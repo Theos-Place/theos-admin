@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Surface Hierarchy</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:var(--font-body);color:var(--fg)}
+  .card{margin:18px;padding:20px;background:var(--surface);border-radius:var(--radius-lg)}
+  .section{background:var(--surface-container-low);border-radius:var(--radius-lg);padding:20px;margin-top:6px}
+  .el{background:var(--surface-container-lowest);border-radius:var(--radius-lg);padding:18px;margin-top:6px}
+  .lbl{font-family:var(--font-display);font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg-soft);margin-bottom:6px}
+  .name{font-family:var(--font-display);font-weight:800;font-size:15px}
+  .hex{font-family:var(--font-mono);font-size:11px;color:var(--fg-soft);margin-top:4px}
+  .hint{font-family:var(--font-body);font-weight:300;font-size:12px;color:var(--fg-muted);margin-top:4px;margin-left:20px}
+</style></head>
+<body>
+<div class="hint" style="margin:18px 18px 0 18px">Tonal layering — no shadows, no borders. Three nested tones = elevation.</div>
+<div class="card">
+  <div class="lbl">Base · surface</div>
+  <div class="name">Page ground</div>
+  <div class="hex">#F8FAFB</div>
+  <div class="section">
+    <div class="lbl">Section · surface-container-low</div>
+    <div class="name">Section band</div>
+    <div class="hex">#F2F4F5</div>
+    <div class="el">
+      <div class="lbl">Element · surface-container-lowest</div>
+      <div class="name">Card on top</div>
+      <div class="hex">#FFFFFF</div>
+    </div>
+  </div>
+</div>
+</body></html>

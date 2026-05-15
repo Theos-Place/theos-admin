@@ -1,26 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Axis';
+  src: url('/fonts/Axis_Extrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Gilmer';
+  src: url('/fonts/gilmer-light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-ultra-blue:   #161440;
+  --brand-navy:         #29365C;
+  --brand-navy-ink:     #0F0E33;
+  --brand-coral:        #EF5554;
+  --brand-coral-deep:   #D94241;
+  --brand-coral-soft:   #F78382;
+  --brand-teal:         #70BDC2;
+  --brand-teal-deep:    #519DA2;
+  --brand-teal-soft:    #B5DDE0;
+
+  --surface:                  #F8FAFB;
+  --surface-low:              #F2F4F5;
+  --surface-card:             #FFFFFF;
+  --surface-container:        #EAEDEF;
+  --surface-container-high:   #E1E5E8;
+  --outline-variant:          rgba(22, 20, 64, 0.15);
+
+  --shadow-md:    0 20px 40px rgba(22, 20, 64, 0.06);
+  --shadow-lg:    0 24px 56px rgba(22, 20, 64, 0.10);
+  --shadow-pulse: 0 12px 32px rgba(239, 85, 84, 0.28);
+
+  --glass-bg:   rgba(248, 250, 251, 0.80);
+  --glass-blur: blur(16px);
+
+  --radius-sm:   0.7rem;
+  --radius-md:   1.25rem;
+  --radius-lg:   2rem;
+  --radius-pill: 999px;
+
+  --font-display: 'Axis', system-ui, sans-serif;
+  --font-body:    'Gilmer', system-ui, sans-serif;
+  --font-mono:    'DM Mono', ui-monospace, monospace;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-navy:          #161440;
+  --color-navy-light:    #29365C;
+  --color-navy-ink:      #0F0E33;
+  --color-coral:         #EF5554;
+  --color-coral-deep:    #D94241;
+  --color-coral-soft:    #F78382;
+  --color-teal:          #70BDC2;
+  --color-teal-deep:     #519DA2;
+  --color-teal-soft:     #B5DDE0;
+  --color-surface:       #F8FAFB;
+  --color-surface-low:   #F2F4F5;
+  --color-surface-card:  #FFFFFF;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  font-weight: 300;
+  background: var(--surface);
+  color: var(--brand-navy);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }

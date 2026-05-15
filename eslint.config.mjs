@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design system assets — not part of the app build
+    "Theos Place Design System/**",
   ]),
 ]);
 

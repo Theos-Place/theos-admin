@@ -1,0 +1,283 @@
+/* ============================================================
+   THEOS PLACE — Colors & Type Foundations
+   Use these tokens everywhere. Avoid hard-coded hex values.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+
+/* Theos Place brand fonts — real files from /fonts.
+   Axis Extrabold = display wordmark face (logo).
+   Gilmer Light = body / UI face.
+   DM Mono is imported above for occasional metadata use. */
+@font-face {
+  font-family: 'Axis';
+  src: url('/fonts/Axis_Extrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Gilmer';
+  src: url('/fonts/gilmer-light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- CORE BRAND PALETTE ---------- */
+  /* PRIMARY — Ultra Blue — the core brand color */
+  --brand-ultra-blue:   #161440;  /* Ultra Blue — PRIMARY */
+  --brand-navy-deep:    #161440;  /* alias — immersive backgrounds */
+  --brand-navy:         #29365C;  /* logo wordmark "Theos" (lifted nav-blue) */
+  --brand-navy-ink:     #0F0E33;  /* deepest ink for text on tinted blocks */
+
+  /* SECONDARY — Cream Orange */
+  --brand-coral:        #EF5554;  /* Cream Orange */
+  --brand-coral-deep:   #D94241;  /* pressed / deep */
+  --brand-coral-soft:   #F78382;  /* hover / subtle bg */
+
+  /* SECONDARY — Azul Pasivo */
+  --brand-teal:         #70BDC2;  /* Azul Pasivo */
+  --brand-teal-deep:    #519DA2;  /* hover */
+  --brand-teal-soft:    #B5DDE0;  /* tints / rings */
+
+  /* SECONDARY — Blanco */
+  --brand-white:        #FFFFFF;
+
+  /* ---------- NEUTRALS ---------- */
+  --neutral-0:          #FFFFFF;
+  --neutral-50:         #FAFAFC;
+  --neutral-100:        #F1F2F6;
+  --neutral-200:        #E4E6EE;
+  --neutral-300:        #C9CCD9;
+  --neutral-400:        #9CA0B4;
+  --neutral-500:        #6E7290;
+  --neutral-600:        #4E5274;
+  --neutral-700:        #363B5A;
+  --neutral-800:        #232748;
+  --neutral-900:        #161440;  /* = Ultra Blue */
+
+  /* ---------- SEMANTIC FOREGROUND / BACKGROUND ---------- */
+  --bg:                 var(--neutral-0);
+  --bg-subtle:          var(--neutral-50);
+  --bg-muted:           var(--neutral-100);
+  --bg-inverse:         var(--brand-navy-deep);
+
+  --fg:                 var(--brand-navy);         /* headings + body ink */
+  --fg-muted:           var(--neutral-600);        /* secondary text */
+  --fg-soft:            var(--neutral-500);        /* meta / captions */
+  --fg-disabled:        var(--neutral-400);
+  --fg-on-dark:         var(--neutral-0);
+  --fg-on-coral:        var(--neutral-0);
+  --fg-on-teal:         var(--brand-navy-deep);
+
+  /* ---------- SEMANTIC ACCENTS ---------- */
+  --accent-primary:     var(--brand-coral);        /* main CTA */
+  --accent-secondary:   var(--brand-teal);         /* community / live */
+  --accent-link:        var(--brand-coral);
+
+  --success:            #3DB97A;
+  --warning:            #E9B949;
+  --danger:             #E2484A;
+  --info:               var(--brand-teal);
+
+  /* ---------- SURFACE HIERARCHY (Tonal Layering) ----------
+     No 1px borders — depth comes from stacked tonal shifts.
+     Base → Section → Card nesting goes: surface → container-low → lowest. */
+  --surface:                  #F8FAFB;  /* base ground */
+  --surface-container-low:    #F2F4F5;  /* section band sitting on surface */
+  --surface-container:        #EAEDEF;  /* deeper section / hover */
+  --surface-container-high:   #E1E5E8;  /* inputs / secondary buttons */
+  --surface-container-highest:#D6DBDF;  /* pressed / input resting */
+  --surface-container-lowest: #FFFFFF;  /* cards / elements on top */
+  --surface-bright:           #FFFFFF;  /* foreground pop */
+  --surface-dim:              #EDEFF0;  /* recessed ground */
+  --surface-inverse:          var(--brand-ultra-blue);
+
+  /* Ghost border — felt, not seen */
+  --outline-variant:          rgba(22, 20, 64, 0.15);
+
+  /* Ambient float-shadow — tinted Ultra Blue, never black */
+  --shadow-ambient:           0 20px 40px rgba(22, 20, 64, 0.06);
+  --shadow-float:             0 24px 56px rgba(22, 20, 64, 0.10);
+
+  /* Cream Orange ambient glow — for the Pulse CTA */
+  --shadow-pulse:             0 12px 32px rgba(239, 85, 84, 0.28);
+
+  /* Glass — for navbars / floating chrome */
+  --glass-bg:                 rgba(248, 250, 251, 0.72);
+  --glass-blur:               blur(16px);
+
+  /* ---------- RADII ----------
+     Cards use "lg" (2rem) for friendly, youth-focused geometry.
+     Buttons use "pill" (full). */
+  --radius-xs:          0.35rem;
+  --radius-sm:          0.7rem;
+  --radius-md:          1.25rem;
+  --radius-lg:          2rem;      /* cards */
+  --radius-xl:          2.75rem;
+  --radius-pill:        999px;     /* primary buttons */
+
+  /* ---------- SHADOWS ----------
+     Rarely used. Prefer tonal layering. Reserve these for floating chrome only. */
+  --shadow-xs:          0 1px 2px rgba(22, 20, 64, 0.04);
+  --shadow-sm:          0 2px 8px rgba(22, 20, 64, 0.06);
+  --shadow-md:          0 20px 40px rgba(22, 20, 64, 0.06);  /* ambient */
+  --shadow-lg:          0 24px 56px rgba(22, 20, 64, 0.10);  /* float */
+
+  /* ---------- SPACING (Pura Vida scale — base 0.35rem / 5.6px)
+     Use macro values (12, 16, 20) generously for section breaks. */
+  --space-1:  0.35rem;   /* 5.6px  — micro / internal */
+  --space-2:  0.7rem;    /* 11.2px — micro */
+  --space-3:  1rem;      /* 16px */
+  --space-4:  1.4rem;    /* 22.4px — standard between elements */
+  --space-5:  1.75rem;   /* 28px */
+  --space-6:  2rem;      /* 32px — standard */
+  --space-8:  2.75rem;   /* 44px — list-item vertical rhythm */
+  --space-10: 3.5rem;    /* 56px */
+  --space-12: 4rem;      /* 64px — macro section break (top) */
+  --space-16: 5.5rem;    /* 88px — asymmetric section bottom */
+  --space-20: 7rem;      /* 112px — macro */
+  --space-24: 8rem;      /* 128px */
+
+  /* ---------- TYPE FAMILIES ---------- */
+  /* Display: Axis Extrabold — the brand's wordmark face. Geometric sans
+     with the distinctive Ɵ-shaped "o". Only ships as 800. */
+  --font-display: 'Axis', 'Avenir Next', 'Nunito Sans', system-ui, sans-serif;
+  /* UI/body: Gilmer Light — warm humanist geometric, ships as 300. */
+  --font-body:    'Gilmer', 'Axis', system-ui, sans-serif;
+  /* Mono: occasional metadata */
+  --font-mono:    'DM Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* ---------- TYPE SCALE (fluid-ish, fixed px for mock fidelity) ---------- */
+  --fs-display-1: 88px;  --lh-display-1: 0.95;
+  --fs-display-2: 64px;  --lh-display-2: 1.00;
+  --fs-h1:        44px;  --lh-h1:        1.08;
+  --fs-h2:        32px;  --lh-h2:        1.15;
+  --fs-h3:        24px;  --lh-h3:        1.22;
+  --fs-h4:        20px;  --lh-h4:        1.30;
+  --fs-body-lg:   18px;  --lh-body-lg:   1.55;
+  --fs-body:      16px;  --lh-body:      1.60;
+  --fs-body-sm:   14px;  --lh-body-sm:   1.55;
+  --fs-caption:   12px;  --lh-caption:   1.40;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.08em;  /* for small-caps labels like "PLACE" in logo */
+  --tracking-eyebrow: 0.14em;
+}
+
+/* ============================================================
+   SEMANTIC ELEMENT STYLES
+   Apply by using the classes below or by baselining <body>.
+   ============================================================ */
+
+.ts-body, body.theos {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.ts-display-1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-display-1);
+  line-height: var(--lh-display-1);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg);
+}
+.ts-display-2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-display-2);
+  line-height: var(--lh-display-2);
+  letter-spacing: var(--tracking-tight);
+}
+.ts-h1, h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-h1);
+  line-height: var(--lh-h1);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg);
+}
+.ts-h2, h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  color: var(--fg);
+}
+.ts-h3, h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  color: var(--fg);
+}
+.ts-h4, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-h4);
+  line-height: var(--lh-h4);
+  color: var(--fg);
+}
+
+.ts-body-lg, p.lead {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  color: var(--fg-muted);
+}
+.ts-body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--fg);
+}
+.ts-body-sm, small {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--fg-muted);
+}
+.ts-caption {
+  font-family: var(--font-body);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--fg-soft);
+}
+
+/* Eyebrow / kicker — "PLACE"-style: uppercase, tracked, coral */
+.ts-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--brand-coral);
+}
+
+/* Link */
+a, .ts-link {
+  color: var(--accent-link);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+a:hover, .ts-link:hover {
+  border-bottom-color: currentColor;
+}
+
+/* Mono */
+code, .ts-mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}

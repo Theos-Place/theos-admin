@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Form Inputs</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;color:var(--fg);font-family:var(--font-body)}
+  .wrap{padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .lbl{font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--fg)}
+  .input,.select,.textarea{font-family:var(--font-body);font-size:14px;padding:11px 14px;border-radius:10px;border:1px solid #E4E6EE;background:#fff;color:var(--fg);outline:none;transition:all 160ms}
+  .input:focus,.select:focus,.textarea:focus{border-color:#F05655;box-shadow:0 0 0 3px rgba(240,86,85,.15)}
+  .helper{font-family:var(--font-body);font-size:12px;color:var(--fg-soft)}
+  .checkbox{display:flex;align-items:center;gap:10px}
+  .cbx{width:18px;height:18px;border-radius:5px;border:2px solid #C9CCD9;background:#fff;display:inline-flex;align-items:center;justify-content:center}
+  .cbx.on{background:#F05655;border-color:#F05655;color:#fff;font-size:12px;font-weight:700}
+</style></head>
+<body><div class="wrap">
+  <div class="field"><span class="lbl">Nombre</span><input class="input" value="María"></div>
+  <div class="field"><span class="lbl">Email</span><input class="input" placeholder="tu@email.com"></div>
+  <div class="field"><span class="lbl">Estudio</span><select class="select"><option>Jueves · 19:30</option></select></div>
+  <div class="field"><span class="lbl">Mensaje</span><textarea class="textarea" rows="2">Me apunto :)</textarea></div>
+  <div class="checkbox"><span class="cbx on">✓</span><span style="font-size:13px">Quiero recibir noticias</span></div>
+  <div class="checkbox"><span class="cbx"></span><span style="font-size:13px">Primera vez aquí</span></div>
+</div></body></html>

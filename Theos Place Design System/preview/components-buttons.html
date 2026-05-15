@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;color:var(--fg);font-family:var(--font-body)}
+  .wrap{padding:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .btn{font-family:var(--font-display);font-weight:700;font-size:15px;padding:12px 22px;border-radius:999px;border:none;cursor:pointer;transition:all 160ms cubic-bezier(.22,1,.36,1)}
+  .btn-primary{background:#F05655;color:#fff;box-shadow:0 6px 20px rgba(240,86,85,.28)}
+  .btn-primary:hover{background:#FF8483}
+  .btn-secondary{background:#52C0C4;color:#151440}
+  .btn-secondary:hover{background:#3BA8AD;color:#fff}
+  .btn-outline{background:transparent;color:#29365C;border:2px solid #29365C;padding:10px 20px}
+  .btn-outline:hover{background:#29365C;color:#fff}
+  .btn-ghost{background:transparent;color:#29365C}
+  .btn-ghost:hover{background:#F1F2F6}
+  .btn-sm{font-size:13px;padding:8px 16px}
+  .btn-lg{font-size:17px;padding:16px 28px}
+</style></head>
+<body><div class="wrap">
+  <button class="btn btn-primary">Apúntate</button>
+  <button class="btn btn-secondary">Únete</button>
+  <button class="btn btn-outline">Ver más</button>
+  <button class="btn btn-ghost">Cancelar</button>
+  <button class="btn btn-primary btn-sm">Enviar</button>
+  <button class="btn btn-primary btn-lg">Ven el domingo →</button>
+</div></body></html>

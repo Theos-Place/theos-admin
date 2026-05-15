@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Semantic Colors</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:var(--font-body);color:var(--fg)}
+  .wrap{padding:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .sw{border-radius:14px;padding:16px;min-height:90px;display:flex;flex-direction:column;justify-content:space-between;color:#fff}
+  .role{font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;font-weight:700;opacity:.88}
+  .name{font-family:var(--font-display);font-weight:700;font-size:14px}
+  .hex{font-family:var(--font-mono);font-size:10.5px;opacity:.85}
+</style></head>
+<body><div class="wrap">
+  <div class="sw" style="background:#3DB97A"><div class="role">Success</div><div><div class="name">Success</div><div class="hex">#3DB97A</div></div></div>
+  <div class="sw" style="background:#E9B949;color:#151440"><div class="role">Warning</div><div><div class="name">Warning</div><div class="hex">#E9B949</div></div></div>
+  <div class="sw" style="background:#E2484A"><div class="role">Danger</div><div><div class="name">Danger</div><div class="hex">#E2484A</div></div></div>
+  <div class="sw" style="background:#52C0C4;color:#151440"><div class="role">Info</div><div><div class="name">Info</div><div class="hex">#52C0C4</div></div></div>
+</div></body></html>

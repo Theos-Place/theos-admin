@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Voice</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;color:var(--fg);font-family:var(--font-body)}
+  .wrap{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .col{border-radius:14px;padding:16px 18px}
+  .yes{background:#E7F8EF;border:1px solid #BFE8D0}
+  .no{background:#FCECEC;border:1px solid #F4C9C9}
+  .h{font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+  .yes .h{color:#2E8D5E}
+  .no .h{color:#C53E40}
+  ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+  li{font-size:13.5px;line-height:1.45;color:#29365C}
+</style></head>
+<body><div class="wrap">
+  <div class="col yes">
+    <div class="h">✓ Sounds like Theos</div>
+    <ul>
+      <li>"Apúntate — empezamos a las 19:30."</li>
+      <li>"Ven como estés. Aquí hay sitio."</li>
+      <li>"¿Te vienes este domingo?"</li>
+      <li>"Disfrutemos juntos de algo real."</li>
+    </ul>
+  </div>
+  <div class="col no">
+    <div class="h">✗ Doesn't</div>
+    <ul>
+      <li>"Le invitamos cordialmente al estudio."</li>
+      <li>"Todos son bienvenidos a la casa del Señor."</li>
+      <li>"Celebraremos el culto dominical."</li>
+      <li>"Únase a nuestra comunidad de fe."</li>
+    </ul>
+  </div>
+</div></body></html>

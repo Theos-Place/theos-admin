@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>The No-Line Rule</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:var(--font-body);color:var(--fg)}
+  .wrap{padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .col{display:flex;flex-direction:column;gap:0}
+  h4{font-family:var(--font-display);font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 10px;color:var(--fg-soft)}
+  .bad-line{padding:14px 0;border-bottom:1px solid #E4E6EE;font-family:var(--font-body);font-weight:300}
+  .bad-line:last-child{border:0}
+  .a{background:var(--surface);padding:14px 16px;font-family:var(--font-body);font-weight:300}
+  .b{background:var(--surface-container-low);padding:14px 16px;font-family:var(--font-body);font-weight:300}
+  .x{font-family:var(--font-display);font-weight:800;font-size:14px;color:#EF5554;margin-right:6px}
+  .c{color:#70BDC2;font-family:var(--font-display);font-weight:800;font-size:14px;margin-right:6px}
+  .ghost{margin-top:10px;background:#FFF;border:1px solid rgba(22,20,64,0.15);border-radius:var(--radius-md);padding:12px 14px;font-family:var(--font-body);font-weight:300;font-size:13px}
+  .note{font-family:var(--font-body);font-weight:300;font-size:11px;color:var(--fg-soft);margin-top:6px}
+</style></head>
+<body><div class="wrap">
+  <div class="col">
+    <h4><span class="x">✕</span>1px dividers</h4>
+    <div class="bad-line">Estudio · martes</div>
+    <div class="bad-line">Grupo pequeño · jueves</div>
+    <div class="bad-line">Domingo · 11:00</div>
+    <div class="note">Clutters the "Sanctuary" feel.</div>
+  </div>
+  <div class="col">
+    <h4><span class="c">✓</span>Tonal shift</h4>
+    <div class="a">Estudio · martes</div>
+    <div class="b">Grupo pequeño · jueves</div>
+    <div class="a">Domingo · 11:00</div>
+    <div class="ghost">Ghost border — felt, not seen · <span style="font-family:var(--font-mono);font-size:10.5px">outline-variant</span></div>
+  </div>
+</div></body></html>

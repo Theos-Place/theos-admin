@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Brand Colors</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:var(--font-body);color:var(--fg)}
+  .wrap{padding:18px}
+  .label{font-family:var(--font-display);font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg-soft);margin:2px 0 8px 2px}
+  .primary{margin-bottom:14px}
+  .sw{border-radius:14px;padding:18px;position:relative;overflow:hidden;border:1px solid rgba(22,20,64,.06);display:flex;flex-direction:column;justify-content:space-between}
+  .sw.big{min-height:130px}
+  .sw.small{min-height:100px}
+  .row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .name{font-family:var(--font-display);font-weight:800;font-size:15px;line-height:1.05}
+  .sub{font-family:var(--font-body);font-weight:300;font-size:12px;opacity:.85;margin-top:3px}
+  .hex{font-family:var(--font-mono);font-size:11px;opacity:.85;letter-spacing:.02em;margin-top:8px}
+  .role{font-size:10px;text-transform:uppercase;letter-spacing:.16em;font-weight:800;opacity:.85;font-family:var(--font-display)}
+  .theta{position:absolute;right:-24px;bottom:-34px;width:150px;height:150px;opacity:.10}
+</style></head>
+<body>
+<div class="wrap">
+
+  <div class="primary">
+    <div class="label">Primario</div>
+    <div class="sw big" style="background:#161440;color:#fff">
+      <svg class="theta" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" stroke="#70BDC2" stroke-width="8"/>
+        <rect x="14" y="46" width="72" height="8" fill="#70BDC2"/>
+      </svg>
+      <div class="role">Primary</div>
+      <div>
+        <div class="name">Ultra Blue</div>
+        <div class="sub">Color principal — fondos inmersivos, tipografía, ground oscuro</div>
+        <div class="hex">#161440</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="label">Secundarios</div>
+  <div class="row">
+    <div class="sw small" style="background:#EF5554;color:#fff">
+      <div class="role">Secondary</div>
+      <div><div class="name">Cream Orange</div><div class="hex">#EF5554</div></div>
+    </div>
+    <div class="sw small" style="background:#70BDC2;color:#161440">
+      <div class="role">Secondary</div>
+      <div><div class="name">Azul Pasivo</div><div class="hex">#70BDC2</div></div>
+    </div>
+    <div class="sw small" style="background:#FFFFFF;color:#161440;border:1px solid #E4E6EE">
+      <div class="role">Secondary</div>
+      <div><div class="name">Blanco</div><div class="hex">#FFFFFF</div></div>
+    </div>
+  </div>
+
+</div>
+</body></html>

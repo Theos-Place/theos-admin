@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Badges & Pills</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;color:var(--fg);font-family:var(--font-body)}
+  .wrap{padding:22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .b{font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:999px}
+  .coral{background:#FFE7E6;color:#F05655}
+  .teal{background:#D6F1F2;color:#1F6E71}
+  .navy{background:#E4E6EE;color:#29365C}
+  .solid-coral{background:#F05655;color:#fff}
+  .solid-navy{background:#29365C;color:#fff}
+  .solid-teal{background:#52C0C4;color:#151440}
+  .live{background:#52C0C4;color:#151440;display:inline-flex;align-items:center;gap:6px}
+  .dot{width:7px;height:7px;border-radius:999px;background:#151440;animation:p 1.2s infinite}
+  @keyframes p{0%,100%{opacity:.4}50%{opacity:1}}
+</style></head>
+<body><div class="wrap">
+  <span class="b coral">Apúntate</span>
+  <span class="b teal">Comunidad</span>
+  <span class="b navy">Estudio</span>
+  <span class="b solid-coral">Nuevo</span>
+  <span class="b solid-navy">Madrid</span>
+  <span class="b solid-teal">Semanal</span>
+  <span class="b live"><span class="dot"></span>En directo</span>
+</div></body></html>

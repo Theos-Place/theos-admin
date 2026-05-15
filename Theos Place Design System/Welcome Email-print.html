@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="x-apple-disable-message-reformatting" />
+<meta name="color-scheme" content="light" />
+<meta name="supported-color-schemes" content="light" />
+<title>Bienvenido/a a Theos Place</title>
+
+<!-- Headline substitute (Axis ships uppercase-only; Bricolage Grotesque is the closest mixed-case match for sentence-case headlines) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&display=swap" rel="stylesheet">
+
+<style>
+  @font-face {
+    font-family: 'Axis';
+    src: url('fonts/Axis_Extrabold.otf') format('opentype');
+    font-weight: 800; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'Gilmer';
+    src: url('fonts/gilmer-light.otf') format('opentype');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+
+  /* Page chrome — browser preview only. Strip <body class="preview-chrome"> wrapper before sending. */
+  html, body { margin: 0; padding: 0; }
+  body.preview-chrome { background: #EAEDEF; font-family: 'Gilmer', system-ui, sans-serif; }
+  .preview-shell { padding: 40px 24px 96px; min-height: 100vh; }
+
+  /* Inbox header strip — preview only */
+  .inbox-header {
+    max-width: 640px; margin: 0 auto;
+    background: #FFFFFF;
+    border-radius: 12px 12px 0 0;
+    padding: 18px 28px 16px;
+    border-bottom: 1px solid rgba(22,20,64,0.10);
+    font-family: 'Gilmer', system-ui, sans-serif;
+    font-weight: 300;
+    color: #29365C;
+    font-size: 14px;
+  }
+  .inbox-header .row { display: flex; align-items: center; gap: 14px; padding: 4px 0; }
+  .inbox-header .row .label { color: #6E7290; min-width: 36px; font-size: 13px; }
+  .inbox-header .top { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 8px; }
+  .inbox-header .subj { font-family: 'Axis', system-ui, sans-serif; font-weight: 800; color: #161440; font-size: 16px; }
+  .inbox-header .when { color: #9CA0B4; font-size: 13px; }
+  .inbox-header .avatar {
+    width: 28px; height: 28px; border-radius: 999px;
+    background: #161440;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #FFFFFF; font-family: 'Axis', system-ui, sans-serif; font-weight: 800; font-size: 13px;
+  }
+  .inbox-header .from { color: #161440; font-family: 'Axis', system-ui, sans-serif; font-weight: 800; }
+
+  .email-container {
+    max-width: 640px; margin: 0 auto;
+    background: #FFFFFF;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+    box-shadow: 0 24px 56px rgba(22,20,64,0.10);
+  }
+
+  /* Display = Bricolage Grotesque 800 (Axis substitute — supports mixed case). */
+  .axis  { font-family: 'Bricolage Grotesque', 'Avenir Next', system-ui, sans-serif !important; font-weight: 800 !important; }
+  /* Wordmark/eyebrow = real Axis font (intended uppercase treatment only). */
+  .axis-wordmark { font-family: 'Axis', 'Bricolage Grotesque', system-ui, sans-serif !important; font-weight: 800 !important; }
+  .gilmer { font-family: 'Gilmer', system-ui, sans-serif !important; font-weight: 300 !important; }
+
+  @media only screen and (max-width: 640px) {
+    .stack { display: block !important; width: 100% !important; padding: 0 0 16px 0 !important; }
+    .px-mobile { padding-left: 24px !important; padding-right: 24px !important; }
+    .h1-mobile { font-size: 32px !important; line-height: 1.1 !important; }
+  }
+
+  /* ============================================================
+     PRINT — letter portrait, white page, email at full width.
+     Hide preview chrome (inbox header, page background, tweaks panel).
+     ============================================================ */
+  @page { size: letter portrait; margin: 0.5in; }
+
+  @media print {
+    html, body { background: #FFFFFF !important; }
+    body.preview-chrome { background: #FFFFFF !important; }
+    .preview-shell { padding: 0 !important; min-height: 0 !important; }
+
+    /* Hide preview-only chrome */
+    .inbox-header { display: none !important; }
+    #tweaks-root, .tweaks-toggle, [class*="Tweak"] { display: none !important; }
+
+    .email-container {
+      max-width: 100% !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+
+    /* Force background colors / images to print */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Avoid awkward breaks inside cards / sections */
+    tr, td { break-inside: avoid; }
+    .stack { break-inside: avoid; }
+  }
+</style>
+</head>
+
+<body class="preview-chrome">
+
+<div class="preview-shell">
+
+  <!-- ===== Inbox header (preview only) ===== -->
+  <div class="inbox-header">
+    <div class="top">
+      <div class="subj">Bienvenido/a</div>
+      <div class="when">Hace unos momentos</div>
+    </div>
+    <div class="row">
+      <div class="label">De:</div>
+      <div class="avatar">Ɵ</div>
+      <div><span class="from">Theos Place</span> &nbsp;<span style="color:#6E7290;">&lt;info@theosplace.org&gt;</span></div>
+    </div>
+    <div class="row">
+      <div class="label">Para:</div>
+      <div style="width:28px;"></div>
+      <div>maria.gonzalez@email.com</div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       EMAIL — table-based, inline styles, hex-only.
+       Simple, centered hero. Three-card row. Footer.
+       ============================================================ -->
+  <!-- Preheader -->
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#FFFFFF;">
+    Qué bueno tenerte aquí. Esto es lo que puedes hacer ahora.
+  </div>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" align="center" class="email-container" style="border-collapse:collapse;width:640px;max-width:640px;background:#FFFFFF;">
+
+    <!-- ============== HERO — centered, white ============== -->
+    <tr>
+      <td align="center" class="px-mobile" style="padding:64px 56px 24px 56px;background:#FFFFFF;">
+
+        <!-- Logo -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="border-collapse:collapse;margin:0 auto;">
+          <tr>
+            <td align="center" style="text-align:center;">
+              <img src="assets/logo-theos-original.png" alt="Theos Place" width="180" style="display:block;border:0;outline:0;width:180px;height:auto;" />
+            </td>
+          </tr>
+        </table>
+
+        <!-- Eyebrow -->
+        <p class="axis" style="margin:32px 0 14px 0;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:13px;line-height:1;letter-spacing:0.14em;text-transform:uppercase;color:#EF5554;">
+          Ya sos parte de nuestra comunidad
+        </p>
+
+        <!-- Headline -->
+        <p class="axis h1-mobile" style="margin:0 0 14px 0;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:40px;line-height:1.05;letter-spacing:-0.02em;color:#161440;">
+          Bienvenido a Theos Place.
+        </p>
+
+        <!-- Subhead -->
+        <p class="gilmer" style="margin:0;font-family:'Gilmer',system-ui,sans-serif;font-weight:300;font-size:17px;line-height:1.55;color:#4E5274;max-width:440px;">
+          Un lugar para conocer a Dios.
+        </p>
+
+      </td>
+    </tr>
+
+    <!-- ============== GREETING ============== -->
+    <tr>
+      <td class="px-mobile" style="padding:48px 56px 8px 56px;background:#FFFFFF;">
+        <p class="axis" style="margin:0 0 16px 0;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:22px;line-height:1.25;color:#161440;">
+          ¡Hola, María!
+        </p>
+        <p class="gilmer" style="margin:0;font-family:'Gilmer',system-ui,sans-serif;font-weight:300;font-size:17px;line-height:1.6;color:#29365C;">
+          Somos una comunidad donde podés crecer, conectar con otros y descubrir tu propósito. Un espacio para ser vos mismo, hacer amigos reales y servir juntos.
+        </p>
+      </td>
+    </tr>
+
+    <!-- ============== "QUÉ PUEDES HACER AHORA" — section title ============== -->
+    <tr>
+      <td class="px-mobile" style="padding:36px 56px 20px 56px;background:#FFFFFF;">
+        <p class="axis" style="margin:0;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:18px;line-height:1.3;color:#161440;">
+          ¿Qué podés hacer ahora?
+        </p>
+      </td>
+    </tr>
+
+    <!-- ============== THREE CARDS ============== -->
+    <tr>
+      <td class="px-mobile" style="padding:0 40px 8px 40px;background:#FFFFFF;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:8px;">
+          <tr>
+            <!-- Card 1 -->
+            <td class="stack" valign="top" width="33%" style="background:#F2F4F5;border-radius:24px;padding:22px 22px 24px 22px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                <tr>
+                  <td width="36" height="36" align="center" valign="middle" style="width:36px;height:36px;background:#B5DDE0;border-radius:999px;text-align:center;vertical-align:middle;">
+                    <span class="axis" style="font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:16px;color:#161440;line-height:36px;">Ɵ</span>
+                  </td>
+                </tr>
+              </table>
+              <p class="axis" style="margin:18px 0 8px 0;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:17px;line-height:1.25;color:#161440;">
+                Encontrá tu sede
+              </p>
+              <p class="gilmer" style="margin:0 0 14px 0;font-family:'Gilmer',system-ui,sans-serif;font-weight:300;font-size:14px;line-height:1.55;color:#4E5274;">
+                Buscá la sede más cercana y acompañanos.
+              </p>
+              <a href="https://theosplace.org/sobre" class="axis" style="font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:13px;letter-spacing:0.04em;color:#EF5554;text-decoration:none;">
+                Ver sedes &nbsp;→
+              </a>
+            </td>
+
+            <!-- Card 2 -->
+            <td class="stack" valign="top" width="33%" style="background:#F2F4F5;border-radius:24px;padding:22px 22px 24px 22px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                <tr>
+                  <td width="36" height="36" align="center" valign="middle" style="width:36px;height:36px;background:#F78382;border-radius:999px;text-align:center;vertical-align:middle;">
+                    <span class="axis" style="font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:16px;color:#FFFFFF;line-height:36px;">Ɵ</span>
+                  </td>
+                </tr>
+              </table>
+              <p class="axis" style="margin:18px 0 8px 0;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:17px;line-height:1.25;color:#161440;">
+                Estudios bíblicos
+              </p>
+              <p class="gilmer" style="margin:0 0 14px 0;font-family:'Gilmer',system-ui,sans-serif;font-weight:300;font-size:14px;line-height:1.55;color:#4E5274;">
+                Explorá los recursos a tu ritmo.
+              </p>
+              <a href="https://theosplace.org/estudios" class="axis" style="font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:13px;letter-spacing:0.04em;color:#EF5554;text-decoration:none;">
+                Anotate &nbsp;→
+              </a>
+            </td>
+
+            <!-- Card 3 -->
+            <td class="stack" valign="top" width="33%" style="background:#F2F4F5;border-radius:24px;padding:22px 22px 24px 22px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                <tr>
+                  <td width="36" height="36" align="center" valign="middle" style="width:36px;height:36px;background:#161440;border-radius:999px;text-align:center;vertical-align:middle;">
+                    <span class="axis" style="font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:16px;color:#70BDC2;line-height:36px;">Ɵ</span>
+                  </td>
+                </tr>
+              </table>
+              <p class="axis" style="margin:18px 0 8px 0;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:17px;line-height:1.25;color:#161440;">
+                Actividades
+              </p>
+              <p class="gilmer" style="margin:0 0 14px 0;font-family:'Gilmer',system-ui,sans-serif;font-weight:300;font-size:14px;line-height:1.55;color:#4E5274;">
+                Mirá todo lo que viene esta semana.
+              </p>
+              <a href="https://theosplace.org/eventos" class="axis" style="font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:13px;letter-spacing:0.04em;color:#EF5554;text-decoration:none;">
+                Ver calendario &nbsp;→
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ============== PRIMARY CTA — Coral Pulse ============== -->
+    <tr>
+      <td align="center" class="px-mobile" style="padding:40px 56px 8px 56px;background:#FFFFFF;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="border-collapse:separate;margin:0 auto;">
+          <tr>
+            <td align="center" bgcolor="#EF5554" style="border-radius:999px;background:#EF5554;box-shadow:0 12px 32px rgba(239,85,84,0.28);">
+              <a href="https://theosplace.org/apuntate" target="_blank" class="axis" style="display:inline-block;padding:16px 32px;font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;font-size:15px;line-height:1;letter-spacing:0.02em;color:#FFFFFF;text-decoration:none;border-radius:999px;border:0;">
+                Anotate a un estudio de Biblia &nbsp;→
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ============== FOOTER LINE ============== -->
+    <tr>
+      <td class="px-mobile" style="padding:48px 56px 16px 56px;background:#FFFFFF;">
+        <div style="height:1px;line-height:1px;font-size:0;background:rgba(22,20,64,0.10);">&nbsp;</div>
+      </td>
+    </tr>
+
+    <tr>
+      <td align="center" class="px-mobile" style="padding:8px 56px 24px 56px;background:#FFFFFF;">
+        <p class="gilmer" style="margin:0;font-family:'Gilmer',system-ui,sans-serif;font-weight:300;font-size:14px;line-height:1.6;color:#6E7290;">
+          ¿Tenés alguna pregunta? Escribinos a
+          <a href="mailto:info@theosplace.org" class="axis" style="font-family:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;font-weight:800;color:#161440;text-decoration:none;">info@theosplace.org</a>
+        </p>
+      </td>
+    </tr>
+
+    <!-- ============== COPYRIGHT ============== -->
+    <tr>
+      <td align="center" class="px-mobile" style="padding:24px 56px 40px 56px;background:#F8FAFB;">
+        <p class="gilmer" style="margin:0;font-family:'Gilmer',system-ui,sans-serif;font-weight:300;font-size:12px;line-height:1.6;color:#9CA0B4;">
+          © 2026 Theos Place. Todos los derechos reservados.
+        </p>
+      </td>
+    </tr>
+
+  </table>
+
+</div><!-- /preview-shell -->
+
+
+<!-- ============================================================
+     TWEAKS PANEL — preview chrome only.
+     ============================================================ -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<div id="tweaks-root"></div>
+
+<script type="text/babel">
+  const { useEffect } = React;
+  const { TweaksPanel, TweakSection, TweakRadio, TweakToggle, TweakText, useTweaks } = window;
+
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "firstName": "Mar\u00eda",
+    "headline": "Bienvenido a Theos Place.",
+    "subhead": "Un lugar para conocer a Dios.",
+    "ctaCopy": "Anotate a un estudio de Biblia  →",
+    "showCards": true,
+    "showCta": true
+  }/*EDITMODE-END*/;
+
+  function App() {
+    const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+    useEffect(() => {
+      const set = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
+      set('[data-tw="headline"]', tweaks.headline);
+      set('[data-tw="subhead"]', tweaks.subhead);
+      set('[data-tw="cta"]', tweaks.ctaCopy);
+      const greet = document.querySelector('[data-tw="greet"]');
+      if (greet) greet.textContent = '¡Hola, ' + (tweaks.firstName || '') + '!';
+
+      const cards = document.querySelector('[data-tw-block="cards"]');
+      if (cards) cards.style.display = tweaks.showCards ? '' : 'none';
+      const cardsTitle = document.querySelector('[data-tw-block="cards-title"]');
+      if (cardsTitle) cardsTitle.style.display = tweaks.showCards ? '' : 'none';
+
+      const cta = document.querySelector('[data-tw-block="cta"]');
+      if (cta) cta.style.display = tweaks.showCta ? '' : 'none';
+    }, [tweaks]);
+
+    return (
+      <TweaksPanel title="Tweaks" subtitle="Welcome email">
+        <TweakSection title="Copy">
+          <TweakText label="First name" value={tweaks.firstName} onChange={(v) => setTweak('firstName', v)} />
+          <TweakText label="Headline" value={tweaks.headline} onChange={(v) => setTweak('headline', v)} />
+          <TweakText label="Subhead" value={tweaks.subhead} onChange={(v) => setTweak('subhead', v)} multiline />
+          <TweakText label="CTA copy" value={tweaks.ctaCopy} onChange={(v) => setTweak('ctaCopy', v)} />
+        </TweakSection>
+        <TweakSection title="Sections">
+          <TweakToggle label="Show 3-card row" value={tweaks.showCards} onChange={(v) => setTweak('showCards', v)} />
+          <TweakToggle label="Show CTA button" value={tweaks.showCta} onChange={(v) => setTweak('showCta', v)} />
+        </TweakSection>
+      </TweaksPanel>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<App />);
+</script>
+
+<!-- Tag elements the tweaks panel manipulates -->
+<script>
+(function () {
+  // headline = first .axis.h1-mobile
+  var hd = document.querySelector('.axis.h1-mobile');
+  if (hd) hd.setAttribute('data-tw', 'headline');
+
+  // subhead = the .gilmer right after the headline
+  if (hd) {
+    var p = hd.parentElement.querySelector('p.gilmer');
+    if (p) p.setAttribute('data-tw', 'subhead');
+  }
+
+  // greeting — first ¡Hola text node
+  document.querySelectorAll('p.axis').forEach(function (el) {
+    if (/¡Hola/.test(el.textContent) && !el.hasAttribute('data-tw')) {
+      el.setAttribute('data-tw', 'greet');
+    }
+  });
+
+  // cards section title row
+  document.querySelectorAll('p.axis').forEach(function (el) {
+    if (/Qu\u00e9 puedes hacer/i.test(el.textContent)) {
+      var tr = el.closest('tr'); if (tr) tr.setAttribute('data-tw-block', 'cards-title');
+    }
+  });
+
+  // cards row — the tr containing 3 stack tds
+  document.querySelectorAll('.email-container > tbody > tr').forEach(function (tr) {
+    if (tr.querySelectorAll('.stack').length === 3) tr.setAttribute('data-tw-block', 'cards');
+  });
+
+  // CTA row
+  document.querySelectorAll('a.axis').forEach(function (a) {
+    if (/Ap\u00fantate/i.test(a.textContent)) {
+      a.setAttribute('data-tw', 'cta');
+      var tr = a.closest('tr'); if (tr) tr.setAttribute('data-tw-block', 'cta');
+    }
+  });
+})();
+</script>
+
+<!-- ============== AUTO-PRINT ============== -->
+<script>
+  (async function () {
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
+    // Give Babel + tweaks-panel rendering a moment to settle
+    await new Promise(function (r) { setTimeout(r, 800); });
+    window.print();
+  })();
+</script>
+
+</body>
+</html>

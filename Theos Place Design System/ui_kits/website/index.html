@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Theos Place — Inicio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../../assets/icon-theta.png">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body class="theos-site theos">
+<div id="app"></div>
+
+<script type="text/babel" src="Header.jsx"></script>
+<script type="text/babel" src="Hero.jsx"></script>
+<script type="text/babel" src="EventCard.jsx"></script>
+<script type="text/babel" src="EventGrid.jsx"></script>
+<script type="text/babel" src="CommunityBlock.jsx"></script>
+<script type="text/babel" src="SignupForm.jsx"></script>
+<script type="text/babel" src="Footer.jsx"></script>
+
+<script type="text/babel">
+const EVENTS = [
+  {
+    id: 'e1',
+    eyebrow: 'ESTUDIOS · JUEVES',
+    title: 'Ven como estés — estudio semanal',
+    when: 'Jueves · 19:30',
+    where: 'Gran Vía 22, Madrid',
+    image: '../../assets/estudios-madrid.jpg',
+  },
+  {
+    id: 'e2',
+    eyebrow: 'DOMINGO',
+    title: 'Nos vemos este domingo',
+    when: 'Dom 10 May · 11:00',
+    where: 'Sala Atlas',
+    image: '../../assets/pattern-coral.png',
+  },
+  {
+    id: 'e3',
+    eyebrow: 'GRUPO PEQUEÑO',
+    title: 'Café + conversación honesta',
+    when: 'Martes · 20:00',
+    where: 'Malasaña',
+    image: '../../assets/pattern-teal-banner.png',
+  },
+  {
+    id: 'e4',
+    eyebrow: 'RETIRO',
+    title: 'Fin de semana en la sierra',
+    when: '14–16 Jun',
+    where: 'Cercedilla',
+    image: '../../assets/pattern-navy-hero.jpg',
+  },
+];
+
+function App() {
+  const [view, setView] = React.useState('home');
+  const [selectedEvent, setSelectedEvent] = React.useState(null);
+
+  const goSignup = (ev) => { setSelectedEvent(ev || null); setView('signup'); window.scrollTo({top:0, behavior:'smooth'}); };
+  const goHome = () => { setView('home'); setSelectedEvent(null); window.scrollTo({top:0}); };
+
+  return (
+    <React.Fragment>
+      <TPHeader current={view} onNavigate={(id) => id === 'signup' ? goSignup(null) : setView(id)} />
+      {view === 'home' && (
+        <main>
+          <TPHero
+            onPrimary={() => goSignup(EVENTS[0])}
+            onSecondary={() => { setView('events'); setTimeout(() => window.scrollTo({top: 600, behavior: 'smooth'}), 50); }}
+          />
+          <TPEventGrid events={EVENTS} onPick={goSignup} />
+          <TPCommunityBlock onJoin={() => goSignup(EVENTS[2])} />
+        </main>
+      )}
+      {view === 'events' && (
+        <main>
+          <div className="tp-section" style={{ paddingTop: 64 }}>
+            <span className="tp-eyebrow">TODOS · LOS · ESTUDIOS</span>
+            <h1 className="tp-h2" style={{ fontSize: 64, marginTop: 8 }}>¿Te vienes?</h1>
+          </div>
+          <TPEventGrid events={EVENTS} onPick={goSignup} />
+        </main>
+      )}
+      {view === 'community' && (
+        <main><TPCommunityBlock onJoin={() => goSignup(EVENTS[2])} /></main>
+      )}
+      {view === 'about' && (
+        <main>
+          <div className="tp-section">
+            <span className="tp-eyebrow">NOSOTROS</span>
+            <h1 className="tp-h2" style={{ fontSize: 56, marginTop: 8, maxWidth: 720 }}>
+              Somos una comunidad joven en Madrid que cree que lo bueno se comparte.
+            </h1>
+            <p className="tp-body-lg" style={{ maxWidth: 640, marginTop: 18 }}>
+              Nos juntamos para estudiar, preguntarnos lo importante y vivir una fe
+              que no es de pandereta — es real, actual y nos cambia la semana.
+            </p>
+          </div>
+        </main>
+      )}
+      {view === 'signup' && (
+        <main>
+          <div className="tp-signup-wrap">
+            <TPSignupForm event={selectedEvent} onSubmit={goHome} onCancel={goHome} />
+          </div>
+        </main>
+      )}
+      <TPFooter />
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+</script>
+</body>
+</html>
