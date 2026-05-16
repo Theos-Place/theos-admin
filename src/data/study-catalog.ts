@@ -24,12 +24,19 @@ export const STUDY_CATALOG = [
   { code: 'HEB', name: 'Hebreos', stage: 'intermedia', prerequisite: 'PAN', weeks: 8 },
   { code: 'RDM', name: 'Religiones del Mundo', stage: 'intermedia', prerequisite: 'PAN', weeks: 8 },
   { code: 'DLF', name: 'Defendiendo la Fe', stage: 'intermedia', prerequisite: 'PAN', weeks: 8 },
+
+  // CAMPAÑAS
+  { code: 'TRANS', name: 'Transformados',                      stage: 'campaña', prerequisite: null, weeks: 8 },
+  { code: 'UFA',   name: 'Una Fe Audaz',                       stage: 'campaña', prerequisite: null, weeks: 8 },
+  { code: 'PQET',  name: '¿Para qué estoy aquí en la tierra?', stage: 'campaña', prerequisite: null, weeks: 8 },
+  { code: 'TPS23', name: 'Tiempo para Soñar',                  stage: 'campaña', prerequisite: null, weeks: 8 },
 ] as const
 
 export const STUDY_STAGES = {
-  niveles:    { label: 'Niveles',           color: 'navy' },
-  inicial:    { label: 'Etapa Inicial',     color: 'teal' },
-  intermedia: { label: 'Etapa Intermedia',  color: 'coral' },
+  niveles:    { label: 'Niveles',          color: 'navy' },
+  inicial:    { label: 'Etapa Inicial',    color: 'teal' },
+  intermedia: { label: 'Etapa Intermedia', color: 'coral' },
+  campaña:    { label: 'Campañas',         color: 'purple' },
 }
 
 export const INTERMEDIA_REQUIREMENTS = [

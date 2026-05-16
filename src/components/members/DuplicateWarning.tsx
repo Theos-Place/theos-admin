@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
 import { type Member } from '@/data/mock-members'
+import { sedeLabel } from '@/data/mock-sedes'
 
 type Props = {
   member: Member
@@ -33,7 +34,7 @@ export function DuplicateWarning({ member, onDismiss }: Props) {
                 {member.first_name} {member.last_name}
               </p>
               <p className="text-xs text-amber-600" style={{ fontFamily: 'var(--font-body)' }}>
-                {member.status === 'active' ? 'Activo' : 'Inactivo'} · {member.sede}
+                {member.status === 'active' ? 'Activo' : 'Inactivo'} · {sedeLabel(member.sede)}
               </p>
             </div>
           </div>

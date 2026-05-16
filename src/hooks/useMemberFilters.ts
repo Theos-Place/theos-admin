@@ -1,261 +1,292 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import { mockMembers, type Member } from '@/data/mock-members'
-import { STUDY_CATALOG, studyLabel } from '@/data/study-catalog'
+import { AREAS } from '@/data/mock-committees'
+import type { FilterCondition, ConditionGroup, AddableCondition } from '@/types/filters'
 
 export type QuickFilter = 'todos' | 'activos' | 'donadores' | 'servidores'
-export type TriState = 'si' | 'no' | 'cualquiera'
 
-export type FilterChip = {
-  id: string
-  label: string
-  onRemove: () => void
+// ─── filter helpers ─────────────────────────────────────────────────────────
+
+function committeeInArea(committee: string, areaCode: string): boolean {
+  const area = AREAS.find(a => a.code === areaCode)
+  return area ? (area.committees as readonly string[]).includes(committee) : false
 }
 
-function toggled(arr: string[], val: string): string[] {
-  return arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]
+function matchesCondition(m: Member, c: FilterCondition): boolean {
+  switch (c.type) {
+    case 'study': {
+      const inCompleted = m.completed_studies.includes(c.study)
+      const inProgress = m.current_study === c.study
+      if (c.status === 'completed') return inCompleted
+      if (c.status === 'in_progress') return inProgress
+      return inCompleted || inProgress
+    }
+    case 'attendance': {
+      let recs = m.attendance_history
+      if (c.eventType === 'Charla')
+        recs = recs.filter(r => r.type === 'Charla semanal' || r.type === 'Charla mensual')
+      else if (c.eventType === 'Campamento')
+        recs = recs.filter(r => r.type === 'Campamento')
+      else if (c.eventType === 'Actividad Social')
+        recs = recs.filter(r => r.type === 'Ayuda social' || r.type === 'Actividad servidores')
+      else if (c.eventType === 'United')
+        recs = recs.filter(r => r.type === 'Worship')
+      if (c.sedes.length > 0) recs = recs.filter(() => c.sedes.includes(m.sede))
+      if (c.camp) recs = recs.filter(r => r.name.toLowerCase().includes(c.camp.toLowerCase()))
+      if (c.attendanceType === 'participant') recs = recs.filter(r => r.attendance_type === 'participante')
+      else if (c.attendanceType === 'server') recs = recs.filter(r => r.attendance_type === 'servidor')
+      if (c.from) recs = recs.filter(r => r.date >= c.from)
+      if (c.to) recs = recs.filter(r => r.date <= c.to)
+      const count = recs.length
+      if (!c.qty || c.qtyOp === 'any') return count > 0
+      const n = parseInt(c.qty)
+      if (isNaN(n)) return count > 0
+      if (c.qtyOp === 'gte') return count >= n
+      if (c.qtyOp === 'lte') return count <= n
+      if (c.qtyOp === 'eq') return count === n
+      return count > 0
+    }
+    case 'service': {
+      let recs = m.service_history
+      if (c.area) recs = recs.filter(r => committeeInArea(r.committee, c.area))
+      if (c.committee) recs = recs.filter(r => r.committee === c.committee)
+      if (c.position) recs = recs.filter(r => r.position === c.position)
+      if (c.status === 'active') recs = recs.filter(r => r.status === 'activo')
+      else if (c.status === 'historical') recs = recs.filter(r => r.status === 'finalizado')
+      if (c.from) recs = recs.filter(r => r.from >= c.from || (r.to != null && r.to >= c.from))
+      if (c.to) recs = recs.filter(r => r.from <= c.to)
+      return recs.length > 0
+    }
+    case 'form': {
+      let recs = m.form_responses.filter(r => r.formId === c.formId)
+      if (c.status === 'not_filled') return recs.length === 0
+      if (c.from) recs = recs.filter(r => r.submittedAt >= c.from)
+      if (c.to) recs = recs.filter(r => r.submittedAt <= c.to)
+      if (c.field && c.fieldVal) {
+        recs = recs.filter(r => {
+          const val = r.answers[c.field]
+          if (!val) return false
+          const pattern = '^' + c.fieldVal.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$'
+          return new RegExp(pattern, 'i').test(val)
+        })
+      }
+      return recs.length > 0
+    }
+    case 'donor': return c.value === 'yes' ? m.is_donor : !m.is_donor
+    case 'age': {
+      if (c.min && m.age < parseInt(c.min)) return false
+      if (c.max && m.age > parseInt(c.max)) return false
+      return true
+    }
+    case 'status': return c.value === 'active' ? m.status === 'active' : m.status === 'inactive'
+    case 'leader': return c.value === 'yes' ? m.es_dirigente : !m.es_dirigente
+  }
 }
 
-const ESTADO_DIRIGENTE_LABEL: Record<string, string> = {
-  activo: 'Activo',
-  en_descanso: 'En descanso',
-  disponible: 'Disponible',
+type Unit =
+  | { kind: 'condition'; id: number }
+  | { kind: 'group'; id: number; members: number[]; op: 'AND' | 'OR' }
+
+export function buildUnits(conditions: FilterCondition[], groups: ConditionGroup[]): Unit[] {
+  const groupedIds = new Set(groups.flatMap(g => g.members))
+  const addedGroups = new Set<number>()
+  const units: Unit[] = []
+  for (const cond of conditions) {
+    if (groupedIds.has(cond.id)) {
+      const grp = groups.find(g => g.members.includes(cond.id))
+      if (grp && !addedGroups.has(grp.id)) {
+        addedGroups.add(grp.id)
+        units.push({ kind: 'group', id: grp.id, members: grp.members, op: grp.op })
+      }
+    } else {
+      units.push({ kind: 'condition', id: cond.id })
+    }
+  }
+  return units
 }
+
+function applyFilters(
+  members: Member[],
+  conditions: FilterCondition[],
+  groups: ConditionGroup[],
+  topLevelOps: Record<string, 'AND' | 'OR'>,
+): Member[] {
+  const units = buildUnits(conditions, groups)
+  if (units.length === 0) return members
+
+  const condMap = new Map(conditions.map(c => [c.id, c]))
+
+  function testUnit(m: Member, unit: Unit): boolean {
+    if (unit.kind === 'condition') {
+      const c = condMap.get(unit.id)
+      return c ? matchesCondition(m, c) : true
+    }
+    const grpConds = unit.members.map(id => condMap.get(id)).filter(Boolean) as FilterCondition[]
+    if (unit.op === 'AND') return grpConds.every(c => matchesCondition(m, c))
+    return grpConds.some(c => matchesCondition(m, c))
+  }
+
+  let result = members
+  for (let i = 0; i < units.length; i++) {
+    const unit = units[i]
+    const key = unit.kind === 'condition' ? `c${unit.id}` : `g${unit.id}`
+    const op = i === 0 ? 'AND' : (topLevelOps[key] ?? 'AND')
+    if (op === 'AND') {
+      result = result.filter(m => testUnit(m, unit))
+    } else {
+      const passing = members.filter(m => testUnit(m, unit))
+      const inResult = new Set(result.map(m => m.id))
+      result = [...result, ...passing.filter(m => !inResult.has(m.id))]
+    }
+  }
+
+  return result
+}
+
+// ─── hook ───────────────────────────────────────────────────────────────────
 
 export function useMemberFilters() {
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>('todos')
-  const [search, setSearch] = useState('')
-  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [conditions, setConditions] = useState<FilterCondition[]>([])
+  const [groups, setGroups] = useState<ConditionGroup[]>([])
+  const [topLevelOps, setTopLevelOps] = useState<Record<string, 'AND' | 'OR'>>({})
+  const [groupMode, setGroupMode] = useState(false)
+  const [picked, setPicked] = useState<Set<number>>(new Set())
+  const [newGroupOp, setNewGroupOp] = useState<'AND' | 'OR'>('AND')
+  const nextId = useRef(1)
 
-  // Estudios
-  const [completedStudies, setCompletedStudies]     = useState<string[]>([])
-  const [inProgressStudies, setInProgressStudies]   = useState<string[]>([])
-  const [ultimoEstudio, setUltimoEstudio]           = useState('')
+  const addCondition = useCallback((partial: AddableCondition) => {
+    const id = nextId.current++
+    const cond = { ...partial, id } as FilterCondition
+    setConditions(prev => [...prev, cond])
+    setTopLevelOps(prev => ({ ...prev, [`c${id}`]: 'AND' }))
+  }, [])
 
-  // Eventos
-  const [tiposEvento, setTiposEvento]   = useState<string[]>([])
-  const [fechaDesde, setFechaDesde]     = useState('')
-  const [fechaHasta, setFechaHasta]     = useState('')
-  const [sedes, setSedes]               = useState<string[]>([])
-
-  // Voluntarios
-  const [comites, setComites]                       = useState<string[]>([])
-  const [estadoServicio, setEstadoServicio]         = useState<TriState>('cualquiera')
-
-  // Dirigentes
-  const [esDirigente, setEsDirigente]               = useState<TriState>('cualquiera')
-  const [estadosDirigente, setEstadosDirigente]     = useState<string[]>([])
-
-  // Datos personales
-  const [edadDesde, setEdadDesde]         = useState<number | ''>('')
-  const [edadHasta, setEdadHasta]         = useState<number | ''>('')
-  const [donador, setDonador]             = useState<TriState>('cualquiera')
-  const [estadoPerfil, setEstadoPerfil]   = useState<'activo' | 'inactivo' | 'todos'>('todos')
-
-  // Single togglers
-  const toggleCompletedStudy   = useCallback((v: string) => setCompletedStudies(p => toggled(p, v)), [])
-  const toggleInProgressStudy  = useCallback((v: string) => setInProgressStudies(p => toggled(p, v)), [])
-  const toggleTipoEvento       = useCallback((v: string) => setTiposEvento(p => toggled(p, v)), [])
-  const toggleSede             = useCallback((v: string) => setSedes(p => toggled(p, v)), [])
-  const toggleComite           = useCallback((v: string) => setComites(p => toggled(p, v)), [])
-  const toggleEstadoDirigente  = useCallback((v: string) => setEstadosDirigente(p => toggled(p, v)), [])
-
-  // Stage togglers — select/deselect all studies in a stage at once
-  const toggleStageCompleted = useCallback((stage: string) => {
-    const codes = STUDY_CATALOG.filter(s => s.stage === stage).map(s => s.code as string)
-    setCompletedStudies(prev => {
-      const allSelected = codes.every(c => prev.includes(c))
-      if (allSelected) return prev.filter(c => !codes.includes(c))
-      return [...new Set([...prev, ...codes])]
+  const removeCondition = useCallback((id: number) => {
+    setConditions(prev => prev.filter(c => c.id !== id))
+    setGroups(prev => {
+      const updated = prev.map(g => ({ ...g, members: g.members.filter(m => m !== id) }))
+      return updated.filter(g => g.members.length >= 2)
+    })
+    setTopLevelOps(prev => {
+      const next = { ...prev }
+      delete next[`c${id}`]
+      return next
     })
   }, [])
 
-  const toggleStageInProgress = useCallback((stage: string) => {
-    const codes = STUDY_CATALOG.filter(s => s.stage === stage).map(s => s.code as string)
-    setInProgressStudies(prev => {
-      const allSelected = codes.every(c => prev.includes(c))
-      if (allSelected) return prev.filter(c => !codes.includes(c))
-      return [...new Set([...prev, ...codes])]
+  const removeConditionsByGroup = useCallback((groupId: number) => {
+    setGroups(prevGroups => {
+      const grp = prevGroups.find(g => g.id === groupId)
+      if (grp) {
+        const memberIds = grp.members
+        setConditions(prev => prev.filter(c => !memberIds.includes(c.id)))
+        setTopLevelOps(prev => {
+          const next = { ...prev }
+          delete next[`g${groupId}`]
+          memberIds.forEach(id => delete next[`c${id}`])
+          return next
+        })
+      }
+      return prevGroups.filter(g => g.id !== groupId)
     })
   }, [])
 
-  const filteredMembers = useMemo((): Member[] => {
-    let list = mockMembers
-
-    if      (quickFilter === 'activos')    list = list.filter(m => m.status === 'active')
-    else if (quickFilter === 'donadores')  list = list.filter(m => m.is_donor)
-    else if (quickFilter === 'servidores') list = list.filter(m => m.is_server)
-
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter(m =>
-        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q) ||
-        m.cedula.includes(q)
-      )
-    }
-
-    if (completedStudies.length > 0)
-      list = list.filter(m => completedStudies.some(c => m.completed_studies.includes(c)))
-
-    if (inProgressStudies.length > 0)
-      list = list.filter(m => m.current_study != null && inProgressStudies.includes(m.current_study))
-
-    if (ultimoEstudio) {
-      list = list.filter(m => {
-        const last = m.completed_studies[m.completed_studies.length - 1]
-        return last === ultimoEstudio
-      })
-    }
-
-    if (tiposEvento.length > 0)
-      list = list.filter(m => tiposEvento.some(t => m.tipos_evento.includes(t)))
-    if (sedes.length > 0)
-      list = list.filter(m => sedes.includes(m.sede))
-
-    if (comites.length > 0)
-      list = list.filter(m => comites.some(c => m.comites.includes(c)))
-    if (estadoServicio !== 'cualquiera')
-      list = list.filter(m => estadoServicio === 'si' ? m.is_server : !m.is_server)
-
-    if (esDirigente !== 'cualquiera')
-      list = list.filter(m => esDirigente === 'si' ? m.es_dirigente : !m.es_dirigente)
-    if (estadosDirigente.length > 0)
-      list = list.filter(m => m.estado_dirigente != null && estadosDirigente.includes(m.estado_dirigente))
-
-    if (edadDesde !== '')
-      list = list.filter(m => m.age >= (edadDesde as number))
-    if (edadHasta !== '')
-      list = list.filter(m => m.age <= (edadHasta as number))
-    if (donador !== 'cualquiera')
-      list = list.filter(m => donador === 'si' ? m.is_donor : !m.is_donor)
-    if (estadoPerfil !== 'todos')
-      list = list.filter(m => estadoPerfil === 'activo' ? m.status === 'active' : m.status === 'inactive')
-
-    return list
-  }, [
-    quickFilter, search,
-    completedStudies, inProgressStudies, ultimoEstudio,
-    tiposEvento, sedes,
-    comites, estadoServicio,
-    esDirigente, estadosDirigente,
-    edadDesde, edadHasta, donador, estadoPerfil,
-  ])
-
-  const activeChips = useMemo((): FilterChip[] => {
-    const chips: FilterChip[] = []
-
-    completedStudies.forEach(v => chips.push({
-      id: `cs-${v}`, label: `Completado: ${studyLabel(v)}`,
-      onRemove: () => setCompletedStudies(p => p.filter(x => x !== v)),
-    }))
-    inProgressStudies.forEach(v => chips.push({
-      id: `ip-${v}`, label: `En progreso: ${studyLabel(v)}`,
-      onRemove: () => setInProgressStudies(p => p.filter(x => x !== v)),
-    }))
-    if (ultimoEstudio) chips.push({
-      id: 'ue', label: `Último: ${studyLabel(ultimoEstudio)}`,
-      onRemove: () => setUltimoEstudio(''),
+  const removeGroup = useCallback((groupId: number) => {
+    setGroups(prevGroups => {
+      const grp = prevGroups.find(g => g.id === groupId)
+      if (grp) {
+        setTopLevelOps(prevOps => {
+          const next = { ...prevOps }
+          const incoming = next[`g${groupId}`] ?? 'AND'
+          delete next[`g${groupId}`]
+          const [first, ...rest] = grp.members
+          if (first !== undefined) next[`c${first}`] = incoming
+          rest.forEach(id => { if (!(`c${id}` in next)) next[`c${id}`] = 'AND' })
+          return next
+        })
+      }
+      return prevGroups.filter(g => g.id !== groupId)
     })
-    tiposEvento.forEach(v => chips.push({
-      id: `te-${v}`, label: `Evento: ${v}`,
-      onRemove: () => setTiposEvento(p => p.filter(x => x !== v)),
-    }))
-    if (fechaDesde) chips.push({
-      id: 'fd', label: `Desde ${fechaDesde}`,
-      onRemove: () => setFechaDesde(''),
-    })
-    if (fechaHasta) chips.push({
-      id: 'fh', label: `Hasta ${fechaHasta}`,
-      onRemove: () => setFechaHasta(''),
-    })
-    sedes.forEach(v => chips.push({
-      id: `sede-${v}`, label: `Sede: ${v}`,
-      onRemove: () => setSedes(p => p.filter(x => x !== v)),
-    }))
-    comites.forEach(v => chips.push({
-      id: `com-${v}`, label: `Comité: ${v}`,
-      onRemove: () => setComites(p => p.filter(x => x !== v)),
-    }))
-    if (estadoServicio !== 'cualquiera') chips.push({
-      id: 'esv', label: `Servicio: ${estadoServicio === 'si' ? 'Activo' : 'Inactivo'}`,
-      onRemove: () => setEstadoServicio('cualquiera'),
-    })
-    if (esDirigente !== 'cualquiera') chips.push({
-      id: 'ed', label: `Dirigente: ${esDirigente === 'si' ? 'Sí' : 'No'}`,
-      onRemove: () => setEsDirigente('cualquiera'),
-    })
-    estadosDirigente.forEach(v => chips.push({
-      id: `edd-${v}`, label: `Est. dirig.: ${ESTADO_DIRIGENTE_LABEL[v] ?? v}`,
-      onRemove: () => setEstadosDirigente(p => p.filter(x => x !== v)),
-    }))
-    if (edadDesde !== '') chips.push({
-      id: 'edad-min', label: `Edad ≥ ${edadDesde}`,
-      onRemove: () => setEdadDesde(''),
-    })
-    if (edadHasta !== '') chips.push({
-      id: 'edad-max', label: `Edad ≤ ${edadHasta}`,
-      onRemove: () => setEdadHasta(''),
-    })
-    if (donador !== 'cualquiera') chips.push({
-      id: 'don', label: `Donador: ${donador === 'si' ? 'Sí' : 'No'}`,
-      onRemove: () => setDonador('cualquiera'),
-    })
-    if (estadoPerfil !== 'todos') chips.push({
-      id: 'ep', label: `Perfil: ${estadoPerfil === 'activo' ? 'Activo' : 'Inactivo'}`,
-      onRemove: () => setEstadoPerfil('todos'),
-    })
+  }, [])
 
-    return chips
-  }, [
-    completedStudies, inProgressStudies, ultimoEstudio,
-    tiposEvento, fechaDesde, fechaHasta, sedes,
-    comites, estadoServicio,
-    esDirigente, estadosDirigente,
-    edadDesde, edadHasta, donador, estadoPerfil,
-  ])
+  const toggleGroupMode = useCallback(() => {
+    setGroupMode(m => !m)
+    setPicked(new Set())
+  }, [])
+
+  const togglePick = useCallback((id: number) => {
+    setPicked(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const confirmGroup = useCallback(() => {
+    if (picked.size < 2) return
+    const id = nextId.current++
+    const members = Array.from(picked)
+    const grp: ConditionGroup = { id, members, op: newGroupOp }
+    setGroups(prev => [...prev, grp])
+    setTopLevelOps(prev => {
+      const next = { ...prev }
+      const firstOp = next[`c${members[0]}`] ?? 'AND'
+      members.forEach(m => delete next[`c${m}`])
+      next[`g${id}`] = firstOp
+      return next
+    })
+    setPicked(new Set())
+    setGroupMode(false)
+  }, [picked, newGroupOp])
+
+  const cancelGroup = useCallback(() => {
+    setPicked(new Set())
+    setGroupMode(false)
+  }, [])
+
+  const toggleOperator = useCallback((unitKey: string) => {
+    setTopLevelOps(prev => ({ ...prev, [unitKey]: prev[unitKey] === 'AND' ? 'OR' : 'AND' }))
+  }, [])
+
+  const toggleGroupOp = useCallback((groupId: number) => {
+    setGroups(prev => prev.map(g => g.id === groupId ? { ...g, op: g.op === 'AND' ? 'OR' : 'AND' } : g))
+  }, [])
 
   const clearAll = useCallback(() => {
-    setCompletedStudies([])
-    setInProgressStudies([])
-    setUltimoEstudio('')
-    setTiposEvento([])
-    setFechaDesde('')
-    setFechaHasta('')
-    setSedes([])
-    setComites([])
-    setEstadoServicio('cualquiera')
-    setEsDirigente('cualquiera')
-    setEstadosDirigente([])
-    setEdadDesde('')
-    setEdadHasta('')
-    setDonador('cualquiera')
-    setEstadoPerfil('todos')
+    setConditions([])
+    setGroups([])
+    setTopLevelOps({})
+    setGroupMode(false)
+    setPicked(new Set())
   }, [])
 
+  const filteredMembers = useMemo(
+    () => applyFilters(mockMembers, conditions, groups, topLevelOps),
+    [conditions, groups, topLevelOps],
+  )
+
   return {
-    quickFilter, setQuickFilter,
-    search, setSearch,
-    advancedOpen, setAdvancedOpen,
-    completedStudies, toggleCompletedStudy, toggleStageCompleted,
-    inProgressStudies, toggleInProgressStudy, toggleStageInProgress,
-    ultimoEstudio, setUltimoEstudio,
-    tiposEvento, toggleTipoEvento,
-    fechaDesde, setFechaDesde,
-    fechaHasta, setFechaHasta,
-    sedes, toggleSede,
-    comites, toggleComite,
-    estadoServicio, setEstadoServicio,
-    esDirigente, setEsDirigente,
-    estadosDirigente, toggleEstadoDirigente,
-    edadDesde, setEdadDesde,
-    edadHasta, setEdadHasta,
-    donador, setDonador,
-    estadoPerfil, setEstadoPerfil,
-    filteredMembers,
-    activeFilterCount: activeChips.length,
-    activeChips,
+    conditions,
+    groups,
+    topLevelOps,
+    groupMode,
+    picked,
+    newGroupOp,
+    addCondition,
+    removeCondition,
+    removeConditionsByGroup,
+    toggleGroupMode,
+    togglePick,
+    setNewGroupOp,
+    confirmGroup,
+    cancelGroup,
+    removeGroup,
+    toggleOperator,
+    toggleGroupOp,
     clearAll,
+    filteredMembers,
   }
 }

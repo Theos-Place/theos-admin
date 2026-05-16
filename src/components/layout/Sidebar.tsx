@@ -9,22 +9,36 @@ import {
   Calendar,
   BookOpen,
   UsersRound,
-  Star,
   Briefcase,
   DollarSign,
   MessageCircle,
   FileText,
   X,
+  ChevronDown,
+  LayoutList,
+  BookText,
+  UserCheck,
+  Clock,
+  ArrowLeftRight,
+  BarChart2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+const ESTUDIOS_SUB = [
+  { href: '/estudios/grupos',          label: 'Grupos',           icon: LayoutList },
+  { href: '/estudios/curriculo',       label: 'Currículo',        icon: BookText },
+  { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
+  { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock },
+  { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight },
+  { href: '/estudios/analisis',        label: 'Análisis',         icon: BarChart2 },
+]
+
 const navItems = [
   { href: '/dashboard',     label: 'Dashboard',            icon: LayoutDashboard },
-  { href: '/miembros',      label: 'Miembros',             icon: Users,          badge: '23k' },
+  { href: '/miembros',      label: 'Miembros',             icon: Users },
   { href: '/eventos',       label: 'Eventos',              icon: Calendar },
   { href: '/estudios',      label: 'Estudios',             icon: BookOpen },
   { href: '/voluntarios',   label: 'Voluntarios / Comités',icon: UsersRound },
-  { href: '/dirigentes',    label: 'Dirigentes',           icon: Star },
   { href: '/empleados',     label: 'Empleados',            icon: Briefcase },
   { href: '/finanzas',      label: 'Finanzas',             icon: DollarSign },
   { href: '/comunicaciones',label: 'Comunicaciones',       icon: MessageCircle },
@@ -38,6 +52,7 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const estudiosActive = pathname === '/estudios' || pathname.startsWith('/estudios/')
 
   return (
     <>
@@ -83,8 +98,85 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon, badge }) => {
-            const active = pathname === href || pathname.startsWith(href + '/')
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const isEstudios = href === '/estudios'
+            const active = isEstudios
+              ? pathname === '/estudios'
+              : pathname === href || pathname.startsWith(href + '/')
+
+            if (isEstudios) {
+              return (
+                <div key={href}>
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    className={cn(
+                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                      estudiosActive
+                        ? 'bg-coral text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    )}
+                  >
+                    <Icon
+                      size={18}
+                      strokeWidth={1.75}
+                      className={cn(
+                        'shrink-0 transition-colors',
+                        estudiosActive ? 'text-white' : 'text-white/50 group-hover:text-white'
+                      )}
+                    />
+                    <span
+                      className="flex-1 truncate"
+                      style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                    >
+                      {label}
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      className={cn(
+                        'transition-transform duration-200',
+                        estudiosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
+                      )}
+                    />
+                  </Link>
+
+                  {/* Sub-items */}
+                  {estudiosActive && (
+                    <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                      {ESTUDIOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                        const subActive = pathname === sub || pathname.startsWith(sub + '/')
+                        return (
+                          <Link
+                            key={sub}
+                            href={sub}
+                            onClick={onClose}
+                            className={cn(
+                              'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                              subActive
+                                ? 'bg-white/15 text-white'
+                                : 'text-white/55 hover:bg-white/10 hover:text-white'
+                            )}
+                          >
+                            <SubIcon
+                              size={14}
+                              strokeWidth={1.75}
+                              className={cn(
+                                'shrink-0',
+                                subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
+                              )}
+                            />
+                            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                              {subLabel}
+                            </span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
             return (
               <Link
                 key={href}
@@ -111,11 +203,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 >
                   {label}
                 </span>
-                {badge && (
-                  <span className="rounded-full bg-teal/20 px-1.5 py-0.5 text-[11px] text-teal-soft tabular-nums">
-                    {badge}
-                  </span>
-                )}
               </Link>
             )
           })}

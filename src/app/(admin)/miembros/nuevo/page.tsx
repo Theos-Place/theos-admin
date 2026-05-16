@@ -6,6 +6,7 @@ import { Check, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { mockMembers, type Member } from '@/data/mock-members'
 import { DuplicateWarning } from '@/components/members/DuplicateWarning'
 import { CR_PROVINCES, CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
+import { SEDES } from '@/data/mock-sedes'
 import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -24,6 +25,9 @@ type Step1Data = {
   district: string
   profession: string
   workplace: string
+  sede: string
+  alergias: string
+  medicamentos: string
 }
 
 type FamilyFormData = {
@@ -172,6 +176,9 @@ export default function NuevoMiembroPage() {
     district: '',
     profession: '',
     workplace: '',
+    sede: '',
+    alergias: '',
+    medicamentos: '',
   })
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
   const [duplicate, setDuplicate] = useState<Member | null>(null)
@@ -216,7 +223,7 @@ export default function NuevoMiembroPage() {
 
   function handleCedulaBlur() {
     if (!data.cedula.trim()) return
-    const found = mockMembers.find(m => m.cedula === data.cedula.trim())
+    const found = mockMembers.find(m => m.cedula != null && m.cedula === data.cedula.trim())
     setDuplicate(found ?? null)
     setDismissedDuplicate(false)
   }
@@ -227,7 +234,6 @@ export default function NuevoMiembroPage() {
     if (!data.last_name.trim()) e.last_name = 'Requerido'
     if (!data.cedula.trim()) e.cedula = 'Requerido'
     if (!isMinor && !data.email.trim()) e.email = 'Requerido para adultos'
-    if (!isMinor && !data.phone.trim()) e.phone = 'Requerido para adultos'
     if (Object.keys(e).length > 0) {
       setErrors(e)
       return
@@ -338,6 +344,20 @@ export default function NuevoMiembroPage() {
                   )}
                 </Field>
 
+                <Field label="Sede" error={errors.sede}>
+                  <select
+                    className={selectCls}
+                    value={data.sede}
+                    onChange={e => handleData('sede', e.target.value)}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    <option value="">Seleccionar sede…</option>
+                    {SEDES.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} — {s.day} {s.time}</option>
+                    ))}
+                  </select>
+                </Field>
+
                 {isMinor ? (
                   <div
                     className="rounded-xl bg-teal-soft/20 px-3 py-2.5 text-sm text-teal-deep"
@@ -357,7 +377,7 @@ export default function NuevoMiembroPage() {
                         style={{ fontFamily: 'var(--font-body)' }}
                       />
                     </Field>
-                    <Field label="Teléfono WhatsApp" required={!isMinor} error={errors.phone}>
+                    <Field label="Teléfono" error={errors.phone}>
                       <input
                         type="tel"
                         className={inputCls}
@@ -495,6 +515,28 @@ export default function NuevoMiembroPage() {
                       />
                     </Field>
                   </div>
+
+                  <Field label="Alergias">
+                    <textarea
+                      className={inputCls}
+                      placeholder="Ej: Polen, mariscos, penicilina…"
+                      rows={2}
+                      value={data.alergias}
+                      onChange={e => handleData('alergias', e.target.value)}
+                      style={{ fontFamily: 'var(--font-body)', resize: 'none' }}
+                    />
+                  </Field>
+
+                  <Field label="Medicamentos">
+                    <textarea
+                      className={inputCls}
+                      placeholder="Ej: Atorvastatina 20mg, Metformina…"
+                      rows={2}
+                      value={data.medicamentos}
+                      onChange={e => handleData('medicamentos', e.target.value)}
+                      style={{ fontFamily: 'var(--font-body)', resize: 'none' }}
+                    />
+                  </Field>
                 </div>
               )}
             </div>
@@ -753,8 +795,23 @@ export default function NuevoMiembroPage() {
                       {[data.district, data.canton, data.province].filter(Boolean).join(', ')}
                     </p>
                   )}
+                  {data.sede && (
+                    <p className="text-xs text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                      Sede: {SEDES.find(s => s.id === data.sede)?.name}
+                    </p>
+                  )}
                   {data.profession && (
                     <p className="text-xs text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{data.profession}</p>
+                  )}
+                  {data.alergias && (
+                    <p className="text-xs text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                      Alergias: {data.alergias}
+                    </p>
+                  )}
+                  {data.medicamentos && (
+                    <p className="text-xs text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                      Medicamentos: {data.medicamentos}
+                    </p>
                   )}
                 </div>
               </div>

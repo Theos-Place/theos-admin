@@ -1,59 +1,101 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { conditionLabel } from '@/lib/condition-labels'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
-import type { useMemberFilters, TriState } from '@/hooks/useMemberFilters'
+import { SEDES } from '@/data/mock-sedes'
+import { AREAS, SERVICE_POSITIONS } from '@/data/mock-committees'
+import { MOCK_FORMS, FORM_CATEGORY_LABEL } from '@/data/mock-forms'
+import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
 
-type Props = ReturnType<typeof useMemberFilters>
-
-const TIPOS_EVENTO = ['Charla', 'Campamento', 'Actividad Social', 'United']
-const SEDES = ['Meridiano', 'Heredia', 'Cartago', 'Rohrmoser', 'San José']
-const COMITES = ['Bienvenida', 'Estudios Bíblicos', 'Sonido', 'Comunicaciones', 'Finanzas']
-const ESTADOS_DIRIGENTE = [
-  { value: 'activo',      label: 'Activo' },
-  { value: 'en_descanso', label: 'En descanso' },
-  { value: 'disponible',  label: 'Disponible' },
-]
-
-const STAGE_STYLE: Record<string, { text: string; codeFg: string }> = {
-  navy:  { text: 'text-navy',      codeFg: 'text-navy/60' },
-  teal:  { text: 'text-teal-deep', codeFg: 'text-teal-deep/70' },
-  coral: { text: 'text-coral',     codeFg: 'text-coral/70' },
+type Props = {
+  conditions: FilterCondition[]
+  addCondition: (c: AddableCondition) => void
+  removeCondition: (id: number) => void
 }
 
-// ─── Shared primitives ─────────────────────────────────────────────────────
+type Tab = 'study' | 'attend' | 'service' | 'form' | 'profile'
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'study',   label: 'Estudios' },
+  { key: 'attend',  label: 'Asistencia' },
+  { key: 'service', label: 'Puestos de servicio' },
+  { key: 'form',    label: 'Formularios' },
+  { key: 'profile', label: 'Perfil' },
+]
+
+const EVENT_TYPES = ['Charla', 'Campamento', 'Actividad Social', 'United']
+const QTY_OPS: { value: QtyOperator; label: string }[] = [
+  { value: 'any', label: 'Cualquiera' },
+  { value: 'gte', label: 'Al menos' },
+  { value: 'lte', label: 'Máximo' },
+  { value: 'eq',  label: 'Exactamente' },
+]
+
+// ─── shared primitives ───────────────────────────────────────────────────────
+
+function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2.5 text-[10px] tracking-widest uppercase text-navy-light/40"
+    <p className="mb-1.5 text-[10px] tracking-widest uppercase text-navy-light/40"
       style={{ fontFamily: 'var(--font-display)' }}>
       {children}
     </p>
   )
 }
 
-function CheckboxGroup({
-  options,
-  selected,
-  onToggle,
-}: {
-  options: { value: string; label: string }[]
-  selected: string[]
-  onToggle: (v: string) => void
+function Sel({ value, onChange, children, className }: {
+  value: string; onChange: (v: string) => void
+  children: React.ReactNode; className?: string
 }) {
   return (
-    <div className="space-y-1.5">
-      {options.map(({ value, label }) => (
-        <label key={value} className="flex items-center gap-2 cursor-pointer group">
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      className={cn(
+        'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30',
+        className,
+      )}
+      style={{ fontFamily: 'var(--font-body)' }}
+    >
+      {children}
+    </select>
+  )
+}
+
+function DateRange({ from, to, onFrom, onTo }: {
+  from: string; to: string; onFrom: (v: string) => void; onTo: (v: string) => void
+}) {
+  return (
+    <div className="flex gap-2">
+      <input type="date" value={from} onChange={e => onFrom(e.target.value)}
+        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30"
+        style={{ fontFamily: 'var(--font-body)' }} />
+      <input type="date" value={to} onChange={e => onTo(e.target.value)}
+        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30"
+        style={{ fontFamily: 'var(--font-body)' }} />
+    </div>
+  )
+}
+
+function RadioGroup<T extends string>({ options, value, onChange }: {
+  options: { value: T; label: string }[]
+  value: T
+  onChange: (v: T) => void
+}) {
+  return (
+    <div className="flex gap-3 flex-wrap">
+      {options.map(opt => (
+        <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer">
           <input
-            type="checkbox"
-            checked={selected.includes(value)}
-            onChange={() => onToggle(value)}
-            className="accent-coral h-3.5 w-3.5 shrink-0 cursor-pointer"
+            type="radio"
+            checked={value === opt.value}
+            onChange={() => onChange(opt.value)}
+            className="accent-coral h-3 w-3"
           />
-          <span className="text-sm text-navy-light/70 group-hover:text-navy transition-colors select-none"
-            style={{ fontFamily: 'var(--font-body)' }}>
-            {label}
+          <span className="text-xs text-navy-light/70 select-none" style={{ fontFamily: 'var(--font-body)' }}>
+            {opt.label}
           </span>
         </label>
       ))}
@@ -61,260 +103,566 @@ function CheckboxGroup({
   )
 }
 
-function TriToggle({ value, onChange }: { value: TriState; onChange: (v: TriState) => void }) {
-  const opts: { v: TriState; label: string }[] = [
-    { v: 'si', label: 'Sí' }, { v: 'no', label: 'No' }, { v: 'cualquiera', label: 'Cualquiera' },
-  ]
+function AddBtn({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
   return (
-    <div className="flex overflow-hidden rounded-xl text-xs" style={{ border: '1px solid var(--outline-variant)' }}>
-      {opts.map(({ v, label }) => (
-        <button key={v} onClick={() => onChange(v)}
-          className={cn('flex-1 py-1.5 transition-colors', v === value ? 'bg-navy text-white' : 'text-navy-light/60 hover:bg-surface-low')}
-          style={{ fontFamily: 'var(--font-body)' }}>
-          {label}
-        </button>
-      ))}
-    </div>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="mt-3 w-full rounded-xl bg-navy px-3 py-2 text-sm text-white transition-all hover:bg-navy/80 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed"
+      style={{ fontFamily: 'var(--font-body)' }}
+    >
+      Agregar filtro
+    </button>
   )
 }
 
-function ProfileToggle({ value, onChange }: {
-  value: 'activo' | 'inactivo' | 'todos'
-  onChange: (v: 'activo' | 'inactivo' | 'todos') => void
-}) {
-  const opts: { v: 'activo' | 'inactivo' | 'todos'; label: string }[] = [
-    { v: 'activo', label: 'Activo' }, { v: 'inactivo', label: 'Inactivo' }, { v: 'todos', label: 'Todos' },
-  ]
-  return (
-    <div className="flex overflow-hidden rounded-xl text-xs" style={{ border: '1px solid var(--outline-variant)' }}>
-      {opts.map(({ v, label }) => (
-        <button key={v} onClick={() => onChange(v)}
-          className={cn('flex-1 py-1.5 transition-colors', v === value ? 'bg-navy text-white' : 'text-navy-light/60 hover:bg-surface-low')}
-          style={{ fontFamily: 'var(--font-body)' }}>
-          {label}
-        </button>
-      ))}
-    </div>
-  )
-}
+// ─── conditions right panel ──────────────────────────────────────────────────
 
-// ─── Grouped study checkboxes ───────────────────────────────────────────────
-
-function StudyGroupCheckboxes({
-  sectionLabel,
-  selected,
-  onToggleSingle,
-  onToggleStage,
+function ConditionsList({
+  conditions, removeCondition, types,
 }: {
-  sectionLabel: string
-  selected: string[]
-  onToggleSingle: (code: string) => void
-  onToggleStage: (stage: string) => void
+  conditions: FilterCondition[]
+  removeCondition: (id: number) => void
+  types: FilterCondition['type'][]
 }) {
+  const filtered = conditions.filter(c => types.includes(c.type))
   return (
-    <div>
-      <SectionLabel>{sectionLabel}</SectionLabel>
-      <div className="space-y-3">
-        {(Object.entries(STUDY_STAGES) as [string, { label: string; color: string }][]).map(
-          ([stageKey, stage]) => {
-            const studiesInStage = STUDY_CATALOG.filter(s => s.stage === stageKey)
-            const selectedCount  = studiesInStage.filter(s => selected.includes(s.code)).length
-            const allSelected    = selectedCount === studiesInStage.length
-            const someSelected   = selectedCount > 0 && !allSelected
-            const style          = STAGE_STYLE[stage.color] ?? STAGE_STYLE.navy
+    <div
+      className="rounded-xl p-3 h-full"
+      style={{ background: 'var(--surface-low)', minHeight: 120 }}
+    >
+      <p className="mb-2 text-[10px] tracking-widest uppercase text-navy-light/30"
+        style={{ fontFamily: 'var(--font-display)' }}>
+        Filtros activos
+      </p>
+      {filtered.length === 0 ? (
+        <p className="text-xs text-navy-light/30 italic" style={{ fontFamily: 'var(--font-body)' }}>
+          Ninguno
+        </p>
+      ) : (
+        <div className="space-y-1.5">
+          {filtered.map(c => (
+            <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg bg-surface-card px-2.5 py-1.5">
+              <span className="text-xs text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                {conditionLabel(c)}
+              </span>
+              <button
+                onClick={() => removeCondition(c.id)}
+                className="shrink-0 text-navy-light/30 hover:text-coral transition-colors"
+                aria-label="Quitar"
+              >
+                <X size={12} strokeWidth={2} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
-            return (
-              <div key={stageKey}>
-                {/* Stage header with "select all" */}
-                <label className="flex items-center gap-2 mb-1.5 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    ref={el => { if (el) el.indeterminate = someSelected }}
-                    checked={allSelected}
-                    onChange={() => onToggleStage(stageKey)}
-                    className="accent-coral h-3.5 w-3.5 shrink-0 cursor-pointer"
-                  />
-                  <span className={cn('text-[10px] font-medium tracking-wider uppercase select-none', style.text)}
-                    style={{ fontFamily: 'var(--font-display)' }}>
-                    {stage.label}
-                  </span>
-                  {selectedCount > 0 && (
-                    <span className="ml-auto rounded-full bg-coral/10 px-1.5 py-0.5 text-[9px] text-coral tabular-nums">
-                      {selectedCount}/{studiesInStage.length}
-                    </span>
-                  )}
-                </label>
+// ─── panels ──────────────────────────────────────────────────────────────────
 
-                {/* Individual studies */}
-                <div className="pl-5 space-y-1">
-                  {studiesInStage.map(study => (
-                    <label key={study.code} className="flex items-center gap-2 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(study.code)}
-                        onChange={() => onToggleSingle(study.code)}
-                        className="accent-coral h-3 w-3 shrink-0 cursor-pointer"
-                      />
-                      <span className="text-xs text-navy-light/60 group-hover:text-navy transition-colors select-none"
-                        style={{ fontFamily: 'var(--font-mono)' }}>
-                        <span className={cn('font-medium', style.codeFg)}>{study.code}</span>
-                        <span className="text-navy-light/40"> — </span>
-                        {study.name}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )
-          }
-        )}
+function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const [study, setStudy] = useState('')
+  const [status, setStatus] = useState<StudyStatus>('completed')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Estudio</Label>
+        <Sel value={study} onChange={setStudy}>
+          <option value="">Seleccioná un estudio</option>
+          {(Object.entries(STUDY_STAGES) as [string, { label: string }][]).map(([key, stage]) => (
+            <optgroup key={key} label={stage.label}>
+              {STUDY_CATALOG.filter(s => s.stage === key).map(s => (
+                <option key={s.code} value={s.code}>{s.code} — {s.name}</option>
+              ))}
+            </optgroup>
+          ))}
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Estado</Label>
+        <RadioGroup<StudyStatus>
+          options={[
+            { value: 'completed',   label: 'Completado' },
+            { value: 'in_progress', label: 'En progreso' },
+            { value: 'any',         label: 'Cualquiera' },
+          ]}
+          value={status}
+          onChange={setStatus}
+        />
+      </div>
+
+      {status === 'completed' && (
+        <div>
+          <Label>Rango de fechas</Label>
+          <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
+        </div>
+      )}
+
+      <AddBtn
+        disabled={!study}
+        onClick={() => {
+          if (!study) return
+          addCondition({
+            group: 'study', type: 'study', study, status,
+            from: status === 'completed' ? (from || null) : null,
+            to: status === 'completed' ? (to || null) : null,
+          })
+          setStudy('')
+        }}
+      />
+    </div>
+  )
+}
+
+function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const [eventType, setEventType]       = useState('')
+  const [sedes, setSedes]               = useState<string[]>([])
+  const [camp, setCamp]                 = useState('')
+  const [attendanceType, setAttType]    = useState<AttendanceType>('any')
+  const [qtyOp, setQtyOp]              = useState<QtyOperator>('any')
+  const [qty, setQty]                   = useState('')
+  const [from, setFrom]                 = useState('')
+  const [to, setTo]                     = useState('')
+
+  function toggleSede(id: string) {
+    setSedes(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Tipo de evento</Label>
+        <Sel value={eventType} onChange={setEventType}>
+          <option value="">Cualquier evento</option>
+          {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        </Sel>
+      </div>
+
+      {eventType === 'Charla' && (
+        <div>
+          <Label>Sede</Label>
+          <div className="space-y-1.5">
+            {SEDES.map(s => (
+              <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={sedes.includes(s.id)} onChange={() => toggleSede(s.id)}
+                  className="accent-coral h-3.5 w-3.5 cursor-pointer" />
+                <span className="text-xs text-navy-light/70 select-none" style={{ fontFamily: 'var(--font-body)' }}>
+                  {s.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {eventType === 'Campamento' && (
+        <div>
+          <Label>Nombre del campamento</Label>
+          <input
+            type="text"
+            value={camp}
+            onChange={e => setCamp(e.target.value)}
+            placeholder="Ej: Campamento Verano 2025"
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
+            style={{ fontFamily: 'var(--font-body)' }}
+          />
+        </div>
+      )}
+
+      <div>
+        <Label>Tipo de asistencia</Label>
+        <RadioGroup<AttendanceType>
+          options={[
+            { value: 'participant', label: 'Participante' },
+            { value: 'server',      label: 'Servidor' },
+            { value: 'any',         label: 'Cualquiera' },
+          ]}
+          value={attendanceType}
+          onChange={setAttType}
+        />
+      </div>
+
+      <div>
+        <Label>Cantidad de veces</Label>
+        <div className="flex gap-2">
+          <Sel value={qtyOp} onChange={v => setQtyOp(v as QtyOperator)} className="flex-1">
+            {QTY_OPS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </Sel>
+          {qtyOp !== 'any' && (
+            <input
+              type="number" min={1} value={qty} onChange={e => setQty(e.target.value)}
+              placeholder="Nº"
+              className="w-20 rounded-xl bg-surface-low px-2 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+              style={{ fontFamily: 'var(--font-body)' }}
+            />
+          )}
+        </div>
+      </div>
+
+      <div>
+        <Label>Rango de fechas</Label>
+        <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
+      </div>
+
+      <AddBtn
+        onClick={() => {
+          addCondition({
+            group: 'attend', type: 'attendance',
+            eventType, sedes, camp, attendanceType, qtyOp,
+            qty: qtyOp !== 'any' ? qty : '',
+            from, to,
+          })
+          setEventType(''); setSedes([]); setCamp('')
+          setAttType('any'); setQtyOp('any'); setQty('')
+          setFrom(''); setTo('')
+        }}
+      />
+    </div>
+  )
+}
+
+function ServicePanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const [area, setArea]         = useState('')
+  const [committee, setComm]    = useState('')
+  const [position, setPosition] = useState('')
+  const [status, setStatus]     = useState<ServiceStatus>('any')
+  const [from, setFrom]         = useState('')
+  const [to, setTo]             = useState('')
+
+  const areaCommittees = area
+    ? (AREAS.find(a => a.code === area)?.committees as readonly string[] ?? [])
+    : []
+
+  function handleAreaChange(v: string) {
+    setArea(v)
+    setComm('')
+    setPosition('')
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Área</Label>
+        <Sel value={area} onChange={handleAreaChange}>
+          <option value="">Cualquier área</option>
+          {AREAS.map(a => <option key={a.code} value={a.code}>{a.name}</option>)}
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Comité</Label>
+        <Sel value={committee} onChange={setComm}>
+          <option value="">Cualquier comité</option>
+          {(area ? areaCommittees : AREAS.flatMap(a => a.committees as readonly string[])).map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Posición</Label>
+        <Sel value={position} onChange={setPosition}>
+          <option value="">Cualquier posición</option>
+          {(SERVICE_POSITIONS as readonly string[]).map(p => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Estado</Label>
+        <RadioGroup<ServiceStatus>
+          options={[
+            { value: 'active',    label: 'Activo' },
+            { value: 'historical', label: 'Histórico' },
+            { value: 'any',       label: 'Cualquiera' },
+          ]}
+          value={status}
+          onChange={setStatus}
+        />
+      </div>
+
+      <div>
+        <Label>Rango de fechas</Label>
+        <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
+      </div>
+
+      <AddBtn
+        disabled={!area && !committee && !position}
+        onClick={() => {
+          addCondition({ group: 'service', type: 'service', area, committee, position, status, from, to })
+          setArea(''); setComm(''); setPosition(''); setStatus('any'); setFrom(''); setTo('')
+        }}
+      />
+    </div>
+  )
+}
+
+function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const [formId, setFormId]         = useState('')
+  const [status, setStatus]         = useState<FormResponseStatus>('any')
+  const [from, setFrom]             = useState('')
+  const [to, setTo]                 = useState('')
+  const [field, setField]           = useState('')
+  const [fieldVal, setFieldVal]     = useState('')
+
+  const selectedForm = MOCK_FORMS.find(f => f.id === formId)
+
+  function handleFormChange(v: string) {
+    setFormId(v)
+    setField('')
+    setFieldVal('')
+  }
+
+  const groupedForms = Object.entries(
+    MOCK_FORMS.reduce<Record<string, typeof MOCK_FORMS>>((acc, f) => {
+      ;(acc[f.category] ??= []).push(f)
+      return acc
+    }, {})
+  )
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Formulario</Label>
+        <Sel value={formId} onChange={handleFormChange}>
+          <option value="">Seleccioná un formulario</option>
+          {groupedForms.map(([cat, forms]) => (
+            <optgroup key={cat} label={FORM_CATEGORY_LABEL[cat as keyof typeof FORM_CATEGORY_LABEL] ?? cat}>
+              {forms.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </optgroup>
+          ))}
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Estado</Label>
+        <RadioGroup<FormResponseStatus>
+          options={[
+            { value: 'filled',     label: 'Llenó' },
+            { value: 'not_filled', label: 'No llenó' },
+            { value: 'any',        label: 'Cualquiera' },
+          ]}
+          value={status}
+          onChange={setStatus}
+        />
+      </div>
+
+      {status !== 'not_filled' && (
+        <div>
+          <Label>Rango de fechas</Label>
+          <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
+        </div>
+      )}
+
+      {selectedForm && status !== 'not_filled' && (
+        <div className="space-y-2">
+          <div>
+            <Label>Campo del formulario</Label>
+            <Sel value={field} onChange={setField}>
+              <option value="">Cualquier campo</option>
+              {selectedForm.fields.map(f => (
+                <option key={f.key} value={f.key}>{f.label}</option>
+              ))}
+            </Sel>
+          </div>
+          {field && (
+            <div>
+              <Label>Valor (* = comodín)</Label>
+              <input
+                type="text"
+                value={fieldVal}
+                onChange={e => setFieldVal(e.target.value)}
+                placeholder="Ej: San José o San*"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
+                style={{ fontFamily: 'var(--font-body)' }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <AddBtn
+        disabled={!formId}
+        onClick={() => {
+          if (!formId) return
+          const form = MOCK_FORMS.find(f => f.id === formId)
+          addCondition({
+            group: 'form', type: 'form',
+            formId, formName: form?.name ?? formId,
+            status, from, to, field, fieldVal,
+          })
+          setFormId(''); setStatus('any'); setFrom(''); setTo('')
+          setField(''); setFieldVal('')
+        }}
+      />
+    </div>
+  )
+}
+
+function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
+  const donorCond  = conditions.find(c => c.type === 'donor')  as Extract<FilterCondition, { type: 'donor'  }> | undefined
+  const statusCond = conditions.find(c => c.type === 'status') as Extract<FilterCondition, { type: 'status' }> | undefined
+  const leaderCond = conditions.find(c => c.type === 'leader') as Extract<FilterCondition, { type: 'leader' }> | undefined
+  const ageCond    = conditions.find(c => c.type === 'age')    as Extract<FilterCondition, { type: 'age'    }> | undefined
+
+  const donorVal  = donorCond  ? donorCond.value  : 'any'
+  const statusVal = statusCond ? statusCond.value : 'any'
+  const leaderVal = leaderCond ? leaderCond.value : 'any'
+
+  const [ageMin, setAgeMin] = useState(ageCond?.min ?? '')
+  const [ageMax, setAgeMax] = useState(ageCond?.max ?? '')
+
+  useEffect(() => {
+    if (!ageCond) { setAgeMin(''); setAgeMax('') }
+  }, [ageCond])
+
+  function syncAge() {
+    if (ageCond) removeCondition(ageCond.id)
+    if (ageMin || ageMax) addCondition({ group: 'age', type: 'age', min: ageMin, max: ageMax })
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <Label>Donador</Label>
+        <Sel value={donorVal} onChange={v => {
+          if (donorCond) removeCondition(donorCond.id)
+          if (v !== 'any') addCondition({ group: 'donor', type: 'donor', value: v as 'yes' | 'no' })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="yes">Sí</option>
+          <option value="no">No</option>
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Estado del perfil</Label>
+        <Sel value={statusVal} onChange={v => {
+          if (statusCond) removeCondition(statusCond.id)
+          if (v !== 'any') addCondition({ group: 'status', type: 'status', value: v as 'active' | 'inactive' })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="active">Activo</option>
+          <option value="inactive">Inactivo</option>
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Dirigente</Label>
+        <Sel value={leaderVal} onChange={v => {
+          if (leaderCond) removeCondition(leaderCond.id)
+          if (v !== 'any') addCondition({ group: 'leader', type: 'leader', value: v as 'yes' | 'no' })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="yes">Sí</option>
+          <option value="no">No</option>
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Rango de edad</Label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number" min={0} max={120} value={ageMin}
+            onChange={e => setAgeMin(e.target.value)}
+            onBlur={syncAge}
+            placeholder="Mín"
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
+            style={{ fontFamily: 'var(--font-body)' }}
+          />
+          <span className="text-navy-light/40 shrink-0 text-sm">–</span>
+          <input
+            type="number" min={0} max={120} value={ageMax}
+            onChange={e => setAgeMax(e.target.value)}
+            onBlur={syncAge}
+            placeholder="Máx"
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
+            style={{ fontFamily: 'var(--font-body)' }}
+          />
+        </div>
       </div>
     </div>
   )
 }
 
-// ─── Panel ─────────────────────────────────────────────────────────────────
+// ─── main component ───────────────────────────────────────────────────────────
 
-export function AdvancedFilters(props: Props) {
-  if (!props.advancedOpen) return null
+export function AdvancedFilters({ conditions, addCondition, removeCondition }: Props) {
+  const [activeTab, setActiveTab] = useState<Tab>('study')
+
+  const conditionTypes: Record<Tab, FilterCondition['type'][]> = {
+    study:   ['study'],
+    attend:  ['attendance'],
+    service: ['service'],
+    form:    ['form'],
+    profile: ['donor', 'age', 'status', 'leader'],
+  }
 
   return (
-    <div className="rounded-2xl p-5"
-      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-      <div className="grid gap-x-8 gap-y-6"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))' }}>
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+    >
+      {/* Tab bar */}
+      <div
+        className="flex gap-0 border-b overflow-x-auto"
+        style={{ borderColor: 'var(--outline-variant)' }}
+      >
+        {TABS.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={cn(
+              'shrink-0 px-4 py-3 text-sm transition-colors whitespace-nowrap',
+              activeTab === tab.key
+                ? 'text-navy border-b-2 border-navy -mb-px'
+                : 'text-navy-light/50 hover:text-navy-light',
+            )}
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            {tab.label}
+            {conditionTypes[tab.key].some(t => conditions.some(c => c.type === t)) && (
+              <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-coral text-[9px] text-white">
+                {conditions.filter(c => conditionTypes[tab.key].includes(c.type)).length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
-        {/* ESTUDIOS — Completado */}
-        <StudyGroupCheckboxes
-          sectionLabel="Completado"
-          selected={props.completedStudies}
-          onToggleSingle={props.toggleCompletedStudy}
-          onToggleStage={props.toggleStageCompleted}
-        />
-
-        {/* ESTUDIOS — En progreso + Último */}
-        <div className="space-y-4">
-          <StudyGroupCheckboxes
-            sectionLabel="En progreso"
-            selected={props.inProgressStudies}
-            onToggleSingle={props.toggleInProgressStudy}
-            onToggleStage={props.toggleStageInProgress}
-          />
-          <div>
-            <SectionLabel>Último estudio completado</SectionLabel>
-            <select
-              value={props.ultimoEstudio}
-              onChange={e => props.setUltimoEstudio(e.target.value)}
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              <option value="">Cualquiera</option>
-              {(Object.entries(STUDY_STAGES) as [string, { label: string; color: string }][]).map(
-                ([stageKey, stage]) => (
-                  <optgroup key={stageKey} label={stage.label}>
-                    {STUDY_CATALOG.filter(s => s.stage === stageKey).map(s => (
-                      <option key={s.code} value={s.code}>{s.code} — {s.name}</option>
-                    ))}
-                  </optgroup>
-                )
-              )}
-            </select>
-          </div>
-        </div>
-
-        {/* EVENTOS */}
-        <div className="space-y-4">
-          <div>
-            <SectionLabel>Tipo de evento</SectionLabel>
-            <CheckboxGroup
-              options={TIPOS_EVENTO.map(t => ({ value: t, label: t }))}
-              selected={props.tiposEvento}
-              onToggle={props.toggleTipoEvento}
+      {/* Two-column body */}
+      <div className="grid gap-0" style={{ gridTemplateColumns: '1fr 260px' }}>
+        {/* Left: inputs */}
+        <div className="p-5" style={{ borderRight: '1px solid var(--outline-variant)' }}>
+          {activeTab === 'study'   && <StudyPanel  addCondition={addCondition} />}
+          {activeTab === 'attend'  && <AttendPanel addCondition={addCondition} />}
+          {activeTab === 'service' && <ServicePanel addCondition={addCondition} />}
+          {activeTab === 'form'    && <FormPanel   addCondition={addCondition} />}
+          {activeTab === 'profile' && (
+            <ProfilePanel
+              conditions={conditions}
+              addCondition={addCondition}
+              removeCondition={removeCondition}
             />
-          </div>
-          <div>
-            <SectionLabel>Rango de fechas</SectionLabel>
-            <div className="flex gap-2">
-              <input type="date" value={props.fechaDesde} onChange={e => props.setFechaDesde(e.target.value)}
-                className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                style={{ fontFamily: 'var(--font-body)' }} />
-              <input type="date" value={props.fechaHasta} onChange={e => props.setFechaHasta(e.target.value)}
-                className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                style={{ fontFamily: 'var(--font-body)' }} />
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* SEDE */}
-        <div>
-          <SectionLabel>Sede</SectionLabel>
-          <CheckboxGroup
-            options={SEDES.map(s => ({ value: s, label: s }))}
-            selected={props.sedes}
-            onToggle={props.toggleSede}
+        {/* Right: active conditions for this tab */}
+        <div className="p-4">
+          <ConditionsList
+            conditions={conditions}
+            removeCondition={removeCondition}
+            types={conditionTypes[activeTab]}
           />
         </div>
-
-        {/* VOLUNTARIOS */}
-        <div className="space-y-4">
-          <div>
-            <SectionLabel>Comité</SectionLabel>
-            <CheckboxGroup
-              options={COMITES.map(c => ({ value: c, label: c }))}
-              selected={props.comites}
-              onToggle={props.toggleComite}
-            />
-          </div>
-          <div>
-            <SectionLabel>Estado de servicio</SectionLabel>
-            <TriToggle value={props.estadoServicio} onChange={props.setEstadoServicio} />
-          </div>
-        </div>
-
-        {/* DIRIGENTES */}
-        <div className="space-y-4">
-          <div>
-            <SectionLabel>Es dirigente</SectionLabel>
-            <TriToggle value={props.esDirigente} onChange={props.setEsDirigente} />
-          </div>
-          <div>
-            <SectionLabel>Estado del dirigente</SectionLabel>
-            <CheckboxGroup
-              options={ESTADOS_DIRIGENTE}
-              selected={props.estadosDirigente}
-              onToggle={props.toggleEstadoDirigente}
-            />
-          </div>
-        </div>
-
-        {/* DATOS PERSONALES */}
-        <div className="space-y-4">
-          <div>
-            <SectionLabel>Rango de edad</SectionLabel>
-            <div className="flex items-center gap-2">
-              <input type="number" min={0} max={100} value={props.edadDesde}
-                onChange={e => props.setEdadDesde(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="Desde"
-                className="w-full rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy placeholder-navy-light/40 outline-none focus:ring-1 focus:ring-coral/30"
-                style={{ fontFamily: 'var(--font-body)' }} />
-              <span className="text-navy-light/40 shrink-0">–</span>
-              <input type="number" min={0} max={100} value={props.edadHasta}
-                onChange={e => props.setEdadHasta(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="Hasta"
-                className="w-full rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy placeholder-navy-light/40 outline-none focus:ring-1 focus:ring-coral/30"
-                style={{ fontFamily: 'var(--font-body)' }} />
-            </div>
-          </div>
-          <div>
-            <SectionLabel>Donador</SectionLabel>
-            <TriToggle value={props.donador} onChange={props.setDonador} />
-          </div>
-          <div>
-            <SectionLabel>Estado del perfil</SectionLabel>
-            <ProfileToggle value={props.estadoPerfil} onChange={props.setEstadoPerfil} />
-          </div>
-        </div>
-
       </div>
     </div>
   )

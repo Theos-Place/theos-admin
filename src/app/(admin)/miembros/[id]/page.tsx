@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { mockMembers } from '@/data/mock-members'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
+import { sedeLabel } from '@/data/mock-sedes'
 import { cn } from '@/lib/utils'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -78,7 +79,8 @@ function studyStageColor(stage: string): string {
 
 const AVATAR_COLORS = ['bg-navy', 'bg-coral', 'bg-teal-deep', 'bg-navy-light']
 function avatarColor(id: string) {
-  return AVATAR_COLORS[parseInt(id) % AVATAR_COLORS.length]
+  const n = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  return AVATAR_COLORS[n % AVATAR_COLORS.length]
 }
 
 const TABS = [
@@ -249,8 +251,11 @@ export default function MiembroDetailPage() {
             >
               {member.first_name} {member.last_name}
             </h1>
-            <p className="mt-0.5 text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-mono)' }}>
-              {member.cedula} · Se unió el {formatDate(member.join_date)}
+            <p className="mt-0.5 text-[10px] text-navy-light/30" style={{ fontFamily: 'var(--font-mono)' }}>
+              ID sistema: {member.id}
+            </p>
+            <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+              {member.cedula ? `Cédula: ${member.cedula}` : 'Sin cédula'} · Se unió el {formatDate(member.join_date)}
             </p>
 
             {/* Badges */}
@@ -295,6 +300,14 @@ export default function MiembroDetailPage() {
                 >
                   <Star size={10} strokeWidth={2} />
                   Dirigente
+                </span>
+              )}
+              {member.roles.includes('admin') && (
+                <span
+                  className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  Admin
                 </span>
               )}
             </div>
@@ -396,7 +409,7 @@ export default function MiembroDetailPage() {
                 </span>
               </div>
               <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                {member.sede}
+                {sedeLabel(member.sede)}
               </p>
             </div>
 
@@ -575,7 +588,8 @@ export default function MiembroDetailPage() {
           {/* Non-editable: name + cedula */}
           <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
             <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Nombre completo" value={`${member.first_name} ${member.last_name}`} editable={false} />
-            <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Cédula" value={member.cedula} editable={false} />
+            <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="ID Sistema" value={member.id} editable={false} />
+            <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Cédula" value={member.cedula ?? 'Sin cédula'} editable={false} />
           </div>
 
           <div className="grid grid-cols-2 gap-x-8">
@@ -621,6 +635,20 @@ export default function MiembroDetailPage() {
               <InfoRow icon={<Building size={15} strokeWidth={1.75} />} label="Lugar de trabajo" value={member.workplace} />
             </div>
           </div>
+
+          {/* Salud */}
+          {(member.alergias || member.medicamentos) && (
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+              <p
+                className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Salud
+              </p>
+              <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias" value={member.alergias ?? '—'} editable={false} />
+              <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Medicamentos" value={member.medicamentos ?? '—'} editable={false} />
+            </div>
+          )}
         </div>
       )}
 

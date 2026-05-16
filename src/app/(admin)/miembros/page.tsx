@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Download,
@@ -15,7 +15,9 @@ import {
 } from 'lucide-react'
 import { useMemberFilters, type QuickFilter } from '@/hooks/useMemberFilters'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
+import { QueryBar } from '@/components/members/QueryBar'
 import { type Member } from '@/data/mock-members'
+import { sedeLabel } from '@/data/mock-sedes'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 5
@@ -31,7 +33,19 @@ const AVATAR_COLORS = [
   'bg-navy-light text-white',
 ]
 function avatarColor(id: string) {
-  return AVATAR_COLORS[parseInt(id) % AVATAR_COLORS.length]
+  const n = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  return AVATAR_COLORS[n % AVATAR_COLORS.length]
+}
+
+const ROLE_BADGE: Record<string, string> = {
+  servidor:  'bg-teal-soft/30 text-teal-deep',
+  dirigente: 'bg-navy/10 text-navy',
+  admin:     'bg-coral-soft/20 text-coral',
+}
+const ROLE_LABEL: Record<string, string> = {
+  servidor:  'Servidor',
+  dirigente: 'Dirigente',
+  admin:     'Admin',
 }
 
 const QUICK_CHIPS: { key: QuickFilter; label: string }[] = [
@@ -44,12 +58,33 @@ const QUICK_CHIPS: { key: QuickFilter; label: string }[] = [
 export default function MiembrosPage() {
   const router = useRouter()
   const filters = useMemberFilters()
+
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('todos')
+  const [search, setSearch] = useState('')
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
-  const totalPages  = Math.max(1, Math.ceil(filters.filteredMembers.length / PAGE_SIZE))
+  const displayMembers = useMemo(() => {
+    let list = filters.filteredMembers
+    if      (quickFilter === 'activos')    list = list.filter(m => m.status === 'active')
+    else if (quickFilter === 'donadores')  list = list.filter(m => m.is_donor)
+    else if (quickFilter === 'servidores') list = list.filter(m => m.is_server)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(m =>
+        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q) ||
+        m.phone.includes(q) ||
+        (m.cedula != null && m.cedula.includes(q))
+      )
+    }
+    return list
+  }, [filters.filteredMembers, quickFilter, search])
+
+  const totalPages  = Math.max(1, Math.ceil(displayMembers.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const paginated   = filters.filteredMembers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const paginated   = displayMembers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   const allSelected = paginated.length > 0 && paginated.every(m => selected.has(m.id))
 
@@ -69,6 +104,8 @@ export default function MiembrosPage() {
       return next
     })
   }
+
+  const activeFilterCount = filters.conditions.length
 
   return (
     <div className="space-y-4">
@@ -103,6 +140,7 @@ export default function MiembrosPage() {
             Comunicar
           </button>
           <button
+            onClick={() => router.push('/miembros/nuevo')}
             className="flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white transition-all hover:bg-coral-deep active:scale-95"
             style={{ boxShadow: 'var(--shadow-pulse)', fontFamily: 'var(--font-body)' }}
           >
@@ -118,10 +156,10 @@ export default function MiembrosPage() {
           {QUICK_CHIPS.map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => { filters.setQuickFilter(key); setPage(1) }}
+              onClick={() => { setQuickFilter(key); setPage(1) }}
               className={cn(
                 'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
-                filters.quickFilter === key
+                quickFilter === key
                   ? 'bg-navy text-white'
                   : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
               )}
@@ -131,12 +169,12 @@ export default function MiembrosPage() {
             </button>
           ))}
 
-          {/* Advanced toggle */}
+          {/* Advanced filters toggle */}
           <button
-            onClick={() => filters.setAdvancedOpen(o => !o)}
+            onClick={() => setFiltersOpen(o => !o)}
             className={cn(
               'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
-              filters.advancedOpen || filters.activeFilterCount > 0
+              filtersOpen || activeFilterCount > 0
                 ? 'bg-navy text-white'
                 : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
             )}
@@ -144,12 +182,12 @@ export default function MiembrosPage() {
           >
             <SlidersHorizontal size={13} strokeWidth={1.75} />
             Filtros
-            {filters.activeFilterCount > 0 && (
+            {activeFilterCount > 0 && (
               <span className="rounded-full bg-coral px-1.5 py-0.5 text-[10px] leading-none text-white">
-                {filters.activeFilterCount}
+                {activeFilterCount}
               </span>
             )}
-            <span className="text-[10px] opacity-60">{filters.advancedOpen ? '↑' : '↓'}</span>
+            <span className="text-[10px] opacity-60">{filtersOpen ? '↑' : '↓'}</span>
           </button>
         </div>
 
@@ -158,8 +196,8 @@ export default function MiembrosPage() {
           <Search size={15} className="text-navy-light/40 shrink-0" strokeWidth={1.75} />
           <input
             type="search"
-            value={filters.search}
-            onChange={e => { filters.setSearch(e.target.value); setPage(1) }}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
             placeholder="Buscar por nombre, email…"
             className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none"
             style={{ fontFamily: 'var(--font-body)' }}
@@ -167,46 +205,53 @@ export default function MiembrosPage() {
         </div>
       </div>
 
-      {/* ── Active filter chips ── */}
-      {filters.activeChips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          {filters.activeChips.map(chip => (
-            <span
-              key={chip.id}
-              className="flex items-center gap-1.5 rounded-full bg-navy/8 px-3 py-1 text-xs text-navy-light"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              {chip.label}
-              <button
-                onClick={chip.onRemove}
-                className="text-navy-light/50 hover:text-coral transition-colors"
-                aria-label={`Quitar filtro ${chip.label}`}
-              >
-                <X size={11} strokeWidth={2} />
-              </button>
-            </span>
-          ))}
-        </div>
+      {/* ── Advanced filters panel ── */}
+      {filtersOpen && (
+        <AdvancedFilters
+          conditions={filters.conditions}
+          addCondition={filters.addCondition}
+          removeCondition={filters.removeCondition}
+        />
       )}
 
-      {/* ── Advanced filters panel ── */}
-      <AdvancedFilters {...filters} />
+      {/* ── Query bar (pills) ── */}
+      {filters.conditions.length > 0 && (
+        <QueryBar
+          conditions={filters.conditions}
+          groups={filters.groups}
+          topLevelOps={filters.topLevelOps}
+          groupMode={filters.groupMode}
+          picked={filters.picked}
+          newGroupOp={filters.newGroupOp}
+          removeCondition={filters.removeCondition}
+          removeConditionsByGroup={filters.removeConditionsByGroup}
+          removeGroup={filters.removeGroup}
+          toggleGroupMode={filters.toggleGroupMode}
+          togglePick={filters.togglePick}
+          setNewGroupOp={filters.setNewGroupOp}
+          confirmGroup={filters.confirmGroup}
+          cancelGroup={filters.cancelGroup}
+          toggleOperator={filters.toggleOperator}
+          toggleGroupOp={filters.toggleGroupOp}
+        />
+      )}
 
       {/* ── Summary bar ── */}
-      {filters.activeFilterCount > 0 && (
+      {activeFilterCount > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
             <span className="font-medium text-navy" style={{ fontWeight: 500 }}>
-              {filters.activeFilterCount} {filters.activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
+              {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
             </span>
             {' · '}
-            {filters.filteredMembers.length.toLocaleString('es')} resultados
+            {displayMembers.length.toLocaleString('es')} resultados
           </p>
           <button
-            onClick={filters.clearAll}
-            className="text-sm text-coral hover:underline transition-colors"
+            onClick={() => { filters.clearAll(); setPage(1) }}
+            className="flex items-center gap-1 text-sm text-coral hover:underline transition-colors"
             style={{ fontFamily: 'var(--font-body)' }}
           >
+            <X size={12} strokeWidth={2} />
             Limpiar todo
           </button>
         </div>
@@ -229,7 +274,7 @@ export default function MiembrosPage() {
                     className="accent-coral h-4 w-4 cursor-pointer rounded"
                   />
                 </th>
-                {['Miembro', 'Cédula', 'Estado', 'Rol', 'Sede', ''].map(col => (
+                {['Miembro', 'Cédula', 'Nacimiento', 'Rol', 'Sede', ''].map(col => (
                   <th
                     key={col}
                     className="px-4 py-3.5 text-left text-xs font-medium text-navy-light/50 tracking-wider uppercase whitespace-nowrap"
@@ -255,10 +300,11 @@ export default function MiembrosPage() {
                 paginated.map((member, i) => (
                   <tr
                     key={member.id}
-                    className="group transition-colors hover:bg-surface-low"
+                    onClick={() => router.push(`/miembros/${member.id}`)}
+                    className="group transition-colors hover:bg-surface-low cursor-pointer"
                     style={i < paginated.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                   >
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selected.has(member.id)}
@@ -295,31 +341,33 @@ export default function MiembrosPage() {
                       className="px-4 py-3.5 text-navy-light/70 tabular-nums"
                       style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
                     >
-                      {member.cedula}
+                      {member.cedula ?? (
+                        <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/30 font-sans">Sin cédula</span>
+                      )}
                     </td>
 
-                    {/* Estado */}
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={cn(
-                          'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs',
-                          member.status === 'active'
-                            ? 'bg-teal-soft/50 text-teal-deep'
-                            : 'bg-surface-low text-navy-light/50'
-                        )}
-                        style={{ fontFamily: 'var(--font-body)' }}
-                      >
-                        <span className={cn(
-                          'mr-1.5 h-1.5 w-1.5 rounded-full',
-                          member.status === 'active' ? 'bg-teal-deep' : 'bg-navy-light/30'
-                        )} />
-                        {member.status === 'active' ? 'Activo' : 'Inactivo'}
-                      </span>
+                    {/* Nacimiento */}
+                    <td
+                      className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
+                    >
+                      {member.birth_date
+                        ? new Date(member.birth_date).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '—'}
                     </td>
 
                     {/* Rol */}
                     <td className="px-4 py-3.5">
                       <div className="flex flex-wrap gap-1">
+                        {member.roles.filter(r => r !== 'miembro').map(role => (
+                          <span
+                            key={role}
+                            className={cn('rounded-full px-2.5 py-0.5 text-xs', ROLE_BADGE[role])}
+                            style={{ fontFamily: 'var(--font-body)' }}
+                          >
+                            {ROLE_LABEL[role]}
+                          </span>
+                        ))}
                         {member.is_donor && (
                           <span
                             className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral"
@@ -328,16 +376,8 @@ export default function MiembrosPage() {
                             Donador
                           </span>
                         )}
-                        {member.is_server && (
-                          <span
-                            className="rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-xs text-teal-deep"
-                            style={{ fontFamily: 'var(--font-body)' }}
-                          >
-                            Servidor
-                          </span>
-                        )}
-                        {!member.is_donor && !member.is_server && (
-                          <span className="text-xs text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>—</span>
+                        {member.roles.length === 1 && !member.is_donor && (
+                          <span className="text-xs text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>Miembro</span>
                         )}
                       </div>
                     </td>
@@ -347,7 +387,7 @@ export default function MiembrosPage() {
                       className="px-4 py-3.5 text-sm text-navy-light/70 whitespace-nowrap"
                       style={{ fontFamily: 'var(--font-body)' }}
                     >
-                      {member.sede}
+                      {sedeLabel(member.sede)}
                     </td>
 
                     {/* Action */}
@@ -373,9 +413,9 @@ export default function MiembrosPage() {
           style={{ borderTop: '1px solid var(--outline-variant)' }}
         >
           <p className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-            {filters.filteredMembers.length === 0
+            {displayMembers.length === 0
               ? 'Sin resultados'
-              : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filters.filteredMembers.length)} de ${filters.filteredMembers.length}`}
+              : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, displayMembers.length)} de ${displayMembers.length}`}
           </p>
 
           <div className="flex items-center gap-1">
