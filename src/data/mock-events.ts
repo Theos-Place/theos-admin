@@ -1,0 +1,604 @@
+export type EventType = 'charla' | 'campamento' | 'social' | 'united' | 'capacitacion'
+export type EventStatus = 'upcoming' | 'in_progress' | 'finished' | 'cancelled' | 'archived'
+export type PaymentStatus = 'pending' | 'paid' | 'exempted'
+export type AttendanceType = 'participant' | 'server'
+
+export type SubEvent = {
+  id: string
+  name: string
+  max_capacity: number
+}
+
+export type EventRegistration = {
+  member_id: string
+  member_name: string
+  payment_status: PaymentStatus
+  registered_at: string
+}
+
+export type EventCheckin = {
+  member_id: string
+  member_name: string
+  attendance_type: AttendanceType
+  sub_event_id: string | null
+  checked_at: string
+}
+
+export type VolunteerBooking = {
+  member_id: string
+  member_name: string
+  role: string
+  status: 'confirmed' | 'pending' | 'cancelled'
+}
+
+export type MockEvent = {
+  id: string
+  name: string
+  event_type: EventType
+  committee_id: string
+  description: string
+  start_at: string
+  end_at: string
+  location: string
+  location_map_url: string | null
+  is_virtual: boolean
+  requires_registration: boolean
+  max_capacity: number
+  requires_payment: boolean
+  payment_amount: number | null
+  requires_survey: boolean
+  status: EventStatus
+  is_recurring: boolean
+  recurrence_rule: string | null
+  recurrence_end: string | null
+  parent_event_id: string | null
+  sub_events: SubEvent[]
+  registrations: EventRegistration[]
+  checkins: EventCheckin[]
+  volunteer_bookings: VolunteerBooking[]
+  cancellation_reason: string | null
+}
+
+function makeRegistrations(count: number, prefix: string): EventRegistration[] {
+  const names = [
+    'José Pérez', 'Ana Salas', 'Luis Vargas', 'María Jiménez', 'Carlos Mora',
+    'Sofía Rodríguez', 'Daniel Castro', 'Valeria Rojas', 'Andrés Ulate', 'Camila Soto',
+    'Roberto Madrigal', 'Fernanda León', 'Esteban Quirós', 'Laura Chacón', 'Miguel Solano',
+    'Isabella Fonseca', 'Sebastián Oviedo', 'Gabriela Araya', 'Pablo Méndez', 'Karen Brenes',
+    'Diego Monge', 'Natalia Vindas', 'Fabian Zamora', 'Daniela Espinoza', 'Christian Badilla',
+    'Paola Gutiérrez', 'Marco Hernández', 'Stephanie Cruz', 'Josué Calvo', 'Alondra Torres',
+    'Ricardo Benavides', 'Andrea Aguilar', 'Víctor Salazar', 'Monica Bolaños', 'Alejandro Mora',
+    'Patricia Villalobos', 'David Núñez', 'Silvia Picado', 'Felipe Porras', 'Lucía Alvarado',
+    'Jonathan Blanco', 'Melissa Sandoval', 'Eduardo Gamboa', 'Tatiana Segura', 'Manuel Montes',
+    'Priscilla Varela', 'Julio Bonilla', 'Adriana Mena', 'Rodrigo Paniagua', 'Karina Vásquez',
+    'Gerardo Fernández', 'Xiomara Bolaños', 'Alexis Campos', 'Rebeca Ureña', 'Wilbert Alfaro',
+    'Cristina Morales', 'Omar Camacho', 'Jessica Contreras', 'Arnoldo Elizondo', 'Wendy Barrantes',
+    'Herbert Fuentes', 'Cindy Obando', 'Edwin Murillo', 'Yessenia Trejos', 'Bruno Cordero',
+    'Karla Gómez', 'Marco Leiva', 'Diana Angulo', 'Ernesto Solís', 'Ileana Céspedes',
+    'Ronny Quesada', 'Tatiana Ramírez', 'Harold Montero', 'Yerlan Vargas', 'Nancy Chaves',
+    'Bryan Coto', 'Alexandra Méndez', 'Mauricio Barboza', 'Kathia Ramírez', 'Arturo Hidalgo',
+    'Flor Godínez', 'Leonard Granados', 'Vanessa Sequeira', 'Anthony Argueta', 'Miriam Bonilla',
+    'Álvaro Vindas', 'Ingrid Alfaro', 'Danilo Caballero', 'Adriana Quirós', 'Steven Acosta',
+    'Maricela Piedra', 'Joselyn Loría', 'Franklin Prado', 'Yolanda Gutiérrez', 'Cesar Azofeifa',
+  ]
+  const statuses: PaymentStatus[] = ['paid', 'paid', 'paid', 'pending', 'exempted']
+  return Array.from({ length: Math.min(count, names.length) }, (_, i) => ({
+    member_id: `${prefix}-m-${i + 1}`,
+    member_name: names[i % names.length],
+    payment_status: statuses[i % statuses.length],
+    registered_at: `2026-0${Math.floor(i / 30) + 3}-${String((i % 28) + 1).padStart(2, '0')}T10:00:00Z`,
+  }))
+}
+
+function makeCheckins(count: number, prefix: string, subEventIds: string[] | null): EventCheckin[] {
+  const names = [
+    'José Pérez', 'Ana Salas', 'Luis Vargas', 'María Jiménez', 'Carlos Mora',
+    'Sofía Rodríguez', 'Daniel Castro', 'Valeria Rojas', 'Andrés Ulate', 'Camila Soto',
+    'Roberto Madrigal', 'Fernanda León', 'Esteban Quirós', 'Laura Chacón', 'Miguel Solano',
+    'Isabella Fonseca', 'Sebastián Oviedo', 'Gabriela Araya', 'Pablo Méndez', 'Karen Brenes',
+    'Diego Monge', 'Natalia Vindas', 'Fabian Zamora', 'Daniela Espinoza', 'Christian Badilla',
+    'Paola Gutiérrez', 'Marco Hernández', 'Stephanie Cruz', 'Josué Calvo', 'Alondra Torres',
+    'Ricardo Benavides', 'Andrea Aguilar', 'Víctor Salazar', 'Monica Bolaños', 'Alejandro Mora',
+    'Patricia Villalobos', 'David Núñez', 'Silvia Picado', 'Felipe Porras', 'Lucía Alvarado',
+    'Jonathan Blanco', 'Melissa Sandoval', 'Eduardo Gamboa', 'Tatiana Segura', 'Manuel Montes',
+    'Priscilla Varela', 'Julio Bonilla', 'Adriana Mena', 'Rodrigo Paniagua', 'Karina Vásquez',
+    'Gerardo Fernández', 'Xiomara Bolaños', 'Alexis Campos', 'Rebeca Ureña', 'Wilbert Alfaro',
+    'Cristina Morales', 'Omar Camacho', 'Jessica Contreras', 'Arnoldo Elizondo', 'Wendy Barrantes',
+    'Herbert Fuentes', 'Cindy Obando', 'Edwin Murillo', 'Yessenia Trejos', 'Bruno Cordero',
+    'Karla Gómez', 'Marco Leiva', 'Diana Angulo', 'Ernesto Solís', 'Ileana Céspedes',
+    'Ronny Quesada', 'Tatiana Ramírez', 'Harold Montero', 'Yerlan Vargas', 'Nancy Chaves',
+    'Bryan Coto', 'Alexandra Méndez', 'Mauricio Barboza', 'Kathia Ramírez', 'Arturo Hidalgo',
+    'Flor Godínez', 'Leonard Granados', 'Vanessa Sequeira', 'Anthony Argueta', 'Miriam Bonilla',
+    'Álvaro Vindas', 'Ingrid Alfaro', 'Danilo Caballero', 'Adriana Quirós', 'Steven Acosta',
+    'Maricela Piedra', 'Joselyn Loría', 'Franklin Prado', 'Yolanda Gutiérrez', 'Cesar Azofeifa',
+  ]
+  return Array.from({ length: Math.min(count, names.length) }, (_, i) => ({
+    member_id: `${prefix}-m-${i + 1}`,
+    member_name: names[i % names.length],
+    attendance_type: (i % 6 === 0 ? 'server' : 'participant') as AttendanceType,
+    sub_event_id: subEventIds ? subEventIds[i % subEventIds.length] : null,
+    checked_at: `2026-05-${String((i % 10) + 1).padStart(2, '0')}T${String(17 + (i % 4)).padStart(2, '0')}:${String((i * 7) % 60).padStart(2, '0')}:00Z`,
+  }))
+}
+
+const CHARLA_SUB_EVENTS: SubEvent[] = [
+  { id: 'kids', name: 'Kids', max_capacity: 80 },
+  { id: 'teens', name: 'Teens', max_capacity: 50 },
+]
+
+export const MOCK_EVENTS: MockEvent[] = [
+  {
+    id: 'ev-charla-001',
+    name: 'Charla Dominical — Pedregal',
+    event_type: 'charla',
+    committee_id: 'Comité de Charlas',
+    description: 'Charla dominical semanal en la sede Pedregal. Espacio para toda la familia con programación especial para niños y adolescentes.',
+    start_at: '2026-05-17T17:00:00-06:00',
+    end_at: '2026-05-17T19:30:00-06:00',
+    location: 'Pedregal, San José',
+    location_map_url: 'https://waze.com/ul/hd1u0u2xsj',
+    is_virtual: false,
+    requires_registration: false,
+    max_capacity: 450,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: true,
+    recurrence_rule: 'WEEKLY:SUN',
+    recurrence_end: '2026-12-20T00:00:00Z',
+    parent_event_id: null,
+    sub_events: CHARLA_SUB_EVENTS,
+    registrations: makeRegistrations(280, 'ch001'),
+    checkins: makeCheckins(220, 'ch001', ['kids', 'teens']),
+    volunteer_bookings: [
+      { member_id: 'v-001', member_name: 'Carlos Mora', role: 'Anfitrión', status: 'confirmed' },
+      { member_id: 'v-002', member_name: 'Laura Chacón', role: 'Colaborador de Bienvenida', status: 'confirmed' },
+      { member_id: 'v-003', member_name: 'Andrés Ulate', role: 'Coordinador de Kids', status: 'confirmed' },
+      { member_id: 'v-004', member_name: 'Valeria Rojas', role: 'Colaborador de Kids', status: 'pending' },
+      { member_id: 'v-005', member_name: 'Miguel Solano', role: 'Coordinador de Audiovisuales', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-charla-002',
+    name: 'Charla Dominical — Meridiano',
+    event_type: 'charla',
+    committee_id: 'Comité de Charlas',
+    description: 'Charla dominical semanal en la sede Meridiano, Escazú. Con servicio de Kids y Teens.',
+    start_at: '2026-05-24T10:00:00-06:00',
+    end_at: '2026-05-24T12:30:00-06:00',
+    location: 'Edificio Meridiano, Escazú',
+    location_map_url: 'https://www.waze.com/live-map/directions?to=ll.9.942691,-84.152763',
+    is_virtual: false,
+    requires_registration: false,
+    max_capacity: 380,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: true,
+    recurrence_rule: 'WEEKLY:SUN',
+    recurrence_end: '2026-12-20T00:00:00Z',
+    parent_event_id: null,
+    sub_events: CHARLA_SUB_EVENTS,
+    registrations: makeRegistrations(280, 'ch002'),
+    checkins: makeCheckins(218, 'ch002', ['kids', 'teens']),
+    volunteer_bookings: [
+      { member_id: 'v-010', member_name: 'Patricia Villalobos', role: 'Anfitrión', status: 'confirmed' },
+      { member_id: 'v-011', member_name: 'David Núñez', role: 'Coordinador de Audiovisuales', status: 'confirmed' },
+      { member_id: 'v-012', member_name: 'Silvia Picado', role: 'Colaborador de Bienvenida Kids', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-charla-003',
+    name: 'Charla Dominical — Antares',
+    event_type: 'charla',
+    committee_id: 'Comité de Charlas',
+    description: 'Charla dominical semanal en Plaza Antares, San Pedro. Entrada libre para toda la comunidad.',
+    start_at: '2026-05-31T10:30:00-06:00',
+    end_at: '2026-05-31T13:00:00-06:00',
+    location: 'Plaza Antares, San Pedro',
+    location_map_url: 'https://waze.com/ul/hd1u0x3283',
+    is_virtual: false,
+    requires_registration: false,
+    max_capacity: 350,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: true,
+    recurrence_rule: 'WEEKLY:SUN',
+    recurrence_end: '2026-12-20T00:00:00Z',
+    parent_event_id: null,
+    sub_events: CHARLA_SUB_EVENTS,
+    registrations: makeRegistrations(280, 'ch003'),
+    checkins: makeCheckins(225, 'ch003', ['kids', 'teens']),
+    volunteer_bookings: [
+      { member_id: 'v-020', member_name: 'Felipe Porras', role: 'Anfitrión', status: 'confirmed' },
+      { member_id: 'v-021', member_name: 'Lucía Alvarado', role: 'Coordinador de Kids', status: 'confirmed' },
+      { member_id: 'v-022', member_name: 'Jonathan Blanco', role: 'Colaborador de Audiovisuales', status: 'pending' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-campa-001',
+    name: 'Campamento Theos 2026',
+    event_type: 'campamento',
+    committee_id: 'Comité de Campamentos',
+    description: 'Campamento anual de Theos Place en el Centro de Retiros La Colina, San Ramón. Tres días de comunidad, oradores especiales y actividades al aire libre. Incluye hospedaje, alimentación y actividades.',
+    start_at: '2026-07-10T14:00:00-06:00',
+    end_at: '2026-07-13T12:00:00-06:00',
+    location: 'Centro de Retiros La Colina, San Ramón',
+    location_map_url: 'https://maps.app.goo.gl/retiro-colina',
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 120,
+    requires_payment: true,
+    payment_amount: 45000,
+    requires_survey: true,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [
+      { id: 'dia1', name: 'Día 1 — Llegada y apertura', max_capacity: 120 },
+      { id: 'dia2', name: 'Día 2 — Actividades y charlas', max_capacity: 120 },
+      { id: 'dia3', name: 'Día 3 — Cierre y despedida', max_capacity: 120 },
+    ],
+    registrations: makeRegistrations(45, 'campa001'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vc-001', member_name: 'Rodrigo Paniagua', role: 'Coordinador de Campamentos', status: 'confirmed' },
+      { member_id: 'vc-002', member_name: 'Karina Vásquez', role: 'Coordinador de Actividades', status: 'confirmed' },
+      { member_id: 'vc-003', member_name: 'Gerardo Fernández', role: 'Colaborador de Comida', status: 'confirmed' },
+      { member_id: 'vc-004', member_name: 'Xiomara Bolaños', role: 'Anfitrión Campamentos', status: 'pending' },
+      { member_id: 'vc-005', member_name: 'Alexis Campos', role: 'Colaborador de Audiovisuales Campas', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-united-001',
+    name: 'United — Mayo 2026',
+    event_type: 'united',
+    committee_id: 'Sede United',
+    description: 'Reunión mensual de toda la comunidad Theos Place. Noche de alabanza, palabra especial y comunidad. Abierto a todos.',
+    start_at: '2026-05-23T18:00:00-06:00',
+    end_at: '2026-05-23T21:00:00-06:00',
+    location: 'Parque Metropolitano La Sabana, San José',
+    location_map_url: null,
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 400,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(95, 'united001'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vu-001', member_name: 'Eduardo Gamboa', role: 'Coordinador de Worship', status: 'confirmed' },
+      { member_id: 'vu-002', member_name: 'Tatiana Segura', role: 'Anfitrión', status: 'confirmed' },
+      { member_id: 'vu-003', member_name: 'Manuel Montes', role: 'Colaborador de Montaje', status: 'confirmed' },
+      { member_id: 'vu-004', member_name: 'Priscilla Varela', role: 'Colaborador de Logística', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-social-001',
+    name: 'Noche de Talentos Theos 2026',
+    event_type: 'social',
+    committee_id: 'Comité Comunity',
+    description: 'Primera noche de talentos del año. Presentaciones musicales, comedia y sorteos entre los asistentes. Una noche para conocerse y divertirse.',
+    start_at: '2026-04-12T18:30:00-06:00',
+    end_at: '2026-04-12T22:00:00-06:00',
+    location: 'Auditorio Theos, Pedregal',
+    location_map_url: 'https://waze.com/ul/hd1u0u2xsj',
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 200,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'finished',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(60, 'social001'),
+    checkins: makeCheckins(55, 'social001', null),
+    volunteer_bookings: [
+      { member_id: 'vs-001', member_name: 'Julio Bonilla', role: 'Coordinador de Actividades Sociales', status: 'confirmed' },
+      { member_id: 'vs-002', member_name: 'Adriana Mena', role: 'Colaborador de Bienvenida', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-cancel-001',
+    name: 'Torneo de Volleyball Theos',
+    event_type: 'social',
+    committee_id: 'Comité Sports',
+    description: 'Torneo interno de volleyball para miembros de la comunidad. Equipos de 6 personas.',
+    start_at: '2026-03-28T14:00:00-06:00',
+    end_at: '2026-03-28T18:00:00-06:00',
+    location: 'Polideportivo Aranjuez, San José',
+    location_map_url: null,
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 80,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'cancelled',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(22, 'cancel001'),
+    checkins: [],
+    volunteer_bookings: [],
+    cancellation_reason: 'El polideportivo quedó sin disponibilidad por reparaciones de emergencia en el techo. No fue posible conseguir un espacio alternativo con tan poco tiempo.',
+  },
+  {
+    id: 'ev-cap-001',
+    name: 'Capacitación de Anfitriones — Módulo 1',
+    event_type: 'capacitacion',
+    committee_id: 'Comité de Anfitriones',
+    description: 'Primera capacitación del año para anfitriones activos y aspirantes. Temas: protocolos de bienvenida, manejo de situaciones difíciles y cultura Theos.',
+    start_at: '2026-05-28T19:00:00-06:00',
+    end_at: '2026-05-28T21:30:00-06:00',
+    location: 'Sala de Conferencias, Edificio Meridiano',
+    location_map_url: null,
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 50,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: true,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(34, 'cap001'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vcap-001', member_name: 'Rebeca Ureña', role: 'Orador', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-cap-002',
+    name: 'Capacitación Servidores de Kids',
+    event_type: 'capacitacion',
+    committee_id: 'Comité de Charlas',
+    description: 'Entrenamiento semestral para todos los servidores del ministerio de Kids y Teens. Dinámicas de manejo de grupos, curriculum actual y protocolos de seguridad.',
+    start_at: '2026-06-04T18:30:00-06:00',
+    end_at: '2026-06-04T21:00:00-06:00',
+    location: 'Sede Antares, San Pedro',
+    location_map_url: 'https://waze.com/ul/hd1u0x3283',
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 40,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(28, 'cap002'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vcap-010', member_name: 'Lucía Alvarado', role: 'Coordinador de Kids', status: 'confirmed' },
+      { member_id: 'vcap-011', member_name: 'Felipe Porras', role: 'Orador de Apoyo', status: 'pending' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-charla-004',
+    name: 'Charla Dominical — Cartago',
+    event_type: 'charla',
+    committee_id: 'Comité de Charlas',
+    description: 'Charla dominical en Cartago. Sede regional con servicio especial para toda la familia.',
+    start_at: '2026-06-07T10:00:00-06:00',
+    end_at: '2026-06-07T12:30:00-06:00',
+    location: 'Rancho Típico El Ensueño, Cartago',
+    location_map_url: 'https://waze.com/ul/hd1u24ju5s',
+    is_virtual: false,
+    requires_registration: false,
+    max_capacity: 250,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: CHARLA_SUB_EVENTS,
+    registrations: makeRegistrations(142, 'ch004'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vch4-001', member_name: 'Arturo Hidalgo', role: 'Anfitrión', status: 'confirmed' },
+      { member_id: 'vch4-002', member_name: 'Flor Godínez', role: 'Colaborador de Bienvenida', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-social-002',
+    name: 'Paseo en Bici — Ruta al Volcán',
+    event_type: 'social',
+    committee_id: 'Comité Sports',
+    description: 'Actividad de biking en familia. Ruta de 25km desde Parque de la Paz hasta el mirador del Volcán Irazú. Nivel: intermedio.',
+    start_at: '2026-06-20T06:00:00-06:00',
+    end_at: '2026-06-20T12:00:00-06:00',
+    location: 'Parque La Paz, San José (punto de partida)',
+    location_map_url: null,
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 60,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(38, 'social002'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vsoc2-001', member_name: 'Mauricio Barboza', role: 'Coordinador de Biking', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-united-002',
+    name: 'United — Junio 2026',
+    event_type: 'united',
+    committee_id: 'Sede United',
+    description: 'United mensual de junio. Noche de adoración y palabra.',
+    start_at: '2026-06-27T18:00:00-06:00',
+    end_at: '2026-06-27T21:00:00-06:00',
+    location: 'Por definir',
+    location_map_url: null,
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 400,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(72, 'united002'),
+    checkins: [],
+    volunteer_bookings: [],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-cap-003',
+    name: 'Taller de Oración — Avanzado',
+    event_type: 'capacitacion',
+    committee_id: 'Comité de Oración',
+    description: 'Taller intensivo de 3 horas para líderes de oración. Herramientas prácticas, modelos de intercesión y dinámica de grupos de oración.',
+    start_at: '2026-06-13T09:00:00-06:00',
+    end_at: '2026-06-13T12:00:00-06:00',
+    location: 'Sede Pedregal — Sala Azul',
+    location_map_url: 'https://waze.com/ul/hd1u0u2xsj',
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 30,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(18, 'cap003'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vcap3-001', member_name: 'Wilbert Alfaro', role: 'Coordinador de Oración', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-charla-005',
+    name: 'Charla Dominical — Alajuela',
+    event_type: 'charla',
+    committee_id: 'Comité de Charlas',
+    description: 'Charla dominical en Lifehouse Alajuela Centro.',
+    start_at: '2026-05-31T10:00:00-06:00',
+    end_at: '2026-05-31T12:30:00-06:00',
+    location: 'Lifehouse, Alajuela Centro',
+    location_map_url: 'https://waze.com/ul/hd1u158h2e',
+    is_virtual: false,
+    requires_registration: false,
+    max_capacity: 200,
+    requires_payment: false,
+    payment_amount: null,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: CHARLA_SUB_EVENTS,
+    registrations: makeRegistrations(120, 'ch005'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vch5-001', member_name: 'Vanessa Sequeira', role: 'Anfitrión', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+  {
+    id: 'ev-social-003',
+    name: 'Cena de Recaudación — Misiones 2026',
+    event_type: 'social',
+    committee_id: 'Comité de Misiones Nacionales',
+    description: 'Cena benéfica para financiar la misión a Talamanca. Incluye buffet, subasta de arte y presentación de los proyectos. Entrada con donación voluntaria.',
+    start_at: '2026-07-04T18:00:00-06:00',
+    end_at: '2026-07-04T22:00:00-06:00',
+    location: 'Restaurante La Terraza, San Pedro',
+    location_map_url: null,
+    is_virtual: false,
+    requires_registration: true,
+    max_capacity: 100,
+    requires_payment: true,
+    payment_amount: 15000,
+    requires_survey: false,
+    status: 'upcoming',
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
+    parent_event_id: null,
+    sub_events: [],
+    registrations: makeRegistrations(65, 'social003'),
+    checkins: [],
+    volunteer_bookings: [
+      { member_id: 'vsoc3-001', member_name: 'Omar Camacho', role: 'Coordinador de Misiones Nacionales', status: 'confirmed' },
+      { member_id: 'vsoc3-002', member_name: 'Jessica Contreras', role: 'Colaborador de Hospitalidad', status: 'confirmed' },
+    ],
+    cancellation_reason: null,
+  },
+]
+
+export function getEvent(id: string): MockEvent | undefined {
+  return MOCK_EVENTS.find(e => e.id === id)
+}
+
+export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string }> = {
+  charla:       { label: 'Charla',       color: 'navy' },
+  campamento:   { label: 'Campamento',   color: 'teal' },
+  social:       { label: 'Social',       color: 'coral' },
+  united:       { label: 'United',       color: 'purple' },
+  capacitacion: { label: 'Capacitación', color: 'amber' },
+}
+
+export const EVENT_STATUS_CONFIG: Record<EventStatus, { label: string; color: string }> = {
+  upcoming:    { label: 'Próximo',      color: 'teal' },
+  in_progress: { label: 'En curso',     color: 'coral' },
+  finished:    { label: 'Finalizado',   color: 'navy' },
+  cancelled:   { label: 'Cancelado',    color: 'red' },
+  archived:    { label: 'Archivado',    color: 'gray' },
+}

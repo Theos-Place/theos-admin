@@ -1,0 +1,283 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { MOCK_EVENTS, EVENT_TYPE_CONFIG, type EventType } from '@/data/mock-events'
+import { EventTypeBadge } from '@/components/events/EventTypeBadge'
+import { EventStatusBadge } from '@/components/events/EventStatusBadge'
+import { CapacityBar } from '@/components/events/CapacityBar'
+import { CalendarGrid } from '@/components/events/CalendarGrid'
+import { cn } from '@/lib/utils'
+import { Plus, LayoutList, Calendar } from 'lucide-react'
+
+const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
+  { key: 'all', label: 'Todos' },
+  { key: 'charla', label: 'Charlas' },
+  { key: 'campamento', label: 'Campamentos' },
+  { key: 'social', label: 'Social' },
+  { key: 'united', label: 'United' },
+  { key: 'capacitacion', label: 'Capacitaciones' },
+]
+
+export default function EventosPage() {
+  const router = useRouter()
+  const [view, setView] = useState<'list' | 'calendar'>('list')
+  const [typeFilter, setTypeFilter] = useState<EventType | 'all'>('all')
+  const now = new Date()
+  const [currentMonth, setCurrentMonth] = useState(now.getMonth())
+  const [currentYear, setCurrentYear] = useState(now.getFullYear())
+
+  const thisMonthEvents = MOCK_EVENTS.filter(e => {
+    const d = new Date(e.start_at)
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  })
+
+  const next7Days = MOCK_EVENTS.filter(e => {
+    const d = new Date(e.start_at)
+    const diff = (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    return diff >= 0 && diff <= 7
+  })
+
+  const totalRegistrations = MOCK_EVENTS.reduce((sum, e) => sum + e.registrations.length, 0)
+
+  const todayCheckins = MOCK_EVENTS.reduce((sum, e) => {
+    return sum + e.checkins.filter(c => {
+      const d = new Date(c.checked_at)
+      return d.toDateString() === now.toDateString()
+    }).length
+  }, 0)
+
+  const filtered = useMemo(() => {
+    return MOCK_EVENTS.filter(e => typeFilter === 'all' || e.event_type === typeFilter)
+  }, [typeFilter])
+
+  function handlePrev() {
+    if (currentMonth === 0) {
+      setCurrentMonth(11)
+      setCurrentYear(y => y - 1)
+    } else {
+      setCurrentMonth(m => m - 1)
+    }
+  }
+
+  function handleNext() {
+    if (currentMonth === 11) {
+      setCurrentMonth(0)
+      setCurrentYear(y => y + 1)
+    } else {
+      setCurrentMonth(m => m + 1)
+    }
+  }
+
+  const calendarMonthEvents = MOCK_EVENTS.filter(e => {
+    const d = new Date(e.start_at)
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+  })
+
+  return (
+    <div className="space-y-6">
+      {/* Header editorial */}
+      <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4" style={{ boxShadow: 'var(--shadow-md)' }}>
+        <div>
+          <h1
+            className="text-2xl text-white"
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          >
+            Eventos
+          </h1>
+          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+            {MOCK_EVENTS.length} eventos en el sistema
+          </p>
+        </div>
+        <Link
+          href="/eventos/nuevo"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          <Plus size={14} />
+          Crear evento
+        </Link>
+      </div>
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Este mes', value: thisMonthEvents.length, color: 'text-navy' },
+          { label: 'Próximos 7 días', value: next7Days.length, color: 'text-teal-deep' },
+          { label: 'Inscritos totales', value: totalRegistrations, color: 'text-coral' },
+          { label: 'Check-ins hoy', value: todayCheckins, color: 'text-navy' },
+        ].map(({ label, value, color }) => (
+          <div
+            key={label}
+            className="rounded-2xl p-5"
+            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          >
+            <p
+              className="text-[10px] tracking-widest uppercase text-navy-light/40"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {label}
+            </p>
+            <p
+              className={cn('mt-2 text-4xl font-extrabold tabular-nums', color)}
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {value.toLocaleString()}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Toggle Vista */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div
+          className="inline-flex rounded-full p-1"
+          style={{ background: 'var(--surface-low)' }}
+        >
+          <button
+            onClick={() => setView('list')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-all duration-150',
+              view === 'list'
+                ? 'bg-navy text-white shadow-sm'
+                : 'text-navy-light/60 hover:text-navy'
+            )}
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <LayoutList size={14} />
+            Lista
+          </button>
+          <button
+            onClick={() => setView('calendar')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-all duration-150',
+              view === 'calendar'
+                ? 'bg-navy text-white shadow-sm'
+                : 'text-navy-light/60 hover:text-navy'
+            )}
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <Calendar size={14} />
+            Calendario
+          </button>
+        </div>
+
+        {view === 'list' && (
+          <div className="flex gap-1.5 flex-wrap">
+            {TYPE_FILTERS.map(f => (
+              <button
+                key={f.key}
+                onClick={() => setTypeFilter(f.key)}
+                className={cn(
+                  'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150',
+                  typeFilter === f.key
+                    ? 'bg-navy text-white border-navy'
+                    : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
+                )}
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Vista Lista */}
+      {view === 'list' && (
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {['Evento', 'Tipo', 'Fecha', 'Capacidad', 'Inscritos', 'Estado', ''].map(h => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
+                      style={{ fontFamily: 'var(--font-display)' }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((event, idx) => {
+                  const config = EVENT_TYPE_CONFIG[event.event_type]
+                  const dotColors: Record<string, string> = {
+                    navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
+                    purple: 'bg-purple-700', amber: 'bg-amber-500',
+                  }
+                  const dotColor = dotColors[config.color] ?? 'bg-navy'
+                  const startDate = new Date(event.start_at)
+                  return (
+                    <tr
+                      key={event.id}
+                      className={cn(
+                        'hover:bg-surface-low transition-colors',
+                        idx % 2 === 1 ? 'bg-surface-low/40' : ''
+                      )}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className={cn('h-2 w-2 rounded-full shrink-0', dotColor)} />
+                          <span className="text-sm font-medium text-navy truncate max-w-[200px]" style={{ fontFamily: 'var(--font-body)' }}>
+                            {event.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <EventTypeBadge type={event.event_type} size="sm" />
+                      </td>
+                      <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                        {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <CapacityBar current={event.registrations.length} max={event.max_capacity} />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-navy tabular-nums" style={{ fontFamily: 'var(--font-body)' }}>
+                        {event.registrations.length}
+                      </td>
+                      <td className="px-4 py-3">
+                        <EventStatusBadge status={event.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/eventos/${event.id}`}
+                          className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
+                          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                        >
+                          →
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filtered.length === 0 && (
+            <div className="px-5 py-10 text-center">
+              <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                No hay eventos con ese filtro.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Vista Calendario */}
+      {view === 'calendar' && (
+        <CalendarGrid
+          events={calendarMonthEvents}
+          month={currentMonth}
+          year={currentYear}
+          onEventClick={id => router.push(`/eventos/${id}`)}
+          onPrev={handlePrev}
+          onNext={handleNext}
+        />
+      )}
+    </div>
+  )
+}
