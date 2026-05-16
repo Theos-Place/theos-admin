@@ -2,29 +2,23 @@
 
 import { use, useState } from 'react'
 import Link from 'next/link'
-import { getEvent, type EventType } from '@/data/mock-events'
+import { getEvent, EVENT_TYPES, type EventType } from '@/data/mock-events'
 import { ALL_COMMITTEES } from '@/data/mock-committees'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { cn } from '@/lib/utils'
 import {
-  ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, Globe, BookOpen, Plus, X,
+  ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
+  Users, Star, MapPin, Music, Coffee, Zap,
 } from 'lucide-react'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
-type EventTypeOption = {
-  key: EventType
-  label: string
-  icon: React.ComponentType<{ size?: number; className?: string }>
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  mic: Mic, tent: Tent, users: Users, star: Star, 'book-open': BookOpen,
+  heart: Heart, 'map-pin': MapPin, music: Music, coffee: Coffee, zap: Zap,
 }
 
-const EVENT_TYPES: EventTypeOption[] = [
-  { key: 'charla',       label: 'Charla',       icon: Mic },
-  { key: 'campamento',   label: 'Campamento',   icon: Tent },
-  { key: 'social',       label: 'Social',       icon: Heart },
-  { key: 'united',       label: 'United',       icon: Globe },
-  { key: 'capacitacion', label: 'Capacitación', icon: BookOpen },
-]
+const activeEventTypes = EVENT_TYPES.filter(t => t.is_active)
 
 type SubEventInput = { id: string; name: string; max_capacity: string }
 
@@ -314,21 +308,24 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           <div className="space-y-1.5">
             <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Tipo</label>
             <div className="grid grid-cols-5 gap-2">
-              {EVENT_TYPES.map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedType(key)}
-                  className={cn(
-                    'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
-                    selectedType === key ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/60 hover:bg-surface-low'
-                  )}
-                  style={{ borderColor: selectedType === key ? undefined : 'var(--outline-variant)' }}
-                >
-                  <Icon size={18} />
-                  <span className="text-[11px] font-medium" style={{ fontFamily: 'var(--font-display)' }}>{label}</span>
-                </button>
-              ))}
+              {activeEventTypes.map(t => {
+                const Icon = ICON_MAP[t.icon] ?? Mic
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setSelectedType(t.id as EventType)}
+                    className={cn(
+                      'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
+                      selectedType === t.id ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/60 hover:bg-surface-low'
+                    )}
+                    style={{ borderColor: selectedType === t.id ? undefined : 'var(--outline-variant)' }}
+                  >
+                    <Icon size={18} />
+                    <span className="text-[11px] font-medium" style={{ fontFamily: 'var(--font-display)' }}>{t.name}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div className="space-y-1">

@@ -10,8 +10,48 @@ import { CancellationModal } from '@/components/events/CancellationModal'
 import { cn } from '@/lib/utils'
 import {
   ChevronLeft, Calendar, MapPin, Users, Edit2, MoreHorizontal,
-  Send, Download, QrCode, UserPlus,
+  Send, Download, QrCode, UserPlus, CalendarPlus, ExternalLink, X as XIcon,
 } from 'lucide-react'
+
+function getGoogleCalendarUrl(event: NonNullable<ReturnType<typeof getEvent>>) {
+  const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+  const title = encodeURIComponent(event.name)
+  const start = event.start_at.replace(/[-:]/g, '').replace(/\.\d{3}/, '').replace('+', '%2B')
+  const end   = event.end_at.replace(/[-:]/g, '').replace(/\.\d{3}/, '').replace('+', '%2B')
+  const details  = encodeURIComponent(event.description || '')
+  const location = encodeURIComponent(event.location || '')
+  return `${base}&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`
+}
+
+function downloadICS(event: NonNullable<ReturnType<typeof getEvent>>, withRRule: boolean) {
+  const fmt = (d: string) => new Date(d).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Theos Place//Sistema Admin//ES',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${event.id}@theosplace.org`,
+    `DTSTAMP:${fmt(new Date().toISOString())}`,
+    `DTSTART:${fmt(event.start_at)}`,
+    `DTEND:${fmt(event.end_at)}`,
+    `SUMMARY:${event.name}`,
+    `DESCRIPTION:${event.description || ''}`,
+    `LOCATION:${event.location || ''}`,
+    ...(event.location_map_url ? [`URL:${event.location_map_url}`] : []),
+    ...(withRRule && event.recurrence_rule ? [`RRULE:${event.recurrence_rule}`] : []),
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ]
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${event.name.replace(/\s+/g, '-')}.ics`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const FAKE_MESSAGES = [
   { date: '2026-05-10', channel: 'WhatsApp', content: 'Recordatorio: el evento se acerca. ¡Confirmá tu asistencia antes del viernes!' },
@@ -98,6 +138,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [showMenu, setShowMenu] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showMessageModal, setShowMessageModal] = useState(false)
+  const [showCalendarPopover, setShowCalendarPopover] = useState(false)
+  const [icsWithRRule, setIcsWithRRule] = useState(false)
   const [cancelled, setCancelled] = useState(false)
 
   if (!event) {
@@ -186,6 +228,74 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {/* Calendar export popover */}
+            <div className="relative">
+              <button
+                onClick={() => setShowCalendarPopover(p => !p)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                <CalendarPlus size={13} />
+                Agregar a mi calendario
+              </button>
+              {showCalendarPopover && (
+                <div
+                  className="absolute right-0 top-full mt-2 rounded-2xl p-4 w-72 z-30 space-y-3"
+                  style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--outline-variant)' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                      Exportar evento
+                    </p>
+                    <button onClick={() => setShowCalendarPopover(false)} className="text-navy-light/40 hover:text-navy transition-colors">
+                      <XIcon size={14} />
+                    </button>
+                  </div>
+                  <a
+                    href={getGoogleCalendarUrl(event)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowCalendarPopover(false)}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors"
+                  >
+                    <div className="h-8 w-8 rounded-lg bg-navy/10 flex items-center justify-center shrink-0">
+                      <ExternalLink size={14} className="text-navy" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>Google Calendar</p>
+                      <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Abre en una nueva pestaña</p>
+                    </div>
+                  </a>
+                  <div>
+                    <button
+                      onClick={() => { downloadICS(event, icsWithRRule); setShowCalendarPopover(false) }}
+                      className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors text-left"
+                    >
+                      <div className="h-8 w-8 rounded-lg bg-navy/10 flex items-center justify-center shrink-0">
+                        <Download size={14} className="text-navy" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>Apple / Outlook (.ics)</p>
+                        <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Descargar archivo de calendario</p>
+                      </div>
+                    </button>
+                    {event.is_recurring && (
+                      <label className="flex items-center gap-2 px-3 pt-1 pb-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="accent-coral"
+                          checked={icsWithRRule}
+                          onChange={e => setIcsWithRRule(e.target.checked)}
+                        />
+                        <span className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                          Incluir toda la serie de recurrencia
+                        </span>
+                      </label>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <Link
               href={`/eventos/${id}/editar`}
               className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"

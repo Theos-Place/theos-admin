@@ -1,4 +1,4 @@
-export type EventType = 'charla' | 'campamento' | 'social' | 'united' | 'capacitacion'
+export type EventType = 'charla' | 'campamento' | 'social' | 'capacitacion'
 export type EventStatus = 'upcoming' | 'in_progress' | 'finished' | 'cancelled' | 'archived'
 export type PaymentStatus = 'pending' | 'paid' | 'exempted'
 export type AttendanceType = 'participant' | 'server'
@@ -262,8 +262,8 @@ export const MOCK_EVENTS: MockEvent[] = [
   {
     id: 'ev-united-001',
     name: 'United — Mayo 2026',
-    event_type: 'united',
-    committee_id: 'Sede United',
+    event_type: 'social',
+    committee_id: 'Comité de Worship',
     description: 'Reunión mensual de toda la comunidad Theos Place. Noche de alabanza, palabra especial y comunidad. Abierto a todos.',
     start_at: '2026-05-23T18:00:00-06:00',
     end_at: '2026-05-23T21:00:00-06:00',
@@ -469,8 +469,8 @@ export const MOCK_EVENTS: MockEvent[] = [
   {
     id: 'ev-united-002',
     name: 'United — Junio 2026',
-    event_type: 'united',
-    committee_id: 'Sede United',
+    event_type: 'social',
+    committee_id: 'Comité de Worship',
     description: 'United mensual de junio. Noche de adoración y palabra.',
     start_at: '2026-06-27T18:00:00-06:00',
     end_at: '2026-06-27T21:00:00-06:00',
@@ -591,9 +591,24 @@ export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string
   charla:       { label: 'Charla',       color: 'navy' },
   campamento:   { label: 'Campamento',   color: 'teal' },
   social:       { label: 'Social',       color: 'coral' },
-  united:       { label: 'United',       color: 'purple' },
   capacitacion: { label: 'Capacitación', color: 'amber' },
 }
+
+export type EventTypeEntry = {
+  id: string
+  name: string
+  color: string
+  icon: string
+  description: string
+  is_active: boolean
+}
+
+export const EVENT_TYPES: EventTypeEntry[] = [
+  { id: 'charla',       name: 'Charla',           color: '#161440', icon: 'mic',       description: 'Servicio semanal en sede',     is_active: true },
+  { id: 'campamento',   name: 'Campamento',        color: '#70BDC2', icon: 'tent',      description: 'Retiro de varios días',        is_active: true },
+  { id: 'social',       name: 'Actividad Social',  color: '#EF5554', icon: 'users',     description: 'Actividades comunitarias',     is_active: true },
+  { id: 'capacitacion', name: 'Capacitación',      color: '#519DA2', icon: 'book-open', description: 'Formación de líderes',         is_active: true },
+]
 
 export const EVENT_STATUS_CONFIG: Record<EventStatus, { label: string; color: string }> = {
   upcoming:    { label: 'Próximo',      color: 'teal' },

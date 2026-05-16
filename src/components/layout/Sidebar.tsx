@@ -21,8 +21,15 @@ import {
   Clock,
   ArrowLeftRight,
   BarChart2,
+  Plus,
+  Tag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+const EVENTOS_SUB = [
+  { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
+  { href: '/eventos/tipos',  label: 'Tipos de evento',  icon: Tag  },
+]
 
 const ESTUDIOS_SUB = [
   { href: '/estudios/grupos',          label: 'Grupos',           icon: LayoutList },
@@ -53,6 +60,7 @@ interface SidebarProps {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const estudiosActive = pathname === '/estudios' || pathname.startsWith('/estudios/')
+  const eventosActive  = pathname === '/eventos'  || pathname.startsWith('/eventos/')
 
   return (
     <>
@@ -100,9 +108,83 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isEstudios = href === '/estudios'
+            const isEventos  = href === '/eventos'
             const active = isEstudios
               ? pathname === '/estudios'
+              : isEventos
+              ? pathname === '/eventos'
               : pathname === href || pathname.startsWith(href + '/')
+
+            if (isEventos) {
+              return (
+                <div key={href}>
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    className={cn(
+                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                      eventosActive
+                        ? 'bg-coral text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    )}
+                  >
+                    <Icon
+                      size={18}
+                      strokeWidth={1.75}
+                      className={cn(
+                        'shrink-0 transition-colors',
+                        eventosActive ? 'text-white' : 'text-white/50 group-hover:text-white'
+                      )}
+                    />
+                    <span
+                      className="flex-1 truncate"
+                      style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                    >
+                      {label}
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      className={cn(
+                        'transition-transform duration-200',
+                        eventosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
+                      )}
+                    />
+                  </Link>
+                  {eventosActive && (
+                    <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                      {EVENTOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                        const subActive = pathname === sub || pathname.startsWith(sub + '/')
+                        return (
+                          <Link
+                            key={sub}
+                            href={sub}
+                            onClick={onClose}
+                            className={cn(
+                              'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                              subActive
+                                ? 'bg-white/15 text-white'
+                                : 'text-white/55 hover:bg-white/10 hover:text-white'
+                            )}
+                          >
+                            <SubIcon
+                              size={14}
+                              strokeWidth={1.75}
+                              className={cn(
+                                'shrink-0',
+                                subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
+                              )}
+                            />
+                            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                              {subLabel}
+                            </span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
 
             if (isEstudios) {
               return (

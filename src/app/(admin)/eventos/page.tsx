@@ -3,22 +3,56 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MOCK_EVENTS, EVENT_TYPE_CONFIG, type EventType } from '@/data/mock-events'
+import { MOCK_EVENTS, EVENT_TYPE_CONFIG, EVENT_TYPES, type EventType } from '@/data/mock-events'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
 import { cn } from '@/lib/utils'
-import { Plus, LayoutList, Calendar } from 'lucide-react'
+import { Plus, LayoutList, Calendar, Download } from 'lucide-react'
 
 const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
   { key: 'all', label: 'Todos' },
-  { key: 'charla', label: 'Charlas' },
-  { key: 'campamento', label: 'Campamentos' },
-  { key: 'social', label: 'Social' },
-  { key: 'united', label: 'United' },
-  { key: 'capacitacion', label: 'Capacitaciones' },
+  ...EVENT_TYPES.filter(t => t.is_active).map(t => ({
+    key: t.id as EventType,
+    label: t.name,
+  })),
 ]
+
+function downloadAllEventsICS(events: typeof MOCK_EVENTS) {
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+
+  const vevents = events.map(event => [
+    'BEGIN:VEVENT',
+    `UID:${event.id}@theosplace.org`,
+    `DTSTAMP:${formatDate(new Date().toISOString())}`,
+    `DTSTART:${formatDate(event.start_at)}`,
+    `DTEND:${formatDate(event.end_at)}`,
+    `SUMMARY:${event.name}`,
+    `DESCRIPTION:${event.description || ''}`,
+    `LOCATION:${event.location || ''}`,
+    'END:VEVENT',
+  ].join('\r\n')).join('\r\n')
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Theos Place//Sistema Admin//ES',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    vevents,
+    'END:VCALENDAR',
+  ].join('\r\n')
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `theos-eventos-${new Date().toISOString().split('T')[0]}.ics`
+  link.click()
+  URL.revokeObjectURL(url)
+}
 
 export default function EventosPage() {
   const router = useRouter()
@@ -90,14 +124,24 @@ export default function EventosPage() {
             {MOCK_EVENTS.length} eventos en el sistema
           </p>
         </div>
-        <Link
-          href="/eventos/nuevo"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          <Plus size={14} />
-          Crear evento
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => downloadAllEventsICS(filtered)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <Download size={13} />
+            Exportar calendario
+          </button>
+          <Link
+            href="/eventos/nuevo"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <Plus size={14} />
+            Crear evento
+          </Link>
+        </div>
       </div>
 
       {/* Stats cards */}
