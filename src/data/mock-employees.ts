@@ -1,0 +1,441 @@
+export type ContractType = 'planilla' | 'servicios_profesionales'
+export type VacationRecordType = 'vacaciones' | 'permiso_con_goce' | 'permiso_sin_goce' | 'incapacidad'
+export type VacationRecordStatus = 'aprobado' | 'pendiente' | 'rechazado'
+export type DocumentType = 'contrato' | 'identificacion' | 'seguro_social' | 'otro'
+export type EmployeeStatus = 'active' | 'inactive'
+
+export interface SalaryChange {
+  date: string
+  previous_salary: number
+  new_salary: number
+  reason: string
+  approved_by: string
+}
+
+export interface PositionRecord {
+  position_name: string
+  start_date: string
+  end_date: string
+  contract_type: ContractType
+}
+
+export interface VacationRecord {
+  id: string
+  type: VacationRecordType
+  start_date: string
+  end_date: string
+  days: number
+  status: VacationRecordStatus
+  notes: string
+}
+
+export interface EmployeeDocument {
+  id: string
+  name: string
+  type: DocumentType
+  uploaded_at: string
+  url: string
+}
+
+export interface PaidPosition {
+  id: string
+  name: string
+  committee_id: string
+  committee_name: string
+  area: string
+  description: string
+  contract_type: ContractType
+  salary_min: number
+  salary_max: number
+  is_active: boolean
+  created_at: string
+}
+
+export interface Employee {
+  id: string
+  member_id: string
+  member_name: string
+  member_initials: string
+  member_email: string
+  position_id: string
+  position_name: string
+  committee_name: string
+  area: string
+  contract_type: ContractType
+  start_date: string
+  end_date: string | null
+  current_salary: number
+  status: EmployeeStatus
+  salary_history: SalaryChange[]
+  position_history: PositionRecord[]
+  vacation_days_total: number
+  vacation_days_used: number
+  vacation_records: VacationRecord[]
+  documents: EmployeeDocument[]
+  notes: string
+}
+
+// ── Puestos pagados ───────────────────────────────────────────────────────────
+
+export const MOCK_PAID_POSITIONS: PaidPosition[] = [
+  {
+    id: 'pos-001',
+    name: 'Coordinador de Estudios Bíblicos',
+    committee_id: 'estudios-biblicos',
+    committee_name: 'Comité de Estudios Bíblicos',
+    area: 'Área Enseñanza',
+    description: 'Responsable de coordinar el programa completo de estudios bíblicos, incluyendo planificación de grupos, currículo, formación de dirigentes y seguimiento de participantes.',
+    contract_type: 'planilla',
+    salary_min: 550000,
+    salary_max: 750000,
+    is_active: true,
+    created_at: '2021-01-01',
+  },
+  {
+    id: 'pos-002',
+    name: 'Encargado de Comunicación',
+    committee_id: 'comunicacion',
+    committee_name: 'Comité de Comunicación',
+    area: 'Área Operaciones',
+    description: 'Gestiona la estrategia de comunicación de la iglesia: redes sociales, boletines, diseño gráfico y presencia digital en todas las plataformas.',
+    contract_type: 'servicios_profesionales',
+    salary_min: 650000,
+    salary_max: 950000,
+    is_active: true,
+    created_at: '2020-06-01',
+  },
+  {
+    id: 'pos-003',
+    name: 'Asistente Administrativo',
+    committee_id: 'planificacion',
+    committee_name: 'Comité de Planificación',
+    area: 'Área Staff',
+    description: 'Apoya la gestión administrativa de la organización: agenda, correspondencia, coordinación de reuniones, manejo de expedientes y atención a colaboradores.',
+    contract_type: 'planilla',
+    salary_min: 450000,
+    salary_max: 600000,
+    is_active: true,
+    created_at: '2019-03-01',
+  },
+  {
+    id: 'pos-004',
+    name: 'Encargado de Youth',
+    committee_id: 'youth',
+    committee_name: 'Comité de Youth',
+    area: 'Área Enseñanza',
+    description: 'Lidera el ministerio de jóvenes, supervisando dirigentes, programando actividades y desarrollando el currículo de Youth en todas las sedes.',
+    contract_type: 'planilla',
+    salary_min: 500000,
+    salary_max: 700000,
+    is_active: true,
+    created_at: '2021-08-01',
+  },
+  {
+    id: 'pos-005',
+    name: 'Diseñador Gráfico',
+    committee_id: 'contenido',
+    committee_name: 'Comité de Contenido',
+    area: 'Área Enseñanza',
+    description: 'Crea piezas gráficas para comunicaciones internas y externas, eventos, redes sociales y materiales impresos de la organización.',
+    contract_type: 'servicios_profesionales',
+    salary_min: 600000,
+    salary_max: 900000,
+    is_active: true,
+    created_at: '2022-03-01',
+  },
+  {
+    id: 'pos-006',
+    name: 'Coordinador de Ayuda Social',
+    committee_id: 'ayuda-social',
+    committee_name: 'Comité Ayuda Social',
+    area: 'Área Comunidad',
+    description: 'Coordina los programas de ayuda social, visitas comunitarias, brigadas médicas y proyectos de impacto en comunidades vulnerables.',
+    contract_type: 'planilla',
+    salary_min: 480000,
+    salary_max: 680000,
+    is_active: true,
+    created_at: '2020-09-01',
+  },
+  {
+    id: 'pos-007',
+    name: 'Desarrollador de Software',
+    committee_id: 'tecnologias',
+    committee_name: 'Comité de Tecnologías Informáticas',
+    area: 'Área Operaciones',
+    description: 'Desarrolla y mantiene el sistema administrativo, aplicaciones web y herramientas tecnológicas que apoyan la operación de la organización.',
+    contract_type: 'servicios_profesionales',
+    salary_min: 900000,
+    salary_max: 1400000,
+    is_active: true,
+    created_at: '2022-01-01',
+  },
+  {
+    id: 'pos-008',
+    name: 'Contador General',
+    committee_id: 'contabilidad',
+    committee_name: 'Comité de Contabilidad',
+    area: 'Área de Finanzas',
+    description: 'Responsable de la contabilidad general, estados financieros, declaraciones ante Hacienda y gestión de planilla de todos los empleados.',
+    contract_type: 'planilla',
+    salary_min: 700000,
+    salary_max: 950000,
+    is_active: true,
+    created_at: '2019-01-01',
+  },
+]
+
+// ── Empleados ─────────────────────────────────────────────────────────────────
+
+export const MOCK_EMPLOYEES: Employee[] = [
+  // ── Activos ──
+  {
+    id: 'emp-001',
+    member_id: 'm001',
+    member_name: 'Carlos Mendoza',
+    member_initials: 'CM',
+    member_email: 'carlos.mendoza@theosplace.org',
+    position_id: 'pos-001',
+    position_name: 'Coordinador de Estudios Bíblicos',
+    committee_name: 'Comité de Estudios Bíblicos',
+    area: 'Área Enseñanza',
+    contract_type: 'planilla',
+    start_date: '2021-02-01',
+    end_date: null,
+    current_salary: 650000,
+    status: 'active',
+    salary_history: [
+      { date: '2024-01-01', previous_salary: 600000, new_salary: 650000, reason: 'Ajuste por desempeño',       approved_by: 'Fernando Zeledón' },
+      { date: '2022-06-01', previous_salary: 575000, new_salary: 600000, reason: 'Ajuste por costo de vida',  approved_by: 'Fernando Zeledón' },
+    ],
+    position_history: [
+      { position_name: 'Asistente de Estudios Bíblicos', start_date: '2021-02-01', end_date: '2022-05-31', contract_type: 'planilla' },
+    ],
+    vacation_days_total: 15,
+    vacation_days_used: 8,
+    vacation_records: [
+      { id: 'vr-001', type: 'vacaciones',      start_date: '2025-12-23', end_date: '2026-01-03', days: 8, status: 'aprobado', notes: 'Vacaciones de fin de año' },
+      { id: 'vr-002', type: 'permiso_con_goce',start_date: '2026-03-15', end_date: '2026-03-15', days: 1, status: 'aprobado', notes: 'Cita médica' },
+    ],
+    documents: [
+      { id: 'doc-001', name: 'Contrato firmado',   type: 'contrato',        uploaded_at: '2021-02-01', url: '#' },
+      { id: 'doc-002', name: 'Copia de cédula',    type: 'identificacion',  uploaded_at: '2021-02-01', url: '#' },
+      { id: 'doc-003', name: 'Comprobante CCSS',   type: 'seguro_social',   uploaded_at: '2021-02-15', url: '#' },
+    ],
+    notes: 'Excelente desempeño. Lideró la digitalización del currículo de estudios en 2024.',
+  },
+  {
+    id: 'emp-002',
+    member_id: 'm070',
+    member_name: 'Priscilla Rojas',
+    member_initials: 'PR',
+    member_email: 'priscilla.rojas@theosplace.org',
+    position_id: 'pos-002',
+    position_name: 'Encargado de Comunicación',
+    committee_name: 'Comité de Comunicación',
+    area: 'Área Operaciones',
+    contract_type: 'servicios_profesionales',
+    start_date: '2020-10-01',
+    end_date: null,
+    current_salary: 850000,
+    status: 'active',
+    salary_history: [
+      { date: '2025-01-01', previous_salary: 780000, new_salary: 850000, reason: 'Ajuste por desempeño',      approved_by: 'Fernando Zeledón' },
+      { date: '2023-01-01', previous_salary: 700000, new_salary: 780000, reason: 'Ajuste por costo de vida', approved_by: 'Fernando Zeledón' },
+    ],
+    position_history: [],
+    vacation_days_total: 0,
+    vacation_days_used: 0,
+    vacation_records: [],
+    documents: [
+      { id: 'doc-010', name: 'Contrato de servicios', type: 'contrato',       uploaded_at: '2020-10-01', url: '#' },
+      { id: 'doc-011', name: 'Copia de cédula',       type: 'identificacion', uploaded_at: '2020-10-01', url: '#' },
+    ],
+    notes: 'Factura mensual los primeros 5 días del mes. Contrato renovable anualmente.',
+  },
+  {
+    id: 'emp-003',
+    member_id: 'm091',
+    member_name: 'Gloria Ávila',
+    member_initials: 'GA',
+    member_email: 'gloria.avila@theosplace.org',
+    position_id: 'pos-003',
+    position_name: 'Asistente Administrativo',
+    committee_name: 'Comité de Planificación',
+    area: 'Área Staff',
+    contract_type: 'planilla',
+    start_date: '2019-03-15',
+    end_date: null,
+    current_salary: 575000,
+    status: 'active',
+    salary_history: [
+      { date: '2024-03-01', previous_salary: 540000, new_salary: 575000, reason: 'Ajuste por costo de vida', approved_by: 'Fernando Zeledón' },
+      { date: '2022-01-01', previous_salary: 500000, new_salary: 540000, reason: 'Ajuste por costo de vida', approved_by: 'Fernando Zeledón' },
+      { date: '2020-06-01', previous_salary: 475000, new_salary: 500000, reason: 'Ajuste por desempeño',     approved_by: 'Héctor Rodríguez' },
+    ],
+    position_history: [],
+    vacation_days_total: 15,
+    vacation_days_used: 5,
+    vacation_records: [
+      { id: 'vr-010', type: 'vacaciones',       start_date: '2025-07-07', end_date: '2025-07-11', days: 5, status: 'aprobado', notes: '' },
+      { id: 'vr-011', type: 'incapacidad',       start_date: '2026-02-10', end_date: '2026-02-12', days: 3, status: 'aprobado', notes: 'Incapacidad CCSS #2026-0234' },
+      { id: 'vr-012', type: 'permiso_con_goce',  start_date: '2026-04-18', end_date: '2026-04-18', days: 1, status: 'pendiente', notes: 'Graduación universitaria de su hija' },
+    ],
+    documents: [
+      { id: 'doc-020', name: 'Contrato firmado',  type: 'contrato',        uploaded_at: '2019-03-15', url: '#' },
+      { id: 'doc-021', name: 'Copia de cédula',   type: 'identificacion',  uploaded_at: '2019-03-15', url: '#' },
+      { id: 'doc-022', name: 'Comprobante CCSS',  type: 'seguro_social',   uploaded_at: '2019-03-15', url: '#' },
+      { id: 'doc-023', name: 'Addéndum 2022',     type: 'contrato',        uploaded_at: '2022-01-15', url: '#' },
+    ],
+    notes: 'Empleada más antigua del staff. Conoce a fondo todos los procesos administrativos de la organización.',
+  },
+  {
+    id: 'emp-004',
+    member_id: 'm030',
+    member_name: 'Daniela Herrera',
+    member_initials: 'DH',
+    member_email: 'daniela.herrera@theosplace.org',
+    position_id: 'pos-004',
+    position_name: 'Encargado de Youth',
+    committee_name: 'Comité de Youth',
+    area: 'Área Enseñanza',
+    contract_type: 'planilla',
+    start_date: '2021-08-01',
+    end_date: null,
+    current_salary: 620000,
+    status: 'active',
+    salary_history: [
+      { date: '2024-08-01', previous_salary: 580000, new_salary: 620000, reason: 'Ajuste por desempeño', approved_by: 'Fernando Zeledón' },
+    ],
+    position_history: [],
+    vacation_days_total: 15,
+    vacation_days_used: 10,
+    vacation_records: [
+      { id: 'vr-020', type: 'vacaciones', start_date: '2025-12-26', end_date: '2026-01-02', days: 6, status: 'aprobado', notes: 'Vacaciones navideñas' },
+      { id: 'vr-021', type: 'vacaciones', start_date: '2026-06-01', end_date: '2026-06-05', days: 4, status: 'pendiente', notes: 'Vacaciones de mitad de año' },
+    ],
+    documents: [
+      { id: 'doc-030', name: 'Contrato firmado', type: 'contrato',       uploaded_at: '2021-08-01', url: '#' },
+      { id: 'doc-031', name: 'Copia de cédula',  type: 'identificacion', uploaded_at: '2021-08-01', url: '#' },
+      { id: 'doc-032', name: 'Comprobante CCSS', type: 'seguro_social',  uploaded_at: '2021-08-15', url: '#' },
+    ],
+    notes: '',
+  },
+  {
+    id: 'emp-005',
+    member_id: 'm043',
+    member_name: 'Kevin Solano',
+    member_initials: 'KS',
+    member_email: 'kevin.solano@theosplace.org',
+    position_id: 'pos-005',
+    position_name: 'Diseñador Gráfico',
+    committee_name: 'Comité de Contenido',
+    area: 'Área Enseñanza',
+    contract_type: 'servicios_profesionales',
+    start_date: '2023-01-10',
+    end_date: null,
+    current_salary: 750000,
+    status: 'active',
+    salary_history: [
+      { date: '2024-06-01', previous_salary: 700000, new_salary: 750000, reason: 'Ajuste por desempeño', approved_by: 'Fernando Zeledón' },
+    ],
+    position_history: [],
+    vacation_days_total: 0,
+    vacation_days_used: 0,
+    vacation_records: [],
+    documents: [
+      { id: 'doc-040', name: 'Contrato de servicios', type: 'contrato',       uploaded_at: '2023-01-10', url: '#' },
+      { id: 'doc-041', name: 'Copia de cédula',       type: 'identificacion', uploaded_at: '2023-01-10', url: '#' },
+    ],
+    notes: 'Especializado en diseño para redes sociales e identidad visual de marca.',
+  },
+  {
+    id: 'emp-006',
+    member_id: 'm110',
+    member_name: 'Raquel Montoya',
+    member_initials: 'RM',
+    member_email: 'raquel.montoya@theosplace.org',
+    position_id: 'pos-008',
+    position_name: 'Contador General',
+    committee_name: 'Comité de Contabilidad',
+    area: 'Área de Finanzas',
+    contract_type: 'planilla',
+    start_date: '2019-01-15',
+    end_date: null,
+    current_salary: 880000,
+    status: 'active',
+    salary_history: [
+      { date: '2025-01-01', previous_salary: 830000, new_salary: 880000, reason: 'Ajuste por costo de vida', approved_by: 'Fernando Zeledón' },
+      { date: '2023-01-01', previous_salary: 780000, new_salary: 830000, reason: 'Ajuste por desempeño',     approved_by: 'Fernando Zeledón' },
+      { date: '2021-01-01', previous_salary: 730000, new_salary: 780000, reason: 'Ajuste por costo de vida', approved_by: 'Héctor Rodríguez' },
+    ],
+    position_history: [],
+    vacation_days_total: 15,
+    vacation_days_used: 12,
+    vacation_records: [
+      { id: 'vr-030', type: 'vacaciones', start_date: '2025-12-22', end_date: '2026-01-02', days: 9, status: 'aprobado', notes: 'Vacaciones anuales' },
+      { id: 'vr-031', type: 'vacaciones', start_date: '2026-04-06', end_date: '2026-04-09', days: 3, status: 'aprobado', notes: 'Semana Santa' },
+    ],
+    documents: [
+      { id: 'doc-050', name: 'Contrato firmado',       type: 'contrato',       uploaded_at: '2019-01-15', url: '#' },
+      { id: 'doc-051', name: 'Copia de cédula',        type: 'identificacion', uploaded_at: '2019-01-15', url: '#' },
+      { id: 'doc-052', name: 'Comprobante CCSS',       type: 'seguro_social',  uploaded_at: '2019-01-15', url: '#' },
+      { id: 'doc-053', name: 'Título universitario',   type: 'otro',           uploaded_at: '2019-01-20', url: '#' },
+      { id: 'doc-054', name: 'Colegio de Contadores',  type: 'otro',           uploaded_at: '2019-01-20', url: '#' },
+    ],
+    notes: 'CPA colegiada. Responsable de declaraciones ante SUGEF, Hacienda y CCSS. Total confianza.',
+  },
+  // ── Históricos ──
+  {
+    id: 'emp-007',
+    member_id: 'm-hist-1',
+    member_name: 'Andrés Quirós',
+    member_initials: 'AQ',
+    member_email: 'andres.quiros@theosplace.org',
+    position_id: 'pos-006',
+    position_name: 'Coordinador de Ayuda Social',
+    committee_name: 'Comité Ayuda Social',
+    area: 'Área Comunidad',
+    contract_type: 'planilla',
+    start_date: '2020-09-01',
+    end_date: '2024-12-31',
+    current_salary: 620000,
+    status: 'inactive',
+    salary_history: [
+      { date: '2023-01-01', previous_salary: 570000, new_salary: 620000, reason: 'Ajuste por desempeño', approved_by: 'Fernando Zeledón' },
+    ],
+    position_history: [],
+    vacation_days_total: 15,
+    vacation_days_used: 15,
+    vacation_records: [],
+    documents: [
+      { id: 'doc-060', name: 'Contrato firmado', type: 'contrato',       uploaded_at: '2020-09-01', url: '#' },
+      { id: 'doc-061', name: 'Copia de cédula',  type: 'identificacion', uploaded_at: '2020-09-01', url: '#' },
+    ],
+    notes: 'Finalizó contrato en diciembre 2024 por fin de período. Salida amigable.',
+  },
+  {
+    id: 'emp-008',
+    member_id: 'm-hist-2',
+    member_name: 'Viviana Corrales',
+    member_initials: 'VC',
+    member_email: 'viviana.corrales@theosplace.org',
+    position_id: 'pos-007',
+    position_name: 'Desarrollador de Software',
+    committee_name: 'Comité de Tecnologías Informáticas',
+    area: 'Área Operaciones',
+    contract_type: 'servicios_profesionales',
+    start_date: '2022-01-01',
+    end_date: '2024-06-30',
+    current_salary: 1100000,
+    status: 'inactive',
+    salary_history: [],
+    position_history: [],
+    vacation_days_total: 0,
+    vacation_days_used: 0,
+    vacation_records: [],
+    documents: [
+      { id: 'doc-070', name: 'Contrato de servicios', type: 'contrato', uploaded_at: '2022-01-01', url: '#' },
+    ],
+    notes: 'Contrato de servicios profesionales finalizado al completar el proyecto del sistema administrativo.',
+  },
+]

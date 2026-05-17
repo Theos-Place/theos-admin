@@ -1,0 +1,232 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { MOCK_COMMITTEES, MOCK_VACANCIES, MOCK_APPLICATIONS, type CommitteeData } from '@/data/mock-servers'
+import { AREAS } from '@/data/mock-committees'
+import { cn } from '@/lib/utils'
+import { Plus, Users, Briefcase, ClipboardList, AlertCircle } from 'lucide-react'
+
+const AREA_FILTERS = [
+  { key: 'all', label: 'Todos' },
+  ...AREAS.map(a => ({ key: a.code, label: a.name })),
+]
+
+function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onClick: () => void }) {
+  const activeMembers = committee.members.filter(m => m.status === 'active')
+  const pct = Math.min(100, Math.round((activeMembers.length / committee.ideal_capacity) * 100))
+  const avatars = activeMembers.slice(0, 4)
+
+  return (
+    <div
+      onClick={onClick}
+      className="rounded-2xl p-5 space-y-4 cursor-pointer hover:shadow-lg transition-all duration-150 group"
+      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+    >
+      {/* Name + vacancy badge */}
+      <div className="flex items-start justify-between gap-2">
+        <p
+          className="text-sm font-semibold text-navy leading-snug group-hover:text-coral transition-colors"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          {committee.name}
+        </p>
+        {committee.open_vacancies > 0 && (
+          <span
+            className="shrink-0 rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {committee.open_vacancies} vacante{committee.open_vacancies !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
+      {/* Leader */}
+      <div className="flex items-center gap-2">
+        <div className="h-6 w-6 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
+          <span className="text-[9px] font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+            {committee.leader.initials}
+          </span>
+        </div>
+        <p className="text-[12px] text-navy-light/60 truncate" style={{ fontFamily: 'var(--font-body)' }}>
+          {committee.leader.name}
+        </p>
+      </div>
+
+      {/* Capacity bar */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            Ocupación
+          </span>
+          <span className="text-[10px] font-medium text-navy-light/60" style={{ fontFamily: 'var(--font-mono)' }}>
+            {activeMembers.length} / {committee.ideal_capacity}
+          </span>
+        </div>
+        <div className="h-1.5 w-full rounded-full bg-navy-light/10 overflow-hidden">
+          <div
+            className={cn(
+              'h-full rounded-full transition-all duration-300',
+              pct >= 90 ? 'bg-coral' : pct >= 60 ? 'bg-teal-deep' : 'bg-navy/40'
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Avatars + count */}
+      <div className="flex items-center justify-between">
+        <div className="flex -space-x-1.5">
+          {avatars.map(m => (
+            <div
+              key={m.member_id}
+              className="h-7 w-7 rounded-full bg-navy flex items-center justify-center ring-2 ring-white"
+              title={m.name}
+            >
+              <span className="text-[9px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                {m.initials}
+              </span>
+            </div>
+          ))}
+          {activeMembers.length > 4 && (
+            <div className="h-7 w-7 rounded-full bg-surface-low flex items-center justify-center ring-2 ring-white">
+              <span className="text-[9px] font-medium text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+                +{activeMembers.length - 4}
+              </span>
+            </div>
+          )}
+        </div>
+        <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+          {activeMembers.length} activo{activeMembers.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+export default function ServidoresPage() {
+  const router = useRouter()
+  const [areaFilter, setAreaFilter] = useState('all')
+
+  const totalActive = useMemo(
+    () => MOCK_COMMITTEES.reduce((s, c) => s + c.members.filter(m => m.status === 'active').length, 0),
+    []
+  )
+  const totalCommittees = MOCK_COMMITTEES.length
+  const openVacancies   = MOCK_VACANCIES.filter(v => v.status === 'published').length
+  const pendingApps     = MOCK_APPLICATIONS.filter(a => a.status === 'pending').length
+
+  const filteredAreas = useMemo(() => {
+    return AREAS.map(area => ({
+      ...area,
+      committees: MOCK_COMMITTEES.filter(
+        c => c.area_code === area.code && (areaFilter === 'all' || c.area_code === areaFilter)
+      ),
+    })).filter(a => a.committees.length > 0)
+  }, [areaFilter])
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div
+        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4"
+        style={{ boxShadow: 'var(--shadow-md)' }}
+      >
+        <div>
+          <h1
+            className="text-2xl text-white"
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          >
+            Servidores
+          </h1>
+          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+            {totalActive} servidores activos en {totalCommittees} comités
+          </p>
+        </div>
+        <Link
+          href="/servidores/vacantes/nueva"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          <Plus size={14} />
+          Nueva vacante
+        </Link>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Servidores activos', value: totalActive,      icon: Users,         color: 'text-navy' },
+          { label: 'Comités activos',    value: totalCommittees,   icon: Briefcase,     color: 'text-teal-deep' },
+          { label: 'Vacantes abiertas',  value: openVacancies,     icon: AlertCircle,   color: openVacancies > 0 ? 'text-coral' : 'text-navy' },
+          { label: 'Apps pendientes',    value: pendingApps,       icon: ClipboardList, color: 'text-navy' },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div
+            key={label}
+            className="rounded-2xl p-5"
+            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                {label}
+              </p>
+              <Icon size={14} className="text-navy-light/30" />
+            </div>
+            <p className={cn('text-4xl font-extrabold tabular-nums', color)} style={{ fontFamily: 'var(--font-display)' }}>
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Area chips */}
+      <div className="flex gap-1.5 flex-wrap">
+        {AREA_FILTERS.map(f => (
+          <button
+            key={f.key}
+            onClick={() => setAreaFilter(f.key)}
+            className={cn(
+              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150',
+              areaFilter === f.key
+                ? 'bg-navy text-white border-navy'
+                : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
+            )}
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Committees grouped by area */}
+      <div className="space-y-8">
+        {filteredAreas.map(area => (
+          <div key={area.code} className="space-y-3">
+            <div className="flex items-center gap-3">
+              <p
+                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/50"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                {area.name}
+              </p>
+              <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
+              <span className="text-[11px] text-navy-light/30" style={{ fontFamily: 'var(--font-mono)' }}>
+                {area.committees.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {area.committees.map(c => (
+                <CommitteeCard
+                  key={c.id}
+                  committee={c}
+                  onClick={() => router.push(`/servidores/${c.id}`)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

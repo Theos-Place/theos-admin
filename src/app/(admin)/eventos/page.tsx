@@ -258,8 +258,9 @@ export default function EventosPage() {
                   return (
                     <tr
                       key={event.id}
+                      onClick={() => router.push(`/eventos/${event.id}`)}
                       className={cn(
-                        'hover:bg-surface-low transition-colors',
+                        'hover:bg-navy/5 transition-colors cursor-pointer',
                         idx % 2 === 1 ? 'bg-surface-low/40' : ''
                       )}
                     >
@@ -286,7 +287,7 @@ export default function EventosPage() {
                       <td className="px-4 py-3">
                         <EventStatusBadge status={event.status} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                         <Link
                           href={`/eventos/${event.id}`}
                           className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"

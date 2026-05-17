@@ -10,7 +10,7 @@ const pageTitles: Record<string, string> = {
   '/miembros':       'Miembros',
   '/eventos':        'Eventos',
   '/estudios':       'Estudios',
-  '/voluntarios':    'Voluntarios y Comités',
+  '/servidores':     'Servidores',
   '/dirigentes':     'Dirigentes',
   '/empleados':      'Empleados',
   '/finanzas':       'Finanzas',

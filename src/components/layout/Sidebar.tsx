@@ -23,12 +23,31 @@ import {
   BarChart2,
   Plus,
   Tag,
+  LayoutGrid,
+  Bookmark,
+  ClipboardList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const EVENTOS_SUB = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
   { href: '/eventos/tipos',  label: 'Tipos de evento',  icon: Tag  },
+]
+
+const EMPLEADOS_SUB = [
+  { href: '/empleados',         label: 'Lista de empleados', icon: Users     },
+  { href: '/empleados/puestos', label: 'Puestos pagados',    icon: Tag       },
+]
+
+const FORMULARIOS_SUB = [
+  { href: '/formularios',       label: 'Todos los formularios', icon: FileText  },
+  { href: '/formularios/nuevo', label: 'Nuevo formulario',      icon: Plus      },
+]
+
+const SERVIDORES_SUB = [
+  { href: '/servidores',                label: 'Por comités',          icon: LayoutGrid   },
+  { href: '/servidores/vacantes',       label: 'Vacantes',             icon: Bookmark     },
+  { href: '/servidores/aplicaciones',   label: 'Aplicaciones',         icon: ClipboardList},
 ]
 
 const ESTUDIOS_SUB = [
@@ -45,7 +64,7 @@ const navItems = [
   { href: '/miembros',      label: 'Miembros',             icon: Users },
   { href: '/eventos',       label: 'Eventos',              icon: Calendar },
   { href: '/estudios',      label: 'Estudios',             icon: BookOpen },
-  { href: '/voluntarios',   label: 'Voluntarios / Comités',icon: UsersRound },
+  { href: '/servidores',    label: 'Servidores',            icon: UsersRound },
   { href: '/empleados',     label: 'Empleados',            icon: Briefcase },
   { href: '/finanzas',      label: 'Finanzas',             icon: DollarSign },
   { href: '/comunicaciones',label: 'Comunicaciones',       icon: MessageCircle },
@@ -59,8 +78,11 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
-  const estudiosActive = pathname === '/estudios' || pathname.startsWith('/estudios/')
-  const eventosActive  = pathname === '/eventos'  || pathname.startsWith('/eventos/')
+  const estudiosActive     = pathname === '/estudios'    || pathname.startsWith('/estudios/')
+  const eventosActive      = pathname === '/eventos'     || pathname.startsWith('/eventos/')
+  const servidoresActive   = pathname === '/servidores'  || pathname.startsWith('/servidores/')
+  const empleadosActive    = pathname === '/empleados'   || pathname.startsWith('/empleados/')
+  const formulariosActive  = pathname === '/formularios' || pathname.startsWith('/formularios/')
 
   return (
     <>
@@ -115,7 +137,195 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               ? pathname === '/eventos'
               : pathname === href || pathname.startsWith(href + '/')
 
-            if (isEventos) {
+            const isEmpleados    = href === '/empleados'
+            const isServidores   = href === '/servidores'
+            const isFormularios  = href === '/formularios'
+
+          if (isEmpleados) {
+            return (
+              <div key={href}>
+                <Link
+                  href={href}
+                  onClick={onClose}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                    empleadosActive
+                      ? 'bg-coral text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <Icon
+                    size={18}
+                    strokeWidth={1.75}
+                    className={cn(
+                      'shrink-0 transition-colors',
+                      empleadosActive ? 'text-white' : 'text-white/50 group-hover:text-white'
+                    )}
+                  />
+                  <span
+                    className="flex-1 truncate"
+                    style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                  >
+                    {label}
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={cn(
+                      'transition-transform duration-200',
+                      empleadosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
+                    )}
+                  />
+                </Link>
+                {empleadosActive && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                    {EMPLEADOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                      const subActive = pathname === sub || (sub !== '/empleados' && pathname.startsWith(sub + '/'))
+                      return (
+                        <Link
+                          key={sub}
+                          href={sub}
+                          onClick={onClose}
+                          className={cn(
+                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                            subActive
+                              ? 'bg-white/15 text-white'
+                              : 'text-white/55 hover:bg-white/10 hover:text-white'
+                          )}
+                        >
+                          <SubIcon
+                            size={14}
+                            strokeWidth={1.75}
+                            className={cn(
+                              'shrink-0',
+                              subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
+                            )}
+                          />
+                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                            {subLabel}
+                          </span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          if (isServidores) {
+            return (
+              <div key={href}>
+                <Link
+                  href={href}
+                  onClick={onClose}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                    servidoresActive
+                      ? 'bg-coral text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <Icon
+                    size={18}
+                    strokeWidth={1.75}
+                    className={cn(
+                      'shrink-0 transition-colors',
+                      servidoresActive ? 'text-white' : 'text-white/50 group-hover:text-white'
+                    )}
+                  />
+                  <span
+                    className="flex-1 truncate"
+                    style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                  >
+                    {label}
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={cn(
+                      'transition-transform duration-200',
+                      servidoresActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
+                    )}
+                  />
+                </Link>
+                {servidoresActive && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                    {SERVIDORES_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                      const subActive = pathname === sub || (sub !== '/servidores' && pathname.startsWith(sub + '/'))
+                      return (
+                        <Link
+                          key={sub}
+                          href={sub}
+                          onClick={onClose}
+                          className={cn(
+                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                            subActive
+                              ? 'bg-white/15 text-white'
+                              : 'text-white/55 hover:bg-white/10 hover:text-white'
+                          )}
+                        >
+                          <SubIcon
+                            size={14}
+                            strokeWidth={1.75}
+                            className={cn(
+                              'shrink-0',
+                              subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
+                            )}
+                          />
+                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                            {subLabel}
+                          </span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          if (isFormularios) {
+            return (
+              <div key={href}>
+                <Link
+                  href={href}
+                  onClick={onClose}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                    formulariosActive
+                      ? 'bg-coral text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', formulariosActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
+                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  <ChevronDown size={14} className={cn('transition-transform duration-200', formulariosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
+                </Link>
+                {formulariosActive && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                    {FORMULARIOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                      const subActive = pathname === sub || (sub !== '/formularios' && pathname.startsWith(sub + '/'))
+                      return (
+                        <Link
+                          key={sub}
+                          href={sub}
+                          onClick={onClose}
+                          className={cn(
+                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
+                          )}
+                        >
+                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
+                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          if (isEventos) {
               return (
                 <div key={href}>
                   <Link

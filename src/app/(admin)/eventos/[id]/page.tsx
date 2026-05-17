@@ -1,8 +1,9 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { getEvent } from '@/data/mock-events'
+import { mockMembers } from '@/data/mock-members'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { CapacityBar } from '@/components/events/CapacityBar'
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils'
 import {
   ChevronLeft, Calendar, MapPin, Users, Edit2, MoreHorizontal,
   Send, Download, QrCode, UserPlus, CalendarPlus, ExternalLink, X as XIcon,
+  Check, Clock, MoreVertical, Search, Link2,
 } from 'lucide-react'
 
 function getGoogleCalendarUrl(event: NonNullable<ReturnType<typeof getEvent>>) {
@@ -120,6 +122,21 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+const SERVER_ROLES = [
+  'Anfitrión', 'Sonidista', 'Proyección', 'Coordinador de Kids',
+  'Coordinador de Teens', 'Logística', 'Seguridad', 'Otro',
+]
+
+type VolunteerBooking = {
+  id: string
+  member_id: string
+  member_name: string
+  member_initials: string
+  role: string
+  status: 'confirmed' | 'pending' | 'declined'
+  is_recurring: boolean
+}
+
 const TABS = ['informacion', 'inscripciones', 'checkin', 'servidores', 'comunicaciones', 'reportes'] as const
 type Tab = typeof TABS[number]
 const TAB_LABELS: Record<Tab, string> = {
@@ -141,6 +158,20 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [showCalendarPopover, setShowCalendarPopover] = useState(false)
   const [icsWithRRule, setIcsWithRRule] = useState(false)
   const [cancelled, setCancelled] = useState(false)
+
+  // Servidores tab state
+  const [localBookings, setLocalBookings] = useState<VolunteerBooking[]>([])
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [modalStep, setModalStep] = useState<1 | 2>(1)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterCommittee, setFilterCommittee] = useState(false)
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
+  const [assignRole, setAssignRole] = useState('')
+  const [customRole, setCustomRole] = useState('')
+  const [assignRecurring, setAssignRecurring] = useState(false)
+  const [recurringGlobal, setRecurringGlobal] = useState(false)
+  const [serverToast, setServerToast] = useState<string | null>(null)
+  const [openServerMenu, setOpenServerMenu] = useState<string | null>(null)
 
   if (!event) {
     return (
@@ -171,6 +202,79 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const incomeEstimate = event.requires_payment && event.payment_amount
     ? checkinCount * event.payment_amount
     : 0
+
+  // Servidores derived
+  const allBookings: VolunteerBooking[] = useMemo(() => [
+    ...event.volunteer_bookings.map(vb => ({
+      id: vb.member_id,
+      member_id: vb.member_id,
+      member_name: vb.member_name,
+      member_initials: getInitials(vb.member_name),
+      role: vb.role,
+      status: vb.status as 'confirmed' | 'pending' | 'declined',
+      is_recurring: false,
+    })),
+    ...localBookings,
+  ], [event.volunteer_bookings, localBookings])
+
+  const groupedBookings = allBookings.reduce<Record<string, VolunteerBooking[]>>((acc, b) => {
+    if (!acc[b.role]) acc[b.role] = []
+    acc[b.role].push(b)
+    return acc
+  }, {})
+
+  const confirmedCount = allBookings.filter(b => b.status === 'confirmed').length
+  const pendingCount   = allBookings.filter(b => b.status === 'pending').length
+  const declinedCount  = allBookings.filter(b => b.status === 'declined').length
+
+  const selectedMember = selectedMemberId ? mockMembers.find(m => m.id === selectedMemberId) : null
+
+  const filteredMembers = useMemo(() => {
+    const q = searchQuery.toLowerCase()
+    return mockMembers.filter(m => {
+      const nameMatch = `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        (m.cedula ?? '').includes(q)
+      const committeeMatch = !filterCommittee ||
+        m.service_history.some(s => s.committee === event.committee_id && s.status === 'activo')
+      return nameMatch && committeeMatch
+    }).slice(0, 8)
+  }, [searchQuery, filterCommittee, event.committee_id])
+
+  function resetModal() {
+    setModalStep(1)
+    setSearchQuery('')
+    setFilterCommittee(false)
+    setSelectedMemberId(null)
+    setAssignRole('')
+    setCustomRole('')
+    setAssignRecurring(false)
+    setShowAssignModal(false)
+  }
+
+  function confirmAssignment() {
+    if (!selectedMember) return
+    const role = assignRole === 'Otro' ? customRole.trim() || 'Otro' : assignRole
+    if (!role) return
+    const newBooking: VolunteerBooking = {
+      id: `booking-${Date.now()}`,
+      member_id: selectedMember.id,
+      member_name: `${selectedMember.first_name} ${selectedMember.last_name}`,
+      member_initials: getInitials(`${selectedMember.first_name} ${selectedMember.last_name}`),
+      role,
+      status: 'pending',
+      is_recurring: assignRecurring,
+    }
+    setLocalBookings(prev => [...prev, newBooking])
+    const name = `${selectedMember.first_name} ${selectedMember.last_name}`
+    setServerToast(`Recordatorio enviado a ${name} por WhatsApp y correo`)
+    setTimeout(() => setServerToast(null), 3500)
+    resetModal()
+  }
+
+  function removeBooking(bookingId: string) {
+    setLocalBookings(prev => prev.filter(b => b.id !== bookingId))
+    setOpenServerMenu(null)
+  }
 
   const arcPct = attendanceRate / 100
   const circumference = 2 * Math.PI * 40
@@ -547,14 +651,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
               {checkinCount} check-ins registrados
             </p>
-            <Link
-              href={`/eventos/${id}/checkin`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              <QrCode size={14} />
-              Ir a Check-in en vivo →
-            </Link>
           </div>
 
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
@@ -599,44 +695,308 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       {/* Tab: Servidores */}
       {activeTab === 'servidores' && (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <button className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
-              <UserPlus size={13} /> Asignar servidor
-            </button>
+          {/* Header row */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* Stats pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1.5 text-[12px] text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>
+                <Check size={12} strokeWidth={2.5} /> {confirmedCount} confirmados
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-[12px] text-amber-700" style={{ fontFamily: 'var(--font-body)' }}>
+                <Clock size={12} strokeWidth={2} className="animate-pulse" /> {pendingCount} pendientes
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1.5 text-[12px] text-navy/50" style={{ fontFamily: 'var(--font-body)' }}>
+                <XIcon size={12} strokeWidth={2} /> {declinedCount} declinaron
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {event.is_recurring && (
+                <label className="flex items-center gap-2 cursor-pointer" title="Los servidores asignados se repetirán automáticamente en cada fecha de la serie">
+                  <div
+                    onClick={() => setRecurringGlobal(v => !v)}
+                    className={cn('relative h-5 w-9 rounded-full transition-colors cursor-pointer', recurringGlobal ? 'bg-coral' : 'bg-navy-light/20')}
+                  >
+                    <div className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', recurringGlobal ? 'translate-x-4' : 'translate-x-0')} />
+                  </div>
+                  <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Aplicar a toda la serie</span>
+                </label>
+              )}
+              <button
+                onClick={() => { setShowAssignModal(true); setModalStep(1) }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                <UserPlus size={13} /> Asignar servidor
+              </button>
+            </div>
           </div>
 
-          {Object.keys(groupedVolunteers).length === 0 ? (
-            <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          {/* Bookings grouped by role */}
+          {Object.keys(groupedBookings).length === 0 ? (
+            <div className="rounded-2xl p-10 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+              <UserPlus size={28} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.25} />
               <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>No hay servidores asignados aún.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {Object.entries(groupedVolunteers).map(([role, volunteers]) => (
+              {Object.entries(groupedBookings).map(([role, bookings]) => (
                 <div key={role} className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-                  <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>{role}</p>
+                  <p className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>{role}</p>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {volunteers.map(v => (
-                      <div key={v.member_id} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'var(--surface-low)' }}>
-                        <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(v.member_name))}>
-                          {getInitials(v.member_name)}
+                    {bookings.map(b => (
+                      <div key={b.id} className="relative flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'var(--surface-low)' }}>
+                        <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(b.member_name))}>
+                          {b.member_initials}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>{v.member_name}</p>
-                          <p className="text-[11px] text-navy-light/50 truncate" style={{ fontFamily: 'var(--font-body)' }}>{v.role}</p>
+                          <p className="text-sm font-medium text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>{b.member_name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={cn(
+                              'rounded-md px-1.5 py-0.5 text-[10px] font-medium',
+                              b.status === 'confirmed' ? 'bg-teal-soft/30 text-teal-deep' :
+                              b.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              'bg-navy/10 text-navy/50'
+                            )}>
+                              {b.status === 'confirmed' ? '✓ Confirmado' : b.status === 'pending' ? '⏳ Pendiente' : '✗ Declinó'}
+                            </span>
+                            {b.is_recurring && (
+                              <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                                <Link2 size={10} className="inline" /> Serie
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className={cn(
-                          'rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0',
-                          v.status === 'confirmed' ? 'bg-teal-soft/30 text-teal-deep' :
-                          v.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-navy/10 text-navy/50'
-                        )}>
-                          {v.status === 'confirmed' ? 'Confirmado' : v.status === 'pending' ? 'Pendiente' : 'Cancelado'}
-                        </span>
+                        <div className="relative shrink-0">
+                          <button
+                            onClick={() => setOpenServerMenu(openServerMenu === b.id ? null : b.id)}
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/30 hover:bg-surface-card hover:text-navy transition-all"
+                          >
+                            <MoreVertical size={14} />
+                          </button>
+                          {openServerMenu === b.id && (
+                            <div
+                              className="absolute right-0 top-full mt-1 rounded-xl overflow-hidden w-36 z-20"
+                              style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--outline-variant)' }}
+                            >
+                              <button
+                                onClick={() => setOpenServerMenu(null)}
+                                className="w-full text-left px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                                style={{ fontFamily: 'var(--font-body)' }}
+                              >
+                                Cambiar rol
+                              </button>
+                              <button
+                                onClick={() => removeBooking(b.id)}
+                                className="w-full text-left px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors"
+                                style={{ fontFamily: 'var(--font-body)' }}
+                              >
+                                Quitar
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Assignment Modal */}
+          {showAssignModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={resetModal} />
+              <div
+                className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden"
+                style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+              >
+                {/* Modal header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+                  <div className="flex items-center gap-3">
+                    <span className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white', modalStep === 1 ? 'bg-coral' : 'bg-teal-deep')}>
+                      {modalStep}
+                    </span>
+                    <span className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                      {modalStep === 1 ? 'Buscar miembro' : 'Definir rol'}
+                    </span>
+                  </div>
+                  <button onClick={resetModal} className="text-navy-light/40 hover:text-navy transition-colors">
+                    <XIcon size={16} />
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                  {/* Step 1 — search */}
+                  {modalStep === 1 && (
+                    <>
+                      <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
+                        <Search size={14} className="text-navy-light/40 shrink-0" />
+                        <input
+                          type="search"
+                          autoFocus
+                          placeholder="Nombre o cédula..."
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                          className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy-light/40"
+                          style={{ fontFamily: 'var(--font-body)' }}
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="accent-coral h-4 w-4"
+                          checked={filterCommittee}
+                          onChange={e => setFilterCommittee(e.target.checked)}
+                        />
+                        <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                          Solo miembros del comité organizador
+                        </span>
+                      </label>
+                      <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                        {filteredMembers.map(m => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setSelectedMemberId(m.id)}
+                            className={cn(
+                              'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all',
+                              selectedMemberId === m.id
+                                ? 'bg-coral/10 ring-1 ring-coral/30'
+                                : 'hover:bg-surface-low'
+                            )}
+                          >
+                            <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(m.first_name))}>
+                              {(m.first_name[0] + m.last_name[0]).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                                {m.first_name} {m.last_name}
+                              </p>
+                              <p className="text-[11px] text-navy-light/40 truncate" style={{ fontFamily: 'var(--font-mono)' }}>
+                                {m.cedula ?? 'Sin cédula'}
+                                {m.service_history.filter(s => s.status === 'activo').map(s => ` · ${s.committee}`).join('')}
+                              </p>
+                            </div>
+                            {selectedMemberId === m.id && <Check size={14} className="text-coral shrink-0" />}
+                          </button>
+                        ))}
+                        {filteredMembers.length === 0 && (
+                          <p className="text-sm text-navy-light/40 text-center py-4" style={{ fontFamily: 'var(--font-body)' }}>Sin resultados</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Step 2 — role & config */}
+                  {modalStep === 2 && selectedMember && (
+                    <>
+                      <div className="flex items-center gap-3 rounded-xl bg-teal-soft/10 px-3 py-2.5">
+                        <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(selectedMember.first_name))}>
+                          {(selectedMember.first_name[0] + selectedMember.last_name[0]).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                            {selectedMember.first_name} {selectedMember.last_name}
+                          </p>
+                          <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-mono)' }}>
+                            {selectedMember.cedula ?? 'Sin cédula'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                          Rol en este evento
+                        </label>
+                        <select
+                          className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                          style={{ fontFamily: 'var(--font-body)' }}
+                          value={assignRole}
+                          onChange={e => setAssignRole(e.target.value)}
+                        >
+                          <option value="">Seleccionar rol...</option>
+                          {SERVER_ROLES.map(r => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                        {assignRole === 'Otro' && (
+                          <input
+                            type="text"
+                            autoFocus
+                            placeholder="Especificá el rol..."
+                            value={customRole}
+                            onChange={e => setCustomRole(e.target.value)}
+                            className="mt-2 w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                            style={{ fontFamily: 'var(--font-body)' }}
+                          />
+                        )}
+                      </div>
+
+                      {event.is_recurring && (
+                        <label className="flex items-start gap-3 cursor-pointer rounded-xl bg-surface-low px-3 py-2.5">
+                          <div
+                            onClick={() => setAssignRecurring(v => !v)}
+                            className={cn('relative h-5 w-9 rounded-full transition-colors cursor-pointer mt-0.5 shrink-0', assignRecurring ? 'bg-coral' : 'bg-navy-light/20')}
+                          >
+                            <div className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', assignRecurring ? 'translate-x-4' : 'translate-x-0')} />
+                          </div>
+                          <div>
+                            <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>Booking recurrente</p>
+                            {assignRecurring && (
+                              <p className="text-[11px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                                Esta persona quedará asignada a todas las instancias futuras de esta serie
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Modal footer */}
+                <div className="flex items-center justify-between gap-2 px-5 py-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+                  <button
+                    onClick={() => modalStep === 1 ? resetModal() : setModalStep(1)}
+                    className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                  >
+                    {modalStep === 1 ? 'Cancelar' : '← Atrás'}
+                  </button>
+                  {modalStep === 1 ? (
+                    <button
+                      onClick={() => { if (selectedMemberId) setModalStep(2) }}
+                      disabled={!selectedMemberId}
+                      className="rounded-xl bg-navy px-4 py-2 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      Continuar →
+                    </button>
+                  ) : (
+                    <button
+                      onClick={confirmAssignment}
+                      disabled={!assignRole || (assignRole === 'Otro' && !customRole.trim())}
+                      className="rounded-xl bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      Asignar servidor
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Toast */}
+          {serverToast && (
+            <div
+              className="fixed bottom-6 right-6 flex items-center gap-3 rounded-2xl bg-navy px-5 py-3.5 text-white z-50"
+              style={{ boxShadow: 'var(--shadow-lg)' }}
+            >
+              <Send size={14} className="text-teal-soft shrink-0" />
+              <span className="text-sm" style={{ fontFamily: 'var(--font-body)' }}>{serverToast}</span>
             </div>
           )}
         </div>

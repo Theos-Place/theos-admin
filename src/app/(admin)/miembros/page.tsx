@@ -13,14 +13,22 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react'
-import { useMemberFilters, type QuickFilter } from '@/hooks/useMemberFilters'
+import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
 import { QueryBar } from '@/components/members/QueryBar'
 import { type Member } from '@/data/mock-members'
-import { sedeLabel } from '@/data/mock-sedes'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 5
+
+function calcularEdad(fechaNacimiento: string): number {
+  const hoy = new Date()
+  const nac = new Date(fechaNacimiento)
+  let edad = hoy.getFullYear() - nac.getFullYear()
+  const m = hoy.getMonth() - nac.getMonth()
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
+  return edad
+}
 
 function initials(m: Member) {
   return (m.first_name[0] + m.last_name[0]).toUpperCase()
@@ -48,18 +56,18 @@ const ROLE_LABEL: Record<string, string> = {
   admin:     'Admin',
 }
 
-const QUICK_CHIPS: { key: QuickFilter; label: string }[] = [
+const QUICK_CHIPS = [
   { key: 'todos',      label: 'Todos' },
-  { key: 'activos',    label: 'Activos' },
   { key: 'donadores',  label: 'Donadores' },
   { key: 'servidores', label: 'Servidores' },
-]
+] as const
 
 export default function MiembrosPage() {
   const router = useRouter()
   const filters = useMemberFilters()
 
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>('todos')
+  const [showDonors, setShowDonors] = useState(false)
+  const [showServers, setShowServers] = useState(false)
   const [search, setSearch] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
@@ -67,9 +75,8 @@ export default function MiembrosPage() {
 
   const displayMembers = useMemo(() => {
     let list = filters.filteredMembers
-    if      (quickFilter === 'activos')    list = list.filter(m => m.status === 'active')
-    else if (quickFilter === 'donadores')  list = list.filter(m => m.is_donor)
-    else if (quickFilter === 'servidores') list = list.filter(m => m.is_server)
+    if (showDonors)  list = list.filter(m => m.is_donor)
+    if (showServers) list = list.filter(m => m.is_server)
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(m =>
@@ -80,7 +87,7 @@ export default function MiembrosPage() {
       )
     }
     return list
-  }, [filters.filteredMembers, quickFilter, search])
+  }, [filters.filteredMembers, showDonors, showServers, search])
 
   const totalPages  = Math.max(1, Math.ceil(displayMembers.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
@@ -153,21 +160,32 @@ export default function MiembrosPage() {
       {/* ── Quick chips + Search ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-1.5 flex-wrap">
-          {QUICK_CHIPS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => { setQuickFilter(key); setPage(1) }}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
-                quickFilter === key
-                  ? 'bg-navy text-white'
-                  : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
-              )}
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              {label}
-            </button>
-          ))}
+          {QUICK_CHIPS.map(({ key, label }) => {
+            const active =
+              key === 'todos'      ? (!showDonors && !showServers) :
+              key === 'donadores'  ? showDonors :
+              showServers
+            return (
+              <button
+                key={key}
+                onClick={() => {
+                  if (key === 'todos') { setShowDonors(false); setShowServers(false) }
+                  else if (key === 'donadores') setShowDonors(v => !v)
+                  else setShowServers(v => !v)
+                  setPage(1)
+                }}
+                className={cn(
+                  'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
+                  active
+                    ? 'bg-navy text-white'
+                    : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
+                )}
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                {label}
+              </button>
+            )
+          })}
 
           {/* Advanced filters toggle */}
           <button
@@ -274,7 +292,7 @@ export default function MiembrosPage() {
                     className="accent-coral h-4 w-4 cursor-pointer rounded"
                   />
                 </th>
-                {['Miembro', 'Cédula', 'Nacimiento', 'Rol', 'Sede', ''].map(col => (
+                {['Miembro', 'Cédula', 'Edad', 'Rol', ''].map(col => (
                   <th
                     key={col}
                     className="px-4 py-3.5 text-left text-xs font-medium text-navy-light/50 tracking-wider uppercase whitespace-nowrap"
@@ -289,7 +307,7 @@ export default function MiembrosPage() {
               {paginated.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-4 py-12 text-center text-sm text-navy-light/40"
                     style={{ fontFamily: 'var(--font-body)' }}
                   >
@@ -346,14 +364,12 @@ export default function MiembrosPage() {
                       )}
                     </td>
 
-                    {/* Nacimiento */}
+                    {/* Edad */}
                     <td
                       className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap"
                       style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
                     >
-                      {member.birth_date
-                        ? new Date(member.birth_date).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })
-                        : '—'}
+                      {member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'}
                     </td>
 
                     {/* Rol */}
@@ -380,14 +396,6 @@ export default function MiembrosPage() {
                           <span className="text-xs text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>Miembro</span>
                         )}
                       </div>
-                    </td>
-
-                    {/* Sede */}
-                    <td
-                      className="px-4 py-3.5 text-sm text-navy-light/70 whitespace-nowrap"
-                      style={{ fontFamily: 'var(--font-body)' }}
-                    >
-                      {sedeLabel(member.sede)}
                     </td>
 
                     {/* Action */}

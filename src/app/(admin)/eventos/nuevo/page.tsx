@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import Link from 'next/link'
 import { ALL_COMMITTEES } from '@/data/mock-committees'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { cn } from '@/lib/utils'
 import {
-  ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
-  Users, Star, MapPin, Music, Coffee, Zap,
+  ChevronLeft, ChevronRight, Mic, Tent, Heart, BookOpen, Plus, X,
+  Users, Star, MapPin, Music, Coffee, Zap, ExternalLink,
 } from 'lucide-react'
 import { EVENT_TYPES, type EventType } from '@/data/mock-events'
 
@@ -22,69 +22,117 @@ const activeEventTypes = EVENT_TYPES.filter(t => t.is_active)
 
 type SubEventInput = { id: string; name: string; max_capacity: string }
 
-function Section({
-  id, title, open, onToggle, children,
-}: {
-  id: string; title: string; open: boolean; onToggle: () => void; children: React.ReactNode
-}) {
+interface FormData {
+  name: string
+  event_type: EventType | ''
+  committee: string
+  description: string
+  start_date: string
+  start_time: string
+  end_date: string
+  end_time: string
+  is_virtual: boolean
+  location: string
+  location_map_url: string
+  is_recurring: boolean
+  recurrence_rule: string | null
+  sub_events: SubEventInput[]
+  requires_registration: boolean
+  max_capacity: string
+  prerequisite: string
+  has_satisfaction_survey: boolean
+  requires_payment: boolean
+  payment_amount: string
+  payment_methods: string[]
+}
+
+const STEPS = [
+  { num: 1, label: 'Información' },
+  { num: 2, label: 'Programación' },
+  { num: 3, label: 'Sub-eventos' },
+  { num: 4, label: 'Financiero' },
+]
+
+function Toggle({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-low transition-colors"
-      >
-        <span className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
-          {title}
-        </span>
-        {open ? <ChevronUp size={16} className="text-navy-light/40" /> : <ChevronDown size={16} className="text-navy-light/40" />}
-      </button>
-      {open && (
-        <div className="px-5 pb-5 space-y-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-          <div className="pt-4">{children}</div>
-        </div>
-      )}
+    <div className="flex items-center gap-3 cursor-pointer" onClick={onToggle}>
+      <div className={cn(
+        'relative h-6 w-11 rounded-full transition-all duration-200 cursor-pointer shrink-0',
+        checked ? 'bg-coral' : 'bg-navy-light/20'
+      )}>
+        <div className={cn(
+          'absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200',
+          checked ? 'translate-x-5' : 'translate-x-0'
+        )} />
+      </div>
+      <span className="text-sm text-navy select-none" style={{ fontFamily: 'var(--font-body)' }}>{label}</span>
+    </div>
+  )
+}
+
+function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div
+      className="flex items-start justify-between gap-4 py-2.5 border-b last:border-0"
+      style={{ borderColor: 'var(--outline-variant)' }}
+    >
+      <span className="text-[11px] tracking-widest uppercase text-navy-light/40 shrink-0 mt-0.5" style={{ fontFamily: 'var(--font-display)' }}>
+        {label}
+      </span>
+      <span className="text-sm text-navy text-right" style={{ fontFamily: 'var(--font-body)' }}>
+        {value}
+      </span>
     </div>
   )
 }
 
 export default function NuevoEventoPage() {
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['info']))
-  const [name, setName] = useState('')
-  const [selectedType, setSelectedType] = useState<EventType | ''>('')
-  const [committee, setCommittee] = useState('')
-  const [description, setDescription] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [startTime, setStartTime] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [endTime, setEndTime] = useState('')
-  const [isVirtual, setIsVirtual] = useState(false)
-  const [location, setLocation] = useState('')
-  const [isRecurring, setIsRecurring] = useState(false)
-  const [recurrenceRule, setRecurrenceRule] = useState<string | null>(null)
-  const [subEvents, setSubEvents] = useState<SubEventInput[]>([])
+  const [step, setStep] = useState(1)
+  const [published, setPublished] = useState(false)
   const [showSubEventForm, setShowSubEventForm] = useState(false)
   const [newSubName, setNewSubName] = useState('')
   const [newSubCap, setNewSubCap] = useState('')
-  const [requiresRegistration, setRequiresRegistration] = useState(false)
-  const [maxCapacity, setMaxCapacity] = useState('')
-  const [requiresPayment, setRequiresPayment] = useState(false)
-  const [paymentAmount, setPaymentAmount] = useState('')
-  const [paymentMethods, setPaymentMethods] = useState<string[]>([])
-  const [published, setPublished] = useState(false)
 
-  function toggleSection(id: string) {
-    setOpenSections(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  const [form, setForm] = useState<FormData>({
+    name: '',
+    event_type: '',
+    committee: '',
+    description: '',
+    start_date: '',
+    start_time: '',
+    end_date: '',
+    end_time: '',
+    is_virtual: false,
+    location: '',
+    location_map_url: '',
+    is_recurring: false,
+    recurrence_rule: null,
+    sub_events: [],
+    requires_registration: false,
+    max_capacity: '',
+    prerequisite: '',
+    has_satisfaction_survey: false,
+    requires_payment: false,
+    payment_amount: '',
+    payment_methods: [],
+  })
+
+  function set<K extends keyof FormData>(key: K, value: FormData[K]) {
+    setForm(prev => ({ ...prev, [key]: value }))
+  }
+
+  function togglePaymentMethod(m: string) {
+    setForm(prev => ({
+      ...prev,
+      payment_methods: prev.payment_methods.includes(m)
+        ? prev.payment_methods.filter(x => x !== m)
+        : [...prev.payment_methods, m],
+    }))
   }
 
   function addSubEvent() {
     if (!newSubName.trim()) return
-    setSubEvents(prev => [...prev, {
+    set('sub_events', [...form.sub_events, {
       id: `sub-${Date.now()}`,
       name: newSubName.trim(),
       max_capacity: newSubCap || '50',
@@ -95,12 +143,19 @@ export default function NuevoEventoPage() {
   }
 
   function removeSubEvent(id: string) {
-    setSubEvents(prev => prev.filter(s => s.id !== id))
+    set('sub_events', form.sub_events.filter(s => s.id !== id))
   }
 
-  function togglePaymentMethod(m: string) {
-    setPaymentMethods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
+  function canProceed(): boolean {
+    if (step === 1) return form.name.trim().length > 0 && form.event_type !== ''
+    if (step === 2) return form.start_date !== '' && form.start_time !== ''
+    return true
   }
+
+  const selectedTypeObj = useMemo(
+    () => activeEventTypes.find(t => t.id === form.event_type),
+    [form.event_type]
+  )
 
   if (published) {
     return (
@@ -129,9 +184,10 @@ export default function NuevoEventoPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
-      {/* Sticky top bar */}
+
+      {/* Top bar — sticky */}
       <div
-        className="sticky top-0 z-10 -mx-1 flex items-center justify-between gap-3 rounded-2xl px-5 py-3"
+        className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-2xl px-5 py-3"
         style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
       >
         <div className="flex items-center gap-3">
@@ -147,44 +203,113 @@ export default function NuevoEventoPage() {
           <span className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
             Crear evento
           </span>
+          {/* Mobile: step indicator */}
           <span
-            className="rounded-md bg-navy/10 px-2 py-0.5 text-[10px] font-medium text-navy-light/60"
+            className="lg:hidden rounded-md bg-navy/10 px-2 py-0.5 text-[10px] font-medium text-navy-light/60"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            Borrador
+            {step} / {STEPS.length}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
             style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
           >
             Guardar borrador
           </button>
-          <button
-            onClick={() => setPublished(true)}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
-          >
-            Publicar
-          </button>
+          {step < STEPS.length ? (
+            <button
+              type="button"
+              onClick={() => setStep(s => s + 1)}
+              disabled={!canProceed()}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[12px] text-white transition-colors',
+                canProceed() ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+              )}
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Siguiente
+              <ChevronRight size={13} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPublished(true)}
+              className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Publicar evento
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Sección 1 — Info principal */}
-      <Section id="info" title="① Información principal" open={openSections.has('info')} onToggle={() => toggleSection('info')}>
-        <div className="space-y-4">
+      {/* Desktop stepper */}
+      <div
+        className="hidden lg:flex items-center px-5 py-4 rounded-2xl"
+        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+      >
+        {STEPS.map((s, idx) => (
+          <Fragment key={s.num}>
+            <button
+              type="button"
+              onClick={() => s.num < step ? setStep(s.num) : undefined}
+              className={cn(
+                'flex items-center gap-2.5',
+                s.num < step ? 'cursor-pointer' : 'cursor-default'
+              )}
+            >
+              <div
+                className={cn(
+                  'h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors',
+                  s.num === step ? 'bg-coral text-white' :
+                  s.num < step ? 'bg-teal-deep text-white' :
+                  'bg-navy-light/15 text-navy-light/50'
+                )}
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                {s.num < step ? '✓' : s.num}
+              </div>
+              <span
+                className={cn(
+                  'text-[12px] font-medium whitespace-nowrap transition-colors',
+                  s.num === step ? 'text-navy' :
+                  s.num < step ? 'text-teal-deep' :
+                  'text-navy-light/40'
+                )}
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                {s.label}
+              </span>
+            </button>
+            {idx < STEPS.length - 1 && (
+              <div className="flex-1 h-px mx-4" style={{ background: 'var(--outline-variant)' }} />
+            )}
+          </Fragment>
+        ))}
+      </div>
+
+      {/* Paso 1 — Información principal */}
+      {step === 1 && (
+        <div className="rounded-2xl p-5 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
           <div>
             <input
-              className="w-full border-0 border-b bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 focus:border-coral/40 transition-colors"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 700, borderBottomWidth: '2px', borderBottomColor: 'var(--outline-variant)' }}
+              className="w-full border-0 border-b bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 transition-colors"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                borderBottomWidth: '2px',
+                borderBottomColor: 'var(--outline-variant)',
+              }}
               placeholder="Nombre del evento..."
-              value={name}
-              onChange={e => setName(e.target.value)}
+              value={form.name}
+              onChange={e => set('name', e.target.value)}
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
               Tipo de evento
             </label>
@@ -195,14 +320,14 @@ export default function NuevoEventoPage() {
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => setSelectedType(t.id as EventType)}
+                    onClick={() => set('event_type', t.id as EventType)}
                     className={cn(
                       'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
-                      selectedType === t.id
+                      form.event_type === t.id
                         ? 'border-coral bg-coral/5 text-coral'
                         : 'text-navy-light/60 hover:bg-surface-low'
                     )}
-                    style={{ borderColor: selectedType === t.id ? undefined : 'var(--outline-variant)' }}
+                    style={{ borderColor: form.event_type === t.id ? undefined : 'var(--outline-variant)' }}
                   >
                     <Icon size={18} />
                     <span className="text-[11px] font-medium" style={{ fontFamily: 'var(--font-display)' }}>{t.name}</span>
@@ -219,8 +344,8 @@ export default function NuevoEventoPage() {
             <select
               className={inputCls}
               style={{ fontFamily: 'var(--font-body)' }}
-              value={committee}
-              onChange={e => setCommittee(e.target.value)}
+              value={form.committee}
+              onChange={e => set('committee', e.target.value)}
             >
               <option value="">Seleccionar comité...</option>
               {ALL_COMMITTEES.map(c => (
@@ -235,7 +360,7 @@ export default function NuevoEventoPage() {
                 Descripción
               </label>
               <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-mono)' }}>
-                {description.length}/500
+                {form.description.length}/500
               </span>
             </div>
             <textarea
@@ -244,302 +369,400 @@ export default function NuevoEventoPage() {
               rows={3}
               maxLength={500}
               placeholder="Describe el evento para los participantes..."
-              value={description}
-              onChange={e => setDescription(e.target.value)}
+              value={form.description}
+              onChange={e => set('description', e.target.value)}
             />
           </div>
         </div>
-      </Section>
+      )}
 
-      {/* Sección 2 — Programación */}
-      <Section id="schedule" title="② Programación y ubicación" open={openSections.has('schedule')} onToggle={() => toggleSection('schedule')}>
-        <div className="space-y-4">
+      {/* Paso 2 — Programación y ubicación */}
+      {step === 2 && (
+        <div className="rounded-2xl p-5 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                Fecha inicio
-              </label>
-              <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Fecha inicio</label>
+              <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.start_date} onChange={e => set('start_date', e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                Hora inicio
-              </label>
-              <input type="time" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={startTime} onChange={e => setStartTime(e.target.value)} />
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Hora inicio</label>
+              <input type="time" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.start_time} onChange={e => set('start_time', e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                Fecha fin
-              </label>
-              <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={endDate} onChange={e => setEndDate(e.target.value)} />
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Fecha fin</label>
+              <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.end_date} onChange={e => set('end_date', e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                Hora fin
-              </label>
-              <input type="time" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={endTime} onChange={e => setEndTime(e.target.value)} />
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Hora fin</label>
+              <input type="time" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.end_time} onChange={e => set('end_time', e.target.value)} />
             </div>
           </div>
 
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              onClick={() => setIsVirtual(v => !v)}
-              className={cn(
-                'relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer',
-                isVirtual ? 'bg-coral' : 'bg-navy-light/20'
-              )}
-            >
-              <div className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isVirtual ? 'translate-x-4' : 'translate-x-0.5')} />
-            </div>
-            <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-              Evento virtual
-            </span>
-          </label>
+          <div className="space-y-4 pt-1 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+            <Toggle
+              checked={form.is_virtual}
+              onToggle={() => set('is_virtual', !form.is_virtual)}
+              label="Evento virtual"
+            />
 
-          {!isVirtual && (
-            <div className="space-y-1 transition-all">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                Dirección
-              </label>
-              <input
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
-                placeholder="Dirección exacta del evento..."
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div
-                onClick={() => setIsRecurring(r => !r)}
-                className={cn(
-                  'relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer',
-                  isRecurring ? 'bg-coral' : 'bg-navy-light/20'
-                )}
-              >
-                <div className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isRecurring ? 'translate-x-4' : 'translate-x-0.5')} />
+            {!form.is_virtual && (
+              <div className="space-y-3 pl-14">
+                <div className="space-y-1">
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Dirección</label>
+                  <input
+                    className={inputCls}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                    placeholder="Dirección exacta del evento..."
+                    value={form.location}
+                    onChange={e => set('location', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                    Link Waze / Google Maps
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      className={inputCls}
+                      style={{ fontFamily: 'var(--font-body)' }}
+                      placeholder="https://maps.google.com/..."
+                      value={form.location_map_url}
+                      onChange={e => set('location_map_url', e.target.value)}
+                    />
+                    {form.location_map_url && (
+                      <a
+                        href={form.location_map_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                      >
+                        <ExternalLink size={13} />
+                        Probar
+                      </a>
+                    )}
+                  </div>
+                </div>
               </div>
-              <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                Evento recurrente
-              </span>
-            </label>
-            {isRecurring && (
-              <div className="pl-12">
-                <RecurrenceSelector value={recurrenceRule} onChange={setRecurrenceRule} />
+            )}
+          </div>
+
+          <div className="space-y-4 pt-1 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+            <Toggle
+              checked={form.is_recurring}
+              onToggle={() => set('is_recurring', !form.is_recurring)}
+              label="Evento recurrente"
+            />
+            {form.is_recurring && (
+              <div className="pl-14">
+                <RecurrenceSelector value={form.recurrence_rule} onChange={v => set('recurrence_rule', v)} />
               </div>
             )}
           </div>
         </div>
-      </Section>
+      )}
 
-      {/* Sección 3 — Sub-eventos */}
-      <Section id="subevents" title="③ Sub-eventos" open={openSections.has('subevents')} onToggle={() => toggleSection('subevents')}>
-        <div className="space-y-3">
-          {subEvents.length > 0 && (
-            <div className="space-y-2">
-              {subEvents.map(se => (
-                <div
-                  key={se.id}
-                  className="flex items-center justify-between rounded-xl px-3 py-2.5"
-                  style={{ background: 'var(--surface-low)' }}
-                >
-                  <div>
-                    <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{se.name}</p>
-                    <p className="text-[11px] text-navy-light/50">Cap. {se.max_capacity}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeSubEvent(se.id)}
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {showSubEventForm ? (
-            <div className="rounded-xl border p-3 space-y-2 transition-all" style={{ borderColor: 'var(--outline-variant)' }}>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
-                  placeholder="Nombre del sub-evento"
-                  value={newSubName}
-                  onChange={e => setNewSubName(e.target.value)}
-                  autoFocus
-                />
-                <input
-                  type="number"
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
-                  placeholder="Capacidad"
-                  value={newSubCap}
-                  onChange={e => setNewSubCap(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={addSubEvent}
-                  className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:bg-navy/80 transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  Agregar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowSubEventForm(false)}
-                  className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowSubEventForm(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-            >
-              <Plus size={13} />
-              Añadir sub-evento
-            </button>
-          )}
-
-          {subEvents.length === 0 && !showSubEventForm && (
-            <p className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-              Agrega sub-eventos como Kids, Teens o divisiones por día.
+      {/* Paso 3 — Sub-eventos e inscripciones */}
+      {step === 3 && (
+        <div className="space-y-4">
+          {/* Sub-eventos */}
+          <div className="rounded-2xl p-5 space-y-3" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              Sub-eventos
             </p>
-          )}
-        </div>
-      </Section>
 
-      {/* Sección 4 — Inscripciones */}
-      <Section id="registration" title="④ Inscripciones" open={openSections.has('registration')} onToggle={() => toggleSection('registration')}>
-        <div className="space-y-4">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              onClick={() => setRequiresRegistration(r => !r)}
-              className={cn(
-                'relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer',
-                requiresRegistration ? 'bg-coral' : 'bg-navy-light/20'
-              )}
-            >
-              <div className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresRegistration ? 'translate-x-4' : 'translate-x-0.5')} />
-            </div>
-            <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-              Requiere inscripción previa
-            </span>
-          </label>
-
-          {requiresRegistration && (
-            <div className="space-y-3 pl-1 transition-all">
-              <div className="space-y-1">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                  Capacidad máxima
-                </label>
-                <input
-                  type="number"
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
-                  placeholder="100"
-                  value={maxCapacity}
-                  onChange={e => setMaxCapacity(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                  Prerrequisito (opcional)
-                </label>
-                <select
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  <option value="">Sin prerrequisito</option>
-                  <option value="member">Ser miembro activo</option>
-                  <option value="server">Ser servidor activo</option>
-                  <option value="n1">Haber completado N1</option>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
-      </Section>
-
-      {/* Sección 5 — Financiero */}
-      <Section id="finance" title="⑤ Financiero" open={openSections.has('finance')} onToggle={() => toggleSection('finance')}>
-        <div className="space-y-4">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              onClick={() => setRequiresPayment(r => !r)}
-              className={cn(
-                'relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer',
-                requiresPayment ? 'bg-coral' : 'bg-navy-light/20'
-              )}
-            >
-              <div className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresPayment ? 'translate-x-4' : 'translate-x-0.5')} />
-            </div>
-            <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-              Evento con cobro
-            </span>
-          </label>
-
-          {requiresPayment && (
-            <div className="space-y-3 pl-1 transition-all">
-              <div className="space-y-1">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                  Monto
-                </label>
-                <div className="relative">
-                  <span
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+            {form.sub_events.length > 0 && (
+              <div className="space-y-2">
+                {form.sub_events.map(se => (
+                  <div
+                    key={se.id}
+                    className="flex items-center justify-between rounded-xl px-3 py-2.5"
+                    style={{ background: 'var(--surface-low)' }}
                   >
-                    ₡
-                  </span>
+                    <div>
+                      <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{se.name}</p>
+                      <p className="text-[11px] text-navy-light/50">Cap. {se.max_capacity}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeSubEvent(se.id)}
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showSubEventForm ? (
+              <div className="rounded-xl border p-3 space-y-2" style={{ borderColor: 'var(--outline-variant)' }}>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    className={inputCls}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                    placeholder="Nombre del sub-evento"
+                    value={newSubName}
+                    onChange={e => setNewSubName(e.target.value)}
+                    autoFocus
+                  />
                   <input
                     type="number"
-                    className={cn(inputCls, 'pl-7')}
+                    className={inputCls}
                     style={{ fontFamily: 'var(--font-body)' }}
-                    placeholder="15000"
-                    value={paymentAmount}
-                    onChange={e => setPaymentAmount(e.target.value)}
+                    placeholder="Capacidad"
+                    value={newSubCap}
+                    onChange={e => setNewSubCap(e.target.value)}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                  Métodos de pago
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {['Tarjeta', 'SINPE Móvil'].map(m => (
-                    <label
-                      key={m}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        className="accent-coral"
-                        checked={paymentMethods.includes(m)}
-                        onChange={() => togglePaymentMethod(m)}
-                      />
-                      <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{m}</span>
-                    </label>
-                  ))}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={addSubEvent}
+                    className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:bg-navy/80 transition-colors"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    Agregar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSubEventForm(false)}
+                    className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                  >
+                    Cancelar
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowSubEventForm(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                <Plus size={13} />
+                Añadir sub-evento
+              </button>
+            )}
+
+            {form.sub_events.length === 0 && !showSubEventForm && (
+              <p className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                Opcional. Agrega divisiones como Kids, Teens o sesiones por día.
+              </p>
+            )}
+          </div>
+
+          {/* Inscripción */}
+          <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <Toggle
+              checked={form.requires_registration}
+              onToggle={() => set('requires_registration', !form.requires_registration)}
+              label="Requiere inscripción previa"
+            />
+
+            {form.requires_registration && (
+              <div className="space-y-3 pl-14">
+                <div className="space-y-1">
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                    Capacidad máxima
+                  </label>
+                  <input
+                    type="number"
+                    className={inputCls}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                    placeholder="100"
+                    value={form.max_capacity}
+                    onChange={e => set('max_capacity', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                    Prerrequisito (opcional)
+                  </label>
+                  <select
+                    className={inputCls}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                    value={form.prerequisite}
+                    onChange={e => set('prerequisite', e.target.value)}
+                  >
+                    <option value="">Sin prerrequisito</option>
+                    <option value="member">Ser miembro activo</option>
+                    <option value="server">Ser servidor activo</option>
+                    <option value="n1">Haber completado N1</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                >
+                  <Plus size={13} />
+                  Crear formulario de inscripción
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Encuesta de satisfacción */}
+          <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <Toggle
+              checked={form.has_satisfaction_survey}
+              onToggle={() => set('has_satisfaction_survey', !form.has_satisfaction_survey)}
+              label="Encuesta de satisfacción al finalizar"
+            />
+            {form.has_satisfaction_survey && (
+              <div className="pl-14">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                >
+                  <Plus size={13} />
+                  Crear encuesta
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </Section>
+      )}
+
+      {/* Paso 4 — Financiero + Resumen */}
+      {step === 4 && (
+        <div className="space-y-4">
+          {/* Pago */}
+          <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <Toggle
+              checked={form.requires_payment}
+              onToggle={() => set('requires_payment', !form.requires_payment)}
+              label="Evento con cobro"
+            />
+
+            {form.requires_payment && (
+              <div className="space-y-3 pl-14">
+                <div className="space-y-1">
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Monto</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-mono)' }}>₡</span>
+                    <input
+                      type="number"
+                      className={cn(inputCls, 'pl-7')}
+                      style={{ fontFamily: 'var(--font-body)' }}
+                      placeholder="15000"
+                      value={form.payment_amount}
+                      onChange={e => set('payment_amount', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Métodos de pago</label>
+                  <div className="flex flex-wrap gap-4">
+                    {['Tarjeta', 'SINPE Móvil'].map(m => (
+                      <label key={m} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="accent-coral"
+                          checked={form.payment_methods.includes(m)}
+                          onChange={() => togglePaymentMethod(m)}
+                        />
+                        <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{m}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Resumen */}
+          <div className="rounded-2xl p-5 space-y-1" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+              Resumen del evento
+            </p>
+            <SummaryRow label="Nombre" value={form.name || '—'} />
+            <SummaryRow label="Tipo" value={selectedTypeObj?.name ?? '—'} />
+            <SummaryRow label="Comité" value={form.committee || '—'} />
+            <SummaryRow
+              label="Fecha inicio"
+              value={
+                form.start_date
+                  ? new Date(`${form.start_date}T${form.start_time || '00:00'}`).toLocaleString('es-CR', {
+                      day: 'numeric', month: 'short', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    })
+                  : '—'
+              }
+            />
+            <SummaryRow label="Lugar" value={form.is_virtual ? 'Virtual' : form.location || '—'} />
+            {form.location_map_url && !form.is_virtual && (
+              <SummaryRow
+                label="Mapa"
+                value={
+                  <a
+                    href={form.location_map_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-coral underline"
+                  >
+                    Ver enlace
+                  </a>
+                }
+              />
+            )}
+            <SummaryRow label="Recurrente" value={form.is_recurring ? 'Sí' : 'No'} />
+            <SummaryRow
+              label="Sub-eventos"
+              value={form.sub_events.length > 0 ? form.sub_events.map(s => s.name).join(', ') : 'Ninguno'}
+            />
+            <SummaryRow
+              label="Inscripción"
+              value={form.requires_registration
+                ? `Sí${form.max_capacity ? ` · Cap. ${form.max_capacity}` : ''}`
+                : 'No requerida'
+              }
+            />
+            <SummaryRow
+              label="Cobro"
+              value={form.requires_payment && form.payment_amount
+                ? `₡${Number(form.payment_amount).toLocaleString('es-CR')}`
+                : 'Gratuito'
+              }
+            />
+          </div>
+
+          {/* Submit */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="flex-1 rounded-xl border py-3 text-sm text-navy-light hover:bg-surface-low transition-colors"
+              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            >
+              Guardar como borrador
+            </button>
+            <button
+              type="button"
+              onClick={() => setPublished(true)}
+              className="flex-1 rounded-xl bg-coral py-3 text-sm text-white hover:bg-coral-deep transition-colors"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Publicar evento
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Back link */}
+      {step > 1 && (
+        <button
+          type="button"
+          onClick={() => setStep(s => s - 1)}
+          className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          <ChevronLeft size={14} />
+          Paso anterior
+        </button>
+      )}
     </div>
   )
 }

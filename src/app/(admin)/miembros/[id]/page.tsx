@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import {
   MapPin,
   BookOpen,
@@ -101,6 +102,27 @@ const TYPE_BADGE: Record<string, string> = {
 const ATTENDANCE_BADGE: Record<string, string> = {
   servidor: 'bg-coral-soft/20 text-coral',
   participante: 'bg-surface-low text-navy-light/70',
+}
+
+const LOAD_MORE = 10
+
+function useSortableTable<T extends object>(data: T[]) {
+  const [sortKey, setSortKey] = useState<keyof T | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  function toggleSort(key: keyof T) {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('asc') }
+  }
+  const sorted = useMemo(() => {
+    if (!sortKey) return data
+    return [...data].sort((a, b) => {
+      const av = a[sortKey] as string | number
+      const bv = b[sortKey] as string | number
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [data, sortKey, sortDir])
+  return { sorted, sortKey, sortDir, toggleSort }
 }
 
 // ─── Subcomponents ────────────────────────────────────────────────────────────
@@ -223,6 +245,71 @@ export default function MiembroDetailPage() {
   const lastStudyEntry = lastStudyCode ? STUDY_CATALOG.find(s => s.code === lastStudyCode) : null
 
   const hasFinanceRole = true // demo
+
+  // ── Typed rows for sortable tables ──────────────────────────────────────────
+
+  type StudyRow = { code: string; name: string; startYear: number; duration: string; status: string }
+  const estudiosRows: StudyRow[] = useMemo(() => [
+    ...member.completed_studies.map((code, i) => {
+      const entry = STUDY_CATALOG.find(s => s.code === code)
+      return {
+        code,
+        name: entry?.name ?? code,
+        startYear: 2025 - (member.completed_studies.length - i),
+        duration: entry ? `${entry.weeks} sem.` : '—',
+        status: 'Completado',
+      }
+    }),
+    ...(member.current_study ? [{
+      code: member.current_study,
+      name: currentStudyEntry?.name ?? member.current_study,
+      startYear: 2025,
+      duration: '—',
+      status: 'En curso',
+    }] : []),
+  ], [member.completed_studies, member.current_study, currentStudyEntry])
+
+  type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
+  const servicioRows: ServiceRow[] = useMemo(() =>
+    member.service_history.map(s => ({
+      position: s.position,
+      committee: s.committee,
+      from: s.from,
+      to: s.to ?? '',
+      status: s.status,
+    })),
+  [member.service_history])
+
+  type EventoRow = { name: string; type: string; date: string; attendance_type: string }
+  const eventosRows: EventoRow[] = useMemo(() =>
+    member.attendance_history.map(ev => ({
+      name: ev.name,
+      type: ev.type,
+      date: ev.date,
+      attendance_type: ev.attendance_type,
+    })),
+  [member.attendance_history])
+
+  type DonacionRow = { date: string; description: string; amount: number }
+  const donacionesRows: DonacionRow[] = useMemo(() =>
+    member.donations.map(d => ({
+      date: d.date,
+      description: d.description,
+      amount: d.amount,
+    })),
+  [member.donations])
+
+  // ── Sortable tables ──────────────────────────────────────────────────────────
+  const estudiosTable  = useSortableTable(estudiosRows)
+  const servicioTable  = useSortableTable(servicioRows)
+  const eventosTable   = useSortableTable(eventosRows)
+  const donacionesTable = useSortableTable(donacionesRows)
+
+  // ── Pagination ───────────────────────────────────────────────────────────────
+  const [visibleEstudios,  setVisibleEstudios]  = useState(LOAD_MORE)
+  const [visibleServicio,  setVisibleServicio]  = useState(LOAD_MORE)
+  const [visibleEventos,   setVisibleEventos]   = useState(LOAD_MORE)
+  const [visibleDonaciones, setVisibleDonaciones] = useState(LOAD_MORE)
 
   return (
     <div className="space-y-4">
@@ -665,98 +752,72 @@ export default function MiembroDetailPage() {
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                    {['Estudio', 'Inicio', 'Fin', 'Estado'].map(col => (
+                    {([['name', 'Estudio'], ['startYear', 'Inicio'], ['duration', 'Duración'], ['status', 'Estado']] as [keyof StudyRow, string][]).map(([key, label]) => (
                       <th
-                        key={col}
-                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40"
+                        key={key}
+                        onClick={() => estudiosTable.toggleSort(key)}
+                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
                         style={{ fontFamily: 'var(--font-display)' }}
                       >
-                        {col}
+                        {label}{' '}
+                        <span className="opacity-50">
+                          {estudiosTable.sortKey === key ? (estudiosTable.sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                        </span>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {member.completed_studies.map((code, i) => {
-                    const entry = STUDY_CATALOG.find(s => s.code === code)
-                    const yearOffset = member.completed_studies.length - i
-                    const startYear = 2025 - yearOffset
+                  {estudiosTable.sorted.slice(0, visibleEstudios).map((row, i) => {
+                    const entry = STUDY_CATALOG.find(s => s.code === row.code)
                     return (
                       <tr
-                        key={code}
-                        style={i < member.completed_studies.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                        key={row.code}
+                        style={i < Math.min(visibleEstudios, estudiosTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                         className="hover:bg-surface-low transition-colors"
                       >
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                             <span
-                              className={cn(
-                                'rounded px-1.5 py-0.5 text-[10px]',
-                                entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50'
-                              )}
+                              className={cn('rounded px-1.5 py-0.5 text-[10px]', entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50')}
                               style={{ fontFamily: 'var(--font-mono)' }}
                             >
-                              {code}
+                              {row.code}
                             </span>
-                            <span className="text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-                              {entry ? entry.name : code}
-                            </span>
+                            <span className="text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{row.name}</span>
                           </div>
                         </td>
                         <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
-                          Ene {startYear}
+                          Ene {row.startYear}
                         </td>
                         <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
-                          {entry ? `${entry.weeks} sem.` : '—'}
+                          {row.duration}
                         </td>
                         <td className="px-4 py-2.5">
                           <span
-                            className="rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-xs text-teal-deep"
+                            className={cn('rounded-full px-2.5 py-0.5 text-xs', row.status === 'Completado' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral-soft/20 text-coral')}
                             style={{ fontFamily: 'var(--font-body)' }}
                           >
-                            Completado
+                            {row.status}
                           </span>
                         </td>
                       </tr>
                     )
                   })}
-                  {member.current_study && (
-                    <tr className="hover:bg-surface-low transition-colors">
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              'rounded px-1.5 py-0.5 text-[10px]',
-                              currentStudyEntry ? studyStageColor(currentStudyEntry.stage) : 'bg-surface-low text-navy-light/50'
-                            )}
-                            style={{ fontFamily: 'var(--font-mono)' }}
-                          >
-                            {member.current_study}
-                          </span>
-                          <span className="text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-                            {currentStudyEntry ? currentStudyEntry.name : member.current_study}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
-                        2025
-                      </td>
-                      <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
-                        —
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span
-                          className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral"
-                          style={{ fontFamily: 'var(--font-body)' }}
-                        >
-                          En curso
-                        </span>
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
+            {visibleEstudios < estudiosTable.sorted.length && (
+              <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+                <button
+                  onClick={() => setVisibleEstudios(v => v + LOAD_MORE)}
+                  className="text-xs text-navy-light/50 hover:text-coral transition-colors"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  Cargar {LOAD_MORE} más (quedan {estudiosTable.sorted.length - visibleEstudios})
+                </button>
+              </div>
+            )}
           </SectionAccordion>
 
           {/* Historial de servicio */}
@@ -765,57 +826,69 @@ export default function MiembroDetailPage() {
             open={openSections.servicio}
             onToggle={() => toggleSection('servicio')}
           >
-            {member.service_history.length === 0 ? (
+            {servicioTable.sorted.length === 0 ? (
               <p className="px-4 py-6 text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
                 Sin historial de servicio
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                      {['Puesto', 'Comité', 'Desde', 'Hasta', 'Estado'].map(col => (
-                        <th
-                          key={col}
-                          className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40"
-                          style={{ fontFamily: 'var(--font-display)' }}
-                        >
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {member.service_history.map((s, i) => (
-                      <tr
-                        key={i}
-                        className="hover:bg-surface-low transition-colors"
-                        style={i < member.service_history.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
-                      >
-                        <td className="px-4 py-2.5 text-navy" style={{ fontFamily: 'var(--font-body)' }}>{s.position}</td>
-                        <td className="px-4 py-2.5 text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{s.committee}</td>
-                        <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>{formatDate(s.from)}</td>
-                        <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
-                          {s.to ? formatDate(s.to) : '—'}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span
-                            className={cn(
-                              'rounded-full px-2.5 py-0.5 text-xs',
-                              s.status === 'activo'
-                                ? 'bg-teal-soft/30 text-teal-deep'
-                                : 'bg-surface-low text-navy-light/50'
-                            )}
-                            style={{ fontFamily: 'var(--font-body)' }}
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                        {([['position', 'Puesto'], ['committee', 'Comité'], ['from', 'Desde'], ['to', 'Hasta'], ['status', 'Estado']] as [keyof ServiceRow, string][]).map(([key, label]) => (
+                          <th
+                            key={key}
+                            onClick={() => servicioTable.toggleSort(key)}
+                            className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
+                            style={{ fontFamily: 'var(--font-display)' }}
                           >
-                            {s.status === 'activo' ? 'Activo' : 'Finalizado'}
-                          </span>
-                        </td>
+                            {label}{' '}
+                            <span className="opacity-50">
+                              {servicioTable.sortKey === key ? (servicioTable.sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                            </span>
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {servicioTable.sorted.slice(0, visibleServicio).map((row, i) => (
+                        <tr
+                          key={i}
+                          className="hover:bg-surface-low transition-colors"
+                          style={i < Math.min(visibleServicio, servicioTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                        >
+                          <td className="px-4 py-2.5 text-navy" style={{ fontFamily: 'var(--font-body)' }}>{row.position}</td>
+                          <td className="px-4 py-2.5 text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{row.committee}</td>
+                          <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>{formatDate(row.from)}</td>
+                          <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
+                            {row.to ? formatDate(row.to) : '—'}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <span
+                              className={cn('rounded-full px-2.5 py-0.5 text-xs', row.status === 'activo' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/50')}
+                              style={{ fontFamily: 'var(--font-body)' }}
+                            >
+                              {row.status === 'activo' ? 'Activo' : 'Finalizado'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {visibleServicio < servicioTable.sorted.length && (
+                  <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+                    <button
+                      onClick={() => setVisibleServicio(v => v + LOAD_MORE)}
+                      className="text-xs text-navy-light/50 hover:text-coral transition-colors"
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      Cargar {LOAD_MORE} más (quedan {servicioTable.sorted.length - visibleServicio})
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </SectionAccordion>
 
@@ -825,64 +898,75 @@ export default function MiembroDetailPage() {
             open={openSections.eventos}
             onToggle={() => toggleSection('eventos')}
           >
-            {member.attendance_history.length === 0 ? (
+            {eventosTable.sorted.length === 0 ? (
               <p className="px-4 py-6 text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
                 Sin registros de asistencia
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                      {['Evento', 'Tipo', 'Fecha', 'Asistencia'].map(col => (
-                        <th
-                          key={col}
-                          className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40"
-                          style={{ fontFamily: 'var(--font-display)' }}
-                        >
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {member.attendance_history.map((ev, i) => (
-                      <tr
-                        key={i}
-                        className="hover:bg-surface-low transition-colors"
-                        style={i < member.attendance_history.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
-                      >
-                        <td className="px-4 py-2.5 text-navy" style={{ fontFamily: 'var(--font-body)' }}>{ev.name}</td>
-                        <td className="px-4 py-2.5">
-                          <span
-                            className={cn(
-                              'rounded-full px-2 py-0.5 text-[10px]',
-                              TYPE_BADGE[ev.type] ?? 'bg-surface-low text-navy-light/50'
-                            )}
-                            style={{ fontFamily: 'var(--font-body)' }}
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                        {([['name', 'Evento'], ['type', 'Tipo'], ['date', 'Fecha'], ['attendance_type', 'Asistencia']] as [keyof EventoRow, string][]).map(([key, label]) => (
+                          <th
+                            key={key}
+                            onClick={() => eventosTable.toggleSort(key)}
+                            className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
+                            style={{ fontFamily: 'var(--font-display)' }}
                           >
-                            {ev.type}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-navy-light/50 text-xs whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
-                          {formatDate(ev.date)}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span
-                            className={cn(
-                              'rounded-full px-2 py-0.5 text-[10px]',
-                              ATTENDANCE_BADGE[ev.attendance_type] ?? 'bg-surface-low text-navy-light/50'
-                            )}
-                            style={{ fontFamily: 'var(--font-body)' }}
-                          >
-                            {ev.attendance_type === 'servidor' ? 'Servidor' : 'Participante'}
-                          </span>
-                        </td>
+                            {label}{' '}
+                            <span className="opacity-50">
+                              {eventosTable.sortKey === key ? (eventosTable.sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                            </span>
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {eventosTable.sorted.slice(0, visibleEventos).map((row, i) => (
+                        <tr
+                          key={i}
+                          className="hover:bg-surface-low transition-colors"
+                          style={i < Math.min(visibleEventos, eventosTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                        >
+                          <td className="px-4 py-2.5 text-navy" style={{ fontFamily: 'var(--font-body)' }}>{row.name}</td>
+                          <td className="px-4 py-2.5">
+                            <span
+                              className={cn('rounded-full px-2 py-0.5 text-[10px]', TYPE_BADGE[row.type] ?? 'bg-surface-low text-navy-light/50')}
+                              style={{ fontFamily: 'var(--font-body)' }}
+                            >
+                              {row.type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-navy-light/50 text-xs whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                            {formatDate(row.date)}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <span
+                              className={cn('rounded-full px-2 py-0.5 text-[10px]', ATTENDANCE_BADGE[row.attendance_type] ?? 'bg-surface-low text-navy-light/50')}
+                              style={{ fontFamily: 'var(--font-body)' }}
+                            >
+                              {row.attendance_type === 'servidor' ? 'Servidor' : 'Participante'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {visibleEventos < eventosTable.sorted.length && (
+                  <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+                    <button
+                      onClick={() => setVisibleEventos(v => v + LOAD_MORE)}
+                      className="text-xs text-navy-light/50 hover:text-coral transition-colors"
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      Cargar {LOAD_MORE} más (quedan {eventosTable.sorted.length - visibleEventos})
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </SectionAccordion>
 
@@ -915,40 +999,45 @@ export default function MiembroDetailPage() {
                     Sin registros de donaciones
                   </p>
                 ) : (
+                  <>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm border-collapse">
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                          {['Fecha', 'Descripción', 'Monto'].map(col => (
+                          {([['date', 'Fecha'], ['description', 'Descripción'], ['amount', 'Monto']] as [keyof DonacionRow, string][]).map(([key, label]) => (
                             <th
-                              key={col}
-                              className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40"
+                              key={key}
+                              onClick={() => donacionesTable.toggleSort(key)}
+                              className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
                               style={{ fontFamily: 'var(--font-display)' }}
                             >
-                              {col}
+                              {label}{' '}
+                              <span className="opacity-50">
+                                {donacionesTable.sortKey === key ? (donacionesTable.sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                              </span>
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {member.donations.map((d, i) => (
+                        {donacionesTable.sorted.slice(0, visibleDonaciones).map((row, i) => (
                           <tr
                             key={i}
                             className="hover:bg-surface-low transition-colors"
-                            style={i < member.donations.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                            style={i < Math.min(visibleDonaciones, donacionesTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                           >
                             <td className="px-4 py-2.5 text-navy-light/50 text-xs whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
-                              {formatDate(d.date)}
+                              {formatDate(row.date)}
                             </td>
                             <td className="px-4 py-2.5 text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-                              {d.description}
+                              {row.description}
                             </td>
                             <td
                               className="px-4 py-2.5 text-right tabular-nums"
                               style={{ fontFamily: revealDonations ? 'var(--font-mono)' : 'var(--font-body)', fontSize: '13px' }}
                             >
                               {revealDonations ? (
-                                <span className="text-navy">{formatAmount(d.amount)}</span>
+                                <span className="text-navy">{formatAmount(row.amount)}</span>
                               ) : (
                                 <span className="text-navy-light/30 tracking-widest">••••••</span>
                               )}
@@ -958,6 +1047,18 @@ export default function MiembroDetailPage() {
                       </tbody>
                     </table>
                   </div>
+                  {visibleDonaciones < donacionesTable.sorted.length && (
+                    <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+                      <button
+                        onClick={() => setVisibleDonaciones(v => v + LOAD_MORE)}
+                        className="text-xs text-navy-light/50 hover:text-coral transition-colors"
+                        style={{ fontFamily: 'var(--font-body)' }}
+                      >
+                        Cargar {LOAD_MORE} más (quedan {donacionesTable.sorted.length - visibleDonaciones})
+                      </button>
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
             ) : (
@@ -1018,44 +1119,47 @@ export default function MiembroDetailPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {member.family_members.map((fm) => (
-                <div
-                  key={fm.id}
-                  className="flex items-center gap-3 rounded-xl bg-surface-low px-4 py-3"
-                >
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-white text-xs"
-                    style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-                  >
-                    {fm.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                      {fm.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
+              {member.family_members.map((fm) => {
+                const hasProfile = mockMembers.some(m => m.id === fm.id)
+                const inner = (
+                  <>
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-white text-xs"
+                      style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+                    >
+                      {fm.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                        {fm.name}
+                      </p>
                       <span
-                        className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep"
+                        className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep mt-0.5 inline-block"
                         style={{ fontFamily: 'var(--font-body)' }}
                       >
                         {fm.relation}
                       </span>
-                      <span
-                        className={cn(
-                          'rounded-full px-2 py-0.5 text-[10px]',
-                          fm.status === 'active'
-                            ? 'bg-teal-soft/20 text-teal-deep'
-                            : 'bg-surface-low text-navy-light/40'
-                        )}
-                        style={{ fontFamily: 'var(--font-body)' }}
-                      >
-                        {fm.status === 'active' ? 'Activo' : 'Inactivo'}
-                      </span>
                     </div>
+                    <ArrowRight size={15} className={cn('shrink-0', hasProfile ? 'text-navy-light/30' : 'text-navy-light/15')} strokeWidth={1.75} />
+                  </>
+                )
+                return hasProfile ? (
+                  <Link
+                    key={fm.id}
+                    href={`/miembros/${fm.id}`}
+                    className="flex items-center gap-3 rounded-xl bg-surface-low px-4 py-3 hover:bg-surface-card cursor-pointer transition-colors"
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <div
+                    key={fm.id}
+                    className="flex items-center gap-3 rounded-xl bg-surface-low px-4 py-3"
+                  >
+                    {inner}
                   </div>
-                  <ArrowRight size={15} className="text-navy-light/30" strokeWidth={1.75} />
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

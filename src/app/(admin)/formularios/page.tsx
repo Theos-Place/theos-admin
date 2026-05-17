@@ -1,0 +1,320 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
+import { MOCK_FORM_TEMPLATES, MOCK_RESPONSES } from '@/data/mock-forms'
+import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
+import { cn } from '@/lib/utils'
+import {
+  Plus,
+  Search,
+  FileText,
+  ClipboardList,
+  BarChart2,
+  UserCheck,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Copy,
+  Archive,
+  Calendar,
+  MessageSquare,
+} from 'lucide-react'
+
+type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
+
+const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
+  { key: 'all',               label: 'Todos' },
+  { key: 'event_registration',label: 'Inscripción eventos' },
+  { key: 'study_registration',label: 'Inscripción estudios' },
+  { key: 'survey',            label: 'Encuestas' },
+  { key: 'registration',      label: 'Registro' },
+  { key: 'other',             label: 'Otros' },
+]
+
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  event_registration:  ClipboardList,
+  study_registration:  FileText,
+  survey:              BarChart2,
+  registration:        UserCheck,
+  other:               FileText,
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  event_registration:  'Inscripción evento',
+  study_registration:  'Inscripción estudios',
+  survey:              'Encuesta',
+  registration:        'Registro',
+  other:               'Otro',
+}
+
+function thisMonth(dateStr: string | null) {
+  if (!dateStr) return false
+  const d = new Date(dateStr)
+  const now = new Date()
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+}
+
+export default function FormulariosPage() {
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
+  const [query, setQuery] = useState('')
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
+
+  const stats = useMemo(() => {
+    const active = MOCK_FORM_TEMPLATES.filter(f => f.is_active).length
+    const responsesThisMonth = MOCK_RESPONSES.filter(r => thisMonth(r.submitted_at)).length
+    const noResponses = MOCK_FORM_TEMPLATES.filter(f => f.responses_count === 0).length
+    const avg = MOCK_FORM_TEMPLATES.reduce((sum, f) => sum + f.responses_count, 0) / Math.max(MOCK_FORM_TEMPLATES.length, 1)
+    return { active, responsesThisMonth, noResponses, avg: Math.round(avg * 10) / 10 }
+  }, [])
+
+  const filtered = useMemo(() => {
+    return MOCK_FORM_TEMPLATES.filter(f => {
+      if (categoryFilter !== 'all' && f.category !== categoryFilter) return false
+      if (query.trim()) {
+        const q = query.toLowerCase()
+        return f.name.toLowerCase().includes(q) || f.description.toLowerCase().includes(q)
+      }
+      return true
+    })
+  }, [categoryFilter, query])
+
+  return (
+    <div className="space-y-6" onClick={() => setMenuOpen(null)}>
+      {/* Header */}
+      <div
+        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4"
+        style={{ boxShadow: 'var(--shadow-md)' }}
+      >
+        <div>
+          <h1
+            className="text-2xl text-white"
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          >
+            Formularios
+          </h1>
+          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+            Constructor de formularios de inscripción y encuestas
+          </p>
+        </div>
+        <Link
+          href="/formularios/nuevo"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          <Plus size={14} />
+          Nuevo formulario
+        </Link>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Formularios activos',      value: stats.active,             color: 'text-navy' },
+          { label: 'Respuestas este mes',       value: stats.responsesThisMonth, color: 'text-teal-deep' },
+          { label: 'Sin respuestas',            value: stats.noResponses,        color: stats.noResponses > 0 ? 'text-coral' : 'text-navy' },
+          { label: 'Promedio respuestas',       value: stats.avg,                color: 'text-navy' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              {label}
+            </p>
+            <p className={cn('mt-2 text-4xl font-extrabold tabular-nums', color)} style={{ fontFamily: 'var(--font-display)' }}>
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex gap-1.5 flex-wrap flex-1">
+          {CATEGORY_FILTERS.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setCategoryFilter(f.key)}
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all',
+                categoryFilter === f.key
+                  ? 'bg-navy text-white border-navy'
+                  : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
+              )}
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+          <input
+            className="rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full sm:w-56"
+            style={{ fontFamily: 'var(--font-body)' }}
+            placeholder="Buscar formulario..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        {filtered.length === 0 ? (
+          <div className="py-16 flex flex-col items-center gap-3">
+            <FileText size={28} className="text-navy-light/20" />
+            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>No hay formularios con ese filtro.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {['Formulario', 'Categoría', 'Respuestas', 'Última respuesta', 'Estado', ''].map(h => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
+                      style={{ fontFamily: 'var(--font-display)' }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((form, idx) => {
+                  const CatIcon = CATEGORY_ICONS[form.category] ?? FileText
+                  return (
+                    <tr
+                      key={form.id}
+                      onClick={() => window.location.href = `/formularios/${form.id}`}
+                      className={cn(
+                        'hover:bg-navy/5 transition-colors cursor-pointer group',
+                        idx % 2 === 1 ? 'bg-surface-low/40' : ''
+                      )}
+                    >
+                      {/* Nombre */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--surface-low)' }}>
+                            <CatIcon size={15} className="text-navy-light/50" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                              {form.name}
+                            </p>
+                            {form.entity_name && (
+                              <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                                {form.entity_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Categoría */}
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                          {CATEGORY_LABELS[form.category] ?? form.category}
+                        </span>
+                      </td>
+
+                      {/* Respuestas */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <MessageSquare size={12} className="text-navy-light/30" />
+                          <span className="text-sm text-navy tabular-nums" style={{ fontFamily: 'var(--font-mono)' }}>
+                            {form.responses_count}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Última respuesta */}
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] text-navy-light/50 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                          {form.last_response_at
+                            ? new Date(form.last_response_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : '—'}
+                        </span>
+                      </td>
+
+                      {/* Estado */}
+                      <td className="px-4 py-3">
+                        <span
+                          className={cn(
+                            'rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
+                            form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/50'
+                          )}
+                          style={{ fontFamily: 'var(--font-display)' }}
+                        >
+                          {form.is_active ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+
+                      {/* Acciones */}
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Link
+                            href={`/formularios/${form.id}`}
+                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
+                            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                          >
+                            Editar
+                          </Link>
+                          <Link
+                            href={`/formularios/${form.id}/respuestas`}
+                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
+                            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                          >
+                            Respuestas
+                          </Link>
+                          <Link
+                            href={`/formularios/${form.id}/preview`}
+                            className="rounded-lg p-1.5 text-navy-light border hover:bg-surface-low transition-colors"
+                            style={{ borderColor: 'var(--outline-variant)' }}
+                          >
+                            <Eye size={12} />
+                          </Link>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setMenuOpen(menuOpen === form.id ? null : form.id)}
+                              className="rounded-lg p-1.5 text-navy-light border hover:bg-surface-low transition-colors"
+                              style={{ borderColor: 'var(--outline-variant)' }}
+                            >
+                              <MoreHorizontal size={12} />
+                            </button>
+                            {menuOpen === form.id && (
+                              <div
+                                className="absolute right-0 top-8 z-20 rounded-xl border py-1 min-w-36 shadow-lg"
+                                style={{ background: 'var(--surface-card)', borderColor: 'var(--outline-variant)' }}
+                              >
+                                {[
+                                  { label: 'Duplicar',  icon: Copy    },
+                                  { label: 'Archivar',  icon: Archive },
+                                ].map(item => (
+                                  <button
+                                    key={item.label}
+                                    type="button"
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                                    style={{ fontFamily: 'var(--font-body)' }}
+                                  >
+                                    <item.icon size={13} className="text-navy-light/50" />
+                                    {item.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
