@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MOCK_EMPLOYEES, type ContractType } from '@/data/mock-employees'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
+import { usePermissions } from '@/hooks/usePermissions'
 import { cn } from '@/lib/utils'
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -31,6 +32,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 
 export default function EmpleadosPage() {
   const router = useRouter()
+  const { can } = usePermissions()
   const [filter, setFilter] = useState<FilterKey>('all')
   const [historyOpen, setHistoryOpen] = useState(false)
 
@@ -70,14 +72,16 @@ export default function EmpleadosPage() {
             Personal remunerado de Theos Place
           </p>
         </div>
-        <Link
-          href="/empleados/nuevo"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          <Plus size={14} />
-          Contratar empleado
-        </Link>
+        {can('empleados', 'create') && (
+          <Link
+            href="/empleados/nuevo"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <Plus size={14} />
+            Contratar empleado
+          </Link>
+        )}
       </div>
 
       {/* Stats */}

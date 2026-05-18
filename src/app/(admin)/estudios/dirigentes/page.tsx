@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { MOCK_LEADERS } from '@/data/mock-studies'
 import { STUDY_TYPES } from '@/data/mock-studies'
-import { SEDES } from '@/data/mock-sedes'
+import { ACTIVE_SEDES, HISTORICAL_SEDES } from '@/data/mock-sedes'
 import { mockMembers } from '@/data/mock-members'
 import { LeaderCard } from '@/components/studies/LeaderCard'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
@@ -236,7 +236,12 @@ export default function DirigentesPage() {
           onChange={e => setFilterZone(e.target.value)}
         >
           <option value="">Todas las zonas</option>
-          {SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          <optgroup label="── Sedes activas ──">
+            {ACTIVE_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </optgroup>
+          <optgroup label="── Sedes históricas ──">
+            {HISTORICAL_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </optgroup>
         </select>
 
         <select

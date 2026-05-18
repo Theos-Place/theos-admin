@@ -1,47 +1,168 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, GripVertical } from 'lucide-react'
+import { Plus, X, GripVertical, Trash2, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { FormFieldNew } from '@/data/mock-forms'
+import type { FormFieldNew, LogicRule, LogicCondition, ConditionOperator } from '@/data/mock-forms'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+
+function generateId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+}
+
+// Operators available per field type
+function getOperatorsForType(type: FormFieldNew['type']): { value: ConditionOperator; label: string }[] {
+  const base: { value: ConditionOperator; label: string }[] = [
+    { value: 'is_empty',     label: 'está vacío' },
+    { value: 'is_not_empty', label: 'no está vacío' },
+  ]
+  if (type === 'text' || type === 'textarea') {
+    return [
+      { value: 'eq',          label: 'es igual a' },
+      { value: 'neq',         label: 'es distinto de' },
+      { value: 'contains',    label: 'contiene' },
+      { value: 'not_contains',label: 'no contiene' },
+      ...base,
+    ]
+  }
+  if (type === 'number' || type === 'scale') {
+    return [
+      { value: 'eq',  label: 'es igual a' },
+      { value: 'neq', label: 'es distinto de' },
+      { value: 'gt',  label: 'mayor que' },
+      { value: 'lt',  label: 'menor que' },
+      ...base,
+    ]
+  }
+  if (type === 'checkbox') {
+    return [
+      { value: 'contains',    label: 'incluye' },
+      { value: 'not_contains',label: 'no incluye' },
+      ...base,
+    ]
+  }
+  // select, radio, yes_no, date
+  return [
+    { value: 'eq',  label: 'es igual a' },
+    { value: 'neq', label: 'es distinto de' },
+    ...base,
+  ]
+}
+
+const VALUE_REQUIRED_OPS: ConditionOperator[] = ['eq', 'neq', 'contains', 'not_contains', 'gt', 'lt']
 
 interface FieldInspectorProps {
   field: FormFieldNew
   allFields: FormFieldNew[]
   onChange: (updated: FormFieldNew) => void
+  onFocusLogic?: boolean
 }
 
-export function FieldInspector({ field, allFields, onChange }: FieldInspectorProps) {
-  const [condActive, setCondActive] = useState(!!field.conditional)
+export function FieldInspector({ field, allFields, onChange, onFocusLogic }: FieldInspectorProps) {
+  const [activeSection, setActiveSection] = useState<'general' | 'options' | 'scale' | 'logic'>(
+    onFocusLogic ? 'logic' : 'general'
+  )
 
   function set<K extends keyof FormFieldNew>(key: K, value: FormFieldNew[K]) {
     onChange({ ...field, [key]: value })
   }
 
-  function addOption() {
-    set('options', [...(field.options ?? []), ''])
+  function setRules(rules: LogicRule[]) {
+    onChange({ ...field, logic_rules: rules })
   }
 
-  function updateOption(i: number, val: string) {
-    const opts = [...(field.options ?? [])]
-    opts[i] = val
-    set('options', opts)
+  function addRule() {
+    const rule: LogicRule = {
+      id: generateId(),
+      condition_operator: 'AND',
+      conditions: [{ id: generateId(), field_id: '', operator: 'eq', value: '' }],
+      action: 'show',
+    }
+    setRules([...(field.logic_rules ?? []), rule])
   }
 
-  function removeOption(i: number) {
-    set('options', (field.options ?? []).filter((_, idx) => idx !== i))
+  function updateRule(ruleId: string, patch: Partial<LogicRule>) {
+    setRules((field.logic_rules ?? []).map(r => r.id === ruleId ? { ...r, ...patch } : r))
   }
 
-  function toggleConditional(active: boolean) {
-    setCondActive(active)
-    if (!active) set('conditional', undefined)
-    else set('conditional', { field_id: '', operator: 'eq', value: '' })
+  function deleteRule(ruleId: string) {
+    setRules((field.logic_rules ?? []).filter(r => r.id !== ruleId))
   }
 
-  const otherFields = allFields.filter(f => f.id !== field.id && f.type !== 'section')
+  function addCondition(ruleId: string) {
+    setRules((field.logic_rules ?? []).map(r => {
+      if (r.id !== ruleId) return r
+      return {
+        ...r,
+        conditions: [...r.conditions, { id: generateId(), field_id: '', operator: 'eq', value: '' }],
+      }
+    }))
+  }
 
+  function updateCondition(ruleId: string, condId: string, patch: Partial<LogicCondition>) {
+    setRules((field.logic_rules ?? []).map(r => {
+      if (r.id !== ruleId) return r
+      return {
+        ...r,
+        conditions: r.conditions.map(c => c.id === condId ? { ...c, ...patch } : c),
+      }
+    }))
+  }
+
+  function deleteCondition(ruleId: string, condId: string) {
+    setRules((field.logic_rules ?? []).map(r => {
+      if (r.id !== ruleId) return r
+      return { ...r, conditions: r.conditions.filter(c => c.id !== condId) }
+    }))
+  }
+
+  // Candidate fields for conditions: only fields that appear BEFORE this one
+  const fieldIndex = allFields.findIndex(f => f.id === field.id)
+  const priorFields = allFields.slice(0, fieldIndex).filter(f => f.type !== 'section' && f.type !== 'page_break')
+
+  function getOptionsForField(fieldId: string): string[] {
+    const f = allFields.find(x => x.id === fieldId)
+    if (!f) return []
+    if (f.type === 'yes_no') return ['Sí', 'No']
+    return f.options ?? []
+  }
+
+  function getFieldType(fieldId: string): FormFieldNew['type'] | null {
+    return allFields.find(f => f.id === fieldId)?.type ?? null
+  }
+
+  // page_break inspector
+  if (field.type === 'page_break') {
+    return (
+      <div className="space-y-4 p-4">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          Bloque / Página
+        </p>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            Título de la página
+          </label>
+          <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="ej. Información de emergencia" value={field.label} onChange={e => set('label', e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            Descripción (opcional)
+          </label>
+          <textarea
+            rows={2}
+            className={cn(inputCls, 'resize-none')}
+            style={{ fontFamily: 'var(--font-body)' }}
+            placeholder="Aparece al inicio de esta página"
+            value={field.description ?? ''}
+            onChange={e => set('description', e.target.value || undefined)}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // section inspector
   if (field.type === 'section') {
     return (
       <div className="space-y-4 p-4">
@@ -60,219 +181,300 @@ export function FieldInspector({ field, allFields, onChange }: FieldInspectorPro
     )
   }
 
+  const sectionBtn = (key: typeof activeSection, label: string) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => setActiveSection(key)}
+      className={cn(
+        'flex-1 py-2 text-[11px] font-medium transition-all border-b-2 -mb-px',
+        activeSection === key ? 'border-coral text-navy' : 'border-transparent text-navy-light/40 hover:text-navy'
+      )}
+      style={{ fontFamily: 'var(--font-display)' }}
+    >
+      {label}
+    </button>
+  )
+
+  const showOptions = field.type === 'select' || field.type === 'radio' || field.type === 'checkbox'
+  const showScale = field.type === 'scale'
+  const logicCount = field.logic_rules?.length ?? 0
+
   return (
-    <div className="overflow-y-auto">
-      {/* General */}
-      <div className="p-4 space-y-3 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-        <p className="text-[10px] uppercase tracking-widests font-semibold text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>General</p>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Section tabs */}
+      <div className="flex border-b px-2 shrink-0" style={{ borderColor: 'var(--outline-variant)' }}>
+        {sectionBtn('general', 'General')}
+        {showOptions && sectionBtn('options', 'Opciones')}
+        {showScale && sectionBtn('scale', 'Escala')}
+        <button
+          type="button"
+          onClick={() => setActiveSection('logic')}
+          className={cn(
+            'flex-1 py-2 text-[11px] font-medium transition-all border-b-2 -mb-px flex items-center justify-center gap-1',
+            activeSection === 'logic' ? 'border-coral text-navy' : 'border-transparent text-navy-light/40 hover:text-navy'
+          )}
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Lógica
+          {logicCount > 0 && (
+            <span className="rounded-full bg-coral/20 text-coral text-[9px] px-1.5 py-0.5 font-bold">{logicCount}</span>
+          )}
+        </button>
+      </div>
 
-        <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-            Etiqueta / Pregunta <span className="text-coral">*</span>
-          </label>
-          <textarea
-            rows={2}
-            className={cn(inputCls, 'resize-none')}
-            style={{ fontFamily: 'var(--font-body)' }}
-            value={field.label}
-            onChange={e => set('label', e.target.value)}
-          />
-        </div>
+      <div className="flex-1 overflow-y-auto">
+        {/* GENERAL */}
+        {activeSection === 'general' && (
+          <div className="p-4 space-y-3">
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                Etiqueta / Pregunta <span className="text-coral">*</span>
+              </label>
+              <textarea
+                rows={2}
+                className={cn(inputCls, 'resize-none')}
+                style={{ fontFamily: 'var(--font-body)' }}
+                value={field.label}
+                onChange={e => set('label', e.target.value)}
+              />
+            </div>
 
-        <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Texto de ayuda</label>
-          <input
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
-            placeholder="Aparece debajo del campo"
-            value={field.helper_text ?? ''}
-            onChange={e => set('helper_text', e.target.value || undefined)}
-          />
-        </div>
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Texto de ayuda</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Aparece debajo del campo" value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
+            </div>
 
-        {(field.type === 'text' || field.type === 'textarea' || field.type === 'number') && (
-          <div className="space-y-1">
-            <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Placeholder</label>
-            <input
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              value={field.placeholder ?? ''}
-              onChange={e => set('placeholder', e.target.value || undefined)}
-            />
+            {(field.type === 'text' || field.type === 'textarea' || field.type === 'number') && (
+              <div className="space-y-1">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Placeholder</label>
+                <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={field.placeholder ?? ''} onChange={e => set('placeholder', e.target.value || undefined)} />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>Obligatorio</p>
+                <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Marcado con asterisco</p>
+              </div>
+              <div
+                onClick={() => set('is_required', !field.is_required)}
+                className={cn('relative h-5 w-9 rounded-full transition-all cursor-pointer shrink-0', field.is_required ? 'bg-coral' : 'bg-navy-light/20')}
+              >
+                <div className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', field.is_required ? 'translate-x-4' : 'translate-x-0')} />
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-1">
-          <div>
-            <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>Obligatorio</p>
-            <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Marcado con asterisco</p>
-          </div>
-          <div
-            onClick={() => set('is_required', !field.is_required)}
-            className={cn(
-              'relative h-5 w-9 rounded-full transition-all cursor-pointer shrink-0',
-              field.is_required ? 'bg-coral' : 'bg-navy-light/20'
-            )}
-          >
-            <div className={cn(
-              'absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform',
-              field.is_required ? 'translate-x-4' : 'translate-x-0'
-            )} />
-          </div>
-        </div>
-      </div>
-
-      {/* Options */}
-      {(field.type === 'select' || field.type === 'radio' || field.type === 'checkbox') && (
-        <div className="p-4 space-y-3 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-          <p className="text-[10px] uppercase tracking-widests font-semibold text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Opciones</p>
-          <div className="space-y-2">
-            {(field.options ?? []).map((opt, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <GripVertical size={14} className="text-navy-light/30 shrink-0 cursor-grab" />
-                <input
-                  className={cn(inputCls, 'flex-1')}
-                  style={{ fontFamily: 'var(--font-body)' }}
-                  value={opt}
-                  onChange={e => updateOption(i, e.target.value)}
-                  placeholder={`Opción ${i + 1}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeOption(i)}
-                  className="shrink-0 h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors"
-                >
-                  <X size={13} className="text-coral" />
-                </button>
-              </div>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={addOption}
-            className="flex items-center gap-1.5 text-[12px] text-coral hover:text-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
-          >
-            <Plus size={13} />
-            Agregar opción
-          </button>
-        </div>
-      )}
-
-      {/* Scale */}
-      {field.type === 'scale' && (
-        <div className="p-4 space-y-3 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-          <p className="text-[10px] uppercase tracking-widests font-semibold text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Escala</p>
-          <div className="space-y-1">
-            <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Rango</label>
-            <div className="flex gap-2">
-              {([[1, 5], [1, 10]] as const).map(([min, max]) => (
-                <button
-                  key={`${min}-${max}`}
-                  type="button"
-                  onClick={() => onChange({ ...field, scale_min: min, scale_max: max })}
-                  className={cn(
-                    'flex-1 rounded-xl border py-2 text-[12px] font-medium transition-colors',
-                    field.scale_min === min && field.scale_max === max
-                      ? 'bg-coral text-white border-coral'
-                      : 'text-navy-light/60 hover:bg-surface-low'
-                  )}
-                  style={{
-                    borderColor: (field.scale_min === min && field.scale_max === max) ? undefined : 'var(--outline-variant)',
-                    fontFamily: 'var(--font-display)',
-                  }}
-                >
-                  {min}–{max}
-                </button>
+        {/* OPTIONS */}
+        {activeSection === 'options' && showOptions && (
+          <div className="p-4 space-y-3">
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Opciones</p>
+            <div className="space-y-2">
+              {(field.options ?? []).map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <GripVertical size={14} className="text-navy-light/30 shrink-0 cursor-grab" />
+                  <input
+                    className={cn(inputCls, 'flex-1')}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                    value={opt}
+                    onChange={e => {
+                      const opts = [...(field.options ?? [])]; opts[i] = e.target.value
+                      set('options', opts)
+                    }}
+                    placeholder={`Opción ${i + 1}`}
+                  />
+                  <button type="button" onClick={() => set('options', (field.options ?? []).filter((_, idx) => idx !== i))} className="shrink-0 h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors">
+                    <X size={13} className="text-coral" />
+                  </button>
+                </div>
               ))}
             </div>
+            <button type="button" onClick={() => set('options', [...(field.options ?? []), ''])} className="flex items-center gap-1.5 text-[12px] text-coral hover:text-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
+              <Plus size={13} />
+              Agregar opción
+            </button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Etiq. mínimo</label>
-              <input
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
-                placeholder="Ej: Muy malo"
-                value={field.scale_min_label ?? ''}
-                onChange={e => set('scale_min_label', e.target.value || undefined)}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Etiq. máximo</label>
-              <input
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
-                placeholder="Ej: Excelente"
-                value={field.scale_max_label ?? ''}
-                onChange={e => set('scale_max_label', e.target.value || undefined)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Conditional logic */}
-      <div className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>Lógica condicional</p>
-            <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Mostrar según otra respuesta</p>
-          </div>
-          <div
-            onClick={() => toggleConditional(!condActive)}
-            className={cn(
-              'relative h-5 w-9 rounded-full transition-all cursor-pointer shrink-0',
-              condActive ? 'bg-coral' : 'bg-navy-light/20'
-            )}
-          >
-            <div className={cn(
-              'absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform',
-              condActive ? 'translate-x-4' : 'translate-x-0'
-            )} />
-          </div>
-        </div>
-
-        {condActive && (
-          <div className="space-y-2">
+        {/* SCALE */}
+        {activeSection === 'scale' && showScale && (
+          <div className="p-4 space-y-3">
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Escala</p>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Mostrar cuando el campo</label>
-              <select
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
-                value={field.conditional?.field_id ?? ''}
-                onChange={e => onChange({ ...field, conditional: { ...(field.conditional ?? { operator: 'eq', value: '' }), field_id: e.target.value } })}
-              >
-                <option value="">Seleccionar campo...</option>
-                {otherFields.map(f => (
-                  <option key={f.id} value={f.id}>{f.label}</option>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Rango</label>
+              <div className="flex gap-2">
+                {([[1, 5], [1, 10]] as const).map(([min, max]) => (
+                  <button
+                    key={`${min}-${max}`}
+                    type="button"
+                    onClick={() => onChange({ ...field, scale_min: min, scale_max: max })}
+                    className={cn('flex-1 rounded-xl border py-2 text-[12px] font-medium transition-colors', field.scale_min === min && field.scale_max === max ? 'bg-coral text-white border-coral' : 'text-navy-light/60 hover:bg-surface-low')}
+                    style={{ borderColor: (field.scale_min === min && field.scale_max === max) ? undefined : 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
+                  >
+                    {min}–{max}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Operador</label>
-                <select
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
-                  value={field.conditional?.operator ?? 'eq'}
-                  onChange={e => onChange({ ...field, conditional: { ...(field.conditional ?? { field_id: '', value: '' }), operator: e.target.value as 'eq' | 'neq' } })}
-                >
-                  <option value="eq">sea igual a</option>
-                  <option value="neq">sea distinto de</option>
-                </select>
+                <label className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Etiq. mínimo</label>
+                <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Ej: Muy malo" value={field.scale_min_label ?? ''} onChange={e => set('scale_min_label', e.target.value || undefined)} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Valor</label>
-                <input
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
-                  placeholder="Ej: Sí"
-                  value={field.conditional?.value ?? ''}
-                  onChange={e => onChange({ ...field, conditional: { ...(field.conditional ?? { field_id: '', operator: 'eq' }), value: e.target.value } })}
-                />
+                <label className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Etiq. máximo</label>
+                <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Ej: Excelente" value={field.scale_max_label ?? ''} onChange={e => set('scale_max_label', e.target.value || undefined)} />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* LOGIC */}
+        {activeSection === 'logic' && (
+          <div className="p-4 space-y-4">
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              Lógica condicional
+            </p>
+
+            {(field.logic_rules ?? []).length === 0 && (
+              <div className="rounded-xl border-2 border-dashed py-6 flex flex-col items-center gap-2" style={{ borderColor: 'var(--outline-variant)' }}>
+                <p className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Sin reglas aún</p>
+              </div>
+            )}
+
+            {(field.logic_rules ?? []).map((rule, ruleIdx) => (
+              <div key={rule.id} className="rounded-xl border space-y-3 p-3" style={{ borderColor: 'var(--outline-variant)' }}>
+                {/* Rule header */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
+                    Regla {ruleIdx + 1}
+                  </span>
+                  <button type="button" onClick={() => deleteRule(rule.id)} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-coral/10 transition-colors">
+                    <X size={12} className="text-coral" />
+                  </button>
+                </div>
+
+                {/* Action */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] text-navy-light/50 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>Acción</span>
+                  <select
+                    className={cn(inputCls, 'flex-1')}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                    value={rule.action}
+                    onChange={e => updateRule(rule.id, { action: e.target.value as 'show' | 'hide' })}
+                  >
+                    <option value="show">Mostrar este campo</option>
+                    <option value="hide">Ocultar este campo</option>
+                  </select>
+                </div>
+
+                {/* Combinator */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] text-navy-light/50 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>Combinar</span>
+                  <div className="flex gap-1">
+                    {(['AND', 'OR'] as const).map(op => (
+                      <button
+                        key={op}
+                        type="button"
+                        onClick={() => updateRule(rule.id, { condition_operator: op })}
+                        className={cn('rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all', rule.condition_operator === op ? 'bg-navy text-white' : 'text-navy-light/40 hover:text-navy')}
+                        style={{ fontFamily: 'var(--font-display)' }}
+                      >
+                        {op}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Conditions */}
+                <div className="space-y-2">
+                  {rule.conditions.map((cond, ci) => {
+                    const refFieldType = getFieldType(cond.field_id)
+                    const operators = refFieldType ? getOperatorsForType(refFieldType) : [{ value: 'eq' as ConditionOperator, label: 'es igual a' }]
+                    const needsValue = VALUE_REQUIRED_OPS.includes(cond.operator)
+                    const valueOptions = getOptionsForField(cond.field_id)
+
+                    return (
+                      <div key={cond.id} className="rounded-lg p-2.5 space-y-2" style={{ background: 'var(--surface-low)' }}>
+                        {ci > 0 && (
+                          <p className="text-[10px] font-bold text-navy-light/40 text-center" style={{ fontFamily: 'var(--font-display)' }}>
+                            {rule.condition_operator}
+                          </p>
+                        )}
+                        <select
+                          className={inputCls}
+                          style={{ fontFamily: 'var(--font-body)' }}
+                          value={cond.field_id}
+                          onChange={e => updateCondition(rule.id, cond.id, { field_id: e.target.value, value: '' })}
+                        >
+                          <option value="">Seleccionar campo...</option>
+                          {priorFields.map(f => (
+                            <option key={f.id} value={f.id}>{f.label || f.id}</option>
+                          ))}
+                        </select>
+                        <select
+                          className={inputCls}
+                          style={{ fontFamily: 'var(--font-body)' }}
+                          value={cond.operator}
+                          onChange={e => updateCondition(rule.id, cond.id, { operator: e.target.value as ConditionOperator })}
+                        >
+                          {operators.map(op => <option key={op.value} value={op.value}>{op.label}</option>)}
+                        </select>
+                        {needsValue && (
+                          valueOptions.length > 0 ? (
+                            <select
+                              className={inputCls}
+                              style={{ fontFamily: 'var(--font-body)' }}
+                              value={cond.value}
+                              onChange={e => updateCondition(rule.id, cond.id, { value: e.target.value })}
+                            >
+                              <option value="">Seleccionar valor...</option>
+                              {valueOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                          ) : (
+                            <input
+                              className={inputCls}
+                              style={{ fontFamily: 'var(--font-body)' }}
+                              placeholder="Valor..."
+                              value={cond.value}
+                              onChange={e => updateCondition(rule.id, cond.id, { value: e.target.value })}
+                            />
+                          )
+                        )}
+                        <div className="flex items-center justify-between">
+                          <button type="button" onClick={() => addCondition(rule.id)} className="text-[11px] text-coral hover:text-coral-deep transition-colors flex items-center gap-1" style={{ fontFamily: 'var(--font-body)' }}>
+                            <Plus size={11} /> Agregar condición
+                          </button>
+                          {rule.conditions.length > 1 && (
+                            <button type="button" onClick={() => deleteCondition(rule.id, cond.id)} className="h-5 w-5 flex items-center justify-center rounded hover:bg-coral/10 transition-colors">
+                              <Trash2 size={11} className="text-coral" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={addRule}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl border-2 border-dashed py-2.5 text-[12px] text-coral hover:bg-coral/5 transition-colors"
+              style={{ borderColor: 'rgb(255 107 74 / 0.3)', fontFamily: 'var(--font-body)' }}
+            >
+              <Plus size={13} />
+              Agregar regla
+            </button>
+
+            {priorFields.length === 0 && (
+              <p className="text-[11px] text-navy-light/30 text-center" style={{ fontFamily: 'var(--font-body)' }}>
+                No hay campos anteriores para referenciar.
+              </p>
+            )}
           </div>
         )}
       </div>

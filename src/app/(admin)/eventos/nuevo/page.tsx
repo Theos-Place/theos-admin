@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useMemo, Fragment } from 'react'
+import { useState, useMemo, Fragment, useRef } from 'react'
 import Link from 'next/link'
 import { ALL_COMMITTEES } from '@/data/mock-committees'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { cn } from '@/lib/utils'
 import {
   ChevronLeft, ChevronRight, Mic, Tent, Heart, BookOpen, Plus, X,
-  Users, Star, MapPin, Music, Coffee, Zap, ExternalLink,
+  Users, Star, MapPin, Music, Coffee, Zap, ExternalLink, Image as ImageIcon,
 } from 'lucide-react'
 import { EVENT_TYPES, type EventType } from '@/data/mock-events'
 
@@ -44,6 +44,7 @@ interface FormData {
   requires_payment: boolean
   payment_amount: string
   payment_methods: string[]
+  flyer: string | null
 }
 
 const STEPS = [
@@ -92,6 +93,9 @@ export default function NuevoEventoPage() {
   const [showSubEventForm, setShowSubEventForm] = useState(false)
   const [newSubName, setNewSubName] = useState('')
   const [newSubCap, setNewSubCap] = useState('')
+  const [flyer, setFlyer] = useState<string | null>(null)
+  const [flyerDragOver, setFlyerDragOver] = useState(false)
+  const flyerInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState<FormData>({
     name: '',
@@ -115,6 +119,7 @@ export default function NuevoEventoPage() {
     requires_payment: false,
     payment_amount: '',
     payment_methods: [],
+    flyer: null,
   })
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
@@ -144,6 +149,13 @@ export default function NuevoEventoPage() {
 
   function removeSubEvent(id: string) {
     set('sub_events', form.sub_events.filter(s => s.id !== id))
+  }
+
+  function handleFlyerSelect(file: File) {
+    if (file.size > 5 * 1024 * 1024) return // too big, silently skip
+    const reader = new FileReader()
+    reader.onload = (e) => setFlyer(e.target?.result as string)
+    reader.readAsDataURL(file)
   }
 
   function canProceed(): boolean {
@@ -372,6 +384,61 @@ export default function NuevoEventoPage() {
               value={form.description}
               onChange={e => set('description', e.target.value)}
             />
+          </div>
+
+          {/* Flyer / Banner */}
+          <div className="space-y-2">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              Flyer o banner del evento
+            </label>
+            <input
+              ref={flyerInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleFlyerSelect(f) }}
+            />
+            {!flyer ? (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setFlyerDragOver(true) }}
+                onDragLeave={() => setFlyerDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setFlyerDragOver(false)
+                  const f = e.dataTransfer.files[0]
+                  if (f?.type.startsWith('image/')) handleFlyerSelect(f)
+                }}
+                onClick={() => flyerInputRef.current?.click()}
+                className={cn(
+                  'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-8 cursor-pointer transition-all',
+                  flyerDragOver ? 'border-coral bg-coral/5' : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low'
+                )}
+              >
+                <ImageIcon size={28} className="text-navy-light/30" />
+                <p className="text-[13px] font-medium text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                  Subí el flyer del evento
+                </p>
+                <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                  PNG, JPG, WebP — máx 5MB · Recomendado: 1200×630px
+                </p>
+              </div>
+            ) : (
+              <div className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--outline-variant)' }}>
+                <img src={flyer} alt="Flyer del evento" className="w-full object-cover max-h-48" />
+                <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2" style={{ background: 'rgba(22,20,64,0.6)' }}>
+                  <button type="button" onClick={() => flyerInputRef.current?.click()}
+                    className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors"
+                    style={{ fontFamily: 'var(--font-body)' }}>
+                    Cambiar
+                  </button>
+                  <button type="button" onClick={() => setFlyer(null)}
+                    className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors"
+                    style={{ fontFamily: 'var(--font-body)' }}>
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

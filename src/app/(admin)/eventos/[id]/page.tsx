@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useMemo } from 'react'
+import { use, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { getEvent } from '@/data/mock-events'
 import { mockMembers } from '@/data/mock-members'
@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import {
   ChevronLeft, Calendar, MapPin, Users, Edit2, MoreHorizontal,
   Send, Download, QrCode, UserPlus, CalendarPlus, ExternalLink, X as XIcon,
-  Check, Clock, MoreVertical, Search, Link2,
+  Check, Clock, MoreVertical, Search, Link2, Image as ImageIcon,
 } from 'lucide-react'
 
 function getGoogleCalendarUrl(event: NonNullable<ReturnType<typeof getEvent>>) {
@@ -172,6 +172,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [recurringGlobal, setRecurringGlobal] = useState(false)
   const [serverToast, setServerToast] = useState<string | null>(null)
   const [openServerMenu, setOpenServerMenu] = useState<string | null>(null)
+  const [flyerPreview, setFlyerPreview] = useState<string | null>(event?.flyer_url ?? null)
+  const [flyerDragOver, setFlyerDragOver] = useState(false)
+  const flyerInputRef = useRef<HTMLInputElement>(null)
 
   if (!event) {
     return (
@@ -274,6 +277,13 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   function removeBooking(bookingId: string) {
     setLocalBookings(prev => prev.filter(b => b.id !== bookingId))
     setOpenServerMenu(null)
+  }
+
+  function handleFlyerSelect(file: File) {
+    if (file.size > 5 * 1024 * 1024) return
+    const reader = new FileReader()
+    reader.onload = (e) => setFlyerPreview(e.target?.result as string)
+    reader.readAsDataURL(file)
   }
 
   const arcPct = attendanceRate / 100
@@ -523,6 +533,59 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                   <span className="text-navy font-medium" style={{ fontFamily: 'var(--font-body)' }}>{value}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Flyer */}
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+              <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Flyer / Banner</h3>
+              <input
+                ref={flyerInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFlyerSelect(f) }}
+              />
+              {!flyerPreview ? (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setFlyerDragOver(true) }}
+                  onDragLeave={() => setFlyerDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setFlyerDragOver(false)
+                    const f = e.dataTransfer.files[0]
+                    if (f?.type.startsWith('image/')) handleFlyerSelect(f)
+                  }}
+                  onClick={() => flyerInputRef.current?.click()}
+                  className={cn(
+                    'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer transition-all',
+                    flyerDragOver ? 'border-coral bg-coral/5' : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low'
+                  )}
+                >
+                  <ImageIcon size={24} className="text-navy-light/30" />
+                  <p className="text-[12px] font-medium text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                    Subir flyer
+                  </p>
+                  <p className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                    PNG, JPG, WebP — máx 5MB
+                  </p>
+                </div>
+              ) : (
+                <div className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--outline-variant)' }}>
+                  <img src={flyerPreview} alt="Flyer del evento" className="w-full object-cover max-h-40" />
+                  <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2" style={{ background: 'rgba(22,20,64,0.6)' }}>
+                    <button type="button" onClick={() => flyerInputRef.current?.click()}
+                      className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors"
+                      style={{ fontFamily: 'var(--font-body)' }}>
+                      Cambiar
+                    </button>
+                    <button type="button" onClick={() => setFlyerPreview(null)}
+                      className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors"
+                      style={{ fontFamily: 'var(--font-body)' }}>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

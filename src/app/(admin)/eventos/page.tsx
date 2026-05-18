@@ -9,7 +9,7 @@ import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
 import { cn } from '@/lib/utils'
-import { Plus, LayoutList, Calendar, Download } from 'lucide-react'
+import { Plus, LayoutList, Calendar, Download, Code, ExternalLink } from 'lucide-react'
 
 const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
   { key: 'all', label: 'Todos' },
@@ -133,6 +133,23 @@ export default function EventosPage() {
             <Download size={13} />
             Exportar calendario
           </button>
+          <a
+            href="/calendario"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <ExternalLink size={13} />
+            Ver calendario público
+          </a>
+          <Link
+            href="/eventos/embed"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <Code size={13} />
+            Compartir calendario
+          </Link>
           <Link
             href="/eventos/nuevo"
             className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150"
@@ -266,6 +283,9 @@ export default function EventosPage() {
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
+                          {event.flyer_url && (
+                            <img src={event.flyer_url} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
+                          )}
                           <span className={cn('h-2 w-2 rounded-full shrink-0', dotColor)} />
                           <span className="text-sm font-medium text-navy truncate max-w-[200px]" style={{ fontFamily: 'var(--font-body)' }}>
                             {event.name}

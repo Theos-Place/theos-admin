@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { usePermissions } from '@/hooks/usePermissions'
 import {
   Download,
   MessageCircle,
@@ -64,6 +65,7 @@ const QUICK_CHIPS = [
 
 export default function MiembrosPage() {
   const router = useRouter()
+  const { can } = usePermissions()
   const filters = useMemberFilters()
 
   const [showDonors, setShowDonors] = useState(false)
@@ -132,28 +134,34 @@ export default function MiembrosPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            <Download size={15} strokeWidth={1.75} />
-            Exportar
-          </button>
-          <button
-            className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            <MessageCircle size={15} strokeWidth={1.75} />
-            Comunicar
-          </button>
-          <button
-            onClick={() => router.push('/miembros/nuevo')}
-            className="flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white transition-all hover:bg-coral-deep active:scale-95"
-            style={{ boxShadow: 'var(--shadow-pulse)', fontFamily: 'var(--font-body)' }}
-          >
-            <UserPlus size={15} strokeWidth={1.75} />
-            Nuevo miembro
-          </button>
+          {can('miembros', 'export') && (
+            <button
+              className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            >
+              <Download size={15} strokeWidth={1.75} />
+              Exportar
+            </button>
+          )}
+          {can('comunicaciones', 'create') && (
+            <button
+              className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            >
+              <MessageCircle size={15} strokeWidth={1.75} />
+              Comunicar
+            </button>
+          )}
+          {can('miembros', 'create') && (
+            <button
+              onClick={() => router.push('/miembros/nuevo')}
+              className="flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white transition-all hover:bg-coral-deep active:scale-95"
+              style={{ boxShadow: 'var(--shadow-pulse)', fontFamily: 'var(--font-body)' }}
+            >
+              <UserPlus size={15} strokeWidth={1.75} />
+              Nuevo miembro
+            </button>
+          )}
         </div>
       </div>
 

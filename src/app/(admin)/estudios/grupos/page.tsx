@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { MOCK_GROUPS, STUDY_TYPES, type GroupStatus } from '@/data/mock-studies'
-import { SEDES, sedeLabel } from '@/data/mock-sedes'
+import { ACTIVE_SEDES, HISTORICAL_SEDES, sedeLabel } from '@/data/mock-sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
@@ -147,9 +147,12 @@ export default function GruposPage() {
               onChange={e => setSelectedZone(e.target.value)}
             >
               <option value="">Todas</option>
-              {SEDES.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
+              <optgroup label="── Sedes activas ──">
+                {ACTIVE_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </optgroup>
+              <optgroup label="── Sedes históricas ──">
+                {HISTORICAL_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </optgroup>
             </select>
           </div>
 

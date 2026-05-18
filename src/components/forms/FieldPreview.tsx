@@ -22,6 +22,20 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
     )
   }
 
+  if (field.type === 'page_break') {
+    return (
+      <div className="flex items-center gap-3 py-1">
+        <div className="flex-1 h-px border-dashed border-t-2" style={{ borderColor: 'var(--outline-variant)' }} />
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border" style={{ borderColor: 'var(--outline-variant)' }}>
+          <span className="text-[10px] uppercase tracking-widest font-semibold text-blue-500" style={{ fontFamily: 'var(--font-display)' }}>
+            📄 {field.label || 'Nueva página'}
+          </span>
+        </div>
+        <div className="flex-1 h-px border-dashed border-t-2" style={{ borderColor: 'var(--outline-variant)' }} />
+      </div>
+    )
+  }
+
   if (field.type === 'text' || field.type === 'number') {
     return (
       <input

@@ -129,7 +129,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                           )}
                           style={{ fontFamily: 'var(--font-body)' }}
                         >
-                          {ev.name}
+                          {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                         </button>
                       )
                     })}

@@ -8,7 +8,7 @@ import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Eye, Save, Send, Check } from 'lucide-react'
+import { ChevronLeft, Eye, Save, Send, Check, GitBranch, X, Zap } from 'lucide-react'
 
 type FormStatus = 'draft' | 'active'
 
@@ -34,8 +34,14 @@ const FIELD_GROUPS: { label: string; types: { type: FieldType; label: string }[]
   {
     label: 'AVANZADOS',
     types: [
-      { type: 'scale',    label: 'Escala'        },
-      { type: 'section',  label: 'Separador'     },
+      { type: 'scale',      label: 'Escala'        },
+      { type: 'section',    label: 'Separador'     },
+    ],
+  },
+  {
+    label: 'ESTRUCTURA',
+    types: [
+      { type: 'page_break', label: 'Bloque / Página' },
     ],
   },
 ]
@@ -59,6 +65,7 @@ function defaultField(type: FieldType, order: number): FormFieldNew {
     label: '',
     is_required: false,
     sort_order: order,
+    logic_rules: [],
   }
   if (type === 'select' || type === 'radio' || type === 'checkbox') {
     base.options = ['Opción 1', 'Opción 2']
@@ -87,6 +94,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const [status, setStatus]           = useState<FormStatus>(existing?.is_active ? 'active' : 'draft')
   const [fields, setFields]           = useState<FormFieldNew[]>(existing?.fields ?? [])
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
+  const [focusLogic, setFocusLogic]   = useState(false)
+  const [showLogicPanel, setShowLogicPanel] = useState(false)
   const [saved, setSaved]             = useState(false)
 
   const activeField = fields.find(f => f.id === activeFieldId) ?? null
@@ -175,6 +184,15 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         </button>
 
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowLogicPanel(true)}
+            className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          >
+            <GitBranch size={12} />
+            Lógica
+          </button>
           <Link
             href={formId ? `/formularios/${formId}/preview` : '#'}
             className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
@@ -258,9 +276,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               fields={fields}
               activeFieldId={activeFieldId}
               onFieldsChange={setFields}
-              onSelectField={setActiveFieldId}
+              onSelectField={id => { setActiveFieldId(id); setFocusLogic(false) }}
               onDuplicateField={duplicateField}
               onDeleteField={deleteField}
+              onFocusLogic={id => { setActiveFieldId(id); setFocusLogic(true) }}
             />
           </div>
           {fields.length > 0 && (
@@ -293,7 +312,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                     activeField.type === 'yes_no' ? 'Sí / No' :
                     activeField.type === 'scale' ? 'Escala' :
                     activeField.type === 'number' ? 'Número' :
-                    activeField.type === 'date' ? 'Fecha' : activeField.type}
+                    activeField.type === 'date' ? 'Fecha' :
+                  activeField.type === 'page_break' ? 'Bloque / Página' : activeField.type}
                 </p>
                 <button
                   type="button"
@@ -307,7 +327,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 <FieldInspector
                   field={activeField}
                   allFields={fields}
-                  onChange={updateField}
+                  onChange={f => { updateField(f); setFocusLogic(false) }}
+                  onFocusLogic={focusLogic}
                 />
               </div>
             </>
@@ -323,6 +344,79 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           )}
         </div>
       </div>
+
+      {/* Logic overview modal */}
+      {showLogicPanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-navy-ink/40 backdrop-blur-sm">
+          <div className="h-full w-full max-w-md overflow-y-auto flex flex-col" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b shrink-0" style={{ borderColor: 'var(--outline-variant)', background: 'var(--surface-card)' }}>
+              <div className="flex items-center gap-2">
+                <GitBranch size={16} className="text-navy-light/50" />
+                <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Lógica del formulario</p>
+              </div>
+              <button type="button" onClick={() => setShowLogicPanel(false)}>
+                <X size={18} className="text-navy-light/40" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-2 flex-1">
+              {(() => {
+                let pageNum = 1
+                let pageLabel = 'Página 1'
+                const sections: { pageLabel: string; fields: typeof fields }[] = [{ pageLabel, fields: [] }]
+                fields.forEach(f => {
+                  if (f.type === 'page_break') {
+                    pageNum++
+                    pageLabel = `Página ${pageNum}${f.label ? ` — ${f.label}` : ''}`
+                    sections.push({ pageLabel, fields: [] })
+                  } else {
+                    sections[sections.length - 1].fields.push(f)
+                  }
+                })
+                return sections.map((section, si) => (
+                  <div key={si} className="space-y-1">
+                    <p className="text-[11px] font-bold text-navy-light/50 uppercase tracking-widests" style={{ fontFamily: 'var(--font-display)' }}>
+                      📄 {section.pageLabel}
+                    </p>
+                    <div className="ml-3 border-l space-y-0.5 pl-3" style={{ borderColor: 'var(--outline-variant)' }}>
+                      {section.fields.map(f => {
+                        const rc = f.logic_rules?.length ?? 0
+                        return (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => { setActiveFieldId(f.id); setFocusLogic(true); setShowLogicPanel(false) }}
+                            className="w-full flex items-center justify-between gap-2 py-1.5 text-left hover:text-coral transition-colors group"
+                          >
+                            <span className="text-[12px] text-navy-light/60 group-hover:text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                              {f.label || <span className="italic text-navy-light/30">Sin etiqueta</span>}
+                            </span>
+                            {rc > 0 && (
+                              <span className="shrink-0 flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5">
+                                <Zap size={9} className="text-amber-600" />
+                                <span className="text-[9px] font-bold text-amber-600">{rc}</span>
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                      {section.fields.length === 0 && (
+                        <p className="text-[11px] text-navy-light/30 italic py-1" style={{ fontFamily: 'var(--font-body)' }}>Sin campos</p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              })()}
+            </div>
+
+            <div className="px-5 py-3 border-t text-center" style={{ borderColor: 'var(--outline-variant)' }}>
+              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                {fields.filter(f => (f.logic_rules?.length ?? 0) > 0).length} campos con lógica · {fields.filter(f => f.type === 'page_break').length} bloque{fields.filter(f => f.type === 'page_break').length !== 1 ? 's' : ''} · {fields.filter(f => f.type !== 'page_break' && f.type !== 'section').length} campos total
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

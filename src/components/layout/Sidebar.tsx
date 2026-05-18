@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -26,8 +27,16 @@ import {
   LayoutGrid,
   Bookmark,
   ClipboardList,
+  LayoutDashboard as PanelIcon,
+  Send,
+  Settings,
+  LogOut,
+  Heart,
+  CreditCard,
+  GraduationCap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Shield } from 'lucide-react'
 
 const EVENTOS_SUB = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
@@ -42,6 +51,22 @@ const EMPLEADOS_SUB = [
 const FORMULARIOS_SUB = [
   { href: '/formularios',       label: 'Todos los formularios', icon: FileText  },
   { href: '/formularios/nuevo', label: 'Nuevo formulario',      icon: Plus      },
+]
+
+const FINANZAS_SUB = [
+  { href: '/finanzas',             label: 'Dashboard',    icon: LayoutDashboard },
+  { href: '/finanzas/donaciones',  label: 'Donaciones',   icon: Heart           },
+  { href: '/finanzas/pagos',       label: 'Pagos',        icon: CreditCard      },
+  { href: '/finanzas/devoluciones',label: 'Devoluciones', icon: ArrowLeftRight  },
+  { href: '/finanzas/becas',       label: 'Becas',        icon: GraduationCap   },
+  { href: '/finanzas/reportes',    label: 'Reportes',     icon: BarChart2       },
+]
+
+const COMUNICACIONES_SUB = [
+  { href: '/comunicaciones',              label: 'Panel principal',    icon: PanelIcon   },
+  { href: '/comunicaciones/nueva',        label: 'Nueva comunicación', icon: Send        },
+  { href: '/comunicaciones/plantillas',   label: 'Plantillas',         icon: FileText    },
+  { href: '/comunicaciones/configuracion',label: 'Configuración',      icon: Settings    },
 ]
 
 const SERVIDORES_SUB = [
@@ -76,13 +101,46 @@ interface SidebarProps {
   onClose: () => void
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  admin:        'Administrador',
+  finance:      'Finanzas',
+  staff_leader: 'Líder de Staff',
+}
+
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
-  const estudiosActive     = pathname === '/estudios'    || pathname.startsWith('/estudios/')
-  const eventosActive      = pathname === '/eventos'     || pathname.startsWith('/eventos/')
-  const servidoresActive   = pathname === '/servidores'  || pathname.startsWith('/servidores/')
-  const empleadosActive    = pathname === '/empleados'   || pathname.startsWith('/empleados/')
-  const formulariosActive  = pathname === '/formularios' || pathname.startsWith('/formularios/')
+  const router = useRouter()
+  const [userName, setUserName]   = useState('')
+  const [userRole, setUserRole]   = useState('')
+  const [userRoles, setUserRoles] = useState<string[]>([])
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem('theos_user') || localStorage.getItem('theos_user')
+    if (raw) {
+      try {
+        const u = JSON.parse(raw)
+        setUserName(u.name ?? '')
+        setUserRole(u.role ?? '')
+        setUserRoles(Array.isArray(u.roles) ? u.roles : u.role ? [u.role] : [])
+      } catch { /* ignore */ }
+    }
+  }, [])
+
+  const canViewAccesos = userRoles.some(r => r === 'admin' || r === 'direccion')
+
+  function handleLogout() {
+    document.cookie = 'theos_session=; path=/; max-age=0'
+    sessionStorage.removeItem('theos_user')
+    localStorage.removeItem('theos_user')
+    router.push('/login')
+  }
+  const estudiosActive        = pathname === '/estudios'        || pathname.startsWith('/estudios/')
+  const eventosActive         = pathname === '/eventos'         || pathname.startsWith('/eventos/')
+  const servidoresActive      = pathname === '/servidores'      || pathname.startsWith('/servidores/')
+  const empleadosActive       = pathname === '/empleados'       || pathname.startsWith('/empleados/')
+  const formulariosActive     = pathname === '/formularios'     || pathname.startsWith('/formularios/')
+  const comunicacionesActive  = pathname === '/comunicaciones'  || pathname.startsWith('/comunicaciones/')
+  const finanzasActive        = pathname === '/finanzas'        || pathname.startsWith('/finanzas/')
 
   return (
     <>
@@ -137,9 +195,53 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               ? pathname === '/eventos'
               : pathname === href || pathname.startsWith(href + '/')
 
-            const isEmpleados    = href === '/empleados'
-            const isServidores   = href === '/servidores'
-            const isFormularios  = href === '/formularios'
+            const isEmpleados      = href === '/empleados'
+            const isServidores     = href === '/servidores'
+            const isFormularios    = href === '/formularios'
+            const isComunicaciones = href === '/comunicaciones'
+            const isFinanzas       = href === '/finanzas'
+
+          if (isFinanzas) {
+            return (
+              <div key={href}>
+                <Link
+                  href={href}
+                  onClick={onClose}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                    finanzasActive
+                      ? 'bg-coral text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', finanzasActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
+                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  <ChevronDown size={14} className={cn('transition-transform duration-200', finanzasActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
+                </Link>
+                {finanzasActive && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                    {FINANZAS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                      const subActive = pathname === sub || (sub !== '/finanzas' && pathname.startsWith(sub + '/'))
+                      return (
+                        <Link
+                          key={sub}
+                          href={sub}
+                          onClick={onClose}
+                          className={cn(
+                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
+                          )}
+                        >
+                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
+                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
 
           if (isEmpleados) {
             return (
@@ -274,6 +376,48 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
                             {subLabel}
                           </span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          if (isComunicaciones) {
+            return (
+              <div key={href}>
+                <Link
+                  href={href}
+                  onClick={onClose}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                    comunicacionesActive
+                      ? 'bg-coral text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', comunicacionesActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
+                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  <ChevronDown size={14} className={cn('transition-transform duration-200', comunicacionesActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
+                </Link>
+                {comunicacionesActive && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                    {COMUNICACIONES_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                      const subActive = pathname === sub || (sub !== '/comunicaciones' && pathname.startsWith(sub + '/'))
+                      return (
+                        <Link
+                          key={sub}
+                          href={sub}
+                          onClick={onClose}
+                          className={cn(
+                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
+                          )}
+                        >
+                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
+                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
                         </Link>
                       )
                     })}
@@ -500,14 +644,63 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-6 py-5">
-          <p
-            className="text-[11px] text-white/30 tracking-widest uppercase"
-            style={{ fontFamily: 'var(--font-display)' }}
+        {/* Accesos — solo admin/direccion */}
+        {canViewAccesos && (
+          <div className="px-3 pb-2">
+            <div className="h-px bg-white/10 mb-2" />
+            <Link
+              href="/accesos"
+              onClick={onClose}
+              className={cn(
+                'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                pathname === '/accesos' || pathname.startsWith('/accesos/')
+                  ? 'bg-coral text-white'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              )}
+            >
+              <Shield
+                size={18}
+                strokeWidth={1.75}
+                className={cn(
+                  'shrink-0 transition-colors',
+                  pathname === '/accesos' || pathname.startsWith('/accesos/')
+                    ? 'text-white'
+                    : 'text-white/50 group-hover:text-white'
+                )}
+              />
+              <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>Accesos</span>
+            </Link>
+          </div>
+        )}
+
+        {/* Footer — usuario + logout */}
+        <div className="px-4 py-4 border-t border-white/10">
+          {userName && (
+            <div className="flex items-center gap-3 px-2 py-2 mb-2">
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold text-white"
+                style={{ background: 'rgba(255,255,255,0.15)', fontFamily: 'var(--font-display)' }}
+              >
+                {userName.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] text-white truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 400 }}>
+                  {userName}
+                </p>
+                <p className="text-[11px] text-white/40 truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                  {ROLE_LABELS[userRole] ?? userRole}
+                </p>
+              </div>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] text-white/50 hover:bg-white/10 hover:text-white transition-all"
+            style={{ fontFamily: 'var(--font-body)' }}
           >
-            THEOS PLACE · ADMIN
-          </p>
+            <LogOut size={14} className="shrink-0" />
+            Cerrar sesión
+          </button>
         </div>
       </aside>
     </>

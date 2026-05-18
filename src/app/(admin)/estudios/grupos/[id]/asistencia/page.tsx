@@ -3,6 +3,7 @@
 import { use, useState } from 'react'
 import Link from 'next/link'
 import { MOCK_GROUPS, getStudyType } from '@/data/mock-studies'
+import { sedeLabel } from '@/data/mock-sedes'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, Users } from 'lucide-react'
 
@@ -191,11 +192,3 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
   )
 }
 
-function sedeLabel(id: string): string {
-  const SEDES: Record<string, string> = {
-    meridiano: 'Meridiano', antares: 'Antares', liberia: 'Liberia',
-    guapiles: 'Guápiles', cartago: 'Cartago', 'perez-zeledon': 'Pérez Zeledón',
-    potrero: 'Potrero', alajuela: 'Alajuela', madrid: 'Madrid', pedregal: 'Pedregal',
-  }
-  return SEDES[id] ?? id
-}

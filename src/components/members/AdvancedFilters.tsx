@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
-import { SEDES } from '@/data/mock-sedes'
+import { ACTIVE_SEDES, HISTORICAL_SEDES } from '@/data/mock-sedes'
 import { AREAS, SERVICE_POSITIONS } from '@/data/mock-committees'
 import { MOCK_FORMS, FORM_CATEGORY_LABEL } from '@/data/mock-forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
@@ -249,11 +249,23 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
         <div>
           <Label>Sede</Label>
           <div className="space-y-1.5">
-            {SEDES.map(s => (
+            {ACTIVE_SEDES.map(s => (
               <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={sedes.includes(s.id)} onChange={() => toggleSede(s.id)}
                   className="accent-coral h-3.5 w-3.5 cursor-pointer" />
                 <span className="text-xs text-navy-light/70 select-none" style={{ fontFamily: 'var(--font-body)' }}>
+                  {s.name}
+                </span>
+              </label>
+            ))}
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/30 pt-1" style={{ fontFamily: 'var(--font-display)' }}>
+              Sedes históricas
+            </p>
+            {HISTORICAL_SEDES.map(s => (
+              <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={sedes.includes(s.id)} onChange={() => toggleSede(s.id)}
+                  className="accent-coral h-3.5 w-3.5 cursor-pointer" />
+                <span className="text-xs text-navy-light/40 select-none" style={{ fontFamily: 'var(--font-body)' }}>
                   {s.name}
                 </span>
               </label>

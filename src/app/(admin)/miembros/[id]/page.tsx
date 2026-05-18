@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -207,6 +207,7 @@ function SectionAccordion({
 
 export default function MiembroDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : ''
 
   const member = mockMembers.find(m => m.id === id)
@@ -403,12 +404,14 @@ export default function MiembroDetailPage() {
           {/* Action buttons */}
           <div className="flex items-center gap-2 shrink-0">
             <button
+              onClick={() => router.push(`/miembros/${id}/editar`)}
               className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
               style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
             >
               Editar
             </button>
             <button
+              onClick={() => router.push(`/comunicaciones/nueva?mode=manual&members=${id}`)}
               className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
               style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
             >

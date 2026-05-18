@@ -4,18 +4,86 @@ import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MOCK_FORM_TEMPLATES } from '@/data/mock-forms'
+import { MOCK_FORM_TEMPLATES, type FormFieldNew, type LogicRule } from '@/data/mock-forms'
 import { PublicField } from '@/components/forms/PublicField'
 import { cn } from '@/lib/utils'
-import { AlertTriangle, Check, ChevronLeft } from 'lucide-react'
+import { AlertTriangle, Check, ChevronLeft, ChevronRight } from 'lucide-react'
+
+// ─── Logic evaluation ─────────────────────────────────────────────────────────
+
+type AnswerMap = Record<string, string | string[] | number>
+
+function evaluateRule(rule: LogicRule, answers: AnswerMap): boolean {
+  const results = rule.conditions.map(condition => {
+    const answer = answers[condition.field_id]
+    const val = condition.value
+    switch (condition.operator) {
+      case 'eq': return String(answer ?? '') === val
+      case 'neq': return String(answer ?? '') !== val
+      case 'contains':
+        if (Array.isArray(answer)) return answer.includes(val)
+        return String(answer ?? '').toLowerCase().includes(val.toLowerCase())
+      case 'not_contains':
+        if (Array.isArray(answer)) return !answer.includes(val)
+        return !String(answer ?? '').toLowerCase().includes(val.toLowerCase())
+      case 'is_empty': return !answer || answer === '' || (Array.isArray(answer) && answer.length === 0)
+      case 'is_not_empty': return !!answer && answer !== '' && (!Array.isArray(answer) || answer.length > 0)
+      case 'gt': return Number(answer) > Number(val)
+      case 'lt': return Number(answer) < Number(val)
+      default: return false
+    }
+  })
+  const met = rule.condition_operator === 'AND' ? results.every(Boolean) : results.some(Boolean)
+  return met
+}
+
+function isFieldVisible(field: FormFieldNew, answers: AnswerMap): boolean {
+  const rules = field.logic_rules ?? []
+  if (rules.length === 0) return true
+  for (const rule of rules) {
+    const met = evaluateRule(rule, answers)
+    if (rule.action === 'hide' && met) return false
+    if (rule.action === 'show' && met) return true
+  }
+  const hasShowRules = rules.some(r => r.action === 'show')
+  return !hasShowRules
+}
+
+// ─── Multi-step helpers ───────────────────────────────────────────────────────
+
+function splitIntoPages(fields: FormFieldNew[]): FormFieldNew[][] {
+  const pages: FormFieldNew[][] = [[]]
+  for (const f of fields) {
+    if (f.type === 'page_break') {
+      pages.push([])
+    } else {
+      pages[pages.length - 1].push(f)
+    }
+  }
+  return pages
+}
+
+function getPageBreakForPage(fields: FormFieldNew[], pageIndex: number): FormFieldNew | null {
+  let count = 0
+  for (const f of fields) {
+    if (f.type === 'page_break') {
+      count++
+      if (count === pageIndex) return f
+    }
+  }
+  return null
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PreviewPage() {
   const { id } = useParams<{ id: string }>()
   const form = useMemo(() => MOCK_FORM_TEMPLATES.find(f => f.id === id), [id])
 
-  const [answers, setAnswers] = useState<Record<string, string | string[] | number>>({})
+  const [answers, setAnswers] = useState<AnswerMap>({})
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+  const [currentPage, setCurrentPage] = useState(0)
 
   if (!form) {
     return (
@@ -25,36 +93,48 @@ export default function PreviewPage() {
     )
   }
 
+  const pages = useMemo(() => splitIntoPages(form.fields), [form.fields])
+  const isMultiStep = pages.length > 1
+  const totalPages = pages.length
+  const isLastPage = currentPage === totalPages - 1
+  const progress = totalPages > 1 ? Math.round(((currentPage + 1) / totalPages) * 100) : 100
+
+  const currentPageBreak = isMultiStep && currentPage > 0
+    ? getPageBreakForPage(form.fields, currentPage)
+    : null
+
   function setAnswer(fieldId: string, value: string | string[] | number) {
     setAnswers(prev => ({ ...prev, [fieldId]: value }))
     setErrors(prev => prev.filter(e => e !== fieldId))
   }
 
-  function isVisible(fieldIndex: number): boolean {
-    const field = form!.fields[fieldIndex]
-    if (!field.conditional) return true
-    const { field_id, operator, value } = field.conditional
-    const ans = answers[field_id]
-    const ansStr = Array.isArray(ans) ? ans.join(', ') : String(ans ?? '')
-    if (operator === 'eq') return ansStr === value
-    if (operator === 'neq') return ansStr !== value
-    return true
-  }
-
-  function handleSubmit() {
-    const requiredErrors = form!.fields
-      .filter((f, i) => f.type !== 'section' && f.is_required && isVisible(i))
+  function getRequiredErrorsForPage(pageIndex: number): string[] {
+    return pages[pageIndex]
+      .filter(f => f.type !== 'section' && f.is_required && isFieldVisible(f, answers))
       .filter(f => {
         const ans = answers[f.id]
         return ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)
       })
       .map(f => f.id)
+  }
 
-    if (requiredErrors.length > 0) {
-      setErrors(requiredErrors)
-      return
-    }
+  function handleNext() {
+    const errs = getRequiredErrorsForPage(currentPage)
+    if (errs.length > 0) { setErrors(errs); return }
+    setErrors([])
+    setCurrentPage(p => Math.min(p + 1, totalPages - 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
+  function handlePrev() {
+    setErrors([])
+    setCurrentPage(p => Math.max(p - 1, 0))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleSubmit() {
+    const errs = getRequiredErrorsForPage(currentPage)
+    if (errs.length > 0) { setErrors(errs); return }
     setSubmitted(true)
   }
 
@@ -73,7 +153,7 @@ export default function PreviewPage() {
           </p>
           <button
             type="button"
-            onClick={() => { setSubmitted(false); setAnswers({}) }}
+            onClick={() => { setSubmitted(false); setAnswers({}); setCurrentPage(0) }}
             className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
             style={{ fontFamily: 'var(--font-body)' }}
           >
@@ -83,6 +163,8 @@ export default function PreviewPage() {
       </div>
     )
   }
+
+  const fieldsToRender = pages[currentPage] ?? []
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--surface-low)' }}>
@@ -112,18 +194,9 @@ export default function PreviewPage() {
           {/* Form header */}
           <div className="px-8 pt-8 pb-6 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
             <div className="flex justify-center mb-6">
-              <Image
-                src="/logo-theos-white.png"
-                alt="Theos Place"
-                width={100}
-                height={28}
-                className="object-contain opacity-60"
-              />
+              <Image src="/logo-theos-white.png" alt="Theos Place" width={100} height={28} className="object-contain opacity-60" />
             </div>
-            <h1
-              className="text-2xl font-extrabold text-navy text-center"
-              style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}
-            >
+            <h1 className="text-2xl font-extrabold text-navy text-center" style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
               {form.name}
             </h1>
             {form.description && (
@@ -131,17 +204,51 @@ export default function PreviewPage() {
                 {form.description}
               </p>
             )}
+
+            {/* Multi-step progress */}
+            {isMultiStep && (
+              <div className="mt-5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] font-semibold text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                    Página {currentPage + 1} de {totalPages}
+                  </span>
+                  <span className="text-[12px] font-semibold text-coral" style={{ fontFamily: 'var(--font-mono)' }}>
+                    {progress}%
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-navy/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-coral transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                {currentPageBreak?.label && (
+                  <p className="text-sm font-bold text-navy mt-1" style={{ fontFamily: 'var(--font-display)' }}>
+                    {currentPageBreak.label}
+                  </p>
+                )}
+                {currentPageBreak?.description && (
+                  <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                    {currentPageBreak.description}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Fields */}
           <div className="px-8 py-6 space-y-6">
-            {form.fields.map((field, index) => {
-              if (!isVisible(index)) return null
+            {fieldsToRender.map(field => {
+              if (!isFieldVisible(field, answers)) return null
 
               const hasError = errors.includes(field.id)
 
               return (
-                <div key={field.id} className={cn('space-y-2', field.type === 'section' && 'pt-2')}>
+                <div
+                  key={field.id}
+                  className={cn('space-y-2 form-field-enter', field.type === 'section' && 'pt-2')}
+                  style={{ animation: 'slideDown 200ms ease-out' }}
+                >
                   {field.type !== 'section' && (
                     <label className="block" style={{ fontFamily: 'var(--font-body)' }}>
                       <span className="text-sm font-semibold text-navy">
@@ -170,7 +277,7 @@ export default function PreviewPage() {
             })}
           </div>
 
-          {/* Submit */}
+          {/* Footer actions */}
           <div className="px-8 pb-8">
             {errors.length > 0 && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
@@ -180,20 +287,65 @@ export default function PreviewPage() {
                 </p>
               </div>
             )}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="w-full rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              Enviar respuesta
-            </button>
+
+            {isMultiStep ? (
+              <div className="flex items-center gap-3">
+                {currentPage > 0 && (
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    className="flex items-center gap-1.5 rounded-2xl border px-5 py-3 text-sm font-semibold text-navy-light hover:bg-surface-low transition-colors"
+                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                  >
+                    <ChevronLeft size={15} />
+                    Anterior
+                  </button>
+                )}
+                {!isLastPage ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    Siguiente
+                    <ChevronRight size={15} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    Enviar respuesta
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="w-full rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                Enviar respuesta
+              </button>
+            )}
+
             <p className="text-center text-[11px] text-navy-light/30 mt-3" style={{ fontFamily: 'var(--font-body)' }}>
               Theos Place · {form.name}
             </p>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }

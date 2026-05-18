@@ -57,6 +57,7 @@ export type MockEvent = {
   checkins: EventCheckin[]
   volunteer_bookings: VolunteerBooking[]
   cancellation_reason: string | null
+  flyer_url: string | null
 }
 
 function makeRegistrations(count: number, prefix: string): EventRegistration[] {
@@ -159,6 +160,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'v-005', member_name: 'Miguel Solano', role: 'Coordinador de Audiovisuales', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-charla-002',
@@ -190,6 +192,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'v-012', member_name: 'Silvia Picado', role: 'Colaborador de Bienvenida Kids', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-charla-003',
@@ -221,6 +224,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'v-022', member_name: 'Jonathan Blanco', role: 'Colaborador de Audiovisuales', status: 'pending' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-campa-001',
@@ -258,6 +262,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vc-005', member_name: 'Alexis Campos', role: 'Colaborador de Audiovisuales Campas', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-united-001',
@@ -290,6 +295,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vu-004', member_name: 'Priscilla Varela', role: 'Colaborador de Logística', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-social-001',
@@ -320,6 +326,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vs-002', member_name: 'Adriana Mena', role: 'Colaborador de Bienvenida', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-cancel-001',
@@ -347,6 +354,7 @@ export const MOCK_EVENTS: MockEvent[] = [
     checkins: [],
     volunteer_bookings: [],
     cancellation_reason: 'El polideportivo quedó sin disponibilidad por reparaciones de emergencia en el techo. No fue posible conseguir un espacio alternativo con tan poco tiempo.',
+    flyer_url: null,
   },
   {
     id: 'ev-cap-001',
@@ -376,6 +384,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vcap-001', member_name: 'Rebeca Ureña', role: 'Orador', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-cap-002',
@@ -406,6 +415,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vcap-011', member_name: 'Felipe Porras', role: 'Orador de Apoyo', status: 'pending' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-charla-004',
@@ -436,6 +446,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vch4-002', member_name: 'Flor Godínez', role: 'Colaborador de Bienvenida', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-social-002',
@@ -465,6 +476,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vsoc2-001', member_name: 'Mauricio Barboza', role: 'Coordinador de Biking', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-united-002',
@@ -492,6 +504,7 @@ export const MOCK_EVENTS: MockEvent[] = [
     checkins: [],
     volunteer_bookings: [],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-cap-003',
@@ -521,6 +534,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vcap3-001', member_name: 'Wilbert Alfaro', role: 'Coordinador de Oración', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-charla-005',
@@ -550,6 +564,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vch5-001', member_name: 'Vanessa Sequeira', role: 'Anfitrión', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
   {
     id: 'ev-social-003',
@@ -580,6 +595,7 @@ export const MOCK_EVENTS: MockEvent[] = [
       { member_id: 'vsoc3-002', member_name: 'Jessica Contreras', role: 'Colaborador de Hospitalidad', status: 'confirmed' },
     ],
     cancellation_reason: null,
+    flyer_url: null,
   },
 ]
 

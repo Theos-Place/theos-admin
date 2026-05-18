@@ -6,7 +6,7 @@ import { Check, Loader2, X } from 'lucide-react'
 import { mockMembers, type Member } from '@/data/mock-members'
 import { DuplicateWarning } from '@/components/members/DuplicateWarning'
 import { CR_PROVINCES, CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
-import { SEDES } from '@/data/mock-sedes'
+import { ACTIVE_SEDES as SEDES } from '@/data/mock-sedes'
 import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────

@@ -170,6 +170,31 @@ export type FieldType =
   | 'date'
   | 'number'
   | 'section'
+  | 'page_break'
+
+export type ConditionOperator =
+  | 'eq'
+  | 'neq'
+  | 'contains'
+  | 'not_contains'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'gt'
+  | 'lt'
+
+export interface LogicCondition {
+  id: string
+  field_id: string
+  operator: ConditionOperator
+  value: string
+}
+
+export interface LogicRule {
+  id: string
+  condition_operator: 'AND' | 'OR'
+  conditions: LogicCondition[]
+  action: 'show' | 'hide'
+}
 
 export interface FormFieldNew {
   id: string
@@ -177,6 +202,7 @@ export interface FormFieldNew {
   label: string
   placeholder?: string
   helper_text?: string
+  description?: string
   is_required: boolean
   sort_order: number
   options?: string[]
@@ -184,7 +210,7 @@ export interface FormFieldNew {
   scale_max?: number
   scale_min_label?: string
   scale_max_label?: string
-  conditional?: { field_id: string; operator: 'eq' | 'neq'; value: string }
+  logic_rules?: LogicRule[]
 }
 
 export interface FormTemplate {
@@ -261,71 +287,92 @@ export const MOCK_FORM_TEMPLATES: FormTemplate[] = [
         sort_order: 3,
       },
       {
-        id: 'condicion-medica',
-        type: 'text',
-        label: 'Condición médica o alergias',
-        placeholder: 'Ninguna',
-        is_required: false,
+        id: 'tiene-condicion',
+        type: 'yes_no',
+        label: '¿Tenés alguna condición médica?',
+        is_required: true,
         sort_order: 4,
+        logic_rules: [],
       },
       {
-        id: 'medicamentos',
-        type: 'text',
-        label: 'Medicamentos actuales',
-        placeholder: 'Ninguno',
-        is_required: false,
+        id: 'cual-condicion',
+        type: 'textarea',
+        label: 'Describí tu condición médica',
+        placeholder: 'Alergias, medicamentos, condiciones crónicas...',
+        is_required: true,
         sort_order: 5,
+        logic_rules: [{
+          id: 'rule-condicion',
+          condition_operator: 'AND',
+          conditions: [{ id: 'cond-condicion', field_id: 'tiene-condicion', operator: 'eq', value: 'Sí' }],
+          action: 'show',
+        }],
+      },
+      {
+        id: 'page-2',
+        type: 'page_break',
+        label: 'Contacto de emergencia',
+        description: 'Necesitamos estos datos por seguridad durante el campamento',
+        is_required: false,
+        sort_order: 6,
+        logic_rules: [],
       },
       {
         id: 'contacto-emergencia',
         type: 'text',
         label: 'Nombre del contacto de emergencia',
         is_required: true,
-        sort_order: 6,
+        sort_order: 7,
+        logic_rules: [],
       },
       {
         id: 'tel-emergencia',
         type: 'text',
         label: 'Teléfono de emergencia',
         is_required: true,
-        sort_order: 7,
+        sort_order: 8,
+        logic_rules: [],
       },
       {
         id: 'autoriza-auxilio',
         type: 'yes_no',
         label: '¿Autoriza aplicar primeros auxilios en caso de emergencia?',
         is_required: true,
-        sort_order: 8,
+        sort_order: 9,
+        logic_rules: [],
       },
       {
         id: 'sec-logistica',
         type: 'section',
         label: 'Logística',
         is_required: false,
-        sort_order: 9,
+        sort_order: 10,
       },
       {
         id: 'talla-camiseta',
         type: 'select',
         label: 'Talla de camiseta',
         is_required: true,
-        sort_order: 10,
+        sort_order: 11,
         options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        logic_rules: [],
       },
       {
         id: 'talleres',
         type: 'checkbox',
         label: 'Talleres de interés',
         is_required: false,
-        sort_order: 11,
+        sort_order: 12,
         options: ['Alabanza', 'Arte', 'Deportes', 'Teatro', 'Cocina'],
+        logic_rules: [],
       },
       {
         id: 'solicitud-especial',
         type: 'textarea',
         label: '¿Alguna solicitud especial o información adicional?',
         is_required: false,
-        sort_order: 12,
+        sort_order: 13,
+        logic_rules: [],
       },
     ],
   },
@@ -786,7 +833,12 @@ export const MOCK_FORM_TEMPLATES: FormTemplate[] = [
         scale_max: 5,
         scale_min_label: 'Poco probable',
         scale_max_label: 'Muy probable',
-        conditional: { field_id: 'primera-vez', operator: 'eq', value: 'Sí' },
+        logic_rules: [{
+          id: 'rule-primera-vez',
+          condition_operator: 'AND',
+          conditions: [{ id: 'cond-1', field_id: 'primera-vez', operator: 'eq', value: 'Sí' }],
+          action: 'show',
+        }],
       },
       {
         id: 'compartir',

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { MOCK_WAIT_LIST, MOCK_GROUPS } from '@/data/mock-studies'
-import { SEDES, sedeLabel } from '@/data/mock-sedes'
+import { ACTIVE_SEDES, HISTORICAL_SEDES, sedeLabel } from '@/data/mock-sedes'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { cn } from '@/lib/utils'
 import { X, Users, Plus } from 'lucide-react'
@@ -198,7 +198,12 @@ export default function ListaEsperaPage() {
           <p className="text-[10px] uppercase tracking-widest text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Zona</p>
           <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={selectedZone} onChange={e => setSelectedZone(e.target.value)}>
             <option value="">Todas</option>
-            {SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <optgroup label="── Sedes activas ──">
+              {ACTIVE_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </optgroup>
+            <optgroup label="── Sedes históricas ──">
+              {HISTORICAL_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </optgroup>
           </select>
         </div>
         <div className="space-y-1">
