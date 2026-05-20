@@ -64,6 +64,47 @@
   --color-surface:       #F8FAFB;
   --color-surface-low:   #F2F4F5;
   --color-surface-card:  #FFFFFF;
+  --fg-muted:            rgba(41, 54, 92, 0.5);
+}
+
+/* ─── Toggle checkbox ──────────────────────────────────────────────────────── */
+.toggle {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-track {
+  display: block;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: rgba(22, 20, 64, 0.15);
+  transition: background 0.2s ease;
+  position: relative;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+.toggle input:checked ~ .toggle-track {
+  background: var(--color-teal-deep, #519DA2);
+}
+.toggle input:checked ~ .toggle-track::after {
+  transform: translateX(16px);
 }
 
 *, *::before, *::after {

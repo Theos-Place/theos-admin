@@ -69,6 +69,11 @@ const COMUNICACIONES_SUB = [
   { href: '/comunicaciones/configuracion',label: 'Configuración',      icon: Settings    },
 ]
 
+const MIEMBROS_SUB = [
+  { href: '/miembros',        label: 'Todos los miembros', icon: Users     },
+  { href: '/miembros/listas', label: 'Listas guardadas',   icon: Bookmark  },
+]
+
 const SERVIDORES_SUB = [
   { href: '/servidores',                label: 'Por comités',          icon: LayoutGrid   },
   { href: '/servidores/vacantes',       label: 'Vacantes',             icon: Bookmark     },
@@ -77,7 +82,7 @@ const SERVIDORES_SUB = [
 
 const ESTUDIOS_SUB = [
   { href: '/estudios/grupos',          label: 'Grupos',           icon: LayoutList },
-  { href: '/estudios/curriculo',       label: 'Currículo',        icon: BookText },
+  { href: '/estudios/plan',            label: 'Plan de Estudios', icon: BookText },
   { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
   { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock },
   { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight },
@@ -87,6 +92,7 @@ const ESTUDIOS_SUB = [
 const navItems = [
   { href: '/dashboard',     label: 'Dashboard',            icon: LayoutDashboard },
   { href: '/miembros',      label: 'Miembros',             icon: Users },
+  { href: '/matricula',     label: 'Matrícula',            icon: GraduationCap },
   { href: '/eventos',       label: 'Eventos',              icon: Calendar },
   { href: '/estudios',      label: 'Estudios',             icon: BookOpen },
   { href: '/servidores',    label: 'Servidores',            icon: UsersRound },
@@ -134,6 +140,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     localStorage.removeItem('theos_user')
     router.push('/login')
   }
+  const miembrosActive        = pathname === '/miembros'        || pathname.startsWith('/miembros/')
   const estudiosActive        = pathname === '/estudios'        || pathname.startsWith('/estudios/')
   const eventosActive         = pathname === '/eventos'         || pathname.startsWith('/eventos/')
   const servidoresActive      = pathname === '/servidores'      || pathname.startsWith('/servidores/')
@@ -141,6 +148,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const formulariosActive     = pathname === '/formularios'     || pathname.startsWith('/formularios/')
   const comunicacionesActive  = pathname === '/comunicaciones'  || pathname.startsWith('/comunicaciones/')
   const finanzasActive        = pathname === '/finanzas'        || pathname.startsWith('/finanzas/')
+
+  const canViewListas = userRoles.some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
 
   return (
     <>
@@ -195,11 +204,54 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               ? pathname === '/eventos'
               : pathname === href || pathname.startsWith(href + '/')
 
+            const isMiembros       = href === '/miembros'
             const isEmpleados      = href === '/empleados'
             const isServidores     = href === '/servidores'
             const isFormularios    = href === '/formularios'
             const isComunicaciones = href === '/comunicaciones'
             const isFinanzas       = href === '/finanzas'
+
+          if (isMiembros) {
+            return (
+              <div key={href}>
+                <Link
+                  href={href}
+                  onClick={onClose}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                    miembrosActive ? 'bg-coral text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', miembrosActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
+                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  {canViewListas && (
+                    <ChevronDown size={14} className={cn('transition-transform duration-200', miembrosActive ? 'text-white rotate-180' : 'text-white/40')} />
+                  )}
+                </Link>
+                {miembrosActive && canViewListas && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+                    {MIEMBROS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                      const subActive = pathname === sub
+                      return (
+                        <Link
+                          key={sub}
+                          href={sub}
+                          onClick={onClose}
+                          className={cn(
+                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
+                          )}
+                        >
+                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
+                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
 
           if (isFinanzas) {
             return (
@@ -379,6 +431,30 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                         </Link>
                       )
                     })}
+                    {userRoles.some(r => ['admin', 'direccion', 'encargado_staff'].includes(r)) && (
+                      <Link
+                        href="/servidores/admin"
+                        onClick={onClose}
+                        className={cn(
+                          'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
+                          pathname === '/servidores/admin'
+                            ? 'bg-white/15 text-white'
+                            : 'text-white/55 hover:bg-white/10 hover:text-white'
+                        )}
+                      >
+                        <Settings
+                          size={14}
+                          strokeWidth={1.75}
+                          className={cn(
+                            'shrink-0',
+                            pathname === '/servidores/admin' ? 'text-white' : 'text-white/40 group-hover:text-white'
+                          )}
+                        />
+                        <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                          Áreas y comités
+                        </span>
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>

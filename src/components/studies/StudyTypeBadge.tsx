@@ -3,8 +3,8 @@
 import { cn } from '@/lib/utils'
 
 const NIVELES = ['N1', 'N2', 'N3', 'N4']
-const INICIAL = ['SCJ', 'ASF', 'EVM', 'AED', 'MAT']
-const CAMPANA = ['TRANS', 'UFA', 'PQET', 'TPS23']
+const INICIAL = ['SCJ', 'ASF', 'EVM', 'AED', 'MAT', 'PREMAT']
+const CAMPANA = ['TRANS', 'UFA', 'PQET', 'TPS']
 
 interface StudyTypeBadgeProps {
   code: string

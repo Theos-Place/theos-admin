@@ -178,16 +178,28 @@ export default function DirigentesPage() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterZone, setFilterZone] = useState('')
   const [filterStudy, setFilterStudy] = useState('')
+  const [search, setSearch] = useState('')
   const [showNewLeader, setShowNewLeader] = useState(false)
 
   const filtered = useMemo(() => {
     return MOCK_LEADERS.filter(l => {
       if (filterStatus && l.availability_status !== filterStatus) return false
-      if (filterZone && l.zone_preference !== filterZone) return false
+      if (filterZone && !l.zone_preference.includes(filterZone)) return false
       if (filterStudy && !l.qualified_studies.includes(filterStudy)) return false
       return true
     })
   }, [filterStatus, filterZone, filterStudy])
+
+  const filteredLeaders = useMemo(() => {
+    if (!search.trim()) return filtered
+    const q = search.toLowerCase().trim()
+    const searchNorm = q.replace(/[-\s]/g, '')
+    return filtered.filter(leader => {
+      const fullName = leader.member_name.toLowerCase()
+      const cedula = ((leader as Record<string, unknown>).cedula as string ?? '').replace(/[-\s]/g, '')
+      return fullName.includes(q) || cedula.includes(searchNorm)
+    })
+  }, [filtered, search])
 
   const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -219,6 +231,26 @@ export default function DirigentesPage() {
 
       {/* Filter bar */}
       <div className="flex flex-wrap gap-3" style={{ fontFamily: 'var(--font-body)' }}>
+        {/* Search input */}
+        <div className="relative flex items-center">
+          <Search size={13} className="absolute left-3 text-navy-light/40 pointer-events-none" />
+          <input
+            className={`${inputCls} pl-8 pr-8`}
+            style={{ minWidth: 220 }}
+            placeholder="Buscar por nombre o cédula..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 text-navy-light/40 hover:text-navy transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
         <select
           className={inputCls}
           value={filterStatus}
@@ -254,18 +286,40 @@ export default function DirigentesPage() {
         </select>
       </div>
 
+      {/* Result count */}
+      {search.trim() && (
+        <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+          {filteredLeaders.length} resultado{filteredLeaders.length !== 1 ? 's' : ''} para &ldquo;{search}&rdquo;
+        </p>
+      )}
+
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map(leader => (
+        {filteredLeaders.map(leader => (
           <Link key={leader.id} href={`/estudios/dirigentes/${leader.id}`} className="block">
             <LeaderCard leader={leader} />
           </Link>
         ))}
-        {filtered.length === 0 && (
-          <div className="col-span-full rounded-2xl p-10 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-              No se encontraron dirigentes con esos filtros.
+        {filteredLeaders.length === 0 && (
+          <div className="col-span-full rounded-2xl p-12 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+              No se encontraron dirigentes
             </p>
+            <p className="mt-1 text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              {search.trim()
+                ? `No hay resultados para "${search}"`
+                : 'No hay dirigentes con esos filtros.'
+              }
+            </p>
+            {search.trim() && (
+              <button
+                onClick={() => setSearch('')}
+                className="mt-3 rounded-full border px-3 py-1.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                Limpiar búsqueda
+              </button>
+            )}
           </div>
         )}
       </div>

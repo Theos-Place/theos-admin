@@ -50,6 +50,7 @@ export type AttendanceRecord = {
 export type ServiceRecord = {
   position: string
   committee: string
+  area: string
   from: string
   to: string | null
   status: 'activo' | 'finalizado'
@@ -80,8 +81,8 @@ export const mockMembers: Member[] = [
     is_donor: true,
     is_server: true,
     roles: ['miembro', 'servidor', 'dirigente', 'admin'],
-    completed_studies: ['N1', 'N2', 'N3', 'N4', 'SCJ', 'DIS1'],
-    current_study: 'DIS2',
+    completed_studies: ['N1', 'N2', 'N3', 'N4', 'SCJ', 'DIS1', 'DIS2', 'DIS3', 'PAN'],
+    current_study: null,
     sede: 'meridiano',
     age: 25,
     tipos_evento: ['Charla mensual', 'Campamento'],
@@ -107,8 +108,8 @@ export const mockMembers: Member[] = [
       { name: 'Charla Mensual — Abril', date: '2025-04-20', type: 'Charla mensual', attendance_type: 'servidor' },
     ],
     service_history: [
-      { position: 'Coordinador de Bienvenida', committee: 'Comité de Anfitriones', from: '2022-01-01', to: null, status: 'activo' },
-      { position: 'Colaborador de Audiovisuales', committee: 'Comité de Worship', from: '2021-06-01', to: '2022-05-31', status: 'finalizado' },
+      { position: 'Coordinador de Bienvenida', committee: 'Comité de Anfitriones', area: 'Área Espiritual', from: '2022-01-01', to: null, status: 'activo' },
+      { position: 'Colaborador de Audiovisuales', committee: 'Comité de Worship', area: 'Área Operaciones', from: '2021-06-01', to: '2022-05-31', status: 'finalizado' },
     ],
     family_members: [
       { id: 'uuid-0008', name: 'Carmen Delgado Nieto', relation: 'Prima', status: 'active' },
@@ -163,7 +164,7 @@ export const mockMembers: Member[] = [
       { name: 'Actividad Social — Boliche', date: '2025-04-05', type: 'Actividad servidores', attendance_type: 'participante' },
     ],
     service_history: [
-      { position: 'Colaborador de Diseño', committee: 'Comité de Comunicación', from: '2023-02-01', to: null, status: 'activo' },
+      { position: 'Colaborador de Diseño', committee: 'Comité de Comunicación', area: 'Área Operaciones', from: '2023-02-01', to: null, status: 'activo' },
     ],
     family_members: [],
     donations: [
@@ -213,8 +214,8 @@ export const mockMembers: Member[] = [
       { name: 'Campamento Avanzado', date: '2025-05-03', type: 'Campamento', attendance_type: 'servidor' },
     ],
     service_history: [
-      { position: 'Encargado de Estudios Bíblicos', committee: 'Comité de Estudios Bíblicos', from: '2020-03-01', to: null, status: 'activo' },
-      { position: 'Coordinador de Audiovisuales', committee: 'Comité de Worship', from: '2018-06-01', to: '2020-02-28', status: 'finalizado' },
+      { position: 'Encargado de Estudios Bíblicos', committee: 'Comité de Estudios Bíblicos', area: 'Área Enseñanza', from: '2020-03-01', to: null, status: 'activo' },
+      { position: 'Coordinador de Audiovisuales', committee: 'Comité de Worship', area: 'Área Operaciones', from: '2018-06-01', to: '2020-02-28', status: 'finalizado' },
     ],
     family_members: [
       { id: 'fam-0003-1', name: 'Andrea García Vidal', relation: 'Cónyuge', status: 'active' },
@@ -307,7 +308,7 @@ export const mockMembers: Member[] = [
       { name: 'Charla Mensual — Abril', date: '2025-04-20', type: 'Charla mensual', attendance_type: 'participante' },
     ],
     service_history: [
-      { position: 'Coordinador de Finanzas', committee: 'Comité de Contabilidad', from: '2021-01-01', to: null, status: 'activo' },
+      { position: 'Coordinador de Finanzas', committee: 'Comité de Contabilidad', area: 'Área de Finanzas', from: '2021-01-01', to: null, status: 'activo' },
     ],
     family_members: [],
     donations: [
@@ -360,8 +361,8 @@ export const mockMembers: Member[] = [
       { name: 'Campamento Avanzado', date: '2025-05-03', type: 'Campamento', attendance_type: 'servidor' },
     ],
     service_history: [
-      { position: 'Anfitrión', committee: 'Comité de Anfitriones', from: '2022-01-01', to: null, status: 'activo' },
-      { position: 'Colaborador de Redes Sociales', committee: 'Comité de Comunicación', from: '2023-01-01', to: null, status: 'activo' },
+      { position: 'Anfitrión', committee: 'Comité de Anfitriones', area: 'Área Espiritual', from: '2022-01-01', to: null, status: 'activo' },
+      { position: 'Colaborador de Redes Sociales', committee: 'Comité de Comunicación', area: 'Área Operaciones', from: '2023-01-01', to: null, status: 'activo' },
     ],
     family_members: [],
     donations: [],
@@ -422,8 +423,8 @@ export const mockMembers: Member[] = [
     is_donor: true,
     is_server: true,
     roles: ['miembro', 'servidor', 'dirigente'],
-    completed_studies: ['N1', 'N2', 'N3', 'N4', 'SCJ', 'DIS1', 'DIS2'],
-    current_study: 'DIS3',
+    completed_studies: ['N1', 'N2', 'N3', 'N4', 'SCJ', 'DIS1', 'DIS2', 'DIS3', 'PAN'],
+    current_study: null,
     sede: 'guapiles',
     age: 28,
     tipos_evento: ['Worship', 'Campamento'],
@@ -441,6 +442,7 @@ export const mockMembers: Member[] = [
     medicamentos: null,
     attendance_history: [
       { name: 'Charla de Bienvenida — Enero', date: '2025-01-19', type: 'Charla mensual', attendance_type: 'servidor' },
+      { name: 'Charla Mensual — Febrero', date: '2025-02-16', type: 'Charla mensual', attendance_type: 'servidor' },
       { name: 'Campamento Theos Verano 2025', date: '2025-02-07', type: 'Campamento', attendance_type: 'servidor' },
       { name: 'United Liderazgo Q1', date: '2025-03-08', type: 'Worship', attendance_type: 'servidor' },
       { name: 'Charla Mensual — Marzo', date: '2025-03-16', type: 'Charla mensual', attendance_type: 'servidor' },
@@ -449,8 +451,8 @@ export const mockMembers: Member[] = [
       { name: 'Campamento Avanzado', date: '2025-05-03', type: 'Campamento', attendance_type: 'servidor' },
     ],
     service_history: [
-      { position: 'Encargado de Estudios Bíblicos', committee: 'Comité de Estudios Bíblicos', from: '2021-03-01', to: null, status: 'activo' },
-      { position: 'Colaborador de Finanzas', committee: 'Comité de Contabilidad', from: '2022-06-01', to: null, status: 'activo' },
+      { position: 'Encargado de Estudios Bíblicos', committee: 'Comité de Estudios Bíblicos', area: 'Área Enseñanza', from: '2021-03-01', to: null, status: 'activo' },
+      { position: 'Colaborador de Finanzas', committee: 'Comité de Contabilidad', area: 'Área de Finanzas', from: '2022-06-01', to: null, status: 'activo' },
     ],
     family_members: [
       { id: 'uuid-0001', name: 'Alejandro Ruiz Moreno', relation: 'Primo', status: 'active' },
@@ -548,8 +550,8 @@ export const mockMembers: Member[] = [
       { name: 'Charla Mensual — Abril', date: '2025-04-20', type: 'Charla mensual', attendance_type: 'servidor' },
     ],
     service_history: [
-      { position: 'Encargado de Estudios Bíblicos', committee: 'Comité de Estudios Bíblicos', from: '2019-01-01', to: null, status: 'activo' },
-      { position: 'Colaborador de Audiovisuales', committee: 'Comité de Worship', from: '2017-09-01', to: '2019-01-01', status: 'finalizado' },
+      { position: 'Encargado de Estudios Bíblicos', committee: 'Comité de Estudios Bíblicos', area: 'Área Enseñanza', from: '2019-01-01', to: null, status: 'activo' },
+      { position: 'Colaborador de Audiovisuales', committee: 'Comité de Worship', area: 'Área Operaciones', from: '2017-09-01', to: '2019-01-01', status: 'finalizado' },
     ],
     family_members: [],
     donations: [],
@@ -595,7 +597,7 @@ export const mockMembers: Member[] = [
       { name: 'Charla Mensual — Abril', date: '2025-04-20', type: 'Charla mensual', attendance_type: 'participante' },
     ],
     service_history: [
-      { position: 'Colaborador de Redes Sociales', committee: 'Comité de Comunicación', from: '2022-01-01', to: null, status: 'activo' },
+      { position: 'Colaborador de Redes Sociales', committee: 'Comité de Comunicación', area: 'Área Operaciones', from: '2022-01-01', to: null, status: 'activo' },
     ],
     family_members: [],
     donations: [

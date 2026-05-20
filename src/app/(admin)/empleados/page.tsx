@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { MOCK_EMPLOYEES, type ContractType } from '@/data/mock-employees'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useSortableTable } from '@/hooks/useSortableTable'
+import { SortableHeader } from '@/components/shared/SortableHeader'
 import { cn } from '@/lib/utils'
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -52,7 +54,7 @@ export default function EmpleadosPage() {
     })
   }, [filter, active, inactive])
 
-  const TABLE_HEADERS = ['Empleado', 'Puesto', 'Comité', 'Tipo', 'Desde', '']
+  const { sorted: sortedEmployees, sortKey, sortDir, toggleSort } = useSortableTable(displayed)
 
   return (
     <div className="space-y-6">
@@ -134,20 +136,19 @@ export default function EmpleadosPage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr>
-                {TABLE_HEADERS.map(h => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    {h}
-                  </th>
-                ))}
+              <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                <SortableHeader label="Empleado"      sortKey="member_name"    currentSortKey={sortKey} currentSortDir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Puesto"        sortKey="position_name"  currentSortKey={sortKey} currentSortDir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Comité"        sortKey="committee_name" currentSortKey={sortKey} currentSortDir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Tipo contrato" sortKey="contract_type"  currentSortKey={sortKey} currentSortDir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Desde"         sortKey="start_date"     currentSortKey={sortKey} currentSortDir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Antigüedad"    sortKey="seniority"      currentSortKey={sortKey} currentSortDir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Estado"        sortKey="status"         currentSortKey={sortKey} currentSortDir={sortDir} onSort={toggleSort} />
+                <th />
               </tr>
             </thead>
             <tbody>
-              {displayed.filter(e => filter !== 'inactive' ? e.status === 'active' : e.status === 'inactive').map((emp, idx) => (
+              {sortedEmployees.map((emp, idx) => (
                 <tr
                   key={emp.id}
                   onClick={() => router.push(`/empleados/${emp.id}`)}
@@ -182,13 +183,22 @@ export default function EmpleadosPage() {
                   <td className="px-4 py-3">
                     <ContractTypeBadge type={emp.contract_type} size="sm" />
                   </td>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                    {new Date(emp.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/50 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                    {calcularAntiguedad(emp.start_date)}
+                  </td>
                   <td className="px-4 py-3">
-                    <p className="text-[12px] text-navy-light/60 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
-                      {new Date(emp.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
-                    <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-                      {calcularAntiguedad(emp.start_date)}
-                    </p>
+                    <span
+                      className={cn(
+                        'rounded-full px-2.5 py-0.5 text-[11px] font-medium',
+                        emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/50'
+                      )}
+                      style={{ fontFamily: 'var(--font-display)' }}
+                    >
+                      {emp.status === 'active' ? 'Activo' : 'Inactivo'}
+                    </span>
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <Link

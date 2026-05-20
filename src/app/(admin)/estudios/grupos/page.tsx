@@ -2,13 +2,17 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_GROUPS, STUDY_TYPES, type GroupStatus } from '@/data/mock-studies'
+import { MOCK_GROUPS, STUDY_TYPES, type GroupStatus, type StudyGroup } from '@/data/mock-studies'
 import { ACTIVE_SEDES, HISTORICAL_SEDES, sedeLabel } from '@/data/mock-sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
+import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { ExportButton } from '@/components/shared/ExportButton'
+import { SortableHeader } from '@/components/shared/SortableHeader'
+import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
-import { Plus, Download } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 const ALL_STATUSES: GroupStatus[] = ['pending_leader', 'pending_opening', 'open', 'in_progress', 'finished']
 const STATUS_LABELS: Record<GroupStatus, string> = {
@@ -20,15 +24,90 @@ const STATUS_LABELS: Record<GroupStatus, string> = {
 }
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
+const STATUS_EXPORT: Record<GroupStatus, string> = {
+  pending_leader: 'Sin dirigente',
+  pending_opening: 'Pendiente apertura',
+  open: 'Abierto',
+  in_progress: 'En curso',
+  finished: 'Finalizado',
+}
+
 function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
+
+const STUDY_GROUP_COLUMNS: ColumnDef<StudyGroup>[] = [
+  {
+    key: 'study_type_id', label: 'Estudio', defaultVisible: true, alwaysVisible: true,
+    exportValue: g => {
+      const t = STUDY_TYPES.find(s => s.id === g.study_type_id)
+      return t ? `${t.code} — ${t.name}` : g.study_type_id
+    },
+  },
+  {
+    key: 'study_stage', label: 'Etapa', defaultVisible: false,
+    exportValue: g => {
+      const t = STUDY_TYPES.find(s => s.id === g.study_type_id)
+      return t?.stage ?? ''
+    },
+  },
+  {
+    key: 'leader_name', label: 'Dirigente', defaultVisible: true,
+    exportValue: g => g.leader_name ?? 'Sin asignar',
+  },
+  {
+    key: 'zone', label: 'Zona / Sede', defaultVisible: true,
+    exportValue: g => sedeLabel(g.zone),
+  },
+  {
+    key: 'schedule', label: 'Horario', defaultVisible: true,
+    exportValue: g => `${g.schedule_days.join('/')} ${g.schedule_time}`,
+  },
+  {
+    key: 'participants_count', label: 'Participantes', defaultVisible: true,
+    exportValue: g => `${g.participants.filter(p => p.status !== 'withdrawn').length}/${g.max_capacity}`,
+  },
+  {
+    key: 'max_capacity', label: 'Capacidad máxima', defaultVisible: false,
+    exportValue: g => String(g.max_capacity),
+  },
+  {
+    key: 'status', label: 'Estado', defaultVisible: true,
+    exportValue: g => STATUS_EXPORT[g.status] ?? g.status,
+  },
+  {
+    key: 'current_week', label: 'Semana actual', defaultVisible: true,
+    exportValue: g => g.current_week > 0 ? `Semana ${g.current_week}` : '—',
+  },
+  {
+    key: 'start_date', label: 'Fecha inicio', defaultVisible: false,
+    exportValue: g => new Date(g.start_date).toLocaleDateString('es-CR'),
+  },
+  {
+    key: 'end_date', label: 'Fecha fin', defaultVisible: false,
+    exportValue: g => g.end_date ? new Date(g.end_date).toLocaleDateString('es-CR') : '',
+  },
+  {
+    key: 'location', label: 'Ubicación', defaultVisible: false,
+  },
+  {
+    key: 'whatsapp_group_url', label: 'Grupo WhatsApp', defaultVisible: false,
+    exportValue: g => g.whatsapp_group_url ?? 'Sin crear',
+  },
+  {
+    key: 'participants_names', label: 'Lista de participantes', defaultVisible: false, exportable: true,
+    exportValue: g => g.participants.filter(p => p.status !== 'withdrawn').map(p => p.member_name).join(' | '),
+  },
+]
 
 export default function GruposPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>([])
   const [selectedType, setSelectedType] = useState('')
   const [selectedZone, setSelectedZone] = useState('')
   const [selectedDay, setSelectedDay] = useState('')
+  const [visibleColumns, setVisibleColumns] = useState<ColumnDef<StudyGroup>[]>(
+    STUDY_GROUP_COLUMNS.filter(c => c.defaultVisible)
+  )
 
   function toggleStatus(s: GroupStatus) {
     setSelectedStatuses(prev =>
@@ -45,6 +124,8 @@ export default function GruposPage() {
       return true
     })
   }, [selectedStatuses, selectedType, selectedZone, selectedDay])
+
+  const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(filtered)
 
   const totalCapacity = filtered.reduce((sum, g) => sum + g.max_capacity, 0)
   const totalEnrolled = filtered.reduce((sum, g) =>
@@ -69,13 +150,17 @@ export default function GruposPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            <Download size={14} />
-            Exportar CSV
-          </button>
+          <ColumnSelector<StudyGroup>
+            columns={STUDY_GROUP_COLUMNS}
+            storageKey="theos_columns_studies"
+            onChange={setVisibleColumns}
+          />
+          <ExportButton<StudyGroup>
+            data={filtered}
+            columns={visibleColumns}
+            allColumns={STUDY_GROUP_COLUMNS}
+            filename="grupos-estudio-theos"
+          />
           <Link
             href="/estudios/grupos/nuevo"
             className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
@@ -200,19 +285,21 @@ export default function GruposPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {['Estudio', 'Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Semana', ''].map(h => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    {h}
-                  </th>
+                {visibleColumns.map(col => (
+                  <SortableHeader
+                    key={String(col.key)}
+                    label={col.label}
+                    sortKey={String(col.key)}
+                    currentSortKey={sortKey}
+                    currentSortDir={sortDir}
+                    onSort={toggleSort}
+                  />
                 ))}
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
-              {filtered.map(group => {
+              {sortedGroups.map(group => {
                 const studyType = STUDY_TYPES.find(s => s.id === group.study_type_id)
                 const enrolled = group.participants.filter(p => p.status !== 'withdrawn').length
                 return (
@@ -221,46 +308,48 @@ export default function GruposPage() {
                     className="hover:bg-surface-low transition-colors"
                     style={{ borderBottom: '1px solid var(--outline-variant)' }}
                   >
-                    <td className="px-4 py-3">
-                      <StudyTypeBadge code={group.study_type_id} size="sm" />
-                    </td>
-                    <td className="px-4 py-3">
-                      {group.leader_name ? (
-                        <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
-                            {getInitials(group.leader_name)}
-                          </div>
-                          <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                            {group.leader_name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] text-amber-600">Sin asignar</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-                      {sedeLabel(group.zone)}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-                      {group.schedule_days.join('/')} {group.schedule_time}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                      {enrolled}/{group.max_capacity}
-                    </td>
-                    <td className="px-4 py-3">
-                      <GroupStatusBadge status={group.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {studyType && group.current_week > 0 ? (
-                        <WeekProgressBar
-                          current={group.current_week}
-                          total={studyType.weeks}
-                          className="w-20"
-                        />
-                      ) : (
-                        <span className="text-[11px] text-navy-light/30">—</span>
-                      )}
-                    </td>
+                    {visibleColumns.map(col => {
+                      switch (String(col.key)) {
+                        case 'study_type_id':
+                          return <td key="study_type_id" className="px-4 py-3"><StudyTypeBadge code={group.study_type_id} size="sm" /></td>
+                        case 'study_stage':
+                          return <td key="study_stage" className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{studyType?.stage ?? '—'}</td>
+                        case 'leader_name':
+                          return (
+                            <td key="leader_name" className="px-4 py-3">
+                              {group.leader_name ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">{getInitials(group.leader_name)}</div>
+                                  <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{group.leader_name}</span>
+                                </div>
+                              ) : <span className="text-[11px] text-amber-600">Sin asignar</span>}
+                            </td>
+                          )
+                        case 'zone':
+                          return <td key="zone" className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{sedeLabel(group.zone)}</td>
+                        case 'schedule':
+                          return <td key="schedule" className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{group.schedule_days.join('/')} {group.schedule_time}</td>
+                        case 'participants_count':
+                          return <td key="participants_count" className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{enrolled}/{group.max_capacity}</td>
+                        case 'max_capacity':
+                          return <td key="max_capacity" className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{group.max_capacity}</td>
+                        case 'status':
+                          return <td key="status" className="px-4 py-3"><GroupStatusBadge status={group.status} /></td>
+                        case 'current_week':
+                          return (
+                            <td key="current_week" className="px-4 py-3">
+                              {studyType && group.current_week > 0
+                                ? <WeekProgressBar current={group.current_week} total={studyType.weeks} className="w-20" />
+                                : <span className="text-[11px] text-navy-light/30">—</span>
+                              }
+                            </td>
+                          )
+                        default: {
+                          const rawVal = (group as Record<string, unknown>)[String(col.key)]
+                          return <td key={String(col.key)} className="px-4 py-3 text-sm text-navy-light/70 max-w-[160px] truncate" style={{ fontFamily: 'var(--font-body)' }}>{rawVal != null ? String(rawVal) : '—'}</td>
+                        }
+                      }
+                    })}
                     <td className="px-4 py-3">
                       <Link
                         href={`/estudios/grupos/${group.id}`}

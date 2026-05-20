@@ -1,11 +1,14 @@
 'use client'
 
-import Link from 'next/link'
 import { Fragment } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { STUDY_TYPES } from '@/data/mock-studies'
+import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
-import { ChevronRight, ArrowDown, Plus } from 'lucide-react'
+import { ExpandableDescription } from '@/components/studies/ExpandableDescription'
+import { ChevronRight, ArrowDown, Plus, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const niveles    = STUDY_TYPES.filter(s => s.stage === 'niveles')
@@ -16,6 +19,15 @@ const campana    = STUDY_TYPES.filter(s => s.stage === 'campaña')
 function formatCost(cost: number) {
   if (cost === 0) return 'Gratis'
   return `₡${cost.toLocaleString('es-CR')}`
+}
+
+function getLevelColor(level: string): string {
+  switch (level) {
+    case 'Básico':     return 'rgba(112,189,194,.15)'
+    case 'Intermedio': return 'rgba(22,20,64,.07)'
+    case 'Avanzado':   return 'rgba(239,85,84,.1)'
+    default:           return 'var(--surface-low)'
+  }
 }
 
 function StageLabel({ children, color }: { children: React.ReactNode; color: 'navy' | 'teal' | 'coral' | 'purple' }) {
@@ -35,7 +47,7 @@ function StageLabel({ children, color }: { children: React.ReactNode; color: 'na
   )
 }
 
-function StudyCard({ study, compact = false }: { study: typeof STUDY_TYPES[0]; compact?: boolean }) {
+function StudyCardCompact({ study }: { study: typeof STUDY_TYPES[0] }) {
   const borderColor = study.stage === 'niveles'
     ? 'border-l-navy/40'
     : study.stage === 'inicial'
@@ -46,18 +58,14 @@ function StudyCard({ study, compact = false }: { study: typeof STUDY_TYPES[0]; c
 
   return (
     <Link
-      href={`/estudios/curriculo/${study.id}`}
+      href={`/estudios/plan/${study.id}`}
       className={cn(
-        'group flex flex-col gap-1 rounded-xl border-l-2 bg-surface-low px-3 py-2.5 transition-all hover:bg-surface-card hover:shadow-sm',
+        'group flex flex-col gap-1 rounded-xl border-l-2 bg-surface-low px-3 py-2.5 transition-all hover:bg-surface-card hover:shadow-sm min-w-[110px]',
         borderColor,
-        compact ? 'min-w-[110px]' : 'min-w-[130px]',
       )}
     >
       <StudyTypeBadge code={study.code} size="sm" />
-      <p
-        className="text-xs text-navy leading-snug group-hover:text-navy font-medium"
-        style={{ fontFamily: 'var(--font-body)' }}
-      >
+      <p className="text-xs text-navy leading-snug font-medium" style={{ fontFamily: 'var(--font-body)' }}>
         {study.name}
       </p>
       <div className="flex items-center justify-between mt-0.5">
@@ -65,16 +73,90 @@ function StudyCard({ study, compact = false }: { study: typeof STUDY_TYPES[0]; c
           {study.weeks} sem.
         </span>
         <span
-          className={cn(
-            'text-[10px] font-medium',
-            study.cost === 0 ? 'text-teal-deep/70' : 'text-navy-light/50',
-          )}
+          className={cn('text-[10px] font-medium', study.cost === 0 ? 'text-teal-deep/70' : 'text-navy-light/50')}
           style={{ fontFamily: 'var(--font-body)' }}
         >
           {formatCost(study.cost)}
         </span>
       </div>
     </Link>
+  )
+}
+
+function StudyCardFull({ study }: { study: typeof STUDY_TYPES[0] }) {
+  const router = useRouter()
+  const cat = STUDY_CATALOG.find(s => s.code === study.code)
+
+  return (
+    <div
+      className="rounded-xl bg-surface-low flex flex-col gap-0"
+      style={{ padding: '14px 16px' }}
+      onClick={() => router.push(`/estudios/plan/${study.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && router.push(`/estudios/plan/${study.id}`)}
+    >
+      {/* Header: código + nombre + semanas */}
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <span
+            style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: 'var(--brand-coral)', textTransform: 'uppercase' }}
+            className="font-display"
+          >
+            {study.code}
+          </span>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--brand-navy)', marginTop: 2, fontFamily: 'var(--font-display)' }}>
+            {study.name}
+          </div>
+        </div>
+        <span style={{ fontSize: 11, color: 'var(--fg-muted)', whiteSpace: 'nowrap', marginLeft: 8, fontFamily: 'var(--font-body)' }}>
+          {study.weeks} sem.
+        </span>
+      </div>
+
+      {/* Instructor */}
+      {cat?.instructor && (
+        <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginBottom: 6, fontFamily: 'var(--font-body)' }}>
+          Instructor: <strong>{cat.instructor}</strong>
+        </div>
+      )}
+
+      {/* Descripción expandible */}
+      <ExpandableDescription text={cat?.description} maxLength={120} />
+
+      {/* Compromisos */}
+      {(study.req_donor || study.req_server || study.req_attendee) && (
+        <div className="mt-2">
+          <CommitmentIcons donor={study.req_donor} server={study.req_server} charlas={study.req_attendee} size={12} />
+        </div>
+      )}
+
+      {/* Nivel */}
+      {cat?.level && (
+        <div style={{ marginTop: 8 }}>
+          <span
+            style={{
+              fontSize: 10, padding: '2px 8px', borderRadius: 999,
+              background: getLevelColor(cat.level), fontWeight: 600,
+              fontFamily: 'var(--font-display)',
+            }}
+          >
+            {cat.level}
+          </span>
+        </div>
+      )}
+
+      {/* Botón editar */}
+      <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          onClick={e => { e.stopPropagation(); router.push(`/estudios/plan/${study.code}/editar`) }}
+          className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-card hover:text-navy transition-colors"
+          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+        >
+          <Pencil size={11} /> Editar
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -85,12 +167,12 @@ function StageDivider({ label }: { label: string }) {
         <ArrowDown size={13} strokeWidth={1.5} />
         <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)' }}>{label}</span>
       </div>
-      <div className="flex-1 h-px bg-outline-variant" style={{ background: 'var(--outline-variant)' }} />
+      <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
     </div>
   )
 }
 
-export default function CurriculoPage() {
+export default function PlanDeEstudiosPage() {
   return (
     <div className="space-y-6">
 
@@ -101,14 +183,14 @@ export default function CurriculoPage() {
             className="text-2xl text-navy"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
           >
-            Currículo
+            Plan de Estudios Bíblicos
           </h1>
           <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-            {STUDY_TYPES.length} tipos de estudio en 4 etapas
+            Ruta de crecimiento espiritual de Theos Place
           </p>
         </div>
         <Link
-          href="/estudios/curriculo/nuevo"
+          href="/estudios/plan/nuevo"
           className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
           style={{ fontFamily: 'var(--font-body)' }}
         >
@@ -117,7 +199,7 @@ export default function CurriculoPage() {
         </Link>
       </div>
 
-      {/* ── Plan de estudios ── */}
+      {/* ── Plan visual ── */}
       <div className="rounded-2xl p-6" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
 
         {/* Stage header strip */}
@@ -134,18 +216,15 @@ export default function CurriculoPage() {
           </span>
         </div>
 
-        {/* ── Niveles (horizontal chain) ── */}
+        {/* ── Niveles (cadena horizontal, compact) ── */}
         <div className="mb-1">
-          <p
-            className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
             Fundamentos — sin costo, sin requisitos
           </p>
           <div className="flex flex-wrap items-center gap-2">
             {niveles.map((s, i) => (
               <Fragment key={s.id}>
-                <StudyCard study={s} compact />
+                <StudyCardCompact study={s} />
                 {i < niveles.length - 1 && (
                   <ChevronRight size={14} className="text-navy/25 shrink-0" strokeWidth={1.5} />
                 )}
@@ -156,52 +235,37 @@ export default function CurriculoPage() {
 
         <StageDivider label="Al completar N4 se habilita la Etapa Inicial" />
 
-        {/* ── Etapa Inicial (grid) ── */}
+        {/* ── Etapa Inicial ── */}
         <div className="mb-1">
-          <p
-            className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
             Etapa Inicial — ₡15,000 · Requiere ser donador
           </p>
-          <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
-            {inicial.map(s => (
-              <StudyCard key={s.id} study={s} />
-            ))}
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {inicial.map(s => <StudyCardFull key={s.id} study={s} />)}
           </div>
         </div>
 
         <StageDivider label="Al completar al menos un Inicial se habilita la Etapa Intermedia" />
 
-        {/* ── Etapa Intermedia (grid) ── */}
+        {/* ── Etapa Intermedia ── */}
         <div className="mb-1">
-          <p
-            className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
             Etapa Intermedia — ₡20,000 · Requiere donador + servidor + charlas
           </p>
-          <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
-            {intermedia.map(s => (
-              <StudyCard key={s.id} study={s} />
-            ))}
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {intermedia.map(s => <StudyCardFull key={s.id} study={s} />)}
           </div>
         </div>
 
         <StageDivider label="Campañas — abiertas a toda la iglesia, sin prerrequisito" />
 
-        {/* ── Campañas (grid) ── */}
+        {/* ── Campañas ── */}
         <div>
-          <p
-            className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
             Campañas — ₡25,000 · Sin prerrequisito
           </p>
-          <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
-            {campana.map(s => (
-              <StudyCard key={s.id} study={s} />
-            ))}
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {campana.map(s => <StudyCardFull key={s.id} study={s} />)}
           </div>
         </div>
       </div>
@@ -216,10 +280,7 @@ export default function CurriculoPage() {
           style={{ borderBottom: '1px solid var(--outline-variant)' }}
         >
           <div>
-            <h2
-              className="text-sm font-semibold text-navy"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
+            <h2 className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
               Todos los tipos de estudio
             </h2>
             <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
@@ -232,7 +293,7 @@ export default function CurriculoPage() {
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', 'Prerrequisito', 'Compromisos', ''].map(h => (
+                {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', 'Instructor', 'Prerrequisito', 'Compromisos', ''].map(h => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap"
@@ -253,31 +314,24 @@ export default function CurriculoPage() {
                   <td className="px-4 py-3">
                     <StudyTypeBadge code={s.code} size="sm" />
                   </td>
-                  <td
-                    className="px-4 py-3 text-sm text-navy"
-                    style={{ fontFamily: 'var(--font-body)' }}
-                  >
+                  <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
                     {s.name}
                   </td>
-                  <td
-                    className="px-4 py-3 text-xs text-navy-light/60"
-                    style={{ fontFamily: 'var(--font-body)' }}
-                  >
-                    {s.stage === 'niveles' ? 'Niveles' : s.stage === 'inicial' ? 'Inicial' : 'Intermedia'}
+                  <td className="px-4 py-3 text-xs text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                    {s.stage === 'niveles' ? 'Niveles' : s.stage === 'inicial' ? 'Inicial' : s.stage === 'campaña' ? 'Campaña' : 'Intermedia'}
                   </td>
-                  <td
-                    className="px-4 py-3 text-sm text-navy-light/70 tabular-nums"
-                    style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
-                  >
+                  <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
                     {s.weeks}
                   </td>
-                  <td
-                    className="px-4 py-3 text-sm whitespace-nowrap"
-                    style={{ fontFamily: 'var(--font-body)' }}
-                  >
+                  <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
                     <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/70'}>
                       {formatCost(s.cost)}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                    {STUDY_CATALOG.find(c => c.code === s.code)?.instructor ?? (
+                      <span className="text-navy-light/30">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {s.prerequisite
@@ -290,7 +344,7 @@ export default function CurriculoPage() {
                   </td>
                   <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                     <Link
-                      href={`/estudios/curriculo/${s.id}`}
+                      href={`/estudios/plan/${s.id}`}
                       className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
                       style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
                     >

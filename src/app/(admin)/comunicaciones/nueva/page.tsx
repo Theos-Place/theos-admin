@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { mockMembers } from '@/data/mock-members'
@@ -40,25 +40,45 @@ function insertAtCursor(ref: React.RefObject<HTMLTextAreaElement | null>, value:
   }, 0)
 }
 
+const PREVIEW_COUNT = 20
+
 export default function NuevaComunicacionPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
   const initialMode = (searchParams.get('mode') as RecipientMode) || 'filters'
-  const initialMemberIds = searchParams.get('members')?.split(',').filter(Boolean) ?? []
+  const initialMemberIds = useMemo(
+    () => searchParams.get('members')?.split(',').filter(Boolean) ?? [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
   const initialEntity = searchParams.get('entity') as 'event' | 'study_group' | null
   const initialGroupId = searchParams.get('id') ?? ''
+  const initialSegmentLabel = useMemo(
+    () => searchParams.get('segment_label') ? decodeURIComponent(searchParams.get('segment_label')!) : '',
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   const [recipients, setRecipients] = useState<RecipientState>({
     mode: initialMode,
     manualMemberIds: initialMemberIds,
     groupEntity: initialEntity,
     groupId: initialGroupId,
-    label: initialMemberIds.length > 0
+    label: initialSegmentLabel || (initialMemberIds.length > 0
       ? `${initialMemberIds.length} persona${initialMemberIds.length !== 1 ? 's' : ''} seleccionada${initialMemberIds.length !== 1 ? 's' : ''}`
-      : '',
+      : ''),
     count: initialMemberIds.length,
   })
+
+  // When arriving from /miembros with a segment, show import summary instead of RecipientSelector
+  const [isImported, setIsImported] = useState(initialSegmentLabel !== '' && initialMemberIds.length > 0)
+  const [showExpandedList, setShowExpandedList] = useState(false)
+
+  const previewMembers = useMemo(
+    () => mockMembers.filter(m => initialMemberIds.includes(m.id)).slice(0, PREVIEW_COUNT),
+    [initialMemberIds]
+  )
 
   const [channel, setChannel] = useState<CommunicationChannel>('whatsapp')
   const [subject, setSubject] = useState('')
@@ -165,7 +185,74 @@ export default function NuevaComunicacionPage() {
             <p className={cn(SECTION_TITLE)} style={{ fontFamily: 'var(--font-display)' }}>
               1 · Destinatarios
             </p>
-            <RecipientSelector value={recipients} onChange={setRecipients} />
+
+            {isImported ? (
+              <div className="space-y-3">
+                {/* Import summary */}
+                <div
+                  className="rounded-xl p-4 space-y-2"
+                  style={{ background: 'var(--surface-low)', border: '1px solid var(--outline-variant)' }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                        Destinatarios ({recipients.count.toLocaleString('es-CR')})
+                      </p>
+                      <div className="h-px my-1.5" style={{ background: 'var(--outline-variant)' }} />
+                      <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                        Importado desde lista de miembros
+                      </p>
+                      {initialSegmentLabel && (
+                        <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                          &quot;{initialSegmentLabel}&quot;
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsImported(false)
+                        setRecipients({ mode: 'manual', manualMemberIds: [], groupEntity: null, groupId: '', label: '', count: 0 })
+                      }}
+                      className="flex items-center gap-1 text-[11px] text-navy-light/50 hover:text-coral transition-colors shrink-0"
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      <X size={12} />
+                      Limpiar
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowExpandedList(v => !v)}
+                    className="text-[12px] text-coral hover:underline transition-colors"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    {showExpandedList ? 'Ocultar lista ↑' : 'Ver lista completa ↓'}
+                  </button>
+
+                  {showExpandedList && (
+                    <div className="space-y-1.5 pt-1">
+                      {previewMembers.map(m => (
+                        <div key={m.id} className="flex items-center gap-2 text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                          <div className="h-5 w-5 rounded-full bg-navy/10 flex items-center justify-center text-[9px] font-bold text-navy shrink-0">
+                            {m.first_name[0]}{m.last_name[0]}
+                          </div>
+                          {m.first_name} {m.last_name}
+                        </div>
+                      ))}
+                      {recipients.count > previewMembers.length && (
+                        <p className="text-[11px] text-navy-light/40 pt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                          y {(recipients.count - previewMembers.length).toLocaleString('es-CR')} más
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <RecipientSelector value={recipients} onChange={setRecipients} />
+            )}
           </div>
 
           {/* Section 2 — Canal */}

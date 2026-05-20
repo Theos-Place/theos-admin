@@ -9,6 +9,8 @@ import {
 } from '@/data/mock-servers'
 import { SERVICE_POSITIONS } from '@/data/mock-committees'
 import { cn } from '@/lib/utils'
+import { SortableHeader } from '@/components/shared/SortableHeader'
+import { useSortableTable } from '@/hooks/useSortableTable'
 import {
   ChevronLeft, Plus, X, Check, MoreVertical,
   Search, ExternalLink,
@@ -67,6 +69,28 @@ export default function CommitteeDetailPage() {
   const [newGoalDate, setNewGoalDate] = useState('')
   const [showGoalForm, setShowGoalForm] = useState(false)
 
+  const committeeVacancies = useMemo(
+    () => MOCK_VACANCIES.filter(v => v.committee_id === committeeId),
+    [committeeId]
+  )
+
+  const displayedMembers = useMemo(
+    () => !committee ? [] : committee.members.filter(m => {
+      if (disconnected.includes(m.member_id)) return false
+      const matchSearch = m.name.toLowerCase().includes(search.toLowerCase())
+      const matchStatus = statusFilter === 'all' || m.status === statusFilter
+      return matchSearch && matchStatus
+    }),
+    [committee, disconnected, search, statusFilter]
+  )
+
+  const activeCount = useMemo(
+    () => !committee ? 0 : committee.members.filter(m => m.status === 'active' && !disconnected.includes(m.member_id)).length,
+    [committee, disconnected]
+  )
+
+  const { sorted: sortedMembers, sortKey: memberSortKey, sortDir: memberSortDir, toggleSort: toggleMemberSort } = useSortableTable(displayedMembers)
+
   if (!committee) {
     return (
       <div className="flex items-center justify-center min-h-60">
@@ -77,18 +101,9 @@ export default function CommitteeDetailPage() {
     )
   }
 
-  const committeeVacancies = MOCK_VACANCIES.filter(v => v.committee_id === committeeId)
-
-  const displayedMembers = committee.members.filter(m => {
-    if (disconnected.includes(m.member_id)) return false
-    const matchSearch = m.name.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === 'all' || m.status === statusFilter
-    return matchSearch && matchStatus
-  })
-
   function handleDisconnect() {
     if (!disconnectTarget) return
-    setDisconnected(prev => [...prev, disconnectTarget.member_id])
+    setDisconnected(prev => [...prev, disconnectTarget!.member_id])
     setDisconnectTarget(null)
   }
 
@@ -110,8 +125,6 @@ export default function CommitteeDetailPage() {
       g.id === id ? { ...g, status: g.status === 'completed' ? 'in_progress' : 'completed' } : g
     ))
   }
-
-  const activeCount = committee.members.filter(m => m.status === 'active' && !disconnected.includes(m.member_id)).length
 
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -238,20 +251,17 @@ export default function CommitteeDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr>
-                    {['Servidor', 'Puesto', 'Inicio', 'Antigüedad', 'Estado', ''].map(h => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                        style={{ fontFamily: 'var(--font-display)' }}
-                      >
-                        {h}
-                      </th>
-                    ))}
+                  <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                    <SortableHeader label="Servidor"   sortKey="name"       currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                    <SortableHeader label="Puesto"     sortKey="position"   currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                    <SortableHeader label="Inicio"     sortKey="start_date" currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                    <SortableHeader label="Antigüedad" sortKey="seniority"  currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                    <SortableHeader label="Estado"     sortKey="status"     currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                    <th className="px-4 py-3.5" />
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedMembers.map((m, idx) => (
+                  {sortedMembers.map((m, idx) => (
                     <tr
                       key={m.member_id}
                       className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}
@@ -335,7 +345,7 @@ export default function CommitteeDetailPage() {
                 </tbody>
               </table>
             </div>
-            {displayedMembers.length === 0 && (
+            {sortedMembers.length === 0 && (
               <div className="px-5 py-10 text-center">
                 <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
                   No hay servidores con ese filtro.

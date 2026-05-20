@@ -61,7 +61,7 @@ export default function NuevoGrupoPage() {
   }
 
   const compatibleLeaders = MOCK_LEADERS.filter(l =>
-    (step1.zone === '' || l.zone_preference === step1.zone) &&
+    (step1.zone === '' || l.zone_preference.includes(step1.zone)) &&
     (step1.study_type_id === '' || l.qualified_studies.includes(step1.study_type_id)) &&
     l.availability_status !== 'resting'
   )
@@ -372,7 +372,7 @@ export default function NuevoGrupoPage() {
                         <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
                           {leader.member_name}
                         </p>
-                        <span className="text-[10px] text-navy-light/50">{sedeLabel(leader.zone_preference)}</span>
+                        <span className="text-[10px] text-navy-light/50">{leader.zone_preference.map(id => sedeLabel(id)).join(' · ')}</span>
                         <span className={cn(
                           'rounded-md px-1.5 py-0.5 text-[10px] font-medium',
                           leader.availability_status === 'available' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy'

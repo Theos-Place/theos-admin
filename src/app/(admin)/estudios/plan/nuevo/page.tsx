@@ -85,15 +85,13 @@ export default function NuevoTipoPage() {
     )
   }
 
-  function handleSave(draft: boolean) {
+  function handleSave() {
     setSaved(true)
-    setTimeout(() => {
-      router.push('/estudios/curriculo')
-    }, 1500)
+    setTimeout(() => { router.push('/estudios/plan') }, 1500)
   }
 
-  const niveles = STUDY_TYPES.filter(s => s.stage === 'niveles')
-  const inicial = STUDY_TYPES.filter(s => s.stage === 'inicial')
+  const niveles    = STUDY_TYPES.filter(s => s.stage === 'niveles')
+  const inicial    = STUDY_TYPES.filter(s => s.stage === 'inicial')
   const intermedia = STUDY_TYPES.filter(s => s.stage === 'intermedia')
 
   if (saved) {
@@ -105,7 +103,7 @@ export default function NuevoTipoPage() {
             Tipo de estudio guardado
           </p>
           <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-            Redirigiendo al currículo...
+            Redirigiendo al plan de estudios...
           </p>
         </div>
       </div>
@@ -117,7 +115,7 @@ export default function NuevoTipoPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
-          href="/estudios/curriculo"
+          href="/estudios/plan"
           className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
           style={{ fontFamily: 'var(--font-body)' }}
         >
@@ -140,51 +138,24 @@ export default function NuevoTipoPage() {
 
       {/* Información básica */}
       <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <h2
-          className="text-[10px] tracking-widest uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
+        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
           Información básica
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2 space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-              Nombre *
-            </label>
-            <input
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              placeholder="Ej. Discípulos 4"
-              value={form.nombre}
-              onChange={e => set('nombre', e.target.value)}
-            />
+            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Nombre *</label>
+            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Ej. Discípulos 4" value={form.nombre} onChange={e => set('nombre', e.target.value)} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-              Código *
-            </label>
-            <input
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              placeholder="Ej. DIS4"
-              maxLength={6}
-              value={form.codigo}
-              onChange={e => set('codigo', e.target.value.toUpperCase())}
-            />
+            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Código *</label>
+            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Ej. DIS4" maxLength={6} value={form.codigo} onChange={e => set('codigo', e.target.value.toUpperCase())} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-              Tipo
-            </label>
-            <select
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              value={form.tipo}
-              onChange={e => set('tipo', e.target.value)}
-            >
+            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Tipo</label>
+            <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.tipo} onChange={e => set('tipo', e.target.value)}>
               <option value="nivel">Nivel</option>
               <option value="capacitacion">Capacitación</option>
               <option value="campana">Campaña</option>
@@ -193,55 +164,30 @@ export default function NuevoTipoPage() {
           </div>
 
           <div className="col-span-2 space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-              Descripción
-            </label>
-            <textarea
-              className={cn(inputCls, 'resize-none')}
-              style={{ fontFamily: 'var(--font-body)' }}
-              rows={3}
-              placeholder="Describe el contenido y objetivo del estudio..."
-              value={form.descripcion}
-              onChange={e => set('descripcion', e.target.value)}
-            />
+            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Descripción</label>
+            <textarea className={cn(inputCls, 'resize-none')} style={{ fontFamily: 'var(--font-body)' }} rows={3} placeholder="Describe el contenido y objetivo del estudio..." value={form.descripcion} onChange={e => set('descripcion', e.target.value)} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-              Duración en semanas
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={52}
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              placeholder="10"
-              value={form.semanas}
-              onChange={e => set('semanas', e.target.value)}
-            />
+            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Duración en semanas</label>
+            <input type="number" min={1} max={52} className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="10" value={form.semanas} onChange={e => set('semanas', e.target.value)} />
           </div>
         </div>
       </div>
 
       {/* Prerequisitos */}
       <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <h2
-          className="text-[10px] tracking-widest uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
+        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
           Prerequisitos
         </h2>
 
         {[
-          { label: 'Niveles', items: niveles },
-          { label: 'Etapa Inicial', items: inicial },
-          { label: 'Etapa Intermedia', items: intermedia },
+          { label: 'Niveles',         items: niveles },
+          { label: 'Etapa Inicial',   items: inicial },
+          { label: 'Etapa Intermedia',items: intermedia },
         ].map(group => (
           <div key={group.label}>
-            <p className="text-[11px] text-navy-light/50 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-              {group.label}
-            </p>
+            <p className="text-[11px] text-navy-light/50 mb-2" style={{ fontFamily: 'var(--font-display)' }}>{group.label}</p>
             <div className="flex flex-wrap gap-2">
               {group.items.map(s => (
                 <button
@@ -252,7 +198,7 @@ export default function NuevoTipoPage() {
                     'rounded-lg px-2.5 py-1 text-[12px] font-medium border transition-all',
                     form.prerequisitos.includes(s.code)
                       ? 'bg-navy text-white border-navy'
-                      : 'text-navy-light border-outline-variant hover:bg-surface-low'
+                      : 'text-navy-light hover:bg-surface-low'
                   )}
                   style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
                 >
@@ -272,10 +218,7 @@ export default function NuevoTipoPage() {
 
       {/* Configuración */}
       <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <h2
-          className="text-[10px] tracking-widest uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
+        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
           Configuración
         </h2>
 
@@ -283,39 +226,20 @@ export default function NuevoTipoPage() {
           <Toggle checked={form.req_pago} onChange={v => set('req_pago', v)} label="¿Requiere pago?" />
           {form.req_pago && (
             <div className="ml-4 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-                Costo (₡)
-              </label>
-              <input
-                type="number"
-                min={0}
-                className={cn(inputCls, 'max-w-xs')}
-                style={{ fontFamily: 'var(--font-body)' }}
-                placeholder="15000"
-                value={form.costo}
-                onChange={e => set('costo', e.target.value)}
-              />
+              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Costo (₡)</label>
+              <input type="number" min={0} className={cn(inputCls, 'max-w-xs')} style={{ fontFamily: 'var(--font-body)' }} placeholder="15000" value={form.costo} onChange={e => set('costo', e.target.value)} />
             </div>
           )}
 
           <Toggle checked={form.req_calificacion} onChange={v => set('req_calificacion', v)} label="¿Requiere calificación numérica?" />
+          <Toggle checked={form.transicion_auto}   onChange={v => set('transicion_auto', v)} label="¿Transición automática?" />
 
-          <Toggle checked={form.transicion_auto} onChange={v => set('transicion_auto', v)} label="¿Transición automática?" />
           {form.transicion_auto && (
             <div className="ml-4 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-                Siguiente estudio
-              </label>
-              <select
-                className={cn(inputCls, 'max-w-xs')}
-                style={{ fontFamily: 'var(--font-body)' }}
-                value={form.siguiente_estudio}
-                onChange={e => set('siguiente_estudio', e.target.value)}
-              >
+              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Siguiente estudio</label>
+              <select className={cn(inputCls, 'max-w-xs')} style={{ fontFamily: 'var(--font-body)' }} value={form.siguiente_estudio} onChange={e => set('siguiente_estudio', e.target.value)}>
                 <option value="">Seleccionar...</option>
-                {STUDY_TYPES.map(s => (
-                  <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
-                ))}
+                {STUDY_TYPES.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
               </select>
             </div>
           )}
@@ -325,21 +249,21 @@ export default function NuevoTipoPage() {
       {/* Actions */}
       <div className="flex items-center gap-3 pb-6">
         <button
-          onClick={() => handleSave(false)}
+          onClick={handleSave}
           className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
           style={{ fontFamily: 'var(--font-body)' }}
         >
           Guardar como activo
         </button>
         <button
-          onClick={() => handleSave(true)}
+          onClick={handleSave}
           className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
           style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
         >
           Guardar como borrador
         </button>
         <Link
-          href="/estudios/curriculo"
+          href="/estudios/plan"
           className="text-sm text-navy-light/50 hover:text-navy-light transition-colors ml-2"
           style={{ fontFamily: 'var(--font-body)' }}
         >

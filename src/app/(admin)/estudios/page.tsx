@@ -35,7 +35,7 @@ function formatSchedule(days: string[], time: string) {
 
 const QUICK_ACCESS = [
   { href: '/estudios/grupos',          label: 'Grupos',           icon: LayoutList,     desc: 'Ver y gestionar grupos' },
-  { href: '/estudios/curriculo',       label: 'Currículo',        icon: BookOpen,       desc: 'Tipos de estudio' },
+  { href: '/estudios/plan',            label: 'Plan de Estudios', icon: BookOpen,       desc: 'Tipos de estudio' },
   { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck,      desc: 'Perfil de líderes' },
   { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock,          desc: 'Personas esperando N1' },
   { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight, desc: 'Solicitudes de cambio' },

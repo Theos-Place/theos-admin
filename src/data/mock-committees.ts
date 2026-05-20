@@ -75,6 +75,39 @@ export const AREAS = [
 
 export const ALL_COMMITTEES: string[] = AREAS.flatMap(a => a.committees)
 
+// ─── Admin types & mutable stores ────────────────────────────────────────────
+// These are parallel to AREAS/ALL_COMMITTEES — do not replace them.
+
+export type Area = {
+  id: string
+  code: string
+  name: string
+  is_active: boolean
+}
+
+export type Committee = {
+  id: string
+  area_code: string
+  name: string
+  is_active: boolean
+}
+
+export const ADMIN_AREAS: Area[] = AREAS.map(a => ({
+  id: a.code as string,
+  code: a.code as string,
+  name: a.name as string,
+  is_active: true,
+}))
+
+export const ADMIN_COMMITTEES: Committee[] = AREAS.flatMap(a =>
+  (a.committees as readonly string[]).map((c, i) => ({
+    id: `${a.code as string}-${i}`,
+    area_code: a.code as string,
+    name: c,
+    is_active: true,
+  }))
+)
+
 export const SERVICE_POSITIONS = [
   'Anfitrión', 'Anfitrión Campamentos',
   'Asistente de Cursos Especiales', 'Asistente de Discípulos',

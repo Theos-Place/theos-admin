@@ -5,12 +5,56 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MOCK_COMMITTEES, MOCK_VACANCIES, MOCK_APPLICATIONS, type CommitteeData } from '@/data/mock-servers'
 import { AREAS } from '@/data/mock-committees'
+import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { ExportButton } from '@/components/shared/ExportButton'
 import { cn } from '@/lib/utils'
 import { Plus, Users, Briefcase, ClipboardList, AlertCircle } from 'lucide-react'
 
 const AREA_FILTERS = [
   { key: 'all', label: 'Todos' },
   ...AREAS.map(a => ({ key: a.code, label: a.name })),
+]
+
+type FlatServer = {
+  member_id: string
+  name: string
+  initials: string
+  position: string
+  start_date: string
+  status: 'active' | 'inactive'
+  committee: string
+  area: string
+  leader_name: string
+}
+
+function calcularAntiguedad(startDate: string): string {
+  const start = new Date(startDate)
+  const now = new Date()
+  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
+  if (months < 12) return `${months} mes${months !== 1 ? 'es' : ''}`
+  const years = Math.floor(months / 12)
+  const rem   = months % 12
+  return rem > 0 ? `${years} año${years !== 1 ? 's' : ''}, ${rem} mes${rem !== 1 ? 'es' : ''}` : `${years} año${years !== 1 ? 's' : ''}`
+}
+
+const SERVER_COLUMNS: ColumnDef<FlatServer>[] = [
+  { key: 'name',       label: 'Nombre',            defaultVisible: true, alwaysVisible: true },
+  { key: 'position',   label: 'Puesto de servicio', defaultVisible: true },
+  { key: 'committee',  label: 'Comité',             defaultVisible: true },
+  { key: 'area',       label: 'Área',               defaultVisible: true },
+  {
+    key: 'start_date', label: 'Fecha de inicio', defaultVisible: true,
+    exportValue: s => new Date(s.start_date).toLocaleDateString('es-CR'),
+  },
+  {
+    key: 'seniority', label: 'Antigüedad', defaultVisible: true,
+    exportValue: s => calcularAntiguedad(s.start_date),
+  },
+  {
+    key: 'status', label: 'Estado', defaultVisible: true,
+    exportValue: s => s.status === 'active' ? 'Activo' : 'Inactivo',
+  },
+  { key: 'leader_name', label: 'Líder del comité', defaultVisible: false },
 ]
 
 function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onClick: () => void }) {
@@ -108,6 +152,9 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
 export default function ServidoresPage() {
   const router = useRouter()
   const [areaFilter, setAreaFilter] = useState('all')
+  const [visibleColumns, setVisibleColumns] = useState<ColumnDef<FlatServer>[]>(
+    SERVER_COLUMNS.filter(c => c.defaultVisible)
+  )
 
   const totalActive = useMemo(
     () => MOCK_COMMITTEES.reduce((s, c) => s + c.members.filter(m => m.status === 'active').length, 0),
@@ -124,6 +171,20 @@ export default function ServidoresPage() {
         c => c.area_code === area.code && (areaFilter === 'all' || c.area_code === areaFilter)
       ),
     })).filter(a => a.committees.length > 0)
+  }, [areaFilter])
+
+  const flatServers = useMemo<FlatServer[]>(() => {
+    const visibleCommittees = MOCK_COMMITTEES.filter(
+      c => areaFilter === 'all' || c.area_code === areaFilter
+    )
+    return visibleCommittees.flatMap(c =>
+      c.members.map(m => ({
+        ...m,
+        committee: c.name,
+        area: c.area,
+        leader_name: c.leader.name,
+      }))
+    )
   }, [areaFilter])
 
   return (
@@ -180,8 +241,8 @@ export default function ServidoresPage() {
         ))}
       </div>
 
-      {/* Area chips */}
-      <div className="flex gap-1.5 flex-wrap">
+      {/* Area chips + export actions */}
+      <div className="flex items-center gap-1.5 flex-wrap">
         {AREA_FILTERS.map(f => (
           <button
             key={f.key}
@@ -197,6 +258,22 @@ export default function ServidoresPage() {
             {f.label}
           </button>
         ))}
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+            {flatServers.length} servidores
+          </span>
+          <ColumnSelector<FlatServer>
+            columns={SERVER_COLUMNS}
+            storageKey="theos_columns_servers"
+            onChange={setVisibleColumns}
+          />
+          <ExportButton<FlatServer>
+            data={flatServers}
+            columns={visibleColumns}
+            allColumns={SERVER_COLUMNS}
+            filename="servidores-theos"
+          />
+        </div>
       </div>
 
       {/* Committees grouped by area */}

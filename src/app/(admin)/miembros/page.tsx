@@ -1,26 +1,32 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
 import {
-  Download,
   MessageCircle,
   UserPlus,
   Search,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   SlidersHorizontal,
   X,
+  Bookmark,
+  Check,
 } from 'lucide-react'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
+import { mockMembers } from '@/data/mock-members'
+import { listStore } from '@/data/mock-member-lists'
+import type { FilterCondition } from '@/types/filters'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
 import { QueryBar } from '@/components/members/QueryBar'
 import { type Member } from '@/data/mock-members'
+import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { ExportButton } from '@/components/shared/ExportButton'
+import { SortableHeader } from '@/components/shared/SortableHeader'
+import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 10
 
 function calcularEdad(fechaNacimiento: string): number {
   const hoy = new Date()
@@ -63,17 +69,188 @@ const QUICK_CHIPS = [
   { key: 'servidores', label: 'Servidores' },
 ] as const
 
+const GENDER_LABELS: Record<string, string> = {
+  masculino: 'Masculino', femenino: 'Femenino', no_indica: 'No indica',
+}
+
+const MEMBER_COLUMNS: ColumnDef<Member>[] = [
+  {
+    key: 'name', label: 'Nombre', defaultVisible: true, alwaysVisible: true,
+    exportValue: m => `${m.first_name} ${m.last_name}`,
+  },
+  {
+    key: 'cedula', label: 'Cédula', defaultVisible: true,
+    exportValue: m => m.cedula ?? 'Sin cédula',
+  },
+  {
+    key: 'age', label: 'Edad', defaultVisible: true,
+    exportValue: m => m.birth_date ? String(calcularEdad(m.birth_date)) : '',
+  },
+  {
+    key: 'email', label: 'Correo', defaultVisible: false,
+  },
+  {
+    key: 'phone', label: 'Teléfono', defaultVisible: false,
+  },
+  {
+    key: 'status', label: 'Estado', defaultVisible: true,
+    exportValue: m => m.status === 'active' ? 'Activo' : 'Inactivo',
+  },
+  {
+    key: 'is_donor', label: 'Donador', defaultVisible: false,
+    exportValue: m => m.is_donor ? 'Sí' : 'No',
+  },
+  {
+    key: 'current_study', label: 'Nivel actual', defaultVisible: false,
+    exportValue: m => m.current_study ?? '',
+  },
+  {
+    key: 'completed_studies', label: 'Estudios completados', defaultVisible: false,
+    exportValue: m => m.completed_studies?.join(', ') ?? '',
+  },
+  {
+    key: 'service_position', label: 'Puesto de servicio', defaultVisible: false, exportable: true,
+    render: m => {
+      const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
+      return active
+        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.position}</span>
+        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+    },
+    exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.position ?? '',
+  },
+  {
+    key: 'service_committee', label: 'Comité', defaultVisible: false, exportable: true,
+    render: m => {
+      const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
+      return active
+        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.committee}</span>
+        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+    },
+    exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.committee ?? '',
+  },
+  {
+    key: 'service_area', label: 'Área de servicio', defaultVisible: false, exportable: true,
+    render: m => {
+      const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
+      return active
+        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.area}</span>
+        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+    },
+    exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.area ?? '',
+  },
+  {
+    key: 'sede', label: 'Sede principal', defaultVisible: false,
+  },
+  {
+    key: 'join_date', label: 'Fecha de ingreso', defaultVisible: false,
+    exportValue: m => m.join_date ? new Date(m.join_date).toLocaleDateString('es-CR') : '',
+  },
+  {
+    key: 'gender', label: 'Género', defaultVisible: false,
+    exportValue: m => GENDER_LABELS[m.gender] ?? '',
+  },
+  {
+    key: 'profession', label: 'Ocupación', defaultVisible: false,
+  },
+]
+
+function buildSegmentLabel(conditions: FilterCondition[], showDonors: boolean, showServers: boolean): string {
+  const parts: string[] = []
+  if (showDonors)  parts.push('Donadores')
+  if (showServers) parts.push('Servidores')
+  for (const c of conditions) {
+    switch (c.type) {
+      case 'study':
+        parts.push(`${c.study} ${c.status === 'completed' ? 'completado' : 'en progreso'}`)
+        break
+      case 'attendance':
+        parts.push(`Asistentes a ${c.eventType}`)
+        break
+      case 'service':
+        parts.push(c.committee ? `Comité ${c.committee}` : c.area ? `Área ${c.area}` : 'Servicio')
+        break
+      case 'donor':
+        parts.push(c.value === 'yes' ? 'Donadores' : 'No donadores')
+        break
+      case 'status':
+        parts.push(c.value === 'active' ? 'Activos' : 'Inactivos')
+        break
+      default:
+        parts.push(c.type)
+    }
+  }
+  return parts.length === 0 ? 'Todos los miembros' : parts.join(' · ')
+}
+
 export default function MiembrosPage() {
   const router = useRouter()
   const { can } = usePermissions()
   const filters = useMemberFilters()
 
-  const [showDonors, setShowDonors] = useState(false)
-  const [showServers, setShowServers] = useState(false)
-  const [search, setSearch] = useState('')
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const [page, setPage] = useState(1)
-  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [showDonors,     setShowDonors]     = useState(false)
+  const [showServers,    setShowServers]    = useState(false)
+  const [search,         setSearch]         = useState('')
+  const [filtersOpen,    setFiltersOpen]    = useState(false)
+  const [visibleCount,   setVisibleCount]   = useState(PAGE_SIZE)
+  const [selectedIds,    setSelectedIds]    = useState<Set<string>>(new Set())
+  const [visibleColumns, setVisibleColumns] = useState<ColumnDef<Member>[]>(
+    MEMBER_COLUMNS.filter(c => c.defaultVisible)
+  )
+
+  // Guardar lista modal
+  const [saveListOpen,    setSaveListOpen]    = useState(false)
+  const [saveListName,    setSaveListName]    = useState('')
+  const [saveListDesc,    setSaveListDesc]    = useState('')
+  const [saveListTags,    setSaveListTags]    = useState('')
+  const [saveListDynamic, setSaveListDynamic] = useState(true)
+  const [toast,           setToast]           = useState('')
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 4000)
+  }
+
+  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || search.trim() !== ''
+
+  function handleComunicarLista() {
+    const ids = displayMembers.map(m => m.id).join(',')
+    const label = encodeURIComponent(buildSegmentLabel(filters.conditions, showDonors, showServers))
+    router.push(`/comunicaciones/nueva?mode=manual&members=${ids}&segment_label=${label}`)
+  }
+
+  function handleComunicarSeleccion() {
+    const ids = allFilteredSelected
+      ? displayMembers.map(m => m.id).join(',')
+      : Array.from(selectedIds).join(',')
+    router.push(`/comunicaciones/nueva?mode=manual&members=${ids}`)
+  }
+
+  function handleSaveList() {
+    if (!saveListName.trim()) return
+    const tags = saveListTags.split(',').map(t => t.trim()).filter(Boolean)
+    const segLabel = buildSegmentLabel(filters.conditions, showDonors, showServers)
+    listStore.add({
+      id: `list-${Date.now()}`,
+      name: saveListName.trim(),
+      description: saveListDesc.trim() || null,
+      filters: { conditions: filters.conditions, groups: filters.groups },
+      segment_label: segLabel,
+      member_ids: displayMembers.map(m => m.id),
+      member_count: displayMembers.length,
+      is_dynamic: saveListDynamic,
+      created_by: 'Admin Theos',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      last_used_at: null,
+      tags,
+    })
+    setSaveListOpen(false)
+    setSaveListName('')
+    setSaveListDesc('')
+    setSaveListTags('')
+    setSaveListDynamic(true)
+    showToast('saved')
+  }
 
   const displayMembers = useMemo(() => {
     let list = filters.filteredMembers
@@ -91,28 +268,22 @@ export default function MiembrosPage() {
     return list
   }, [filters.filteredMembers, showDonors, showServers, search])
 
-  const totalPages  = Math.max(1, Math.ceil(displayMembers.length / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
-  const paginated   = displayMembers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  // Reset visible window and clear selection whenever the filtered set changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+    setSelectedIds(new Set())
+  }, [displayMembers])
 
-  const allSelected = paginated.length > 0 && paginated.every(m => selected.has(m.id))
+  const { sorted: sortedMembers, sortKey, sortDir, toggleSort } = useSortableTable(displayMembers)
 
-  function toggleAll() {
-    setSelected(prev => {
-      const next = new Set(prev)
-      if (allSelected) paginated.forEach(m => next.delete(m.id))
-      else paginated.forEach(m => next.add(m.id))
-      return next
-    })
-  }
-  function toggleOne(id: string) {
-    setSelected(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+  const visibleMembers       = sortedMembers.slice(0, visibleCount)
+  const hasMore              = visibleCount < displayMembers.length
+  const remaining            = displayMembers.length - visibleCount
+  const allVisibleSelected   = visibleMembers.length > 0 && visibleMembers.every(m => selectedIds.has(m.id))
+  const allFilteredSelected  = selectedIds.size > 0 && selectedIds.size === displayMembers.length
+  const selectedData         = allFilteredSelected
+    ? displayMembers
+    : displayMembers.filter(m => selectedIds.has(m.id))
 
   const activeFilterCount = filters.conditions.length
 
@@ -135,16 +306,33 @@ export default function MiembrosPage() {
 
         <div className="flex items-center gap-2 flex-wrap">
           {can('miembros', 'export') && (
-            <button
-              className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-            >
-              <Download size={15} strokeWidth={1.75} />
-              Exportar
-            </button>
+            <>
+              <ColumnSelector<Member>
+                columns={MEMBER_COLUMNS}
+                storageKey="theos_columns_members"
+                onChange={setVisibleColumns}
+              />
+              <ExportButton<Member>
+                data={displayMembers}
+                columns={visibleColumns}
+                allColumns={MEMBER_COLUMNS}
+                filename="miembros-theos"
+              />
+              <button
+                onClick={() => hasAnyFilter ? setSaveListOpen(true) : undefined}
+                disabled={!hasAnyFilter}
+                title={!hasAnyFilter ? 'Aplicá filtros primero para guardar una lista' : ''}
+                className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                <Bookmark size={13} strokeWidth={1.75} />
+                Guardar lista
+              </button>
+            </>
           )}
           {can('comunicaciones', 'create') && (
             <button
+              onClick={handleComunicarLista}
               className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
               style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
             >
@@ -180,7 +368,6 @@ export default function MiembrosPage() {
                   if (key === 'todos') { setShowDonors(false); setShowServers(false) }
                   else if (key === 'donadores') setShowDonors(v => !v)
                   else setShowServers(v => !v)
-                  setPage(1)
                 }}
                 className={cn(
                   'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
@@ -223,7 +410,7 @@ export default function MiembrosPage() {
           <input
             type="search"
             value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
+            onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email…"
             className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none"
             style={{ fontFamily: 'var(--font-body)' }}
@@ -270,16 +457,69 @@ export default function MiembrosPage() {
               {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
             </span>
             {' · '}
-            {displayMembers.length.toLocaleString('es')} resultados
+            {displayMembers.length.toLocaleString('es-CR')} resultados
           </p>
           <button
-            onClick={() => { filters.clearAll(); setPage(1) }}
+            onClick={() => filters.clearAll()}
             className="flex items-center gap-1 text-sm text-coral hover:underline transition-colors"
             style={{ fontFamily: 'var(--font-body)' }}
           >
             <X size={12} strokeWidth={2} />
             Limpiar todo
           </button>
+        </div>
+      )}
+
+      {/* ── Selection banner ── */}
+      {selectedIds.size > 0 && (
+        <div
+          className="flex items-center gap-3 rounded-2xl px-4 py-3 flex-wrap"
+          style={{ background: 'rgba(22,20,64,0.04)', border: '1px solid rgba(22,20,64,0.12)' }}
+        >
+          <span className="text-[13px] font-semibold text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+            {allFilteredSelected
+              ? `${displayMembers.length.toLocaleString('es-CR')} miembros seleccionados (todos los resultados)`
+              : `${selectedIds.size} miembro${selectedIds.size !== 1 ? 's' : ''} seleccionado${selectedIds.size !== 1 ? 's' : ''}`
+            }
+          </span>
+
+          {!allFilteredSelected && (
+            <button
+              onClick={() => setSelectedIds(new Set(displayMembers.map(m => m.id)))}
+              className="text-[12px] font-semibold underline transition-colors"
+              style={{ color: 'var(--coral, #EF5554)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+            >
+              Seleccionar los {displayMembers.length.toLocaleString('es-CR')} resultados filtrados
+            </button>
+          )}
+
+          <div className="flex-1" />
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <ExportButton<Member>
+              data={selectedData}
+              columns={visibleColumns}
+              allColumns={MEMBER_COLUMNS}
+              filename="miembros-seleccionados-theos"
+              label={`Exportar ${(allFilteredSelected ? displayMembers.length : selectedIds.size).toLocaleString('es-CR')} miembros`}
+            />
+            <button
+              onClick={handleComunicarSeleccion}
+              className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            >
+              <MessageCircle size={14} strokeWidth={1.75} />
+              Comunicar ({(allFilteredSelected ? displayMembers.length : selectedIds.size).toLocaleString('es-CR')})
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="flex items-center gap-1 rounded-xl border px-3.5 py-2 text-sm text-navy-light/60 hover:bg-surface-low transition-colors"
+              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            >
+              <X size={13} />
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
 
@@ -295,27 +535,33 @@ export default function MiembrosPage() {
                 <th className="w-10 px-4 py-3.5">
                   <input
                     type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleAll}
+                    checked={allVisibleSelected}
+                    ref={el => { if (el) el.indeterminate = selectedIds.size > 0 && !allVisibleSelected }}
+                    onChange={e => {
+                      if (e.target.checked) setSelectedIds(new Set(visibleMembers.map(m => m.id)))
+                      else setSelectedIds(new Set())
+                    }}
                     className="accent-coral h-4 w-4 cursor-pointer rounded"
                   />
                 </th>
-                {['Miembro', 'Cédula', 'Edad', 'Rol', ''].map(col => (
-                  <th
-                    key={col}
-                    className="px-4 py-3.5 text-left text-xs font-medium text-navy-light/50 tracking-wider uppercase whitespace-nowrap"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    {col}
-                  </th>
+                {visibleColumns.map(col => (
+                  <SortableHeader
+                    key={String(col.key)}
+                    label={col.label}
+                    sortKey={String(col.key)}
+                    currentSortKey={sortKey}
+                    currentSortDir={sortDir}
+                    onSort={toggleSort}
+                  />
                 ))}
+                <th className="px-4 py-3.5" />
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 ? (
+              {visibleMembers.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={visibleColumns.length + 2}
                     className="px-4 py-12 text-center text-sm text-navy-light/40"
                     style={{ fontFamily: 'var(--font-body)' }}
                   >
@@ -323,90 +569,91 @@ export default function MiembrosPage() {
                   </td>
                 </tr>
               ) : (
-                paginated.map((member, i) => (
+                visibleMembers.map((member, i) => (
                   <tr
                     key={member.id}
                     onClick={() => router.push(`/miembros/${member.id}`)}
                     className="group transition-colors hover:bg-surface-low cursor-pointer"
-                    style={i < paginated.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                    style={i < visibleMembers.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                   >
                     <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
                       <input
                         type="checkbox"
-                        checked={selected.has(member.id)}
-                        onChange={() => toggleOne(member.id)}
+                        checked={selectedIds.has(member.id)}
+                        onChange={e => {
+                          const next = new Set(selectedIds)
+                          if (e.target.checked) next.add(member.id)
+                          else next.delete(member.id)
+                          setSelectedIds(next)
+                        }}
                         className="accent-coral h-4 w-4 cursor-pointer rounded"
                       />
                     </td>
 
-                    {/* Miembro */}
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs', avatarColor(member.id))}
-                          style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
-                        >
-                          {initials(member)}
-                        </div>
-                        <div className="min-w-0">
-                          <p
-                            className="truncate text-navy"
-                            style={{ fontFamily: 'var(--font-body)', fontWeight: 400 }}
-                          >
-                            {member.first_name} {member.last_name}
-                          </p>
-                          <p className="truncate text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-                            {member.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
+                    {visibleColumns.map(col => {
+                      switch (String(col.key)) {
+                        case 'name':
+                          return (
+                            <td key="name" className="px-4 py-3.5">
+                              <div className="flex items-center gap-3">
+                                <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs', avatarColor(member.id))} style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+                                  {initials(member)}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate text-navy" style={{ fontFamily: 'var(--font-body)' }}>{member.first_name} {member.last_name}</p>
+                                  <p className="truncate text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>{member.email}</p>
+                                </div>
+                              </div>
+                            </td>
+                          )
+                        case 'cedula':
+                          return (
+                            <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/30 font-sans">Sin cédula</span>}
+                            </td>
+                          )
+                        case 'age':
+                          return (
+                            <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                              {member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'}
+                            </td>
+                          )
+                        case 'status':
+                          return (
+                            <td key="status" className="px-4 py-3.5">
+                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', member.status === 'active' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
+                                {member.status === 'active' ? 'Activo' : 'Inactivo'}
+                              </span>
+                            </td>
+                          )
+                        case 'is_donor':
+                          return (
+                            <td key="is_donor" className="px-4 py-3.5">
+                              {member.is_donor
+                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral" style={{ fontFamily: 'var(--font-body)' }}>Sí</span>
+                                : <span className="text-sm text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>—</span>
+                              }
+                            </td>
+                          )
+                        default: {
+                          if (col.render) {
+                            return (
+                              <td key={String(col.key)} className="px-4 py-3.5">
+                                {col.render(member)}
+                              </td>
+                            )
+                          }
+                          const rawVal = (member as Record<string, unknown>)[String(col.key)]
+                          const display = Array.isArray(rawVal) ? (rawVal as string[]).join(', ') : String(rawVal ?? '')
+                          return (
+                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                              {display || '—'}
+                            </td>
+                          )
+                        }
+                      }
+                    })}
 
-                    {/* Cédula */}
-                    <td
-                      className="px-4 py-3.5 text-navy-light/70 tabular-nums"
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
-                    >
-                      {member.cedula ?? (
-                        <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/30 font-sans">Sin cédula</span>
-                      )}
-                    </td>
-
-                    {/* Edad */}
-                    <td
-                      className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap"
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
-                    >
-                      {member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'}
-                    </td>
-
-                    {/* Rol */}
-                    <td className="px-4 py-3.5">
-                      <div className="flex flex-wrap gap-1">
-                        {member.roles.filter(r => r !== 'miembro').map(role => (
-                          <span
-                            key={role}
-                            className={cn('rounded-full px-2.5 py-0.5 text-xs', ROLE_BADGE[role])}
-                            style={{ fontFamily: 'var(--font-body)' }}
-                          >
-                            {ROLE_LABEL[role]}
-                          </span>
-                        ))}
-                        {member.is_donor && (
-                          <span
-                            className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral"
-                            style={{ fontFamily: 'var(--font-body)' }}
-                          >
-                            Donador
-                          </span>
-                        )}
-                        {member.roles.length === 1 && !member.is_donor && (
-                          <span className="text-xs text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>Miembro</span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Action */}
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={() => router.push(`/miembros/${member.id}`)}
@@ -423,50 +670,188 @@ export default function MiembrosPage() {
           </table>
         </div>
 
-        {/* ── Pagination ── */}
-        <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ borderTop: '1px solid var(--outline-variant)' }}
-        >
-          <p className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-            {displayMembers.length === 0
-              ? 'Sin resultados'
-              : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, displayMembers.length)} de ${displayMembers.length}`}
-          </p>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="rounded-lg p-1.5 text-navy-light/50 transition-colors hover:bg-surface-low disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={16} strokeWidth={1.75} />
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+        {/* ── Load more / collapse ── */}
+        {hasMore && (
+          <div
+            className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap"
+            style={{ borderTop: '1px solid var(--outline-variant)' }}
+          >
+            <span className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+              Mostrando <strong className="text-navy">{visibleCount.toLocaleString('es-CR')}</strong> de{' '}
+              <strong className="text-navy">{displayMembers.length.toLocaleString('es-CR')}</strong> miembros
+            </span>
+            <div className="flex items-center gap-2">
               <button
-                key={n}
-                onClick={() => setPage(n)}
-                className={cn(
-                  'h-7 w-7 rounded-lg text-xs transition-all',
-                  n === currentPage ? 'bg-navy text-white' : 'text-navy-light/60 hover:bg-surface-low'
-                )}
-                style={{ fontFamily: 'var(--font-body)' }}
+                onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
+                className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
               >
-                {n}
+                Cargar 10 más
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[10px]"
+                  style={{ background: 'var(--surface-low)', fontFamily: 'var(--font-body)' }}
+                >
+                  {Math.min(PAGE_SIZE, remaining)} de {remaining.toLocaleString('es-CR')} restantes
+                </span>
               </button>
-            ))}
+              <button
+                onClick={() => setVisibleCount(displayMembers.length)}
+                className="rounded-lg border px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                Mostrar todos ({displayMembers.length.toLocaleString('es-CR')})
+              </button>
+            </div>
+          </div>
+        )}
 
+        {!hasMore && displayMembers.length > PAGE_SIZE && (
+          <div
+            className="flex items-center justify-between px-4 py-3"
+            style={{ borderTop: '1px solid var(--outline-variant)' }}
+          >
+            <span className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+              Mostrando todos — <strong className="text-navy">{displayMembers.length.toLocaleString('es-CR')}</strong> miembros
+            </span>
             <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="rounded-lg p-1.5 text-navy-light/50 transition-colors hover:bg-surface-low disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => setVisibleCount(PAGE_SIZE)}
+              className="text-xs text-navy-light/50 hover:text-navy transition-colors"
+              style={{ fontFamily: 'var(--font-body)' }}
             >
-              <ChevronRight size={16} strokeWidth={1.75} />
+              Colapsar lista
             </button>
           </div>
-        </div>
+        )}
       </div>
+      {/* ── Guardar lista modal ── */}
+      {saveListOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+          <div
+            className="w-full max-w-sm rounded-2xl p-6 space-y-4"
+            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                Guardar lista de miembros
+              </p>
+              <button onClick={() => setSaveListOpen(false)}>
+                <X size={18} className="text-navy-light/40" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                  Nombre de la lista *
+                </label>
+                <input
+                  autoFocus
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  placeholder="Ej. Donadores Heredia..."
+                  value={saveListName}
+                  onChange={e => setSaveListName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                  Descripción (opcional)
+                </label>
+                <input
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  placeholder="Para qué sirve esta lista..."
+                  value={saveListDesc}
+                  onChange={e => setSaveListDesc(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                  Tags (separados por coma)
+                </label>
+                <input
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  placeholder="donadores, heredia..."
+                  value={saveListTags}
+                  onChange={e => setSaveListTags(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                  Tipo de lista
+                </label>
+                {[
+                  { val: true,  label: 'Dinámica', desc: 'Se recalcula con los filtros actuales cada vez que la abrís' },
+                  { val: false, label: 'Snapshot', desc: `Guarda los ${displayMembers.length.toLocaleString('es-CR')} miembros exactos de ahora` },
+                ].map(opt => (
+                  <button
+                    key={String(opt.val)}
+                    type="button"
+                    onClick={() => setSaveListDynamic(opt.val)}
+                    className="flex items-start gap-3 w-full text-left rounded-xl border p-3 transition-all"
+                    style={{ borderColor: saveListDynamic === opt.val ? '#161440' : 'var(--outline-variant)', background: saveListDynamic === opt.val ? 'rgba(22,20,64,0.04)' : undefined }}
+                  >
+                    <div className={cn('mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0', saveListDynamic === opt.val ? 'border-coral bg-coral' : 'border-navy-light/30')}>
+                      {saveListDynamic === opt.val && <Check size={9} className="text-white" strokeWidth={3} />}
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{opt.label}</p>
+                      <p className="text-[11px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{opt.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl px-3 py-2.5 text-[12px] text-navy-light/60"
+              style={{ background: 'var(--surface-low)', fontFamily: 'var(--font-body)' }}
+            >
+              Resumen: <strong className="text-navy">{displayMembers.length.toLocaleString('es-CR')} miembros</strong>
+              {' · '}{buildSegmentLabel(filters.conditions, showDonors, showServers)}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSaveListOpen(false)}
+                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveList}
+                disabled={!saveListName.trim()}
+                className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                Guardar lista
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast ── */}
+      {toast === 'saved' && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-2xl"
+          style={{ background: '#161440', boxShadow: '0 20px 48px rgba(22,20,64,0.30)' }}>
+          <Check size={15} className="text-teal-deep shrink-0" strokeWidth={2.5} />
+          <p className="text-[13px] text-white" style={{ fontFamily: 'var(--font-body)' }}>
+            Lista guardada
+          </p>
+          <span className="text-white/20 mx-1">·</span>
+          <button
+            onClick={() => { setToast(''); router.push('/miembros/listas') }}
+            className="text-[13px] text-coral hover:underline"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+          >
+            Ver mis listas →
+          </button>
+        </div>
+      )}
     </div>
   )
 }
