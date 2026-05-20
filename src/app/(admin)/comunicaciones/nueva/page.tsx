@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { mockMembers } from '@/data/mock-members'
@@ -42,7 +42,7 @@ function insertAtCursor(ref: React.RefObject<HTMLTextAreaElement | null>, value:
 
 const PREVIEW_COUNT = 20
 
-export default function NuevaComunicacionPage() {
+function NuevaComunicacionContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -576,5 +576,17 @@ export default function NuevaComunicacionPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function NuevaComunicacionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando...</div>
+      </div>
+    }>
+      <NuevaComunicacionContent />
+    </Suspense>
   )
 }

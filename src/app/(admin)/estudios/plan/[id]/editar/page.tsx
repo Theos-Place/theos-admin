@@ -43,7 +43,7 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
   const [form, setForm] = useState({
     name:             catalogEntry?.name         ?? '',
     weeks:            catalogEntry?.weeks        ?? 0,
-    instructor:       catalogEntry?.instructor   ?? '',
+    mentor:           catalogEntry?.mentor        ?? '',
     description:      catalogEntry?.description  ?? '',
     commitments:      catalogEntry?.commitments  ?? '',
     level:            catalogEntry?.level        ?? '',
@@ -69,10 +69,12 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
   }
 
   function handleSave() {
+    if (!catalogEntry) return
+
     Object.assign(catalogEntry, {
       name:        form.name,
       weeks:       form.weeks,
-      instructor:  form.instructor,
+      mentor:      form.mentor,
       description: form.description,
       commitments: form.commitments,
       level:       form.level || undefined,
@@ -195,17 +197,17 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Instructor */}
+        {/* Mentor */}
         <div className="space-y-1">
           <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-            Instructor
+            Mentor
           </label>
           <input
             className={inputCls}
             style={{ fontFamily: 'var(--font-body)' }}
-            placeholder="Nombre del instructor..."
-            value={form.instructor}
-            onChange={e => set('instructor', e.target.value)}
+            placeholder="Nombre del mentor..."
+            value={form.mentor}
+            onChange={e => set('mentor', e.target.value)}
           />
         </div>
 

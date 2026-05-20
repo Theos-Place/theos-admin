@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, GraduationCap, MessageCircle } from 'lucide-react'
@@ -25,7 +25,7 @@ function formatDays(days: string[]): string {
   return labels.slice(0, -1).join(', ') + ' y ' + labels[labels.length - 1]
 }
 
-export default function ConfirmacionPage() {
+function ConfirmacionContent() {
   const searchParams = useSearchParams()
   const groupId  = searchParams.get('group') ?? ''
   const studyCode = searchParams.get('study') ?? ''
@@ -150,5 +150,17 @@ export default function ConfirmacionPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ConfirmacionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando...</div>
+      </div>
+    }>
+      <ConfirmacionContent />
+    </Suspense>
   )
 }

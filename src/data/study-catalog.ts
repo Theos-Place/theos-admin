@@ -4,10 +4,19 @@ export type StudyCatalogItem = {
   stage: 'niveles' | 'inicial' | 'intermedia' | 'campaña'
   prerequisite: string | null
   weeks: number
-  instructor?: string
+  mentor?: string
   description?: string
   commitments?: string
   level?: 'Básico' | 'Intermedio' | 'Avanzado'
+  requires_payment?: boolean
+  cost?: number
+  req_donor?: boolean
+  req_server?: boolean
+  req_attendee?: boolean
+  requires_grade?: boolean
+  auto_promote?: boolean
+  next_study_id?: string
+  is_archived?: boolean
 }
 
 export const STUDY_CATALOG: StudyCatalogItem[] = [
@@ -25,7 +34,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'inicial',
     prerequisite: 'N4',
     weeks: 12,
-    instructor: 'Daniela Sánchez',
+    mentor:'Daniela Sánchez',
     level: 'Intermedio',
     description: 'Un curso diseñado para descubrir la invitación de Jesús a ser servidores, y la forma única en la que Dios nos creó para servirle a Él y a las personas de nuestro alrededor. Primero, veremos el ejemplo de Jesús como el máximo servidor y extraeremos principios de servicio para aplicar a nuestra vida. Luego, veremos diferentes áreas de nuestra vida (personalidad, talentos, pasiones, dones y experiencias) para identificar cómo seguir el ejemplo de Jesús de forma personal. Finalmente, a través del estudio de personajes bíblicos, descubriremos cómo sus virtudes, decisiones y ejemplos reflejan el modelo de servicio de Jesús.',
     commitments: 'Tareas + presentación final',
@@ -36,7 +45,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'inicial',
     prerequisite: 'N4',
     weeks: 8,
-    instructor: 'Danilo Mata',
+    mentor:'Danilo Mata',
     level: 'Intermedio',
     description: 'Este curso invita a correr la "Maratón Financiera", un viaje transformador basado en principios bíblicos de buena administración y fe. A lo largo de etapas claras, se aprenden habilidades prácticas para cada fase: desde crear un presupuesto y un plan para emergencias, hasta desarrollar un plan intenso para eliminar todas las deudas usando el método de "bola de nieve". El objetivo final es cruzar la meta de la libertad financiera total, permitiendo vivir con una paz profunda y experimentar la alegría de una generosidad radical.',
     commitments: 'Tareas',
@@ -47,7 +56,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'inicial',
     prerequisite: 'N4',
     weeks: 10,
-    instructor: 'Charlie',
+    mentor:'Charlie',
     level: 'Intermedio',
     description: 'Compartir el mensaje del evangelio es una de las grandes responsabilidades, pero también grandes privilegios de un cristiano. En este curso, aprenderemos a compartir el mensaje del evangelio de forma práctica y efectiva. Exploraremos estrategias, tácticas y métodos reales para compartir el mensaje de salvación. Estudiaremos los elementos teóricos que son esenciales en el evangelio, comprendiendo claramente sus componentes fundamentales para poder comunicarlo con convicción y fidelidad.',
     commitments: 'Quiz y tareas',
@@ -120,7 +129,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'intermedia',
     prerequisite: 'DIS3',
     weeks: 12,
-    instructor: 'Yendry',
+    mentor:'Yendry',
     level: 'Avanzado',
     description: 'Este curso invita a los participantes a reflexionar sobre cómo los mandamientos y principios bíblicos pueden guiar nuestras decisiones diarias. A través del análisis de situaciones cotidianas, se busca desarrollar una comprensión práctica de cómo vivir con integridad, amor y obediencia a Dios en cada área de la vida. El objetivo central es aprender a tomar decisiones que honren a Dios, promoviendo una fe activa y coherente con Su voluntad.',
     commitments: 'Quices, lectura, caso práctico, examen final',
@@ -131,7 +140,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'intermedia',
     prerequisite: 'DIS3',
     weeks: 12,
-    instructor: 'Lara Aguilar',
+    mentor:'Lara Aguilar',
     level: 'Avanzado',
     description: 'El curso Panorama de la Biblia tiene como propósito guiar al estudiante a través de toda la historia bíblica —desde la creación hasta la salvación— mostrando el hilo conductor del amor, la fidelidad y el plan redentor de Dios manifestado en Jesucristo. A lo largo de las semanas, los estudiantes comprenderán la estructura completa de la Biblia, descubriendo cómo los libros del Antiguo y Nuevo Testamento se entrelazan para revelar un solo mensaje: la salvación en Jesús.',
     commitments: 'Quices + exámenes cortos + examen final',
@@ -162,7 +171,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'intermedia',
     prerequisite: 'PAN',
     weeks: 12,
-    instructor: 'Naomi',
+    mentor:'Naomi',
     level: 'Avanzado',
     description: 'El libro de Romanos es una de las exposiciones más completas y poderosas del evangelio de Jesucristo. A través de esta carta, el apóstol Pablo revela la profundidad del amor y la justicia de Dios, explicando cómo la fe en Cristo nos libera del pecado, nos justifica ante Dios y nos llama a vivir una vida nueva guiada por el Espíritu. A través del análisis del texto bíblico, discusión en grupo, memorización de versículos y tareas de aplicación, los estudiantes comprenderán el poder del evangelio a mayor profundidad.',
     commitments: 'Quices + memorización de versículos + ensayos + proyecto final',
@@ -173,7 +182,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'intermedia',
     prerequisite: 'PAN',
     weeks: 10,
-    instructor: 'Flori',
+    mentor:'Flori',
     level: 'Avanzado',
     description: 'El curso de Hebreos es un recorrido profundo y práctico por esta carta, capítulo por capítulo. Descubriremos su mensaje, su contexto, sus advertencias, sus promesas y su aplicación para nuestra vida hoy. Utilizaremos diferentes métodos de estudio bíblico que nos ayudarán a crecer y a fortalecer nuestra fe de forma sólida, consciente e intencional.',
     commitments: 'Memorización de versículos + 1 proyecto de investigación y exposición',
@@ -184,7 +193,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'intermedia',
     prerequisite: 'PAN',
     weeks: 12,
-    instructor: 'Josué',
+    mentor:'Josué',
     level: 'Avanzado',
     description: 'Esta capacitación estudia las características importantes de otras religiones (Hinduismo, Budismo, Judaísmo, Islam, Fe Bahaí, Mormones y Testigos de Jehová) con el fin de capacitar al estudiante para interactuar con personas de una fe distinta y poder apuntar a la verdad revelada en la Biblia. El curso no se enfoca en un estudio profundo de cada religión, sino en un acercamiento que nos permita mostrar el amor de Cristo a otros, generando empatía.',
     commitments: 'Tareas + exposición final',
@@ -195,7 +204,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'intermedia',
     prerequisite: 'PAN',
     weeks: 10,
-    instructor: 'Naomi',
+    mentor:'Naomi',
     level: 'Avanzado',
     description: 'Vivimos en una época donde la fe cristiana es constantemente cuestionada, y los creyentes necesitan estar preparados para responder con verdad, claridad y humildad. En este curso los participantes explorarán los fundamentos bíblicos, filosóficos e históricos de la fe cristiana. A través de clases dinámicas, debates, análisis de argumentos y ejercicios prácticos, los estudiantes aprenderán a responder con convicción a los desafíos más comunes contra la fe.',
     commitments: 'Por definir',
@@ -206,7 +215,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     stage: 'intermedia',
     prerequisite: 'PAN',
     weeks: 10,
-    instructor: 'Naomi',
+    mentor:'Naomi',
     level: 'Avanzado',
     description: 'La Palabra de Dios es viva y eficaz, pero para entenderla correctamente necesitamos interpretarla con fidelidad y discernimiento espiritual. En este curso estudiaremos los principios fundamentales de interpretación bíblica y cómo aplicarlos a diferentes géneros literarios de la Escritura. A través de exposiciones, análisis de pasajes, ejercicios prácticos y discusiones guiadas, los estudiantes desarrollarán las herramientas necesarias para estudiar y enseñar la Biblia con mayor profundidad, claridad y fidelidad al mensaje original.',
     commitments: 'Tareas + Proyecto final con exposición',

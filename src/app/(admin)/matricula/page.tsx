@@ -465,7 +465,7 @@ function StudyCard({
           )}
         </div>
 
-        {/* Descripción, instructor y compromisos */}
+        {/* Descripción, mentor y compromisos */}
         {(() => {
           const cat = STUDY_CATALOG.find(s => s.code === result.study_code)
           if (!cat) return null
@@ -481,9 +481,9 @@ function StudyCard({
                 </p>
               )}
               <div className="flex flex-wrap gap-x-4 gap-y-0.5">
-                {cat.instructor && (
+                {cat.mentor && (
                   <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}>
-                    <span className="font-semibold">Instructor:</span> {cat.instructor}
+                    <span className="font-semibold">Mentor:</span> {cat.mentor}
                   </span>
                 )}
                 {cat.commitments && (

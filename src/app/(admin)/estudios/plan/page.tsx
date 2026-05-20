@@ -114,10 +114,10 @@ function StudyCardFull({ study }: { study: typeof STUDY_TYPES[0] }) {
         </span>
       </div>
 
-      {/* Instructor */}
-      {cat?.instructor && (
+      {/* Mentor */}
+      {cat?.mentor && (
         <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginBottom: 6, fontFamily: 'var(--font-body)' }}>
-          Instructor: <strong>{cat.instructor}</strong>
+          Mentor: <strong>{cat.mentor}</strong>
         </div>
       )}
 
@@ -329,7 +329,7 @@ export default function PlanDeEstudiosPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-                    {STUDY_CATALOG.find(c => c.code === s.code)?.instructor ?? (
+                    {STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
                       <span className="text-navy-light/30">—</span>
                     )}
                   </td>

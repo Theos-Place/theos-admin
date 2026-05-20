@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { MOCK_COMMITTEES } from '@/data/mock-servers'
@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-react'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
-export default function NuevaVacantePage() {
+function NuevaVacanteContent() {
   const params = useSearchParams()
   const preselectedCommittee = params.get('comite') ?? ''
 
@@ -357,5 +357,15 @@ export default function NuevaVacantePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function NuevaVacantePage() {
+  return (
+    <Suspense fallback={
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--fg-muted)' }}>Cargando...</div>
+    }>
+      <NuevaVacanteContent />
+    </Suspense>
   )
 }
