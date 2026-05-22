@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, AlertCircle, Loader2, Zap } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react'
 
 const MOCK_USERS = [
   { email: 'admin@theosplace.org',     cedula: '1-0000-0001', password: 'Theos2026',    roles: ['admin'],            name: 'Admin Theos',     member_id: 'uuid-0001'  },
@@ -54,10 +54,6 @@ export default function LoginPage() {
   const [authError, setAuthError]     = useState('')
   const [emailErr, setEmailErr]       = useState('')
   const [passErr, setPassErr]         = useState('')
-  const [showMagic, setShowMagic]     = useState(false)
-  const [magicToken, setMagicToken]   = useState('')
-  const [magicLoading, setMagicLoading] = useState(false)
-
   function validate() {
     let ok = true
     if (!email.trim()) {
@@ -94,16 +90,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  async function handleMagicSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!magicToken.trim()) return
-    setMagicLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
-    sessionStorage.setItem('theos_user', JSON.stringify({ name: 'Usuario', email: email || 'usuario@theosplace.org', role: 'staff_leader' }))
-    document.cookie = 'theos_session=true; path=/; max-age=86400'
-    router.push('/dashboard')
   }
 
   return (
@@ -251,62 +237,6 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      {/* Separador */}
-      <div className="relative flex items-center gap-3 my-6">
-        <div className="flex-1 h-px bg-[rgba(22,20,64,0.10)]" />
-        <span className="text-[11px] text-navy-light/30 uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)' }}>
-          o
-        </span>
-        <div className="flex-1 h-px bg-[rgba(22,20,64,0.10)]" />
-      </div>
-
-      {/* Smart Link */}
-      {!showMagic ? (
-        <button
-          type="button"
-          onClick={() => setShowMagic(true)}
-          className="w-full flex items-center justify-center gap-2 rounded-xl border py-3.5 text-[13px] font-medium text-navy-light/60 hover:text-navy hover:bg-white transition-all"
-          style={{ borderColor: 'rgba(22,20,64,0.15)', fontFamily: 'var(--font-body)' }}
-        >
-          <Zap size={14} className="text-teal-deep" />
-          Ingresar con Smart Link
-        </button>
-      ) : (
-        <form
-          onSubmit={handleMagicSubmit}
-          className="space-y-3"
-          style={{ animation: 'fadeSlideIn 0.2s ease-out' }}
-        >
-          <style>{`@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-          <input
-            type="text"
-            autoFocus
-            value={magicToken}
-            onChange={e => setMagicToken(e.target.value)}
-            placeholder="Pegá tu Smart Link token aquí..."
-            className={`${INPUT} ${INPUT_NORMAL}`}
-            style={{ fontFamily: 'var(--font-body)' }}
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => { setShowMagic(false); setMagicToken('') }}
-              className="flex-1 rounded-xl border py-3 text-[13px] text-navy-light/50 hover:bg-white transition-colors"
-              style={{ borderColor: 'rgba(22,20,64,0.12)', fontFamily: 'var(--font-body)' }}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={magicLoading || !magicToken.trim()}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-[13px] font-semibold text-white transition-all disabled:opacity-50"
-              style={{ background: '#519DA2', fontFamily: 'var(--font-body)', cursor: magicLoading ? 'not-allowed' : 'pointer' }}
-            >
-              {magicLoading ? <><Loader2 size={14} className="animate-spin" /> Verificando...</> : 'Enviar'}
-            </button>
-          </div>
-        </form>
-      )}
     </div>
   )
 }

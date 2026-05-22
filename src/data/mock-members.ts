@@ -38,6 +38,8 @@ export type Member = {
   donations: DonationRecord[]
   form_responses: FormResponse[]
   wallet_pass_status: 'active' | 'not_generated'
+  emergency_contact_name?: string
+  emergency_contact_phone?: string
 }
 
 export type AttendanceRecord = {
@@ -127,6 +129,8 @@ export const mockMembers: Member[] = [
       { formId: 'camp-jun25', submittedAt: '2025-05-01', answers: { zona_preferencia: 'Zona Central', transporte: 'Bus de Theos', condicion_medica: 'Ninguna', numero_emergencia: '+506 8812 0000' } },
     ],
     wallet_pass_status: 'active',
+    emergency_contact_name: 'Carmen Ruiz',
+    emergency_contact_phone: '8812-3456',
   },
   {
     id: 'uuid-0002',
@@ -177,6 +181,8 @@ export const mockMembers: Member[] = [
       { formId: 'n1-ins', submittedAt: '2022-09-01', answers: { zona_preferencia: 'Heredia', horario_preferencia: 'Miércoles 7:30pm', como_se_entero: 'Instagram' } },
     ],
     wallet_pass_status: 'active',
+    emergency_contact_name: 'Ana Rodríguez',
+    emergency_contact_phone: '7721-8890',
   },
   {
     id: 'uuid-0003',
@@ -227,6 +233,8 @@ export const mockMembers: Member[] = [
       { formId: 'enc-dirigente', submittedAt: '2023-01-15', answers: { calificacion_general: '5', puntualidad: '4', preparacion: '5', comentarios: 'Excelente preparación' } },
     ],
     wallet_pass_status: 'active',
+    emergency_contact_name: 'Andrea García',
+    emergency_contact_phone: '8834-5567',
   },
   {
     id: 'uuid-0004',

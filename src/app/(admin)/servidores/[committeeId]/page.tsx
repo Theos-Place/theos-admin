@@ -129,48 +129,26 @@ export default function CommitteeDetailPage() {
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
   return (
-    <div className="space-y-4 max-w-4xl">
-      {/* Back */}
-      <Link
-        href="/servidores"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
-      >
-        <ChevronLeft size={15} />
-        Servidores
-      </Link>
+    <div className="page">
 
-      {/* Header */}
-      <div
-        className="rounded-2xl px-6 py-5"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-      >
-        <div className="flex items-start gap-4 justify-between flex-wrap">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold tracking-widest uppercase text-navy-light/60"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                {committee.area}
-              </span>
-              <span className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-                {activeCount} servidor{activeCount !== 1 ? 'es' : ''} activo{activeCount !== 1 ? 's' : ''}
-              </span>
+      {/* ── Header ── */}
+      <div className="ph">
+        <button className="btn btn-ghost btn-sm" onClick={() => router.push('/servidores')} style={{ marginBottom: 10 }}>
+          ← Volver a servidores
+        </button>
+        <div className="ph-row">
+          <div>
+            <div className="ptitle">{committee.name}</div>
+            <div className="psub">
+              {committee.area} · {activeCount} servidor{activeCount !== 1 ? 'es' : ''} activo{activeCount !== 1 ? 's' : ''}
             </div>
-            <h1
-              className="text-2xl text-navy"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
-            >
-              {committee.name}
-            </h1>
-            <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
               <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center">
                 <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
                   {committee.leader.initials}
                 </span>
               </div>
-              <span className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+              <span style={{ fontSize: 13, color: 'rgba(41,54,92,0.7)', fontFamily: 'var(--font-body)' }}>
                 {committee.leader.name}
               </span>
               <Link
@@ -182,11 +160,18 @@ export default function CommitteeDetailPage() {
               </Link>
             </div>
           </div>
+          <div className="ph-actions">
+            <button className="btn btn-ghost btn-sm">Editar comité</button>
+            <button className="btn btn-primary btn-sm">
+              <Plus size={13} /> Añadir servidor
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-0 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      {/* ── Tabs card ── */}
+      <div className="card" style={{ width: '100%', minWidth: 0 }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(22,20,64,0.09)', padding: '0 4px' }}>
         {(['miembros', 'vacantes', 'metas'] as Tab[]).map(t => (
           <button
             key={t}
@@ -202,11 +187,11 @@ export default function CommitteeDetailPage() {
             {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Vacantes (${committeeVacancies.length})` : 'Metas'}
           </button>
         ))}
-      </div>
+      </div>{/* end tab bar */}
 
       {/* Tab: Miembros */}
       {tab === 'miembros' && (
-        <div className="space-y-4">
+        <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Toolbar */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-48">
@@ -244,10 +229,7 @@ export default function CommitteeDetailPage() {
           </div>
 
           {/* Table */}
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-          >
+          <div className="overflow-hidden" style={{ borderRadius: 12, border: '1px solid rgba(22,20,64,0.09)' }}>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -358,7 +340,7 @@ export default function CommitteeDetailPage() {
 
       {/* Tab: Vacantes */}
       {tab === 'vacantes' && (
-        <div className="space-y-3">
+        <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div className="flex justify-end">
             <Link
               href={`/servidores/vacantes/nueva?comite=${committeeId}`}
@@ -372,8 +354,8 @@ export default function CommitteeDetailPage() {
 
           {committeeVacancies.length === 0 && (
             <div
-              className="rounded-2xl px-5 py-10 text-center"
-              style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+              className="rounded-xl px-5 py-10 text-center"
+              style={{ background: 'var(--surface-low)' }}
             >
               <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
                 No hay vacantes para este comité.
@@ -427,7 +409,7 @@ export default function CommitteeDetailPage() {
 
       {/* Tab: Metas */}
       {tab === 'metas' && (
-        <div className="space-y-3">
+        <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {goals.map(g => (
             <div
               key={g.id}
@@ -631,6 +613,8 @@ export default function CommitteeDetailPage() {
           </div>
         </div>
       )}
+
+      </div>{/* end .card tabs */}
     </div>
   )
 }

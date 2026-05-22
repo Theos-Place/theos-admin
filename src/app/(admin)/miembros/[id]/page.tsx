@@ -694,6 +694,16 @@ export default function MiembroDetailPage() {
               <InfoRow icon={<Phone size={15} strokeWidth={1.75} />} label="Teléfono" value={member.phone} />
               <InfoRow icon={<Mail size={15} strokeWidth={1.75} />} label="Correo" value={member.email} />
               <InfoRow icon={<MapPin size={15} strokeWidth={1.75} />} label="Dirección" value={member.address} />
+              <InfoRow
+                icon={<Phone size={15} strokeWidth={1.75} />}
+                label="Contacto de emergencia"
+                value={member.emergency_contact_name ?? ''}
+              />
+              <InfoRow
+                icon={<Phone size={15} strokeWidth={1.75} />}
+                label="Teléfono de emergencia"
+                value={member.emergency_contact_phone ?? ''}
+              />
             </div>
 
             {/* Datos personales */}

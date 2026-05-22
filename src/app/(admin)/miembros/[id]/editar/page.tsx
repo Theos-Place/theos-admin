@@ -2,58 +2,63 @@
 
 import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { ChevronLeft, Lock, Check, Loader2 } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { mockMembers } from '@/data/mock-members'
 import { ACTIVE_SEDES } from '@/data/mock-sedes'
-import { cn } from '@/lib/utils'
-
-const INPUT = [
-  'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
-  'outline-none transition-all placeholder:text-navy-light/25',
-  'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
-  'border-[rgba(22,20,64,0.15)]',
-].join(' ')
-
-const INPUT_READONLY = [
-  'w-full rounded-xl border px-4 py-3 text-sm text-navy-light/50 bg-[rgba(22,20,64,0.03)]',
-  'outline-none cursor-not-allowed border-[rgba(22,20,64,0.08)]',
-].join(' ')
-
-const LABEL = 'block text-[12px] font-medium text-navy-light/60 mb-1.5'
+import { PhoneInput } from '@/components/shared/PhoneInput'
+import { useMockAuth } from '@/hooks/useMockAuth'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const { user } = useMockAuth()
+  const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('direccion')
 
   const member = mockMembers.find(m => m.id === id)
 
-  const [email,         setEmail]         = useState(member?.email ?? '')
-  const [phone,         setPhone]         = useState(member?.phone ?? '')
-  const [sede,          setSede]          = useState(member?.sede ?? '')
-  const [status,        setStatus]        = useState<'active' | 'inactive'>(member?.status ?? 'active')
-  const [birthDate,     setBirthDate]     = useState(member?.birth_date ?? '')
-  const [gender,        setGender]        = useState(member?.gender ?? 'no_indica')
-  const [maritalStatus, setMaritalStatus] = useState(member?.marital_status ?? '')
-  const [profession,    setProfession]    = useState(member?.profession ?? '')
-  const [workplace,     setWorkplace]     = useState(member?.workplace ?? '')
-  const [address,       setAddress]       = useState(member?.address ?? '')
-  const [alergias,      setAlergias]      = useState(member?.alergias ?? '')
-  const [medicamentos,  setMedicamentos]  = useState(member?.medicamentos ?? '')
-  const [saving,        setSaving]        = useState(false)
-  const [toast,         setToast]         = useState(false)
+  // ── Estado del formulario ──────────────────────────────────────────────────
+  const [firstName,             setFirstName]             = useState(member?.first_name ?? '')
+  const [lastName,              setLastName]              = useState(member?.last_name ?? '')
+  const [email,                 setEmail]                 = useState(member?.email ?? '')
+  const [phone,                 setPhone]                 = useState(member?.phone ?? '')
+  const [sede,                  setSede]                  = useState(member?.sede ?? '')
+  const [isActive,              setIsActive]              = useState(member?.status === 'active' || member?.status == null)
+  const [birthDate,             setBirthDate]             = useState(member?.birth_date ?? '')
+  const [gender,                setGender]                = useState(member?.gender ?? 'no_indica')
+  const [maritalStatus,         setMaritalStatus]         = useState(member?.marital_status ?? '')
+  const [profession,            setProfession]            = useState(member?.profession ?? '')
+  const [workplace,             setWorkplace]             = useState(member?.workplace ?? '')
+  const [address,               setAddress]               = useState(member?.address ?? '')
+  const [province,              setProvince]              = useState('')
+  const [canton,                setCanton]                = useState('')
+  const [district,              setDistrict]              = useState('')
+  const [alergias,              setAlergias]              = useState(member?.alergias ?? '')
+  const [medicamentos,          setMedicamentos]          = useState(member?.medicamentos ?? '')
+  const [emergencyContactName,  setEmergencyContactName]  = useState(member?.emergency_contact_name ?? '')
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState(member?.emergency_contact_phone ?? '')
+  const [saving,                setSaving]                = useState(false)
+  const [toast,                 setToast]                 = useState(false)
+
+  // ── Modal desactivar ───────────────────────────────────────────────────────
+  const [deactivateModalOpen, setDeactivateModalOpen] = useState(false)
+  const [deactivateReason,    setDeactivateReason]    = useState('')
 
   if (!member) {
     return (
-      <div className="px-6 py-8 text-center text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-        Miembro no encontrado.{' '}
-        <Link href="/miembros" className="text-coral underline">Volver a miembros</Link>
+      <div className="page">
+        <div className="ph">
+          <div className="ptitle">Editar perfil</div>
+        </div>
+        <div className="card" style={{ padding: 22 }}>
+          <p className="text-sm text-navy-light/50 text-center py-8" style={{ fontFamily: 'var(--font-body)' }}>
+            Miembro no encontrado.
+          </p>
+        </div>
       </div>
     )
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSave() {
     setSaving(true)
     await new Promise(r => setTimeout(r, 900))
     setSaving(false)
@@ -65,157 +70,303 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="px-6 py-8 max-w-2xl space-y-6">
+    <div className="page">
 
-      {/* Back + header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/miembros/${id}`}
-          className="flex items-center gap-1.5 text-[13px] text-navy-light/60 hover:text-navy transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+      {/* ── Header ── */}
+      <div className="ph">
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={() => router.back()}
+          style={{ marginBottom: 10 }}
         >
-          <ChevronLeft size={15} />
-          Volver al perfil
-        </Link>
+          ← Volver
+        </button>
+        <div className="ph-row">
+          <div>
+            <div className="ptitle">Editar perfil</div>
+            <div className="psub">{member.first_name} {member.last_name}</div>
+          </div>
+          <div className="ph-actions">
+
+            {/* Toggle estado — solo admins */}
+            {isAdmin && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--fg-muted)', fontFamily: 'var(--font-body)' }}>
+                  Estado:
+                </span>
+                <label
+                  className="toggle"
+                  title={isActive ? 'Clic para desactivar este miembro' : 'Clic para activar este miembro'}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={() => {
+                      if (isActive) {
+                        setDeactivateModalOpen(true)
+                      } else {
+                        setIsActive(true)
+                      }
+                    }}
+                  />
+                  <div className="toggle-track" />
+                </label>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-body)',
+                  color: isActive ? 'var(--success)' : 'var(--fg-muted)',
+                }}>
+                  {isActive ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+            )}
+
+            <button className="btn btn-ghost" onClick={() => router.back()}>
+              Cancelar
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving
+                ? <><Loader2 size={14} className="animate-spin" style={{ display: 'inline', marginRight: 6 }} />Guardando...</>
+                : 'Guardar cambios'
+              }
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <h1 className="text-2xl text-navy mb-0.5" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-          Editar perfil
-        </h1>
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-          {member.first_name} {member.last_name}
-        </p>
-      </div>
+      {/* ── Secciones ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%' }}>
 
-      <form onSubmit={handleSave} className="space-y-5">
-
-        {/* Campos bloqueados */}
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/40 flex items-center gap-1.5"
-            style={{ fontFamily: 'var(--font-display)' }}>
-            <Lock size={11} /> Campos no editables
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Cédula</label>
-              <div className="relative">
+        {/* ── Sección 1: Datos personales ── */}
+        <div className="card">
+          <div className="card-hd">
+            <div className="card-title">Datos personales</div>
+          </div>
+          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Nombre *</label>
                 <input
-                  type="text"
-                  value={member.cedula ?? 'Sin cédula'}
-                  readOnly
-                  className={INPUT_READONLY}
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="form-input"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  placeholder="Ej: Alejandro"
                 />
-                <Lock size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/25" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Apellidos *</label>
+                <input
+                  className="form-input"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  placeholder="Ej: Ruiz Moreno"
+                />
               </div>
             </div>
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Nombre completo</label>
-              <div className="relative">
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Cédula</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className="form-input"
+                    value={member.cedula ?? 'Sin cédula'}
+                    disabled
+                    style={{ background: 'rgba(22,20,64,0.04)', color: 'rgba(41,54,92,0.45)', paddingRight: 36, cursor: 'not-allowed' }}
+                  />
+                  <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13 }}>🔒</span>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 3, fontFamily: 'var(--font-body)' }}>
+                  No editable — contactá al admin principal
+                </span>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Fecha de nacimiento</label>
                 <input
-                  type="text"
-                  value={`${member.first_name} ${member.last_name}`}
-                  readOnly
-                  className={INPUT_READONLY}
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  type="date"
+                  className="form-input"
+                  value={birthDate}
+                  onChange={e => setBirthDate(e.target.value)}
                 />
-                <Lock size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/25" />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Género</label>
+                <select
+                  className="form-select"
+                  value={gender}
+                  onChange={e => setGender(e.target.value as typeof gender)}
+                >
+                  <option value="no_indica">Prefiero no indicar</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="femenino">Femenino</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Estado civil</label>
+                <select
+                  className="form-select"
+                  value={maritalStatus}
+                  onChange={e => setMaritalStatus(e.target.value)}
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="Soltero/a">Soltero/a</option>
+                  <option value="Casado/a">Casado/a</option>
+                  <option value="Divorciado/a">Divorciado/a</option>
+                  <option value="Viudo/a">Viudo/a</option>
+                </select>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Datos de contacto */}
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}>Contacto</p>
-
-          <div>
-            <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Correo electrónico</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className={INPUT}
-              style={{ fontFamily: 'var(--font-body)' }}
-              autoComplete="email"
-            />
+        {/* ── Sección 2: Contacto ── */}
+        <div className="card">
+          <div className="card-hd">
+            <div className="card-title">Información de contacto</div>
           </div>
-
-          <div>
-            <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Teléfono</label>
-            <input
-              type="tel"
+          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <PhoneInput
+              label="Teléfono WhatsApp"
               value={phone}
-              onChange={e => setPhone(e.target.value)}
-              placeholder="+506 8888 8888"
-              className={INPUT}
-              style={{ fontFamily: 'var(--font-body)' }}
+              onChange={setPhone}
             />
-          </div>
-
-          <div>
-            <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Dirección</label>
-            <input
-              type="text"
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-              placeholder="Barrio, Ciudad"
-              className={INPUT}
-              style={{ fontFamily: 'var(--font-body)' }}
-            />
+            <div className="form-group">
+              <label className="form-label">Correo electrónico</label>
+              <input
+                type="email"
+                className="form-input"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </div>
+            <div className="form-row">
+              <PhoneInput
+                label="Contacto de emergencia — Teléfono"
+                value={emergencyContactPhone}
+                onChange={setEmergencyContactPhone}
+              />
+              <div className="form-group">
+                <label className="form-label">Contacto de emergencia — Nombre</label>
+                <input
+                  className="form-input"
+                  value={emergencyContactName}
+                  onChange={e => setEmergencyContactName(e.target.value)}
+                  placeholder="Nombre completo..."
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Datos personales */}
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}>Datos personales</p>
+        {/* ── Sección 3: Dirección ── */}
+        <div className="card">
+          <div className="card-hd">
+            <div className="card-title">Dirección</div>
+          </div>
+          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Provincia</label>
+                <select
+                  className="form-select"
+                  value={province}
+                  onChange={e => setProvince(e.target.value)}
+                >
+                  <option value="">Seleccionar...</option>
+                  <option>San José</option>
+                  <option>Alajuela</option>
+                  <option>Cartago</option>
+                  <option>Heredia</option>
+                  <option>Guanacaste</option>
+                  <option>Puntarenas</option>
+                  <option>Limón</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Cantón</label>
+                <input
+                  className="form-input"
+                  value={canton}
+                  onChange={e => setCanton(e.target.value)}
+                  placeholder="Ej: Escazú"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Distrito</label>
+                <input
+                  className="form-input"
+                  value={district}
+                  onChange={e => setDistrict(e.target.value)}
+                  placeholder="Ej: San Rafael"
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Señas</label>
+              <textarea
+                className="form-textarea"
+                rows={2}
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="Del semáforo 100m norte..."
+              />
+            </div>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Fecha de nacimiento</label>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={e => setBirthDate(e.target.value)}
-                className={INPUT}
-                style={{ fontFamily: 'var(--font-body)' }}
-              />
+        {/* ── Sección 4: Trabajo y ocupación ── */}
+        <div className="card">
+          <div className="card-hd">
+            <div className="card-title">Trabajo y ocupación</div>
+          </div>
+          <div style={{ padding: '18px 22px' }}>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Profesión / Ocupación</label>
+                <input
+                  className="form-input"
+                  value={profession}
+                  onChange={e => setProfession(e.target.value)}
+                  placeholder="Ej: Ingeniería en Sistemas"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Lugar de trabajo</label>
+                <input
+                  className="form-input"
+                  value={workplace}
+                  onChange={e => setWorkplace(e.target.value)}
+                  placeholder="Ej: Intel Costa Rica"
+                />
+              </div>
             </div>
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Género</label>
+          </div>
+        </div>
+
+        {/* ── Sección 5: Sede y salud ── */}
+        <div className="card">
+          <div className="card-hd">
+            <div className="card-title">Sede y salud</div>
+          </div>
+          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* Sede */}
+            <div className="form-group">
+              <label className="form-label">Sede</label>
               <select
-                value={gender}
-                onChange={e => setGender(e.target.value as typeof gender)}
-                className={INPUT}
-                style={{ fontFamily: 'var(--font-body)' }}
-              >
-                <option value="masculino">Masculino</option>
-                <option value="femenino">Femenino</option>
-                <option value="no_indica">Prefiero no indicar</option>
-              </select>
-            </div>
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Estado civil</label>
-              <input
-                type="text"
-                value={maritalStatus}
-                onChange={e => setMaritalStatus(e.target.value)}
-                placeholder="Soltero/a, Casado/a..."
-                className={INPUT}
-                style={{ fontFamily: 'var(--font-body)' }}
-              />
-            </div>
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Sede</label>
-              <select
+                className="form-select"
                 value={sede}
                 onChange={e => setSede(e.target.value)}
-                className={INPUT}
-                style={{ fontFamily: 'var(--font-body)' }}
               >
                 <option value="">Seleccioná una sede</option>
                 {ACTIVE_SEDES.map(s => (
@@ -223,116 +374,36 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 ))}
               </select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Profesión</label>
-              <input
-                type="text"
-                value={profession}
-                onChange={e => setProfession(e.target.value)}
-                className={INPUT}
-                style={{ fontFamily: 'var(--font-body)' }}
-              />
+            {/* Salud */}
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Alergias</label>
+                <textarea
+                  className="form-textarea"
+                  value={alergias}
+                  onChange={e => setAlergias(e.target.value)}
+                  placeholder="Ninguna conocida"
+                  rows={2}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Medicamentos</label>
+                <textarea
+                  className="form-textarea"
+                  value={medicamentos}
+                  onChange={e => setMedicamentos(e.target.value)}
+                  placeholder="Ninguno"
+                  rows={2}
+                />
+              </div>
             </div>
-            <div>
-              <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Lugar de trabajo</label>
-              <input
-                type="text"
-                value={workplace}
-                onChange={e => setWorkplace(e.target.value)}
-                className={INPUT}
-                style={{ fontFamily: 'var(--font-body)' }}
-              />
-            </div>
           </div>
         </div>
 
-        {/* Estado */}
-        <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}>Estado en el sistema</p>
-          <div className="flex gap-3">
-            {(['active', 'inactive'] as const).map(s => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatus(s)}
-                className={cn(
-                  'flex-1 rounded-xl py-2.5 text-[13px] font-medium transition-all border',
-                  status === s
-                    ? s === 'active'
-                      ? 'bg-[rgba(61,185,122,0.10)] border-[rgba(61,185,122,0.40)] text-[#3DB97A]'
-                      : 'bg-[rgba(239,85,84,0.08)] border-[rgba(239,85,84,0.30)] text-coral'
-                    : 'border-[rgba(22,20,64,0.12)] text-navy-light/50 hover:bg-surface-low'
-                )}
-                style={{ fontFamily: 'var(--font-body)' }}
-              >
-                {s === 'active' ? 'Activo' : 'Inactivo'}
-              </button>
-            ))}
-          </div>
-        </div>
+      </div>
 
-        {/* Información médica */}
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}>Información médica</p>
-
-          <div>
-            <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Alergias</label>
-            <textarea
-              value={alergias}
-              onChange={e => setAlergias(e.target.value)}
-              placeholder="Ninguna conocida"
-              rows={2}
-              className={cn(INPUT, 'resize-none')}
-              style={{ fontFamily: 'var(--font-body)' }}
-            />
-          </div>
-
-          <div>
-            <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>Medicamentos</label>
-            <textarea
-              value={medicamentos}
-              onChange={e => setMedicamentos(e.target.value)}
-              placeholder="Ninguno"
-              rows={2}
-              className={cn(INPUT, 'resize-none')}
-              style={{ fontFamily: 'var(--font-body)' }}
-            />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all disabled:opacity-60"
-            style={{
-              background: '#EF5554',
-              fontFamily: 'var(--font-body)',
-              boxShadow: saving ? 'none' : '0 8px 24px rgba(239,85,84,0.25)',
-            }}
-          >
-            {saving
-              ? <><Loader2 size={15} className="animate-spin" /> Guardando...</>
-              : 'Guardar cambios'
-            }
-          </button>
-          <Link
-            href={`/miembros/${id}`}
-            className="rounded-xl border px-6 py-3 text-sm text-navy-light/60 hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            Cancelar
-          </Link>
-        </div>
-      </form>
-
-      {/* Toast */}
+      {/* ── Toast ── */}
       {toast && (
         <div
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white"
@@ -340,6 +411,82 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         >
           <Check size={15} className="text-[#3DB97A] shrink-0" />
           Perfil actualizado exitosamente
+        </div>
+      )}
+
+      {/* ── Modal desactivar ── */}
+      {deactivateModalOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20,
+        }}>
+          <div style={{
+            background: 'var(--surface-card)', borderRadius: 20,
+            padding: 28, maxWidth: 440, width: '100%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }}>
+            {/* Ícono de advertencia */}
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%',
+                background: 'rgba(239,85,84,.1)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-coral)" strokeWidth="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--brand-navy)', fontFamily: 'var(--font-display)' }}>
+                ¿Desactivar a {member.first_name} {member.last_name}?
+              </h3>
+              <p style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 6, fontFamily: 'var(--font-body)' }}>
+                El perfil quedará inaccesible y la persona será removida de todos sus roles activos. El historial se conserva intacto.
+              </p>
+            </div>
+
+            {/* Motivo obligatorio */}
+            <div className="form-group" style={{ marginBottom: 20 }}>
+              <label className="form-label">Motivo de desactivación *</label>
+              <select
+                className="form-select"
+                value={deactivateReason}
+                onChange={e => setDeactivateReason(e.target.value)}
+              >
+                <option value="">Seleccionar motivo...</option>
+                <option value="fallecimiento">Fallecimiento</option>
+                <option value="solicitud_miembro">Solicitud del miembro</option>
+                <option value="inactividad">Inactividad prolongada</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+
+            {/* Botones */}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  setDeactivateModalOpen(false)
+                  setDeactivateReason('')
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn btn-primary"
+                disabled={!deactivateReason}
+                onClick={() => {
+                  setIsActive(false)
+                  setDeactivateModalOpen(false)
+                  setDeactivateReason('')
+                }}
+              >
+                Sí, desactivar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

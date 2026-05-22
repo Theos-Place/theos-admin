@@ -4,11 +4,8 @@ import { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { STUDY_CATALOG } from '@/data/study-catalog'
-import { STUDY_TYPES } from '@/data/mock-studies'
-import { ChevronLeft } from 'lucide-react'
+import { STUDY_TYPES, MOCK_LEADERS } from '@/data/mock-studies'
 import { cn } from '@/lib/utils'
-
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 function Toggle({ checked, onChange, label, sublabel }: {
   checked: boolean
@@ -59,11 +56,15 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
 
   if (!catalogEntry) {
     return (
-      <div className="space-y-4">
-        <Link href="/estudios/plan" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
-          <ChevronLeft size={16} /> Plan de Estudios
-        </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Estudio no encontrado.</p>
+      <div className="page">
+        <div className="ph">
+          <div className="ptitle">Editar estudio</div>
+        </div>
+        <div className="card" style={{ padding: 22 }}>
+          <p className="text-sm text-navy-light/50 text-center py-8" style={{ fontFamily: 'var(--font-body)' }}>
+            Estudio no encontrado.
+          </p>
+        </div>
       </div>
     )
   }
@@ -102,149 +103,134 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
     : catalogEntry.stage === 'campaña'    ? 'Campaña'
     : 'Intermedia'
 
+  const qualifiedLeaders = MOCK_LEADERS.filter(
+    l => l.is_active && l.qualified_studies.includes(code)
+  )
+
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="page">
 
       {/* Header */}
-      <Link
-        href="/estudios/plan"
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
-      >
-        <ChevronLeft size={16} /> Plan de Estudios
-      </Link>
-
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
-          >
-            Editar estudio
-          </h1>
-          <p className="mt-0.5 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-            {catalogEntry.code} · {stageLabel}
-          </p>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <button
-            onClick={() => router.back()}
-            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
-          >
-            Guardar cambios
-          </button>
+      <div className="ph">
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={() => router.back()}
+          style={{ marginBottom: 10 }}
+        >
+          ← Volver
+        </button>
+        <div className="ph-row">
+          <div>
+            <div className="ptitle">Editar estudio</div>
+            <div className="psub">{catalogEntry.code} · {stageLabel}</div>
+          </div>
+          <div className="ph-actions">
+            <button className="btn btn-ghost" onClick={() => router.back()}>
+              Cancelar
+            </button>
+            <button className="btn btn-primary" onClick={handleSave}>
+              Guardar cambios
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Información básica */}
-      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-          Información básica
-        </h2>
-
-        {/* Nombre */}
-        <div className="space-y-1">
-          <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-            Nombre del estudio *
-          </label>
-          <input
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
-            value={form.name}
-            onChange={e => set('name', e.target.value)}
-          />
-        </div>
-
-        {/* Duración + Nivel */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-              Duración (semanas)
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={52}
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              value={form.weeks}
-              onChange={e => set('weeks', Number(e.target.value))}
-            />
+      <div className="card">
+          <div className="card-hd">
+            <div className="card-title">Información básica</div>
           </div>
-          <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-              Nivel
-            </label>
-            <select
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              value={form.level}
-              onChange={e => set('level', e.target.value)}
-            >
-              <option value="">Sin nivel</option>
-              <option value="Básico">Básico</option>
-              <option value="Intermedio">Intermedio</option>
-              <option value="Avanzado">Avanzado</option>
-            </select>
+          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+            {/* Nombre */}
+            <div className="form-group">
+              <label className="form-label">Nombre del estudio *</label>
+              <input
+                className="form-input"
+                value={form.name}
+                onChange={e => set('name', e.target.value)}
+              />
+            </div>
+
+            {/* Duración + Nivel */}
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Duración (semanas)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={52}
+                  className="form-input"
+                  value={form.weeks}
+                  onChange={e => set('weeks', Number(e.target.value))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Nivel</label>
+                <select
+                  className="form-select"
+                  value={form.level}
+                  onChange={e => set('level', e.target.value)}
+                >
+                  <option value="">Sin nivel</option>
+                  <option value="Básico">Básico</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Mentor */}
+            <div className="form-group">
+              <label className="form-label">Mentor</label>
+              <select
+                className="form-select"
+                value={form.mentor}
+                onChange={e => set('mentor', e.target.value)}
+              >
+                <option value="">Sin asignar</option>
+                {qualifiedLeaders.map(l => (
+                  <option key={l.id} value={l.member_name}>{l.member_name}</option>
+                ))}
+              </select>
+              {qualifiedLeaders.length === 0 && (
+                <span style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 3, fontFamily: 'var(--font-body)' }}>
+                  No hay dirigentes calificados para este estudio
+                </span>
+              )}
+            </div>
+
+            {/* Descripción */}
+            <div className="form-group">
+              <label className="form-label">Descripción pública</label>
+              <textarea
+                className="form-textarea"
+                rows={4}
+                placeholder="Descripción visible para los miembros..."
+                value={form.description}
+                onChange={e => set('description', e.target.value)}
+              />
+            </div>
+
+            {/* Compromisos */}
+            <div className="form-group">
+              <label className="form-label">Compromisos requeridos</label>
+              <input
+                className="form-input"
+                placeholder="ej. Tareas semanales, examen final..."
+                value={form.commitments}
+                onChange={e => set('commitments', e.target.value)}
+              />
+            </div>
           </div>
-        </div>
-
-        {/* Mentor */}
-        <div className="space-y-1">
-          <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-            Mentor
-          </label>
-          <input
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
-            placeholder="Nombre del mentor..."
-            value={form.mentor}
-            onChange={e => set('mentor', e.target.value)}
-          />
-        </div>
-
-        {/* Descripción */}
-        <div className="space-y-1">
-          <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-            Descripción pública
-          </label>
-          <textarea
-            className={cn(inputCls, 'resize-none')}
-            style={{ fontFamily: 'var(--font-body)', minHeight: 120 }}
-            placeholder="Descripción visible para los miembros..."
-            value={form.description}
-            onChange={e => set('description', e.target.value)}
-          />
-        </div>
-
-        {/* Compromisos */}
-        <div className="space-y-1">
-          <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
-            Compromisos requeridos
-          </label>
-          <input
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
-            placeholder="ej. Tareas semanales, examen final..."
-            value={form.commitments}
-            onChange={e => set('commitments', e.target.value)}
-          />
-        </div>
       </div>
 
       {/* Configuración */}
-      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-          Configuración
-        </h2>
+      <div className="card">
+          <div className="card-hd">
+            <div className="card-title">Configuración</div>
+          </div>
+          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         <Toggle
           checked={form.requires_payment}
@@ -252,12 +238,11 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
           label="¿Requiere pago?"
         />
         {form.requires_payment && (
-          <div className="ml-4 space-y-1">
-            <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Monto (₡)</label>
+          <div className="form-group" style={{ paddingLeft: 16, maxWidth: 220 }}>
+            <label className="form-label">Monto (₡)</label>
             <input
               type="number"
-              className={cn(inputCls, 'max-w-xs')}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="form-input"
               value={form.cost}
               onChange={e => set('cost', Number(e.target.value))}
             />
@@ -280,25 +265,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
           label="Archivar estudio"
           sublabel="No estará disponible para nuevos grupos"
         />
+          </div>
       </div>
 
-      {/* Footer actions */}
-      <div className="flex gap-3 pb-6">
-        <button
-          onClick={handleSave}
-          className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          Guardar cambios
-        </button>
-        <button
-          onClick={() => router.back()}
-          className="rounded-xl border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-        >
-          Cancelar
-        </button>
-      </div>
     </div>
   )
 }

@@ -72,11 +72,13 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
 
   if (!leader) {
     return (
-      <div className="space-y-4">
-        <Link href="/estudios/dirigentes" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
-          <ChevronLeft size={16} /> Dirigentes
-        </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Dirigente no encontrado.</p>
+      <div className="page">
+        <div className="ph"><div className="ptitle">Dirigentes</div></div>
+        <div className="card" style={{ padding: 22 }}>
+          <p style={{ fontSize: 13, color: 'var(--fg-muted)', textAlign: 'center', padding: '32px 0', fontFamily: 'var(--font-body)' }}>
+            Dirigente no encontrado.
+          </p>
+        </div>
       </div>
     )
   }
@@ -115,7 +117,7 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
   const statusKeys = Object.keys(AVAILABILITY_CONFIG) as AvailabilityStatus[]
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="page">
 
       {/* Modal unificado de edición */}
       {editOpen && (
@@ -304,151 +306,130 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
         </div>
       )}
 
-      <Link
-        href="/estudios/dirigentes"
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
-      >
-        <ChevronLeft size={16} /> Dirigentes
-      </Link>
-
-      {/* Header card */}
-      <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <div className="flex items-start gap-4 flex-wrap">
-          <div className={cn('h-16 w-16 rounded-full flex items-center justify-center text-xl font-bold shrink-0', avatarColor)}>
-            {initials}
+      {/* ── Header ── */}
+      <div className="ph">
+        <button className="btn btn-ghost btn-sm" onClick={() => router.back()} style={{ marginBottom: 10 }}>
+          ← Volver a dirigentes
+        </button>
+        <div className="ph-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div className={cn('h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0', avatarColor)}>
+              {initials}
+            </div>
+            <div>
+              <div className="ptitle">{leader.member_name}</div>
+              <div className="psub">
+                {zones.length > 0 ? zones.map(z => sedeLabel(z)).join(' · ') : 'Sin zona de preferencia'}
+              </div>
+            </div>
+            <button className="btn btn-ghost btn-sm" onClick={() => router.push(`/miembros/${leader.member_id}`)}>
+              <ExternalLink size={13} /> Ver perfil de miembro
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1
-                className="text-xl text-navy"
-                style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
-              >
-                {leader.member_name}
-              </h1>
-              <button
-                onClick={() => router.push(`/miembros/${leader.member_id}`)}
-                title="Ver perfil completo del miembro"
-                className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-              >
-                <ExternalLink size={11} />
-                Ver perfil
-              </button>
-              <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium', avail.className)}>
-                {avail.label}
+          <div className="ph-actions">
+            {hasCritical && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-coral/10 px-2 py-0.5 text-[11px] font-medium text-coral">
+                <AlertTriangle size={11} /> Evaluación crítica
               </span>
-              {hasCritical && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-coral/10 px-2 py-0.5 text-[11px] font-medium text-coral">
-                  <AlertTriangle size={11} /> Evaluación crítica
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-navy-light/60 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
-              {zones.length > 0 ? zones.map(id => sedeLabel(id)).join(' · ') : 'Sin zona de preferencia'}
-            </p>
-            <div className="mt-3">
-              <CommitmentIcons
-                donor={leader.commitments.is_donor}
-                server={leader.commitments.is_server}
-                charlas={leader.commitments.attends_charlas}
-                size={16}
-              />
-            </div>
+            )}
+            <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium', avail.className)}>
+              {avail.label}
+            </span>
+            <CommitmentIcons
+              donor={leader.commitments.is_donor}
+              server={leader.commitments.is_server}
+              charlas={leader.commitments.attends_charlas}
+              size={16}
+            />
+            <button className="btn btn-ghost btn-sm" onClick={() => setEditOpen(true)}>
+              <Pencil size={13} /> Editar
+            </button>
           </div>
-          <button
-            onClick={() => setEditOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            <Pencil size={13} />
-            Editar
-          </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-        {tabs.map(t => (
-          <button
-            key={t}
-            onClick={() => setActiveTab(t)}
-            className={cn(
-              'px-4 py-2.5 text-sm transition-all border-b-2 -mb-px',
-              activeTab === t
-                ? 'border-coral text-coral font-medium'
-                : 'border-transparent text-navy-light/60 hover:text-navy'
-            )}
-            style={{ fontFamily: 'var(--font-body)' }}
-          >
-            {tabLabels[t]}
-          </button>
+      {/* ── Stats ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
+        {[
+          { label: 'Grupos liderados',      value: leader.stats.groups_led },
+          { label: 'Calificación prom.',    value: `${leader.stats.avg_rating.toFixed(1)} / 5` },
+          { label: 'Participantes activos', value: leader.stats.current_participants },
+        ].map(({ label, value }) => (
+          <div key={label} className="card" style={{ padding: '18px 22px' }}>
+            <div className="st">{label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--brand-navy)', fontFamily: 'var(--font-display)', marginTop: 8 }}>
+              {value}
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Tab: Resumen */}
-      {activeTab === 'resumen' && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: 'Grupos liderados',      value: leader.stats.groups_led },
-              { label: 'Calificación prom.',    value: `${leader.stats.avg_rating.toFixed(1)} / 5` },
-              { label: 'Participantes activos', value: leader.stats.current_participants },
-            ].map(({ label, value }) => (
-              <div key={label} className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-                <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                  {label}
-                </p>
-                <p className="text-2xl font-bold text-navy mt-1" style={{ fontFamily: 'var(--font-display)' }}>
-                  {value}
-                </p>
-              </div>
-            ))}
-          </div>
+      {/* ── Tabs card ── */}
+      <div className="card" style={{ width: '100%' }}>
 
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-              <h2 className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
-                Grupos liderados ({leaderGroups.length})
-              </h2>
+        {/* Tab bar */}
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(22,20,64,0.09)', padding: '0 22px' }}>
+          {tabs.map(t => (
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              className={cn(
+                'px-4 py-3 text-sm transition-all border-b-2 -mb-px',
+                activeTab === t
+                  ? 'border-coral text-coral font-medium'
+                  : 'border-transparent text-navy-light/60 hover:text-navy'
+              )}
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              {tabLabels[t]}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab: Resumen */}
+        {activeTab === 'resumen' && (
+          <div>
+            <div className="card-hd">
+              <div className="card-title">Grupos liderados ({leaderGroups.length})</div>
             </div>
             {leaderGroups.length === 0 ? (
-              <div className="px-5 py-8 text-center">
-                <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Sin grupos registrados.</p>
+              <div style={{ padding: '40px 22px', textAlign: 'center' }}>
+                <p style={{ fontSize: 13, color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-body)' }}>Sin grupos registrados.</p>
               </div>
             ) : (
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    {['Estudio', 'Zona', 'Participantes', 'Estado'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderGroups.map(g => (
-                    <tr key={g.id} className="hover:bg-surface-low transition-colors" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                      <td className="px-4 py-3"><StudyTypeBadge code={g.study_type_id} size="sm" /></td>
-                      <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{sedeLabel(g.zone)}</td>
-                      <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                        {g.participants.filter(p => p.status !== 'withdrawn').length}/{g.max_capacity}
-                      </td>
-                      <td className="px-4 py-3"><GroupStatusBadge status={g.status} /></td>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(22,20,64,0.09)' }}>
+                      {['Estudio', 'Zona', 'Participantes', 'Estado'].map(h => (
+                        <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {leaderGroups.map(g => (
+                      <tr key={g.id} className="hover:bg-surface-low transition-colors" style={{ borderBottom: '1px solid rgba(22,20,64,0.06)' }}>
+                        <td className="px-4 py-3"><StudyTypeBadge code={g.study_type_id} size="sm" /></td>
+                        <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{sedeLabel(g.zone)}</td>
+                        <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                          {g.participants.filter(p => p.status !== 'withdrawn').length}/{g.max_capacity}
+                        </td>
+                        <td className="px-4 py-3"><GroupStatusBadge status={g.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
-        </div>
-      )}
+        )}
 
       {/* Tab: Evaluaciones */}
       {activeTab === 'evaluaciones' && (
-        <div className="space-y-5">
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div>
             <div className="flex items-center gap-6">
               <div className="text-center">
                 <p className="text-5xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
@@ -460,17 +441,50 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                 </div>
               </div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-widests text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-                  Últimas {lastFive.length} evaluaciones
-                </p>
-                <div className="flex items-end gap-2 h-20">
-                  {lastFive.map(ev => (
-                    <div key={ev.id} className="flex flex-col items-center gap-1 flex-1">
-                      <div
-                        className="w-full rounded-t bg-navy transition-all"
-                        style={{ height: `${(ev.score / 5) * maxBarHeight}px` }}
-                      />
-                      <span className="text-[10px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>{ev.score}</span>
+                {/* Título de la sección */}
+                <div className="st" style={{ marginBottom: 16 }}>
+                  Evaluaciones por grupo
+                </div>
+
+                {/* Gráfico de barras */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  gap: 12,
+                  height: 120,
+                  paddingTop: 24,
+                  marginBottom: 20,
+                }}>
+                  {leader.evaluations?.map((ev, i) => (
+                    <div key={i} style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 4,
+                      flex: 1,
+                    }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-navy)' }}>
+                        {ev.score}
+                      </span>
+                      <div style={{
+                        width: '100%',
+                        height: `${(ev.score / 5) * 80}px`,
+                        background: ev.score <= 2 ? 'var(--brand-coral)' : 'var(--brand-teal)',
+                        borderRadius: '6px 6px 0 0',
+                        minHeight: 8,
+                      }} />
+                      <span style={{
+                        fontSize: 10,
+                        color: 'var(--fg-muted)',
+                        textAlign: 'center',
+                        maxWidth: 60,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontFamily: 'var(--font-body)',
+                      }}>
+                        {ev.group_name || `Grupo ${i + 1}`}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -478,12 +492,11 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {leader.evaluations.map(ev => (
               <div
                 key={ev.id}
-                className="rounded-2xl p-4"
-                style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+                style={{ borderRadius: 14, padding: '14px 16px', background: 'var(--surface-low)' }}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
@@ -519,54 +532,48 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
 
       {/* Tab: Cualificaciones */}
       {activeTab === 'cualificaciones' && (
-        <div className="space-y-4">
-          <div className="rounded-2xl p-5 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            <div>
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-                Puede impartir
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {qualifications.map(code => (
-                  <StudyTypeBadge key={code} code={code} size="md" />
-                ))}
-                {qualifications.length === 0 && (
-                  <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Sin estudios registrados.</p>
-                )}
-              </div>
+          <div>
+            <div className="st" style={{ marginBottom: 8 }}>Puede impartir</div>
+            <div className="flex flex-wrap gap-1.5">
+              {qualifications.map(code => (
+                <StudyTypeBadge key={code} code={code} size="md" />
+              ))}
+              {qualifications.length === 0 && (
+                <p style={{ fontSize: 13, color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-body)' }}>Sin estudios registrados.</p>
+              )}
             </div>
-
-            <div className="border-t pt-4" style={{ borderColor: 'var(--outline-variant)' }}>
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-                Zonas de preferencia
-              </p>
-              <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                {zones.length > 0 ? zones.map(id => sedeLabel(id)).join(' · ') : '—'}
-              </p>
-            </div>
-
-            <div className="border-t pt-4" style={{ borderColor: 'var(--outline-variant)' }}>
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-                Estado de disponibilidad
-              </p>
-              <span className={cn('rounded-md px-2.5 py-1 text-[12px] font-medium', avail.className)}>
-                {avail.label}
-              </span>
-            </div>
-
-            <div className="border-t pt-4" style={{ borderColor: 'var(--outline-variant)' }}>
-              <button
-                onClick={() => setEditOpen(true)}
-                className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral-deep transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
-              >
-                <Pencil size={13} /> Editar cualificaciones
-              </button>
-            </div>
-
           </div>
+
+          <div style={{ borderTop: '1px solid rgba(22,20,64,0.09)', paddingTop: 16 }}>
+            <div className="st" style={{ marginBottom: 6 }}>Zonas de preferencia</div>
+            <p style={{ fontSize: 13, color: 'var(--brand-navy)', fontFamily: 'var(--font-body)' }}>
+              {zones.length > 0 ? zones.map(z => sedeLabel(z)).join(' · ') : '—'}
+            </p>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(22,20,64,0.09)', paddingTop: 16 }}>
+            <div className="st" style={{ marginBottom: 6 }}>Estado de disponibilidad</div>
+            <span className={cn('rounded-md px-2.5 py-1 text-[12px] font-medium', avail.className)}>
+              {avail.label}
+            </span>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(22,20,64,0.09)', paddingTop: 16 }}>
+            <button
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral-deep transition-colors"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              <Pencil size={13} /> Editar cualificaciones
+            </button>
+          </div>
+
         </div>
       )}
+
+      </div>{/* end .card tabs */}
     </div>
   )
 }

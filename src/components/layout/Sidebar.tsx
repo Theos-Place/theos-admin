@@ -86,7 +86,7 @@ const ESTUDIOS_SUB = [
   { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
   { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock },
   { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight },
-  { href: '/estudios/analisis',        label: 'Análisis',         icon: BarChart2 },
+  // { href: '/estudios/analisis',        label: 'Análisis',         icon: BarChart2 },
 ]
 
 const navItems = [

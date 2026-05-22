@@ -1,22 +1,25 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { STUDY_TYPES, MOCK_GROUPS } from '@/data/mock-studies'
+import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
-import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
 import { sedeLabel } from '@/data/mock-sedes'
-import { ChevronLeft, Archive, Edit3, Search, X } from 'lucide-react'
+import { Archive, Pencil, Search, X } from 'lucide-react'
 
 const PAGE_SIZE = 10
 
 const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
-function formatCost(cost: number) {
-  if (cost === 0) return 'Gratis'
-  return `₡${cost.toLocaleString('es-CR')}`
+function getLevelColor(level: string): string {
+  switch (level) {
+    case 'Básico':     return 'rgba(112,189,194,.15)'
+    case 'Intermedio': return 'rgba(22,20,64,.07)'
+    case 'Avanzado':   return 'rgba(239,85,84,.1)'
+    default:           return 'var(--surface-low)'
+  }
 }
 
 function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
@@ -39,15 +42,13 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
         <div className="flex gap-3">
           <button
             onClick={onConfirm}
-            className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="btn btn-primary btn-sm"
           >
             Sí, archivar
           </button>
           <button
             onClick={onCancel}
-            className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="btn btn-ghost btn-sm"
           >
             Cancelar
           </button>
@@ -60,13 +61,15 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
 export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const study = STUDY_TYPES.find(s => s.id === id)
+
+  const studyType = STUDY_TYPES.find(s => s.id === id)
+  const catalog   = STUDY_CATALOG.find(s => s.code === id)
 
   const [showArchive, setShowArchive] = useState(false)
-  const [archived, setArchived] = useState(false)
-  const [search, setSearch] = useState('')
+  const [archived,    setArchived]    = useState(false)
+  const [search,       setSearch]      = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [zoneFilter, setZoneFilter] = useState<string>('all')
+  const [zoneFilter,   setZoneFilter]   = useState<string>('all')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const studyGroups = MOCK_GROUPS.filter(g => g.study_type_id === id)
@@ -76,35 +79,39 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       g.leader_name?.toLowerCase().includes(search.toLowerCase()) ||
       g.zone?.toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === 'all' || g.status === statusFilter
-    const matchZone = zoneFilter === 'all' || g.zone === zoneFilter
+    const matchZone   = zoneFilter === 'all'   || g.zone === zoneFilter
     return matchSearch && matchStatus && matchZone
   })
 
   const visibleGroups = filteredGroups.slice(0, visibleCount)
-  const hasMore = visibleCount < filteredGroups.length
-  const remaining = filteredGroups.length - visibleCount
-
+  const hasMore    = visibleCount < filteredGroups.length
+  const remaining  = filteredGroups.length - visibleCount
   const uniqueZones = Array.from(new Set(studyGroups.map(g => g.zone).filter(Boolean))) as string[]
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
   }, [search, statusFilter, zoneFilter])
 
-  if (!study) {
+  if (!studyType || !catalog) {
     return (
-      <div className="space-y-4">
-        <Link href="/estudios/plan" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
-          <ChevronLeft size={16} /> Volver
-        </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-          Tipo de estudio no encontrado.
-        </p>
+      <div className="page">
+        <div className="ph">
+          <div className="ptitle">Plan de Estudios</div>
+        </div>
+        <div className="card" style={{ padding: 22 }}>
+          <p className="text-sm text-center py-8" style={{ color: 'var(--fg-muted)', fontFamily: 'var(--font-body)' }}>
+            Tipo de estudio no encontrado.
+          </p>
+        </div>
       </div>
     )
   }
 
+  const stageInfo = STUDY_STAGES[catalog.stage as keyof typeof STUDY_STAGES]
+
   return (
-    <div className="w-full space-y-6">
+    <div className="page">
+
       {showArchive && (
         <ConfirmModal
           onConfirm={() => { setArchived(true); setShowArchive(false) }}
@@ -112,114 +119,166 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         />
       )}
 
-      {/* Back link */}
-      <div>
-        <Link
-          href="/estudios/plan"
-          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+      {/* ── Header ── */}
+      <div className="ph">
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={() => router.back()}
+          style={{ marginBottom: 10 }}
         >
-          <ChevronLeft size={16} />
-          Plan de Estudios
-        </Link>
-      </div>
-
-      {/* Study title + actions */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <StudyTypeBadge code={study.code} size="md" />
+          ← Volver
+        </button>
+        <div className="ph-row">
           <div>
-            <h1
-              className="text-2xl text-navy"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            <div className="ptitle">{catalog.name}</div>
+            <div className="psub">
+              {stageInfo?.label}
+              {archived && <span style={{ marginLeft: 8, color: 'var(--brand-coral)', fontWeight: 600 }}>[Archivado]</span>}
+            </div>
+          </div>
+          <div className="ph-actions">
+            {!archived && (
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowArchive(true)}>
+                <Archive size={13} /> Archivar
+              </button>
+            )}
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => router.push(`/estudios/plan/${id}/editar`)}
             >
-              {study.name}
-            </h1>
-            <p className="text-sm text-navy-light/60 capitalize" style={{ fontFamily: 'var(--font-body)' }}>
-              Etapa: {study.stage === 'niveles' ? 'Niveles' : study.stage === 'inicial' ? 'Inicial' : study.stage === 'campaña' ? 'Campaña' : 'Intermedia'}
-              {archived && <span className="ml-2 text-amber-600 text-[11px] font-medium">[ARCHIVADO]</span>}
-            </p>
+              <Pencil size={13} /> Editar
+            </button>
           </div>
         </div>
-        <div className="flex gap-2 shrink-0">
-          <button
-            onClick={() => router.push(`/estudios/plan/${study.code}/editar`)}
-            className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            <Edit3 size={14} />
-            Editar
-          </button>
-          {!archived && (
-            <button
-              onClick={() => setShowArchive(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-            >
-              <Archive size={14} />
-              Archivar
-            </button>
-          )}
-        </div>
       </div>
 
-      {/* Config card */}
-      <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <h2 className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-          Configuración
-        </h2>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            { label: 'Código',                value: study.code },
-            { label: 'Semanas',               value: `${study.weeks} semanas` },
-            { label: 'Costo',                 value: formatCost(study.cost) },
-            { label: 'Prerrequisito',         value: study.prerequisite ?? 'Ninguno' },
-            { label: 'Próximo estudio',       value: study.next_study_id ?? '—' },
-            { label: 'Calificación',          value: study.requires_grade ? 'Sí' : 'No' },
-            { label: 'Pago',                  value: study.requires_payment ? 'Requerido' : 'Gratuito' },
-            { label: 'Transición automática', value: study.auto_promote ? 'Sí' : 'No' },
-          ].map(({ label, value }) => (
-            <div key={label} className="space-y-0.5">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-                {label}
-              </p>
-              <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{value}</p>
+      {/* ── Card info ── */}
+      <div className="card">
+        <div className="card-hd" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <StudyTypeBadge code={catalog.code} />
+            <div>
+              <div className="card-title">{catalog.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 2, fontFamily: 'var(--font-body)' }}>
+                {stageInfo?.label} · {catalog.weeks} semanas
+                {catalog.level && ` · Nivel ${catalog.level}`}
+              </div>
             </div>
-          ))}
+          </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-            Compromisos requeridos
-          </p>
-          <CommitmentIcons donor={study.req_donor} server={study.req_server} charlas={study.req_attendee} size={16} />
+        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+          {/* Descripción */}
+          {catalog.description && (
+            <div>
+              <div className="st">Descripción</div>
+              <p style={{ fontSize: 13, color: 'var(--brand-navy)', lineHeight: 1.6, marginTop: 4, fontFamily: 'var(--font-body)' }}>
+                {catalog.description}
+              </p>
+            </div>
+          )}
+
+          {/* Mentor */}
+          <div>
+            <div className="st">Mentor</div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4, fontFamily: 'var(--font-body)' }}>
+              {catalog.mentor
+                ? catalog.mentor
+                : <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>Sin mentor asignado</span>}
+            </div>
+          </div>
+
+          {/* Compromisos (texto) */}
+          {catalog.commitments && (
+            <div>
+              <div className="st">Compromisos</div>
+              <div style={{
+                fontSize: 12, color: 'var(--fg-muted)',
+                background: 'var(--surface-low)', padding: '6px 10px',
+                borderRadius: 8, marginTop: 4, display: 'inline-block',
+                fontFamily: 'var(--font-body)',
+              }}>
+                📋 {catalog.commitments}
+              </div>
+            </div>
+          )}
+
+          {/* Fila de datos rápidos */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+            <div>
+              <div className="st">Duración</div>
+              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>{catalog.weeks} semanas</div>
+            </div>
+            {catalog.level && (
+              <div>
+                <div className="st">Nivel</div>
+                <span style={{
+                  fontSize: 12, padding: '2px 8px', borderRadius: 999,
+                  background: getLevelColor(catalog.level), fontWeight: 600,
+                  fontFamily: 'var(--font-body)',
+                }}>
+                  {catalog.level}
+                </span>
+              </div>
+            )}
+            <div>
+              <div className="st">Costo</div>
+              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>
+                {catalog.requires_payment
+                  ? `₡${(catalog.cost ?? 0).toLocaleString('es-CR')}`
+                  : 'Gratuito'}
+              </div>
+            </div>
+            <div>
+              <div className="st">Prerequisito</div>
+              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>
+                {catalog.prerequisite
+                  ? STUDY_CATALOG.find(s => s.code === catalog.prerequisite)?.name || catalog.prerequisite
+                  : 'Ninguno'}
+              </div>
+            </div>
+          </div>
+
+          {/* Requisitos de compromiso */}
+          {(catalog.req_donor || catalog.req_server || catalog.req_attendee) && (
+            <div>
+              <div className="st">Compromisos requeridos para matricular</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+                {catalog.req_donor    && <span className="badge b-donor">Ser donador activo</span>}
+                {catalog.req_server   && <span className="badge b-server">Servir en un comité</span>}
+                {catalog.req_attendee && <span className="badge b-study">Asistencia regular a charlas</span>}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
-      {/* Groups section */}
-      <div>
-        {/* Section header */}
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h2 className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
-            Grupos con este tipo de estudio ({filteredGroups.length}{filteredGroups.length !== studyGroups.length ? ` de ${studyGroups.length}` : ''})
-          </h2>
+      {/* ── Grupos ── */}
+      <div className="card">
+        <div className="card-hd" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="card-title">
+            Grupos activos
+            <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--fg-muted)', marginLeft: 8, fontFamily: 'var(--font-body)' }}>
+              ({filteredGroups.length}{filteredGroups.length !== studyGroups.length ? ` de ${studyGroups.length}` : ''})
+            </span>
+          </div>
           <button
+            className="btn btn-primary btn-sm"
             onClick={() => router.push('/estudios/grupos/nuevo')}
-            className="rounded-full bg-coral px-3 py-1.5 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             + Nuevo grupo
           </button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40 pointer-events-none" />
+        <div style={{ padding: '12px 22px', display: 'flex', flexWrap: 'wrap', gap: 8, borderBottom: '1px solid rgba(22,20,64,0.09)' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(41,54,92,0.4)', pointerEvents: 'none' }} />
             <input
               className={inputCls}
-              style={{ fontFamily: 'var(--font-body)', paddingLeft: 32, minWidth: 200 }}
+              style={{ fontFamily: 'var(--font-body)', paddingLeft: 30, minWidth: 200 }}
               placeholder="Buscar por dirigente o zona..."
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -227,7 +286,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-navy-light/40 hover:text-navy-light transition-colors"
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: 'rgba(41,54,92,0.4)' }}
               >
                 <X size={14} />
               </button>
@@ -261,30 +320,23 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           </select>
         </div>
 
-        {/* Table or empty state */}
+        {/* Table or empty */}
         {filteredGroups.length === 0 ? (
-          <div
-            className="rounded-2xl px-5 py-10 text-center"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-          >
-            <p className="text-sm font-semibold text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
-              Sin resultados
-            </p>
-            <p className="text-xs text-navy-light/40 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
-              Probá con otros filtros
-            </p>
+          <div style={{ padding: '40px 22px', textAlign: 'center' }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-display)' }}>Sin resultados</p>
+            <p style={{ fontSize: 12, color: 'rgba(41,54,92,0.35)', marginTop: 4, fontFamily: 'var(--font-body)' }}>Probá con otros filtros</p>
           </div>
         ) : (
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                  <tr style={{ borderBottom: '1px solid rgba(22,20,64,0.09)' }}>
                     {['Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Semana', ''].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                        style={{ fontFamily: 'var(--font-display)' }}
+                        className="px-4 py-3 text-left"
+                        style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-display)' }}
                       >
                         {h}
                       </th>
@@ -296,40 +348,38 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                     <tr
                       key={group.id}
                       className="hover:bg-surface-low transition-colors cursor-pointer"
-                      style={{ borderBottom: '1px solid var(--outline-variant)' }}
+                      style={{ borderBottom: '1px solid rgba(22,20,64,0.06)' }}
                       onClick={() => router.push(`/estudios/grupos/${group.id}`)}
                     >
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="shrink-0 rounded-full flex items-center justify-center text-[10px] font-semibold text-white"
-                            style={{ width: 28, height: 28, background: 'var(--brand-navy)' }}
-                          >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: '50%', background: 'var(--brand-navy)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0,
+                          }}>
                             {group.leader_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) ?? '?'}
                           </div>
-                          <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                            {group.leader_name ?? <span className="text-amber-600 text-[11px]">Sin asignar</span>}
+                          <span style={{ fontSize: 13, color: 'var(--brand-navy)', fontFamily: 'var(--font-body)' }}>
+                            {group.leader_name ?? <span style={{ color: '#d97706', fontSize: 11 }}>Sin asignar</span>}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3" style={{ fontSize: 13, color: 'rgba(41,54,92,0.7)', fontFamily: 'var(--font-body)' }}>
                         {sedeLabel(group.zone)}
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3" style={{ fontSize: 12, color: 'rgba(41,54,92,0.6)', fontFamily: 'var(--font-body)' }}>
                         {group.schedule_days.join('/')} {group.schedule_time}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="rounded-full overflow-hidden" style={{ width: 60, height: 5, background: 'var(--outline-variant)' }}>
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${(group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length / group.max_capacity) * 100}%`,
-                                background: 'var(--brand-coral)',
-                              }}
-                            />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 60, height: 5, borderRadius: 999, background: 'rgba(22,20,64,0.12)', overflow: 'hidden' }}>
+                            <div style={{
+                              height: '100%', borderRadius: 999, background: 'var(--brand-coral)',
+                              width: `${(group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length / group.max_capacity) * 100}%`,
+                            }} />
                           </div>
-                          <span className="text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                          <span style={{ fontSize: 12, color: 'rgba(41,54,92,0.7)', fontFamily: 'var(--font-body)' }}>
                             {group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length}/{group.max_capacity}
                           </span>
                         </div>
@@ -337,13 +387,12 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                       <td className="px-4 py-3">
                         <GroupStatusBadge status={group.status} />
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3" style={{ fontSize: 12, color: 'rgba(41,54,92,0.6)', fontFamily: 'var(--font-body)' }}>
                         {group.status === 'in_progress' ? `Sem. ${group.current_week}` : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <button
-                          className="rounded-lg border px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                          className="btn btn-ghost btn-sm"
                           onClick={e => { e.stopPropagation(); router.push(`/estudios/grupos/${group.id}`) }}
                         >
                           Ver →
@@ -356,24 +405,19 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {hasMore && (
-              <div
-                className="flex items-center justify-between px-4 py-3"
-                style={{ borderTop: '1px solid var(--outline-variant)' }}
-              >
-                <span className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 22px', borderTop: '1px solid rgba(22,20,64,0.09)' }}>
+                <span style={{ fontSize: 12, color: 'rgba(41,54,92,0.5)', fontFamily: 'var(--font-body)' }}>
                   Mostrando {visibleCount} de {filteredGroups.length} grupos
                 </span>
-                <div className="flex gap-2">
+                <div style={{ display: 'flex', gap: 8 }}>
                   <button
-                    className="rounded-lg border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                    className="btn btn-ghost btn-sm"
                     onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
                   >
                     Cargar {Math.min(PAGE_SIZE, remaining)} más
                   </button>
                   <button
-                    className="rounded-lg border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                    className="btn btn-ghost btn-sm"
                     onClick={() => setVisibleCount(filteredGroups.length)}
                   >
                     Ver todos ({filteredGroups.length})
@@ -381,9 +425,10 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
+
     </div>
   )
 }

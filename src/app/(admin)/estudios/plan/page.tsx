@@ -293,7 +293,7 @@ export default function PlanDeEstudiosPage() {
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', 'Instructor', 'Prerrequisito', 'Compromisos', ''].map(h => (
+                {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', 'Mentor', 'Prerrequisito', 'Compromisos', ''].map(h => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap"

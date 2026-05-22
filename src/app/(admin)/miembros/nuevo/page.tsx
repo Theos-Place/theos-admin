@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2, X } from 'lucide-react'
 import { mockMembers, type Member } from '@/data/mock-members'
+import { PhoneInput } from '@/components/shared/PhoneInput'
 import { DuplicateWarning } from '@/components/members/DuplicateWarning'
 import { CR_PROVINCES, CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
 import { ACTIVE_SEDES as SEDES } from '@/data/mock-sedes'
@@ -29,6 +30,8 @@ type Step1Data = {
   alergias: string
   medicamentos: string
   señas: string
+  emergency_contact_name: string
+  emergency_contact_phone: string
 }
 
 type FamilyManualData = {
@@ -182,6 +185,8 @@ export default function NuevoMiembroPage() {
     alergias: '',
     medicamentos: '',
     señas: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
   })
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
   const [duplicate, setDuplicate] = useState<Member | null>(null)
@@ -460,16 +465,11 @@ export default function NuevoMiembroPage() {
                     style={{ fontFamily: 'var(--font-body)' }}
                   />
                 </Field>
-                <Field label="Teléfono" error={errors.phone}>
-                  <input
-                    type="tel"
-                    className={inputCls}
-                    placeholder="+506 8800 0000"
-                    value={data.phone}
-                    onChange={e => handleData('phone', e.target.value)}
-                    style={{ fontFamily: 'var(--font-body)' }}
-                  />
-                </Field>
+                <PhoneInput
+                  label="Teléfono"
+                  value={data.phone}
+                  onChange={val => handleData('phone', val)}
+                />
               </div>
             )}
 
@@ -612,6 +612,24 @@ export default function NuevoMiembroPage() {
                 style={{ fontFamily: 'var(--font-body)', resize: 'none' }}
               />
             </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Nombre contacto de emergencia">
+                <input
+                  type="text"
+                  className={inputCls}
+                  placeholder="Nombre completo..."
+                  value={data.emergency_contact_name}
+                  onChange={e => handleData('emergency_contact_name', e.target.value)}
+                  style={{ fontFamily: 'var(--font-body)' }}
+                />
+              </Field>
+              <PhoneInput
+                label="Teléfono de emergencia"
+                value={data.emergency_contact_phone}
+                onChange={val => handleData('emergency_contact_phone', val)}
+              />
+            </div>
           </div>
         )}
 
@@ -803,16 +821,11 @@ export default function NuevoMiembroPage() {
                             style={{ fontFamily: 'var(--font-body)' }}
                           />
                         </Field>
-                        <Field label="Teléfono">
-                          <input
-                            type="tel"
-                            className={inputCls}
-                            placeholder="+506…"
-                            value={newFamilyManual.phone}
-                            onChange={e => setNewFamilyManual(f => ({ ...f, phone: e.target.value }))}
-                            style={{ fontFamily: 'var(--font-body)' }}
-                          />
-                        </Field>
+                        <PhoneInput
+                          label="Teléfono"
+                          value={newFamilyManual.phone}
+                          onChange={val => setNewFamilyManual(f => ({ ...f, phone: val }))}
+                        />
                       </div>
                     )}
 
