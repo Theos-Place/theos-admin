@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Info,
   Edit,
+  X,
 } from 'lucide-react'
 
 type SmtpTab = 'smtp' | 'whatsapp'
@@ -36,9 +37,65 @@ export default function ConfiguracionPage() {
   const [showToken, setShowToken] = useState(false)
   const [verifying, setVerifying] = useState<string | null>(null)
   const [verifyResult, setVerifyResult] = useState<Record<string, 'ok' | 'error'>>({})
+  const [editingConfig, setEditingConfig] = useState<ChannelConfig | null>(null)
+  const [editSmtpForm, setEditSmtpForm] = useState(INITIAL_SMTP_FORM)
+  const [editWaForm, setEditWaForm] = useState(INITIAL_WA_FORM)
+  const [showEditPwd, setShowEditPwd] = useState(false)
+  const [showEditToken, setShowEditToken] = useState(false)
 
   const smtpConfigs = configs.filter(c => c.type === 'smtp')
   const waConfigs = configs.filter(c => c.type === 'whatsapp')
+
+  function openEditSmtp(config: ChannelConfig) {
+    setEditSmtpForm({
+      name: config.name,
+      host: config.smtp_host ?? '',
+      port: String(config.smtp_port ?? 587),
+      user: config.smtp_user ?? '',
+      password: '',
+      from_name: config.smtp_from_name ?? '',
+      from_email: config.smtp_from_email ?? '',
+      ssl: true,
+    })
+    setEditingConfig(config)
+  }
+
+  function openEditWa(config: ChannelConfig) {
+    setEditWaForm({
+      name: config.name,
+      account_id: config.wa_account_id ?? '',
+      token: '',
+      phone: config.wa_phone_number ?? '',
+    })
+    setEditingConfig(config)
+  }
+
+  function handleSaveEditSmtp() {
+    if (!editingConfig) return
+    setConfigs(prev => prev.map(c => c.id === editingConfig.id ? {
+      ...c,
+      name: editSmtpForm.name || c.name,
+      smtp_host: editSmtpForm.host,
+      smtp_port: parseInt(editSmtpForm.port),
+      smtp_user: editSmtpForm.user,
+      smtp_from_name: editSmtpForm.from_name,
+      smtp_from_email: editSmtpForm.from_email,
+      is_verified: false,
+    } : c))
+    setEditingConfig(null)
+  }
+
+  function handleSaveEditWa() {
+    if (!editingConfig) return
+    setConfigs(prev => prev.map(c => c.id === editingConfig.id ? {
+      ...c,
+      name: editWaForm.name || c.name,
+      wa_account_id: editWaForm.account_id,
+      wa_phone_number: editWaForm.phone,
+      is_verified: false,
+    } : c))
+    setEditingConfig(null)
+  }
 
   function handleVerify(id: string) {
     setVerifying(id)
@@ -135,7 +192,7 @@ export default function ConfiguracionPage() {
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Verificar
           </button>
-          <button type="button" className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => openEditSmtp(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
             <Edit size={13} />
           </button>
           <button type="button" onClick={() => handleDelete(config.id)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
@@ -183,7 +240,7 @@ export default function ConfiguracionPage() {
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Reconectar
           </button>
-          <button type="button" className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => openEditWa(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
             <Edit size={13} />
           </button>
           <button type="button" onClick={() => handleDelete(config.id)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
@@ -195,6 +252,7 @@ export default function ConfiguracionPage() {
   }
 
   return (
+    <>
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded-2xl bg-navy px-6 py-5" style={{ boxShadow: 'var(--shadow-md)' }}>
@@ -394,6 +452,99 @@ export default function ConfiguracionPage() {
           </div>
         </div>
       )}
-    </div>
+    </div>{/* end space-y-6 */}
+
+    {/* ── Modal: Editar SMTP ── */}
+    {editingConfig && editingConfig.type === 'smtp' && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+        <div className="w-full max-w-lg rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+            <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Editar cuenta SMTP</p>
+            <button type="button" onClick={() => setEditingConfig(null)}><X size={18} className="text-navy-light/40" /></button>
+          </div>
+          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre de la configuración</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.name} onChange={e => setEditSmtpForm(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Servidor SMTP</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.host} onChange={e => setEditSmtpForm(p => ({ ...p, host: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Puerto</label>
+              <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.port} onChange={e => setEditSmtpForm(p => ({ ...p, port: e.target.value }))}>
+                <option value="587">587 (TLS)</option><option value="465">465 (SSL)</option><option value="25">25 (SMTP)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Usuario</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.user} onChange={e => setEditSmtpForm(p => ({ ...p, user: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Contraseña (dejar en blanco para no cambiar)</label>
+              <div className="relative">
+                <input type={showEditPwd ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} style={{ fontFamily: 'var(--font-body)' }} placeholder="••••••••" value={editSmtpForm.password} onChange={e => setEditSmtpForm(p => ({ ...p, password: e.target.value }))} />
+                <button type="button" onClick={() => setShowEditPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                  {showEditPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre remitente</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.from_name} onChange={e => setEditSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Email remitente</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.from_email} onChange={e => setEditSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-6 py-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+            <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
+            <button type="button" onClick={handleSaveEditSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cambios</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ── Modal: Editar WhatsApp ── */}
+    {editingConfig && editingConfig.type === 'whatsapp' && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+            <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Editar cuenta WhatsApp</p>
+            <button type="button" onClick={() => setEditingConfig(null)}><X size={18} className="text-navy-light/40" /></button>
+          </div>
+          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre de la configuración</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editWaForm.name} onChange={e => setEditWaForm(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>ID de la cuenta</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editWaForm.account_id} onChange={e => setEditWaForm(p => ({ ...p, account_id: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Número de WhatsApp</label>
+              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editWaForm.phone} onChange={e => setEditWaForm(p => ({ ...p, phone: e.target.value }))} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Token (dejar en blanco para no cambiar)</label>
+              <div className="relative">
+                <input type={showEditToken ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} style={{ fontFamily: 'var(--font-body)' }} placeholder="EAABs..." value={editWaForm.token} onChange={e => setEditWaForm(p => ({ ...p, token: e.target.value }))} />
+                <button type="button" onClick={() => setShowEditToken(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                  {showEditToken ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-6 py-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+            <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
+            <button type="button" onClick={handleSaveEditWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cambios</button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

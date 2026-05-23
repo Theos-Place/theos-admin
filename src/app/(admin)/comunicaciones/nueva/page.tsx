@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { mockMembers } from '@/data/mock-members'
-import { MOCK_TEMPLATES, MOCK_CHANNEL_CONFIGS, type CommunicationChannel } from '@/data/mock-communications'
+import { MOCK_TEMPLATES, MOCK_MESSAGES, MOCK_CHANNEL_CONFIGS, type CommunicationChannel } from '@/data/mock-communications'
+import { MOCK_MEMBER_LISTS } from '@/data/mock-member-lists'
 import { MessagePreview } from '@/components/communications/MessagePreview'
 import { VariableChips } from '@/components/communications/VariableChips'
 import { RecipientSelector, type RecipientState, type RecipientMode } from '@/components/communications/RecipientSelector'
@@ -22,7 +23,17 @@ import {
   Mail,
   Layers,
   AlertTriangle,
+  List,
+  Search,
 } from 'lucide-react'
+
+const TIMEZONES = [
+  { value: 'America/Costa_Rica', label: 'Costa Rica (GMT-6)' },
+  { value: 'America/New_York',   label: 'Este EE.UU. (GMT-5/-4)' },
+  { value: 'America/Chicago',    label: 'Centro EE.UU. (GMT-6/-5)' },
+  { value: 'America/Los_Angeles',label: 'Pacífico EE.UU. (GMT-8/-7)' },
+  { value: 'Europe/Madrid',      label: 'España (GMT+1/+2)' },
+]
 
 const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40'
 
@@ -49,6 +60,12 @@ function NuevaComunicacionContent() {
   const initialMode = (searchParams.get('mode') as RecipientMode) || 'filters'
   const initialMemberIds = useMemo(
     () => searchParams.get('members')?.split(',').filter(Boolean) ?? [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
+  const reenviarId = searchParams.get('reenviar') ?? ''
+  const reenviarMsg = useMemo(
+    () => reenviarId ? MOCK_MESSAGES.find(m => m.id === reenviarId) : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
@@ -80,17 +97,35 @@ function NuevaComunicacionContent() {
     [initialMemberIds]
   )
 
-  const [channel, setChannel] = useState<CommunicationChannel>('whatsapp')
-  const [subject, setSubject] = useState('')
-  const [waBody, setWaBody] = useState('')
-  const [emailBody, setEmailBody] = useState('')
+  const [channel, setChannel] = useState<CommunicationChannel>(reenviarMsg?.channel ?? 'whatsapp')
+  const [subject, setSubject] = useState(reenviarMsg?.subject ?? '')
+  const [waBody, setWaBody] = useState(reenviarMsg?.channel !== 'email' ? (reenviarMsg?.body ?? '') : '')
+  const [emailBody, setEmailBody] = useState(reenviarMsg?.channel !== 'whatsapp' ? (reenviarMsg?.body ?? '') : '')
   const [scheduled, setScheduled] = useState(false)
   const [scheduledAt, setScheduledAt] = useState('')
+  const [timezone, setTimezone] = useState('America/Costa_Rica')
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showListModal, setShowListModal] = useState(false)
+  const [listSearch, setListSearch] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
-  const [previewChannel, setPreviewChannel] = useState<'whatsapp' | 'email'>('whatsapp')
+  const [previewChannel, setPreviewChannel] = useState<'whatsapp' | 'email'>(reenviarMsg?.channel === 'email' ? 'email' : 'whatsapp')
+
+  const filteredLists = useMemo(() => {
+    if (!listSearch.trim()) return MOCK_MEMBER_LISTS
+    const q = listSearch.toLowerCase()
+    return MOCK_MEMBER_LISTS.filter(l => l.name.toLowerCase().includes(q) || l.segment_label.toLowerCase().includes(q))
+  }, [listSearch])
+
+  function applyList(listId: string) {
+    const list = MOCK_MEMBER_LISTS.find(l => l.id === listId)
+    if (!list) return
+    setRecipients({ mode: 'manual', manualMemberIds: list.member_ids, groupEntity: null, groupId: '', label: list.name, count: list.member_count })
+    setIsImported(true)
+    setShowListModal(false)
+    setListSearch('')
+  }
 
   const waRef = useRef<HTMLTextAreaElement>(null)
   const emailRef = useRef<HTMLTextAreaElement>(null)
@@ -186,6 +221,13 @@ function NuevaComunicacionContent() {
               1 · Destinatarios
             </p>
 
+            {reenviarMsg && (
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px]" style={{ background: 'rgba(112,189,194,0.1)', fontFamily: 'var(--font-body)' }}>
+                <Check size={13} className="text-teal-deep shrink-0" />
+                <span className="text-teal-deep">Reenviando: &ldquo;{reenviarMsg.subject || reenviarMsg.body.slice(0, 60)}&rdquo;</span>
+              </div>
+            )}
+
             {isImported ? (
               <div className="space-y-3">
                 {/* Import summary */}
@@ -251,7 +293,18 @@ function NuevaComunicacionContent() {
                 </div>
               </div>
             ) : (
-              <RecipientSelector value={recipients} onChange={setRecipients} />
+              <>
+                <RecipientSelector value={recipients} onChange={setRecipients} />
+                <button
+                  type="button"
+                  onClick={() => setShowListModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
+                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                >
+                  <List size={12} />
+                  Usar lista existente
+                </button>
+              </>
             )}
           </div>
 
@@ -413,14 +466,27 @@ function NuevaComunicacionContent() {
               </button>
             </div>
             {scheduled && (
-              <div className="flex items-center gap-2">
-                <Clock size={14} className="text-navy-light/40 shrink-0" />
-                <input
-                  type="datetime-local"
-                  className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  value={scheduledAt}
-                  onChange={e => setScheduledAt(e.target.value)}
-                />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-navy-light/40 shrink-0" />
+                  <input
+                    type="datetime-local"
+                    className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                    value={scheduledAt}
+                    onChange={e => setScheduledAt(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 pl-6">
+                  <p className="text-[11px] text-navy-light/50 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>Zona horaria:</p>
+                  <select
+                    className="flex-1 rounded-xl bg-surface-low px-3 py-1.5 text-[12px] text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                    value={timezone}
+                    onChange={e => setTimezone(e.target.value)}
+                  >
+                    {TIMEZONES.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
+                  </select>
+                </div>
               </div>
             )}
           </div>
@@ -461,6 +527,54 @@ function NuevaComunicacionContent() {
           />
         </div>
       </div>
+
+      {/* Lista existente modal */}
+      {showListModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-ink/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+              <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Seleccionar lista</p>
+              <button type="button" onClick={() => { setShowListModal(false); setListSearch('') }}><X size={18} className="text-navy-light/40" /></button>
+            </div>
+            <div className="px-4 pt-3 pb-2">
+              <div className="relative">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+                <input
+                  className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  placeholder="Buscar lista..."
+                  value={listSearch}
+                  onChange={e => setListSearch(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="px-4 pb-4 space-y-2 max-h-80 overflow-y-auto">
+              {filteredLists.length === 0 ? (
+                <p className="text-sm text-navy-light/40 py-4 text-center" style={{ fontFamily: 'var(--font-body)' }}>Sin listas.</p>
+              ) : filteredLists.map(list => (
+                <button
+                  key={list.id}
+                  type="button"
+                  onClick={() => applyList(list.id)}
+                  className="w-full text-left rounded-xl border px-4 py-3 hover:bg-surface-low transition-colors"
+                  style={{ borderColor: 'var(--outline-variant)' }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{list.name}</p>
+                      <p className="text-[11px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{list.segment_label}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-semibold text-navy-light/60 tabular-nums" style={{ fontFamily: 'var(--font-display)' }}>
+                      {list.member_count.toLocaleString('es-CR')}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Template modal */}
       {showTemplateModal && (

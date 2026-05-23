@@ -99,8 +99,17 @@ export default function VacanteDetailPage() {
 
   const slotsLeft = vacancy.slots_total - vacancy.slots_filled
 
+  const [closeVacancyOpen, setCloseVacancyOpen] = useState(false)
+  const [closeReason, setCloseReason] = useState('')
+  const [vacancyClosed, setVacancyClosed] = useState(false)
+
+  function handleCloseVacancy() {
+    setVacancyClosed(true)
+    setCloseVacancyOpen(false)
+  }
+
   return (
-    <div className="space-y-4 max-w-5xl">
+    <div className="page">
       {/* Toast */}
       {toast && (
         <div
@@ -112,35 +121,19 @@ export default function VacanteDetailPage() {
         </div>
       )}
 
-      {/* Back */}
-      <Link
-        href="/servidores/vacantes"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
-      >
-        <ChevronLeft size={15} />
-        Vacantes
-      </Link>
-
       {/* Header */}
-      <div
-        className="rounded-2xl px-6 py-5 space-y-2"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-      >
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold text-navy-light/60"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
+      <div className="ph">
+        <button className="btn btn-ghost btn-sm" onClick={() => window.history.back()} style={{ marginBottom: 10 }}>
+          ← Volver a vacantes
+        </button>
+        <div className="ph-row">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+              <span className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
                 {vacancy.committee_name}
               </span>
-              <span
-                className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold', VACANCY_STATUS_COLORS[vacancy.status])}
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                {VACANCY_STATUS_LABELS[vacancy.status]}
+              <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold', vacancyClosed ? VACANCY_STATUS_COLORS['closed'] : VACANCY_STATUS_COLORS[vacancy.status])} style={{ fontFamily: 'var(--font-display)' }}>
+                {vacancyClosed ? 'Cerrada' : VACANCY_STATUS_LABELS[vacancy.status]}
               </span>
               {vacancy.published_at && (
                 <span className="text-[11px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>
@@ -148,26 +141,23 @@ export default function VacanteDetailPage() {
                 </span>
               )}
             </div>
-            <h1
-              className="text-2xl text-navy"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
-            >
-              {vacancy.title}
-            </h1>
+            <div className="ptitle">{vacancy.title}</div>
+            <div className="psub">{vacancy.position} · {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}</div>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-3xl font-extrabold text-navy tabular-nums" style={{ fontFamily: 'var(--font-display)' }}>
-              {slotsLeft}
-            </p>
-            <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-              cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}
-            </p>
+          <div className="ph-actions">
+            <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/vacantes/${id}/editar`}>Editar publicación</button>
+            {!vacancyClosed && vacancy.status !== 'closed' && (
+              <button className="btn btn-ghost btn-sm" style={{ color: 'var(--brand-coral)', borderColor: 'rgba(239,85,84,0.3)' }} onClick={() => setCloseVacancyOpen(true)}>
+                Cerrar vacante
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-0 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      {/* Tabs card */}
+      <div className="card">
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(22,20,64,0.09)', padding: '0 4px' }}>
         {(['descripcion', 'aplicaciones'] as Tab[]).map(t => (
           <button
             key={t}
@@ -183,14 +173,11 @@ export default function VacanteDetailPage() {
             {t === 'descripcion' ? 'Descripción' : `Aplicaciones (${counts.total})`}
           </button>
         ))}
-      </div>
+        </div>
 
       {/* Tab: Descripción */}
       {tab === 'descripcion' && (
-        <div
-          className="rounded-2xl p-6 space-y-5"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-        >
+        <div style={{ padding: '16px 22px' }} className="space-y-5">
           <div className="space-y-2">
             <p className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
               Descripción
@@ -229,18 +216,12 @@ export default function VacanteDetailPage() {
             </div>
           </div>
 
-          <button
-            className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            Editar publicación
-          </button>
         </div>
       )}
 
       {/* Tab: Aplicaciones */}
       {tab === 'aplicaciones' && (
-        <div className="space-y-4">
+        <div style={{ padding: '16px 22px' }} className="space-y-4">
           {/* Stats */}
           <div className="grid grid-cols-5 gap-2">
             {[
@@ -494,6 +475,38 @@ export default function VacanteDetailPage() {
               >
                 Confirmar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      </div>{/* end .card */}
+
+      {/* ── Modal: Cerrar vacante ── */}
+      {closeVacancyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="flex items-start justify-between">
+              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Cerrar vacante</p>
+              <button onClick={() => setCloseVacancyOpen(false)} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
+            </div>
+            <p className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+              La vacante <strong>{vacancy.title}</strong> será marcada como cerrada y dejará de recibir aplicaciones.
+            </p>
+            <div className="space-y-1">
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Motivo de cierre (opcional)</label>
+              <textarea
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none resize-none"
+                style={{ fontFamily: 'var(--font-body)' }}
+                rows={2}
+                placeholder="¿Por qué se cierra esta vacante?"
+                value={closeReason}
+                onChange={e => setCloseReason(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setCloseVacancyOpen(false)} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
+              <button onClick={handleCloseVacancy} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Cerrar vacante</button>
             </div>
           </div>
         </div>

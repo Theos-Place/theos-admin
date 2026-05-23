@@ -5,15 +5,16 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   MOCK_COMMITTEES, MOCK_VACANCIES, MOCK_COMMITTEE_GOALS,
-  type CommitteeServer, type CommitteeGoal,
+  type CommitteeServer, type CommitteeGoal, type CommitteeData,
 } from '@/data/mock-servers'
 import { SERVICE_POSITIONS } from '@/data/mock-committees'
+import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import {
   ChevronLeft, Plus, X, Check, MoreVertical,
-  Search, ExternalLink,
+  Search, ExternalLink, Pencil,
 } from 'lucide-react'
 
 function calcularAntiguedad(startDate: string): string {
@@ -62,6 +63,26 @@ export default function CommitteeDetailPage() {
   const [disconnectDate, setDisconnectDate] = useState(new Date().toISOString().split('T')[0])
   const [disconnected, setDisconnected] = useState<string[]>([])
 
+  // Edit committee modal
+  const [editCommitteeOpen, setEditCommitteeOpen] = useState(false)
+  const [committeeForm, setCommitteeForm] = useState({
+    name: committee?.name ?? '',
+    area: committee?.area ?? '',
+    area_code: committee?.area_code ?? '',
+    ideal_capacity: String(committee?.ideal_capacity ?? ''),
+  })
+  const [committeeOverride, setCommitteeOverride] = useState<Partial<CommitteeData>>({})
+
+  // Add server modal
+  const [addServerOpen, setAddServerOpen] = useState(false)
+  const [serverSearch, setServerSearch] = useState('')
+  const [addedServers, setAddedServers] = useState<CommitteeServer[]>([])
+
+  // Change position modal
+  const [changePositionTarget, setChangePositionTarget] = useState<CommitteeServer | null>(null)
+  const [newPosition, setNewPosition] = useState('')
+  const [positionOverrides, setPositionOverrides] = useState<Record<string, string>>({})
+
   // Goals (local state)
   const initialGoals = MOCK_COMMITTEE_GOALS[committeeId] ?? []
   const [goals, setGoals] = useState<CommitteeGoal[]>(initialGoals)
@@ -74,20 +95,42 @@ export default function CommitteeDetailPage() {
     [committeeId]
   )
 
+  const allCommitteeMembers = useMemo(
+    () => !committee ? [] : [...committee.members, ...addedServers].map(m => ({
+      ...m,
+      position: positionOverrides[m.member_id] ?? m.position,
+    })),
+    [committee, addedServers, positionOverrides]
+  )
+
   const displayedMembers = useMemo(
-    () => !committee ? [] : committee.members.filter(m => {
+    () => allCommitteeMembers.filter(m => {
       if (disconnected.includes(m.member_id)) return false
       const matchSearch = m.name.toLowerCase().includes(search.toLowerCase())
       const matchStatus = statusFilter === 'all' || m.status === statusFilter
       return matchSearch && matchStatus
     }),
-    [committee, disconnected, search, statusFilter]
+    [allCommitteeMembers, disconnected, search, statusFilter]
   )
 
   const activeCount = useMemo(
-    () => !committee ? 0 : committee.members.filter(m => m.status === 'active' && !disconnected.includes(m.member_id)).length,
-    [committee, disconnected]
+    () => allCommitteeMembers.filter(m => m.status === 'active' && !disconnected.includes(m.member_id)).length,
+    [allCommitteeMembers, disconnected]
   )
+
+  const existingMemberIds = useMemo(
+    () => new Set(allCommitteeMembers.map(m => m.member_id)),
+    [allCommitteeMembers]
+  )
+
+  const filteredCandidates = useMemo(() => {
+    if (!serverSearch.trim()) return []
+    const q = serverSearch.toLowerCase()
+    return mockMembers
+      .filter(m => !existingMemberIds.has(m.id) && m.status === 'active')
+      .filter(m => `${m.first_name} ${m.last_name}`.toLowerCase().includes(q))
+      .slice(0, 8)
+  }, [serverSearch, existingMemberIds])
 
   const { sorted: sortedMembers, sortKey: memberSortKey, sortDir: memberSortDir, toggleSort: toggleMemberSort } = useSortableTable(displayedMembers)
 
@@ -105,6 +148,39 @@ export default function CommitteeDetailPage() {
     if (!disconnectTarget) return
     setDisconnected(prev => [...prev, disconnectTarget!.member_id])
     setDisconnectTarget(null)
+  }
+
+  function updateCommitteeInMock() {
+    setCommitteeOverride({
+      name: committeeForm.name,
+      area: committeeForm.area,
+      area_code: committeeForm.area_code,
+      ideal_capacity: parseInt(committeeForm.ideal_capacity) || committee?.ideal_capacity,
+    })
+    setEditCommitteeOpen(false)
+  }
+
+  function addServerToCommittee(memberId: string) {
+    const member = mockMembers.find(m => m.id === memberId)
+    if (!member) return
+    const newServer: CommitteeServer = {
+      member_id: member.id,
+      name: `${member.first_name} ${member.last_name}`,
+      initials: `${member.first_name[0]}${member.last_name[0]}`,
+      position: 'Colaborador',
+      start_date: new Date().toISOString().split('T')[0],
+      status: 'active',
+    }
+    setAddedServers(prev => [...prev, newServer])
+    setServerSearch('')
+    setAddServerOpen(false)
+  }
+
+  function updateMemberPosition() {
+    if (!changePositionTarget || !newPosition) return
+    setPositionOverrides(prev => ({ ...prev, [changePositionTarget.member_id]: newPosition }))
+    setChangePositionTarget(null)
+    setNewPosition('')
   }
 
   function addGoal() {
@@ -138,9 +214,9 @@ export default function CommitteeDetailPage() {
         </button>
         <div className="ph-row">
           <div>
-            <div className="ptitle">{committee.name}</div>
+            <div className="ptitle">{committeeOverride.name ?? committee.name}</div>
             <div className="psub">
-              {committee.area} · {activeCount} servidor{activeCount !== 1 ? 'es' : ''} activo{activeCount !== 1 ? 's' : ''}
+              {committeeOverride.area ?? committee.area} · {activeCount} servidor{activeCount !== 1 ? 'es' : ''} activo{activeCount !== 1 ? 's' : ''}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
               <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center">
@@ -161,8 +237,10 @@ export default function CommitteeDetailPage() {
             </div>
           </div>
           <div className="ph-actions">
-            <button className="btn btn-ghost btn-sm">Editar comité</button>
-            <button className="btn btn-primary btn-sm">
+            <button className="btn btn-ghost btn-sm" onClick={() => { setCommitteeForm({ name: committeeOverride.name ?? committee.name, area: committeeOverride.area ?? committee.area, area_code: committeeOverride.area_code ?? committee.area_code, ideal_capacity: String(committeeOverride.ideal_capacity ?? committee.ideal_capacity) }); setEditCommitteeOpen(true) }}>
+              <Pencil size={13} /> Editar comité
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => setAddServerOpen(true)}>
               <Plus size={13} /> Añadir servidor
             </button>
           </div>
@@ -222,6 +300,7 @@ export default function CommitteeDetailPage() {
             <button
               className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors"
               style={{ fontFamily: 'var(--font-body)' }}
+              onClick={() => setAddServerOpen(true)}
             >
               <Plus size={13} />
               Añadir servidor
@@ -305,7 +384,7 @@ export default function CommitteeDetailPage() {
                                 Ver perfil
                               </Link>
                               <button
-                                onClick={() => { setOpenMenu(null) }}
+                                onClick={() => { setChangePositionTarget(m); setNewPosition(positionOverrides[m.member_id] ?? m.position); setOpenMenu(null) }}
                                 className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors"
                                 style={{ fontFamily: 'var(--font-body)' }}
                               >
@@ -615,6 +694,120 @@ export default function CommitteeDetailPage() {
       )}
 
       </div>{/* end .card tabs */}
+
+      {/* ── Modal: Editar comité ── */}
+      {editCommitteeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="flex items-center justify-between">
+              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Editar comité</p>
+              <button onClick={() => setEditCommitteeOpen(false)} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Nombre</label>
+                <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={committeeForm.name} onChange={e => setCommitteeForm(p => ({ ...p, name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Área</label>
+                <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={committeeForm.area} onChange={e => setCommitteeForm(p => ({ ...p, area: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Código de área</label>
+                <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={committeeForm.area_code} onChange={e => setCommitteeForm(p => ({ ...p, area_code: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Capacidad ideal</label>
+                <input type="number" min="1" max="100" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={committeeForm.ideal_capacity} onChange={e => setCommitteeForm(p => ({ ...p, ideal_capacity: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setEditCommitteeOpen(false)} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
+              <button onClick={updateCommitteeInMock} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Añadir servidor ── */}
+      {addServerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="flex items-center justify-between">
+              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Añadir servidor</p>
+              <button onClick={() => { setAddServerOpen(false); setServerSearch('') }} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
+            </div>
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+              <input
+                className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                style={{ fontFamily: 'var(--font-body)' }}
+                placeholder="Buscar por nombre..."
+                value={serverSearch}
+                onChange={e => setServerSearch(e.target.value)}
+                autoFocus
+              />
+            </div>
+            {filteredCandidates.length > 0 ? (
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {filteredCandidates.map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => addServerToCommittee(m.id)}
+                    className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors text-left"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
+                      <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{m.first_name[0]}{m.last_name[0]}</span>
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{m.first_name} {m.last_name}</p>
+                      <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>{m.email}</p>
+                    </div>
+                    <Plus size={14} className="ml-auto text-coral shrink-0" />
+                  </button>
+                ))}
+              </div>
+            ) : serverSearch.trim() ? (
+              <p className="text-center text-sm text-navy-light/40 py-4" style={{ fontFamily: 'var(--font-body)' }}>No se encontraron miembros.</p>
+            ) : (
+              <p className="text-center text-[12px] text-navy-light/30 py-4" style={{ fontFamily: 'var(--font-body)' }}>Escribí un nombre para buscar</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Cambiar puesto ── */}
+      {changePositionTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Cambiar puesto</p>
+                <p className="text-sm text-navy-light/60 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{changePositionTarget.name}</p>
+              </div>
+              <button onClick={() => setChangePositionTarget(null)} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Nuevo puesto</label>
+              <select
+                className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                style={{ fontFamily: 'var(--font-body)' }}
+                value={newPosition}
+                onChange={e => setNewPosition(e.target.value)}
+              >
+                <option value="">Seleccionar puesto...</option>
+                {SERVICE_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setChangePositionTarget(null)} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
+              <button onClick={updateMemberPosition} disabled={!newPosition} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep disabled:opacity-40 transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

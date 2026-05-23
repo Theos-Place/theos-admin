@@ -179,79 +179,44 @@ export default function EmpleadoDetailPage() {
     },
   ].sort((a, b) => b.date.localeCompare(a.date))
 
-  return (
-    <div className="max-w-3xl space-y-4">
-      <Link
-        href="/empleados"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
-      >
-        <ChevronLeft size={15} />
-        Empleados
-      </Link>
+  function handleDeleteDocument(docId: string) {
+    if (docId.startsWith('extra-')) {
+      const extraIdx = parseInt(docId.replace('extra-', '')) - employee!.documents.length
+      setExtraDocs(prev => prev.filter((_, i) => i !== extraIdx))
+    }
+  }
 
-      {/* Header card */}
-      <div
-        className="rounded-2xl px-6 py-5"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              'h-14 w-14 rounded-full flex items-center justify-center shrink-0',
-              employee.status === 'active' ? 'bg-navy' : 'bg-navy-light/20'
-            )}>
-              <span className={cn(
-                'text-sm font-bold',
-                employee.status === 'active' ? 'text-white' : 'text-navy-light/50'
-              )} style={{ fontFamily: 'var(--font-display)' }}>
+  return (
+    <div className="page">
+
+
+      {/* Header */}
+      <div className="ph">
+        <div className="ph-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div className={cn('h-12 w-12 rounded-full flex items-center justify-center shrink-0', employee.status === 'active' ? 'bg-navy' : 'bg-navy-light/20')}>
+              <span className={cn('text-sm font-bold', employee.status === 'active' ? 'text-white' : 'text-navy-light/50')} style={{ fontFamily: 'var(--font-display)' }}>
                 {employee.member_initials}
               </span>
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1
-                  className="text-xl text-navy"
-                  style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
-                >
-                  {employee.member_name}
-                </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div className="ptitle">{employee.member_name}</div>
                 {employee.status === 'inactive' && (
-                  <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral" style={{ fontFamily: 'var(--font-display)' }}>
-                    Inactivo
-                  </span>
+                  <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral" style={{ fontFamily: 'var(--font-display)' }}>Inactivo</span>
                 )}
               </div>
-              <p className="text-sm text-navy-light/60 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
-                {employee.position_name}
-              </p>
-              <p className="text-[12px] text-navy-light/40 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
-                {employee.member_email}
-              </p>
+              <div className="psub">{employee.position_name} · {employee.member_email}</div>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={`/empleados/${id}/editar`}
-              className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-            >
-              Editar
-            </Link>
+          <div className="ph-actions">
+            <Link href={`/empleados/${id}/editar`} className="btn btn-ghost btn-sm">Editar</Link>
             {employee.status === 'active' && (
-              <button
-                type="button"
-                onClick={() => setShowTerminateModal(true)}
-                className="rounded-full border border-coral/30 px-3.5 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
-              >
-                Dar de baja
-              </button>
+              <button type="button" onClick={() => setShowTerminateModal(true)} className="btn btn-ghost btn-sm" style={{ color: 'var(--brand-coral)', borderColor: 'rgba(239,85,84,0.3)' }}>Dar de baja</button>
             )}
           </div>
         </div>
-
-        <div className="mt-4 pt-4 border-t grid grid-cols-2 sm:grid-cols-4 gap-4" style={{ borderColor: 'var(--outline-variant)' }}>
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--outline-variant)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px,1fr))', gap: 16 }}>
           {[
             { label: 'Comité',     value: employee.committee_name },
             { label: 'Área',       value: employee.area },
@@ -267,10 +232,7 @@ export default function EmpleadoDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-      >
+      <div className="card" style={{ overflow: 'hidden' }}>
         <div className="flex overflow-x-auto border-b" style={{ borderColor: 'var(--outline-variant)' }}>
           {TABS.map(t => {
             const Icon = t.icon
@@ -496,11 +458,11 @@ export default function EmpleadoDetailPage() {
               </div>
               {allDocs.length > 0 ? (
                 <div className="space-y-2">
-                  {allDocs.map((doc, i) => (
+                  {allDocs.map((doc) => (
                     <DocumentCard
                       key={doc.id}
                       doc={doc}
-                      onDelete={doc.id.startsWith('extra-') ? (docId) => setExtraDocs(prev => prev.filter((_, idx) => `extra-${employee.documents.length + idx}` !== docId)) : undefined}
+                      onDelete={doc.id.startsWith('extra-') ? handleDeleteDocument : undefined}
                     />
                   ))}
                 </div>

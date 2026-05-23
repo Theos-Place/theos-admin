@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_FORM_TEMPLATES, MOCK_RESPONSES } from '@/data/mock-forms'
+import { MOCK_FORM_TEMPLATES, MOCK_RESPONSES, type FormTemplate } from '@/data/mock-forms'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
 import {
@@ -56,20 +56,42 @@ function thisMonth(dateStr: string | null) {
 }
 
 export default function FormulariosPage() {
+  const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>(MOCK_FORM_TEMPLATES)
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
+  function handleDuplicate(formId: string) {
+    const template = localTemplates.find(t => t.id === formId)
+    if (!template) return
+    const clone: FormTemplate = {
+      ...template,
+      id: `form-${Date.now()}`,
+      name: `${template.name} (copia)`,
+      responses_count: 0,
+      last_response_at: null,
+      created_at: new Date().toISOString(),
+      is_active: false,
+    }
+    setLocalTemplates(prev => [...prev, clone])
+    setMenuOpen(null)
+  }
+
+  function handleArchive(formId: string) {
+    setLocalTemplates(prev => prev.map(t => t.id === formId ? { ...t, is_active: false } : t))
+    setMenuOpen(null)
+  }
+
   const stats = useMemo(() => {
-    const active = MOCK_FORM_TEMPLATES.filter(f => f.is_active).length
+    const active = localTemplates.filter(f => f.is_active).length
     const responsesThisMonth = MOCK_RESPONSES.filter(r => thisMonth(r.submitted_at)).length
-    const noResponses = MOCK_FORM_TEMPLATES.filter(f => f.responses_count === 0).length
-    const avg = MOCK_FORM_TEMPLATES.reduce((sum, f) => sum + f.responses_count, 0) / Math.max(MOCK_FORM_TEMPLATES.length, 1)
+    const noResponses = localTemplates.filter(f => f.responses_count === 0).length
+    const avg = localTemplates.reduce((sum, f) => sum + f.responses_count, 0) / Math.max(localTemplates.length, 1)
     return { active, responsesThisMonth, noResponses, avg: Math.round(avg * 10) / 10 }
-  }, [])
+  }, [localTemplates])
 
   const filtered = useMemo(() => {
-    return MOCK_FORM_TEMPLATES.filter(f => {
+    return localTemplates.filter(f => {
       if (categoryFilter !== 'all' && f.category !== categoryFilter) return false
       if (query.trim()) {
         const q = query.toLowerCase()
@@ -77,7 +99,7 @@ export default function FormulariosPage() {
       }
       return true
     })
-  }, [categoryFilter, query])
+  }, [localTemplates, categoryFilter, query])
 
   return (
     <div className="space-y-6" onClick={() => setMenuOpen(null)}>
@@ -288,20 +310,24 @@ export default function FormulariosPage() {
                                 className="absolute right-0 top-8 z-20 rounded-xl border py-1 min-w-36 shadow-lg"
                                 style={{ background: 'var(--surface-card)', borderColor: 'var(--outline-variant)' }}
                               >
-                                {[
-                                  { label: 'Duplicar',  icon: Copy    },
-                                  { label: 'Archivar',  icon: Archive },
-                                ].map(item => (
-                                  <button
-                                    key={item.label}
-                                    type="button"
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                                    style={{ fontFamily: 'var(--font-body)' }}
-                                  >
-                                    <item.icon size={13} className="text-navy-light/50" />
-                                    {item.label}
-                                  </button>
-                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDuplicate(form.id)}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                                  style={{ fontFamily: 'var(--font-body)' }}
+                                >
+                                  <Copy size={13} className="text-navy-light/50" />
+                                  Duplicar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleArchive(form.id)}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors"
+                                  style={{ fontFamily: 'var(--font-body)' }}
+                                >
+                                  <Archive size={13} className="text-coral/60" />
+                                  Archivar
+                                </button>
                               </div>
                             )}
                           </div>

@@ -27,7 +27,7 @@ export default function PuestoDetailPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       <Link
         href="/empleados/puestos"
         className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"

@@ -271,6 +271,32 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               onChange={e => setDescription(e.target.value)}
             />
           </div>
+
+          {/* Fixed: Datos personales del miembro */}
+          <div className="max-w-2xl mx-auto mb-3">
+            <div
+              className="rounded-2xl border-2 border-dashed px-5 py-4 space-y-3"
+              style={{ borderColor: 'rgba(22,20,64,0.12)', background: 'rgba(22,20,64,0.02)' }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                  Datos personales del miembro
+                </span>
+                <span className="text-[9px] rounded-full bg-navy/10 px-2 py-0.5 text-navy-light/40 font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
+                  Sección fija · no editable
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {['Nombre completo', 'Correo electrónico', 'Teléfono', 'Cédula'].map(field => (
+                  <div key={field} className="rounded-xl px-3 py-2" style={{ background: 'white', border: '1px solid var(--outline-variant)' }}>
+                    <p className="text-[10px] text-navy-light/40 uppercase tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>{field}</p>
+                    <div className="h-4 mt-1 rounded" style={{ background: 'var(--surface-low)', width: '70%' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="max-w-2xl mx-auto">
             <FormCanvas
               fields={fields}

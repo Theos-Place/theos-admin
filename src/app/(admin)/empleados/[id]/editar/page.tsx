@@ -54,7 +54,7 @@ export default function EditarEmpleadoPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       {/* Top bar */}
       <div
         className="sticky top-0 z-10 rounded-2xl px-5 py-3 flex items-center justify-between gap-3"

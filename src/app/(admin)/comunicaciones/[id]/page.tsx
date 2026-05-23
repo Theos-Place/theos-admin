@@ -8,7 +8,7 @@ import { mockMembers } from '@/data/mock-members'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { DeliveryStats } from '@/components/communications/DeliveryStats'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, RefreshCw } from 'lucide-react'
+import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, RefreshCw, Send } from 'lucide-react'
 
 type RecipientFilter = 'all' | 'sent' | 'failed'
 
@@ -98,18 +98,29 @@ export default function ComunicacionDetallePage() {
             }
           </p>
         </div>
-        {message.stats.failed > 0 && (
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={handleRetry}
-            disabled={retrying}
-            className="shrink-0 inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-60"
-            style={{ fontFamily: 'var(--font-body)' }}
+            onClick={() => window.location.href = `/comunicaciones/nueva?reenviar=${id}`}
+            className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-all"
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
           >
-            <RotateCcw size={14} className={retrying ? 'animate-spin' : ''} />
-            {retrying ? 'Reintentando...' : `Reintentar ${message.stats.failed} fallidos`}
+            <Send size={13} />
+            Reenviar este mensaje
           </button>
-        )}
+          {message.stats.failed > 0 && (
+            <button
+              type="button"
+              onClick={handleRetry}
+              disabled={retrying}
+              className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-60"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              <RotateCcw size={14} className={retrying ? 'animate-spin' : ''} />
+              {retrying ? 'Reintentando...' : `Reintentar ${message.stats.failed} fallidos`}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Delivery stats */}
