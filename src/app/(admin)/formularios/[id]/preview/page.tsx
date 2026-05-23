@@ -4,10 +4,44 @@ import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MOCK_FORM_TEMPLATES, type FormFieldNew, type LogicRule } from '@/data/mock-forms'
+import { MOCK_FORM_TEMPLATES, PERSONAL_DATA_FIELDS, type FormFieldNew, type LogicRule } from '@/data/mock-forms'
+import { mockMembers, type Member } from '@/data/mock-members'
 import { PublicField } from '@/components/forms/PublicField'
 import { cn } from '@/lib/utils'
-import { AlertTriangle, Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, User, Pencil } from 'lucide-react'
+
+// ─── Personal data helpers ─────────────────────────────────────────────────────
+
+function calcularEdad(birthDate: string): number {
+  const today = new Date()
+  const birth = new Date(birthDate)
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  return age
+}
+
+function getMemberFieldValue(member: Member, key: string): string {
+  switch (key) {
+    case 'full_name':               return `${member.first_name} ${member.last_name}`
+    case 'cedula':                  return member.cedula || '—'
+    case 'age':                     return member.birth_date ? `${calcularEdad(member.birth_date)} años` : `${member.age} años`
+    case 'gender':                  return member.gender === 'masculino' ? 'Masculino' : member.gender === 'femenino' ? 'Femenino' : 'No indica'
+    case 'marital_status':          return member.marital_status || '—'
+    case 'phone':                   return member.phone || '—'
+    case 'email':                   return member.email || '—'
+    case 'address':                 return member.address || '—'
+    case 'emergency_contact_name':  return member.emergency_contact_name || '—'
+    case 'emergency_contact_phone': return member.emergency_contact_phone || '—'
+    case 'occupation':              return member.profession || '—'
+    case 'workplace':               return member.workplace || '—'
+    case 'allergies':               return member.allergies || member.alergias || '—'
+    default:                        return '—'
+  }
+}
+
+// Use first active mock member as "current user" for preview purposes
+const PREVIEW_MEMBER = mockMembers.find(m => m.status === 'active') ?? mockMembers[0]
 
 // ─── Logic evaluation ─────────────────────────────────────────────────────────
 
@@ -110,7 +144,7 @@ export default function PreviewPage() {
 
   function getRequiredErrorsForPage(pageIndex: number): string[] {
     return pages[pageIndex]
-      .filter(f => f.type !== 'section' && f.is_required && isFieldVisible(f, answers))
+      .filter(f => f.type !== 'section' && f.type !== 'personal_data' && f.is_required && isFieldVisible(f, answers))
       .filter(f => {
         const ans = answers[f.id]
         return ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)
@@ -240,6 +274,66 @@ export default function PreviewPage() {
           <div className="px-8 py-6 space-y-6">
             {fieldsToRender.map(field => {
               if (!isFieldVisible(field, answers)) return null
+
+              // personal_data → custom card, no label/input wrapper
+              if (field.type === 'personal_data') {
+                const selectedFields = PERSONAL_DATA_FIELDS.filter(f => (field.options ?? []).includes(f.key))
+                if (selectedFields.length === 0) return null
+                return (
+                  <div
+                    key={field.id}
+                    style={{
+                      background: 'rgba(112,189,194,.06)',
+                      border: '1px solid rgba(112,189,194,.3)',
+                      borderRadius: 14,
+                      padding: '16px 18px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <User size={14} color="#2a8b8f" />
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#2a8b8f', fontFamily: 'var(--font-display)' }}>
+                            Tus datos personales
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--fg-muted, #8c8fb0)', fontFamily: 'var(--font-body)' }}>
+                          Tomados de tu perfil — no editables acá
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
+                        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                        onClick={() => alert('Redirigir al perfil del miembro para editar datos')}
+                      >
+                        <Pencil size={11} />
+                        Editar mis datos
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+                      {selectedFields.map(f => (
+                        <div
+                          key={f.key}
+                          style={{
+                            background: 'var(--surface-card)',
+                            border: '1px solid var(--outline-variant)',
+                            borderRadius: 8,
+                            padding: '8px 12px',
+                          }}
+                        >
+                          <div style={{ fontSize: 10, color: 'var(--fg-muted, #8c8fb0)', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-display)' }}>
+                            {f.label}
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, fontFamily: 'var(--font-body)' }}>
+                            {getMemberFieldValue(PREVIEW_MEMBER, f.key)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              }
 
               const hasError = errors.includes(field.id)
 

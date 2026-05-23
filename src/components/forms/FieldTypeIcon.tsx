@@ -10,22 +10,24 @@ import {
   Star,
   Minus,
   FileText,
+  User,
   type LucideIcon,
 } from 'lucide-react'
 import type { FieldType } from '@/data/mock-forms'
 
 const ICON_MAP: Record<FieldType, LucideIcon> = {
-  text:       AlignLeft,
-  textarea:   AlignJustify,
-  number:     Hash,
-  date:       Calendar,
-  select:     ChevronDown,
-  radio:      Circle,
-  checkbox:   CheckSquare,
-  yes_no:     ToggleLeft,
-  scale:      Star,
-  section:    Minus,
-  page_break: FileText,
+  text:          AlignLeft,
+  textarea:      AlignJustify,
+  number:        Hash,
+  date:          Calendar,
+  select:        ChevronDown,
+  radio:         Circle,
+  checkbox:      CheckSquare,
+  yes_no:        ToggleLeft,
+  scale:         Star,
+  section:       Minus,
+  page_break:    FileText,
+  personal_data: User,
 }
 
 interface FieldTypeIconProps {

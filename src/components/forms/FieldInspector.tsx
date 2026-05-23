@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Plus, X, GripVertical, Trash2, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FormFieldNew, LogicRule, LogicCondition, ConditionOperator } from '@/data/mock-forms'
+import { PERSONAL_DATA_FIELDS } from '@/data/mock-forms'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -117,9 +118,69 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
     }))
   }
 
+  // personal_data inspector (early return — no tabs)
+  if (field.type === 'personal_data') {
+    const selectedKeys = field.options ?? []
+    const GROUPS = ['Identificación', 'Contacto', 'Emergencia', 'Trabajo', 'Salud'] as const
+    return (
+      <div className="p-4 space-y-4">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          Datos personales del miembro
+        </p>
+
+        {/* Select all / none */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            className="flex-1 rounded-xl border py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            onClick={() => set('options', PERSONAL_DATA_FIELDS.map(f => f.key))}
+          >
+            Seleccionar todos
+          </button>
+          <button
+            type="button"
+            className="flex-1 rounded-xl border py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            onClick={() => set('options', [])}
+          >
+            Ninguno
+          </button>
+        </div>
+
+        {/* Fields grouped */}
+        {GROUPS.map(group => (
+          <div key={group}>
+            <p className="text-[10px] font-bold uppercase tracking-widests text-navy-light/30 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+              {group}
+            </p>
+            <div className="space-y-0.5">
+              {PERSONAL_DATA_FIELDS.filter(f => f.group === group).map(pf => (
+                <label key={pf.key} className="flex items-center gap-2.5 py-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="accent-coral"
+                    checked={selectedKeys.includes(pf.key)}
+                    onChange={e => {
+                      const updated = e.target.checked
+                        ? [...selectedKeys, pf.key]
+                        : selectedKeys.filter(k => k !== pf.key)
+                      set('options', updated)
+                    }}
+                  />
+                  <span className="text-[12px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>{pf.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   // Candidate fields for conditions: only fields that appear BEFORE this one
   const fieldIndex = allFields.findIndex(f => f.id === field.id)
-  const priorFields = allFields.slice(0, fieldIndex).filter(f => f.type !== 'section' && f.type !== 'page_break')
+  const priorFields = allFields.slice(0, fieldIndex).filter(f => f.type !== 'section' && f.type !== 'page_break' && f.type !== 'personal_data')
 
   function getOptionsForField(fieldId: string): string[] {
     const f = allFields.find(x => x.id === fieldId)

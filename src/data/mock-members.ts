@@ -32,6 +32,7 @@ export type Member = {
   address: string
   alergias: string | null
   medicamentos: string | null
+  allergies?: string | null
   attendance_history: AttendanceRecord[]
   service_history: ServiceRecord[]
   family_members: FamilyEntry[]
@@ -99,6 +100,7 @@ export const mockMembers: Member[] = [
     workplace: 'Universidad de Costa Rica',
     address: 'Curridabat, San José',
     alergias: 'Polen, mariscos',
+    allergies: 'Polen, mariscos',
     medicamentos: null,
     attendance_history: [
       { name: 'Charla de Bienvenida — Enero', date: '2025-01-19', type: 'Charla mensual', attendance_type: 'servidor' },

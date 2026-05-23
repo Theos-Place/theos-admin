@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { GripVertical, Copy, Trash2, Pencil, Zap, FileText } from 'lucide-react'
+import { GripVertical, Copy, Trash2, Pencil, Zap, FileText, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FormFieldNew } from '@/data/mock-forms'
+import { PERSONAL_DATA_FIELDS } from '@/data/mock-forms'
 import { FieldTypeIcon } from './FieldTypeIcon'
 import { FieldPreview } from './FieldPreview'
 
@@ -121,6 +122,77 @@ export function FormCanvas({
                 </div>
               </div>
               {isActive && <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-blue-400" />}
+            </div>
+          )
+        }
+
+        // personal_data gets its own card
+        if (field.type === 'personal_data') {
+          const selectedLabels = (field.options ?? []).map(
+            k => PERSONAL_DATA_FIELDS.find(f => f.key === k)?.label ?? k
+          )
+          return (
+            <div
+              key={field.id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={e => handleDragOver(e, index)}
+              onDrop={() => handleDrop(index)}
+              onDragEnd={handleDragEnd}
+              onClick={() => onSelectField(field.id)}
+              className={cn('group relative cursor-pointer transition-all', isDragging ? 'opacity-30' : '', isOver ? 'ring-2 ring-teal-deep/40 rounded-xl' : '')}
+              style={{
+                background: 'rgba(112,189,194,.06)',
+                border: isActive ? '1.5px solid var(--brand-teal-deep)' : '1.5px dashed rgba(112,189,194,.5)',
+                borderRadius: 12,
+                padding: '12px 14px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <GripVertical size={14} className="text-teal-deep/30 cursor-grab shrink-0" />
+                  <User size={14} color="var(--brand-teal-deep, #2a8b8f)" />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-teal-deep, #2a8b8f)', fontFamily: 'var(--font-display)' }}>
+                    Datos personales del miembro
+                  </span>
+                  <span style={{ fontSize: 10, color: 'rgba(42,139,143,.6)', fontFamily: 'var(--font-display)' }}>#{index + 1}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 4 }} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); onSelectField(field.id) }}
+                    className="h-6 rounded-lg px-2 text-[11px] hover:bg-teal-deep/10 transition-colors"
+                    style={{ color: 'var(--brand-teal-deep, #2a8b8f)', fontFamily: 'var(--font-body)' }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); onDeleteField(field.id) }}
+                    className="h-6 w-6 rounded-lg flex items-center justify-center hover:bg-coral/10 transition-colors"
+                  >
+                    <Trash2 size={11} className="text-coral" />
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {selectedLabels.length > 0
+                  ? selectedLabels.map(label => (
+                    <span
+                      key={label}
+                      style={{
+                        fontSize: 10, padding: '2px 8px', borderRadius: 999,
+                        background: 'rgba(112,189,194,.18)', color: 'var(--brand-teal-deep, #2a8b8f)',
+                        fontWeight: 500, fontFamily: 'var(--font-body)',
+                      }}
+                    >
+                      {label}
+                    </span>
+                  ))
+                  : <span style={{ fontSize: 11, color: 'var(--fg-muted, #8c8fb0)', fontFamily: 'var(--font-body)' }}>Sin campos seleccionados — hacé clic en Editar</span>
+                }
+              </div>
+              {isActive && <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full" style={{ background: 'var(--brand-teal-deep, #2a8b8f)' }} />}
             </div>
           )
         }
