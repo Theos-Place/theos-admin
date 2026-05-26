@@ -1,0 +1,210 @@
+import { useRef } from 'react'
+import { Mic, Image as ImageIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { EVENT_TYPES, type EventType } from '@/data/mock-events'
+import { ALL_COMMITTEES } from '@/data/mock-committees'
+import { inputCls, ICON_MAP, FieldLabel } from './shared'
+
+const activeEventTypes = EVENT_TYPES.filter(t => t.is_active)
+
+interface Step1Props {
+  name: string
+  event_type: EventType | ''
+  committee: string
+  description: string
+  flyer: string | null
+  flyerDragOver: boolean
+  flyerInputRef: React.RefObject<HTMLInputElement | null>
+  onNameChange: (v: string) => void
+  onEventTypeChange: (v: EventType) => void
+  onCommitteeChange: (v: string) => void
+  onDescriptionChange: (v: string) => void
+  onFlyerSelect: (file: File) => void
+  onFlyerDragOver: (v: boolean) => void
+  onFlyerRemove: () => void
+}
+
+export function Step1Informacion({
+  name,
+  event_type,
+  committee,
+  description,
+  flyer,
+  flyerDragOver,
+  flyerInputRef,
+  onNameChange,
+  onEventTypeChange,
+  onCommitteeChange,
+  onDescriptionChange,
+  onFlyerSelect,
+  onFlyerDragOver,
+  onFlyerRemove,
+}: Step1Props) {
+  return (
+    <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
+      <div className="card-title" style={{ marginBottom: 20 }}>Información principal</div>
+
+      {/* Nombre */}
+      <div style={{ marginBottom: 20 }}>
+        <input
+          className="w-full border-0 border-b bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 transition-colors"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            borderBottomWidth: '2px',
+            borderBottomColor: 'var(--outline-variant)',
+          }}
+          placeholder="Nombre del evento..."
+          value={name}
+          onChange={e => onNameChange(e.target.value)}
+        />
+      </div>
+
+      {/* Tipo de evento */}
+      <div style={{ marginBottom: 20 }}>
+        <FieldLabel>Tipo de evento</FieldLabel>
+        <div className="grid grid-cols-5 gap-2">
+          {activeEventTypes.map(t => {
+            const Icon = ICON_MAP[t.icon] ?? Mic
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => onEventTypeChange(t.id as EventType)}
+                className={cn(
+                  'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
+                  event_type === t.id
+                    ? 'border-coral bg-coral/5 text-coral'
+                    : 'text-navy-light/60 hover:bg-surface-low',
+                )}
+                style={{ borderColor: event_type === t.id ? undefined : 'var(--outline-variant)' }}
+              >
+                <Icon size={18} />
+                <span
+                  className="text-[11px] font-medium"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {t.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Comité + Descripción en grid */}
+      <div className="form-row" style={{ marginBottom: 20 }}>
+        <div>
+          <FieldLabel>Comité organizador</FieldLabel>
+          <select
+            className={inputCls}
+            style={{ fontFamily: 'var(--font-body)' }}
+            value={committee}
+            onChange={e => onCommitteeChange(e.target.value)}
+          >
+            <option value="">Seleccionar comité...</option>
+            {ALL_COMMITTEES.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <FieldLabel>Descripción</FieldLabel>
+            <span
+              className="text-[10px] text-navy-light/40"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              {description.length}/500
+            </span>
+          </div>
+          <textarea
+            className={cn(inputCls, 'resize-none')}
+            style={{ fontFamily: 'var(--font-body)' }}
+            rows={3}
+            maxLength={500}
+            placeholder="Describe el evento..."
+            value={description}
+            onChange={e => onDescriptionChange(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Flyer */}
+      <div>
+        <FieldLabel>Flyer o banner del evento</FieldLabel>
+        <input
+          ref={flyerInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="hidden"
+          onChange={e => {
+            const f = e.target.files?.[0]
+            if (f) onFlyerSelect(f)
+          }}
+        />
+        {!flyer ? (
+          <div
+            onDragOver={e => { e.preventDefault(); onFlyerDragOver(true) }}
+            onDragLeave={() => onFlyerDragOver(false)}
+            onDrop={e => {
+              e.preventDefault()
+              onFlyerDragOver(false)
+              const f = e.dataTransfer.files[0]
+              if (f?.type.startsWith('image/')) onFlyerSelect(f)
+            }}
+            onClick={() => flyerInputRef.current?.click()}
+            className={cn(
+              'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-8 cursor-pointer transition-all',
+              flyerDragOver
+                ? 'border-coral bg-coral/5'
+                : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low',
+            )}
+          >
+            <ImageIcon size={28} className="text-navy-light/30" />
+            <p
+              className="text-[13px] font-medium text-navy-light/60"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Subí el flyer del evento
+            </p>
+            <p
+              className="text-[11px] text-navy-light/40"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              PNG, JPG, WebP — máx 5MB · Recomendado: 1200×630px
+            </p>
+          </div>
+        ) : (
+          <div
+            className="relative rounded-xl overflow-hidden border"
+            style={{ borderColor: 'var(--outline-variant)' }}
+          >
+            <img src={flyer} alt="Flyer del evento" className="w-full object-cover max-h-48" />
+            <div
+              className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2"
+              style={{ background: 'rgba(22,20,64,0.6)' }}
+            >
+              <button
+                type="button"
+                onClick={() => flyerInputRef.current?.click()}
+                className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                Cambiar
+              </button>
+              <button
+                type="button"
+                onClick={onFlyerRemove}
+                className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

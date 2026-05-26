@@ -16,6 +16,15 @@ import { MOCK_EVENTS, type EventType } from '@/data/mock-events'
 import { DASHBOARD_STATS, RECENT_ACTIVITY } from '@/data/mock-dashboard'
 
 // ─── Theta pattern ────────────────────────────────────────────────────────────
+type ThetaPosition = {
+  id: string
+  top: string
+  size: number
+  opacity: number
+  left?: string
+  right?: string
+}
+
 function ThetaSVG({ size, opacity }: { size: number; opacity: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" style={{ opacity, display: 'block' }}>
@@ -25,11 +34,11 @@ function ThetaSVG({ size, opacity }: { size: number; opacity: number }) {
   )
 }
 
-const HEADER_THETAS = [
-  { top: '10%', right: '2%',  size: 80,  opacity: 0.05 },
-  { top: '5%',  right: '12%', size: 40,  opacity: 0.04 },
-  { top: '40%', right: '6%',  size: 120, opacity: 0.03 },
-  { top: '0%',  left: '60%',  size: 60,  opacity: 0.04 },
+const HEADER_THETAS: ThetaPosition[] = [
+  { id: 'theta-1', top: '10%', right: '2%',  size: 80,  opacity: 0.05 },
+  { id: 'theta-2', top: '5%',  right: '12%', size: 40,  opacity: 0.04 },
+  { id: 'theta-3', top: '40%', right: '6%',  size: 120, opacity: 0.03 },
+  { id: 'theta-4', top: '0%',  left: '60%',  size: 60,  opacity: 0.04 },
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -251,8 +260,8 @@ export default function DashboardPage() {
     return (
       <div className="px-6 py-8 max-w-3xl mx-auto space-y-6">
         <div className="bg-[#161440] rounded-2xl px-6 py-6 text-white relative overflow-hidden">
-          {HEADER_THETAS.map((p, i) => (
-            <div key={i} style={{ position: 'absolute', top: p.top, left: (p as any).left, right: (p as any).right }}>
+          {HEADER_THETAS.map((p) => (
+            <div key={p.id} style={{ position: 'absolute', top: p.top, left: p.left, right: p.right }}>
               <ThetaSVG size={p.size} opacity={p.opacity} />
             </div>
           ))}
@@ -319,8 +328,8 @@ export default function DashboardPage() {
 
       {/* Header */}
       <div className="bg-[#161440] rounded-2xl px-6 py-5 relative overflow-hidden">
-        {HEADER_THETAS.map((p, i) => (
-          <div key={i} style={{ position: 'absolute', top: p.top, left: (p as any).left, right: (p as any).right }}>
+        {HEADER_THETAS.map((p) => (
+          <div key={p.id} style={{ position: 'absolute', top: p.top, left: p.left, right: p.right }}>
             <ThetaSVG size={p.size} opacity={p.opacity} />
           </div>
         ))}

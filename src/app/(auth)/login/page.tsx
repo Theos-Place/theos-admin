@@ -4,14 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react'
-
-const MOCK_USERS = [
-  { email: 'admin@theosplace.org',     cedula: '1-0000-0001', password: 'Theos2026',    roles: ['admin'],            name: 'Admin Theos',     member_id: 'uuid-0001'  },
-  { email: 'finanzas@theosplace.org',  cedula: '1-0000-0002', password: 'finanzas123',  roles: ['finanzas'],         name: 'Jennifer Zamora', member_id: 'custom-001' },
-  { email: 'staff@theosplace.org',     cedula: '1-0000-0003', password: 'staff123',     roles: ['encargado_staff'],  name: 'Carlos Araya',    member_id: 'custom-002' },
-  { email: 'dirigente@theosplace.org', cedula: '1-0000-0004', password: 'dirigente123', roles: ['dirigente'],        name: 'Diego Salazar',   member_id: 'mock-member-4' },
-  { email: 'miembro@theosplace.org',   cedula: '1-0000-0005', password: 'miembro123',   roles: ['miembro'],          name: 'María Rodríguez', member_id: 'mock-member-5' },
-]
+import { MOCK_USERS } from '@/lib/mock-auth-config'
+import { MOCK_LOGIN_DELAY_MS } from '@/lib/constants'
+import { setSessionCookie } from '@/lib/session'
 
 function isEmail(value: string): boolean {
   return value.includes('@')
@@ -22,7 +17,7 @@ function normalizeCedula(value: string): string {
 }
 
 async function mockLogin(identifier: string, password: string) {
-  await new Promise(resolve => setTimeout(resolve, 1200))
+  await new Promise(resolve => setTimeout(resolve, MOCK_LOGIN_DELAY_MS))
   const user = MOCK_USERS.find(u => {
     const idMatch = isEmail(identifier)
       ? u.email === identifier.toLowerCase().trim()
@@ -82,8 +77,7 @@ export default function LoginPage() {
       const userData = { name: user.name, email: user.email, role: user.roles[0], roles: user.roles, member_id: user.member_id }
       const storage = rememberMe ? localStorage : sessionStorage
       storage.setItem('theos_user', JSON.stringify(userData))
-      const age = rememberMe ? 60 * 60 * 24 * 30 : 86400
-      document.cookie = `theos_session=true; path=/; max-age=${age}`
+      setSessionCookie(rememberMe)
       router.push('/dashboard')
     } catch {
       setAuthError('Correo o contraseña incorrectos. Verificá tus datos e intentá de nuevo.')
@@ -124,10 +118,11 @@ export default function LoginPage() {
 
         {/* Correo */}
         <div>
-          <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>
+          <label htmlFor="login-identifier" className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>
             Correo electrónico o cédula
           </label>
           <input
+            id="login-identifier"
             type="text"
             autoComplete="username"
             inputMode="email"
@@ -147,11 +142,12 @@ export default function LoginPage() {
 
         {/* Contraseña */}
         <div>
-          <label className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>
+          <label htmlFor="login-password" className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>
             Contraseña
           </label>
           <div className="relative">
             <input
+              id="login-password"
               type={showPass ? 'text' : 'password'}
               autoComplete="current-password"
               value={password}
@@ -163,6 +159,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPass(v => !v)}
+              aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/30 hover:text-navy-light/60 transition-colors"
               tabIndex={-1}
             >

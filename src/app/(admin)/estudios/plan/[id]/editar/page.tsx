@@ -144,8 +144,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
 
             {/* Nombre */}
             <div className="form-group">
-              <label className="form-label">Nombre del estudio *</label>
+              <label className="form-label" htmlFor="edit-study-name">Nombre del estudio *</label>
               <input
+                id="edit-study-name"
                 className="form-input"
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
@@ -155,8 +156,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
             {/* Duración + Nivel */}
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Duración (semanas)</label>
+                <label className="form-label" htmlFor="edit-study-weeks">Duración (semanas)</label>
                 <input
+                  id="edit-study-weeks"
                   type="number"
                   min={1}
                   max={52}
@@ -166,8 +168,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Nivel</label>
+                <label className="form-label" htmlFor="edit-study-level">Nivel</label>
                 <select
+                  id="edit-study-level"
                   className="form-select"
                   value={form.level}
                   onChange={e => set('level', e.target.value)}
@@ -182,8 +185,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
 
             {/* Mentor */}
             <div className="form-group">
-              <label className="form-label">Mentor</label>
+              <label className="form-label" htmlFor="edit-study-mentor">Mentor</label>
               <select
+                id="edit-study-mentor"
                 className="form-select"
                 value={form.mentor}
                 onChange={e => set('mentor', e.target.value)}
@@ -202,8 +206,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
 
             {/* Descripción */}
             <div className="form-group">
-              <label className="form-label">Descripción pública</label>
+              <label className="form-label" htmlFor="edit-study-description">Descripción pública</label>
               <textarea
+                id="edit-study-description"
                 className="form-textarea"
                 rows={4}
                 placeholder="Descripción visible para los miembros..."
@@ -214,8 +219,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
 
             {/* Compromisos */}
             <div className="form-group">
-              <label className="form-label">Compromisos requeridos</label>
+              <label className="form-label" htmlFor="edit-study-commitments">Compromisos requeridos</label>
               <input
+                id="edit-study-commitments"
                 className="form-input"
                 placeholder="ej. Tareas semanales, examen final..."
                 value={form.commitments}
@@ -239,8 +245,9 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
         />
         {form.requires_payment && (
           <div className="form-group" style={{ paddingLeft: 16, maxWidth: 220 }}>
-            <label className="form-label">Monto (₡)</label>
+            <label className="form-label" htmlFor="edit-study-cost">Monto (₡)</label>
             <input
+              id="edit-study-cost"
               type="number"
               className="form-input"
               value={form.cost}

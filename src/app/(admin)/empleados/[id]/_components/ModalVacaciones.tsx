@@ -1,0 +1,152 @@
+'use client'
+
+import type { VacationRecordType } from '@/data/mock-employees'
+import { cn } from '@/lib/utils'
+import { X, Check, Clock } from 'lucide-react'
+
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+
+const VACATION_TYPE_LABELS: Record<VacationRecordType, string> = {
+  vacaciones:          'Vacaciones',
+  permiso_con_goce:    'Permiso con goce',
+  permiso_sin_goce:    'Permiso sin goce',
+  incapacidad:         'Incapacidad',
+}
+
+interface ModalVacacionesProps {
+  vacType: VacationRecordType
+  vacFrom: string
+  vacTo: string
+  vacNotes: string
+  vacSaved: boolean
+  diasHabilesModal: number
+  onClose: () => void
+  onVacTypeChange: (value: VacationRecordType) => void
+  onVacFromChange: (value: string) => void
+  onVacToChange: (value: string) => void
+  onVacNotesChange: (value: string) => void
+  onSave: () => void
+}
+
+export function ModalVacaciones({
+  vacType,
+  vacFrom,
+  vacTo,
+  vacNotes,
+  vacSaved,
+  diasHabilesModal,
+  onClose,
+  onVacTypeChange,
+  onVacFromChange,
+  onVacToChange,
+  onVacNotesChange,
+  onSave,
+}: ModalVacacionesProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        {vacSaved ? (
+          <div className="text-center space-y-3 py-4">
+            <div className="h-12 w-12 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
+              <Check size={22} className="text-teal-deep" />
+            </div>
+            <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Solicitud registrada</p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Cerrar
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Registrar solicitud</h2>
+              <button type="button" onClick={onClose}>
+                <X size={18} className="text-navy-light/40" />
+              </button>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Tipo</label>
+              <select
+                className={inputCls}
+                style={{ fontFamily: 'var(--font-body)' }}
+                value={vacType}
+                onChange={e => onVacTypeChange(e.target.value as VacationRecordType)}
+              >
+                {Object.entries(VACATION_TYPE_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Desde</label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  value={vacFrom}
+                  onChange={e => onVacFromChange(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Hasta</label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  style={{ fontFamily: 'var(--font-body)' }}
+                  value={vacTo}
+                  onChange={e => onVacToChange(e.target.value)}
+                />
+              </div>
+            </div>
+            {vacFrom && vacTo && (
+              <div className="rounded-lg bg-navy/5 px-3 py-2 flex items-center gap-2">
+                <Clock size={13} className="text-navy-light/50" />
+                <p className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                  {diasHabilesModal} día{diasHabilesModal !== 1 ? 's' : ''} hábil{diasHabilesModal !== 1 ? 'es' : ''}
+                </p>
+              </div>
+            )}
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Notas</label>
+              <textarea
+                className={cn(inputCls, 'resize-none')}
+                style={{ fontFamily: 'var(--font-body)' }}
+                rows={2}
+                placeholder="Descripción de la solicitud..."
+                value={vacNotes}
+                onChange={e => onVacNotesChange(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={!vacFrom || !vacTo}
+                className={cn(
+                  'rounded-full px-4 py-2 text-sm text-white transition-colors',
+                  vacFrom && vacTo ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+                )}
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                Guardar solicitud
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

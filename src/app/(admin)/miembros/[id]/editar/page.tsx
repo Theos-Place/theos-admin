@@ -151,8 +151,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Nombre *</label>
+                <label className="form-label" htmlFor="edit-first-name">Nombre *</label>
                 <input
+                  id="edit-first-name"
                   className="form-input"
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
@@ -160,8 +161,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Apellidos *</label>
+                <label className="form-label" htmlFor="edit-last-name">Apellidos *</label>
                 <input
+                  id="edit-last-name"
                   className="form-input"
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
@@ -172,9 +174,10 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Cédula</label>
+                <label className="form-label" htmlFor="edit-cedula">Cédula</label>
                 <div style={{ position: 'relative' }}>
                   <input
+                    id="edit-cedula"
                     className="form-input"
                     value={member.cedula ?? 'Sin cédula'}
                     disabled
@@ -187,8 +190,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 </span>
               </div>
               <div className="form-group">
-                <label className="form-label">Fecha de nacimiento</label>
+                <label className="form-label" htmlFor="edit-birth-date">Fecha de nacimiento</label>
                 <input
+                  id="edit-birth-date"
                   type="date"
                   className="form-input"
                   value={birthDate}
@@ -199,8 +203,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Género</label>
+                <label className="form-label" htmlFor="edit-gender">Género</label>
                 <select
+                  id="edit-gender"
                   className="form-select"
                   value={gender}
                   onChange={e => setGender(e.target.value as typeof gender)}
@@ -211,8 +216,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Estado civil</label>
+                <label className="form-label" htmlFor="edit-marital-status">Estado civil</label>
                 <select
+                  id="edit-marital-status"
                   className="form-select"
                   value={maritalStatus}
                   onChange={e => setMaritalStatus(e.target.value)}
@@ -240,8 +246,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
               onChange={setPhone}
             />
             <div className="form-group">
-              <label className="form-label">Correo electrónico</label>
+              <label className="form-label" htmlFor="edit-email">Correo electrónico</label>
               <input
+                id="edit-email"
                 type="email"
                 className="form-input"
                 value={email}
@@ -256,8 +263,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 onChange={setEmergencyContactPhone}
               />
               <div className="form-group">
-                <label className="form-label">Contacto de emergencia — Nombre</label>
+                <label className="form-label" htmlFor="edit-emergency-name">Contacto de emergencia — Nombre</label>
                 <input
+                  id="edit-emergency-name"
                   className="form-input"
                   value={emergencyContactName}
                   onChange={e => setEmergencyContactName(e.target.value)}
@@ -312,8 +320,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Señas</label>
+              <label className="form-label" htmlFor="edit-senas">Señas</label>
               <textarea
+                id="edit-senas"
                 className="form-textarea"
                 rows={2}
                 value={address}
@@ -332,8 +341,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div style={{ padding: '18px 22px' }}>
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Profesión / Ocupación</label>
+                <label className="form-label" htmlFor="edit-profession">Profesión / Ocupación</label>
                 <input
+                  id="edit-profession"
                   className="form-input"
                   value={profession}
                   onChange={e => setProfession(e.target.value)}
@@ -341,8 +351,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Lugar de trabajo</label>
+                <label className="form-label" htmlFor="edit-workplace">Lugar de trabajo</label>
                 <input
+                  id="edit-workplace"
                   className="form-input"
                   value={workplace}
                   onChange={e => setWorkplace(e.target.value)}
@@ -362,8 +373,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             {/* Sede */}
             <div className="form-group">
-              <label className="form-label">Sede</label>
+              <label className="form-label" htmlFor="edit-sede">Sede</label>
               <select
+                id="edit-sede"
                 className="form-select"
                 value={sede}
                 onChange={e => setSede(e.target.value)}
@@ -378,8 +390,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
             {/* Salud */}
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Alergias</label>
+                <label className="form-label" htmlFor="edit-alergias">Alergias</label>
                 <textarea
+                  id="edit-alergias"
                   className="form-textarea"
                   value={alergias}
                   onChange={e => setAlergias(e.target.value)}
@@ -388,8 +401,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Medicamentos</label>
+                <label className="form-label" htmlFor="edit-medicamentos">Medicamentos</label>
                 <textarea
+                  id="edit-medicamentos"
                   className="form-textarea"
                   value={medicamentos}
                   onChange={e => setMedicamentos(e.target.value)}

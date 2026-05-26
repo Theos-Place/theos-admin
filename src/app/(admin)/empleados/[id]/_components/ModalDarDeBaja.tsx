@@ -1,0 +1,106 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+import { X, AlertOctagon } from 'lucide-react'
+
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+
+interface ModalDarDeBajaProps {
+  memberName: string
+  terminateConfirm: string
+  terminateDate: string
+  terminateReason: string
+  onClose: () => void
+  onTerminateConfirmChange: (value: string) => void
+  onTerminateDateChange: (value: string) => void
+  onTerminateReasonChange: (value: string) => void
+  onConfirm: () => void
+}
+
+export function ModalDarDeBaja({
+  memberName,
+  terminateConfirm,
+  terminateDate,
+  terminateReason,
+  onClose,
+  onTerminateConfirmChange,
+  onTerminateDateChange,
+  onTerminateReasonChange,
+  onConfirm,
+}: ModalDarDeBajaProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertOctagon size={18} className="text-coral" />
+            <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Dar de baja</h2>
+          </div>
+          <button type="button" onClick={onClose}>
+            <X size={18} className="text-navy-light/40" />
+          </button>
+        </div>
+        <div className="rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
+          <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+            Esta acción marca al empleado como inactivo. Escribí el nombre completo para confirmar.
+          </p>
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            Escribí "<span className="font-semibold text-navy">{memberName}</span>" para confirmar
+          </label>
+          <input
+            className={inputCls}
+            style={{ fontFamily: 'var(--font-body)' }}
+            placeholder={memberName}
+            value={terminateConfirm}
+            onChange={e => onTerminateConfirmChange(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Fecha de baja</label>
+          <input
+            type="date"
+            className={inputCls}
+            style={{ fontFamily: 'var(--font-body)' }}
+            value={terminateDate}
+            onChange={e => onTerminateDateChange(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Motivo</label>
+          <textarea
+            className={cn(inputCls, 'resize-none')}
+            style={{ fontFamily: 'var(--font-body)' }}
+            rows={2}
+            placeholder="Motivo de la baja..."
+            value={terminateReason}
+            onChange={e => onTerminateReasonChange(e.target.value)}
+          />
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={terminateConfirm !== memberName}
+            className={cn(
+              'rounded-full px-4 py-2 text-sm text-white transition-colors',
+              terminateConfirm === memberName ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+            )}
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            Confirmar baja
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

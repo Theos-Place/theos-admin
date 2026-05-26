@@ -7,6 +7,7 @@ import { EmailPreview } from '@/components/communications/EmailPreview'
 import { VariableChips, AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
+import { MOCK_LONG_SEND_DELAY_MS } from '@/lib/constants'
 import type { CommunicationChannel, MessageTemplate } from '@/data/mock-communications'
 
 type Category = MessageTemplate['category']
@@ -47,7 +48,7 @@ export default function NuevaPlantillaPage() {
 
   function handleSave() {
     setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setTimeout(() => setSaved(false), MOCK_LONG_SEND_DELAY_MS)
   }
 
   const labelCls = 'text-[11px] text-navy-light/50 mb-1 block'

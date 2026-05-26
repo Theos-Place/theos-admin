@@ -355,3 +355,9 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ─── Font utility classes ────────────────────────────────────────────────── */
+/* Tailwind v4: no tailwind.config.ts — utilities definidas aquí como CSS puro */
+.font-display { font-family: var(--font-display); }
+.font-body    { font-family: var(--font-body); }
+.font-mono    { font-family: var(--font-mono); }

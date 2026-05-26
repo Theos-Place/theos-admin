@@ -1,0 +1,78 @@
+// Events domain types.
+
+export type EventType = 'charla' | 'campamento' | 'social' | 'capacitacion'
+export type EventStatus = 'upcoming' | 'in_progress' | 'finished' | 'cancelled' | 'archived'
+
+/**
+ * Payment status for event registrations.
+ * Note: different from the finance PaymentStatus in @/types/finance.
+ */
+export type EventPaymentStatus = 'pending' | 'paid' | 'exempted'
+
+export type AttendanceType = 'participant' | 'server'
+
+export type SubEvent = {
+  id: string
+  name: string
+  max_capacity: number
+}
+
+export type EventRegistration = {
+  member_id: string
+  member_name: string
+  payment_status: EventPaymentStatus
+  registered_at: string
+}
+
+export type EventCheckin = {
+  member_id: string
+  member_name: string
+  attendance_type: AttendanceType
+  sub_event_id: string | null
+  checked_at: string
+}
+
+export type VolunteerBooking = {
+  member_id: string
+  member_name: string
+  role: string
+  status: 'confirmed' | 'pending' | 'cancelled'
+}
+
+export type MockEvent = {
+  id: string
+  name: string
+  event_type: EventType
+  committee_id: string
+  description: string
+  start_at: string
+  end_at: string
+  location: string
+  location_map_url: string | null
+  is_virtual: boolean
+  requires_registration: boolean
+  max_capacity: number
+  requires_payment: boolean
+  payment_amount: number | null
+  requires_survey: boolean
+  status: EventStatus
+  is_recurring: boolean
+  recurrence_rule: string | null
+  recurrence_end: string | null
+  parent_event_id: string | null
+  sub_events: SubEvent[]
+  registrations: EventRegistration[]
+  checkins: EventCheckin[]
+  volunteer_bookings: VolunteerBooking[]
+  cancellation_reason: string | null
+  flyer_url: string | null
+}
+
+export type EventTypeEntry = {
+  id: string
+  name: string
+  color: string
+  icon: string
+  description: string
+  is_active: boolean
+}

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Copy, Check, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
 
 const EVENT_TYPE_OPTIONS = [
   { id: 'charla', label: 'Charlas' },
@@ -91,7 +92,7 @@ export default function MiPagina() {
   function handleCopy() {
     navigator.clipboard.writeText(currentCode).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopied(false), MOCK_SAVE_DELAY_MS)
     })
   }
 

@@ -21,6 +21,7 @@ import { AdvancedFilters } from '@/components/members/AdvancedFilters'
 import { QueryBar } from '@/components/members/QueryBar'
 import { type Member } from '@/data/mock-members'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { TOAST_LONG_MS } from '@/lib/constants'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
@@ -207,7 +208,7 @@ export default function MiembrosPage() {
 
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(''), 4000)
+    setTimeout(() => setToast(''), TOAST_LONG_MS)
   }
 
   const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || search.trim() !== ''

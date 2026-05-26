@@ -8,6 +8,7 @@ import {
   type Application, type ApplicationStatus,
 } from '@/data/mock-servers'
 import { cn } from '@/lib/utils'
+import { TOAST_LONG_MS } from '@/lib/constants'
 import { ChevronLeft, X, Check, Users } from 'lucide-react'
 
 type Tab = 'descripcion' | 'aplicaciones'
@@ -86,7 +87,7 @@ export default function VacanteDetailPage() {
 
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(null), 4000)
+    setTimeout(() => setToast(null), TOAST_LONG_MS)
   }
 
   const counts = {

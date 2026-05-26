@@ -7,6 +7,7 @@ import { Menu, Search, User, Settings, LogOut, ChevronDown } from 'lucide-react'
 import { useMockAuth } from '@/hooks/useMockAuth'
 import { ROLES } from '@/data/mock-auth'
 import { NotificationsBell } from './NotificationsDropdown'
+import { clearSessionCookie } from '@/lib/session'
 
 interface TopbarProps {
   title: string
@@ -39,7 +40,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
   }, [menuOpen])
 
   function handleLogout() {
-    document.cookie = 'theos_session=; path=/; max-age=0'
+    clearSessionCookie()
     sessionStorage.removeItem('theos_user')
     localStorage.removeItem('theos_user')
     router.push('/login')

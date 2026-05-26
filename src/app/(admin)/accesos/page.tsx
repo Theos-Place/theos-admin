@@ -6,6 +6,7 @@ import { Shield, Search, UserPlus, Check, X, AlertTriangle, ChevronDown } from '
 import { MOCK_USER_ACCESS, ROLES, type RoleId, type UserAccess } from '@/data/mock-auth'
 import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
+import { TOAST_MS } from '@/lib/constants'
 
 function RoleBadge({ roleId, small }: { roleId: RoleId; small?: boolean }) {
   const role = ROLES.find(r => r.id === roleId)
@@ -42,7 +43,7 @@ export default function AccesosPage() {
 
   function showToast(msg: string) {
     setToastMsg(msg)
-    setTimeout(() => setToastMsg(''), 3500)
+    setTimeout(() => setToastMsg(''), TOAST_MS)
   }
 
   const activeCount    = users.filter(u => u.is_active).length

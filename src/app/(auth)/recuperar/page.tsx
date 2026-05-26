@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail } from 'lucide-react'
+import { MOCK_RECOVERY_DELAY_MS } from '@/lib/constants'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -28,7 +29,7 @@ export default function RecuperarPage() {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1400))
+    await new Promise(r => setTimeout(r, MOCK_RECOVERY_DELAY_MS))
     setLoading(false)
     setSent(true)
   }
@@ -112,12 +113,14 @@ export default function RecuperarPage() {
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <div>
           <label
+            htmlFor="recuperar-email"
             className="block text-[12px] font-medium text-navy-light/60 mb-1.5"
             style={{ fontFamily: 'var(--font-body)' }}
           >
             Correo electrónico
           </label>
           <input
+            id="recuperar-email"
             type="email"
             autoComplete="email"
             value={email}

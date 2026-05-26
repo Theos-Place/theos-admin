@@ -6,6 +6,7 @@ import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { MOCK_REFUNDS, type Refund, type RefundStatus } from '@/data/mock-finance'
+import { TOAST_MS } from '@/lib/constants'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -39,7 +40,7 @@ export default function DevolucionesPage() {
 
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(''), 3500)
+    setTimeout(() => setToast(''), TOAST_MS)
   }
 
   const cardRefunds = refunds.filter(r => r.method === 'card')

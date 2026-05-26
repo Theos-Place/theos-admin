@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, AlertCircle, Loader2, CheckCircle, Check, Lock } from 'lucide-react'
+import { MOCK_PASSWORD_RESET_DELAY_MS } from '@/lib/constants'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -47,7 +48,7 @@ export default function NuevaContrasenaPage() {
     if (!allReqsMet || !confirm) return
     if (password !== confirm) { setConfirmErr('Las contraseñas no coinciden'); return }
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1300))
+    await new Promise(r => setTimeout(r, MOCK_PASSWORD_RESET_DELAY_MS))
     setLoading(false)
     setDone(true)
   }

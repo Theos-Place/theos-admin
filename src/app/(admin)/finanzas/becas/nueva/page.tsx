@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Search, Check, X } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { mockMembers } from '@/data/mock-members'
+import { TOAST_MS, REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
 
 const EVENTS = [
   { id: 'evt-camp-jun25', name: 'Campamento Junio 2025', amount: 45000 },
@@ -37,7 +38,7 @@ export default function NuevaBecaPage() {
 
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(''), 3500)
+    setTimeout(() => setToast(''), TOAST_MS)
   }
 
   const memberResults = useMemo(() => {
@@ -67,7 +68,7 @@ export default function NuevaBecaPage() {
   function handleCreate() {
     if (!selectedMember || !selectedEntity) return
     showToast('Beca creada exitosamente')
-    setTimeout(() => router.push('/finanzas/becas'), 1500)
+    setTimeout(() => router.push('/finanzas/becas'), REDIRECT_AFTER_SAVE_MS)
   }
 
   return (

@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MOCK_FORM_TEMPLATES, type FormTemplate, type FormFieldNew, type FieldType } from '@/data/mock-forms'
+import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
 import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
@@ -132,7 +133,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
   function handleSave() {
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setTimeout(() => setSaved(false), MOCK_SAVE_DELAY_MS)
   }
 
   const backHref = formId ? `/formularios/${formId}` : '/formularios'

@@ -37,6 +37,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Shield } from 'lucide-react'
+import { clearSessionCookie } from '@/lib/session'
 
 const EVENTOS_SUB = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
@@ -86,7 +87,6 @@ const ESTUDIOS_SUB = [
   { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
   { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock },
   { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight },
-  // { href: '/estudios/analisis',        label: 'Análisis',         icon: BarChart2 },
 ]
 
 const navItems = [
@@ -135,7 +135,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const canViewAccesos = userRoles.some(r => r === 'admin' || r === 'direccion')
 
   function handleLogout() {
-    document.cookie = 'theos_session=; path=/; max-age=0'
+    clearSessionCookie()
     sessionStorage.removeItem('theos_user')
     localStorage.removeItem('theos_user')
     router.push('/login')

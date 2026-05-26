@@ -1,0 +1,80 @@
+import { cn } from '@/lib/utils'
+import { Clock } from 'lucide-react'
+
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40'
+
+const TIMEZONES = [
+  { value: 'America/Costa_Rica', label: 'Costa Rica (GMT-6)' },
+  { value: 'America/New_York',   label: 'Este EE.UU. (GMT-5/-4)' },
+  { value: 'America/Chicago',    label: 'Centro EE.UU. (GMT-6/-5)' },
+  { value: 'America/Los_Angeles',label: 'Pacífico EE.UU. (GMT-8/-7)' },
+  { value: 'Europe/Madrid',      label: 'España (GMT+1/+2)' },
+]
+
+type Props = {
+  scheduled: boolean
+  setScheduled: (v: boolean) => void
+  scheduledAt: string
+  setScheduledAt: (v: string) => void
+  timezone: string
+  setTimezone: (v: string) => void
+}
+
+export function ScheduleSection({
+  scheduled,
+  setScheduled,
+  scheduledAt,
+  setScheduledAt,
+  timezone,
+  setTimezone,
+}: Props) {
+  return (
+    <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <p className={cn(SECTION_TITLE)} style={{ fontFamily: 'var(--font-display)' }}>
+        4 · Programar (opcional)
+      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>¿Programar envío?</p>
+          <p className="text-[12px] text-navy-light/40 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            Elegí cuándo enviar el mensaje
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setScheduled(!scheduled)}
+          className={cn(
+            'relative h-6 w-11 rounded-full transition-colors',
+            scheduled ? 'bg-coral' : 'bg-navy/20'
+          )}
+        >
+          <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', scheduled ? 'translate-x-5' : 'translate-x-0')} />
+        </button>
+      </div>
+      {scheduled && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Clock size={14} className="text-navy-light/40 shrink-0" />
+            <input
+              type="datetime-local"
+              className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+              value={scheduledAt}
+              onChange={e => setScheduledAt(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2 pl-6">
+            <p className="text-[11px] text-navy-light/50 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>Zona horaria:</p>
+            <select
+              className="flex-1 rounded-xl bg-surface-low px-3 py-1.5 text-[12px] text-navy outline-none focus:ring-1 focus:ring-coral/30"
+              style={{ fontFamily: 'var(--font-body)' }}
+              value={timezone}
+              onChange={e => setTimezone(e.target.value)}
+            >
+              {TIMEZONES.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

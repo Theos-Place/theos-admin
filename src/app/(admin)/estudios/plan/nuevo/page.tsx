@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { STUDY_TYPES } from '@/data/mock-studies'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
+import { REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
 
 type FormState = {
   nombre: string
@@ -87,7 +88,7 @@ export default function NuevoTipoPage() {
 
   function handleSave() {
     setSaved(true)
-    setTimeout(() => { router.push('/estudios/plan') }, 1500)
+    setTimeout(() => { router.push('/estudios/plan') }, REDIRECT_AFTER_SAVE_MS)
   }
 
   const niveles    = STUDY_TYPES.filter(s => s.stage === 'niveles')

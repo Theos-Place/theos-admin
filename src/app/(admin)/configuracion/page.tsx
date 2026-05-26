@@ -6,6 +6,7 @@ import {
   AlertCircle, Smartphone, Monitor, Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { TOAST_SHORT_MS } from '@/lib/constants'
 
 type Tab = 'seguridad' | 'notificaciones'
 
@@ -47,7 +48,7 @@ export default function ConfiguracionPage() {
 
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(''), 3200)
+    setTimeout(() => setToast(''), TOAST_SHORT_MS)
   }
 
   return (

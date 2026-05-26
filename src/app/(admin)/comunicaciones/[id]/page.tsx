@@ -8,6 +8,7 @@ import { mockMembers } from '@/data/mock-members'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { DeliveryStats } from '@/components/communications/DeliveryStats'
 import { cn } from '@/lib/utils'
+import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
 import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, RefreshCw, Send } from 'lucide-react'
 
 type RecipientFilter = 'all' | 'sent' | 'failed'
@@ -63,7 +64,7 @@ export default function ComunicacionDetallePage() {
 
   function handleRetry() {
     setRetrying(true)
-    setTimeout(() => setRetrying(false), 2000)
+    setTimeout(() => setRetrying(false), MOCK_SAVE_DELAY_MS)
   }
 
   return (

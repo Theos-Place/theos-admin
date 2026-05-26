@@ -1,26 +1,14 @@
 'use client'
 
-import { useState, useMemo, Fragment, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import { ALL_COMMITTEES } from '@/data/mock-committees'
-import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
-import { cn } from '@/lib/utils'
-import {
-  ChevronRight, Mic, Tent, Heart, BookOpen, Plus, X,
-  Users, Star, MapPin, Music, Coffee, Zap, ExternalLink, Image as ImageIcon,
-} from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { EVENT_TYPES, type EventType } from '@/data/mock-events'
-
-// ─── Styling ──────────────────────────────────────────────────────────────────
-
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
-
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  mic: Mic, tent: Tent, users: Users, star: Star, 'book-open': BookOpen,
-  heart: Heart, 'map-pin': MapPin, music: Music, coffee: Coffee, zap: Zap,
-}
-
-const activeEventTypes = EVENT_TYPES.filter(t => t.is_active)
+import { StepSidebar } from './_components/StepSidebar'
+import { Step1Informacion } from './_components/Step1Informacion'
+import { Step2Programacion } from './_components/Step2Programacion'
+import { Step3SubEventos } from './_components/Step3SubEventos'
+import { Step4Financiero } from './_components/Step4Financiero'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,65 +39,19 @@ interface FormData {
   flyer: string | null
 }
 
-const STEPS = [
-  { num: 1, label: 'Información' },
-  { num: 2, label: 'Programación' },
-  { num: 3, label: 'Sub-eventos' },
-  { num: 4, label: 'Financiero' },
-]
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function Toggle({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
-  return (
-    <div className="flex items-center gap-3 cursor-pointer" onClick={onToggle}>
-      <div className={cn(
-        'relative h-6 w-11 rounded-full transition-all duration-200 cursor-pointer shrink-0',
-        checked ? 'bg-coral' : 'bg-navy-light/20'
-      )}>
-        <div className={cn(
-          'absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200',
-          checked ? 'translate-x-5' : 'translate-x-0'
-        )} />
-      </div>
-      <span className="text-sm text-navy select-none" style={{ fontFamily: 'var(--font-body)' }}>{label}</span>
-    </div>
-  )
-}
-
-function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div
-      className="flex items-start justify-between gap-4 py-2.5 border-b last:border-0"
-      style={{ borderColor: 'var(--outline-variant)' }}
-    >
-      <span className="text-[11px] tracking-widest uppercase text-navy-light/40 shrink-0 mt-0.5" style={{ fontFamily: 'var(--font-display)' }}>
-        {label}
-      </span>
-      <span className="text-sm text-navy text-right" style={{ fontFamily: 'var(--font-body)' }}>
-        {value}
-      </span>
-    </div>
-  )
-}
-
-const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <label className="text-[11px] tracking-widest uppercase text-navy-light/40 block mb-1" style={{ fontFamily: 'var(--font-display)' }}>
-    {children}
-  </label>
-)
+const STEPS_COUNT = 4
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NuevoEventoPage() {
-  const [step, setStep]                     = useState(1)
-  const [published, setPublished]           = useState(false)
+  const [step, setStep]                         = useState(1)
+  const [published, setPublished]               = useState(false)
   const [showSubEventForm, setShowSubEventForm] = useState(false)
-  const [newSubName, setNewSubName]         = useState('')
-  const [newSubCap, setNewSubCap]           = useState('')
-  const [flyer, setFlyer]                   = useState<string | null>(null)
-  const [flyerDragOver, setFlyerDragOver]   = useState(false)
-  const flyerInputRef                       = useRef<HTMLInputElement>(null)
+  const [newSubName, setNewSubName]             = useState('')
+  const [newSubCap, setNewSubCap]               = useState('')
+  const [flyer, setFlyer]                       = useState<string | null>(null)
+  const [flyerDragOver, setFlyerDragOver]       = useState(false)
+  const flyerInputRef                           = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState<FormData>({
     name: '',
@@ -179,8 +121,8 @@ export default function NuevoEventoPage() {
   }
 
   const selectedTypeObj = useMemo(
-    () => activeEventTypes.find(t => t.id === form.event_type),
-    [form.event_type]
+    () => EVENT_TYPES.filter(t => t.is_active).find(t => t.id === form.event_type),
+    [form.event_type],
   )
 
   // ── Estado: publicado ──────────────────────────────────────────────────────
@@ -195,10 +137,16 @@ export default function NuevoEventoPage() {
           <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">✓</span>
           </div>
-          <p className="text-xl font-bold text-navy mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <p
+            className="text-xl font-bold text-navy mb-2"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             Evento publicado
           </p>
-          <p className="text-sm text-navy-light/60 mb-6" style={{ fontFamily: 'var(--font-body)' }}>
+          <p
+            className="text-sm text-navy-light/60 mb-6"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
             El evento quedó disponible para inscripciones.
           </p>
           <Link
@@ -229,7 +177,7 @@ export default function NuevoEventoPage() {
             <button type="button" className="btn btn-ghost btn-sm">
               Guardar borrador
             </button>
-            {step < STEPS.length ? (
+            {step < STEPS_COUNT ? (
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
@@ -262,541 +210,98 @@ export default function NuevoEventoPage() {
           alignItems: 'start',
         }}
       >
-        {/* Sidebar de pasos — sticky */}
-        <div style={{ position: 'sticky', top: 76 }}>
-          <div className="card" style={{ padding: '8px 0' }}>
-            {STEPS.map((s, idx) => {
-              const done   = s.num < step
-              const active = s.num === step
-              return (
-                <Fragment key={s.num}>
-                  <button
-                    type="button"
-                    onClick={() => (done || active) ? setStep(s.num) : undefined}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
-                      active  ? 'bg-surface-low' : '',
-                      (done || active) ? 'cursor-pointer' : 'cursor-default opacity-60'
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors',
-                        active ? 'bg-coral text-white' :
-                        done   ? 'bg-teal-deep text-white' :
-                        'bg-navy-light/15 text-navy-light/50'
-                      )}
-                      style={{ fontFamily: 'var(--font-display)' }}
-                    >
-                      {done ? '✓' : s.num}
-                    </div>
-                    <span
-                      className={cn(
-                        'text-[13px] font-medium transition-colors',
-                        active ? 'text-navy' : done ? 'text-teal-deep' : 'text-navy-light/40'
-                      )}
-                      style={{ fontFamily: 'var(--font-display)' }}
-                    >
-                      {s.label}
-                    </span>
-                  </button>
-                  {idx < STEPS.length - 1 && (
-                    <div className="mx-4 h-px" style={{ background: 'var(--outline-variant)' }} />
-                  )}
-                </Fragment>
-              )
-            })}
-          </div>
-        </div>
+        {/* Sidebar de pasos */}
+        <StepSidebar step={step} onStepClick={setStep} />
 
         {/* Contenido del paso activo */}
         <div style={{ width: '100%', minWidth: 0 }}>
 
-          {/* ── Paso 1: Información principal ── */}
           {step === 1 && (
-            <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-              <div className="card-title" style={{ marginBottom: 20 }}>Información principal</div>
-
-              {/* Nombre */}
-              <div style={{ marginBottom: 20 }}>
-                <input
-                  className="w-full border-0 border-b bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 transition-colors"
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 700,
-                    borderBottomWidth: '2px',
-                    borderBottomColor: 'var(--outline-variant)',
-                  }}
-                  placeholder="Nombre del evento..."
-                  value={form.name}
-                  onChange={e => set('name', e.target.value)}
-                />
-              </div>
-
-              {/* Tipo de evento */}
-              <div style={{ marginBottom: 20 }}>
-                <FieldLabel>Tipo de evento</FieldLabel>
-                <div className="grid grid-cols-5 gap-2">
-                  {activeEventTypes.map(t => {
-                    const Icon = ICON_MAP[t.icon] ?? Mic
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => set('event_type', t.id as EventType)}
-                        className={cn(
-                          'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
-                          form.event_type === t.id
-                            ? 'border-coral bg-coral/5 text-coral'
-                            : 'text-navy-light/60 hover:bg-surface-low'
-                        )}
-                        style={{ borderColor: form.event_type === t.id ? undefined : 'var(--outline-variant)' }}
-                      >
-                        <Icon size={18} />
-                        <span className="text-[11px] font-medium" style={{ fontFamily: 'var(--font-display)' }}>{t.name}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Comité + Descripción en grid */}
-              <div className="form-row" style={{ marginBottom: 20 }}>
-                <div>
-                  <FieldLabel>Comité organizador</FieldLabel>
-                  <select
-                    className={inputCls}
-                    style={{ fontFamily: 'var(--font-body)' }}
-                    value={form.committee}
-                    onChange={e => set('committee', e.target.value)}
-                  >
-                    <option value="">Seleccionar comité...</option>
-                    {ALL_COMMITTEES.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <FieldLabel>Descripción</FieldLabel>
-                    <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-mono)' }}>
-                      {form.description.length}/500
-                    </span>
-                  </div>
-                  <textarea
-                    className={cn(inputCls, 'resize-none')}
-                    style={{ fontFamily: 'var(--font-body)' }}
-                    rows={3}
-                    maxLength={500}
-                    placeholder="Describe el evento..."
-                    value={form.description}
-                    onChange={e => set('description', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Flyer */}
-              <div>
-                <FieldLabel>Flyer o banner del evento</FieldLabel>
-                <input
-                  ref={flyerInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFlyerSelect(f) }}
-                />
-                {!flyer ? (
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setFlyerDragOver(true) }}
-                    onDragLeave={() => setFlyerDragOver(false)}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      setFlyerDragOver(false)
-                      const f = e.dataTransfer.files[0]
-                      if (f?.type.startsWith('image/')) handleFlyerSelect(f)
-                    }}
-                    onClick={() => flyerInputRef.current?.click()}
-                    className={cn(
-                      'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-8 cursor-pointer transition-all',
-                      flyerDragOver ? 'border-coral bg-coral/5' : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low'
-                    )}
-                  >
-                    <ImageIcon size={28} className="text-navy-light/30" />
-                    <p className="text-[13px] font-medium text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-                      Subí el flyer del evento
-                    </p>
-                    <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-                      PNG, JPG, WebP — máx 5MB · Recomendado: 1200×630px
-                    </p>
-                  </div>
-                ) : (
-                  <div className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--outline-variant)' }}>
-                    <img src={flyer} alt="Flyer del evento" className="w-full object-cover max-h-48" />
-                    <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2" style={{ background: 'rgba(22,20,64,0.6)' }}>
-                      <button type="button" onClick={() => flyerInputRef.current?.click()}
-                        className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors"
-                        style={{ fontFamily: 'var(--font-body)' }}>
-                        Cambiar
-                      </button>
-                      <button type="button" onClick={() => setFlyer(null)}
-                        className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors"
-                        style={{ fontFamily: 'var(--font-body)' }}>
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <Step1Informacion
+              name={form.name}
+              event_type={form.event_type}
+              committee={form.committee}
+              description={form.description}
+              flyer={flyer}
+              flyerDragOver={flyerDragOver}
+              flyerInputRef={flyerInputRef}
+              onNameChange={v => set('name', v)}
+              onEventTypeChange={v => set('event_type', v)}
+              onCommitteeChange={v => set('committee', v)}
+              onDescriptionChange={v => set('description', v)}
+              onFlyerSelect={handleFlyerSelect}
+              onFlyerDragOver={setFlyerDragOver}
+              onFlyerRemove={() => setFlyer(null)}
+            />
           )}
 
-          {/* ── Paso 2: Programación y ubicación ── */}
           {step === 2 && (
-            <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-              <div className="card-title" style={{ marginBottom: 20 }}>Programación y ubicación</div>
-
-              {/* Fechas */}
-              <div style={{ marginBottom: 20 }}>
-                <div className="form-row">
-                  <div>
-                    <FieldLabel>Fecha inicio</FieldLabel>
-                    <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.start_date} onChange={e => set('start_date', e.target.value)} />
-                  </div>
-                  <div>
-                    <FieldLabel>Hora inicio</FieldLabel>
-                    <input type="time" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.start_time} onChange={e => set('start_time', e.target.value)} />
-                  </div>
-                  <div>
-                    <FieldLabel>Fecha fin</FieldLabel>
-                    <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.end_date} onChange={e => set('end_date', e.target.value)} />
-                  </div>
-                  <div>
-                    <FieldLabel>Hora fin</FieldLabel>
-                    <input type="time" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.end_time} onChange={e => set('end_time', e.target.value)} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Ubicación */}
-              <div className="pt-4 border-t space-y-4" style={{ borderColor: 'var(--outline-variant)', marginBottom: 20 }}>
-                <Toggle
-                  checked={form.is_virtual}
-                  onToggle={() => set('is_virtual', !form.is_virtual)}
-                  label="Evento virtual"
-                />
-                {!form.is_virtual && (
-                  <div className="space-y-3 pl-14">
-                    <div>
-                      <FieldLabel>Dirección</FieldLabel>
-                      <input
-                        className={inputCls}
-                        style={{ fontFamily: 'var(--font-body)' }}
-                        placeholder="Dirección exacta del evento..."
-                        value={form.location}
-                        onChange={e => set('location', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <FieldLabel>Link Waze / Google Maps</FieldLabel>
-                      <div className="flex gap-2">
-                        <input
-                          className={inputCls}
-                          style={{ fontFamily: 'var(--font-body)' }}
-                          placeholder="https://maps.google.com/..."
-                          value={form.location_map_url}
-                          onChange={e => set('location_map_url', e.target.value)}
-                        />
-                        {form.location_map_url && (
-                          <a
-                            href={form.location_map_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-                          >
-                            <ExternalLink size={13} />
-                            Probar
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Recurrencia */}
-              <div className="pt-4 border-t space-y-4" style={{ borderColor: 'var(--outline-variant)' }}>
-                <Toggle
-                  checked={form.is_recurring}
-                  onToggle={() => set('is_recurring', !form.is_recurring)}
-                  label="Evento recurrente"
-                />
-                {form.is_recurring && (
-                  <div className="pl-14">
-                    <RecurrenceSelector value={form.recurrence_rule} onChange={v => set('recurrence_rule', v)} />
-                  </div>
-                )}
-              </div>
-            </div>
+            <Step2Programacion
+              start_date={form.start_date}
+              start_time={form.start_time}
+              end_date={form.end_date}
+              end_time={form.end_time}
+              is_virtual={form.is_virtual}
+              location={form.location}
+              location_map_url={form.location_map_url}
+              is_recurring={form.is_recurring}
+              recurrence_rule={form.recurrence_rule}
+              onStartDateChange={v => set('start_date', v)}
+              onStartTimeChange={v => set('start_time', v)}
+              onEndDateChange={v => set('end_date', v)}
+              onEndTimeChange={v => set('end_time', v)}
+              onToggleVirtual={() => set('is_virtual', !form.is_virtual)}
+              onLocationChange={v => set('location', v)}
+              onLocationMapUrlChange={v => set('location_map_url', v)}
+              onToggleRecurring={() => set('is_recurring', !form.is_recurring)}
+              onRecurrenceRuleChange={v => set('recurrence_rule', v)}
+            />
           )}
 
-          {/* ── Paso 3: Sub-eventos e inscripciones ── */}
           {step === 3 && (
-            <div className="space-y-4">
-              {/* Sub-eventos */}
-              <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-                <div className="card-title" style={{ marginBottom: 16 }}>Sub-eventos</div>
-
-                {form.sub_events.length > 0 && (
-                  <div className="space-y-2 mb-3">
-                    {form.sub_events.map(se => (
-                      <div
-                        key={se.id}
-                        className="flex items-center justify-between rounded-xl px-3 py-2.5"
-                        style={{ background: 'var(--surface-low)' }}
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{se.name}</p>
-                          <p className="text-[11px] text-navy-light/50">Cap. {se.max_capacity}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeSubEvent(se.id)}
-                          className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {showSubEventForm ? (
-                  <div className="rounded-xl border p-3 space-y-2" style={{ borderColor: 'var(--outline-variant)' }}>
-                    <div className="form-row">
-                      <input
-                        className={inputCls}
-                        style={{ fontFamily: 'var(--font-body)' }}
-                        placeholder="Nombre del sub-evento"
-                        value={newSubName}
-                        onChange={e => setNewSubName(e.target.value)}
-                        autoFocus
-                      />
-                      <input
-                        type="number"
-                        className={inputCls}
-                        style={{ fontFamily: 'var(--font-body)' }}
-                        placeholder="Capacidad"
-                        value={newSubCap}
-                        onChange={e => setNewSubCap(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={addSubEvent}
-                        className="btn btn-primary btn-sm"
-                      >
-                        Agregar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowSubEventForm(false)}
-                        className="btn btn-ghost btn-sm"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowSubEventForm(true)}
-                    className="btn btn-ghost btn-sm"
-                  >
-                    <Plus size={13} />
-                    Añadir sub-evento
-                  </button>
-                )}
-
-                {form.sub_events.length === 0 && !showSubEventForm && (
-                  <p className="text-[12px] text-navy-light/40 mt-2" style={{ fontFamily: 'var(--font-body)' }}>
-                    Opcional. Agrega divisiones como Kids, Teens o sesiones por día.
-                  </p>
-                )}
-              </div>
-
-              {/* Inscripción */}
-              <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-                <div className="card-title" style={{ marginBottom: 16 }}>Inscripciones</div>
-                <div className="space-y-4">
-                  <Toggle
-                    checked={form.requires_registration}
-                    onToggle={() => set('requires_registration', !form.requires_registration)}
-                    label="Requiere inscripción previa"
-                  />
-                  {form.requires_registration && (
-                    <div className="space-y-3 pl-14">
-                      <div className="form-row">
-                        <div>
-                          <FieldLabel>Capacidad máxima</FieldLabel>
-                          <input
-                            type="number"
-                            className={inputCls}
-                            style={{ fontFamily: 'var(--font-body)' }}
-                            placeholder="100"
-                            value={form.max_capacity}
-                            onChange={e => set('max_capacity', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <FieldLabel>Prerrequisito (opcional)</FieldLabel>
-                          <select
-                            className={inputCls}
-                            style={{ fontFamily: 'var(--font-body)' }}
-                            value={form.prerequisite}
-                            onChange={e => set('prerequisite', e.target.value)}
-                          >
-                            <option value="">Sin prerrequisito</option>
-                            <option value="member">Ser miembro activo</option>
-                            <option value="server">Ser servidor activo</option>
-                            <option value="n1">Haber completado N1</option>
-                          </select>
-                        </div>
-                      </div>
-                      <button type="button" className="btn btn-ghost btn-sm">
-                        <Plus size={13} />
-                        Crear formulario de inscripción
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Encuesta */}
-              <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-                <div className="card-title" style={{ marginBottom: 16 }}>Encuesta de satisfacción</div>
-                <div className="space-y-4">
-                  <Toggle
-                    checked={form.has_satisfaction_survey}
-                    onToggle={() => set('has_satisfaction_survey', !form.has_satisfaction_survey)}
-                    label="Enviar encuesta al finalizar el evento"
-                  />
-                  {form.has_satisfaction_survey && (
-                    <div className="pl-14">
-                      <button type="button" className="btn btn-ghost btn-sm">
-                        <Plus size={13} />
-                        Crear encuesta
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Step3SubEventos
+              sub_events={form.sub_events}
+              showSubEventForm={showSubEventForm}
+              newSubName={newSubName}
+              newSubCap={newSubCap}
+              requires_registration={form.requires_registration}
+              max_capacity={form.max_capacity}
+              prerequisite={form.prerequisite}
+              has_satisfaction_survey={form.has_satisfaction_survey}
+              onSetShowSubEventForm={setShowSubEventForm}
+              onNewSubNameChange={setNewSubName}
+              onNewSubCapChange={setNewSubCap}
+              onAddSubEvent={addSubEvent}
+              onRemoveSubEvent={removeSubEvent}
+              onToggleRegistration={() => set('requires_registration', !form.requires_registration)}
+              onMaxCapacityChange={v => set('max_capacity', v)}
+              onPrerequisiteChange={v => set('prerequisite', v)}
+              onToggleSatisfactionSurvey={() => set('has_satisfaction_survey', !form.has_satisfaction_survey)}
+            />
           )}
 
-          {/* ── Paso 4: Financiero + Resumen ── */}
           {step === 4 && (
-            <div className="space-y-4">
-              {/* Pago */}
-              <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-                <div className="card-title" style={{ marginBottom: 16 }}>Financiero</div>
-                <div className="space-y-4">
-                  <Toggle
-                    checked={form.requires_payment}
-                    onToggle={() => set('requires_payment', !form.requires_payment)}
-                    label="Evento con cobro"
-                  />
-                  {form.requires_payment && (
-                    <div className="space-y-3 pl-14">
-                      <div className="form-row">
-                        <div>
-                          <FieldLabel>Monto</FieldLabel>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-mono)' }}>₡</span>
-                            <input
-                              type="number"
-                              className={cn(inputCls, 'pl-7')}
-                              style={{ fontFamily: 'var(--font-body)' }}
-                              placeholder="15000"
-                              value={form.payment_amount}
-                              onChange={e => set('payment_amount', e.target.value)}
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <FieldLabel>Métodos de pago</FieldLabel>
-                          <div className="flex flex-wrap gap-4 pt-2">
-                            {['Tarjeta', 'SINPE Móvil'].map(m => (
-                              <label key={m} className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  className="accent-coral"
-                                  checked={form.payment_methods.includes(m)}
-                                  onChange={() => togglePaymentMethod(m)}
-                                />
-                                <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{m}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Resumen */}
-              <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-                <div className="card-title" style={{ marginBottom: 16 }}>Resumen del evento</div>
-                <div className="space-y-1">
-                  <SummaryRow label="Nombre" value={form.name || '—'} />
-                  <SummaryRow label="Tipo" value={selectedTypeObj?.name ?? '—'} />
-                  <SummaryRow label="Comité" value={form.committee || '—'} />
-                  <SummaryRow
-                    label="Fecha inicio"
-                    value={
-                      form.start_date
-                        ? new Date(`${form.start_date}T${form.start_time || '00:00'}`).toLocaleString('es-CR', {
-                            day: 'numeric', month: 'short', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit',
-                          })
-                        : '—'
-                    }
-                  />
-                  <SummaryRow label="Lugar" value={form.is_virtual ? 'Virtual' : form.location || '—'} />
-                  {form.location_map_url && !form.is_virtual && (
-                    <SummaryRow
-                      label="Mapa"
-                      value={
-                        <a href={form.location_map_url} target="_blank" rel="noopener noreferrer" className="text-coral underline">
-                          Ver enlace
-                        </a>
-                      }
-                    />
-                  )}
-                  <SummaryRow label="Recurrente" value={form.is_recurring ? 'Sí' : 'No'} />
-                  <SummaryRow
-                    label="Sub-eventos"
-                    value={form.sub_events.length > 0 ? form.sub_events.map(s => s.name).join(', ') : 'Ninguno'}
-                  />
-                  <SummaryRow
-                    label="Inscripción"
-                    value={form.requires_registration
-                      ? `Sí${form.max_capacity ? ` · Cap. ${form.max_capacity}` : ''}`
-                      : 'No requerida'
-                    }
-                  />
-                  <SummaryRow
-                    label="Cobro"
-                    value={form.requires_payment && form.payment_amount
-                      ? `₡${Number(form.payment_amount).toLocaleString('es-CR')}`
-                      : 'Gratuito'
-                    }
-                  />
-                </div>
-              </div>
-            </div>
+            <Step4Financiero
+              requires_payment={form.requires_payment}
+              payment_amount={form.payment_amount}
+              payment_methods={form.payment_methods}
+              name={form.name}
+              event_type={form.event_type}
+              selectedTypeName={selectedTypeObj?.name}
+              committee={form.committee}
+              start_date={form.start_date}
+              start_time={form.start_time}
+              is_virtual={form.is_virtual}
+              location={form.location}
+              location_map_url={form.location_map_url}
+              is_recurring={form.is_recurring}
+              sub_events={form.sub_events}
+              requires_registration={form.requires_registration}
+              max_capacity={form.max_capacity}
+              onTogglePayment={() => set('requires_payment', !form.requires_payment)}
+              onPaymentAmountChange={v => set('payment_amount', v)}
+              onTogglePaymentMethod={togglePaymentMethod}
+            />
           )}
 
           {/* Navegación inferior */}

@@ -1,64 +1,11 @@
-export type EventType = 'charla' | 'campamento' | 'social' | 'capacitacion'
-export type EventStatus = 'upcoming' | 'in_progress' | 'finished' | 'cancelled' | 'archived'
-export type PaymentStatus = 'pending' | 'paid' | 'exempted'
-export type AttendanceType = 'participant' | 'server'
+// Types live in @/types/event — imported here for internal use, re-exported for consumers.
+import type { EventType, EventStatus, EventPaymentStatus, AttendanceType, SubEvent, EventRegistration, EventCheckin, VolunteerBooking, MockEvent, EventTypeEntry } from '@/types/event'
+export type { EventType, EventStatus, EventPaymentStatus, AttendanceType, SubEvent, EventRegistration, EventCheckin, VolunteerBooking, MockEvent, EventTypeEntry }
+// Backward-compat alias: PaymentStatus was the original name for EventPaymentStatus in this file.
+export type { EventPaymentStatus as PaymentStatus } from '@/types/event'
 
-export type SubEvent = {
-  id: string
-  name: string
-  max_capacity: number
-}
-
-export type EventRegistration = {
-  member_id: string
-  member_name: string
-  payment_status: PaymentStatus
-  registered_at: string
-}
-
-export type EventCheckin = {
-  member_id: string
-  member_name: string
-  attendance_type: AttendanceType
-  sub_event_id: string | null
-  checked_at: string
-}
-
-export type VolunteerBooking = {
-  member_id: string
-  member_name: string
-  role: string
-  status: 'confirmed' | 'pending' | 'cancelled'
-}
-
-export type MockEvent = {
-  id: string
-  name: string
-  event_type: EventType
-  committee_id: string
-  description: string
-  start_at: string
-  end_at: string
-  location: string
-  location_map_url: string | null
-  is_virtual: boolean
-  requires_registration: boolean
-  max_capacity: number
-  requires_payment: boolean
-  payment_amount: number | null
-  requires_survey: boolean
-  status: EventStatus
-  is_recurring: boolean
-  recurrence_rule: string | null
-  recurrence_end: string | null
-  parent_event_id: string | null
-  sub_events: SubEvent[]
-  registrations: EventRegistration[]
-  checkins: EventCheckin[]
-  volunteer_bookings: VolunteerBooking[]
-  cancellation_reason: string | null
-  flyer_url: string | null
-}
+// Internal alias so helper functions below keep working without changes.
+type PaymentStatus = EventPaymentStatus
 
 function makeRegistrations(count: number, prefix: string): EventRegistration[] {
   const names = [
@@ -608,15 +555,6 @@ export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string
   campamento:   { label: 'Campamento',   color: 'teal' },
   social:       { label: 'Social',       color: 'coral' },
   capacitacion: { label: 'Capacitación', color: 'amber' },
-}
-
-export type EventTypeEntry = {
-  id: string
-  name: string
-  color: string
-  icon: string
-  description: string
-  is_active: boolean
 }
 
 export const EVENT_TYPES: EventTypeEntry[] = [

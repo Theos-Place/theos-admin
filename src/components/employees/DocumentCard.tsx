@@ -46,6 +46,7 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
           href={doc.url}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={`Abrir documento ${doc.name}`}
           className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-navy hover:bg-surface-low transition-colors"
         >
           <ExternalLink size={14} />
@@ -54,6 +55,7 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
           <button
             type="button"
             onClick={() => onDelete(doc.id)}
+            aria-label={`Eliminar documento ${doc.name}`}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors"
           >
             <Trash2 size={14} />
