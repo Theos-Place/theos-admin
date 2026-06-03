@@ -159,5 +159,96 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
   return normalize(data as Record<string, unknown>)
 }
 
+// ── Mutaciones ─────────────────────────────────────────────
+
+/** Campos escribibles de un evento (nombres de columna DB). */
+export type EventWriteInput = {
+  title: string
+  description?: string | null
+  event_type: string
+  location?: string | null
+  location_url?: string | null
+  starts_at: string
+  ends_at?: string | null
+  is_recurring?: boolean
+  recurrence_rule?: string | null
+  recurrence_end?: string | null
+  max_capacity?: number | null
+  flyer_url?: string | null
+  committee_id?: string | null
+  is_virtual?: boolean
+  requires_registration?: boolean
+  requires_payment?: boolean
+  payment_amount?: number | null
+  requires_survey?: boolean
+  status?: EventStatus
+  cancellation_reason?: string | null
+}
+
+type SubEventInput = { name: string; max_capacity: number }
+
+/** Crea un evento y sus sub-eventos. Devuelve el evento enriquecido. */
+export async function createEvent(
+  input: EventWriteInput,
+  subEvents: SubEventInput[] = [],
+): Promise<DbEventEnriched> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('events')
+    .insert(input)
+    .select('id')
+    .single()
+  if (error) throw error
+
+  const eventId = (data as { id: string }).id
+
+  if (subEvents.length > 0) {
+    const { error: subErr } = await supabase
+      .from('sub_events')
+      .insert(subEvents.map((s) => ({ ...s, event_id: eventId })))
+    if (subErr) throw subErr
+  }
+
+  const created = await getEventById(eventId)
+  if (!created) throw new Error('No se pudo cargar el evento recién creado')
+  return created
+}
+
+/** Actualiza los campos de un evento. Si se pasa `subEvents`, reemplaza el set
+ *  completo de sub-eventos (borra los existentes e inserta los nuevos). */
+export async function updateEvent(
+  id: string,
+  input: Partial<EventWriteInput>,
+  subEvents?: SubEventInput[],
+): Promise<DbEventEnriched> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase.from('events').update(input).eq('id', id)
+  if (error) throw error
+
+  if (subEvents) {
+    const { error: delErr } = await supabase.from('sub_events').delete().eq('event_id', id)
+    if (delErr) throw delErr
+    if (subEvents.length > 0) {
+      const { error: insErr } = await supabase
+        .from('sub_events')
+        .insert(subEvents.map((s) => ({ ...s, event_id: id })))
+      if (insErr) throw insErr
+    }
+  }
+
+  const updated = await getEventById(id)
+  if (!updated) throw new Error('Evento no encontrado tras actualizar')
+  return updated
+}
+
+/** Borrado lógico: marca is_active=false. El borrado duro lo hace el cascade. */
+export async function deleteEvent(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('events').update({ is_active: false }).eq('id', id)
+  if (error) throw error
+}
+
 // Re-exportamos tipos de dominio usados por el adapter
 export type { AttendanceType }

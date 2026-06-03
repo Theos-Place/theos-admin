@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getEvents } from '@/lib/supabase/queries/events'
+import { getEvents, createEvent } from '@/lib/supabase/queries/events'
+import { formToWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
 import type { EventType, EventStatus } from '@/types/event'
 
 export async function GET(req: NextRequest) {
@@ -24,6 +25,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('GET /api/events:', error)
+    const detail = error instanceof Error
+      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
+      : error
+    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const event = await createEvent(formToWriteInput(body), formToSubEvents(body))
+    return NextResponse.json(event, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/events:', error)
     const detail = error instanceof Error
       ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
       : error
