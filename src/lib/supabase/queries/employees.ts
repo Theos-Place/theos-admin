@@ -92,3 +92,156 @@ export async function getPaidPositions(): Promise<DbPaidPosition[]> {
   if (error) throw error
   return (data ?? []) as unknown as DbPaidPosition[]
 }
+
+// ── Mutaciones ─────────────────────────────────────────────
+
+export type PositionWriteInput = {
+  name: string
+  committee_id?: string | null
+  description?: string | null
+  contract_type?: ContractType | null
+  salary_min?: number | null
+  salary_max?: number | null
+  is_active?: boolean
+}
+
+export async function createPosition(input: PositionWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('paid_positions').insert(input).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function updatePosition(id: string, patch: Partial<PositionWriteInput>): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('paid_positions').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+export async function deletePosition(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('paid_positions').delete().eq('id', id)
+  if (error) throw error
+}
+
+export type EmployeeWriteInput = {
+  member_id?: string | null
+  position_id?: string | null
+  position?: string | null // columna legacy NOT NULL; se rellena desde el puesto si falta
+  contract_type?: ContractType | null
+  start_date?: string
+  end_date?: string | null
+  salary?: number | null
+  status?: 'active' | 'inactive' | 'on_leave' | 'terminated'
+  vacation_days_total?: number
+  notes?: string | null
+}
+
+export async function createEmployee(input: EmployeeWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const row: EmployeeWriteInput = { ...input }
+  // `position` (texto) es NOT NULL. Si no viene, lo derivamos del puesto pagado.
+  if (!row.position) {
+    if (row.position_id) {
+      const { data: pos } = await supabase
+        .from('paid_positions').select('name').eq('id', row.position_id).maybeSingle()
+      row.position = (pos as { name: string } | null)?.name ?? 'Sin definir'
+    } else {
+      row.position = 'Sin definir'
+    }
+  }
+  const { data, error } = await supabase.from('employees').insert(row).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function updateEmployee(id: string, patch: Partial<EmployeeWriteInput>): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('employees').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+/** Registra un cambio de salario: inserta en el historial (previous = actual) y
+ *  actualiza el salario vigente del empleado. */
+export async function recordSalaryChange(
+  employeeId: string,
+  newSalary: number,
+  reason?: string,
+): Promise<void> {
+  const supabase = createAdminClient()
+  const { data: emp, error: eErr } = await supabase
+    .from('employees').select('salary').eq('id', employeeId).single()
+  if (eErr) throw eErr
+  const previous = (emp as { salary: number | null }).salary
+
+  const { error: hErr } = await supabase.from('salary_changes').insert({
+    employee_id: employeeId,
+    previous_salary: previous,
+    new_salary: newSalary,
+    reason: reason ?? null,
+  })
+  if (hErr) throw hErr
+
+  const { error: uErr } = await supabase.from('employees').update({ salary: newSalary }).eq('id', employeeId)
+  if (uErr) throw uErr
+}
+
+export type VacationWriteInput = {
+  employee_id: string
+  type: VacationRecordType
+  start_date: string
+  end_date: string
+  days: number
+  status?: VacationRecordStatus
+  notes?: string | null
+}
+
+export async function createVacationRecord(input: VacationWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('vacation_records').insert(input).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+/** Cambia el estado de una solicitud de vacaciones. Al aprobar (tipo
+ *  'vacaciones') suma los días a vacation_days_used del empleado. */
+export async function setVacationStatus(id: string, status: VacationRecordStatus): Promise<void> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('vacation_records').update({ status }).eq('id', id)
+    .select('employee_id, days, type').single()
+  if (error) throw error
+
+  const rec = data as { employee_id: string; days: number; type: VacationRecordType }
+  if (status === 'aprobado' && rec.type === 'vacaciones') {
+    const { data: emp, error: eErr } = await supabase
+      .from('employees').select('vacation_days_used').eq('id', rec.employee_id).single()
+    if (eErr) throw eErr
+    const used = (emp as { vacation_days_used: number }).vacation_days_used ?? 0
+    const { error: uErr } = await supabase
+      .from('employees').update({ vacation_days_used: used + rec.days }).eq('id', rec.employee_id)
+    if (uErr) throw uErr
+  }
+}
+
+export type DocumentWriteInput = {
+  employee_id: string
+  title: string
+  doc_type: DocumentType
+  file_url?: string | null
+  expires_at?: string | null
+  notes?: string | null
+}
+
+export async function addEmployeeDocument(input: DocumentWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('employee_documents').insert(input).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function deleteEmployeeDocument(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('employee_documents').delete().eq('id', id)
+  if (error) throw error
+}
