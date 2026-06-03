@@ -5,9 +5,9 @@ import {
 } from 'lucide-react'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
-import { getEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/mock-events'
 
-type Event = NonNullable<ReturnType<typeof getEvent>>
+type Event = MockEvent
 
 function getGoogleCalendarUrl(event: Event) {
   const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE'

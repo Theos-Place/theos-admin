@@ -48,3 +48,35 @@ export function useEvents(filters: Filters = {}) {
 
   return { events, total, loading, error, refetch: fetchEvents }
 }
+
+/** Carga un evento individual por id (detalle). */
+export function useEvent(id: string | null) {
+  const [dbEvent, setDbEvent] = useState<DbEventEnriched | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState<string | null>(null)
+
+  const fetchEvent = useCallback(async () => {
+    if (!id) { setLoading(false); return }
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/events/${id}`)
+      if (res.status === 404) { setDbEvent(null); return }
+      if (!res.ok) throw new Error('Error cargando el evento')
+      setDbEvent(await res.json())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setLoading(false)
+    }
+  }, [id])
+
+  useEffect(() => { fetchEvent() }, [fetchEvent])
+
+  const event: MockEvent | null = useMemo(
+    () => (dbEvent ? toDomainEvent(dbEvent) : null),
+    [dbEvent],
+  )
+
+  return { event, loading, error, refetch: fetchEvent }
+}

@@ -2,10 +2,10 @@ import { useRef } from 'react'
 import { Image as ImageIcon } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { cn } from '@/lib/utils'
-import { getEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/mock-events'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
 
-type Event = NonNullable<ReturnType<typeof getEvent>>
+type Event = MockEvent
 
 type Props = {
   event: Event

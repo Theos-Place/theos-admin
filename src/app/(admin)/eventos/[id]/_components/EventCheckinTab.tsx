@@ -1,8 +1,8 @@
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { cn } from '@/lib/utils'
-import { getEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/mock-events'
 
-type Event = NonNullable<ReturnType<typeof getEvent>>
+type Event = MockEvent
 
 const AVATAR_COLORS: Record<string, string> = {
   A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',

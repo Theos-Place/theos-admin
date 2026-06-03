@@ -1,8 +1,8 @@
 import { Download, Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/mock-events'
 
-type Event = NonNullable<ReturnType<typeof getEvent>>
+type Event = MockEvent
 
 const PAYMENT_BADGE: Record<string, string> = {
   paid:     'bg-teal-soft/30 text-teal-deep',

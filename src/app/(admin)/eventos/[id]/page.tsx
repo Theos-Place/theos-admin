@@ -1,7 +1,7 @@
 'use client'
 
 import { use, useState, useMemo } from 'react'
-import { getEvent } from '@/data/mock-events'
+import { useEvent } from '@/hooks/useEvents'
 import { mockMembers } from '@/data/mock-members'
 import { CancellationModal } from '@/components/events/CancellationModal'
 import { cn } from '@/lib/utils'
@@ -77,7 +77,7 @@ const TAB_LABELS: Record<Tab, string> = {
 
 export default function EventoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const event = getEvent(id)
+  const { event, loading } = useEvent(id)
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
   const [showMenu, setShowMenu] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -109,7 +109,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
           <ChevronLeft size={16} /> Eventos
         </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Evento no encontrado.</p>
+        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          {loading ? 'Cargando…' : 'Evento no encontrado.'}
+        </p>
       </div>
     )
   }
