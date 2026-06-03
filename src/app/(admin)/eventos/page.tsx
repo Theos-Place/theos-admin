@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MOCK_EVENTS, EVENT_TYPE_CONFIG, EVENT_TYPES, type EventType } from '@/data/mock-events'
+import { EVENT_TYPE_CONFIG, EVENT_TYPES, type EventType, type MockEvent } from '@/data/mock-events'
+import { useEvents } from '@/hooks/useEvents'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { CapacityBar } from '@/components/events/CapacityBar'
@@ -19,7 +20,7 @@ const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
   })),
 ]
 
-function downloadAllEventsICS(events: typeof MOCK_EVENTS) {
+function downloadAllEventsICS(events: MockEvent[]) {
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 
@@ -56,26 +57,27 @@ function downloadAllEventsICS(events: typeof MOCK_EVENTS) {
 
 export default function EventosPage() {
   const router = useRouter()
+  const { events, loading } = useEvents()
   const [view, setView] = useState<'list' | 'calendar'>('list')
   const [typeFilter, setTypeFilter] = useState<EventType | 'all'>('all')
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState(now.getMonth())
   const [currentYear, setCurrentYear] = useState(now.getFullYear())
 
-  const thisMonthEvents = MOCK_EVENTS.filter(e => {
+  const thisMonthEvents = events.filter(e => {
     const d = new Date(e.start_at)
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
   })
 
-  const next7Days = MOCK_EVENTS.filter(e => {
+  const next7Days = events.filter(e => {
     const d = new Date(e.start_at)
     const diff = (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     return diff >= 0 && diff <= 7
   })
 
-  const totalRegistrations = MOCK_EVENTS.reduce((sum, e) => sum + e.registrations.length, 0)
+  const totalRegistrations = events.reduce((sum, e) => sum + e.registrations.length, 0)
 
-  const todayCheckins = MOCK_EVENTS.reduce((sum, e) => {
+  const todayCheckins = events.reduce((sum, e) => {
     return sum + e.checkins.filter(c => {
       const d = new Date(c.checked_at)
       return d.toDateString() === now.toDateString()
@@ -83,8 +85,8 @@ export default function EventosPage() {
   }, 0)
 
   const filtered = useMemo(() => {
-    return MOCK_EVENTS.filter(e => typeFilter === 'all' || e.event_type === typeFilter)
-  }, [typeFilter])
+    return events.filter(e => typeFilter === 'all' || e.event_type === typeFilter)
+  }, [events, typeFilter])
 
   function handlePrev() {
     if (currentMonth === 0) {
@@ -104,7 +106,7 @@ export default function EventosPage() {
     }
   }
 
-  const calendarMonthEvents = MOCK_EVENTS.filter(e => {
+  const calendarMonthEvents = events.filter(e => {
     const d = new Date(e.start_at)
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear
   })
@@ -121,7 +123,7 @@ export default function EventosPage() {
             Eventos
           </h1>
           <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
-            {MOCK_EVENTS.length} eventos en el sistema
+            {loading ? 'Cargando…' : `${events.length} eventos en el sistema`}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

@@ -1,7 +1,8 @@
 'use client'
 import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { MOCK_EVENTS } from '@/data/mock-events'
+import type { MockEvent } from '@/data/mock-events'
+import { useEvents } from '@/hooks/useEvents'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
@@ -16,15 +17,16 @@ function CalendarioWidget() {
   const showLoc = searchParams.get('showLoc') !== 'false'
   const showBtn = searchParams.get('showBtn') !== 'false'
 
+  const { events: allEvents } = useEvents()
   const events = useMemo(() =>
-    MOCK_EVENTS.filter(e =>
+    allEvents.filter(e =>
       e.status !== 'cancelled' && e.status !== 'archived' && types.includes(e.event_type)
     ).sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
-  , [types])
+  , [allEvents, types])
 
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
-  const [selectedEvent, setSelectedEvent] = useState<(typeof MOCK_EVENTS)[0] | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<MockEvent | null>(null)
 
   function formatEventTime(iso: string) {
     return new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })
