@@ -89,3 +89,111 @@ export async function getFormResponses(formId: string): Promise<DbFormResponse[]
   if (error) throw error
   return (data ?? []) as unknown as DbFormResponse[]
 }
+
+// ── Mutaciones ─────────────────────────────────────────────
+
+export type FieldInput = {
+  field_type: string
+  label: string
+  placeholder?: string | null
+  help_text?: string | null
+  description?: string | null
+  is_required?: boolean
+  options?: unknown
+  conditions?: unknown
+  scale_min?: number | null
+  scale_max?: number | null
+  scale_min_label?: string | null
+  scale_max_label?: string | null
+}
+
+export type FormWriteInput = {
+  title: string
+  description?: string | null
+  category?: string | null
+  entity_type?: 'event' | 'study_group' | 'general' | null
+  entity_id?: string | null
+  slug?: string | null
+  is_active?: boolean
+}
+
+async function insertFields(supabase: ReturnType<typeof createAdminClient>, formId: string, fields: FieldInput[]) {
+  if (fields.length === 0) return
+  const rows = fields.map((f, i) => ({ ...f, form_id: formId, sort_order: i }))
+  const { error } = await supabase.from('form_fields').insert(rows)
+  if (error) throw error
+}
+
+export async function createForm(input: FormWriteInput, fields: FieldInput[] = []): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('forms').insert(input).select('id').single()
+  if (error) throw error
+  const id = (data as { id: string }).id
+  await insertFields(supabase, id, fields)
+  return { id }
+}
+
+/** Actualiza el form. Si se pasan `fields`, reemplaza el set completo. */
+export async function updateForm(
+  id: string,
+  patch: Partial<FormWriteInput>,
+  fields?: FieldInput[],
+): Promise<void> {
+  const supabase = createAdminClient()
+  if (Object.keys(patch).length > 0) {
+    const { error } = await supabase.from('forms').update(patch).eq('id', id)
+    if (error) throw error
+  }
+  if (fields) {
+    const { error: delErr } = await supabase.from('form_fields').delete().eq('form_id', id)
+    if (delErr) throw delErr
+    await insertFields(supabase, id, fields)
+  }
+}
+
+export async function deleteForm(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('forms').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Registra una respuesta: crea form_response y sus form_response_values.
+ *  `answers` viene keyed por field_id. */
+export async function submitResponse(
+  formId: string,
+  input: {
+    member_id?: string | null
+    guest_name?: string | null
+    guest_email?: string | null
+    answers: Record<string, string | string[] | number>
+  },
+): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('form_responses')
+    .insert({
+      form_id: formId,
+      member_id: input.member_id ?? null,
+      guest_name: input.guest_name ?? null,
+      guest_email: input.guest_email ?? null,
+    })
+    .select('id')
+    .single()
+  if (error) throw error
+  const responseId = (data as { id: string }).id
+
+  const values = Object.entries(input.answers).map(([field_id, value]) => {
+    const isComposite = Array.isArray(value) || typeof value === 'number'
+    return {
+      response_id: responseId,
+      field_id,
+      value_text: isComposite ? null : String(value),
+      value_json: isComposite ? value : null,
+    }
+  })
+  if (values.length > 0) {
+    const { error: vErr } = await supabase.from('form_response_values').insert(values)
+    if (vErr) throw vErr
+  }
+  return { id: responseId }
+}
