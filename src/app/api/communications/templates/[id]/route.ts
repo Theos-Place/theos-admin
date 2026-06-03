@@ -1,0 +1,32 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { updateTemplate, deleteTemplate, type TemplateWriteInput } from '@/lib/supabase/queries/communications'
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params
+    await updateTemplate(id, (await req.json()) as Partial<TemplateWriteInput>)
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('PUT /api/communications/templates/[id]:', error)
+    const detail = error instanceof Error ? { message: error.message } : error
+    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params
+    await deleteTemplate(id)
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('DELETE /api/communications/templates/[id]:', error)
+    const detail = error instanceof Error ? { message: error.message } : error
+    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+  }
+}
