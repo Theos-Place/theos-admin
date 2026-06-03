@@ -163,3 +163,177 @@ export async function getRelocations(): Promise<DbRelocation[]> {
   if (error) throw error
   return (data ?? []) as unknown as DbRelocation[]
 }
+
+// ── Mutaciones ─────────────────────────────────────────────
+
+export type PlanWriteInput = {
+  name: string
+  code?: string | null
+  description?: string | null
+  level: DbStudyPlan['level']
+  cost?: number
+  duration_weeks?: number | null
+  max_students?: number | null
+  requires_donor?: boolean
+  requires_attendance?: boolean
+  requires_payment?: boolean
+  requires_grade?: boolean
+  requires_server?: boolean
+  auto_promote?: boolean
+  prerequisite_code?: string | null
+  next_study_code?: string | null
+  min_attendance_pct?: number
+  is_active?: boolean
+}
+
+export type GroupWriteInput = {
+  plan_id?: string
+  name: string
+  leader_id?: string | null
+  zone?: string | null
+  schedule_days?: string[] | null
+  schedule_time?: string | null
+  location?: string | null
+  sede?: string | null
+  max_students?: number | null
+  starts_at?: string | null
+  ends_at?: string | null
+  status?: DbGroupEnriched['status']
+  current_week?: number
+  whatsapp_group_url?: string | null
+}
+
+/** Resuelve el UUID de un plan a partir de su `code` (el frontend usa code). */
+export async function getPlanIdByCode(code: string): Promise<string | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('study_plans').select('id').eq('code', code).maybeSingle()
+  if (error) throw error
+  return data ? (data as { id: string }).id : null
+}
+
+// Planes
+export async function createPlan(input: PlanWriteInput): Promise<DbStudyPlan> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('study_plans').insert(input).select('*').single()
+  if (error) throw error
+  return data as DbStudyPlan
+}
+
+export async function updatePlan(id: string, patch: Partial<PlanWriteInput>): Promise<DbStudyPlan> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('study_plans').update(patch).eq('id', id).select('*').single()
+  if (error) throw error
+  return data as DbStudyPlan
+}
+
+// Grupos
+export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('study_groups').insert(input).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('study_groups').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+// Inscripciones
+export async function enrollMember(groupId: string, memberId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('study_enrollments')
+    .upsert({ group_id: groupId, member_id: memberId, status: 'enrolled' }, { onConflict: 'group_id,member_id' })
+  if (error) throw error
+}
+
+export async function withdrawMember(groupId: string, memberId: string, reason?: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('study_enrollments')
+    .update({ status: 'dropped', dropped_at: new Date().toISOString(), drop_reason: reason ?? null })
+    .eq('group_id', groupId)
+    .eq('member_id', memberId)
+  if (error) throw error
+}
+
+export async function setEnrollmentGrade(groupId: string, memberId: string, grade: number): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('study_enrollments')
+    .update({ grade })
+    .eq('group_id', groupId)
+    .eq('member_id', memberId)
+  if (error) throw error
+}
+
+// Waitlist
+export async function addToWaitlist(input: {
+  member_id: string
+  zone_preference?: string | null
+  schedule_preference?: string | null
+  type?: 'N1' | 'campaign'
+  campaign_code?: string | null
+}): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('study_waitlist').insert(input)
+  if (error) throw error
+}
+
+export async function removeFromWaitlist(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('study_waitlist').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Promueve una entrada de waitlist a un grupo: inscribe al miembro y borra la entrada. */
+export async function promoteFromWaitlist(waitlistId: string, groupId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_waitlist').select('member_id').eq('id', waitlistId).single()
+  if (error) throw error
+  await enrollMember(groupId, (data as { member_id: string }).member_id)
+  await removeFromWaitlist(waitlistId)
+}
+
+// Reubicaciones
+export async function createRelocation(input: {
+  member_id: string
+  from_group_id?: string | null
+  study_plan_code?: string | null
+  reason?: string | null
+}): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('relocation_requests').insert(input)
+  if (error) throw error
+}
+
+export async function resolveRelocation(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('relocation_requests').update({ status: 'resolved' }).eq('id', id)
+  if (error) throw error
+}
+
+// Líderes
+export type LeaderWriteInput = {
+  member_id: string
+  zone_preference?: string[]
+  availability_status?: DbLeaderEnriched['availability_status']
+  is_active?: boolean
+  qualified_study_codes?: string[]
+}
+
+export async function createLeader(input: LeaderWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('study_leaders').insert(input).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function updateLeader(id: string, patch: Partial<LeaderWriteInput>): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('study_leaders').update(patch).eq('id', id)
+  if (error) throw error
+}

@@ -1,14 +1,23 @@
-import { NextResponse } from 'next/server'
-import { getWaitlist } from '@/lib/supabase/queries/studies'
+import { NextRequest, NextResponse } from 'next/server'
+import { getWaitlist, addToWaitlist } from '@/lib/supabase/queries/studies'
 
 export async function GET() {
   try {
     return NextResponse.json(await getWaitlist())
   } catch (error) {
     console.error('GET /api/studies/waitlist:', error)
-    const detail = error instanceof Error
-      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
-      : error
+    const detail = error instanceof Error ? { message: error.message } : error
+    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    await addToWaitlist(await req.json())
+    return NextResponse.json({ ok: true }, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/studies/waitlist:', error)
+    const detail = error instanceof Error ? { message: error.message } : error
     return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
   }
 }
