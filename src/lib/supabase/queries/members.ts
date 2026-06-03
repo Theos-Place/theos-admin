@@ -316,18 +316,24 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   // 2. Queries en paralelo para histórico pesado
   const [
     checkinsRes,
+    volunteersRes,
     paymentsRes,
     formsRes,
   ] = await Promise.all([
     supabase
       .from('event_checkins')
       .select(`
+        event_id,
         checked_in_at,
-        events(title, event_type, starts_at),
-        event_volunteers:event_volunteers!event_volunteers_member_id_fkey(member_id)
+        events(title, event_type, starts_at)
       `)
       .eq('member_id', id)
       .order('checked_in_at', { ascending: false }),
+
+    supabase
+      .from('event_volunteers')
+      .select('event_id')
+      .eq('member_id', id),
 
     supabase
       .from('payments')
@@ -356,9 +362,15 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       .order('submitted_at', { ascending: false }),
   ])
 
-  if (checkinsRes.error) throw checkinsRes.error
-  if (paymentsRes.error) throw paymentsRes.error
-  if (formsRes.error)    throw formsRes.error
+  if (checkinsRes.error)   throw checkinsRes.error
+  if (volunteersRes.error) throw volunteersRes.error
+  if (paymentsRes.error)   throw paymentsRes.error
+  if (formsRes.error)      throw formsRes.error
+
+  // Set de event_ids donde el miembro sirvió como voluntario
+  const volunteerEventIds = new Set(
+    (volunteersRes.data ?? []).map((v) => (v as { event_id: string }).event_id),
+  )
 
   // 3. Aplanar relaciones del miembro (sede, roles, volunteers, studies)
   const memberRoles = (memberRow.member_roles ?? []) as Array<{
@@ -396,12 +408,11 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   const attendance: DbAttendance[] = (checkinsRes.data ?? []).map((c) => {
     const row = c as Record<string, unknown>
     const ev = row.events as { title: string; event_type: string; starts_at: string } | null
-    const evVols = (row.event_volunteers as Array<{ member_id: string }> | null) ?? []
     return {
       event_name: ev?.title ?? '',
       event_type: ev?.event_type ?? 'otro',
       event_date: ev?.starts_at ?? row.checked_in_at as string,
-      was_volunteer: evVols.length > 0,
+      was_volunteer: volunteerEventIds.has(row.event_id as string),
     }
   })
 
