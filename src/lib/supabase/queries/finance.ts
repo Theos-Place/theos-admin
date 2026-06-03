@@ -159,3 +159,174 @@ export async function getImportBatches(): Promise<DbImportBatch[]> {
   if (error) throw error
   return (data ?? []) as DbImportBatch[]
 }
+
+// ── Mutaciones ─────────────────────────────────────────────
+
+export type PaymentWriteInput = {
+  member_id?: string | null
+  entity_type?: 'event' | 'study_group' | null
+  event_id?: string | null
+  study_group_id?: string | null
+  amount: number
+  payment_method?: PaymentMethod | null
+  status?: PaymentStatus
+  gateway_ref?: string | null
+  sinpe_confirmation?: string | null
+  scholarship_id?: string | null
+  paid_at?: string | null
+  description?: string | null
+}
+
+export async function createPayment(input: PaymentWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('payments').insert(input).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export type ScholarshipWriteInput = {
+  member_id: string
+  entity_type?: 'study_group' | 'event' | null
+  study_group_id?: string | null
+  event_id?: string | null
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  original_amount: number
+  final_amount: number
+  reason?: string | null
+  notes?: string | null
+  created_by?: string | null
+}
+
+export async function createScholarship(input: ScholarshipWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  // scholarships.amount y reason son NOT NULL en el esquema original.
+  const row = {
+    ...input,
+    amount: input.original_amount - input.final_amount,
+    reason: input.reason ?? input.notes ?? 'Beca',
+    status: 'approved' as const,
+  }
+  const { data, error } = await supabase.from('scholarships').insert(row).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function markScholarshipUsed(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('scholarships')
+    .update({ is_used: true, used_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export type RefundWriteInput = {
+  payment_id: string
+  member_id?: string | null
+  amount: number
+  method?: PaymentMethod | null
+  reason?: string | null
+  sinpe_pending?: boolean
+  notes?: string | null
+}
+
+export async function createRefund(input: RefundWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('refunds').insert(input).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+/** Cambia el estado de una devolución. Al completar, marca el pago como reembolsado. */
+export async function processRefund(id: string, status: RefundStatus): Promise<void> {
+  const supabase = createAdminClient()
+  const patch: Record<string, unknown> = { status }
+  if (status === 'completed' || status === 'rejected') {
+    patch.processed_at = new Date().toISOString()
+  }
+  const { data, error } = await supabase.from('refunds').update(patch).eq('id', id).select('payment_id').single()
+  if (error) throw error
+
+  if (status === 'completed') {
+    const { error: pErr } = await supabase
+      .from('payments').update({ status: 'refunded' }).eq('id', (data as { payment_id: string }).payment_id)
+    if (pErr) throw pErr
+  }
+}
+
+// ── Importación de donaciones ──────────────────────────────
+
+export type DonationRow = {
+  cedula?: string | null
+  donation_date: string
+  amount: number
+}
+
+/** Importa un lote de donaciones: identifica por cédula, detecta duplicados
+ *  (mismo miembro+fecha+monto ya existente) y crea el registro del lote. */
+export async function importDonations(
+  filename: string,
+  rows: DonationRow[],
+): Promise<DbImportBatch> {
+  const supabase = createAdminClient()
+
+  // 1. Resolver cédulas → member_id en un solo query.
+  const cedulas = Array.from(new Set(rows.map((r) => r.cedula).filter(Boolean))) as string[]
+  const cedulaToId = new Map<string, string>()
+  if (cedulas.length > 0) {
+    const { data: members, error: mErr } = await supabase
+      .from('members').select('id, cedula').in('cedula', cedulas)
+    if (mErr) throw mErr
+    for (const m of (members ?? []) as Array<{ id: string; cedula: string }>) {
+      cedulaToId.set(m.cedula, m.id)
+    }
+  }
+
+  // 2. Armar filas, contar identificados y duplicados.
+  let identified = 0
+  let duplicates = 0
+  const toInsert: Array<Record<string, unknown>> = []
+
+  for (const r of rows) {
+    const memberId = r.cedula ? cedulaToId.get(r.cedula) ?? null : null
+    const isIdentified = memberId != null
+    if (isIdentified) identified++
+
+    let isDup = false
+    if (memberId) {
+      const { count } = await supabase
+        .from('donations')
+        .select('id', { count: 'exact', head: true })
+        .eq('member_id', memberId)
+        .eq('donation_date', r.donation_date)
+        .eq('amount', r.amount)
+      if ((count ?? 0) > 0) { isDup = true; duplicates++ }
+    }
+    if (isDup) continue
+
+    toInsert.push({
+      member_id: memberId,
+      donation_date: r.donation_date,
+      amount: r.amount,
+      source_file: filename,
+      is_identified: isIdentified,
+    })
+  }
+
+  if (toInsert.length > 0) {
+    const { error: dErr } = await supabase.from('donations').insert(toInsert)
+    if (dErr) throw dErr
+  }
+
+  // 3. Registrar el lote.
+  const unidentified = rows.length - identified
+  const status = duplicates === rows.length ? 'failed' : duplicates > 0 ? 'partial' : 'completed'
+  const { data: batch, error: bErr } = await supabase
+    .from('import_batches')
+    .insert({ filename, total_rows: rows.length, identified, unidentified, duplicates, status })
+    .select('*')
+    .single()
+  if (bErr) throw bErr
+  return batch as DbImportBatch
+}
