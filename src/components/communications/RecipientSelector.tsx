@@ -45,7 +45,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
       .filter(m => !value.manualMemberIds.includes(m.id) && (
         m.first_name.toLowerCase().includes(q) ||
         m.last_name.toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q)
+        (m.email?.toLowerCase().includes(q) ?? false)
       ))
       .slice(0, 6)
   }, [memberSearch, value.manualMemberIds])

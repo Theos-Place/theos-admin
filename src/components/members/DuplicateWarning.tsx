@@ -34,7 +34,7 @@ export function DuplicateWarning({ member, onDismiss }: Props) {
                 {member.first_name} {member.last_name}
               </p>
               <p className="text-xs text-amber-600" style={{ fontFamily: 'var(--font-body)' }}>
-                {member.status === 'active' ? 'Activo' : 'Inactivo'} · {sedeLabel(member.sede)}
+                {member.is_active ? 'Activo' : 'Inactivo'} · {sedeLabel(member.sede)}
               </p>
             </div>
           </div>

@@ -14,12 +14,12 @@ import {
   Check,
 } from 'lucide-react'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
-import { mockMembers } from '@/data/mock-members'
+import { useMembers } from '@/hooks/useMembers'
 import { listStore } from '@/data/mock-member-lists'
 import type { FilterCondition } from '@/types/filters'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
 import { QueryBar } from '@/components/members/QueryBar'
-import { type Member } from '@/data/mock-members'
+import { type Member } from '@/types/member'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { TOAST_LONG_MS } from '@/lib/constants'
 import { ExportButton } from '@/components/shared/ExportButton'
@@ -53,15 +53,34 @@ function avatarColor(id: string) {
   return AVATAR_COLORS[n % AVATAR_COLORS.length]
 }
 
+// Estilos de badge por rol. Los 12 roles vienen de member_roles.role en Supabase.
 const ROLE_BADGE: Record<string, string> = {
-  servidor:  'bg-teal-soft/30 text-teal-deep',
-  dirigente: 'bg-navy/10 text-navy',
-  admin:     'bg-coral-soft/20 text-coral',
+  admin:                  'bg-coral-soft/20 text-coral',
+  direccion:              'bg-coral-soft/20 text-coral',
+  finanzas:               'bg-navy/10 text-navy',
+  encargado_staff:        'bg-navy/10 text-navy',
+  coordinador_estudios:   'bg-navy/10 text-navy',
+  coordinador_dirigentes: 'bg-navy/10 text-navy',
+  lider_comite:           'bg-navy/10 text-navy',
+  comunicaciones:         'bg-teal-soft/30 text-teal-deep',
+  dirigente:              'bg-navy/10 text-navy',
+  editor_perfiles:        'bg-teal-soft/30 text-teal-deep',
+  miembro:                'bg-surface-low text-navy-light/60',
+  solo_lectura:           'bg-surface-low text-navy-light/40',
 }
 const ROLE_LABEL: Record<string, string> = {
-  servidor:  'Servidor',
-  dirigente: 'Dirigente',
-  admin:     'Admin',
+  admin:                  'Admin',
+  direccion:              'Dirección',
+  finanzas:               'Finanzas',
+  encargado_staff:        'Encargado de Staff',
+  coordinador_estudios:   'Coord. Estudios',
+  coordinador_dirigentes: 'Coord. Dirigentes',
+  lider_comite:           'Líder Comité',
+  comunicaciones:         'Comunicaciones',
+  dirigente:              'Dirigente',
+  editor_perfiles:        'Editor Perfiles',
+  miembro:                'Miembro',
+  solo_lectura:           'Sólo Lectura',
 }
 
 const QUICK_CHIPS = [
@@ -71,7 +90,7 @@ const QUICK_CHIPS = [
 ] as const
 
 const GENDER_LABELS: Record<string, string> = {
-  masculino: 'Masculino', femenino: 'Femenino', no_indica: 'No indica',
+  M: 'Masculino', F: 'Femenino', otro: 'No indica',
 }
 
 const MEMBER_COLUMNS: ColumnDef<Member>[] = [
@@ -95,7 +114,7 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'status', label: 'Estado', defaultVisible: true,
-    exportValue: m => m.status === 'active' ? 'Activo' : 'Inactivo',
+    exportValue: m => m.is_active ? 'Activo' : 'Inactivo',
   },
   {
     key: 'is_donor', label: 'Donador', defaultVisible: false,
@@ -148,10 +167,10 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'gender', label: 'Género', defaultVisible: false,
-    exportValue: m => GENDER_LABELS[m.gender] ?? '',
+    exportValue: m => (m.gender ? GENDER_LABELS[m.gender] : '') ?? '',
   },
   {
-    key: 'profession', label: 'Ocupación', defaultVisible: false,
+    key: 'occupation', label: 'Ocupación', defaultVisible: false,
   },
 ]
 
@@ -186,7 +205,8 @@ function buildSegmentLabel(conditions: FilterCondition[], showDonors: boolean, s
 export default function MiembrosPage() {
   const router = useRouter()
   const { can } = usePermissions()
-  const filters = useMemberFilters()
+  const { members: supabaseMembers, total, loading, error } = useMembers({ is_active: true })
+  const filters = useMemberFilters(supabaseMembers)
 
   const [showDonors,     setShowDonors]     = useState(false)
   const [showServers,    setShowServers]    = useState(false)
@@ -254,15 +274,15 @@ export default function MiembrosPage() {
   }
 
   const displayMembers = useMemo(() => {
-    let list = filters.filteredMembers
+    let list = filters.filteredMembers.length > 0 ? filters.filteredMembers : supabaseMembers
     if (showDonors)  list = list.filter(m => m.is_donor)
     if (showServers) list = list.filter(m => m.is_server)
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(m =>
         `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q) ||
-        m.phone.includes(q) ||
+        (m.email?.toLowerCase().includes(q) ?? false) ||
+        (m.phone?.includes(q) ?? false) ||
         (m.cedula != null && m.cedula.includes(q))
       )
     }
@@ -301,7 +321,8 @@ export default function MiembrosPage() {
             Miembros
           </h1>
           <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-            23,418 registrados
+            {loading ? 'Cargando…' : `${total.toLocaleString('es-CR')} registrados`}
+            {error && <span className="text-coral"> · {error}</span>}
           </p>
         </div>
 
@@ -622,8 +643,8 @@ export default function MiembrosPage() {
                         case 'status':
                           return (
                             <td key="status" className="px-4 py-3.5">
-                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', member.status === 'active' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
-                                {member.status === 'active' ? 'Activo' : 'Inactivo'}
+                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
+                                {member.is_active ? 'Activo' : 'Inactivo'}
                               </span>
                             </td>
                           )

@@ -87,9 +87,9 @@ export function MemberPersonalTab({ member }: Props) {
           >
             Contacto
           </p>
-          <InfoRow icon={<Phone size={15} strokeWidth={1.75} />} label="Teléfono" value={member.phone} />
-          <InfoRow icon={<Mail size={15} strokeWidth={1.75} />} label="Correo" value={member.email} />
-          <InfoRow icon={<MapPin size={15} strokeWidth={1.75} />} label="Dirección" value={member.address} />
+          <InfoRow icon={<Phone size={15} strokeWidth={1.75} />} label="Teléfono" value={member.phone ?? '—'} />
+          <InfoRow icon={<Mail size={15} strokeWidth={1.75} />} label="Correo" value={member.email ?? '—'} />
+          <InfoRow icon={<MapPin size={15} strokeWidth={1.75} />} label="Dirección" value={member.address ?? '—'} />
           <InfoRow
             icon={<Phone size={15} strokeWidth={1.75} />}
             label="Contacto de emergencia"
@@ -113,27 +113,27 @@ export function MemberPersonalTab({ member }: Props) {
           <InfoRow
             icon={<User size={15} strokeWidth={1.75} />}
             label="Edad"
-            value={`${calculateAge(member.birth_date)} años · ${formatDate(member.birth_date)}`}
+            value={member.birth_date ? `${calculateAge(member.birth_date)} años · ${formatDate(member.birth_date)}` : '—'}
           />
           <InfoRow
             icon={<User size={15} strokeWidth={1.75} />}
             label="Género"
             value={
-              member.gender === 'masculino'
+              member.gender === 'M'
                 ? 'Masculino'
-                : member.gender === 'femenino'
+                : member.gender === 'F'
                 ? 'Femenino'
                 : 'No indica'
             }
           />
-          <InfoRow icon={<Heart size={15} strokeWidth={1.75} />} label="Estado civil" value={member.marital_status} />
-          <InfoRow icon={<Briefcase size={15} strokeWidth={1.75} />} label="Profesión" value={member.profession} />
-          <InfoRow icon={<Building size={15} strokeWidth={1.75} />} label="Lugar de trabajo" value={member.workplace} />
+          <InfoRow icon={<Heart size={15} strokeWidth={1.75} />} label="Estado civil" value={member.marital_status ?? '—'} />
+          <InfoRow icon={<Briefcase size={15} strokeWidth={1.75} />} label="Profesión" value={member.occupation ?? '—'} />
+          <InfoRow icon={<Building size={15} strokeWidth={1.75} />} label="Lugar de trabajo" value={member.workplace ?? '—'} />
         </div>
       </div>
 
       {/* Salud */}
-      {(member.alergias || member.medicamentos) && (
+      {(member.allergies || member.medicamentos) && (
         <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--outline-variant)' }}>
           <p
             className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3"
@@ -141,7 +141,7 @@ export function MemberPersonalTab({ member }: Props) {
           >
             Salud
           </p>
-          <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias" value={member.alergias ?? '—'} editable={false} />
+          <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias" value={member.allergies ?? '—'} editable={false} />
           <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Medicamentos" value={member.medicamentos ?? '—'} editable={false} />
         </div>
       )}

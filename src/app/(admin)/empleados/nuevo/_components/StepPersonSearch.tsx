@@ -138,7 +138,7 @@ export function StepPersonSearch({
                       className="text-[11px] text-navy-light/30 shrink-0"
                       style={{ fontFamily: 'var(--font-body)' }}
                     >
-                      {m.profession}
+                      {m.occupation}
                     </span>
                   </button>
                 ))

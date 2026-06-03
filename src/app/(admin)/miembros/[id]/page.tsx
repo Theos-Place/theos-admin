@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { notFound } from 'next/navigation'
-import { mockMembers } from '@/data/mock-members'
+import { useMember } from '@/hooks/useMember'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { cn } from '@/lib/utils'
 import { MemberHeader } from './_components/MemberHeader'
@@ -57,8 +57,7 @@ export default function MiembroDetailPage() {
   const router = useRouter()
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : ''
 
-  const member = mockMembers.find(m => m.id === id)
-  if (!member) notFound()
+  const { member, loading, notFound: isNotFound, error } = useMember(id || undefined)
 
   const [activeTab, setActiveTab] = useState('resumen')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -78,70 +77,73 @@ export default function MiembroDetailPage() {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  // Derived
-  const currentStudyEntry = member.current_study
+  // Derived (safe-against-null para no romper los hooks de abajo mientras carga)
+  const currentStudyEntry = member?.current_study
     ? STUDY_CATALOG.find(s => s.code === member.current_study)
     : null
 
-  const currentWeek = currentStudyEntry
+  const currentWeek = currentStudyEntry && member
     ? getStudyWeek(member.id, currentStudyEntry.weeks)
     : 0
 
-  const activeService = member.service_history.find(s => s.status === 'activo')
+  const activeService = member?.service_history.find(s => s.status === 'activo')
 
-  const lastStudyCode = member.completed_studies[member.completed_studies.length - 1]
+  const lastStudyCode = member?.completed_studies[member.completed_studies.length - 1]
   const lastStudyEntry = lastStudyCode ? STUDY_CATALOG.find(s => s.code === lastStudyCode) : null
 
   const hasFinanceRole = true // demo
 
   // ── Typed rows for sortable tables ──────────────────────────────────────────
 
-  const estudiosRows: StudyRow[] = useMemo(() => [
-    ...member.completed_studies.map((code, i) => {
-      const entry = STUDY_CATALOG.find(s => s.code === code)
-      return {
-        code,
-        name: entry?.name ?? code,
-        startYear: 2025 - (member.completed_studies.length - i),
-        duration: entry ? `${entry.weeks} sem.` : '—',
-        status: 'Completado',
-      }
-    }),
-    ...(member.current_study ? [{
-      code: member.current_study,
-      name: currentStudyEntry?.name ?? member.current_study,
-      startYear: 2025,
-      duration: '—',
-      status: 'En curso',
-    }] : []),
-  ], [member.completed_studies, member.current_study, currentStudyEntry])
+  const estudiosRows: StudyRow[] = useMemo(() => {
+    if (!member) return []
+    return [
+      ...member.completed_studies.map((code, i) => {
+        const entry = STUDY_CATALOG.find(s => s.code === code)
+        return {
+          code,
+          name: entry?.name ?? code,
+          startYear: 2025 - (member.completed_studies.length - i),
+          duration: entry ? `${entry.weeks} sem.` : '—',
+          status: 'Completado',
+        }
+      }),
+      ...(member.current_study ? [{
+        code: member.current_study,
+        name: currentStudyEntry?.name ?? member.current_study,
+        startYear: 2025,
+        duration: '—',
+        status: 'En curso',
+      }] : []),
+    ]
+  }, [member, currentStudyEntry])
 
   const servicioRows: ServiceRow[] = useMemo(() =>
-    member.service_history.map(s => ({
+    (member?.service_history ?? []).map(s => ({
       position: s.position,
       committee: s.committee,
       from: s.from,
       to: s.to ?? '',
       status: s.status,
     })),
-  [member.service_history])
+  [member])
 
   const eventosRows: EventoRow[] = useMemo(() =>
-    member.attendance_history.map(ev => ({
+    (member?.attendance_history ?? []).map(ev => ({
       name: ev.name,
       type: ev.type,
       date: ev.date,
       attendance_type: ev.attendance_type,
     })),
-  [member.attendance_history])
+  [member])
 
   const donacionesRows: DonacionRow[] = useMemo(() =>
-    member.donations.map(d => ({
+    (member?.donations ?? []).map(d => ({
       date: d.date,
       description: d.description,
       amount: d.amount,
     })),
-  [member.donations])
+  [member])
 
   // ── Sortable tables ──────────────────────────────────────────────────────────
   const estudiosTable  = useSortableTable(estudiosRows)
@@ -154,6 +156,23 @@ export default function MiembroDetailPage() {
   const [visibleServicio,  setVisibleServicio]  = useState(LOAD_MORE)
   const [visibleEventos,   setVisibleEventos]   = useState(LOAD_MORE)
   const [visibleDonaciones, setVisibleDonaciones] = useState(LOAD_MORE)
+
+  // ── Estados de carga (van DESPUÉS de todos los hooks por reglas de React) ──
+  if (isNotFound) notFound()
+  if (error) {
+    return (
+      <div className="p-8 text-center text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+        Error cargando miembro: {error}
+      </div>
+    )
+  }
+  if (loading || !member) {
+    return (
+      <div className="p-8 text-center text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        Cargando…
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

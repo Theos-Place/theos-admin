@@ -66,11 +66,11 @@ export default function NuevoEmpleadoPage() {
     const q = query.trim().toLowerCase()
     if (!q) return []
     return mockMembers
-      .filter(m => m.status === 'active' && !alreadyHiredIds.has(m.id))
+      .filter(m => m.is_active && !alreadyHiredIds.has(m.id))
       .filter(
         m =>
           `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-          m.email.toLowerCase().includes(q) ||
+          (m.email?.toLowerCase().includes(q) ?? false) ||
           (m.cedula ?? '').includes(q)
       )
       .slice(0, 8)

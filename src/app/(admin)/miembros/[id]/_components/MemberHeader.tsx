@@ -81,7 +81,7 @@ export function MemberHeader({
             <span
               className={cn(
                 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs',
-                member.status === 'active'
+                member.is_active
                   ? 'bg-teal-soft/50 text-teal-deep'
                   : 'bg-surface-low text-navy-light/50'
               )}
@@ -90,10 +90,10 @@ export function MemberHeader({
               <span
                 className={cn(
                   'mr-1.5 h-1.5 w-1.5 rounded-full',
-                  member.status === 'active' ? 'bg-teal-deep' : 'bg-navy-light/30'
+                  member.is_active ? 'bg-teal-deep' : 'bg-navy-light/30'
                 )}
               />
-              {member.status === 'active' ? 'Activo' : 'Inactivo'}
+              {member.is_active ? 'Activo' : 'Inactivo'}
             </span>
             {member.is_donor && (
               <span

@@ -26,22 +26,22 @@ function getMemberFieldValue(member: Member, key: string): string {
     case 'full_name':               return `${member.first_name} ${member.last_name}`
     case 'cedula':                  return member.cedula || '—'
     case 'age':                     return member.birth_date ? `${calcularEdad(member.birth_date)} años` : `${member.age} años`
-    case 'gender':                  return member.gender === 'masculino' ? 'Masculino' : member.gender === 'femenino' ? 'Femenino' : 'No indica'
+    case 'gender':                  return member.gender === 'M' ? 'Masculino' : member.gender === 'F' ? 'Femenino' : 'No indica'
     case 'marital_status':          return member.marital_status || '—'
     case 'phone':                   return member.phone || '—'
     case 'email':                   return member.email || '—'
     case 'address':                 return member.address || '—'
     case 'emergency_contact_name':  return member.emergency_contact_name || '—'
     case 'emergency_contact_phone': return member.emergency_contact_phone || '—'
-    case 'occupation':              return member.profession || '—'
+    case 'occupation':              return member.occupation || '—'
     case 'workplace':               return member.workplace || '—'
-    case 'allergies':               return member.allergies || member.alergias || '—'
+    case 'allergies':               return member.allergies || '—'
     default:                        return '—'
   }
 }
 
 // Use first active mock member as "current user" for preview purposes
-const PREVIEW_MEMBER = mockMembers.find(m => m.status === 'active') ?? mockMembers[0]
+const PREVIEW_MEMBER = mockMembers.find(m => m.is_active) ?? mockMembers[0]
 
 // ─── Logic evaluation ─────────────────────────────────────────────────────────
 

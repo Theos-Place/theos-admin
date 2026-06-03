@@ -25,7 +25,7 @@ CREATE TABLE members (
   birth_date              DATE,
   gender                  TEXT CHECK (gender IN ('M', 'F', 'otro')),
   marital_status          TEXT,
-  phone_whatsapp          TEXT,
+  phone          TEXT,
   email                   TEXT UNIQUE,
   province                TEXT,
   canton                  TEXT,
@@ -502,7 +502,7 @@ SELECT
   m.id,
   m.first_name || ' ' || m.last_name  AS nombre,
   m.cedula,
-  m.phone_whatsapp,
+  m.phone,
   m.province,
   m.canton,
   COUNT(ec.id)                         AS total_asistencias,
@@ -510,7 +510,7 @@ SELECT
 FROM members m
 LEFT JOIN event_checkins ec ON ec.member_id = m.id
 WHERE m.is_active = TRUE
-GROUP BY m.id, m.first_name, m.last_name, m.cedula, m.phone_whatsapp, m.province, m.canton;
+GROUP BY m.id, m.first_name, m.last_name, m.cedula, m.phone, m.province, m.canton;
 
 -- ============================================================
 -- BLOQUE 4: ESTUDIOS BÍBLICOS

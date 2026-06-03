@@ -426,7 +426,7 @@ function DarAccesoModal({
     if (!query.trim()) return []
     const q = query.toLowerCase()
     return mockMembers
-      .filter(m => `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+      .filter(m => `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) || (m.email?.toLowerCase().includes(q) ?? false))
       .slice(0, 6)
   }, [query])
 
@@ -444,7 +444,7 @@ function DarAccesoModal({
   function handleConfirm() {
     if (!selected || selectedRoles.size === 0) return
     const initials = `${selected.first_name[0]}${selected.last_name[0]}`.toUpperCase()
-    onConfirm(selected.id, `${selected.first_name} ${selected.last_name}`, selected.email, initials, [...selectedRoles])
+    onConfirm(selected.id, `${selected.first_name} ${selected.last_name}`, selected.email ?? '', initials, [...selectedRoles])
   }
 
   return (

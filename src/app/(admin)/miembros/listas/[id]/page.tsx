@@ -56,7 +56,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'status', label: 'Estado', defaultVisible: true,
-    exportValue: m => m.status === 'active' ? 'Activo' : 'Inactivo',
+    exportValue: m => m.is_active ? 'Activo' : 'Inactivo',
   },
   {
     key: 'is_donor', label: 'Donador', defaultVisible: false,
@@ -350,8 +350,8 @@ export default function ListaDetailPage() {
                         case 'status':
                           return (
                             <td key="status" className="px-4 py-3.5">
-                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', member.status === 'active' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
-                                {member.status === 'active' ? 'Activo' : 'Inactivo'}
+                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
+                                {member.is_active ? 'Activo' : 'Inactivo'}
                               </span>
                             </td>
                           )

@@ -80,7 +80,7 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
       if (c.max && m.age > parseInt(c.max)) return false
       return true
     }
-    case 'status': return c.value === 'active' ? m.status === 'active' : m.status === 'inactive'
+    case 'status': return c.value === 'active' ? m.is_active : !m.is_active
     case 'leader': return c.value === 'yes' ? m.es_dirigente : !m.es_dirigente
   }
 }
@@ -147,7 +147,7 @@ function applyFilters(
 
 // ─── hook ───────────────────────────────────────────────────────────────────
 
-export function useMemberFilters() {
+export function useMemberFilters(members: Member[] = mockMembers) {
   const [conditions, setConditions] = useState<FilterCondition[]>([])
   const [groups, setGroups] = useState<ConditionGroup[]>([])
   const [topLevelOps, setTopLevelOps] = useState<Record<string, 'AND' | 'OR'>>({})
@@ -264,8 +264,8 @@ export function useMemberFilters() {
   }, [])
 
   const filteredMembers = useMemo(
-    () => applyFilters(mockMembers, conditions, groups, topLevelOps),
-    [conditions, groups, topLevelOps],
+    () => applyFilters(members, conditions, groups, topLevelOps),
+    [members, conditions, groups, topLevelOps],
   )
 
   return {

@@ -112,7 +112,7 @@ export default function CommitteeDetailPage() {
     if (!serverSearch.trim()) return []
     const q = serverSearch.toLowerCase()
     return mockMembers
-      .filter(m => !existingMemberIds.has(m.id) && m.status === 'active')
+      .filter(m => !existingMemberIds.has(m.id) && m.is_active)
       .filter(m => `${m.first_name} ${m.last_name}`.toLowerCase().includes(q))
       .slice(0, 8)
   }, [serverSearch, existingMemberIds])
