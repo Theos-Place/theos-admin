@@ -58,14 +58,8 @@ ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Autenticados ven miembros activos"
   ON members FOR SELECT
   USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins gestionan miembros"
-  ON members FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM member_roles mr
-    WHERE mr.member_id = auth.uid()::uuid
-      AND mr.role IN ('admin', 'staff_leader', 'editor_profiles')
-      AND mr.is_active = TRUE
-  ));
+-- NOTA: la política "Admins gestionan miembros" se crea en la migración 009,
+-- porque referencia member_roles (que se define más abajo en este archivo).
 
 -- ------------------------------------------------------------
 -- FAMILIAS
@@ -112,14 +106,8 @@ CREATE TABLE family_unlink_requests (
 );
 
 ALTER TABLE family_unlink_requests ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins ven solicitudes de desvinculación"
-  ON family_unlink_requests FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM member_roles mr
-    WHERE mr.member_id = auth.uid()::uuid
-      AND mr.role IN ('admin', 'staff_leader')
-      AND mr.is_active = TRUE
-  ));
+-- NOTA: la política "Admins ven solicitudes de desvinculación" se crea en la
+-- migración 009 (referencia member_roles, definida más abajo).
 
 -- ------------------------------------------------------------
 -- ROLES
