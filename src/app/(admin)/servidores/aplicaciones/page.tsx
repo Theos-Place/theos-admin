@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { type ApplicationStatus } from '@/data/mock-servers'
+import { type ApplicationStatus } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight } from 'lucide-react'

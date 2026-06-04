@@ -17,6 +17,11 @@ export type CommitteeLeader = {
   initials: string
 }
 
+export type CommitteePosition = {
+  id: string
+  title: string
+}
+
 export type CommitteeData = {
   id: string
   name: string
@@ -25,6 +30,7 @@ export type CommitteeData = {
   leader: CommitteeLeader
   ideal_capacity: number
   members: CommitteeServer[]
+  positions?: CommitteePosition[]
   open_vacancies: number
 }
 

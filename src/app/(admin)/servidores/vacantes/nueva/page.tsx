@@ -3,8 +3,7 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { MOCK_COMMITTEES } from '@/data/mock-servers'
-import { SERVICE_POSITIONS } from '@/data/mock-committees'
+import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-react'
 
@@ -13,14 +12,17 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 function NuevaVacanteContent() {
   const params = useSearchParams()
   const preselectedCommittee = params.get('comite') ?? ''
+  const { committees } = useServers()
 
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
   const [published, setPublished] = useState(false)
+  const [saving, setSaving]   = useState(false)
+  const [error, setError]     = useState<string | null>(null)
 
   // Step 1 — solicitud interna
   const [committeeId, setCommitteeId] = useState(preselectedCommittee)
-  const [position, setPosition]       = useState('')
+  const [positionId, setPositionId]   = useState('')
   const [slots, setSlots]             = useState('1')
   const [justification, setJustification] = useState('')
 
@@ -31,7 +33,38 @@ function NuevaVacanteContent() {
   const [schedule, setSchedule]   = useState('')
   const [commitment, setCommitment] = useState('')
 
-  const selectedCommittee = MOCK_COMMITTEES.find(c => c.id === committeeId)
+  const selectedCommittee = committees.find(c => c.id === committeeId)
+  const position = selectedCommittee?.positions?.find(p => p.id === positionId)?.title ?? ''
+
+  async function handleSubmit(status: 'draft' | 'published') {
+    if (saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/servers/vacancies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          committee_id: committeeId,
+          position_id: positionId || null,
+          position,
+          title: title.trim() || position,
+          description: description.trim() || null,
+          functions: functions.map(f => f.trim()).filter(Boolean),
+          schedule: schedule.trim() || null,
+          commitment: commitment.trim() || null,
+          slots_total: Math.max(1, Number(slots) || 1),
+          status,
+        }),
+      })
+      if (!res.ok) throw new Error('No se pudo guardar la vacante')
+      setPublished(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   function addFunction() {
     setFunctions(prev => [...prev, ''])
@@ -46,7 +79,7 @@ function NuevaVacanteContent() {
   }
 
   function canStep1() {
-    return committeeId !== '' && position !== '' && Number(slots) >= 1
+    return committeeId !== '' && positionId !== '' && Number(slots) >= 1
   }
 
   if (published) {
@@ -57,10 +90,10 @@ function NuevaVacanteContent() {
             <Check size={24} className="text-teal-deep" />
           </div>
           <p className="text-xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
-            Vacante publicada
+            Vacante guardada
           </p>
           <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-            La vacante está disponible para que los miembros apliquen.
+            Las publicadas quedan disponibles para que los miembros apliquen; los borradores los podés editar luego.
           </p>
           <Link
             href="/servidores/vacantes"
@@ -231,26 +264,34 @@ function NuevaVacanteContent() {
           <div className="flex-1" />
           <button
             type="button"
-            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+            onClick={() => handleSubmit('draft')}
+            disabled={saving}
+            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50"
             style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
           >
             Guardar como borrador
           </button>
           <button
             type="button"
-            onClick={() => setPublished(true)}
-            disabled={!title.trim() || !description.trim()}
+            onClick={() => handleSubmit('published')}
+            disabled={saving || !title.trim() || !description.trim()}
             className={cn(
               'rounded-full px-4 py-2 text-sm text-white transition-colors',
-              title.trim() && description.trim()
+              !saving && title.trim() && description.trim()
                 ? 'bg-coral hover:bg-coral-deep'
                 : 'bg-navy-light/20 cursor-not-allowed'
             )}
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Publicar vacante
+            {saving ? 'Guardando...' : 'Publicar vacante'}
           </button>
         </div>
+
+        {error && (
+          <p className="text-sm text-coral text-right" style={{ fontFamily: 'var(--font-body)' }}>
+            {error}
+          </p>
+        )}
       </div>
     )
   }
@@ -301,10 +342,10 @@ function NuevaVacanteContent() {
             className={inputCls}
             style={{ fontFamily: 'var(--font-body)' }}
             value={committeeId}
-            onChange={e => setCommitteeId(e.target.value)}
+            onChange={e => { setCommitteeId(e.target.value); setPositionId('') }}
           >
             <option value="">Seleccionar comité...</option>
-            {MOCK_COMMITTEES.map(c => (
+            {committees.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -317,12 +358,15 @@ function NuevaVacanteContent() {
           <select
             className={inputCls}
             style={{ fontFamily: 'var(--font-body)' }}
-            value={position}
-            onChange={e => setPosition(e.target.value)}
+            value={positionId}
+            onChange={e => setPositionId(e.target.value)}
+            disabled={!selectedCommittee}
           >
-            <option value="">Seleccionar puesto...</option>
-            {SERVICE_POSITIONS.map(p => (
-              <option key={p} value={p}>{p}</option>
+            <option value="">
+              {selectedCommittee ? 'Seleccionar puesto...' : 'Elegí un comité primero'}
+            </option>
+            {selectedCommittee?.positions?.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
             ))}
           </select>
         </div>

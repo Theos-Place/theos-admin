@@ -1,23 +1,75 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { MOCK_VACANCIES } from '@/data/mock-servers'
+import { useServers } from '@/hooks/useServers'
 import { Check } from 'lucide-react'
 
 export default function EditarVacantePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const vacancy = useMemo(() => MOCK_VACANCIES.find(v => v.id === id), [id])
+  const { vacancies, loading } = useServers()
+  const vacancy = useMemo(() => vacancies.find(v => v.id === id), [vacancies, id])
 
-  const [title, setTitle]           = useState(vacancy?.title ?? '')
-  const [position, setPosition]     = useState(vacancy?.position ?? '')
-  const [description, setDescription] = useState(vacancy?.description ?? '')
-  const [schedule, setSchedule]     = useState(vacancy?.schedule ?? '')
-  const [commitment, setCommitment] = useState(vacancy?.commitment ?? '')
-  const [slotsTotal, setSlotsTotal] = useState(String(vacancy?.slots_total ?? 1))
-  const [functions, setFunctions]   = useState<string[]>(vacancy?.functions ?? [''])
+  const [title, setTitle]           = useState('')
+  const [position, setPosition]     = useState('')
+  const [description, setDescription] = useState('')
+  const [schedule, setSchedule]     = useState('')
+  const [commitment, setCommitment] = useState('')
+  const [slotsTotal, setSlotsTotal] = useState('1')
+  const [functions, setFunctions]   = useState<string[]>([''])
   const [saved, setSaved]           = useState(false)
+  const [saving, setSaving]         = useState(false)
+  const [error, setError]           = useState<string | null>(null)
+
+  // Poblar el form cuando la vacante llega de la BD (carga async).
+  useEffect(() => {
+    if (!vacancy) return
+    setTitle(vacancy.title)
+    setPosition(vacancy.position)
+    setDescription(vacancy.description)
+    setSchedule(vacancy.schedule)
+    setCommitment(vacancy.commitment)
+    setSlotsTotal(String(vacancy.slots_total))
+    setFunctions(vacancy.functions.length ? vacancy.functions : [''])
+  }, [vacancy])
+
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/servers/vacancies/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          position: position.trim() || null,
+          description: description.trim() || null,
+          schedule: schedule.trim() || null,
+          commitment: commitment.trim() || null,
+          slots_total: Math.max(1, Number(slotsTotal) || 1),
+          functions: functions.map(f => f.trim()).filter(Boolean),
+        }),
+      })
+      if (!res.ok) throw new Error('No se pudieron guardar los cambios')
+      setSaved(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading && !vacancy) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+          Cargando vacante...
+        </p>
+      </div>
+    )
+  }
 
   if (!vacancy) {
     return (
@@ -73,10 +125,18 @@ export default function EditarVacantePage() {
           </div>
           <div className="ph-actions">
             <button className="btn btn-ghost btn-sm" onClick={() => router.push(`/servidores/vacantes/${id}`)}>Cancelar</button>
-            <button className="btn btn-primary btn-sm" onClick={() => setSaved(true)}>Guardar cambios</button>
+            <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving || !title.trim()}>
+              {saving ? 'Guardando...' : 'Guardar cambios'}
+            </button>
           </div>
         </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)', marginBottom: 8 }}>
+          {error}
+        </p>
+      )}
 
       {/* Form card */}
       <div className="card" style={{ padding: '20px 22px' }}>
