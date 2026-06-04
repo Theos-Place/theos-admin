@@ -228,9 +228,9 @@ export function NewMemberStep1({
             style={{ fontFamily: 'var(--font-body)' }}
           >
             <option value="">Seleccionar…</option>
-            <option value="masculino">Masculino</option>
-            <option value="femenino">Femenino</option>
-            <option value="no_indica">No indica</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="otro">Otro / No indica</option>
           </select>
         </Field>
       </div>

@@ -265,9 +265,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   value={gender}
                   onChange={e => setGender(e.target.value as typeof gender)}
                 >
-                  <option value="no_indica">Prefiero no indicar</option>
-                  <option value="masculino">Masculino</option>
-                  <option value="femenino">Femenino</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="otro">Otro / Prefiero no indicar</option>
                 </select>
               </div>
               <div className="form-group">
