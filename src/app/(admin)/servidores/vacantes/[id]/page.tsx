@@ -3,9 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import {
-  type Application, type ApplicationStatus,
-} from '@/data/mock-servers'
+import type { Application, ApplicationStatus } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { TOAST_LONG_MS } from '@/lib/constants'
@@ -39,7 +37,7 @@ const VACANCY_STATUS_LABELS: Record<string, string> = {
 
 export default function VacanteDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { vacancies, applications } = useServers()
+  const { vacancies, applications, refetch } = useServers()
 
   const vacancy = useMemo(() => vacancies.find(v => v.id === id), [vacancies, id])
   const initialApps = useMemo(
@@ -57,6 +55,9 @@ export default function VacanteDetailPage() {
   const [rejectModal, setRejectModal] = useState<Application | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [toast, setToast] = useState<string | null>(null)
+  const [closeVacancyOpen, setCloseVacancyOpen] = useState(false)
+  const [closeReason, setCloseReason] = useState('')
+  const [vacancyClosed, setVacancyClosed] = useState(false)
 
   if (!vacancy) {
     return (
@@ -68,23 +69,37 @@ export default function VacanteDetailPage() {
     )
   }
 
-  function changeStatus(appId: string, status: ApplicationStatus) {
+  async function changeStatus(appId: string, status: ApplicationStatus) {
+    // Optimista en UI; persiste en la BD y refresca para reflejar slots/volunteer.
     setApps(prev => prev.map(a => a.id === appId ? { ...a, status } : a))
     if (selectedApp?.id === appId) setSelectedApp(prev => prev ? { ...prev, status } : null)
+    try {
+      const res = await fetch(`/api/servers/applications/${appId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) throw new Error('No se pudo actualizar la aplicación')
+      await refetch()
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al actualizar')
+    }
   }
 
-  function handleAssign() {
+  async function handleAssign() {
     if (!assignModal) return
-    changeStatus(assignModal.id, 'approved')
+    const name = assignModal.applicant_name
     setAssignModal(null)
-    showToast(`Servidor asignado · Notificación de bienvenida enviada a ${assignModal.applicant_name}`)
+    await changeStatus(assignModal.id, 'approved')
+    showToast(`Servidor asignado · Notificación de bienvenida enviada a ${name}`)
   }
 
-  function handleReject() {
+  async function handleReject() {
     if (!rejectModal) return
-    changeStatus(rejectModal.id, 'rejected')
+    const appId = rejectModal.id
     setRejectModal(null)
     setRejectReason('')
+    await changeStatus(appId, 'rejected')
   }
 
   function showToast(msg: string) {
@@ -102,13 +117,21 @@ export default function VacanteDetailPage() {
 
   const slotsLeft = vacancy.slots_total - vacancy.slots_filled
 
-  const [closeVacancyOpen, setCloseVacancyOpen] = useState(false)
-  const [closeReason, setCloseReason] = useState('')
-  const [vacancyClosed, setVacancyClosed] = useState(false)
-
-  function handleCloseVacancy() {
+  async function handleCloseVacancy() {
     setVacancyClosed(true)
     setCloseVacancyOpen(false)
+    try {
+      const res = await fetch(`/api/servers/vacancies/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'closed' }),
+      })
+      if (!res.ok) throw new Error('No se pudo cerrar la vacante')
+      await refetch()
+    } catch (e) {
+      setVacancyClosed(false)
+      showToast(e instanceof Error ? e.message : 'Error al cerrar la vacante')
+    }
   }
 
   return (

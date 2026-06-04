@@ -2,9 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import {
-  type CommitteeServer, type CommitteeGoal, type CommitteeData,
-} from '@/data/mock-servers'
+import type { CommitteeServer, CommitteeGoal, CommitteeData } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
@@ -28,7 +26,7 @@ type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
 export default function CommitteeDetailPage() {
   const { committeeId } = useParams<{ committeeId: string }>()
   const router = useRouter()
-  const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, goalsByCommittee } = useServers()
+  const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, goalsByCommittee, refetch } = useServers()
 
   const committee = useMemo(
     () => MOCK_COMMITTEES.find(c => c.id === committeeId),
@@ -142,14 +140,27 @@ export default function CommitteeDetailPage() {
     setDisconnectTarget(null)
   }
 
-  function updateCommitteeInMock() {
+  async function updateCommitteeInMock() {
+    const ideal = parseInt(committeeForm.ideal_capacity) || committee?.ideal_capacity
+    // Reflejo inmediato en UI (el área no se persiste: cambiar de área = cambiar parent_id, fuera de alcance).
     setCommitteeOverride({
       name: committeeForm.name,
       area: committeeForm.area,
       area_code: committeeForm.area_code,
-      ideal_capacity: parseInt(committeeForm.ideal_capacity) || committee?.ideal_capacity,
+      ideal_capacity: ideal,
     })
     setEditCommitteeOpen(false)
+    try {
+      const res = await fetch(`/api/servers/committees/${committeeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: committeeForm.name, ideal_capacity: ideal }),
+      })
+      if (!res.ok) throw new Error('update failed')
+      await refetch()
+    } catch {
+      // se mantiene el override local aunque falle la persistencia
+    }
   }
 
   function addServerToCommittee(memberId: string) {
@@ -175,23 +186,42 @@ export default function CommitteeDetailPage() {
     setNewPosition('')
   }
 
-  function addGoal() {
-    if (!newGoalText.trim()) return
-    setGoals(prev => [...prev, {
-      id: `g-new-${Date.now()}`,
-      description: newGoalText.trim(),
-      status: 'in_progress',
-      due_date: newGoalDate || null,
-    }])
+  async function addGoal() {
+    const description = newGoalText.trim()
+    if (!description) return
+    const due_date = newGoalDate || null
     setNewGoalText('')
     setNewGoalDate('')
     setShowGoalForm(false)
+    try {
+      const res = await fetch('/api/servers/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ committee_id: committeeId, description, due_date }),
+      })
+      if (!res.ok) throw new Error('create goal failed')
+      await refetch()
+    } catch {
+      // si falla, la meta no queda; el usuario puede reintentar
+    }
   }
 
-  function toggleGoal(id: string) {
-    setGoals(prev => prev.map(g =>
-      g.id === id ? { ...g, status: g.status === 'completed' ? 'in_progress' : 'completed' } : g
-    ))
+  async function toggleGoal(id: string) {
+    const goal = goals.find(g => g.id === id)
+    if (!goal) return
+    const status = goal.status === 'completed' ? 'in_progress' : 'completed'
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, status } : g)) // optimista
+    try {
+      const res = await fetch(`/api/servers/goals/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) throw new Error('toggle goal failed')
+      await refetch()
+    } catch {
+      setGoals(prev => prev.map(g => g.id === id ? { ...g, status: goal.status } : g)) // revertir
+    }
   }
 
   function handleMenuToggle(memberId: string) {
