@@ -42,3 +42,5 @@ next-env.d.ts
 
 # Datos de importacion (PII real, no versionar)
 data-import/
+
+supabase/.temp/
