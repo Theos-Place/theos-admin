@@ -138,6 +138,18 @@ export default function EmpleadoDetailPage() {
     } catch { /* sin cambios si falla */ }
   }
 
+  async function handleSetVacationStatus(recordId: string, status: 'aprobado' | 'pendiente' | 'rechazado') {
+    try {
+      const res = await fetch(`/api/employees/vacations/${recordId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
+  }
+
   async function handleUploadDoc(file: File) {
     try {
       const res = await fetch(`/api/employees/${id}/documents`, {
@@ -262,6 +274,7 @@ export default function EmpleadoDetailPage() {
               employee={employee}
               vacDiasDisponibles={vacDiasDisponibles}
               onOpenVacModal={() => { setShowVacModal(true); setVacSaved(false) }}
+              onSetVacationStatus={handleSetVacationStatus}
             />
           )}
 

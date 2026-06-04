@@ -1,9 +1,9 @@
 'use client'
 
-import type { Employee, VacationRecordType } from '@/data/mock-employees'
+import type { Employee, VacationRecordType, VacationRecordStatus } from '@/types/employee'
 import { VacationTracker } from '@/components/employees/VacationTracker'
 import { cn } from '@/lib/utils'
-import { Calendar, Clock, Plus } from 'lucide-react'
+import { Calendar, Clock, Plus, Check, X } from 'lucide-react'
 
 const VACATION_TYPE_LABELS: Record<VacationRecordType, string> = {
   vacaciones:          'Vacaciones',
@@ -35,9 +35,10 @@ interface TabVacacionesProps {
   employee: Employee
   vacDiasDisponibles: number
   onOpenVacModal: () => void
+  onSetVacationStatus: (recordId: string, status: VacationRecordStatus) => void
 }
 
-export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal }: TabVacacionesProps) {
+export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, onSetVacationStatus }: TabVacacionesProps) {
   if (employee.contract_type === 'servicios_profesionales') {
     return (
       <div className="space-y-5">
@@ -107,9 +108,31 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal }: 
                   )}
                 </div>
               </div>
-              <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold shrink-0', STATUS_COLORS[v.status])} style={{ fontFamily: 'var(--font-display)' }}>
-                {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
-              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                {v.status === 'pendiente' && employee.status === 'active' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onSetVacationStatus(v.id, 'aprobado')}
+                      title="Aprobar"
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-teal-deep hover:bg-teal-soft/30 transition-colors"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSetVacationStatus(v.id, 'rechazado')}
+                      title="Rechazar"
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-coral hover:bg-coral/10 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </>
+                )}
+                <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold', STATUS_COLORS[v.status])} style={{ fontFamily: 'var(--font-display)' }}>
+                  {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
+                </span>
+              </div>
             </div>
           ))}
         </div>
