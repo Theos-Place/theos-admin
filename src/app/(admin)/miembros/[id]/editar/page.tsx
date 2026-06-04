@@ -366,6 +366,17 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 placeholder="Del semáforo 100m norte..."
               />
             </div>
+
+            {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
+            <div className="form-group">
+              <label className="form-label">Sede</label>
+              <p className="text-sm text-navy-light/70 py-2" style={{ fontFamily: 'var(--font-body)' }}>
+                {sede ? sedeLabel(sede) : 'Sin sede asignada'}
+              </p>
+              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                Se asigna automáticamente según la charla a la que más asiste.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -454,17 +465,6 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   rows={2}
                 />
               </div>
-            </div>
-
-            {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
-            <div className="form-group">
-              <label className="form-label">Sede</label>
-              <p className="text-sm text-navy-light/70 py-2" style={{ fontFamily: 'var(--font-body)' }}>
-                {sede ? sedeLabel(sede) : 'Sin sede asignada'}
-              </p>
-              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-                Se asigna automáticamente según la charla a la que más asiste.
-              </p>
             </div>
           </div>
         </div>
