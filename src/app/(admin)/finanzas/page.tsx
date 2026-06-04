@@ -11,7 +11,7 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { FinanceChart } from '@/components/finance/FinanceChart'
-import { MOCK_PAYMENTS, MOCK_DONATIONS, MOCK_REFUNDS } from '@/data/mock-finance'
+import { useFinance } from '@/hooks/useFinance'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -19,6 +19,7 @@ function formatDate(d: string | null) {
 }
 
 export default function FinanzasPage() {
+  const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS, refunds: MOCK_REFUNDS } = useFinance()
   const [period, setPeriod] = useState<'month' | 'prev_month' | 'year'>('month')
   const [revealAll, setRevealAll] = useState(false)
 

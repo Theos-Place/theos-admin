@@ -8,7 +8,8 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
-import { MOCK_PAYMENTS, type Payment, type PaymentMethod, type PaymentStatus } from '@/data/mock-finance'
+import { type Payment, type PaymentMethod, type PaymentStatus } from '@/data/mock-finance'
+import { useFinance } from '@/hooks/useFinance'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -16,6 +17,7 @@ function formatDate(d: string | null) {
 }
 
 export default function PagosPage() {
+  const { payments: MOCK_PAYMENTS } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   const [entityFilter, setEntityFilter] = useState<'all' | 'event' | 'study_group'>('all')
   const [methodFilter, setMethodFilter] = useState<'all' | PaymentMethod>('all')

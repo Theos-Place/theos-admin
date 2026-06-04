@@ -5,7 +5,7 @@ import { Heart, Upload, Search, AlertTriangle, X, Check, Eye, EyeOff } from 'luc
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
-import { MOCK_DONATIONS } from '@/data/mock-finance'
+import { useFinance } from '@/hooks/useFinance'
 import { mockMembers } from '@/data/mock-members'
 import { TOAST_MS } from '@/lib/constants'
 
@@ -14,6 +14,7 @@ function formatDate(d: string) {
 }
 
 export default function DonacionesPage() {
+  const { donations: MOCK_DONATIONS } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ArrowLeftRight, Check, X } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
-import { MOCK_REFUNDS, type Refund, type RefundStatus } from '@/data/mock-finance'
+import { type Refund, type RefundStatus } from '@/data/mock-finance'
+import { useFinance } from '@/hooks/useFinance'
 import { TOAST_MS } from '@/lib/constants'
 
 function formatDate(d: string | null) {
@@ -30,7 +31,9 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
 }
 
 export default function DevolucionesPage() {
-  const [refunds, setRefunds] = useState(MOCK_REFUNDS)
+  const { refunds: allRefunds } = useFinance()
+  const [refunds, setRefunds] = useState<Refund[]>([])
+  useEffect(() => { setRefunds(allRefunds) }, [allRefunds])
   const [completeTarget, setCompleteTarget] = useState<Refund | null>(null)
   const [rejectTarget, setRejectTarget] = useState<Refund | null>(null)
   const [completionDate, setCompletionDate] = useState('')

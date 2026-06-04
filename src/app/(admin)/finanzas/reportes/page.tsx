@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { BarChart2, Download, Package } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
-import { MOCK_PAYMENTS, MOCK_DONATIONS } from '@/data/mock-finance'
+import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 
 const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre']
@@ -23,6 +23,7 @@ const ENTITIES = [
 ]
 
 export default function ReportesPage() {
+  const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS } = useFinance()
   const [activeTab, setActiveTab] = useState<'donations' | 'payments' | 'transparency'>('donations')
   const [donDateFrom, setDonDateFrom] = useState('')
   const [donDateTo, setDonDateTo] = useState('')

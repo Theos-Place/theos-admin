@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Plus, Check, AlertTriangle } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
-import { MOCK_SCHOLARSHIPS, type Scholarship } from '@/data/mock-finance'
+import { type Scholarship } from '@/data/mock-finance'
+import { useFinance } from '@/hooks/useFinance'
 import { TOAST_MS } from '@/lib/constants'
 
 function formatDate(d: string | null) {
@@ -14,7 +15,9 @@ function formatDate(d: string | null) {
 }
 
 export default function BecasPage() {
-  const [scholarships, setScholarships] = useState(MOCK_SCHOLARSHIPS)
+  const { scholarships: allScholarships } = useFinance()
+  const [scholarships, setScholarships] = useState<Scholarship[]>([])
+  useEffect(() => { setScholarships(allScholarships) }, [allScholarships])
   const [typeFilter, setTypeFilter] = useState<'all' | 'percentage' | 'fixed'>('all')
   const [entityFilter, setEntityFilter] = useState<'all' | 'event' | 'study_group'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unused' | 'used'>('all')
