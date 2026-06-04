@@ -1,8 +1,9 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { getEvent, EVENT_TYPES, type EventType } from '@/data/mock-events'
+import { EVENT_TYPES, type EventType } from '@/data/mock-events'
+import { useEvent } from '@/hooks/useEvents'
 import { useOrg } from '@/lib/org'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { cn } from '@/lib/utils'
@@ -140,7 +141,7 @@ function RecurringSaveModal({
 export default function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
   const { allCommittees: ALL_COMMITTEES } = useOrg()
   const { id } = use(params)
-  const event = getEvent(id)
+  const { event, loading } = useEvent(id)
 
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['info']))
   const [name, setName] = useState(event?.name ?? '')
@@ -168,6 +169,29 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [paymentMethods, setPaymentMethods] = useState<string[]>(['SINPE Móvil'])
   const [showRecurringModal, setShowRecurringModal] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  // Poblar el formulario cuando carga el evento (fetch async).
+  useEffect(() => {
+    if (!event) return
+    setName(event.name ?? '')
+    setSelectedType(event.event_type ?? '')
+    setCommittee(event.committee_id ?? '')
+    setDescription(event.description ?? '')
+    setStartDate(event.start_at.split('T')[0])
+    setStartTime(event.start_at.split('T')[1]?.slice(0, 5) ?? '')
+    setEndDate(event.end_at ? event.end_at.split('T')[0] : '')
+    setEndTime(event.end_at ? (event.end_at.split('T')[1]?.slice(0, 5) ?? '') : '')
+    setIsVirtual(event.is_virtual ?? false)
+    setLocation(event.location ?? '')
+    setIsRecurring(event.is_recurring ?? false)
+    setRecurrenceRule(event.recurrence_rule ?? null)
+    setSubEvents(event.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity) })))
+    setRequiresRegistration(event.requires_registration ?? false)
+    setMaxCapacity(String(event.max_capacity ?? ''))
+    setRequiresPayment(event.requires_payment ?? false)
+    setPaymentAmount(event.payment_amount ? String(event.payment_amount) : '')
+  }, [event])
 
   if (!event) {
     return (
@@ -175,7 +199,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
           <ChevronLeft size={16} /> Eventos
         </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Evento no encontrado.</p>
+        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{loading ? 'Cargando…' : 'Evento no encontrado.'}</p>
       </div>
     )
   }
@@ -205,17 +229,44 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setPaymentMethods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
   }
 
+  async function doSave() {
+    setSaving(true)
+    const body = {
+      name, event_type: selectedType, committee, description,
+      start_date: startDate, start_time: startTime,
+      end_date: endDate, end_time: endTime,
+      is_virtual: isVirtual, location,
+      is_recurring: isRecurring, recurrence_rule: recurrenceRule,
+      requires_registration: requiresRegistration, max_capacity: maxCapacity,
+      requires_payment: requiresPayment, payment_amount: paymentAmount,
+      sub_events: subEvents,
+    }
+    try {
+      const res = await fetch(`/api/events/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error('Error guardando cambios')
+      setSaved(true)
+    } catch (e) {
+      console.error(e)
+      alert('No se pudieron guardar los cambios. Intentá de nuevo.')
+      setSaving(false)
+    }
+  }
+
   function handleSave() {
     if (event!.is_recurring) {
       setShowRecurringModal(true)
     } else {
-      setSaved(true)
+      doSave()
     }
   }
 
   function handleRecurringSave() {
     setShowRecurringModal(false)
-    setSaved(true)
+    doSave()
   }
 
   if (saved) {
@@ -287,10 +338,11 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </Link>
           <button
             onClick={handleSave}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
+            disabled={saving}
+            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Guardar cambios
+            {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
       </div>

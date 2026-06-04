@@ -125,6 +125,25 @@ export default function NuevoEventoPage() {
     [form.event_type],
   )
 
+  const [submitting, setSubmitting] = useState(false)
+
+  async function handlePublish() {
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, flyer }),
+      })
+      if (!res.ok) throw new Error('Error creando el evento')
+      setPublished(true)
+    } catch (e) {
+      console.error(e)
+      alert('No se pudo crear el evento. Revisá los datos e intentá de nuevo.')
+      setSubmitting(false)
+    }
+  }
+
   // ── Estado: publicado ──────────────────────────────────────────────────────
 
   if (published) {
@@ -190,9 +209,10 @@ export default function NuevoEventoPage() {
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
-                onClick={() => setPublished(true)}
+                onClick={handlePublish}
+                disabled={submitting}
               >
-                Publicar evento
+                {submitting ? 'Publicando…' : 'Publicar evento'}
               </button>
             )}
           </div>
