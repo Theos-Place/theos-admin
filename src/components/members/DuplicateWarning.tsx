@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
 import { type Member } from '@/data/mock-members'
-import { sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel } from '@/lib/sedes'
 
 type Props = {
   member: Member

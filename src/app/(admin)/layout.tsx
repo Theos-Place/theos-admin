@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
+import { SedesProvider } from '@/lib/sedes'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':      'Dashboard',
@@ -32,18 +33,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const title = getTitle(pathname)
 
   return (
-    <div className="min-h-screen bg-surface">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <SedesProvider>
+      <div className="min-h-screen bg-surface">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main content — offset for the fixed sidebar on desktop */}
-      <div className="lg:pl-60 flex flex-col min-h-screen">
-        <Topbar title={title} onMenuToggle={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 lg:p-6">
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
-        </main>
+        {/* Main content — offset for the fixed sidebar on desktop */}
+        <div className="lg:pl-60 flex flex-col min-h-screen">
+          <Topbar title={title} onMenuToggle={() => setSidebarOpen(true)} />
+          <main className="flex-1 p-4 lg:p-6">
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </main>
+        </div>
       </div>
-    </div>
+    </SedesProvider>
   )
 }

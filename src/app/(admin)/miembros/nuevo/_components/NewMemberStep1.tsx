@@ -2,7 +2,7 @@ import { Loader2 } from 'lucide-react'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { DuplicateWarning } from '@/components/members/DuplicateWarning'
 import { CR_PROVINCES, CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
-import { ACTIVE_SEDES as SEDES } from '@/data/mock-sedes'
+import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/data/mock-members'
 
@@ -96,6 +96,7 @@ export function NewMemberStep1({
   onCedulaBlur,
   onDismissDuplicate,
 }: Props) {
+  const { activeSedes: SEDES } = useSedes()
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">

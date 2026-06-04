@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
-import { ACTIVE_SEDES, HISTORICAL_SEDES } from '@/data/mock-sedes'
+import { useSedes } from '@/lib/sedes'
 import { AREAS, SERVICE_POSITIONS } from '@/data/mock-committees'
 import { MOCK_FORMS, FORM_CATEGORY_LABEL } from '@/data/mock-forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
@@ -222,6 +222,7 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 }
 
 function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const [eventType, setEventType]       = useState('')
   const [sedes, setSedes]               = useState<string[]>([])
   const [camp, setCamp]                 = useState('')

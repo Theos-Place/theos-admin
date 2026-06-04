@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { ACTIVE_SEDES as SEDES } from '@/data/mock-sedes'
+import { useSedes } from '@/lib/sedes'
 import type { Member } from '@/data/mock-members'
 
 type Step1Data = {
@@ -75,6 +75,7 @@ export function NewMemberStep3({
   familyItemInitials,
   familyItemRelation,
 }: Props) {
+  const { activeSedes: SEDES } = useSedes()
   return (
     <div className="space-y-5">
       <h2

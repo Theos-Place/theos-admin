@@ -4,11 +4,12 @@ import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
 import { mockMembers } from '@/data/mock-members'
-import { ACTIVE_SEDES } from '@/data/mock-sedes'
+import { useSedes } from '@/lib/sedes'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { useMockAuth } from '@/hooks/useMockAuth'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
+  const { activeSedes: ACTIVE_SEDES } = useSedes()
   const { id } = use(params)
   const router = useRouter()
   const { user } = useMockAuth()

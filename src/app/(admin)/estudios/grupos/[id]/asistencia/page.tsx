@@ -3,7 +3,7 @@
 import { use, useState } from 'react'
 import Link from 'next/link'
 import { MOCK_GROUPS, getStudyType } from '@/data/mock-studies'
-import { sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, Users } from 'lucide-react'
 

@@ -1,6 +1,6 @@
 import { MapPin, BookOpen, Users, Check } from 'lucide-react'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
-import { sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { mockMembers } from '@/data/mock-members'
 

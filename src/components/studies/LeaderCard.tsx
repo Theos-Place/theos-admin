@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import type { StudyLeader } from '@/data/mock-studies'
 import { StudyTypeBadge } from './StudyTypeBadge'
 import { CommitmentIcons } from './CommitmentIcons'
-import { sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel } from '@/lib/sedes'
 
 const AVAILABILITY_CONFIG = {
   available: { label: 'Disponible',  className: 'bg-teal-soft/30 text-teal-deep' },

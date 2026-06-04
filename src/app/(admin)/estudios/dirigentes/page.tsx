@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
-import { ACTIVE_SEDES, HISTORICAL_SEDES } from '@/data/mock-sedes'
+import { useSedes } from '@/lib/sedes'
 import { mockMembers } from '@/data/mock-members'
 import { LeaderCard } from '@/components/studies/LeaderCard'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
@@ -176,6 +176,7 @@ function NewLeaderModal({ onClose }: { onClose: () => void }) {
 
 export default function DirigentesPage() {
   const { leaders: MOCK_LEADERS, studyTypes: STUDY_TYPES } = useStudies()
+  const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const [filterStatus, setFilterStatus] = useState('')
   const [filterZone, setFilterZone] = useState('')
   const [filterStudy, setFilterStudy] = useState('')

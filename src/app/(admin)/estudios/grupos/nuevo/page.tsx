@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { STUDY_TYPES, MOCK_LEADERS, getStudyType } from '@/data/mock-studies'
-import { ACTIVE_SEDES as SEDES, sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { LeaderCard } from '@/components/studies/LeaderCard'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
@@ -32,6 +32,7 @@ type Step1 = {
 }
 
 export default function NuevoGrupoPage() {
+  const { activeSedes: SEDES } = useSedes()
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [step1, setStep1] = useState<Step1>({

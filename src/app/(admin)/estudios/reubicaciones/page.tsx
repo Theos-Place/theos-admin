@@ -5,7 +5,7 @@ import type { RelocationRequest, StudyGroup } from '@/data/mock-studies'
 import { useStudies } from '@/hooks/useStudies'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
-import { sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { X, CheckCircle } from 'lucide-react'
 

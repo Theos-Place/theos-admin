@@ -6,7 +6,7 @@ import { useStudies } from '@/hooks/useStudies'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
-import { sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel } from '@/lib/sedes'
 import { Archive, Pencil, Search, X } from 'lucide-react'
 
 const PAGE_SIZE = 10

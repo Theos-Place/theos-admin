@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
-import { ACTIVE_SEDES, sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel, useSedes } from '@/lib/sedes'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
@@ -60,6 +60,7 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
   const { id } = use(params)
   const router = useRouter()
   const { leaders, groups } = useStudies()
+  const { activeSedes: ACTIVE_SEDES } = useSedes()
   const leader = leaders.find(l => l.id === id)
 
   const [activeTab, setActiveTab] = useState('resumen')

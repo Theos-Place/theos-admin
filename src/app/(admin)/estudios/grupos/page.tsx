@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { GroupStatus, StudyGroup, StudyType } from '@/data/mock-studies'
 import { useStudies } from '@/hooks/useStudies'
-import { ACTIVE_SEDES, HISTORICAL_SEDES, sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
@@ -105,6 +105,7 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
 
 export default function GruposPage() {
   const { groups: MOCK_GROUPS, studyTypes: STUDY_TYPES } = useStudies()
+  const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>([])
   const [selectedType, setSelectedType] = useState('')

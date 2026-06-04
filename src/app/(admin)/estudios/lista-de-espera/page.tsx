@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { StudyGroup } from '@/data/mock-studies'
 import { useStudies } from '@/hooks/useStudies'
-import { ACTIVE_SEDES, HISTORICAL_SEDES, sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel, useSedes } from '@/lib/sedes'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { cn } from '@/lib/utils'
 import { X, Users, Plus } from 'lucide-react'
@@ -112,6 +112,7 @@ function InviteModal({
 
 export default function ListaEsperaPage() {
   const { groups, waitlist } = useStudies()
+  const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const [activeTab, setActiveTab] = useState<TabType>('N1')
   const [selectedZone, setSelectedZone] = useState('')
   const [ageFrom, setAgeFrom] = useState('')

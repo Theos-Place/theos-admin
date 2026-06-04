@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useStudies } from '@/hooks/useStudies'
 import { mockMembers } from '@/data/mock-members'
-import { SEDES, sedeLabel } from '@/data/mock-sedes'
+import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
 import { Send, CheckCircle } from 'lucide-react'
@@ -12,6 +12,7 @@ const INITIAL_DATE = '2026-05-16'
 
 export default function AnalisisPage() {
   const { studyTypes: STUDY_TYPES } = useStudies()
+  const { sedes: SEDES } = useSedes()
   const [selectedStudyId, setSelectedStudyId] = useState('')
   const [groupInputs, setGroupInputs] = useState<Record<string, number>>({})
   const [totalInput, setTotalInput] = useState<number | null>(null)
