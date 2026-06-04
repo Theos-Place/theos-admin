@@ -325,6 +325,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   <input
                     id="edit-emergency-name"
                     className="form-input"
+                    style={{ background: '#fff' }}
                     value={emergencyContactName}
                     onChange={e => setEmergencyContactName(e.target.value)}
                     placeholder="Nombre completo..."
