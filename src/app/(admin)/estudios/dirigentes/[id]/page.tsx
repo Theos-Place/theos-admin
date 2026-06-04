@@ -1,8 +1,8 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { MOCK_LEADERS, MOCK_GROUPS } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { ACTIVE_SEDES, sedeLabel } from '@/data/mock-sedes'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
@@ -53,22 +53,29 @@ function StarRating({ score }: { score: number }) {
   )
 }
 
-function updateLeaderInMock(id: string, data: Record<string, unknown>) {
-  const idx = MOCK_LEADERS.findIndex(l => l.id === id)
-  if (idx !== -1) Object.assign(MOCK_LEADERS[idx], data)
-}
+// TODO: persistir vía PUT /api/studies/leaders/[id] (write path). Por ahora no-op.
+function updateLeaderInMock(_id: string, _data: Record<string, unknown>) {}
 
 export default function DirigentePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const leader = MOCK_LEADERS.find(l => l.id === id)
+  const { leaders, groups } = useStudies()
+  const leader = leaders.find(l => l.id === id)
 
   const [activeTab, setActiveTab] = useState('resumen')
   const [editOpen, setEditOpen] = useState(false)
-  const [qualifications, setQualifications] = useState<string[]>(leader?.qualified_studies ?? [])
-  const [zones, setZones] = useState<string[]>(leader?.zone_preference ?? [])
-  const [status, setStatus] = useState<AvailabilityStatus>((leader?.availability_status as AvailabilityStatus) ?? 'available')
+  const [qualifications, setQualifications] = useState<string[]>([])
+  const [zones, setZones] = useState<string[]>([])
+  const [status, setStatus] = useState<AvailabilityStatus>('available')
   const [studyToAdd, setStudyToAdd] = useState('')
+
+  // Sincroniza el estado editable cuando carga el dirigente.
+  useEffect(() => {
+    if (!leader) return
+    setQualifications(leader.qualified_studies ?? [])
+    setZones(leader.zone_preference ?? [])
+    setStatus((leader.availability_status as AvailabilityStatus) ?? 'available')
+  }, [leader])
 
   if (!leader) {
     return (
@@ -97,7 +104,7 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
   const avail = AVAILABILITY_CONFIG[status] ?? AVAILABILITY_CONFIG.inactive
   const initials = getInitials(leader.member_name)
   const avatarColor = getAvatarColor(leader.member_name)
-  const leaderGroups = MOCK_GROUPS.filter(g => g.leader_id === id)
+  const leaderGroups = groups.filter(g => g.leader_id === leader?.member_id)
   const hasCritical = leader.evaluations.some(e => e.score <= 2)
   const tabs = ['resumen', 'evaluaciones', 'cualificaciones']
   const tabLabels: Record<string, string> = { resumen: 'Resumen', evaluaciones: 'Evaluaciones', cualificaciones: 'Cualificaciones' }

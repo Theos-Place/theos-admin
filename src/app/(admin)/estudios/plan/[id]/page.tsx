@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { STUDY_TYPES, MOCK_GROUPS } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
@@ -62,7 +62,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   const { id } = use(params)
   const router = useRouter()
 
-  const studyType = STUDY_TYPES.find(s => s.id === id)
+  const { studyTypes, groups } = useStudies()
+  const studyType = studyTypes.find(s => s.id === id)
   const catalog   = STUDY_CATALOG.find(s => s.code === id)
 
   const [showArchive, setShowArchive] = useState(false)
@@ -72,7 +73,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   const [zoneFilter,   setZoneFilter]   = useState<string>('all')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  const studyGroups = MOCK_GROUPS.filter(g => g.study_type_id === id)
+  const studyGroups = groups.filter(g => g.study_type_id === id)
 
   const filteredGroups = studyGroups.filter(g => {
     const matchSearch = !search.trim() ||

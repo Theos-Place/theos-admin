@@ -3,7 +3,7 @@
 import { use, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MOCK_GROUPS, STUDY_TYPES, getStudyType } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { mockMembers } from '@/data/mock-members'
 import { sedeLabel } from '@/data/mock-sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
@@ -166,7 +166,8 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
 
 export default function GrupoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const group = MOCK_GROUPS.find(g => g.id === id)
+  const { groups, studyTypes } = useStudies()
+  const group = groups.find(g => g.id === id)
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
@@ -184,7 +185,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  const studyType = getStudyType(group.study_type_id)
+  const studyType = studyTypes.find(s => s.id === group.study_type_id) ?? null
   const enrolled = group.participants.filter(p => p.status !== 'withdrawn')
   const tabs = ['participantes', 'asistencia', 'comunicaciones', 'información']
   const tabLabels: Record<string, string> = {
