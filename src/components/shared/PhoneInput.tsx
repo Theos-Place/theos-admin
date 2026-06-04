@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 type Props = {
   value: string
@@ -34,6 +34,12 @@ function getNumber(val: string): string {
 export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }: Props) {
   const [countryCode, setCountryCode] = useState(() => getCountryCode(value))
   const [number, setNumber]           = useState(() => getNumber(value))
+
+  // Re-sincroniza cuando la prop `value` cambia (ej. data que llega async).
+  useEffect(() => {
+    setCountryCode(getCountryCode(value))
+    setNumber(getNumber(value))
+  }, [value])
 
   function handleCodeChange(code: string) {
     setCountryCode(code)

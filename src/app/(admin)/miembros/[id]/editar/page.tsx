@@ -284,6 +284,13 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   <option value="Casado/a">Casado/a</option>
                   <option value="Divorciado/a">Divorciado/a</option>
                   <option value="Viudo/a">Viudo/a</option>
+                  <option value="Unión libre">Unión libre</option>
+                  {maritalStatus &&
+                    !['Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión libre'].includes(maritalStatus) && (
+                      <option value={maritalStatus}>
+                        {maritalStatus.charAt(0).toUpperCase() + maritalStatus.slice(1)}
+                      </option>
+                    )}
                 </select>
               </div>
             </div>
@@ -297,7 +304,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           </div>
           <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <PhoneInput
-              label="Teléfono WhatsApp"
+              label="Teléfono"
               value={phone}
               onChange={setPhone}
             />
