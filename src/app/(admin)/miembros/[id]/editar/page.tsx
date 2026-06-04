@@ -317,20 +317,23 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 />
               </div>
             </div>
-            <div className="form-row">
-              <PhoneInput
-                label="Contacto de emergencia — Teléfono"
-                value={emergencyContactPhone}
-                onChange={setEmergencyContactPhone}
-              />
-              <div className="form-group">
-                <label className="form-label" htmlFor="edit-emergency-name">Contacto de emergencia — Nombre</label>
-                <input
-                  id="edit-emergency-name"
-                  className="form-input"
-                  value={emergencyContactName}
-                  onChange={e => setEmergencyContactName(e.target.value)}
-                  placeholder="Nombre completo..."
+            <div style={{ background: 'var(--surface-low)', borderRadius: 12, padding: 16 }}>
+              <p className="form-label" style={{ marginBottom: 12 }}>Contacto de emergencia</p>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="edit-emergency-name">Nombre</label>
+                  <input
+                    id="edit-emergency-name"
+                    className="form-input"
+                    value={emergencyContactName}
+                    onChange={e => setEmergencyContactName(e.target.value)}
+                    placeholder="Nombre completo..."
+                  />
+                </div>
+                <PhoneInput
+                  label="Teléfono"
+                  value={emergencyContactPhone}
+                  onChange={setEmergencyContactPhone}
                 />
               </div>
             </div>
