@@ -74,7 +74,6 @@ export function MemberPersonalTab({ member }: Props) {
       {/* Non-editable: name + cedula */}
       <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
         <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Nombre completo" value={`${member.first_name} ${member.last_name}`} editable={false} />
-        <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="ID Sistema" value={member.id} editable={false} />
         <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Cédula" value={member.cedula ?? 'Sin cédula'} editable={false} />
       </div>
 

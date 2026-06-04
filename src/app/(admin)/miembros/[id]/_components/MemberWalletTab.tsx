@@ -34,12 +34,12 @@ export function MemberWalletTab({ member }: Props) {
           </span>
         </div>
 
-        {/* Member ID */}
+        {/* Identificador del carné: cédula si la tiene */}
         <p
           className="text-xs text-white/40 mb-1"
           style={{ fontFamily: 'var(--font-mono)' }}
         >
-          #{member.id.padStart(6, '0')}
+          {member.cedula ? `#${member.cedula}` : ''}
         </p>
 
         {/* Name */}
