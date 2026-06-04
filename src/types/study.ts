@@ -2,8 +2,13 @@
 
 export type StudyType = {
   id: string
+  plan_id?: string
   code: string
   name: string
+  description?: string | null
+  difficulty?: string | null
+  commitments?: string | null
+  mentor_id?: string | null
   stage: 'niveles' | 'inicial' | 'intermedia' | 'campaña'
   weeks: number
   prerequisite: string | null

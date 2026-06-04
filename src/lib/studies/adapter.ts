@@ -30,8 +30,13 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
   const code = db.code ?? db.id
   return {
     id: code,
+    plan_id: db.id,
     code,
     name: db.name,
+    description: db.description ?? null,
+    difficulty: db.difficulty ?? null,
+    commitments: db.commitments ?? null,
+    mentor_id: db.mentor_id ?? null,
     stage: LEVEL_TO_STAGE[db.level] ?? 'niveles',
     weeks: db.duration_weeks ?? 0,
     prerequisite: db.prerequisite_code,

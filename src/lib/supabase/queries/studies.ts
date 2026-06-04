@@ -24,6 +24,9 @@ export type DbStudyPlan = {
   next_study_code: string | null
   min_attendance_pct: number
   is_active: boolean
+  difficulty: string | null
+  commitments: string | null
+  mentor_id: string | null
 }
 
 export type DbGroupEnriched = {
@@ -184,6 +187,9 @@ export type PlanWriteInput = {
   next_study_code?: string | null
   min_attendance_pct?: number
   is_active?: boolean
+  difficulty?: string | null
+  commitments?: string | null
+  mentor_id?: string | null
 }
 
 export type GroupWriteInput = {
@@ -238,6 +244,51 @@ export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): 
   const supabase = createAdminClient()
   const { error } = await supabase.from('study_groups').update(patch).eq('id', id)
   if (error) throw error
+}
+
+export type CloseResult = {
+  member_id: string
+  status_result: 'aprobado' | 'reprobado' | 'retirado'
+  grade?: number | null
+}
+
+/**
+ * Cierra un grupo: finaliza cada matrícula según su resultado y marca el grupo
+ * como 'finished'. aprobado/reprobado → 'completed' (la nota distingue el
+ * resultado; se guarda la etiqueta en notes). retirado → 'dropped'.
+ */
+export async function closeGroup(groupId: string, results: CloseResult[]): Promise<void> {
+  const supabase = createAdminClient()
+  const now = new Date().toISOString()
+
+  for (const r of results) {
+    if (r.status_result === 'retirado') {
+      const { error } = await supabase
+        .from('study_enrollments')
+        .update({ status: 'dropped', dropped_at: now, drop_reason: 'Retirado en cierre' })
+        .eq('group_id', groupId)
+        .eq('member_id', r.member_id)
+      if (error) throw error
+    } else {
+      const { error } = await supabase
+        .from('study_enrollments')
+        .update({
+          status: 'completed',
+          completed_at: now,
+          grade: r.grade ?? null,
+          notes: r.status_result,
+        })
+        .eq('group_id', groupId)
+        .eq('member_id', r.member_id)
+      if (error) throw error
+    }
+  }
+
+  const { error: gErr } = await supabase
+    .from('study_groups')
+    .update({ status: 'finished' })
+    .eq('id', groupId)
+  if (gErr) throw gErr
 }
 
 // Inscripciones
