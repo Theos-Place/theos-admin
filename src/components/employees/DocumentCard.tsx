@@ -1,7 +1,7 @@
 'use client'
 
 import { FileText, CreditCard, ShieldCheck, File, ExternalLink, Trash2 } from 'lucide-react'
-import type { EmployeeDocument, DocumentType } from '@/data/mock-employees'
+import type { EmployeeDocument, DocumentType } from '@/types/employee'
 import { cn } from '@/lib/utils'
 
 const ICON_MAP: Record<DocumentType, React.ComponentType<{ size?: number; className?: string }>> = {

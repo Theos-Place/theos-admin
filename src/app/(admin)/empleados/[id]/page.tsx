@@ -152,11 +152,11 @@ export default function EmpleadoDetailPage() {
 
   async function handleUploadDoc(file: File) {
     try {
-      const res = await fetch(`/api/employees/${id}/documents`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: file.name, doc_type: 'otro' }),
-      })
+      const form = new FormData()
+      form.append('file', file)
+      form.append('doc_type', 'otro')
+      form.append('title', file.name)
+      const res = await fetch(`/api/employees/${id}/documents`, { method: 'POST', body: form })
       if (!res.ok) throw new Error()
       await refetch()
     } catch { /* sin cambios si falla */ }

@@ -47,7 +47,8 @@ export function toDomainEmployee(db: DbEmployee): Employee {
     name: d.title,
     type: d.doc_type,
     uploaded_at: d.created_at,
-    url: d.file_url ?? '',
+    // url apunta a la ruta de descarga (firma una URL temporal); vacío si no hay archivo.
+    url: d.file_url ? `/api/employees/documents/${d.id}/download` : '',
   }))
 
   return {

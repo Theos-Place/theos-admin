@@ -242,6 +242,43 @@ export async function addEmployeeDocument(input: DocumentWriteInput): Promise<{ 
 
 export async function deleteEmployeeDocument(id: string): Promise<void> {
   const supabase = createAdminClient()
+  // Borra primero el archivo de storage (si lo tiene), luego el registro.
+  const { data } = await supabase.from('employee_documents').select('file_url').eq('id', id).maybeSingle()
+  const path = (data as { file_url: string | null } | null)?.file_url
+  if (path) await supabase.storage.from(EMPLOYEE_DOCS_BUCKET).remove([path])
   const { error } = await supabase.from('employee_documents').delete().eq('id', id)
   if (error) throw error
+}
+
+// ── Storage de documentos ──────────────────────────────────
+export const EMPLOYEE_DOCS_BUCKET = 'employee-docs'
+
+/** Sube un archivo al bucket privado y devuelve la ruta (que se guarda en file_url). */
+export async function uploadEmployeeDocFile(
+  employeeId: string,
+  fileName: string,
+  body: ArrayBuffer | Uint8Array,
+  contentType: string,
+  stamp: number,
+): Promise<string> {
+  const supabase = createAdminClient()
+  const safe = fileName.replace(/[^\w.\-]+/g, '_')
+  const path = `${employeeId}/${stamp}-${safe}`
+  const { error } = await supabase.storage
+    .from(EMPLOYEE_DOCS_BUCKET)
+    .upload(path, body, { contentType, upsert: false })
+  if (error) throw error
+  return path
+}
+
+/** URL firmada temporal para ver/descargar un documento privado. */
+export async function getEmployeeDocSignedUrl(id: string): Promise<string | null> {
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('employee_documents').select('file_url').eq('id', id).maybeSingle()
+  const path = (data as { file_url: string | null } | null)?.file_url
+  if (!path) return null
+  const { data: signed, error } = await supabase.storage
+    .from(EMPLOYEE_DOCS_BUCKET).createSignedUrl(path, 300)
+  if (error) throw error
+  return signed?.signedUrl ?? null
 }

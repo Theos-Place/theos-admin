@@ -1,6 +1,6 @@
 'use client'
 
-import type { EmployeeDocument } from '@/data/mock-employees'
+import type { EmployeeDocument } from '@/types/employee'
 import { DocumentCard } from '@/components/employees/DocumentCard'
 import { Upload } from 'lucide-react'
 
@@ -43,7 +43,7 @@ export function TabDocumentos({ allDocs, uploadRef, onFileChange, onDelete }: Ta
             <DocumentCard
               key={doc.id}
               doc={doc}
-              onDelete={doc.id.startsWith('extra-') ? onDelete : undefined}
+              onDelete={onDelete}
             />
           ))}
         </div>
