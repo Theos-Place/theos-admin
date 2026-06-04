@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
-  MOCK_VACANCIES, MOCK_APPLICATIONS,
   type Application, type ApplicationStatus,
 } from '@/data/mock-servers'
+import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { TOAST_LONG_MS } from '@/lib/constants'
 import { ChevronLeft, X, Check, Users } from 'lucide-react'
@@ -39,15 +39,17 @@ const VACANCY_STATUS_LABELS: Record<string, string> = {
 
 export default function VacanteDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const { vacancies, applications } = useServers()
 
-  const vacancy = useMemo(() => MOCK_VACANCIES.find(v => v.id === id), [id])
+  const vacancy = useMemo(() => vacancies.find(v => v.id === id), [vacancies, id])
   const initialApps = useMemo(
-    () => MOCK_APPLICATIONS.filter(a => a.vacancy_id === id),
-    [id]
+    () => applications.filter(a => a.vacancy_id === id),
+    [applications, id]
   )
 
   const [tab, setTab] = useState<Tab>('descripcion')
-  const [apps, setApps] = useState<Application[]>(initialApps)
+  const [apps, setApps] = useState<Application[]>([])
+  useEffect(() => { setApps(initialApps) }, [initialApps])
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [panelNotes, setPanelNotes] = useState<Record<string, string>>({})
   const [assignModal, setAssignModal] = useState<Application | null>(null)

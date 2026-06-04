@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
-  MOCK_COMMITTEES, MOCK_VACANCIES, MOCK_COMMITTEE_GOALS,
   type CommitteeServer, type CommitteeGoal, type CommitteeData,
 } from '@/data/mock-servers'
+import { useServers } from '@/hooks/useServers'
 import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
 import { useSortableTable } from '@/hooks/useSortableTable'
@@ -28,10 +28,11 @@ type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
 export default function CommitteeDetailPage() {
   const { committeeId } = useParams<{ committeeId: string }>()
   const router = useRouter()
+  const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, goalsByCommittee } = useServers()
 
   const committee = useMemo(
     () => MOCK_COMMITTEES.find(c => c.id === committeeId),
-    [committeeId]
+    [MOCK_COMMITTEES, committeeId]
   )
 
   const [tab, setTab] = useState<Tab>('miembros')
@@ -51,11 +52,17 @@ export default function CommitteeDetailPage() {
   // Edit committee modal
   const [editCommitteeOpen, setEditCommitteeOpen] = useState(false)
   const [committeeForm, setCommitteeForm] = useState<CommitteeFormState>({
-    name: committee?.name ?? '',
-    area: committee?.area ?? '',
-    area_code: committee?.area_code ?? '',
-    ideal_capacity: String(committee?.ideal_capacity ?? ''),
+    name: '', area: '', area_code: '', ideal_capacity: '',
   })
+  useEffect(() => {
+    if (!committee) return
+    setCommitteeForm({
+      name: committee.name,
+      area: committee.area,
+      area_code: committee.area_code,
+      ideal_capacity: String(committee.ideal_capacity ?? ''),
+    })
+  }, [committee])
   const [committeeOverride, setCommitteeOverride] = useState<Partial<CommitteeData>>({})
 
   // Add server modal
@@ -69,15 +76,15 @@ export default function CommitteeDetailPage() {
   const [positionOverrides, setPositionOverrides] = useState<Record<string, string>>({})
 
   // Goals (local state)
-  const initialGoals = MOCK_COMMITTEE_GOALS[committeeId] ?? []
-  const [goals, setGoals] = useState<CommitteeGoal[]>(initialGoals)
+  const [goals, setGoals] = useState<CommitteeGoal[]>([])
+  useEffect(() => { setGoals(goalsByCommittee[committeeId] ?? []) }, [goalsByCommittee, committeeId])
   const [newGoalText, setNewGoalText] = useState('')
   const [newGoalDate, setNewGoalDate] = useState('')
   const [showGoalForm, setShowGoalForm] = useState(false)
 
   const committeeVacancies = useMemo(
     () => MOCK_VACANCIES.filter(v => v.committee_id === committeeId),
-    [committeeId]
+    [MOCK_VACANCIES, committeeId]
   )
 
   const allCommitteeMembers = useMemo(
