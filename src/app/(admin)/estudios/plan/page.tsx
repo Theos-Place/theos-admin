@@ -1,20 +1,16 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { STUDY_TYPES } from '@/data/mock-studies'
+import type { StudyType } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
 import { ExpandableDescription } from '@/components/studies/ExpandableDescription'
 import { ChevronRight, ArrowDown, Plus, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const niveles    = STUDY_TYPES.filter(s => s.stage === 'niveles')
-const inicial    = STUDY_TYPES.filter(s => s.stage === 'inicial')
-const intermedia = STUDY_TYPES.filter(s => s.stage === 'intermedia')
-const campana    = STUDY_TYPES.filter(s => s.stage === 'campaña')
 
 function formatCost(cost: number) {
   if (cost === 0) return 'Gratis'
@@ -47,7 +43,7 @@ function StageLabel({ children, color }: { children: React.ReactNode; color: 'na
   )
 }
 
-function StudyCardCompact({ study }: { study: typeof STUDY_TYPES[0] }) {
+function StudyCardCompact({ study }: { study: StudyType }) {
   const borderColor = study.stage === 'niveles'
     ? 'border-l-navy/40'
     : study.stage === 'inicial'
@@ -83,7 +79,7 @@ function StudyCardCompact({ study }: { study: typeof STUDY_TYPES[0] }) {
   )
 }
 
-function StudyCardFull({ study }: { study: typeof STUDY_TYPES[0] }) {
+function StudyCardFull({ study }: { study: StudyType }) {
   const router = useRouter()
   const cat = STUDY_CATALOG.find(s => s.code === study.code)
 
@@ -173,6 +169,12 @@ function StageDivider({ label }: { label: string }) {
 }
 
 export default function PlanDeEstudiosPage() {
+  const { studyTypes } = useStudies()
+  const niveles    = useMemo(() => studyTypes.filter(s => s.stage === 'niveles'), [studyTypes])
+  const inicial    = useMemo(() => studyTypes.filter(s => s.stage === 'inicial'), [studyTypes])
+  const intermedia = useMemo(() => studyTypes.filter(s => s.stage === 'intermedia'), [studyTypes])
+  const campana    = useMemo(() => studyTypes.filter(s => s.stage === 'campaña'), [studyTypes])
+
   return (
     <div className="space-y-6">
 
@@ -284,7 +286,7 @@ export default function PlanDeEstudiosPage() {
               Todos los tipos de estudio
             </h2>
             <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
-              {STUDY_TYPES.length} estudios en total
+              {studyTypes.length} estudios en total
             </p>
           </div>
         </div>
@@ -305,11 +307,11 @@ export default function PlanDeEstudiosPage() {
               </tr>
             </thead>
             <tbody>
-              {STUDY_TYPES.map((s, i) => (
+              {studyTypes.map((s, i) => (
                 <tr
                   key={s.id}
                   className="hover:bg-surface-low transition-colors group"
-                  style={i < STUDY_TYPES.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                  style={i < studyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   <td className="px-4 py-3">
                     <StudyTypeBadge code={s.code} size="sm" />

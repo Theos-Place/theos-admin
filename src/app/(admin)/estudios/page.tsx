@@ -1,7 +1,8 @@
 'use client'
 
+import { useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_GROUPS, MOCK_WAIT_LIST, MOCK_RELOCATIONS } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel } from '@/data/mock-sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
@@ -9,25 +10,6 @@ import {
   Users, Clock, AlertTriangle, TrendingUp,
   BookOpen, UserCheck, ArrowLeftRight, BarChart2, ListChecks, LayoutList,
 } from 'lucide-react'
-
-const activeGroups = MOCK_GROUPS.filter(g => g.status === 'open' || g.status === 'in_progress')
-const openGroups = MOCK_GROUPS.filter(g => g.status === 'open')
-const inProgressGroups = MOCK_GROUPS.filter(g => g.status === 'in_progress')
-const n1WaitList = MOCK_WAIT_LIST.filter(w => w.type === 'N1')
-const pendingRelocations = MOCK_RELOCATIONS.filter(r => r.status === 'pending')
-
-function groupsClosingSoon() {
-  const now = new Date()
-  const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-  return inProgressGroups.filter(g => {
-    if (!g.end_date) return false
-    const end = new Date(g.end_date)
-    return end <= in30 && end >= now
-  })
-}
-
-const closingSoon = groupsClosingSoon()
-const pendingLeaderGroups = MOCK_GROUPS.filter(g => g.status === 'pending_leader')
 
 function formatSchedule(days: string[], time: string) {
   return `${days.join('/')} ${time}`
@@ -43,6 +25,24 @@ const QUICK_ACCESS = [
 ]
 
 export default function EstudiosPage() {
+  const { groups, waitlist, relocations } = useStudies()
+
+  const activeGroups        = useMemo(() => groups.filter(g => g.status === 'open' || g.status === 'in_progress'), [groups])
+  const openGroups          = useMemo(() => groups.filter(g => g.status === 'open'), [groups])
+  const inProgressGroups    = useMemo(() => groups.filter(g => g.status === 'in_progress'), [groups])
+  const n1WaitList          = useMemo(() => waitlist.filter(w => w.type === 'N1'), [waitlist])
+  const pendingRelocations  = useMemo(() => relocations.filter(r => r.status === 'pending'), [relocations])
+  const pendingLeaderGroups = useMemo(() => groups.filter(g => g.status === 'pending_leader'), [groups])
+  const closingSoon = useMemo(() => {
+    const now = new Date()
+    const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+    return inProgressGroups.filter(g => {
+      if (!g.end_date) return false
+      const end = new Date(g.end_date)
+      return end <= in30 && end >= now
+    })
+  }, [inProgressGroups])
+
   return (
     <div className="space-y-6">
       {/* Header */}
