@@ -54,12 +54,7 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }
   return (
     <div>
       {label && (
-        <label
-          className="block text-[12px] font-medium text-navy-light/60 mb-1.5"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          {label}
-        </label>
+        <label className="form-label">{label}</label>
       )}
       <div style={{ display: 'flex' }}>
         <select

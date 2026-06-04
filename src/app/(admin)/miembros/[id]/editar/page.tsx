@@ -299,21 +299,23 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
             <div className="card-title">Información de contacto</div>
           </div>
           <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <PhoneInput
-              label="Teléfono"
-              value={phone}
-              onChange={setPhone}
-            />
-            <div className="form-group">
-              <label className="form-label" htmlFor="edit-email">Correo electrónico</label>
-              <input
-                id="edit-email"
-                type="email"
-                className="form-input"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                autoComplete="email"
+            <div className="form-row">
+              <PhoneInput
+                label="Teléfono"
+                value={phone}
+                onChange={setPhone}
               />
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-email">Correo electrónico</label>
+                <input
+                  id="edit-email"
+                  type="email"
+                  className="form-input"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+              </div>
             </div>
             <div className="form-row">
               <PhoneInput
