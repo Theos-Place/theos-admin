@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { mockMembers, type Member } from '@/data/mock-members'
-import { MOCK_PAID_POSITIONS, MOCK_EMPLOYEES, type ContractType } from '@/data/mock-employees'
+import { type Member } from '@/data/mock-members'
+import { type ContractType } from '@/types/employee'
+import { useEmployees } from '@/hooks/useEmployees'
 import { ChevronLeft } from 'lucide-react'
 
 import { TopBar } from './_components/TopBar'
@@ -26,16 +27,14 @@ const REQUIRED_DOCS: { key: DocKey }[] = [
   { key: 'ccss' },
 ]
 
-const alreadyHiredIds = new Set(
-  MOCK_EMPLOYEES.filter(e => e.status === 'active').map(e => e.member_id)
-)
-
 export default function NuevoEmpleadoPage() {
   const router = useRouter()
+  const { employees, positions } = useEmployees()
 
   const [step, setStep]                 = useState(1)
   const [query, setQuery]               = useState('')
   const [selected, setSelected]         = useState<Member | null>(null)
+  const [candidates, setCandidates]     = useState<Member[]>([])
 
   const [positionId, setPositionId]     = useState('')
   const [contractType, setContractType] = useState<ContractType>('planilla')
@@ -45,10 +44,17 @@ export default function NuevoEmpleadoPage() {
 
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({})
   const [done, setDone]                 = useState(false)
+  const [saving, setSaving]             = useState(false)
+  const [error, setError]               = useState<string | null>(null)
+
+  const alreadyHiredIds = useMemo(
+    () => new Set(employees.filter(e => e.status === 'active').map(e => e.member_id)),
+    [employees]
+  )
 
   const activePositions = useMemo(
-    () => MOCK_PAID_POSITIONS.filter(p => p.is_active),
-    []
+    () => positions.filter(p => p.is_active),
+    [positions]
   )
 
   const selectedPosition = useMemo(
@@ -62,19 +68,23 @@ export default function NuevoEmpleadoPage() {
     salaryNum > 0 &&
     (salaryNum < selectedPosition.salary_min || salaryNum > selectedPosition.salary_max)
 
-  const searchResults = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return []
-    return mockMembers
-      .filter(m => m.is_active && !alreadyHiredIds.has(m.id))
-      .filter(
-        m =>
-          `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-          (m.email?.toLowerCase().includes(q) ?? false) ||
-          (m.cedula ?? '').includes(q)
-      )
-      .slice(0, 8)
-  }, [query])
+  // Búsqueda de personas contra la BD (activas y no contratadas aún).
+  useEffect(() => {
+    const q = query.trim()
+    if (!q) { setCandidates([]); return }
+    const ctrl = new AbortController()
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`, { signal: ctrl.signal })
+        if (!res.ok) return
+        const { members } = await res.json()
+        setCandidates((members ?? []).filter((m: { id: string }) => !alreadyHiredIds.has(m.id)) as Member[])
+      } catch { /* abortado */ }
+    }, 250)
+    return () => { clearTimeout(t); ctrl.abort() }
+  }, [query, alreadyHiredIds])
+
+  const searchResults = candidates
 
   function canAdvanceStep1() { return selected !== null }
   function canAdvanceStep2() { return positionId !== '' && salary !== '' && startDate !== '' }
@@ -100,6 +110,34 @@ export default function NuevoEmpleadoPage() {
     })
   }
 
+  async function handleFinish() {
+    if (saving || !selected) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          member_id: selected.id,
+          position_id: positionId || null,
+          position: selectedPosition?.name ?? null,
+          contract_type: contractType,
+          salary: salary ? Number(salary) : null,
+          start_date: startDate,
+          notes: notes.trim() || null,
+          status: 'active',
+        }),
+      })
+      if (!res.ok) throw new Error('No se pudo crear el empleado')
+      setDone(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (done) {
     return <SuccessScreen selected={selected} />
   }
@@ -111,12 +149,16 @@ export default function NuevoEmpleadoPage() {
       <TopBar
         step={step}
         totalSteps={STEPS.length}
-        canAdvance={canAdvanceCurrent}
+        canAdvance={canAdvanceCurrent && !saving}
         onNext={() => setStep(s => s + 1)}
-        onFinish={() => setDone(true)}
+        onFinish={handleFinish}
       />
 
       <StepProgress steps={STEPS} currentStep={step} />
+
+      {error && (
+        <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>
+      )}
 
       {step === 1 && (
         <StepPersonSearch

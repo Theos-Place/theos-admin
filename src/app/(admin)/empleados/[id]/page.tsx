@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { type Employee, type VacationRecordType } from '@/data/mock-employees'
+import { type VacationRecordType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
 import { cn } from '@/lib/utils'
 import {
@@ -63,7 +63,7 @@ function calcularDiasHabiles(desde: string, hasta: string): number {
 
 export default function EmpleadoDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { employees } = useEmployees()
+  const { employees, refetch } = useEmployees()
   const employee = useMemo(() => employees.find(e => e.id === id), [employees, id])
 
   const [tab, setTab] = useState<Tab>('resumen')
@@ -90,8 +90,65 @@ export default function EmpleadoDetailPage() {
   const [vacSaved, setVacSaved]                     = useState(false)
 
   // Documents
-  const [extraDocs, setExtraDocs]                   = useState<{ name: string; type: 'otro' }[]>([])
   const uploadRef = useRef<HTMLInputElement | null>(null)
+
+  async function handleSaveRaise() {
+    if (!employee || !raiseAmount) return
+    try {
+      const res = await fetch(`/api/employees/${id}/salary`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_salary: Number(raiseAmount), reason: raiseReason || null }),
+      })
+      if (!res.ok) throw new Error()
+      setRaiseSaved(true)
+      await refetch()
+    } catch { /* sin cambios si falla */ }
+  }
+
+  async function handleTerminate() {
+    if (!employee) return
+    setShowTerminateModal(false)
+    setTerminateConfirm('')
+    try {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'terminated', end_date: terminateDate || null, notes: terminateReason || null }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
+  }
+
+  async function handleSaveVacation() {
+    if (!employee || !vacFrom || !vacTo) return
+    try {
+      const res = await fetch(`/api/employees/${id}/vacations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: vacType, start_date: vacFrom, end_date: vacTo,
+          days: diasHabilesModal, notes: vacNotes || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      setVacSaved(true)
+      await refetch()
+    } catch { /* sin cambios si falla */ }
+  }
+
+  async function handleUploadDoc(file: File) {
+    try {
+      const res = await fetch(`/api/employees/${id}/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: file.name, doc_type: 'otro' }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
+  }
 
   if (!employee) {
     return (
@@ -106,16 +163,7 @@ export default function EmpleadoDetailPage() {
   const vacDiasDisponibles = employee.vacation_days_total - employee.vacation_days_used
   const diasHabilesModal   = vacFrom && vacTo ? calcularDiasHabiles(vacFrom, vacTo) : 0
 
-  const allDocs = [
-    ...employee.documents,
-    ...extraDocs.map((d, i) => ({
-      id: `extra-${i}`,
-      name: d.name,
-      type: 'otro' as const,
-      uploaded_at: new Date().toISOString().slice(0, 10),
-      url: '#',
-    })),
-  ]
+  const allDocs = employee.documents
 
   // Full timeline items
   const timeline = [
@@ -153,11 +201,12 @@ export default function EmpleadoDetailPage() {
     },
   ].sort((a, b) => b.date.localeCompare(a.date))
 
-  function handleDeleteDocument(docId: string) {
-    if (docId.startsWith('extra-')) {
-      const extraIdx = parseInt(docId.replace('extra-', '')) - employee!.documents.length
-      setExtraDocs(prev => prev.filter((_, i) => i !== extraIdx))
-    }
+  async function handleDeleteDocument(docId: string) {
+    try {
+      const res = await fetch(`/api/employees/documents/${docId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
   return (
@@ -222,7 +271,7 @@ export default function EmpleadoDetailPage() {
               uploadRef={uploadRef}
               onFileChange={e => {
                 const file = e.target.files?.[0]
-                if (file) setExtraDocs(prev => [...prev, { name: file.name, type: 'otro' }])
+                if (file) handleUploadDoc(file)
               }}
               onDelete={handleDeleteDocument}
             />
@@ -245,7 +294,7 @@ export default function EmpleadoDetailPage() {
           onRaiseAmountChange={setRaiseAmount}
           onRaiseReasonChange={setRaiseReason}
           onRaiseDateChange={setRaiseDate}
-          onSave={() => setRaiseSaved(true)}
+          onSave={handleSaveRaise}
         />
       )}
 
@@ -259,7 +308,7 @@ export default function EmpleadoDetailPage() {
           onTerminateConfirmChange={setTerminateConfirm}
           onTerminateDateChange={setTerminateDate}
           onTerminateReasonChange={setTerminateReason}
-          onConfirm={() => { setShowTerminateModal(false); setTerminateConfirm('') }}
+          onConfirm={handleTerminate}
         />
       )}
 
@@ -276,7 +325,7 @@ export default function EmpleadoDetailPage() {
           onVacFromChange={setVacFrom}
           onVacToChange={setVacTo}
           onVacNotesChange={setVacNotes}
-          onSave={() => setVacSaved(true)}
+          onSave={handleSaveVacation}
         />
       )}
     </div>

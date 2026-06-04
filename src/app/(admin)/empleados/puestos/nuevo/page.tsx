@@ -10,9 +10,11 @@ import { ChevronLeft, Check } from 'lucide-react'
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 export default function NuevoPuestoPage() {
-  const { allCommittees: ALL_COMMITTEES, areas: AREAS } = useOrg()
+  const { areas: AREAS, adminCommittees } = useOrg()
   const router = useRouter()
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState<string | null>(null)
 
   const [name, setName]                     = useState('')
   const [committee, setCommittee]           = useState('')
@@ -23,7 +25,34 @@ export default function NuevoPuestoPage() {
   const [isActive, setIsActive]             = useState(true)
 
   function canSave() {
-    return name.trim() !== '' && committee !== ''
+    return name.trim() !== '' && committee !== '' && !saving
+  }
+
+  async function handleSave() {
+    const committee_id = adminCommittees.find(c => c.name === committee)?.id ?? null
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/employees/positions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          committee_id,
+          description: description.trim() || null,
+          contract_type: contractType,
+          salary_min: salaryMin ? Number(salaryMin) : null,
+          salary_max: salaryMax ? Number(salaryMax) : null,
+          is_active: isActive,
+        }),
+      })
+      if (!res.ok) throw new Error('No se pudo crear el puesto')
+      setSaved(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (saved) {
@@ -79,7 +108,7 @@ export default function NuevoPuestoPage() {
           </Link>
           <button
             type="button"
-            onClick={() => setSaved(true)}
+            onClick={handleSave}
             disabled={!canSave()}
             className={cn(
               'rounded-full px-3.5 py-1.5 text-[12px] text-white transition-colors',
@@ -87,10 +116,14 @@ export default function NuevoPuestoPage() {
             )}
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Guardar puesto
+            {saving ? 'Guardando...' : 'Guardar puesto'}
           </button>
         </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>
+      )}
 
       <div className="rounded-2xl p-5 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
         {/* Nombre */}

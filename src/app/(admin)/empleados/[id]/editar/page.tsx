@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { MOCK_EMPLOYEES, MOCK_PAID_POSITIONS, type ContractType } from '@/data/mock-employees'
+import { type ContractType } from '@/types/employee'
+import { useEmployees } from '@/hooks/useEmployees'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
 
@@ -11,15 +12,67 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 
 export default function EditarEmpleadoPage() {
   const { id } = useParams<{ id: string }>()
-  const employee = useMemo(() => MOCK_EMPLOYEES.find(e => e.id === id), [id])
-  const activePositions = useMemo(() => MOCK_PAID_POSITIONS.filter(p => p.is_active), [])
+  const { employees, positions, loading } = useEmployees()
+  const employee = useMemo(() => employees.find(e => e.id === id), [employees, id])
+  const activePositions = useMemo(() => positions.filter(p => p.is_active), [positions])
 
-  const [positionId, setPositionId]         = useState(employee?.position_id ?? '')
-  const [contractType, setContractType]     = useState<ContractType>(employee?.contract_type ?? 'planilla')
-  const [email, setEmail]                   = useState(employee?.member_email ?? '')
-  const [notes, setNotes]                   = useState(employee?.notes ?? '')
-  const [vacationDays, setVacationDays]     = useState(String(employee?.vacation_days_total ?? 15))
+  const [positionId, setPositionId]         = useState('')
+  const [contractType, setContractType]     = useState<ContractType>('planilla')
+  const [email, setEmail]                   = useState('')
+  const [notes, setNotes]                   = useState('')
+  const [vacationDays, setVacationDays]     = useState('15')
   const [saved, setSaved]                   = useState(false)
+  const [saving, setSaving]                 = useState(false)
+  const [error, setError]                   = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!employee) return
+    setPositionId(employee.position_id ?? '')
+    setContractType(employee.contract_type ?? 'planilla')
+    setEmail(employee.member_email ?? '')
+    setNotes(employee.notes ?? '')
+    setVacationDays(String(employee.vacation_days_total ?? 15))
+  }, [employee])
+
+  async function handleSave() {
+    if (saving || !employee) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          position_id: positionId || null,
+          contract_type: contractType,
+          notes: notes.trim() || null,
+          vacation_days_total: Number(vacationDays) || 0,
+        }),
+      })
+      if (!res.ok) throw new Error('No se pudieron guardar los cambios')
+      // El email pertenece al miembro: se persiste aparte (best-effort).
+      if (employee.member_id && email !== (employee.member_email ?? '')) {
+        await fetch(`/api/members/${employee.member_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() || null }),
+        }).catch(() => {})
+      }
+      setSaved(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading && !employee) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando empleado...</p>
+      </div>
+    )
+  }
 
   if (!employee) {
     return (
@@ -84,14 +137,19 @@ export default function EditarEmpleadoPage() {
           </Link>
           <button
             type="button"
-            onClick={() => setSaved(true)}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Guardar cambios
+            {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>
+      )}
 
       <div className="rounded-2xl p-5 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
         {/* Info no editable */}
