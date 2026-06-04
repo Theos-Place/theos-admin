@@ -19,6 +19,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   // ── Estado del formulario ──────────────────────────────────────────────────
   const [firstName,             setFirstName]             = useState(member?.first_name ?? '')
   const [lastName,              setLastName]              = useState(member?.last_name ?? '')
+  const [cedula,                setCedula]                = useState(member?.cedula ?? '')
   const [email,                 setEmail]                 = useState(member?.email ?? '')
   const [phone,                 setPhone]                 = useState(member?.phone ?? '')
   const [sede,                  setSede]                  = useState(member?.sede ?? '')
@@ -48,6 +49,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     if (!member) return
     setFirstName(member.first_name ?? '')
     setLastName(member.last_name ?? '')
+    setCedula(member.cedula ?? '')
     setEmail(member.email ?? '')
     setPhone(member.phone ?? '')
     setSede(member.sede ?? '')
@@ -87,6 +89,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     const payload = {
       first_name: firstName.trim(),
       last_name: lastName.trim(),
+      cedula: cedula.trim() || null,
       email: email.trim() || null,
       phone: phone.trim() || null,
       birth_date: birthDate || null,
@@ -223,6 +226,19 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
                   placeholder="Ej: Ruiz Moreno"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-cedula">Cédula</label>
+                <input
+                  id="edit-cedula"
+                  className="form-input"
+                  value={cedula}
+                  onChange={e => setCedula(e.target.value)}
+                  placeholder="Ej: 1-1234-5678"
                 />
               </div>
             </div>
