@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_PAID_POSITIONS, MOCK_EMPLOYEES } from '@/data/mock-employees'
+import { useEmployees } from '@/hooks/useEmployees'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryBadge } from '@/components/employees/SalaryBadge'
 import { AREAS } from '@/data/mock-committees'
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { Plus, Lock } from 'lucide-react'
 
 export default function PuestosPage() {
+  const { employees: MOCK_EMPLOYEES, positions: MOCK_PAID_POSITIONS } = useEmployees()
   const [areaFilter, setAreaFilter] = useState('all')
 
   const areaOptions = [

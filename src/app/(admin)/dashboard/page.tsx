@@ -12,8 +12,19 @@ import { cn } from '@/lib/utils'
 import { useMockAuth } from '@/hooks/useMockAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import type { RoleId } from '@/data/mock-auth'
-import { MOCK_EVENTS, type EventType } from '@/data/mock-events'
-import { DASHBOARD_STATS, RECENT_ACTIVITY } from '@/data/mock-dashboard'
+import { type EventType } from '@/data/mock-events'
+import { useEvents } from '@/hooks/useEvents'
+import { useDashboard } from '@/hooks/useDashboard'
+
+// Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
+const EMPTY_STATS = {
+  members: { total: 0, active: 0, new_this_month: 0, without_cedula: 0, duplicates_suggested: 0 },
+  studies: { active_groups: 0, students: 0, open_registration: 0, waitlist_n1: 0, closing_soon: 0, without_leader: 0 },
+  events: { upcoming_this_month: 0, this_week: 0, pending_payments: 0, near_capacity: 0 },
+  servers: { active: 0, committees: 0, open_vacancies: 0, pending_applications: 0 },
+  finance: { donors_active: 0, pending_refunds: 0, income_this_month: 0 },
+  communications: { sent_this_month: 0, total_recipients: 0, failed: 0 },
+}
 
 // ─── Theta pattern ────────────────────────────────────────────────────────────
 type ThetaPosition = {
@@ -210,6 +221,9 @@ function ModuleCard({
 export default function DashboardPage() {
   const { user, loaded, hasRole } = useMockAuth()
   const { can } = usePermissions()
+  const { events: MOCK_EVENTS } = useEvents()
+  const { stats, activity: RECENT_ACTIVITY } = useDashboard()
+  const DASHBOARD_STATS = stats ?? EMPTY_STATS
 
   const [now, setNow] = useState(new Date())
   const [showAmounts, setShowAmounts] = useState(false)

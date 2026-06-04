@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_MESSAGES, getDeliveryRate, type CommunicationChannel, type CommunicationStatus } from '@/data/mock-communications'
+import { getDeliveryRate, type CommunicationChannel, type CommunicationStatus } from '@/data/mock-communications'
+import { useCommunications } from '@/hooks/useCommunications'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { cn } from '@/lib/utils'
 import {
@@ -40,8 +41,9 @@ export default function ComunicacionesPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
-  const sent = useMemo(() => MOCK_MESSAGES.filter(m => m.status !== 'draft'), [])
-  const drafts = useMemo(() => MOCK_MESSAGES.filter(m => m.status === 'draft'), [])
+  const { messages: MOCK_MESSAGES } = useCommunications()
+  const sent = useMemo(() => MOCK_MESSAGES.filter(m => m.status !== 'draft'), [MOCK_MESSAGES])
+  const drafts = useMemo(() => MOCK_MESSAGES.filter(m => m.status === 'draft'), [MOCK_MESSAGES])
 
   const stats = useMemo(() => {
     const sentThisMonth = sent.filter(m => thisMonth(m.sent_at))

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { MOCK_CHANNEL_CONFIGS, type ChannelConfig } from '@/data/mock-communications'
+import { useState, useEffect } from 'react'
+import { type ChannelConfig } from '@/data/mock-communications'
+import { useCommunications } from '@/hooks/useCommunications'
 import { cn } from '@/lib/utils'
 import {
   Plus,
@@ -27,8 +28,10 @@ const INITIAL_WA_FORM = {
 }
 
 export default function ConfiguracionPage() {
+  const { configs: allConfigs } = useCommunications()
   const [tab, setTab] = useState<SmtpTab>('smtp')
-  const [configs, setConfigs] = useState<ChannelConfig[]>(MOCK_CHANNEL_CONFIGS)
+  const [configs, setConfigs] = useState<ChannelConfig[]>([])
+  useEffect(() => { setConfigs(allConfigs) }, [allConfigs])
   const [showSmtpForm, setShowSmtpForm] = useState(false)
   const [showWaForm, setShowWaForm] = useState(false)
   const [smtpForm, setSmtpForm] = useState(INITIAL_SMTP_FORM)

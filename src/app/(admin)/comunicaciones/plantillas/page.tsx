@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MOCK_TEMPLATES, type MessageTemplate, type CommunicationChannel } from '@/data/mock-communications'
+import { type MessageTemplate, type CommunicationChannel } from '@/data/mock-communications'
+import { useCommunications } from '@/hooks/useCommunications'
 import { TemplateCard } from '@/components/communications/TemplateCard'
 import { cn } from '@/lib/utils'
 import { Plus, FileText } from 'lucide-react'
@@ -28,7 +29,9 @@ const CHANNEL_FILTERS: { key: 'all' | CommunicationChannel; label: string }[] = 
 
 export default function PlantillasPage() {
   const router = useRouter()
-  const [templates, setTemplates] = useState<MessageTemplate[]>(MOCK_TEMPLATES)
+  const { templates: allTemplates } = useCommunications()
+  const [templates, setTemplates] = useState<MessageTemplate[]>([])
+  useEffect(() => { setTemplates(allTemplates) }, [allTemplates])
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
 

@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MOCK_EMPLOYEES, type ContractType } from '@/data/mock-employees'
+import { type ContractType } from '@/data/mock-employees'
+import { useEmployees } from '@/hooks/useEmployees'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useSortableTable } from '@/hooks/useSortableTable'
@@ -35,6 +36,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 export default function EmpleadosPage() {
   const router = useRouter()
   const { can } = usePermissions()
+  const { employees: MOCK_EMPLOYEES } = useEmployees()
   const [filter, setFilter] = useState<FilterKey>('all')
   const [historyOpen, setHistoryOpen] = useState(false)
 

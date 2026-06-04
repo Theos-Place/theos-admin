@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { MOCK_FORM_TEMPLATES, MOCK_RESPONSES, type FormTemplate } from '@/data/mock-forms'
+import { type FormTemplate } from '@/data/mock-forms'
+import { useForms } from '@/hooks/useForms'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
 import {
@@ -56,7 +57,9 @@ function thisMonth(dateStr: string | null) {
 }
 
 export default function FormulariosPage() {
-  const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>(MOCK_FORM_TEMPLATES)
+  const { forms } = useForms()
+  const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>([])
+  useEffect(() => { setLocalTemplates(forms) }, [forms])
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
@@ -84,7 +87,10 @@ export default function FormulariosPage() {
 
   const stats = useMemo(() => {
     const active = localTemplates.filter(f => f.is_active).length
-    const responsesThisMonth = MOCK_RESPONSES.filter(r => thisMonth(r.submitted_at)).length
+    // Aproximación: respuestas de formularios cuya última respuesta cae este mes.
+    const responsesThisMonth = localTemplates
+      .filter(f => f.last_response_at && thisMonth(f.last_response_at))
+      .reduce((s, f) => s + f.responses_count, 0)
     const noResponses = localTemplates.filter(f => f.responses_count === 0).length
     const avg = localTemplates.reduce((sum, f) => sum + f.responses_count, 0) / Math.max(localTemplates.length, 1)
     return { active, responsesThisMonth, noResponses, avg: Math.round(avg * 10) / 10 }
