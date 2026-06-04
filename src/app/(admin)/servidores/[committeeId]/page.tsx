@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import type { CommitteeServer, CommitteeGoal, CommitteeData } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
-import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { CommitteeHeader } from './_components/CommitteeHeader'
@@ -45,7 +44,6 @@ export default function CommitteeDetailPage() {
   const [disconnectReason, setDisconnectReason] = useState<DisconnectReason>('renuncia')
   const [disconnectOtherReason, setDisconnectOtherReason] = useState('')
   const [disconnectDate, setDisconnectDate] = useState(new Date().toISOString().split('T')[0])
-  const [disconnected, setDisconnected] = useState<string[]>([])
 
   // Edit committee modal
   const [editCommitteeOpen, setEditCommitteeOpen] = useState(false)
@@ -66,12 +64,12 @@ export default function CommitteeDetailPage() {
   // Add server modal
   const [addServerOpen, setAddServerOpen] = useState(false)
   const [serverSearch, setServerSearch] = useState('')
-  const [addedServers, setAddedServers] = useState<CommitteeServer[]>([])
+  const [addPositionId, setAddPositionId] = useState('')
+  const [candidates, setCandidates] = useState<Array<{ id: string; first_name: string; last_name: string; email: string | null }>>([])
 
-  // Change position modal
+  // Change position modal (newPosition guarda el position_id destino)
   const [changePositionTarget, setChangePositionTarget] = useState<CommitteeServer | null>(null)
   const [newPosition, setNewPosition] = useState('')
-  const [positionOverrides, setPositionOverrides] = useState<Record<string, string>>({})
 
   // Goals (local state)
   const [goals, setGoals] = useState<CommitteeGoal[]>([])
@@ -86,26 +84,22 @@ export default function CommitteeDetailPage() {
   )
 
   const allCommitteeMembers = useMemo(
-    () => !committee ? [] : [...committee.members, ...addedServers].map(m => ({
-      ...m,
-      position: positionOverrides[m.member_id] ?? m.position,
-    })),
-    [committee, addedServers, positionOverrides]
+    () => committee?.members ?? [],
+    [committee]
   )
 
   const displayedMembers = useMemo(
     () => allCommitteeMembers.filter(m => {
-      if (disconnected.includes(m.member_id)) return false
       const matchSearch = m.name.toLowerCase().includes(search.toLowerCase())
       const matchStatus = statusFilter === 'all' || m.status === statusFilter
       return matchSearch && matchStatus
     }),
-    [allCommitteeMembers, disconnected, search, statusFilter]
+    [allCommitteeMembers, search, statusFilter]
   )
 
   const activeCount = useMemo(
-    () => allCommitteeMembers.filter(m => m.status === 'active' && !disconnected.includes(m.member_id)).length,
-    [allCommitteeMembers, disconnected]
+    () => allCommitteeMembers.filter(m => m.status === 'active').length,
+    [allCommitteeMembers]
   )
 
   const existingMemberIds = useMemo(
@@ -113,14 +107,23 @@ export default function CommitteeDetailPage() {
     [allCommitteeMembers]
   )
 
-  const filteredCandidates = useMemo(() => {
-    if (!serverSearch.trim()) return []
-    const q = serverSearch.toLowerCase()
-    return mockMembers
-      .filter(m => !existingMemberIds.has(m.id) && m.is_active)
-      .filter(m => `${m.first_name} ${m.last_name}`.toLowerCase().includes(q))
-      .slice(0, 8)
+  // Búsqueda de candidatos contra la BD (miembros activos que no están ya en el comité).
+  useEffect(() => {
+    const q = serverSearch.trim()
+    if (!q) { setCandidates([]); return }
+    const ctrl = new AbortController()
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`, { signal: ctrl.signal })
+        if (!res.ok) return
+        const { members } = await res.json()
+        setCandidates((members ?? []).filter((m: { id: string }) => !existingMemberIds.has(m.id)))
+      } catch { /* abortado */ }
+    }, 250)
+    return () => { clearTimeout(t); ctrl.abort() }
   }, [serverSearch, existingMemberIds])
+
+  const filteredCandidates = candidates
 
   const { sorted: sortedMembers, sortKey: memberSortKey, sortDir: memberSortDir, toggleSort: toggleMemberSort } = useSortableTable(displayedMembers)
 
@@ -134,10 +137,19 @@ export default function CommitteeDetailPage() {
     )
   }
 
-  function handleDisconnect() {
-    if (!disconnectTarget) return
-    setDisconnected(prev => [...prev, disconnectTarget!.member_id])
+  async function handleDisconnect() {
+    if (!disconnectTarget?.position_id) { setDisconnectTarget(null); return }
+    const { position_id, member_id } = disconnectTarget
     setDisconnectTarget(null)
+    try {
+      const res = await fetch('/api/servers/volunteers', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position_id, member_id }),
+      })
+      if (!res.ok) throw new Error('disconnect failed')
+      await refetch()
+    } catch { /* el servidor sigue visible si falla */ }
   }
 
   async function updateCommitteeInMock() {
@@ -163,27 +175,47 @@ export default function CommitteeDetailPage() {
     }
   }
 
-  function addServerToCommittee(memberId: string) {
-    const member = mockMembers.find(m => m.id === memberId)
-    if (!member) return
-    const newServer: CommitteeServer = {
-      member_id: member.id,
-      name: `${member.first_name} ${member.last_name}`,
-      initials: `${member.first_name[0]}${member.last_name[0]}`,
-      position: 'Colaborador',
-      start_date: new Date().toISOString().split('T')[0],
-      status: 'active',
-    }
-    setAddedServers(prev => [...prev, newServer])
+  async function addServerToCommittee(memberId: string) {
+    if (!addPositionId) return
+    const position_id = addPositionId
     setServerSearch('')
     setAddServerOpen(false)
+    setAddPositionId('')
+    try {
+      const res = await fetch('/api/servers/volunteers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position_id, member_id: memberId }),
+      })
+      if (!res.ok) throw new Error('assign failed')
+      await refetch()
+    } catch { /* no se agregó; reintentar */ }
   }
 
-  function updateMemberPosition() {
+  // Cambiar puesto = baja del puesto actual + alta en el nuevo (newPosition es el position_id destino).
+  async function updateMemberPosition() {
     if (!changePositionTarget || !newPosition) return
-    setPositionOverrides(prev => ({ ...prev, [changePositionTarget.member_id]: newPosition }))
+    const { member_id, position_id: oldPositionId } = changePositionTarget
+    const newPositionId = newPosition
     setChangePositionTarget(null)
     setNewPosition('')
+    if (newPositionId === oldPositionId) return
+    try {
+      if (oldPositionId) {
+        await fetch('/api/servers/volunteers', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ position_id: oldPositionId, member_id }),
+        })
+      }
+      const res = await fetch('/api/servers/volunteers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position_id: newPositionId, member_id }),
+      })
+      if (!res.ok) throw new Error('change position failed')
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
   async function addGoal() {
@@ -230,7 +262,7 @@ export default function CommitteeDetailPage() {
 
   function handleChangePositionOpen(member: CommitteeServer) {
     setChangePositionTarget(member)
-    setNewPosition(positionOverrides[member.member_id] ?? member.position)
+    setNewPosition(member.position_id ?? '')
   }
 
   return (
@@ -287,7 +319,6 @@ export default function CommitteeDetailPage() {
             onStatusFilterChange={setStatusFilter}
             openMenu={openMenu}
             onMenuToggle={handleMenuToggle}
-            positionOverrides={positionOverrides}
             onChangePosition={handleChangePositionOpen}
             onDisconnect={setDisconnectTarget}
             onAddServerClick={() => setAddServerOpen(true)}
@@ -351,8 +382,11 @@ export default function CommitteeDetailPage() {
           serverSearch={serverSearch}
           onServerSearchChange={setServerSearch}
           filteredCandidates={filteredCandidates}
+          positions={committee.positions ?? []}
+          positionId={addPositionId}
+          onPositionChange={setAddPositionId}
           onAddServer={addServerToCommittee}
-          onClose={() => { setAddServerOpen(false); setServerSearch('') }}
+          onClose={() => { setAddServerOpen(false); setServerSearch(''); setAddPositionId('') }}
         />
       )}
 
@@ -361,6 +395,7 @@ export default function CommitteeDetailPage() {
         <ChangePositionModal
           target={changePositionTarget}
           newPosition={newPosition}
+          positions={committee.positions ?? []}
           onPositionChange={setNewPosition}
           onConfirm={updateMemberPosition}
           onCancel={() => setChangePositionTarget(null)}

@@ -26,6 +26,7 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
         name,
         initials: initials(name),
         position: pos.title,
+        position_id: pos.id,
         start_date: v.start_date ?? '',
         status: (v.status === 'active' ? 'active' : 'inactive') as CommitteeServer['status'],
       }

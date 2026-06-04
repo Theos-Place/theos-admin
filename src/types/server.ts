@@ -7,6 +7,7 @@ export type CommitteeServer = {
   name: string
   initials: string
   position: string
+  position_id?: string
   start_date: string
   status: ServerStatus
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Plus, Search, MoreVertical, ExternalLink } from 'lucide-react'
-import { type CommitteeServer } from '@/data/mock-servers'
+import type { CommitteeServer } from '@/types/server'
 import { cn } from '@/lib/utils'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { type SortDirection } from '@/hooks/useSortableTable'
@@ -34,7 +34,6 @@ type Props = {
   onStatusFilterChange: (value: StatusFilter) => void
   openMenu: string | null
   onMenuToggle: (memberId: string) => void
-  positionOverrides: Record<string, string>
   onChangePosition: (member: CommitteeServer) => void
   onDisconnect: (member: CommitteeServer) => void
   onAddServerClick: () => void
@@ -51,7 +50,6 @@ export function MembersTab({
   onStatusFilterChange,
   openMenu,
   onMenuToggle,
-  positionOverrides,
   onChangePosition,
   onDisconnect,
   onAddServerClick,

@@ -1,9 +1,7 @@
 'use client'
 
 import { X, Search, Plus } from 'lucide-react'
-import { type CommitteeServer } from '@/data/mock-servers'
-import { SERVICE_POSITIONS } from '@/data/mock-committees'
-import { cn } from '@/lib/utils'
+import type { CommitteeServer, CommitteePosition } from '@/types/server'
 
 type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
 
@@ -199,6 +197,9 @@ type AddServerModalProps = {
   serverSearch: string
   onServerSearchChange: (value: string) => void
   filteredCandidates: Candidate[]
+  positions: CommitteePosition[]
+  positionId: string
+  onPositionChange: (value: string) => void
   onAddServer: (memberId: string) => void
   onClose: () => void
 }
@@ -207,6 +208,9 @@ export function AddServerModal({
   serverSearch,
   onServerSearchChange,
   filteredCandidates,
+  positions,
+  positionId,
+  onPositionChange,
   onAddServer,
   onClose,
 }: AddServerModalProps) {
@@ -217,7 +221,19 @@ export function AddServerModal({
           <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Añadir servidor</p>
           <button onClick={onClose} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
         </div>
-        <div className="relative">
+        <div className="space-y-1">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Puesto</label>
+          <select
+            className={inputCls}
+            style={{ fontFamily: 'var(--font-body)' }}
+            value={positionId}
+            onChange={e => onPositionChange(e.target.value)}
+          >
+            <option value="">Seleccionar puesto...</option>
+            {positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+          </select>
+        </div>
+        <div className={positionId ? 'relative' : 'relative opacity-50 pointer-events-none'}>
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
@@ -263,6 +279,7 @@ export function AddServerModal({
 type ChangePositionModalProps = {
   target: CommitteeServer
   newPosition: string
+  positions: CommitteePosition[]
   onPositionChange: (value: string) => void
   onConfirm: () => void
   onCancel: () => void
@@ -271,6 +288,7 @@ type ChangePositionModalProps = {
 export function ChangePositionModal({
   target,
   newPosition,
+  positions,
   onPositionChange,
   onConfirm,
   onCancel,
@@ -294,7 +312,7 @@ export function ChangePositionModal({
             onChange={e => onPositionChange(e.target.value)}
           >
             <option value="">Seleccionar puesto...</option>
-            {SERVICE_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            {positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>
         </div>
         <div className="flex gap-2">
