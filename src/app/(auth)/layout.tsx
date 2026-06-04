@@ -24,12 +24,6 @@ function ThetaSVG({ size, opacity }: { size: number; opacity: number }) {
   )
 }
 
-const STATS = [
-  '900+ personas por semana',
-  '184 grupos de estudio',
-  '10 sedes en Costa Rica',
-]
-
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -114,34 +108,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           >
             disfrutá de una relación cada vez más cercana con Dios
           </p>
-
-          {/* Stats */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 10,
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
-            {STATS.map(stat => (
-              <span
-                key={stat}
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 12,
-                  color: 'white',
-                  background: 'rgba(255,255,255,0.10)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: 999,
-                  padding: '7px 16px',
-                  backdropFilter: 'blur(8px)',
-                }}
-              >
-                {stat}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
 
