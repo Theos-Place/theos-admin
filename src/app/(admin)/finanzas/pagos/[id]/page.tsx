@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Check } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -8,7 +8,8 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
-import { MOCK_PAYMENTS } from '@/data/mock-finance'
+import { type Payment } from '@/data/mock-finance'
+import { useFinance } from '@/hooks/useFinance'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -21,7 +22,9 @@ function formatDateShort(d: string | null) {
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const [payment, setPayment] = useState(() => MOCK_PAYMENTS.find(p => p.id === id) ?? null)
+  const { payments } = useFinance()
+  const [payment, setPayment] = useState<Payment | null>(null)
+  useEffect(() => { setPayment(payments.find(p => p.id === id) ?? null) }, [payments, id])
   const [showRefund, setShowRefund] = useState(false)
   const [toast, setToast] = useState('')
 

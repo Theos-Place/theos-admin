@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { MOCK_EMPLOYEES, type Employee, type VacationRecordType } from '@/data/mock-employees'
+import { type Employee, type VacationRecordType } from '@/data/mock-employees'
+import { useEmployees } from '@/hooks/useEmployees'
 import { cn } from '@/lib/utils'
 import {
   FileText,
@@ -62,7 +63,8 @@ function calcularDiasHabiles(desde: string, hasta: string): number {
 
 export default function EmpleadoDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const employee = useMemo(() => MOCK_EMPLOYEES.find(e => e.id === id), [id])
+  const { employees } = useEmployees()
+  const employee = useMemo(() => employees.find(e => e.id === id), [employees, id])
 
   const [tab, setTab] = useState<Tab>('resumen')
 

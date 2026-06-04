@@ -3,17 +3,18 @@
 import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { MOCK_PAID_POSITIONS, MOCK_EMPLOYEES } from '@/data/mock-employees'
+import { useEmployees } from '@/hooks/useEmployees'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryBadge } from '@/components/employees/SalaryBadge'
 import { ChevronLeft, Lock } from 'lucide-react'
 
 export default function PuestoDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const position = useMemo(() => MOCK_PAID_POSITIONS.find(p => p.id === id), [id])
+  const { employees, positions } = useEmployees()
+  const position = useMemo(() => positions.find(p => p.id === id), [positions, id])
   const assigned = useMemo(
-    () => MOCK_EMPLOYEES.find(e => e.position_id === id && e.status === 'active'),
-    [id]
+    () => employees.find(e => e.position_id === id && e.status === 'active'),
+    [employees, id]
   )
 
   if (!position) {

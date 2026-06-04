@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { MOCK_MESSAGES, type CommunicationStatus } from '@/data/mock-communications'
+import { type CommunicationStatus } from '@/data/mock-communications'
+import { useCommunications } from '@/hooks/useCommunications'
 import { mockMembers } from '@/data/mock-members'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { DeliveryStats } from '@/components/communications/DeliveryStats'
@@ -39,7 +40,8 @@ function buildRecipients(total: number, failed: number) {
 
 export default function ComunicacionDetallePage() {
   const { id } = useParams<{ id: string }>()
-  const message = useMemo(() => MOCK_MESSAGES.find(m => m.id === id), [id])
+  const { messages } = useCommunications()
+  const message = useMemo(() => messages.find(m => m.id === id), [messages, id])
   const [recipientFilter, setRecipientFilter] = useState<RecipientFilter>('all')
   const [retrying, setRetrying] = useState(false)
 
