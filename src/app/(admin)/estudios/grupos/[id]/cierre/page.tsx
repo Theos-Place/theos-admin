@@ -2,7 +2,9 @@
 
 import { use, useState } from 'react'
 import Link from 'next/link'
-import { MOCK_GROUPS, getStudyType } from '@/data/mock-studies'
+import { useRouter } from 'next/navigation'
+import { useStudies } from '@/hooks/useStudies'
+import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star } from 'lucide-react'
 
@@ -16,23 +18,17 @@ type ParticipantResult = {
 
 export default function CierrePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const group = MOCK_GROUPS.find(g => g.id === id)
-  const studyType = group ? getStudyType(group.study_type_id) : null
+  const { groups, studyTypes, loading } = useStudies()
 
-  const [step, setStep] = useState(1)
-  const [results, setResults] = useState<ParticipantResult[]>(() =>
-    (group?.participants ?? []).map(p => ({
-      member_id: p.member_id,
-      member_name: p.member_name,
-      attendance_pct: p.attendance_pct,
-      status_result: (p.status === 'withdrawn' ? 'retirado' : '') as ParticipantResult['status_result'],
-      grade: p.grade?.toString() ?? '',
-    }))
-  )
-  const [confirmText, setConfirmText] = useState('')
-  const [closed, setClosed] = useState(false)
-  const [triedNext, setTriedNext] = useState(false)
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+      </div>
+    )
+  }
 
+  const group = groups.find(g => g.id === id)
   if (!group) {
     return (
       <div className="space-y-4">
@@ -43,6 +39,27 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
       </div>
     )
   }
+
+  const studyType = studyTypes.find(s => s.code === group.study_type_id) ?? null
+  return <CierreForm group={group} studyType={studyType} />
+}
+
+function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyType | null }) {
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
+  const [results, setResults] = useState<ParticipantResult[]>(() =>
+    group.participants.map(p => ({
+      member_id: p.member_id,
+      member_name: p.member_name,
+      attendance_pct: p.attendance_pct,
+      status_result: (p.status === 'withdrawn' ? 'retirado' : '') as ParticipantResult['status_result'],
+      grade: p.grade?.toString() ?? '',
+    }))
+  )
+  const [confirmText, setConfirmText] = useState('')
+  const [closed, setClosed] = useState(false)
+  const [triedNext, setTriedNext] = useState(false)
 
   function setResult(memberId: string, field: keyof ParticipantResult, value: string) {
     setResults(prev => prev.map(r =>
@@ -56,6 +73,32 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
   const retirados = results.filter(r => r.status_result === 'retirado').length
   const autoPromotable = studyType?.auto_promote && studyType?.next_study_id
   const canClose = confirmText === 'CERRAR'
+
+  async function handleClose() {
+    if (!canClose) return
+    setSubmitting(true)
+    try {
+      const payload = results
+        .filter(r => r.status_result !== '')
+        .map(r => ({
+          member_id: r.member_id,
+          status_result: r.status_result,
+          grade: r.grade ? Number(r.grade) : null,
+        }))
+      const res = await fetch(`/api/studies/groups/${group.id}/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ results: payload }),
+      })
+      if (!res.ok) throw new Error('Error cerrando el grupo')
+      setClosed(true)
+      router.refresh()
+    } catch (e) {
+      console.error(e)
+      alert('No se pudo cerrar el grupo. Intentá de nuevo.')
+      setSubmitting(false)
+    }
+  }
 
   if (closed) {
     return (
@@ -82,7 +125,7 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
   return (
     <div className="max-w-2xl space-y-5">
       <Link
-        href={`/estudios/grupos/${id}`}
+        href={`/estudios/grupos/${group.id}`}
         className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
         style={{ fontFamily: 'var(--font-body)' }}
       >
@@ -137,12 +180,17 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
             </div>
           )}
 
+          {results.length === 0 && (
+            <div className="rounded-xl bg-surface-low px-4 py-3">
+              <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                Este grupo no tiene participantes matriculados.
+              </p>
+            </div>
+          )}
+
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
             <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-              <h2
-                className="text-sm font-semibold text-navy"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
+              <h2 className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
                 Resultados de participantes
               </h2>
             </div>
@@ -211,10 +259,7 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
         <div className="space-y-4">
           {/* Summary */}
           <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <h2
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-4"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
+            <h2 className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-4" style={{ fontFamily: 'var(--font-display)' }}>
               Resumen
             </h2>
             <div className="grid grid-cols-3 gap-3 mb-4">
@@ -248,22 +293,7 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
                   </p>
                 </div>
               )}
-
-              <div className="flex items-start gap-2">
-                <CheckCircle size={14} className="text-teal-deep mt-0.5 shrink-0" />
-                <p className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-                  Se enviará evaluación del dirigente a{' '}
-                  <strong className="text-navy">{aprobados}</strong> participantes aprobados
-                </p>
-              </div>
             </div>
-
-            <button
-              className="mt-3 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-            >
-              Solicitar folletos
-            </button>
           </div>
 
           {/* Confirmation input */}
@@ -283,18 +313,19 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
           <div className="flex justify-between">
             <button
               onClick={() => setStep(1)}
+              disabled={submitting}
               className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
               style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
             >
               ← Atrás
             </button>
             <button
-              onClick={() => { if (canClose) setClosed(true) }}
-              disabled={!canClose}
+              onClick={handleClose}
+              disabled={!canClose || submitting}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
               style={{ fontFamily: 'var(--font-body)' }}
             >
-              Confirmar cierre
+              {submitting ? 'Cerrando...' : 'Confirmar cierre'}
             </button>
           </div>
         </div>

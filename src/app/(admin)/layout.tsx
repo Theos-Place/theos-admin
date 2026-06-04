@@ -7,6 +7,7 @@ import { Topbar } from '@/components/layout/Topbar'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { SedesProvider } from '@/lib/sedes'
 import { OrgProvider } from '@/lib/org'
+import { AuthProvider } from '@/lib/auth/auth-context'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':      'Dashboard',
@@ -34,6 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const title = getTitle(pathname)
 
   return (
+    <AuthProvider>
     <SedesProvider>
       <OrgProvider>
       <div className="min-h-screen bg-surface">
@@ -51,5 +53,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
       </OrgProvider>
     </SedesProvider>
+    </AuthProvider>
   )
 }

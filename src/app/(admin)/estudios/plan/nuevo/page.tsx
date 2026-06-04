@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { STUDY_TYPES } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import { REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
@@ -28,7 +28,7 @@ type FormState = {
 const INITIAL: FormState = {
   nombre: '',
   codigo: '',
-  tipo: 'capacitacion',
+  tipo: 'niveles',
   descripcion: '',
   semanas: '',
   prerequisitos: [],
@@ -72,8 +72,10 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 
 export default function NuevoTipoPage() {
   const router = useRouter()
+  const { studyTypes } = useStudies()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [saved, setSaved] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -86,14 +88,47 @@ export default function NuevoTipoPage() {
     )
   }
 
-  function handleSave() {
-    setSaved(true)
-    setTimeout(() => { router.push('/estudios/plan') }, REDIRECT_AFTER_SAVE_MS)
+  async function handleSave(active: boolean) {
+    if (!form.nombre.trim() || !form.codigo.trim()) {
+      alert('Nombre y código son obligatorios.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/studies/plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.nombre.trim(),
+          code: form.codigo.trim(),
+          description: form.descripcion || null,
+          level: form.tipo,
+          duration_weeks: form.semanas ? Number(form.semanas) : null,
+          requires_donor: form.req_donador,
+          requires_server: form.req_servidor,
+          requires_attendance: form.req_asistencia,
+          requires_payment: form.req_pago,
+          cost: form.req_pago && form.costo ? Number(form.costo) : 0,
+          requires_grade: form.req_calificacion,
+          auto_promote: form.transicion_auto,
+          prerequisite_code: form.prerequisitos[0] ?? null,
+          next_study_code: form.transicion_auto ? (form.siguiente_estudio || null) : null,
+          is_active: active,
+        }),
+      })
+      if (!res.ok) throw new Error('Error guardando el tipo de estudio')
+      setSaved(true)
+      setTimeout(() => { router.push('/estudios/plan') }, REDIRECT_AFTER_SAVE_MS)
+    } catch (e) {
+      console.error(e)
+      alert('No se pudo guardar. Revisá los datos e intentá de nuevo.')
+      setSubmitting(false)
+    }
   }
 
-  const niveles    = STUDY_TYPES.filter(s => s.stage === 'niveles')
-  const inicial    = STUDY_TYPES.filter(s => s.stage === 'inicial')
-  const intermedia = STUDY_TYPES.filter(s => s.stage === 'intermedia')
+  const niveles    = studyTypes.filter(s => s.stage === 'niveles')
+  const inicial    = studyTypes.filter(s => s.stage === 'inicial')
+  const intermedia = studyTypes.filter(s => s.stage === 'intermedia')
 
   if (saved) {
     return (
@@ -157,10 +192,10 @@ export default function NuevoTipoPage() {
           <div className="space-y-1">
             <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Tipo</label>
             <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.tipo} onChange={e => set('tipo', e.target.value)}>
-              <option value="nivel">Nivel</option>
-              <option value="capacitacion">Capacitación</option>
-              <option value="campana">Campaña</option>
-              <option value="campamento">Campamento</option>
+              <option value="niveles">Niveles</option>
+              <option value="etapa_inicial">Etapa Inicial</option>
+              <option value="etapa_intermedia">Etapa Intermedia</option>
+              <option value="campanas">Campañas</option>
             </select>
           </div>
 
@@ -240,7 +275,7 @@ export default function NuevoTipoPage() {
               <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>Siguiente estudio</label>
               <select className={cn(inputCls, 'max-w-xs')} style={{ fontFamily: 'var(--font-body)' }} value={form.siguiente_estudio} onChange={e => set('siguiente_estudio', e.target.value)}>
                 <option value="">Seleccionar...</option>
-                {STUDY_TYPES.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
+                {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
               </select>
             </div>
           )}
@@ -250,15 +285,17 @@ export default function NuevoTipoPage() {
       {/* Actions */}
       <div className="flex items-center gap-3 pb-6">
         <button
-          onClick={handleSave}
-          className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
+          onClick={() => handleSave(true)}
+          disabled={submitting}
+          className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
           style={{ fontFamily: 'var(--font-body)' }}
         >
-          Guardar como activo
+          {submitting ? 'Guardando...' : 'Guardar como activo'}
         </button>
         <button
-          onClick={handleSave}
-          className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+          onClick={() => handleSave(false)}
+          disabled={submitting}
+          className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40"
           style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
         >
           Guardar como borrador

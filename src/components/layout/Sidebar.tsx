@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -37,7 +36,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Shield } from 'lucide-react'
-import { clearSessionCookie } from '@/lib/session'
+import { useMockAuth } from '@/hooks/useMockAuth'
 
 const EVENTOS_SUB = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
@@ -116,29 +115,20 @@ const ROLE_LABELS: Record<string, string> = {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const [userName, setUserName]   = useState('')
-  const [userRole, setUserRole]   = useState('')
-  const [userRoles, setUserRoles] = useState<string[]>([])
-
-  useEffect(() => {
-    const raw = sessionStorage.getItem('theos_user') || localStorage.getItem('theos_user')
-    if (raw) {
-      try {
-        const u = JSON.parse(raw)
-        setUserName(u.name ?? '')
-        setUserRole(u.role ?? '')
-        setUserRoles(Array.isArray(u.roles) ? u.roles : u.role ? [u.role] : [])
-      } catch { /* ignore */ }
-    }
-  }, [])
+  const { user } = useMockAuth()
+  const userName  = user?.name ?? ''
+  const userRole  = user?.role ?? ''
+  const userRoles = user?.roles ?? []
 
   const canViewAccesos = userRoles.some(r => r === 'admin' || r === 'direccion')
 
-  function handleLogout() {
-    clearSessionCookie()
-    sessionStorage.removeItem('theos_user')
-    localStorage.removeItem('theos_user')
-    router.push('/login')
+  async function handleLogout() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } finally {
+      router.push('/login')
+      router.refresh()
+    }
   }
   const miembrosActive        = pathname === '/miembros'        || pathname.startsWith('/miembros/')
   const estudiosActive        = pathname === '/estudios'        || pathname.startsWith('/estudios/')

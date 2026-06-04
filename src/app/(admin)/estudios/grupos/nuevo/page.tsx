@@ -2,11 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { STUDY_TYPES, MOCK_LEADERS, getStudyType } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { LeaderCard } from '@/components/studies/LeaderCard'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, MessageCircle } from 'lucide-react'
@@ -33,8 +31,9 @@ type Step1 = {
 
 export default function NuevoGrupoPage() {
   const { activeSedes: SEDES } = useSedes()
-  const router = useRouter()
+  const { studyTypes, leaders } = useStudies()
   const [step, setStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
   const [step1, setStep1] = useState<Step1>({
     study_type_id: '',
     zone: '',
@@ -61,14 +60,44 @@ export default function NuevoGrupoPage() {
       : [...step1.days, d])
   }
 
-  const compatibleLeaders = MOCK_LEADERS.filter(l =>
+  const studyType = studyTypes.find(s => s.id === step1.study_type_id)
+
+  const compatibleLeaders = leaders.filter(l =>
     (step1.zone === '' || l.zone_preference.includes(step1.zone)) &&
-    (step1.study_type_id === '' || l.qualified_studies.includes(step1.study_type_id)) &&
+    (!studyType || l.qualified_studies.includes(studyType.code)) &&
     l.availability_status !== 'resting'
   )
 
-  const leaderData = MOCK_LEADERS.find(l => l.id === selectedLeader)
-  const studyType = getStudyType(step1.study_type_id)
+  const leaderData = leaders.find(l => l.id === selectedLeader)
+
+  async function handleCreate() {
+    if (!studyType) return
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/studies/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          study_type_id: studyType.code,
+          name: `${studyType.code} — ${step1.zone ? sedeLabel(step1.zone) : 'Sin zona'}`,
+          leader_id: leaderData?.member_id ?? null,
+          zone: step1.zone || null,
+          schedule_days: step1.days,
+          schedule_time: step1.time || null,
+          location: step1.location || null,
+          max_students: step1.capacity ? Number(step1.capacity) : null,
+          starts_at: step1.start_date || null,
+          status: leaderData ? 'pending_opening' : 'pending_leader',
+        }),
+      })
+      if (!res.ok) throw new Error('Error creando el grupo')
+      setCreated(true)
+    } catch (e) {
+      console.error(e)
+      alert('No se pudo crear el grupo. Revisá los datos e intentá de nuevo.')
+      setSubmitting(false)
+    }
+  }
 
   if (created) {
     return (
@@ -92,9 +121,9 @@ export default function NuevoGrupoPage() {
     )
   }
 
-  const niveles = STUDY_TYPES.filter(s => s.stage === 'niveles')
-  const inicial = STUDY_TYPES.filter(s => s.stage === 'inicial')
-  const intermedia = STUDY_TYPES.filter(s => s.stage === 'intermedia')
+  const niveles = studyTypes.filter(s => s.stage === 'niveles')
+  const inicial = studyTypes.filter(s => s.stage === 'inicial')
+  const intermedia = studyTypes.filter(s => s.stage === 'intermedia')
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -462,7 +491,7 @@ export default function NuevoGrupoPage() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Tipo</p>
-                <StudyTypeBadge code={step1.study_type_id} name={studyType?.name} size="sm" />
+                <StudyTypeBadge code={studyType?.code ?? ''} name={studyType?.name} size="sm" />
               </div>
               <div>
                 <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Zona</p>
@@ -506,11 +535,12 @@ export default function NuevoGrupoPage() {
               ← Atrás
             </button>
             <button
-              onClick={() => setCreated(true)}
-              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
+              onClick={handleCreate}
+              disabled={submitting}
+              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
               style={{ fontFamily: 'var(--font-body)' }}
             >
-              Crear grupo
+              {submitting ? 'Creando...' : 'Crear grupo'}
             </button>
           </div>
         </div>
