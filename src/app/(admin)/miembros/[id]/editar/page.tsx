@@ -241,9 +241,6 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   placeholder="Ej: 1-1234-5678"
                 />
               </div>
-            </div>
-
-            <div className="form-row">
               <div className="form-group">
                 <label className="form-label" htmlFor="edit-birth-date">Fecha de nacimiento</label>
                 <input
