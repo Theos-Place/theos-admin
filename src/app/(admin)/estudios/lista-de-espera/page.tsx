@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_WAIT_LIST, MOCK_GROUPS } from '@/data/mock-studies'
+import type { StudyGroup } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { ACTIVE_SEDES, HISTORICAL_SEDES, sedeLabel } from '@/data/mock-sedes'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { cn } from '@/lib/utils'
@@ -14,14 +15,16 @@ function InviteModal({
   selectedIds,
   tabType,
   onClose,
+  groups,
 }: {
   selectedIds: string[]
   tabType: TabType
   onClose: () => void
+  groups: StudyGroup[]
 }) {
   const [selectedGroup, setSelectedGroup] = useState('')
   const [done, setDone] = useState(false)
-  const compatibleGroups = MOCK_GROUPS.filter(g =>
+  const compatibleGroups = groups.filter(g =>
     g.status === 'open' || g.status === 'pending_opening'
   )
 
@@ -108,6 +111,7 @@ function InviteModal({
 }
 
 export default function ListaEsperaPage() {
+  const { groups, waitlist } = useStudies()
   const [activeTab, setActiveTab] = useState<TabType>('N1')
   const [selectedZone, setSelectedZone] = useState('')
   const [ageFrom, setAgeFrom] = useState('')
@@ -116,7 +120,7 @@ export default function ListaEsperaPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [showInvite, setShowInvite] = useState(false)
 
-  const allEntries = MOCK_WAIT_LIST.filter(w => w.type === activeTab)
+  const allEntries = waitlist.filter(w => w.type === activeTab)
 
   const filtered = useMemo(() => {
     return allEntries.filter(w => {
@@ -156,6 +160,7 @@ export default function ListaEsperaPage() {
         <InviteModal
           selectedIds={selectedIds}
           tabType={activeTab}
+          groups={groups}
           onClose={() => { setShowInvite(false); setSelectedIds([]) }}
         />
       )}
@@ -169,7 +174,7 @@ export default function ListaEsperaPage() {
           Lista de espera
         </h1>
         <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-          {MOCK_WAIT_LIST.length} personas en total esperando inscripción
+          {waitlist.length} personas en total esperando inscripción
         </p>
       </div>
 
@@ -187,7 +192,7 @@ export default function ListaEsperaPage() {
             )}
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            {t === 'N1' ? `Nivel 1 (${MOCK_WAIT_LIST.filter(w => w.type === 'N1').length})` : `Campañas (${MOCK_WAIT_LIST.filter(w => w.type === 'campaign').length})`}
+            {t === 'N1' ? `Nivel 1 (${waitlist.filter(w => w.type === 'N1').length})` : `Campañas (${waitlist.filter(w => w.type === 'campaign').length})`}
           </button>
         ))}
       </div>

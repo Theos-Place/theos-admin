@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { MOCK_RELOCATIONS, MOCK_GROUPS, type RelocationRequest } from '@/data/mock-studies'
+import { useState, useEffect } from 'react'
+import type { RelocationRequest, StudyGroup } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { sedeLabel } from '@/data/mock-sedes'
@@ -12,15 +13,17 @@ function SidePanel({
   request,
   onClose,
   onResolve,
+  groups,
 }: {
   request: RelocationRequest
   onClose: () => void
   onResolve: (id: string) => void
+  groups: StudyGroup[]
 }) {
   const [selectedGroup, setSelectedGroup] = useState('')
   const [resolved, setResolved] = useState(request.status === 'resolved')
-  const fromGroup = MOCK_GROUPS.find(g => g.id === request.from_group_id)
-  const compatibleGroups = MOCK_GROUPS.filter(g =>
+  const fromGroup = groups.find(g => g.id === request.from_group_id)
+  const compatibleGroups = groups.filter(g =>
     g.study_type_id === request.study_type &&
     g.id !== request.from_group_id &&
     g.status !== 'finished'
@@ -191,7 +194,9 @@ function SidePanel({
 }
 
 export default function ReubicacionesPage() {
-  const [requests, setRequests] = useState(MOCK_RELOCATIONS)
+  const { groups, relocations } = useStudies()
+  const [requests, setRequests] = useState<RelocationRequest[]>([])
+  useEffect(() => { setRequests(relocations) }, [relocations])
   const [selectedRequest, setSelectedRequest] = useState<RelocationRequest | null>(null)
 
   function handleResolve(id: string) {
@@ -205,6 +210,7 @@ export default function ReubicacionesPage() {
     <div className="space-y-5">
       {selectedRequest && (
         <SidePanel
+          groups={groups}
           request={requests.find(r => r.id === selectedRequest.id) ?? selectedRequest}
           onClose={() => setSelectedRequest(null)}
           onResolve={handleResolve}

@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_LEADERS } from '@/data/mock-studies'
-import { STUDY_TYPES } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { ACTIVE_SEDES, HISTORICAL_SEDES } from '@/data/mock-sedes'
 import { mockMembers } from '@/data/mock-members'
 import { LeaderCard } from '@/components/studies/LeaderCard'
@@ -18,6 +17,7 @@ function getInitials(name: string) {
 }
 
 function NewLeaderModal({ onClose }: { onClose: () => void }) {
+  const { studyTypes: STUDY_TYPES } = useStudies()
   const [modalStep, setModalStep] = useState<ModalStep>('search')
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState('')
@@ -175,6 +175,7 @@ function NewLeaderModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function DirigentesPage() {
+  const { leaders: MOCK_LEADERS, studyTypes: STUDY_TYPES } = useStudies()
   const [filterStatus, setFilterStatus] = useState('')
   const [filterZone, setFilterZone] = useState('')
   const [filterStudy, setFilterStudy] = useState('')
