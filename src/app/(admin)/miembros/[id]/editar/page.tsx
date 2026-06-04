@@ -290,15 +290,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 </select>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* ── Sección 2: Contacto ── */}
-        <div className="card">
-          <div className="card-hd">
-            <div className="card-title">Información de contacto</div>
-          </div>
-          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div className="form-row">
               <PhoneInput
                 label="Teléfono"
@@ -317,31 +309,10 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 />
               </div>
             </div>
-            <div style={{ background: 'var(--surface-low)', borderRadius: 12, padding: 16 }}>
-              <p className="form-label" style={{ marginBottom: 12 }}>Contacto de emergencia</p>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label" htmlFor="edit-emergency-name">Nombre</label>
-                  <input
-                    id="edit-emergency-name"
-                    className="form-input"
-                    style={{ background: '#fff' }}
-                    value={emergencyContactName}
-                    onChange={e => setEmergencyContactName(e.target.value)}
-                    placeholder="Nombre completo..."
-                  />
-                </div>
-                <PhoneInput
-                  label="Teléfono"
-                  value={emergencyContactPhone}
-                  onChange={setEmergencyContactPhone}
-                />
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* ── Sección 3: Dirección ── */}
+        {/* ── Sección 2: Dirección ── */}
         <div className="card">
           <div className="card-hd">
             <div className="card-title">Dirección</div>
@@ -398,7 +369,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* ── Sección 4: Trabajo y ocupación ── */}
+        {/* ── Sección 3: Trabajo y ocupación ── */}
         <div className="card">
           <div className="card-hd">
             <div className="card-title">Trabajo y ocupación</div>
@@ -429,22 +400,34 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* ── Sección 5: Sede y salud ── */}
+        {/* ── Sección 4: Contacto de emergencia y salud ── */}
         <div className="card">
           <div className="card-hd">
-            <div className="card-title">Sede y salud</div>
+            <div className="card-title">Contacto de emergencia y salud</div>
           </div>
           <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
-            <div className="form-group">
-              <label className="form-label">Sede</label>
-              <p className="text-sm text-navy-light/70 py-2" style={{ fontFamily: 'var(--font-body)' }}>
-                {sede ? sedeLabel(sede) : 'Sin sede asignada'}
-              </p>
-              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-                Se asigna automáticamente según la charla a la que más asiste.
-              </p>
+            {/* Contacto de emergencia */}
+            <div style={{ background: 'var(--surface-low)', borderRadius: 12, padding: 16 }}>
+              <p className="form-label" style={{ marginBottom: 12 }}>Contacto de emergencia</p>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="edit-emergency-name">Nombre</label>
+                  <input
+                    id="edit-emergency-name"
+                    className="form-input"
+                    style={{ background: '#fff' }}
+                    value={emergencyContactName}
+                    onChange={e => setEmergencyContactName(e.target.value)}
+                    placeholder="Nombre completo..."
+                  />
+                </div>
+                <PhoneInput
+                  label="Teléfono"
+                  value={emergencyContactPhone}
+                  onChange={setEmergencyContactPhone}
+                />
+              </div>
             </div>
 
             {/* Salud */}
@@ -471,6 +454,17 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   rows={2}
                 />
               </div>
+            </div>
+
+            {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
+            <div className="form-group">
+              <label className="form-label">Sede</label>
+              <p className="text-sm text-navy-light/70 py-2" style={{ fontFamily: 'var(--font-body)' }}>
+                {sede ? sedeLabel(sede) : 'Sin sede asignada'}
+              </p>
+              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                Se asigna automáticamente según la charla a la que más asiste.
+              </p>
             </div>
           </div>
         </div>
