@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MOCK_COMMITTEES, MOCK_VACANCIES, MOCK_APPLICATIONS, type CommitteeData } from '@/data/mock-servers'
+import { type CommitteeData } from '@/data/mock-servers'
+import { useServers } from '@/hooks/useServers'
 import { AREAS } from '@/data/mock-committees'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
@@ -151,6 +152,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
 
 export default function ServidoresPage() {
   const router = useRouter()
+  const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, applications: MOCK_APPLICATIONS } = useServers()
   const [areaFilter, setAreaFilter] = useState('all')
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<FlatServer>[]>(
     SERVER_COLUMNS.filter(c => c.defaultVisible)

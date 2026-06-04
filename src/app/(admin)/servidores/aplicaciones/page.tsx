@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_APPLICATIONS, type ApplicationStatus } from '@/data/mock-servers'
-import { MOCK_COMMITTEES } from '@/data/mock-servers'
+import { type ApplicationStatus } from '@/data/mock-servers'
+import { useServers } from '@/hooks/useServers'
 import { AREAS } from '@/data/mock-committees'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight } from 'lucide-react'
@@ -31,6 +31,7 @@ const STATUS_FILTERS: { key: ApplicationStatus | 'all'; label: string }[] = [
 ]
 
 export default function AplicacionesPage() {
+  const { committees: MOCK_COMMITTEES, applications: MOCK_APPLICATIONS } = useServers()
   const [search, setSearch]             = useState('')
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all')
   const [committeeFilter, setCommitteeFilter] = useState('all')
