@@ -7,7 +7,6 @@ import { Menu, Search, User, Settings, LogOut, ChevronDown } from 'lucide-react'
 import { useMockAuth } from '@/hooks/useMockAuth'
 import { ROLES } from '@/data/mock-auth'
 import { NotificationsBell } from './NotificationsDropdown'
-import { clearSessionCookie } from '@/lib/session'
 
 interface TopbarProps {
   title: string
@@ -39,11 +38,13 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
     return () => document.removeEventListener('mousedown', handleMouseDown)
   }, [menuOpen])
 
-  function handleLogout() {
-    clearSessionCookie()
-    sessionStorage.removeItem('theos_user')
-    localStorage.removeItem('theos_user')
-    router.push('/login')
+  async function handleLogout() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } finally {
+      router.push('/login')
+      router.refresh()
+    }
   }
 
   const userInitials = user ? initials(user.name) : 'TP'

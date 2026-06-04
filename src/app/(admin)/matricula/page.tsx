@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
@@ -8,6 +8,7 @@ import {
   CreditCard, Smartphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useMockAuth } from '@/hooks/useMockAuth'
 import { mockMembers } from '@/data/mock-members'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { getEligibleStudies, type EligibilityResult, type EligibleGroup } from '@/lib/enrollment-eligibility'
@@ -46,8 +47,8 @@ type ConfirmState = { group: EligibleGroup; study: EligibilityResult }
 export default function MatriculaPage() {
   const router = useRouter()
 
-  const [userRoles, setUserRoles]         = useState<string[]>([])
-  const [userMemberId, setUserMemberId]   = useState<string>('')
+  const { user } = useMockAuth()
+  const userRoles = user?.roles ?? []
   const [selectedMemberId, setSelectedMemberId] = useState<string>('')
   const [activeFilter, setActiveFilter]   = useState<FilterTab>('available')
   const [search, setSearch]               = useState('')
@@ -55,33 +56,20 @@ export default function MatriculaPage() {
   const [confirmModal, setConfirmModal]   = useState<ConfirmState | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'sinpe'>('sinpe')
 
-  useEffect(() => {
-    const raw = sessionStorage.getItem('theos_user') || localStorage.getItem('theos_user')
-    if (raw) {
-      try {
-        const u = JSON.parse(raw)
-        const roles: string[] = Array.isArray(u.roles) ? u.roles : u.role ? [u.role] : []
-        setUserRoles(roles)
-        // Buscar el miembro por nombre o usar el primero
-        const name: string = u.name ?? ''
-        const matched = mockMembers.find(
-          m => `${m.first_name} ${m.last_name}` === name
-        )
-        const defaultId = matched?.id ?? mockMembers[0].id
-        setUserMemberId(defaultId)
-        setSelectedMemberId(defaultId)
-      } catch { /* ignore */ }
-    } else {
-      setSelectedMemberId(mockMembers[0].id)
-      setUserMemberId(mockMembers[0].id)
-    }
-  }, [])
+  // El miembro por defecto se resuelve por nombre contra el catálogo mock
+  // (matrícula sigue en mock — ver Fase 2). Si no calza, usa el primero.
+  const defaultMemberId = useMemo(() => {
+    const name = user?.name ?? ''
+    const matched = mockMembers.find(m => `${m.first_name} ${m.last_name}` === name)
+    return matched?.id ?? mockMembers[0].id
+  }, [user])
+  const effectiveMemberId = selectedMemberId || defaultMemberId
 
   const isAdminView = userRoles.some(r => ['admin', 'direccion'].includes(r))
 
   const currentMember = useMemo(
-    () => mockMembers.find(m => m.id === selectedMemberId) ?? mockMembers[0],
-    [selectedMemberId]
+    () => mockMembers.find(m => m.id === effectiveMemberId) ?? mockMembers[0],
+    [effectiveMemberId]
   )
 
   const eligibilityResults = useMemo(
@@ -148,7 +136,7 @@ export default function MatriculaPage() {
     router.push(`/matricula/confirmacion?group=${group.group_id}&study=${study.study_code}`)
   }
 
-  if (!selectedMemberId) {
+  if (!effectiveMemberId) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
@@ -191,7 +179,7 @@ export default function MatriculaPage() {
                 Ver disponibilidad como:
               </label>
               <select
-                value={selectedMemberId}
+                value={effectiveMemberId}
                 onChange={e => { setSelectedMemberId(e.target.value); setExpandedStudy(null) }}
                 className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white outline-none focus:border-coral/50"
                 style={{ fontFamily: 'var(--font-body)' }}

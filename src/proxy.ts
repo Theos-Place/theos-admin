@@ -1,24 +1,38 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
-export function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
+// Rutas accesibles sin sesión.
+const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario']
 
-  const isAuthPage =
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/recuperar')
+function isPublic(pathname: string): boolean {
+  return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+}
 
-  const session = request.cookies.get('theos_session')
+export async function proxy(request: NextRequest) {
+  const { response, user } = await updateSession(request)
+  const { pathname } = request.nextUrl
 
-  if (!isAuthPage && !session) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Sin sesión en ruta protegida → al login.
+  if (!user && !isPublic(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.search = ''
+    const redirect = NextResponse.redirect(url)
+    response.cookies.getAll().forEach(c => redirect.cookies.set(c))
+    return redirect
   }
 
-  if (isAuthPage && session) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  // Con sesión intentando entrar al login o a la raíz → al dashboard.
+  if (user && (pathname === '/login' || pathname === '/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    url.search = ''
+    const redirect = NextResponse.redirect(url)
+    response.cookies.getAll().forEach(c => redirect.cookies.set(c))
+    return redirect
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {

@@ -4,28 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react'
-import { MOCK_USERS } from '@/lib/mock-auth-config'
-import { MOCK_LOGIN_DELAY_MS } from '@/lib/constants'
-import { setSessionCookie } from '@/lib/session'
 
 function isEmail(value: string): boolean {
   return value.includes('@')
-}
-
-function normalizeCedula(value: string): string {
-  return value.replace(/[-\s]/g, '')
-}
-
-async function mockLogin(identifier: string, password: string) {
-  await new Promise(resolve => setTimeout(resolve, MOCK_LOGIN_DELAY_MS))
-  const user = MOCK_USERS.find(u => {
-    const idMatch = isEmail(identifier)
-      ? u.email === identifier.toLowerCase().trim()
-      : normalizeCedula(u.cedula) === normalizeCedula(identifier)
-    return idMatch && u.password === password
-  })
-  if (!user) throw new Error('Credenciales incorrectas')
-  return user
 }
 
 const LABEL = 'block text-[12px] font-medium text-navy-light/60 mb-1.5'
@@ -73,14 +54,19 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      const user = await mockLogin(email.trim(), password)
-      const userData = { name: user.name, email: user.email, role: user.roles[0], roles: user.roles, member_id: user.member_id }
-      const storage = rememberMe ? localStorage : sessionStorage
-      storage.setItem('theos_user', JSON.stringify(userData))
-      setSessionCookie(rememberMe)
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email.trim(), password }),
+      })
+      if (!res.ok) {
+        setAuthError('Correo o cédula o contraseña incorrectos. Verificá tus datos e intentá de nuevo.')
+        return
+      }
       router.push('/dashboard')
+      router.refresh()
     } catch {
-      setAuthError('Correo o contraseña incorrectos. Verificá tus datos e intentá de nuevo.')
+      setAuthError('No se pudo conectar. Revisá tu conexión e intentá de nuevo.')
     } finally {
       setLoading(false)
     }
