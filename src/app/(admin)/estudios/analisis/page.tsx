@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { STUDY_TYPES, getStudyType } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { mockMembers } from '@/data/mock-members'
 import { SEDES, sedeLabel } from '@/data/mock-sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
@@ -10,15 +10,14 @@ import { Send, CheckCircle } from 'lucide-react'
 
 const INITIAL_DATE = '2026-05-16'
 
-const initialInitialStudies = STUDY_TYPES.filter(s => s.stage === 'inicial' || s.stage === 'intermedia')
-
 export default function AnalisisPage() {
+  const { studyTypes: STUDY_TYPES } = useStudies()
   const [selectedStudyId, setSelectedStudyId] = useState('')
   const [groupInputs, setGroupInputs] = useState<Record<string, number>>({})
   const [totalInput, setTotalInput] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
 
-  const study = selectedStudyId ? getStudyType(selectedStudyId) : null
+  const study = selectedStudyId ? (STUDY_TYPES.find(s => s.id === selectedStudyId) ?? null) : null
 
   const analysis = useMemo(() => {
     if (!study) return null

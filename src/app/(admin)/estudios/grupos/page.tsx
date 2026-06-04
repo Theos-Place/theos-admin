@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { MOCK_GROUPS, STUDY_TYPES, type GroupStatus, type StudyGroup } from '@/data/mock-studies'
+import type { GroupStatus, StudyGroup, StudyType } from '@/data/mock-studies'
+import { useStudies } from '@/hooks/useStudies'
 import { ACTIVE_SEDES, HISTORICAL_SEDES, sedeLabel } from '@/data/mock-sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
@@ -36,18 +37,19 @@ function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
 
-const STUDY_GROUP_COLUMNS: ColumnDef<StudyGroup>[] = [
+function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[] {
+  return [
   {
     key: 'study_type_id', label: 'Estudio', defaultVisible: true, alwaysVisible: true,
     exportValue: g => {
-      const t = STUDY_TYPES.find(s => s.id === g.study_type_id)
+      const t = studyTypes.find(s => s.id === g.study_type_id)
       return t ? `${t.code} — ${t.name}` : g.study_type_id
     },
   },
   {
     key: 'study_stage', label: 'Etapa', defaultVisible: false,
     exportValue: g => {
-      const t = STUDY_TYPES.find(s => s.id === g.study_type_id)
+      const t = studyTypes.find(s => s.id === g.study_type_id)
       return t?.stage ?? ''
     },
   },
@@ -98,9 +100,12 @@ const STUDY_GROUP_COLUMNS: ColumnDef<StudyGroup>[] = [
     key: 'participants_names', label: 'Lista de participantes', defaultVisible: false, exportable: true,
     exportValue: g => g.participants.filter(p => p.status !== 'withdrawn').map(p => p.member_name).join(' | '),
   },
-]
+  ]
+}
 
 export default function GruposPage() {
+  const { groups: MOCK_GROUPS, studyTypes: STUDY_TYPES } = useStudies()
+  const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>([])
   const [selectedType, setSelectedType] = useState('')
   const [selectedZone, setSelectedZone] = useState('')
@@ -123,7 +128,7 @@ export default function GruposPage() {
       if (selectedDay && !g.schedule_days.includes(selectedDay)) return false
       return true
     })
-  }, [selectedStatuses, selectedType, selectedZone, selectedDay])
+  }, [MOCK_GROUPS, selectedStatuses, selectedType, selectedZone, selectedDay])
 
   const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(filtered)
 
