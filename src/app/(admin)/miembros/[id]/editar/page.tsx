@@ -419,7 +419,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
             {/* Contacto de emergencia */}
-            <div style={{ background: 'var(--surface-low)', borderRadius: 12, padding: 16 }}>
+            <div style={{ background: 'rgba(112, 189, 194, 0.12)', border: '1px solid rgba(112, 189, 194, 0.30)', borderRadius: 12, padding: 16 }}>
               <p className="form-label" style={{ marginBottom: 12 }}>Contacto de emergencia</p>
               <div className="form-row">
                 <div className="form-group">
