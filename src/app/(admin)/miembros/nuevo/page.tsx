@@ -292,12 +292,44 @@ export default function NuevoMiembroPage() {
     return item.kind === 'linked' ? item.relation : item.data.relation
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setSubmitting(true)
-    setTimeout(() => {
+    const payload = {
+      first_name: data.first_name.trim(),
+      last_name: data.last_name.trim(),
+      cedula: data.cedula.trim() || null,
+      email: data.email.trim() || null,
+      phone: data.phone.trim() || null,
+      birth_date: data.birth_date || null,
+      gender: data.gender || null,
+      marital_status: data.marital_status || null,
+      province: data.province || null,
+      canton: data.canton || null,
+      district: data.district || null,
+      occupation: data.profession.trim() || null,
+      workplace: data.workplace.trim() || null,
+      address: data.señas.trim() || null,
+      allergies: data.alergias.trim() || null,
+      medications: data.medicamentos.trim() || null,
+      emergency_contact_name: data.emergency_contact_name.trim() || null,
+      emergency_contact_phone: data.emergency_contact_phone.trim() || null,
+      is_donor: false,
+      is_active: true,
+    }
+    try {
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error('Error guardando el miembro')
       setShowToast(true)
       setTimeout(() => router.push('/miembros'), REDIRECT_LONG_AFTER_SAVE_MS)
-    }, 800)
+    } catch (e) {
+      console.error(e)
+      alert('No se pudo guardar el miembro. Revisá los datos e intentá de nuevo.')
+      setSubmitting(false)
+    }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, use } from 'react'
+import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
-import { mockMembers } from '@/data/mock-members'
 import { useSedes } from '@/lib/sedes'
+import { useMember } from '@/hooks/useMember'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { useMockAuth } from '@/hooks/useMockAuth'
 
@@ -15,7 +15,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   const { user } = useMockAuth()
   const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('direccion')
 
-  const member = mockMembers.find(m => m.id === id)
+  const { member, loading } = useMember(id)
 
   // ── Estado del formulario ──────────────────────────────────────────────────
   const [firstName,             setFirstName]             = useState(member?.first_name ?? '')
@@ -44,6 +44,30 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false)
   const [deactivateReason,    setDeactivateReason]    = useState('')
 
+  // Poblar el formulario cuando carga el miembro (fetch async).
+  useEffect(() => {
+    if (!member) return
+    setFirstName(member.first_name ?? '')
+    setLastName(member.last_name ?? '')
+    setEmail(member.email ?? '')
+    setPhone(member.phone ?? '')
+    setSede(member.sede ?? '')
+    setIsActive(member.is_active ?? true)
+    setBirthDate(member.birth_date ?? '')
+    setGender(member.gender ?? 'otro')
+    setMaritalStatus(member.marital_status ?? '')
+    setProfession(member.occupation ?? '')
+    setWorkplace(member.workplace ?? '')
+    setAddress(member.address ?? '')
+    setProvince(member.province ?? '')
+    setCanton(member.canton ?? '')
+    setDistrict(member.district ?? '')
+    setAlergias(member.allergies ?? '')
+    setMedicamentos(member.medicamentos ?? '')
+    setEmergencyContactName(member.emergency_contact_name ?? '')
+    setEmergencyContactPhone(member.emergency_contact_phone ?? '')
+  }, [member])
+
   if (!member) {
     return (
       <div className="page">
@@ -52,7 +76,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         </div>
         <div className="card" style={{ padding: 22 }}>
           <p className="text-sm text-navy-light/50 text-center py-8" style={{ fontFamily: 'var(--font-body)' }}>
-            Miembro no encontrado.
+            {loading ? 'Cargando…' : 'Miembro no encontrado.'}
           </p>
         </div>
       </div>
@@ -61,13 +85,44 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
   async function handleSave() {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 900))
-    setSaving(false)
-    setToast(true)
-    setTimeout(() => {
-      setToast(false)
-      router.push(`/miembros/${id}`)
-    }, 1800)
+    const payload = {
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email.trim() || null,
+      phone: phone.trim() || null,
+      birth_date: birthDate || null,
+      gender: gender || null,
+      marital_status: maritalStatus || null,
+      province: province || null,
+      canton: canton || null,
+      district: district || null,
+      occupation: profession.trim() || null,
+      workplace: workplace.trim() || null,
+      address: address.trim() || null,
+      allergies: alergias.trim() || null,
+      medications: medicamentos.trim() || null,
+      emergency_contact_name: emergencyContactName.trim() || null,
+      emergency_contact_phone: emergencyContactPhone.trim() || null,
+      is_active: isActive,
+    }
+    try {
+      const res = await fetch(`/api/members/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error('Error guardando cambios')
+      setSaving(false)
+      setToast(true)
+      setTimeout(() => {
+        setToast(false)
+        router.push(`/miembros/${id}`)
+      }, 1500)
+    } catch (e) {
+      console.error(e)
+      alert('No se pudieron guardar los cambios. Intentá de nuevo.')
+      setSaving(false)
+    }
   }
 
   return (
