@@ -3,7 +3,7 @@
 import { use, useState } from 'react'
 import Link from 'next/link'
 import { getEvent, EVENT_TYPES, type EventType } from '@/data/mock-events'
-import { ALL_COMMITTEES } from '@/data/mock-committees'
+import { useOrg } from '@/lib/org'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { cn } from '@/lib/utils'
 import {
@@ -138,6 +138,7 @@ function RecurringSaveModal({
 }
 
 export default function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { allCommittees: ALL_COMMITTEES } = useOrg()
   const { id } = use(params)
   const event = getEvent(id)
 

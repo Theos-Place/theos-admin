@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { SedesProvider } from '@/lib/sedes'
+import { OrgProvider } from '@/lib/org'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':      'Dashboard',
@@ -34,6 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <SedesProvider>
+      <OrgProvider>
       <div className="min-h-screen bg-surface">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -47,6 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </main>
         </div>
       </div>
+      </OrgProvider>
     </SedesProvider>
   )
 }

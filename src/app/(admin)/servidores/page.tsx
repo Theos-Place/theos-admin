@@ -5,16 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { type CommitteeData } from '@/data/mock-servers'
 import { useServers } from '@/hooks/useServers'
-import { AREAS } from '@/data/mock-committees'
+import { useOrg } from '@/lib/org'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { cn } from '@/lib/utils'
 import { Plus, Users, Briefcase, ClipboardList, AlertCircle } from 'lucide-react'
-
-const AREA_FILTERS = [
-  { key: 'all', label: 'Todos' },
-  ...AREAS.map(a => ({ key: a.code, label: a.name })),
-]
 
 type FlatServer = {
   member_id: string
@@ -153,6 +148,11 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
 export default function ServidoresPage() {
   const router = useRouter()
   const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, applications: MOCK_APPLICATIONS } = useServers()
+  const { areas: AREAS } = useOrg()
+  const AREA_FILTERS = useMemo(
+    () => [{ key: 'all', label: 'Todos' }, ...AREAS.map(a => ({ key: a.code, label: a.name }))],
+    [AREAS],
+  )
   const [areaFilter, setAreaFilter] = useState('all')
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<FlatServer>[]>(
     SERVER_COLUMNS.filter(c => c.defaultVisible)

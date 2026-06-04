@@ -1,13 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ADMIN_AREAS, ADMIN_COMMITTEES, type Area, type Committee } from '@/data/mock-committees'
-
-// Session-scoped mutable copies — changes persist until page reload
-const _areas: Area[] = ADMIN_AREAS.map(a => ({ ...a }))
-const _committees: Committee[] = ADMIN_COMMITTEES.map(c => ({ ...c }))
+import { useOrg, type Area, type Committee } from '@/lib/org'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 const labelCls = 'text-[10px] tracking-widest uppercase text-navy-light/40'
@@ -219,9 +215,14 @@ function DeactivateConfirm({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ServidoresAdminPage() {
-  const [areas, setAreas]           = useState<Area[]>([..._areas])
-  const [committees, setCommittees] = useState<Committee[]>([..._committees])
-  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(_areas[0]?.id ?? null)
+  const { adminAreas, adminCommittees } = useOrg()
+  const [areas, setAreas]           = useState<Area[]>([])
+  const [committees, setCommittees] = useState<Committee[]>([])
+  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null)
+  useEffect(() => { setAreas(adminAreas); setCommittees(adminCommittees) }, [adminAreas, adminCommittees])
+  useEffect(() => {
+    setSelectedAreaId((prev) => prev ?? adminAreas[0]?.id ?? null)
+  }, [adminAreas])
 
   type AreaModal   = { open: boolean; editing: Area | null }
   type CommModal   = { open: boolean; editing: Committee | null }
@@ -250,14 +251,12 @@ export default function ServidoresAdminPage() {
     if (editing) {
       const updated = areas.map(a => a.id === editing.id ? { ...a, name } : a)
       setAreas(updated)
-      _areas.splice(0, _areas.length, ...updated)
     } else {
       const code = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 20)
       const id   = `${code}-${Date.now()}`
       const newArea: Area = { id, code, name, is_active: true }
       const updated = [...areas, newArea]
       setAreas(updated)
-      _areas.push(newArea)
       setSelectedAreaId(id)
     }
     setAreaModal({ open: false, editing: null })
@@ -275,8 +274,6 @@ export default function ServidoresAdminPage() {
   function toggleAreaActive(area: Area) {
     const updated = areas.map(a => a.id === area.id ? { ...a, is_active: !a.is_active } : a)
     setAreas(updated)
-    const idx = _areas.findIndex(a => a.id === area.id)
-    if (idx !== -1) _areas[idx] = updated[idx]
   }
 
   // ── Committee handlers ────────────────────────────────────────────────────
@@ -288,7 +285,6 @@ export default function ServidoresAdminPage() {
         c.id === editing.id ? { ...c, name, area_code } : c
       )
       setCommittees(updated)
-      _committees.splice(0, _committees.length, ...updated)
     } else {
       const newComm: Committee = {
         id: `${area_code}-${Date.now()}`,
@@ -298,7 +294,6 @@ export default function ServidoresAdminPage() {
       }
       const updated = [...committees, newComm]
       setCommittees(updated)
-      _committees.push(newComm)
     }
     setCommModal({ open: false, editing: null })
   }
@@ -317,7 +312,6 @@ export default function ServidoresAdminPage() {
   function toggleCommitteeActive(c: Committee) {
     const updated = committees.map(x => x.id === c.id ? { ...x, is_active: !x.is_active } : x)
     setCommittees(updated)
-    _committees.splice(0, _committees.length, ...updated)
   }
 
   function confirmDeactivate() {

@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { Mic, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EVENT_TYPES, type EventType } from '@/data/mock-events'
-import { ALL_COMMITTEES } from '@/data/mock-committees'
+import { useOrg } from '@/lib/org'
 import { inputCls, ICON_MAP, FieldLabel } from './shared'
 
 const activeEventTypes = EVENT_TYPES.filter(t => t.is_active)
@@ -40,6 +40,7 @@ export function Step1Informacion({
   onFlyerDragOver,
   onFlyerRemove,
 }: Step1Props) {
+  const { allCommittees: ALL_COMMITTEES } = useOrg()
   return (
     <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
       <div className="card-title" style={{ marginBottom: 20 }}>Información principal</div>

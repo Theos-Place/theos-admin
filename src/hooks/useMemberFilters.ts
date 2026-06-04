@@ -2,17 +2,12 @@
 
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { mockMembers, type Member } from '@/data/mock-members'
-import { AREAS } from '@/data/mock-committees'
+import { committeeInArea } from '@/lib/org'
 import type { FilterCondition, ConditionGroup, AddableCondition } from '@/types/filters'
 
 export type QuickFilter = 'todos' | 'activos' | 'donadores' | 'servidores'
 
 // ─── filter helpers ─────────────────────────────────────────────────────────
-
-function committeeInArea(committee: string, areaCode: string): boolean {
-  const area = AREAS.find(a => a.code === areaCode)
-  return area ? (area.committees as readonly string[]).includes(committee) : false
-}
 
 function matchesCondition(m: Member, c: FilterCondition): boolean {
   switch (c.type) {

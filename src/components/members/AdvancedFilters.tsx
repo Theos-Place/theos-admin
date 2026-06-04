@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { useSedes } from '@/lib/sedes'
-import { AREAS, SERVICE_POSITIONS } from '@/data/mock-committees'
+import { SERVICE_POSITIONS } from '@/data/mock-committees'
+import { useOrg } from '@/lib/org'
 import { MOCK_FORMS, FORM_CATEGORY_LABEL } from '@/data/mock-forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
 
@@ -342,6 +343,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 }
 
 function ServicePanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const { areas: AREAS } = useOrg()
   const [area, setArea]         = useState('')
   const [committee, setComm]    = useState('')
   const [position, setPosition] = useState('')

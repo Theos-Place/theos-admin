@@ -5,12 +5,13 @@ import Link from 'next/link'
 import { useEmployees } from '@/hooks/useEmployees'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryBadge } from '@/components/employees/SalaryBadge'
-import { AREAS } from '@/data/mock-committees'
+import { useOrg } from '@/lib/org'
 import { cn } from '@/lib/utils'
 import { Plus, Lock } from 'lucide-react'
 
 export default function PuestosPage() {
   const { employees: MOCK_EMPLOYEES, positions: MOCK_PAID_POSITIONS } = useEmployees()
+  const { areas: AREAS } = useOrg()
   const [areaFilter, setAreaFilter] = useState('all')
 
   const areaOptions = [

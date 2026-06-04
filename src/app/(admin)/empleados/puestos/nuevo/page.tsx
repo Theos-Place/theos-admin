@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ALL_COMMITTEES, AREAS } from '@/data/mock-committees'
+import { useOrg } from '@/lib/org'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 export default function NuevoPuestoPage() {
+  const { allCommittees: ALL_COMMITTEES, areas: AREAS } = useOrg()
   const router = useRouter()
   const [saved, setSaved] = useState(false)
 

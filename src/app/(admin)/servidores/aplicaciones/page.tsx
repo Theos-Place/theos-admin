@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { type ApplicationStatus } from '@/data/mock-servers'
 import { useServers } from '@/hooks/useServers'
-import { AREAS } from '@/data/mock-committees'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight } from 'lucide-react'
 

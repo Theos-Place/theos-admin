@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { type VacancyStatus } from '@/data/mock-servers'
 import { useServers } from '@/hooks/useServers'
-import { AREAS } from '@/data/mock-committees'
+import { useOrg } from '@/lib/org'
 import { cn } from '@/lib/utils'
 import { Plus, Users, ChevronRight } from 'lucide-react'
 
@@ -29,6 +29,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function VacantesPage() {
   const { vacancies: MOCK_VACANCIES, applications: MOCK_APPLICATIONS } = useServers()
+  const { areas: AREAS } = useOrg()
   const [statusFilter, setStatusFilter] = useState<VacancyStatus | 'all'>('all')
   const [areaFilter, setAreaFilter] = useState('all')
 
