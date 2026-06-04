@@ -3,13 +3,12 @@
 import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
-import { useSedes } from '@/lib/sedes'
+import { sedeLabel } from '@/lib/sedes'
 import { useMember } from '@/hooks/useMember'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { useMockAuth } from '@/hooks/useMockAuth'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
-  const { activeSedes: ACTIVE_SEDES } = useSedes()
   const { id } = use(params)
   const router = useRouter()
   const { user } = useMockAuth()
@@ -434,20 +433,15 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           </div>
           <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Sede */}
+            {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
             <div className="form-group">
-              <label className="form-label" htmlFor="edit-sede">Sede</label>
-              <select
-                id="edit-sede"
-                className="form-select"
-                value={sede}
-                onChange={e => setSede(e.target.value)}
-              >
-                <option value="">Seleccioná una sede</option>
-                {ACTIVE_SEDES.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
+              <label className="form-label">Sede</label>
+              <p className="text-sm text-navy-light/70 py-2" style={{ fontFamily: 'var(--font-body)' }}>
+                {sede ? sedeLabel(sede) : 'Sin sede asignada'}
+              </p>
+              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                Se asigna automáticamente según la charla a la que más asiste.
+              </p>
             </div>
 
             {/* Salud */}
