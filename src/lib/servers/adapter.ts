@@ -36,8 +36,10 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
   return {
     id: db.id,
     name: db.name,
+    // El embed self-FK de parent es poco fiable en PostgREST; usamos parent_id directo
+    // como area_code (coincide con el id de área que expone useOrg para agrupar/filtrar).
     area: db.parent?.name ?? '',
-    area_code: db.parent?.id ?? '',
+    area_code: db.parent_id ?? db.parent?.id ?? '',
     leader: {
       member_id: db.leader_id ?? '',
       name: leaderName,

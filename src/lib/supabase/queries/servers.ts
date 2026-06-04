@@ -8,6 +8,7 @@ export type DbCommittee = {
   id: string
   name: string
   ideal_capacity: number | null
+  parent_id: string | null
   parent: { id: string; name: string } | null
   leader: { first_name: string; last_name: string } | null
   leader_id: string | null
@@ -67,7 +68,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
   const { data, error } = await supabase
     .from('areas')
     .select(`
-      id, name, ideal_capacity, leader_id,
+      id, name, ideal_capacity, leader_id, parent_id,
       parent:areas!parent_id(id, name),
       leader:members!areas_leader_id_fkey(first_name, last_name),
       positions:service_positions(

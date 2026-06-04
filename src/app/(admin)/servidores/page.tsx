@@ -160,7 +160,7 @@ export default function ServidoresPage() {
 
   const totalActive = useMemo(
     () => MOCK_COMMITTEES.reduce((s, c) => s + c.members.filter(m => m.status === 'active').length, 0),
-    []
+    [MOCK_COMMITTEES]
   )
   const totalCommittees = MOCK_COMMITTEES.length
   const openVacancies   = MOCK_VACANCIES.filter(v => v.status === 'published').length
@@ -173,7 +173,7 @@ export default function ServidoresPage() {
         c => c.area_code === area.code && (areaFilter === 'all' || c.area_code === areaFilter)
       ),
     })).filter(a => a.committees.length > 0)
-  }, [areaFilter])
+  }, [AREAS, MOCK_COMMITTEES, areaFilter])
 
   const flatServers = useMemo<FlatServer[]>(() => {
     const visibleCommittees = MOCK_COMMITTEES.filter(
@@ -187,7 +187,7 @@ export default function ServidoresPage() {
         leader_name: c.leader.name,
       }))
     )
-  }, [areaFilter])
+  }, [MOCK_COMMITTEES, areaFilter])
 
   return (
     <div className="space-y-6">
