@@ -15,6 +15,10 @@ function initials(firstName: string, lastName: string) {
   return (firstName[0] + lastName[0]).toUpperCase()
 }
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 
 type Props = {
   member: Member
@@ -64,6 +68,7 @@ export function MemberHeader({
           </h1>
           <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
             {member.cedula ? `Cédula: ${member.cedula}` : 'Sin cédula'}
+            {member.join_date ? ` · Se unió el ${formatDate(member.join_date)}` : ''}
           </p>
 
           {/* Badges */}
