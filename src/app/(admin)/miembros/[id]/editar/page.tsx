@@ -245,22 +245,6 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label" htmlFor="edit-cedula">Cédula</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="edit-cedula"
-                    className="form-input"
-                    value={member.cedula ?? 'Sin cédula'}
-                    disabled
-                    style={{ background: 'rgba(22,20,64,0.04)', color: 'rgba(41,54,92,0.45)', paddingRight: 36, cursor: 'not-allowed' }}
-                  />
-                  <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13 }}>🔒</span>
-                </div>
-                <span style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 3, fontFamily: 'var(--font-body)' }}>
-                  No editable — contactá al admin principal
-                </span>
-              </div>
-              <div className="form-group">
                 <label className="form-label" htmlFor="edit-birth-date">Fecha de nacimiento</label>
                 <input
                   id="edit-birth-date"
