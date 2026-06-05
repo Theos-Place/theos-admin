@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, use } from 'react'
+import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
-import { MOCK_USER_ACCESS, ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/data/mock-auth'
+import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/data/mock-auth'
 import { cn } from '@/lib/utils'
 
 function RoleBadge({ roleId }: { roleId: RoleId }) {
@@ -38,11 +38,21 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
   const { memberId } = use(params)
   const router = useRouter()
 
-  const initial = MOCK_USER_ACCESS.find(u => u.member_id === memberId)
-
-  const [user, setUser]               = useState<UserAccess | null>(initial ?? null)
+  const [user, setUser]               = useState<UserAccess | null>(null)
   const [confirmAdd, setConfirmAdd]   = useState<RoleId | null>(null)
-  const [history, setHistory]         = useState<AccessHistoryEntry[]>(initial?.history ?? [])
+  const [history, setHistory]         = useState<AccessHistoryEntry[]>([])
+
+  // Carga el acceso del miembro desde la BD.
+  useEffect(() => {
+    fetch('/api/accesos')
+      .then(r => (r.ok ? r.json() : []))
+      .then((data: UserAccess[]) => {
+        const found = Array.isArray(data) ? data.find(u => u.member_id === memberId) ?? null : null
+        setUser(found)
+        setHistory(found?.history ?? [])
+      })
+      .catch(() => {})
+  }, [memberId])
 
   if (!user) {
     return (

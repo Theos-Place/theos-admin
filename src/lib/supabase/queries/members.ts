@@ -183,6 +183,64 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
   return { ids, total: count ?? ids.length }
 }
 
+export type UserAccessRow = {
+  id: string
+  member_id: string
+  member_name: string
+  member_email: string
+  member_initials: string
+  roles: string[]
+  granted_by: string
+  granted_at: string
+  last_login: string | null
+  is_active: boolean
+}
+
+/** Miembros que tienen al menos un rol asignado en member_roles (gestión de accesos). */
+export async function getUserAccess(): Promise<UserAccessRow[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('member_roles')
+    .select('member_id, role, is_active, granted_at, member:members!member_roles_member_id_fkey(first_name, last_name, email)')
+    .order('granted_at', { ascending: false })
+  if (error) throw error
+
+  const rows = (data ?? []) as unknown as Array<{
+    member_id: string
+    role: string
+    is_active: boolean
+    granted_at: string | null
+    member: { first_name: string | null; last_name: string | null; email: string | null } | null
+  }>
+
+  const byMember = new Map<string, UserAccessRow>()
+  for (const r of rows) {
+    if (!r.member_id) continue
+    const name = `${r.member?.first_name ?? ''} ${r.member?.last_name ?? ''}`.trim() || (r.member?.email ?? '')
+    const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
+    let entry = byMember.get(r.member_id)
+    if (!entry) {
+      entry = {
+        id: r.member_id,
+        member_id: r.member_id,
+        member_name: name,
+        member_email: r.member?.email ?? '',
+        member_initials: initials,
+        roles: [],
+        granted_by: 'Sistema',
+        granted_at: r.granted_at ?? new Date().toISOString(),
+        last_login: null,
+        is_active: false,
+      }
+      byMember.set(r.member_id, entry)
+    }
+    if (r.is_active && !entry.roles.includes(r.role)) entry.roles.push(r.role)
+    if (r.is_active) entry.is_active = true
+  }
+  // Solo miembros con al menos un rol activo.
+  return Array.from(byMember.values()).filter(u => u.roles.length > 0)
+}
+
 // ── Queries ────────────────────────────────────────────────
 
 /** Lista paginada de miembros con datos relacionados ligeros para el list view.

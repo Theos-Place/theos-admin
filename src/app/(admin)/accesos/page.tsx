@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Search, UserPlus, Check, X, AlertTriangle, ChevronDown } from 'lucide-react'
-import { MOCK_USER_ACCESS, ROLES, type RoleId, type UserAccess } from '@/data/mock-auth'
+import { ROLES, type RoleId, type UserAccess } from '@/data/mock-auth'
 import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
@@ -38,8 +38,16 @@ export default function AccesosPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [showModal, setShowModal]     = useState(false)
   const [confirmRevoke, setConfirmRevoke] = useState<UserAccess | null>(null)
-  const [users, setUsers]             = useState<UserAccess[]>(MOCK_USER_ACCESS)
+  const [users, setUsers]             = useState<UserAccess[]>([])
   const [toastMsg, setToastMsg]       = useState('')
+
+  // Carga los miembros con roles asignados desde la BD.
+  useEffect(() => {
+    fetch('/api/accesos')
+      .then(r => (r.ok ? r.json() : []))
+      .then(data => { if (Array.isArray(data)) setUsers(data as UserAccess[]) })
+      .catch(() => {})
+  }, [])
 
   function showToast(msg: string) {
     setToastMsg(msg)
