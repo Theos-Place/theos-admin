@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { type ChannelConfig } from '@/data/mock-communications'
+import { type ChannelConfig } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import {
   Plus,
@@ -28,10 +29,11 @@ const INITIAL_WA_FORM = {
 }
 
 export default function ConfiguracionPage() {
-  const { configs: allConfigs } = useCommunications()
+  const { configs: allConfigs, refetch } = useCommunications()
   const [tab, setTab] = useState<SmtpTab>('smtp')
   const [configs, setConfigs] = useState<ChannelConfig[]>([])
   useEffect(() => { setConfigs(allConfigs) }, [allConfigs])
+  const [deleteTarget, setDeleteTarget] = useState<ChannelConfig | null>(null)
   const [showSmtpForm, setShowSmtpForm] = useState(false)
   const [showWaForm, setShowWaForm] = useState(false)
   const [smtpForm, setSmtpForm] = useState(INITIAL_SMTP_FORM)
@@ -73,78 +75,112 @@ export default function ConfiguracionPage() {
     setEditingConfig(config)
   }
 
-  function handleSaveEditSmtp() {
+  async function handleSaveEditSmtp() {
     if (!editingConfig) return
-    setConfigs(prev => prev.map(c => c.id === editingConfig.id ? {
-      ...c,
-      name: editSmtpForm.name || c.name,
-      smtp_host: editSmtpForm.host,
-      smtp_port: parseInt(editSmtpForm.port),
-      smtp_user: editSmtpForm.user,
-      smtp_from_name: editSmtpForm.from_name,
-      smtp_from_email: editSmtpForm.from_email,
-      is_verified: false,
-    } : c))
+    const id = editingConfig.id
     setEditingConfig(null)
+    try {
+      const res = await fetch(`/api/communications/configs/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editSmtpForm.name || undefined,
+          smtp_host: editSmtpForm.host || null,
+          smtp_port: parseInt(editSmtpForm.port) || null,
+          smtp_user: editSmtpForm.user || null,
+          smtp_from_name: editSmtpForm.from_name || null,
+          smtp_from_email: editSmtpForm.from_email || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
-  function handleSaveEditWa() {
+  async function handleSaveEditWa() {
     if (!editingConfig) return
-    setConfigs(prev => prev.map(c => c.id === editingConfig.id ? {
-      ...c,
-      name: editWaForm.name || c.name,
-      wa_account_id: editWaForm.account_id,
-      wa_phone_number: editWaForm.phone,
-      is_verified: false,
-    } : c))
+    const id = editingConfig.id
     setEditingConfig(null)
+    try {
+      const res = await fetch(`/api/communications/configs/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editWaForm.name || undefined,
+          wa_account_id: editWaForm.account_id || null,
+          wa_phone_number: editWaForm.phone || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
-  function handleVerify(id: string) {
+  async function handleVerify(id: string) {
     setVerifying(id)
-    setTimeout(() => {
+    try {
+      const res = await fetch(`/api/communications/configs/${id}/verify`, { method: 'POST' })
+      setVerifyResult(prev => ({ ...prev, [id]: res.ok ? 'ok' : 'error' }))
+      if (res.ok) await refetch()
+    } catch {
+      setVerifyResult(prev => ({ ...prev, [id]: 'error' }))
+    } finally {
       setVerifying(null)
-      setVerifyResult(prev => ({ ...prev, [id]: Math.random() > 0.2 ? 'ok' : 'error' }))
-    }, 2000)
-  }
-
-  function handleDelete(id: string) {
-    setConfigs(prev => prev.filter(c => c.id !== id))
-  }
-
-  function handleAddSmtp() {
-    const newConfig: ChannelConfig = {
-      id: `smtp-${Date.now()}`,
-      type: 'smtp',
-      name: smtpForm.name || 'Nueva cuenta SMTP',
-      smtp_host: smtpForm.host,
-      smtp_port: parseInt(smtpForm.port),
-      smtp_user: smtpForm.user,
-      smtp_from_name: smtpForm.from_name,
-      smtp_from_email: smtpForm.from_email,
-      is_active: true,
-      is_verified: false,
-      last_verified_at: null,
     }
-    setConfigs(prev => [...prev, newConfig])
-    setSmtpForm(INITIAL_SMTP_FORM)
-    setShowSmtpForm(false)
   }
 
-  function handleAddWa() {
-    const newConfig: ChannelConfig = {
-      id: `wa-${Date.now()}`,
-      type: 'whatsapp',
-      name: waForm.name || 'Nueva cuenta WhatsApp',
-      wa_account_id: waForm.account_id,
-      wa_phone_number: waForm.phone,
-      is_active: true,
-      is_verified: false,
-      last_verified_at: null,
-    }
-    setConfigs(prev => [...prev, newConfig])
-    setWaForm(INITIAL_WA_FORM)
-    setShowWaForm(false)
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    const id = deleteTarget.id
+    setDeleteTarget(null)
+    try {
+      const res = await fetch(`/api/communications/configs/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
+  }
+
+  async function handleAddSmtp() {
+    try {
+      const res = await fetch('/api/communications/configs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'smtp',
+          name: smtpForm.name || 'Nueva cuenta SMTP',
+          smtp_host: smtpForm.host || null,
+          smtp_port: parseInt(smtpForm.port) || null,
+          smtp_user: smtpForm.user || null,
+          smtp_from_name: smtpForm.from_name || null,
+          smtp_from_email: smtpForm.from_email || null,
+          is_active: true,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      setSmtpForm(INITIAL_SMTP_FORM)
+      setShowSmtpForm(false)
+      await refetch()
+    } catch { /* sin cambios si falla */ }
+  }
+
+  async function handleAddWa() {
+    try {
+      const res = await fetch('/api/communications/configs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'whatsapp',
+          name: waForm.name || 'Nueva cuenta WhatsApp',
+          wa_account_id: waForm.account_id || null,
+          wa_phone_number: waForm.phone || null,
+          is_active: true,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      setWaForm(INITIAL_WA_FORM)
+      setShowWaForm(false)
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
@@ -198,7 +234,7 @@ export default function ConfiguracionPage() {
           <button type="button" onClick={() => openEditSmtp(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => handleDelete(config.id)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
             <Trash2 size={13} />
           </button>
         </div>
@@ -246,7 +282,7 @@ export default function ConfiguracionPage() {
           <button type="button" onClick={() => openEditWa(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => handleDelete(config.id)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
             <Trash2 size={13} />
           </button>
         </div>
@@ -548,6 +584,14 @@ export default function ConfiguracionPage() {
         </div>
       </div>
     )}
+
+    <DeleteConfirmModal
+      open={!!deleteTarget}
+      title="Eliminar configuración"
+      description={`Se eliminará la configuración "${deleteTarget?.name ?? ''}". Esta acción no se puede deshacer.`}
+      onConfirm={confirmDelete}
+      onCancel={() => setDeleteTarget(null)}
+    />
     </>
   )
 }
