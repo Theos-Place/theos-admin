@@ -73,11 +73,13 @@ export type MemberFilters = {
 
 /** member_ids con al menos un voluntariado activo (mismo criterio que la página de servidores). */
 export async function getServerMemberIds(): Promise<string[]> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('volunteers').select('member_id').eq('status', 'active')
-  if (error) throw error
-  return Array.from(new Set((data ?? []).map((r) => (r as { member_id: string }).member_id)))
+  try {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase
+      .from('volunteers').select('member_id').eq('status', 'active')
+    if (error) return []
+    return Array.from(new Set((data ?? []).map((r) => (r as { member_id: string }).member_id)))
+  } catch { return [] }
 }
 
 /** Últimos 6 meses calendario (YYYY-MM), incluyendo el mes actual. */
@@ -91,27 +93,30 @@ function last6MonthsKeys(now = new Date()): string[] {
   return out
 }
 
-/** member_ids con al menos una asistencia en cada uno de los últimos 6 meses. */
+/** member_ids con al menos una asistencia en cada uno de los últimos 6 meses.
+ *  Si no hay datos de asistencia (o la tabla falla), devuelve [] — nunca lanza. */
 export async function getActiveAttendanceMemberIds(): Promise<string[]> {
-  const supabase = createAdminClient()
-  const months = last6MonthsKeys()
-  const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo
-  const { data, error } = await supabase
-    .from('event_checkins').select('member_id, checked_in_at').gte('checked_in_at', oldest)
-  if (error) throw error
-  const byMember = new Map<string, Set<string>>()
-  for (const r of (data ?? []) as Array<{ member_id: string | null; checked_in_at: string | null }>) {
-    if (!r.member_id || !r.checked_in_at) continue
-    const mo = r.checked_in_at.slice(0, 7)
-    if (!byMember.has(r.member_id)) byMember.set(r.member_id, new Set())
-    byMember.get(r.member_id)!.add(mo)
-  }
-  const need = new Set(months)
-  const out: string[] = []
-  for (const [id, set] of byMember) {
-    if ([...need].every((m) => set.has(m))) out.push(id)
-  }
-  return out
+  try {
+    const supabase = createAdminClient()
+    const months = last6MonthsKeys()
+    const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo
+    const { data, error } = await supabase
+      .from('event_checkins').select('member_id, checked_in_at').gte('checked_in_at', oldest)
+    if (error || !data) return []
+    const byMember = new Map<string, Set<string>>()
+    for (const r of data as Array<{ member_id: string | null; checked_in_at: string | null }>) {
+      if (!r?.member_id || !r?.checked_in_at) continue
+      const mo = r.checked_in_at.slice(0, 7)
+      if (!byMember.has(r.member_id)) byMember.set(r.member_id, new Set())
+      byMember.get(r.member_id)!.add(mo)
+    }
+    const need = new Set(months)
+    const out: string[] = []
+    for (const [id, set] of byMember) {
+      if ([...need].every((m) => set.has(m))) out.push(id)
+    }
+    return out
+  } catch { return [] }
 }
 
 export type MemberCounts = {
@@ -125,16 +130,57 @@ export type MemberCounts = {
 export async function getMemberCounts(): Promise<MemberCounts> {
   const supabase = createAdminClient()
   const countWhere = async (col: string, val: boolean) => {
-    const { count } = await supabase.from('members').select('id', { count: 'exact', head: true }).eq(col, val)
-    return count ?? 0
+    try {
+      const { count } = await supabase.from('members').select('id', { count: 'exact', head: true }).eq(col, val)
+      return count ?? 0
+    } catch { return 0 }
   }
+  const totalP = (async () => {
+    try {
+      const { count } = await supabase.from('members').select('id', { count: 'exact', head: true }).eq('is_active', true)
+      return count ?? 0
+    } catch { return 0 }
+  })()
   const [total, donadores, serverIds, attendanceIds] = await Promise.all([
-    supabase.from('members').select('id', { count: 'exact', head: true }).eq('is_active', true).then(r => r.count ?? 0),
+    totalP,
     countWhere('is_donor', true),
-    getServerMemberIds(),
-    getActiveAttendanceMemberIds(),
+    getServerMemberIds(),          // ya resiliente (devuelve [])
+    getActiveAttendanceMemberIds(),// ya resiliente (devuelve [])
   ])
   return { total, donadores, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
+}
+
+/** Solo los IDs (y total) que coinciden con los filtros, sin paginar. Liviano:
+ *  select('id'). Sirve para guardar listas / acciones sobre "todos los resultados". */
+export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: string[]; total: number }> {
+  const supabase = createAdminClient()
+  const { search, is_active = true, is_donor, is_server, active_attendance } = filters
+
+  let idFilter: string[] | null = null
+  if (active_attendance) {
+    const ids = await getActiveAttendanceMemberIds()
+    if (ids.length === 0) return { ids: [], total: 0 }
+    idFilter = ids
+  }
+
+  let query = supabase
+    .from('members')
+    .select(is_server ? 'id, volunteers!inner(status)' : 'id', { count: 'exact' })
+    .eq('is_active', is_active)
+    .range(0, 199999)
+
+  if (search) {
+    query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,cedula.ilike.%${search}%,email.ilike.%${search}%`)
+  }
+  if (is_donor !== undefined) query = query.eq('is_donor', is_donor)
+  if (is_server) query = query.eq('volunteers.status', 'active')
+  if (idFilter) query = query.in('id', idFilter)
+
+  const { data, error, count } = await query
+  if (error) throw error
+  const rows = (data ?? []) as unknown as Array<{ id: string }>
+  const ids = Array.from(new Set(rows.map((r) => r.id)))
+  return { ids, total: count ?? ids.length }
 }
 
 // ── Queries ────────────────────────────────────────────────
@@ -159,7 +205,8 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
   let idFilter: string[] | null = null
   if (active_attendance) {
     const ids = await getActiveAttendanceMemberIds()
-    idFilter = ids.length === 0 ? ['__none__'] : ids
+    if (ids.length === 0) return { members: [], total: 0 } // sin datos → 0 resultados, sin query
+    idFilter = ids
   }
 
   // is_server: inner join a volunteers activos (evita listas de ids enormes en la URL).

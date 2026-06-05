@@ -247,7 +247,18 @@ export default function MiembrosPage() {
   const [saveListDesc,    setSaveListDesc]    = useState('')
   const [saveListTags,    setSaveListTags]    = useState('')
   const [saveListDynamic, setSaveListDynamic] = useState(true)
+  const [savingList,      setSavingList]      = useState(false)
   const [toast,           setToast]           = useState('')
+
+  // Querystring con los filtros activos (búsqueda + chips) para acciones sobre todo el filtro.
+  function filterQS(): string {
+    const u = new URLSearchParams({ is_active: 'true' })
+    if (searchActive) u.set('search', debouncedSearch.trim())
+    if (showDonors)  u.set('is_donor', 'true')
+    if (showServers) u.set('is_server', 'true')
+    if (showActive)  u.set('active_attendance', 'true')
+    return u.toString()
+  }
 
   function showToast(msg: string) {
     setToast(msg)
@@ -270,31 +281,44 @@ export default function MiembrosPage() {
     router.push(`/comunicaciones/nueva?mode=manual&members=${ids}`)
   }
 
-  function handleSaveList() {
-    if (!saveListName.trim()) return
-    const tags = saveListTags.split(',').map(t => t.trim()).filter(Boolean)
-    const segLabel = buildSegmentLabel(filters.conditions, showDonors, showServers)
-    listStore.add({
-      id: `list-${Date.now()}`,
-      name: saveListName.trim(),
-      description: saveListDesc.trim() || null,
-      filters: { conditions: filters.conditions, groups: filters.groups },
-      segment_label: segLabel,
-      member_ids: displayMembers.map(m => m.id),
-      member_count: displayMembers.length,
-      is_dynamic: saveListDynamic,
-      created_by: 'Admin Theos',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      last_used_at: null,
-      tags,
-    })
-    setSaveListOpen(false)
-    setSaveListName('')
-    setSaveListDesc('')
-    setSaveListTags('')
-    setSaveListDynamic(true)
-    showToast('saved')
+  async function handleSaveList() {
+    if (!saveListName.trim() || savingList) return
+    setSavingList(true)
+    try {
+      // Trae TODOS los ids que coinciden con el filtro (no solo los cargados en pantalla).
+      let ids: string[] = displayMembers.map(m => m.id)
+      let total = ids.length
+      try {
+        const res = await fetch(`/api/members/ids?${filterQS()}`)
+        if (res.ok) { const d = await res.json(); ids = d.ids ?? ids; total = d.total ?? ids.length }
+      } catch { /* fallback a lo cargado */ }
+
+      const tags = saveListTags.split(',').map(t => t.trim()).filter(Boolean)
+      const segLabel = buildSegmentLabel(filters.conditions, showDonors, showServers)
+      listStore.add({
+        id: `list-${Date.now()}`,
+        name: saveListName.trim(),
+        description: saveListDesc.trim() || null,
+        filters: { conditions: filters.conditions, groups: filters.groups },
+        segment_label: segLabel,
+        member_ids: ids,
+        member_count: total,
+        is_dynamic: saveListDynamic,
+        created_by: 'Admin Theos',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        last_used_at: null,
+        tags,
+      })
+      setSaveListOpen(false)
+      setSaveListName('')
+      setSaveListDesc('')
+      setSaveListTags('')
+      setSaveListDynamic(true)
+      showToast('saved')
+    } finally {
+      setSavingList(false)
+    }
   }
 
   // Búsqueda y chips se resuelven server-side; los filtros avanzados refinan lo cargado.
@@ -836,7 +860,7 @@ export default function MiembrosPage() {
                 </label>
                 {[
                   { val: true,  label: 'Dinámica', desc: 'Se recalcula con los filtros actuales cada vez que la abrís' },
-                  { val: false, label: 'Snapshot', desc: `Guarda los ${displayMembers.length.toLocaleString('es-CR')} miembros exactos de ahora` },
+                  { val: false, label: 'Snapshot', desc: `Guarda los ${resultTotal.toLocaleString('es-CR')} miembros exactos de ahora` },
                 ].map(opt => (
                   <button
                     key={String(opt.val)}
@@ -861,7 +885,7 @@ export default function MiembrosPage() {
               className="rounded-xl px-3 py-2.5 text-[12px] text-navy-light/60"
               style={{ background: 'var(--surface-low)', fontFamily: 'var(--font-body)' }}
             >
-              Resumen: <strong className="text-navy">{displayMembers.length.toLocaleString('es-CR')} miembros</strong>
+              Resumen: <strong className="text-navy">{resultTotal.toLocaleString('es-CR')} miembros</strong>
               {' · '}{buildSegmentLabel(filters.conditions, showDonors, showServers)}
             </div>
 
@@ -875,11 +899,11 @@ export default function MiembrosPage() {
               </button>
               <button
                 onClick={handleSaveList}
-                disabled={!saveListName.trim()}
+                disabled={!saveListName.trim() || savingList}
                 className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'var(--font-body)' }}
               >
-                Guardar lista
+                {savingList ? 'Obteniendo miembros…' : 'Guardar lista'}
               </button>
             </div>
           </div>
