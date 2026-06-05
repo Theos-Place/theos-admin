@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { MOCK_TEMPLATES, MOCK_MESSAGES, MOCK_CHANNEL_CONFIGS, type CommunicationChannel } from '@/data/mock-communications'
+import { type CommunicationChannel } from '@/types/communication'
+import { useCommunications } from '@/hooks/useCommunications'
 import { MOCK_MEMBER_LISTS } from '@/data/mock-member-lists'
-import { MOCK_SEND_DELAY_MS } from '@/lib/constants'
 import { MessagePreview } from '@/components/communications/MessagePreview'
 import { type RecipientState, type RecipientMode } from '@/components/communications/RecipientSelector'
 import { ChevronLeft, Send, Save, Check } from 'lucide-react'
@@ -32,6 +32,7 @@ function insertAtCursor(ref: React.RefObject<HTMLTextAreaElement | null>, value:
 
 function NuevaComunicacionContent() {
   const searchParams = useSearchParams()
+  const { templates: MOCK_TEMPLATES, messages: MOCK_MESSAGES, configs: MOCK_CHANNEL_CONFIGS } = useCommunications()
 
   const initialMode = (searchParams.get('mode') as RecipientMode) || 'filters'
   const initialMemberIds = useMemo(
@@ -122,9 +123,38 @@ function NuevaComunicacionContent() {
     setShowTemplateModal(false)
   }
 
-  function handleSend() {
+  async function handleSend() {
     setSending(true)
-    setTimeout(() => { setSending(false); setSent(true) }, MOCK_SEND_DELAY_MS)
+    try {
+      const channels: ('whatsapp' | 'email')[] = channel === 'both' ? ['whatsapp', 'email'] : [channel]
+      const recips = recipients.manualMemberIds.flatMap(id =>
+        channels.map(ch => ({ member_id: id, channel: ch, recipient: '' })),
+      )
+      const createRes = await fetch('/api/communications/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel,
+          subject: (channel === 'email' || channel === 'both') ? (subject || null) : null,
+          body: channel === 'email' ? emailBody : waBody,
+          segment_label: recipients.label || null,
+          total_recipients: recipients.count,
+          smtp_config_id: (channel === 'email' || channel === 'both') ? (smtpConfig?.id ?? null) : null,
+          whatsapp_config_id: (channel === 'whatsapp' || channel === 'both') ? (waConfig?.id ?? null) : null,
+        }),
+      })
+      if (!createRes.ok) throw new Error()
+      const { id } = await createRes.json()
+      await fetch(`/api/communications/messages/${id}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipients: recips }),
+      })
+      setSending(false)
+      setSent(true)
+    } catch {
+      setSending(false)
+    }
   }
 
   if (sent) {
