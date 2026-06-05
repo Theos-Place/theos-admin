@@ -6,61 +6,49 @@ import { CloudUpload, Download, Check, CheckCircle2, AlertCircle, XCircle, Arrow
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { generateCSV } from '@/lib/export'
 
-type RowStatus = 'identified' | 'possible' | 'unidentified'
-
 interface PreviewRow {
   cedula: string
   csv_name: string
-  identified_name: string | null
   date: string
   amount: number
-  status: RowStatus
-  confirmed?: boolean
 }
 
-const MOCK_MEMBERS_SAMPLE = [
-  { cedula: '1-0847-0291', name: 'Alejandro Ruiz Moreno' },
-  { cedula: '2-0738-1094', name: 'Sofía Fernández López' },
-  { cedula: '3-0492-1857', name: 'Marcos García Vidal' },
-  { cedula: '4-0283-7610', name: 'Daniel Torres Blanco' },
-  { cedula: '3-0948-2016', name: 'Valeria Sánchez Romero' },
-  { cedula: '2-0561-0782', name: 'Carmen Delgado Nieto' },
-  { cedula: '5-0371-2948', name: 'Andrés Vargas Solís' },
-  { cedula: '6-0182-4073', name: 'María José Rojas Picado' },
-  { cedula: '1-1034-6281', name: 'Kevin Arias Mora' },
-]
-
-function generateMockRows(): PreviewRow[] {
-  const base: PreviewRow[] = [
-    { cedula: '1-0847-0291', csv_name: 'RUIZ MORENO ALEJANDRO', identified_name: 'Alejandro Ruiz Moreno', date: '2026-05-05', amount: 50000, status: 'identified' },
-    { cedula: '2-0738-1094', csv_name: 'FERNANDEZ LOPEZ SOFIA', identified_name: 'Sofía Fernández López', date: '2026-05-10', amount: 35000, status: 'identified' },
-    { cedula: '4-0283-7610', csv_name: 'TORRES BLANCO DANIEL', identified_name: 'Daniel Torres Blanco', date: '2026-05-28', amount: 75000, status: 'identified' },
-    { cedula: '2-0561-0782', csv_name: 'DELGADO NIETO CARMEN', identified_name: 'Carmen Delgado Nieto', date: '2026-05-08', amount: 60000, status: 'identified' },
-    { cedula: '3-0492-1857', csv_name: 'GARCIA VIDAL MARCOS', identified_name: 'Marcos García Vidal', date: '2026-05-12', amount: 40000, status: 'identified' },
-    { cedula: '3-0948-2016', csv_name: 'SANCHEZ ROMERO VALERIA', identified_name: 'Valeria Sánchez Romero', date: '2026-05-03', amount: 30000, status: 'identified' },
-    { cedula: '5-0371-2948', csv_name: 'VARGAS SOLIS ANDRES', identified_name: 'Andrés Vargas Solís', date: '2026-05-10', amount: 45000, status: 'identified' },
-    { cedula: '6-0182-4073', csv_name: 'ROJAS PICADO MARIA JOSE', identified_name: 'María José Rojas Picado', date: '2026-05-14', amount: 20000, status: 'identified' },
-    { cedula: '1-1034-6281', csv_name: 'ARIAS MORA KEVIN', identified_name: 'Kevin Arias Mora', date: '2026-05-15', amount: 55000, status: 'identified' },
-    { cedula: '2-0456-7890', csv_name: 'MORA QUESADA ROBERTO', identified_name: 'Roberto Mora Quesada', date: '2026-05-06', amount: 25000, status: 'identified' },
-    { cedula: '1-0923-4567', csv_name: 'BRENES ARAYA ANDREA', identified_name: 'Andrea Brenes Araya', date: '2026-05-09', amount: 42000, status: 'identified' },
-    { cedula: '3-0567-1234', csv_name: 'CAMPOS SOLANO LUIS', identified_name: 'Luis Campos Solano', date: '2026-05-11', amount: 18000, status: 'identified' },
-    { cedula: '4-0891-2345', csv_name: 'HERRERA VEGA PATRICIA', identified_name: 'Patricia Herrera Vega', date: '2026-05-13', amount: 33000, status: 'identified' },
-    { cedula: '1-0673-9012', csv_name: 'NUNEZ FALLAS JOSE', identified_name: 'José Núñez Fallas', date: '2026-05-16', amount: 27000, status: 'identified' },
-    { cedula: '2-0345-6789', csv_name: 'PORRAS JIMENEZ ANA', identified_name: 'Ana Porras Jiménez', date: '2026-05-17', amount: 52000, status: 'identified' },
-    { cedula: '5-0678-3456', csv_name: 'VINDAS MEZA CARLOS', identified_name: 'Carlos Vindas Meza', date: '2026-05-18', amount: 38000, status: 'identified' },
-    { cedula: '3-0234-5678', csv_name: 'OBANDO LEON DIANA', identified_name: 'Diana Obando León', date: '2026-05-19', amount: 21000, status: 'identified' },
-    // 2 possible matches
-    { cedula: '1-0847-0292', csv_name: 'RUIZ MORENO A', identified_name: 'Alejandro Ruiz Moreno', date: '2026-05-20', amount: 15000, status: 'possible' },
-    { cedula: '6-0182-4072', csv_name: 'ROJAS PICADO M', identified_name: 'María José Rojas Picado', date: '2026-05-21', amount: 10000, status: 'possible' },
-    // 1 unidentified
-    { cedula: '9-9999-9999', csv_name: 'DONANTE ANONIMO', identified_name: null, date: '2026-05-22', amount: 150000, status: 'unidentified' },
-  ]
-  return base
+type ImportResult = {
+  total_rows: number
+  identified: number
+  unidentified: number
+  duplicates: number
+  status: string
 }
 
-const IDENTIFIED_COUNT = 17
-const POSSIBLE_COUNT = 2
-const UNIDENTIFIED_COUNT = 1
+// Parser CSV simple (maneja comas entre comillas). Espera columnas: cedula, nombre, fecha, monto.
+function parseDonationsCSV(text: string): PreviewRow[] {
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '')
+  if (lines.length === 0) return []
+  const split = (line: string) => {
+    const out: string[] = []; let f = '', q = false
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i]
+      if (q) { if (c === '"') { if (line[i+1] === '"') { f += '"'; i++ } else q = false } else f += c }
+      else if (c === '"') q = true
+      else if (c === ',') { out.push(f); f = '' }
+      else f += c
+    }
+    out.push(f); return out.map(s => s.trim())
+  }
+  const header = split(lines[0]).map(h => h.toLowerCase())
+  const idx = (names: string[]) => header.findIndex(h => names.some(n => h.includes(n)))
+  const ci = idx(['cedula', 'cédula']), ni = idx(['nombre']), fi = idx(['fecha']), mi = idx(['monto', 'amount'])
+  return lines.slice(1).map(line => {
+    const cols = split(line)
+    return {
+      cedula: ci >= 0 ? cols[ci] ?? '' : '',
+      csv_name: ni >= 0 ? cols[ni] ?? '' : '',
+      date: fi >= 0 ? cols[fi] ?? '' : '',
+      amount: Number((mi >= 0 ? cols[mi] ?? '0' : '0').replace(/[^\d.-]/g, '')) || 0,
+    }
+  }).filter(r => r.date && r.amount > 0)
+}
 
 export default function ImportarDonacionesPage() {
   const router = useRouter()
@@ -70,6 +58,7 @@ export default function ImportarDonacionesPage() {
   const [updateDonorStatus, setUpdateDonorStatus] = useState(true)
   const [applyFamilyLogic, setApplyFamilyLogic] = useState(false)
   const [toast, setToast] = useState('')
+  const [importing, setImporting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function showToast(msg: string) {
@@ -77,11 +66,12 @@ export default function ImportarDonacionesPage() {
     setTimeout(() => setToast(''), 3500)
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setFileName(file.name)
-    setRows(generateMockRows())
+    const text = await file.text()
+    setRows(parseDonationsCSV(text))
     setStep(2)
   }
 
@@ -96,20 +86,32 @@ export default function ImportarDonacionesPage() {
     )
   }
 
-  function confirmPossible(index: number) {
-    setRows(prev => prev.map((r, i) => i === index ? { ...r, confirmed: true, status: 'identified' } : r))
+  async function handleConfirmImport() {
+    if (importing || rows.length === 0) return
+    setImporting(true)
+    try {
+      const res = await fetch('/api/finance/donations/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: fileName || 'donaciones.csv',
+          rows: rows.map(r => ({ cedula: r.cedula || null, donation_date: r.date, amount: r.amount })),
+        }),
+      })
+      if (!res.ok) throw new Error()
+      const batch = (await res.json()) as ImportResult
+      showToast(`Importación completada — ${batch.identified} identificadas, ${batch.unidentified} sin identificar, ${batch.duplicates} duplicadas`)
+      setTimeout(() => router.push('/finanzas/donaciones'), 2200)
+    } catch {
+      showToast('Error al importar las donaciones')
+      setImporting(false)
+    }
   }
 
-  function handleConfirmImport() {
-    showToast('Importación completada — 20 donaciones procesadas')
-    setTimeout(() => router.push('/finanzas/donaciones'), 1800)
-  }
-
-  const statusCount = {
-    identified: rows.filter(r => r.status === 'identified').length,
-    possible: rows.filter(r => r.status === 'possible').length,
-    unidentified: rows.filter(r => r.status === 'unidentified').length,
-  }
+  // En el preview solo sabemos si la fila trae cédula; la identificación real
+  // (match contra miembros + duplicados) la hace el backend al importar.
+  const conCedula = rows.filter(r => r.cedula).length
+  const sinCedula = rows.length - conCedula
 
   return (
     <FinanceGuard>
@@ -211,9 +213,9 @@ export default function ImportarDonacionesPage() {
             {/* Summary */}
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: 'Identificados', count: IDENTIFIED_COUNT, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)', Icon: CheckCircle2 },
-                { label: 'Posible coincidencia', count: POSSIBLE_COUNT, color: '#E9B949', bg: 'rgba(233,185,73,0.10)', Icon: AlertCircle },
-                { label: 'No identificados', count: UNIDENTIFIED_COUNT, color: '#EF5554', bg: 'rgba(239,85,84,0.10)', Icon: XCircle },
+                { label: 'Filas en el archivo', count: rows.length, color: '#161440', bg: 'rgba(22,20,64,0.06)', Icon: CheckCircle2 },
+                { label: 'Con cédula', count: conCedula, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)', Icon: CheckCircle2 },
+                { label: 'Sin cédula', count: sinCedula, color: '#EF5554', bg: 'rgba(239,85,84,0.10)', Icon: XCircle },
               ].map(({ label, count, color, bg, Icon }) => (
                 <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: bg }}>
                   <Icon size={20} style={{ color, flexShrink: 0 }} />
@@ -231,7 +233,7 @@ export default function ImportarDonacionesPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-                      {['Cédula', 'Nombre del CSV', 'Miembro identificado', 'Fecha', 'Monto', 'Estado'].map(h => (
+                      {['Cédula', 'Nombre del CSV', 'Fecha', 'Monto'].map(h => (
                         <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest"
                           style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
                           {h}
@@ -247,38 +249,7 @@ export default function ImportarDonacionesPage() {
                           <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>{row.cedula}</p>
                         </td>
                         <td className="px-5 py-3">
-                          <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{row.csv_name}</p>
-                        </td>
-                        <td className="px-5 py-3">
-                          {row.status === 'identified' && (
-                            <p className="text-[13px] font-medium" style={{ color: '#3DB97A', fontFamily: 'var(--font-body)' }}>
-                              ✓ {row.identified_name}
-                            </p>
-                          )}
-                          {row.status === 'possible' && !row.confirmed && (
-                            <div className="flex items-center gap-2">
-                              <p className="text-[13px]" style={{ color: '#E9B949', fontFamily: 'var(--font-body)' }}>
-                                ⚠ {row.identified_name}
-                              </p>
-                              <button
-                                onClick={() => confirmPossible(i)}
-                                className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-all"
-                                style={{ background: 'rgba(233,185,73,0.15)', color: '#9B7200', fontFamily: 'var(--font-body)' }}
-                              >
-                                Confirmar
-                              </button>
-                            </div>
-                          )}
-                          {row.status === 'possible' && row.confirmed && (
-                            <p className="text-[13px] font-medium" style={{ color: '#3DB97A', fontFamily: 'var(--font-body)' }}>
-                              ✓ {row.identified_name} (confirmado)
-                            </p>
-                          )}
-                          {row.status === 'unidentified' && (
-                            <p className="text-[13px]" style={{ color: '#EF5554', fontFamily: 'var(--font-body)' }}>
-                              ✗ No identificado
-                            </p>
-                          )}
+                          <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{row.csv_name || '—'}</p>
                         </td>
                         <td className="px-5 py-3">
                           <p className="text-[13px] whitespace-nowrap" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>
@@ -289,17 +260,6 @@ export default function ImportarDonacionesPage() {
                           <p className="text-[13px] font-medium" style={{ color: '#161440', fontFamily: 'var(--font-body)' }}>
                             ₡{row.amount.toLocaleString('es-CR')}
                           </p>
-                        </td>
-                        <td className="px-5 py-3">
-                          <span
-                            className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-                            style={{
-                              color: row.status === 'identified' ? '#3DB97A' : row.status === 'possible' ? '#E9B949' : '#EF5554',
-                              background: row.status === 'identified' ? 'rgba(61,185,122,0.10)' : row.status === 'possible' ? 'rgba(233,185,73,0.10)' : 'rgba(239,85,84,0.10)',
-                            }}
-                          >
-                            {row.status === 'identified' ? 'Identificado' : row.status === 'possible' ? 'Por confirmar' : 'No identificado'}
-                          </span>
                         </td>
                       </tr>
                     ))}
@@ -334,10 +294,10 @@ export default function ImportarDonacionesPage() {
 
             <div className="rounded-xl p-5 space-y-3" style={{ background: 'rgba(22,20,64,0.03)', border: '1px solid rgba(22,20,64,0.08)' }}>
               {[
-                { label: 'Archivo', value: fileName || 'donaciones-importadas.csv' },
-                { label: 'Total filas', value: '20' },
-                { label: 'Identificados', value: `${IDENTIFIED_COUNT + POSSIBLE_COUNT}` },
-                { label: 'Sin identificar', value: `${UNIDENTIFIED_COUNT}` },
+                { label: 'Archivo', value: fileName || 'donaciones.csv' },
+                { label: 'Total filas', value: `${rows.length}` },
+                { label: 'Con cédula', value: `${conCedula}` },
+                { label: 'Sin cédula', value: `${sinCedula}` },
                 { label: 'Monto total', value: `₡${rows.reduce((s, r) => s + r.amount, 0).toLocaleString('es-CR')}` },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between text-sm" style={{ fontFamily: 'var(--font-body)' }}>
@@ -394,10 +354,11 @@ export default function ImportarDonacionesPage() {
               </button>
               <button
                 onClick={handleConfirmImport}
-                className="flex-1 rounded-full py-2.5 text-sm text-white font-medium transition-all"
+                disabled={importing || rows.length === 0}
+                className="flex-1 rounded-full py-2.5 text-sm text-white font-medium transition-all disabled:opacity-50"
                 style={{ background: '#3DB97A', fontFamily: 'var(--font-body)' }}
               >
-                Confirmar importación
+                {importing ? 'Importando...' : 'Confirmar importación'}
               </button>
             </div>
           </div>

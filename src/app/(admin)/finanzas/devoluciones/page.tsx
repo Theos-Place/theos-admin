@@ -5,7 +5,7 @@ import { ArrowLeftRight, Check, X } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
-import { type Refund, type RefundStatus } from '@/data/mock-finance'
+import { type Refund, type RefundStatus } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
 import { TOAST_MS } from '@/lib/constants'
 
@@ -31,7 +31,7 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
 }
 
 export default function DevolucionesPage() {
-  const { refunds: allRefunds } = useFinance()
+  const { refunds: allRefunds, refetch } = useFinance()
   const [refunds, setRefunds] = useState<Refund[]>([])
   useEffect(() => { setRefunds(allRefunds) }, [allRefunds])
   const [completeTarget, setCompleteTarget] = useState<Refund | null>(null)
@@ -56,29 +56,43 @@ export default function DevolucionesPage() {
     totalAmount: refunds.filter(r => r.status === 'completed').reduce((s, r) => s + r.amount, 0),
   }), [refunds])
 
-  function handleComplete() {
+  async function handleComplete() {
     if (!completeTarget) return
-    setRefunds(prev => prev.map(r =>
-      r.id === completeTarget.id
-        ? { ...r, status: 'completed', processed_at: completionDate || new Date().toISOString(), processed_by: 'Daniel Torres Blanco', sinpe_pending: false, notes: completionConf ? `Confirmación SINPE: ${completionConf}` : r.notes }
-        : r
-    ))
+    const target = completeTarget
     setCompleteTarget(null)
     setCompletionDate('')
     setCompletionConf('')
-    showToast(`Devolución completada para ${completeTarget.member_name}`)
+    try {
+      const res = await fetch(`/api/finance/refunds/${target.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+      showToast(`Devolución completada para ${target.member_name}`)
+    } catch {
+      showToast('Error al completar la devolución')
+    }
   }
 
-  function handleReject() {
+  async function handleReject() {
     if (!rejectTarget) return
-    setRefunds(prev => prev.map(r =>
-      r.id === rejectTarget.id
-        ? { ...r, status: 'rejected', processed_at: new Date().toISOString(), processed_by: 'Daniel Torres Blanco', notes: rejectReason }
-        : r
-    ))
+    const target = rejectTarget
     setRejectTarget(null)
     setRejectReason('')
-    showToast(`Devolución rechazada para ${rejectTarget.member_name}`)
+    try {
+      const res = await fetch(`/api/finance/refunds/${target.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+      showToast(`Devolución rechazada para ${target.member_name}`)
+    } catch {
+      showToast('Error al rechazar la devolución')
+    }
   }
 
   return (
