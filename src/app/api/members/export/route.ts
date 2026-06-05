@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMembers } from '@/lib/supabase/queries/members'
 
+// GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
+// para exportar. Mismos params que /api/members. Usa createAdminClient (en getMembers).
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl
@@ -9,8 +11,6 @@ export async function GET(req: NextRequest) {
     const is_donor  = searchParams.get('is_donor')
     const is_server = searchParams.get('is_server')
     const active_attendance = searchParams.get('active_attendance')
-    const page      = Number(searchParams.get('page') ?? 1)
-    const pageSize  = Number(searchParams.get('pageSize') ?? 50)
 
     const result = await getMembers({
       search,
@@ -18,31 +18,14 @@ export async function GET(req: NextRequest) {
       is_donor:  is_donor  !== null ? is_donor  === 'true' : undefined,
       is_server: is_server === 'true' ? true : undefined,
       active_attendance: active_attendance === 'true' ? true : undefined,
-      page,
-      pageSize,
+      page: 1,
+      pageSize: 100000, // sin límite práctico
     })
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('GET /api/members:', error)
-    const detail = error instanceof Error
-      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
-      : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-    const { createMember } = await import('@/lib/supabase/queries/members')
-    const member = await createMember(body)
-    return NextResponse.json(member, { status: 201 })
-  } catch (error) {
-    console.error('POST /api/members:', error)
-    const detail = error instanceof Error
-      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
-      : error
+    console.error('GET /api/members/export:', error)
+    const detail = error instanceof Error ? { message: error.message } : error
     return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
   }
 }

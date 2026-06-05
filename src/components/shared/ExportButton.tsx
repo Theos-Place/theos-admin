@@ -11,6 +11,10 @@ interface Props<T> {
   allColumns: ColumnDef<T>[]
   filename: string
   label?: string
+  /** Si se pasa, al exportar se piden los datos completos (no solo los de `data`). */
+  fetchData?: () => Promise<T[]>
+  /** Si se pasa, se confirma con el usuario antes de exportar (p. ej. export sin filtros). */
+  confirmMessage?: string
 }
 
 function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) {
@@ -46,10 +50,21 @@ function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) 
   })
 }
 
-export function ExportButton<T>({ data, columns, allColumns, filename, label }: Props<T>) {
+export function ExportButton<T>({ data, columns, allColumns, filename, label, fetchData, confirmMessage }: Props<T>) {
   const [open, setOpen] = useState(false)
   const [onlyVisible, setOnlyVisible] = useState(true)
+  const [busy, setBusy] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
+  // Obtiene los datos a exportar: completos (fetchData) o los ya cargados.
+  async function resolveData(): Promise<T[] | null> {
+    if (confirmMessage && !window.confirm(confirmMessage)) return null
+    if (!fetchData) return data
+    setBusy(true)
+    try { return await fetchData() }
+    catch { return null }
+    finally { setBusy(false) }
+  }
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -62,9 +77,11 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label }: 
   const activeCols = onlyVisible ? columns : allColumns
   const exportCols = activeCols.filter(c => c.exportable !== false)
 
-  function handleCSV() {
+  async function handleCSV() {
+    const rows0 = await resolveData()
+    if (!rows0) return
     const headers = exportCols.map(c => c.label)
-    const rows = data.map(row =>
+    const rows = rows0.map(row =>
       exportCols.map(col => {
         const val = col.exportValue ? col.exportValue(row) : (row as Record<string, unknown>)[String(col.key)]
         if (val === null || val === undefined) return ''
@@ -75,8 +92,10 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label }: 
     setOpen(false)
   }
 
-  function handleExcel() {
-    exportToExcel(data, exportCols, filename)
+  async function handleExcel() {
+    const rows0 = await resolveData()
+    if (!rows0) return
+    exportToExcel(rows0, exportCols, filename)
     setOpen(false)
   }
 
@@ -88,7 +107,7 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label }: 
         style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
       >
         <Download size={14} strokeWidth={1.75} />
-        {label ?? 'Exportar'}
+        {busy ? 'Preparando export…' : (label ?? 'Exportar')}
         <span className="text-[11px] opacity-50">{open ? '↑' : '↓'}</span>
       </button>
 

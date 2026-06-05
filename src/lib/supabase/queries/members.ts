@@ -64,9 +64,77 @@ export type MemberFilters = {
   province?: string
   is_active?: boolean
   is_donor?: boolean
+  is_server?: boolean
+  active_attendance?: boolean
   gender?: string
   page?: number
   pageSize?: number
+}
+
+/** member_ids con al menos un voluntariado activo (mismo criterio que la página de servidores). */
+export async function getServerMemberIds(): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('volunteers').select('member_id').eq('status', 'active')
+  if (error) throw error
+  return Array.from(new Set((data ?? []).map((r) => (r as { member_id: string }).member_id)))
+}
+
+/** Últimos 6 meses calendario (YYYY-MM), incluyendo el mes actual. */
+function last6MonthsKeys(now = new Date()): string[] {
+  const out: string[] = []
+  const d = new Date(now)
+  for (let i = 0; i < 6; i++) {
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+    d.setMonth(d.getMonth() - 1)
+  }
+  return out
+}
+
+/** member_ids con al menos una asistencia en cada uno de los últimos 6 meses. */
+export async function getActiveAttendanceMemberIds(): Promise<string[]> {
+  const supabase = createAdminClient()
+  const months = last6MonthsKeys()
+  const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo
+  const { data, error } = await supabase
+    .from('event_checkins').select('member_id, checked_in_at').gte('checked_in_at', oldest)
+  if (error) throw error
+  const byMember = new Map<string, Set<string>>()
+  for (const r of (data ?? []) as Array<{ member_id: string | null; checked_in_at: string | null }>) {
+    if (!r.member_id || !r.checked_in_at) continue
+    const mo = r.checked_in_at.slice(0, 7)
+    if (!byMember.has(r.member_id)) byMember.set(r.member_id, new Set())
+    byMember.get(r.member_id)!.add(mo)
+  }
+  const need = new Set(months)
+  const out: string[] = []
+  for (const [id, set] of byMember) {
+    if ([...need].every((m) => set.has(m))) out.push(id)
+  }
+  return out
+}
+
+export type MemberCounts = {
+  total: number
+  donadores: number
+  servidores: number
+  activos_asistencia: number
+}
+
+/** Conteos para los chips/header. Mismas definiciones que las páginas de cada módulo. */
+export async function getMemberCounts(): Promise<MemberCounts> {
+  const supabase = createAdminClient()
+  const countWhere = async (col: string, val: boolean) => {
+    const { count } = await supabase.from('members').select('id', { count: 'exact', head: true }).eq(col, val)
+    return count ?? 0
+  }
+  const [total, donadores, serverIds, attendanceIds] = await Promise.all([
+    supabase.from('members').select('id', { count: 'exact', head: true }).eq('is_active', true).then(r => r.count ?? 0),
+    countWhere('is_donor', true),
+    getServerMemberIds(),
+    getActiveAttendanceMemberIds(),
+  ])
+  return { total, donadores, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
 }
 
 // ── Queries ────────────────────────────────────────────────
@@ -80,10 +148,24 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     province,
     is_active = true,
     is_donor,
+    is_server,
+    active_attendance,
     gender,
     page = 1,
     pageSize = 50,
   } = filters
+
+  // active_attendance: lista de member_ids (hoy pocos/0; a escala conviene un RPC).
+  let idFilter: string[] | null = null
+  if (active_attendance) {
+    const ids = await getActiveAttendanceMemberIds()
+    idFilter = ids.length === 0 ? ['__none__'] : ids
+  }
+
+  // is_server: inner join a volunteers activos (evita listas de ids enormes en la URL).
+  const volunteersEmbed = is_server
+    ? `volunteers!inner(status, start_date, service_positions(title, area:areas(name, parent:areas!parent_id(name))))`
+    : `volunteers(status, start_date, service_positions(title, area:areas(name, parent:areas!parent_id(name))))`
 
   let query = supabase
     .from('members')
@@ -92,14 +174,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       *,
       sede:sedes(code, name),
       member_roles!member_roles_member_id_fkey(role, is_active, status_detail),
-      volunteers(
-        status,
-        start_date,
-        service_positions(
-          title,
-          area:areas(name, parent:areas!parent_id(name))
-        )
-      ),
+      ${volunteersEmbed},
       study_enrollments(
         status,
         study_groups!study_enrollments_group_id_fkey(plan:study_plans(name))
@@ -112,6 +187,8 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     .order('last_name', { ascending: true })
     .range((page - 1) * pageSize, page * pageSize - 1)
 
+  if (is_server) query = query.eq('volunteers.status', 'active')
+
   if (search) {
     query = query.or(
       `first_name.ilike.%${search}%,last_name.ilike.%${search}%,cedula.ilike.%${search}%,email.ilike.%${search}%`,
@@ -120,6 +197,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
   if (province) query = query.eq('province', province)
   if (is_donor !== undefined) query = query.eq('is_donor', is_donor)
   if (gender) query = query.eq('gender', gender)
+  if (idFilter) query = query.in('id', idFilter)
 
   const { data, error, count } = await query
 

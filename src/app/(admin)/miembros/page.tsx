@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { useMembers } from '@/hooks/useMembers'
+import { toDomainMember } from '@/lib/members/adapter'
+import type { MemberCounts } from '@/lib/supabase/queries/members'
 import { listStore } from '@/data/mock-member-lists'
 import type { FilterCondition } from '@/types/filters'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
@@ -26,8 +28,6 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
-
-const PAGE_SIZE = 10
 
 function calcularEdad(fechaNacimiento: string): number {
   const hoy = new Date()
@@ -89,27 +89,6 @@ const QUICK_CHIPS = [
   { key: 'servidores', label: 'Servidores' },
   { key: 'activo',     label: 'Activo (asistencia)' },
 ] as const
-
-// Los últimos 6 meses calendario en formato YYYY-MM (incluye el mes actual).
-function ultimos6Meses(): string[] {
-  const out: string[] = []
-  const d = new Date()
-  for (let i = 0; i < 6; i++) {
-    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-    d.setMonth(d.getMonth() - 1)
-  }
-  return out
-}
-
-/** Activo por asistencia: al menos 1 asistencia en cada uno de los últimos 6 meses.
- *  Usa attendance_months (liviano, del listado) y cae a attendance_history si falta. */
-function esActivoPorAsistencia(m: Member, meses: string[]): boolean {
-  const fromMonths = m.attendance_months ?? []
-  const fromHistory = (m.attendance_history ?? []).map(a => (a.date ?? '').slice(0, 7)).filter(Boolean)
-  const set = new Set([...fromMonths, ...fromHistory])
-  if (set.size === 0) return false
-  return meses.every(mo => set.has(mo))
-}
 
 const GENDER_LABELS: Record<string, string> = {
   M: 'Masculino', F: 'Femenino', otro: 'No indica',
@@ -227,19 +206,40 @@ function buildSegmentLabel(conditions: FilterCondition[], showDonors: boolean, s
 export default function MiembrosPage() {
   const router = useRouter()
   const { can } = usePermissions()
-  const { members: supabaseMembers, total, loading, error } = useMembers({ is_active: true })
-  const filters = useMemberFilters(supabaseMembers)
+  // Conteos para chips/header — una sola vez al cargar, independiente de la búsqueda.
+  const [counts, setCounts] = useState<MemberCounts | null>(null)
+  useEffect(() => {
+    fetch('/api/members/counts')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setCounts(d) })
+      .catch(() => {})
+  }, [])
 
   const [showDonors,     setShowDonors]     = useState(false)
   const [showServers,    setShowServers]    = useState(false)
   const [showActive,     setShowActive]     = useState(false)
   const [search,         setSearch]         = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => { const t = setTimeout(() => setDebouncedSearch(search), 300); return () => clearTimeout(t) }, [search])
   const [filtersOpen,    setFiltersOpen]    = useState(false)
-  const [visibleCount,   setVisibleCount]   = useState(PAGE_SIZE)
   const [selectedIds,    setSelectedIds]    = useState<Set<string>>(new Set())
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<Member>[]>(
     MEMBER_COLUMNS.filter(c => c.defaultVisible)
   )
+
+  // Trigger de carga: búsqueda (≥2) o algún chip rápido. Los filtros avanzados se
+  // aplican client-side sobre lo cargado (refinan la búsqueda/chips).
+  const searchActive = debouncedSearch.trim().length >= 2
+  const shouldFetch  = searchActive || showDonors || showServers || showActive
+  const searchParams = useMemo(() => ({
+    search: searchActive ? debouncedSearch.trim() : undefined,
+    is_donor: showDonors || undefined,
+    is_server: showServers || undefined,
+    active_attendance: showActive || undefined,
+  }), [searchActive, debouncedSearch, showDonors, showServers, showActive])
+
+  const { members: loadedMembers, total: resultTotal, loading, error, hasMore, loadMore } = useMembers(searchParams, shouldFetch)
+  const filters = useMemberFilters(loadedMembers)
 
   // Guardar lista modal
   const [saveListOpen,    setSaveListOpen]    = useState(false)
@@ -254,7 +254,7 @@ export default function MiembrosPage() {
     setTimeout(() => setToast(''), TOAST_LONG_MS)
   }
 
-  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || showActive || search.trim() !== ''
+  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || showActive || searchActive
   const quickActiveCount = (showDonors ? 1 : 0) + (showServers ? 1 : 0) + (showActive ? 1 : 0)
 
   function handleComunicarLista() {
@@ -297,37 +297,17 @@ export default function MiembrosPage() {
     showToast('saved')
   }
 
-  const displayMembers = useMemo(() => {
-    let list = filters.filteredMembers.length > 0 ? filters.filteredMembers : supabaseMembers
-    if (showDonors)  list = list.filter(m => m.is_donor)
-    if (showServers) list = list.filter(m => m.is_server)
-    if (showActive) {
-      const meses = ultimos6Meses()
-      list = list.filter(m => esActivoPorAsistencia(m, meses))
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter(m =>
-        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-        (m.email?.toLowerCase().includes(q) ?? false) ||
-        (m.phone?.includes(q) ?? false) ||
-        (m.cedula != null && m.cedula.includes(q))
-      )
-    }
-    return list
-  }, [filters.filteredMembers, supabaseMembers, showDonors, showServers, showActive, search])
+  // Búsqueda y chips se resuelven server-side; los filtros avanzados refinan lo cargado.
+  const displayMembers = filters.filteredMembers
 
-  // Reset visible window and clear selection whenever the filtered set changes
+  // Limpiar selección cuando cambia el set mostrado
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE)
     setSelectedIds(new Set())
   }, [displayMembers])
 
   const { sorted: sortedMembers, sortKey, sortDir, toggleSort } = useSortableTable(displayMembers)
 
-  const visibleMembers       = sortedMembers.slice(0, visibleCount)
-  const hasMore              = visibleCount < displayMembers.length
-  const remaining            = displayMembers.length - visibleCount
+  const visibleMembers       = sortedMembers
   const allVisibleSelected   = visibleMembers.length > 0 && visibleMembers.every(m => selectedIds.has(m.id))
   const allFilteredSelected  = selectedIds.size > 0 && selectedIds.size === displayMembers.length
   const selectedData         = allFilteredSelected
@@ -335,6 +315,22 @@ export default function MiembrosPage() {
     : displayMembers.filter(m => selectedIds.has(m.id))
 
   const activeFilterCount = filters.conditions.length
+
+  // Export: descarga la totalidad que coincide con búsqueda/chips (no solo lo cargado).
+  async function fetchAllForExport(): Promise<Member[]> {
+    const u = new URLSearchParams({ is_active: 'true' })
+    if (searchActive) u.set('search', debouncedSearch.trim())
+    if (showDonors)  u.set('is_donor', 'true')
+    if (showServers) u.set('is_server', 'true')
+    if (showActive)  u.set('active_attendance', 'true')
+    const res = await fetch(`/api/members/export?${u.toString()}`)
+    if (!res.ok) throw new Error('Error exportando')
+    const d = await res.json()
+    return (d.members ?? []).map(toDomainMember) as Member[]
+  }
+  const exportConfirm = (!searchActive && !showDonors && !showServers && !showActive)
+    ? `Vas a exportar ${(counts?.total ?? 0).toLocaleString('es-CR')} miembros. Esto puede tardar unos segundos. ¿Continuás?`
+    : undefined
 
   return (
     <div className="space-y-4">
@@ -349,7 +345,7 @@ export default function MiembrosPage() {
             Miembros
           </h1>
           <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-            {loading ? 'Cargando…' : `${total.toLocaleString('es-CR')} registrados`}
+            {counts ? `${counts.total.toLocaleString('es-CR')} registrados` : 'Cargando…'}
             {error && <span className="text-coral"> · {error}</span>}
           </p>
         </div>
@@ -367,6 +363,8 @@ export default function MiembrosPage() {
                 columns={visibleColumns}
                 allColumns={MEMBER_COLUMNS}
                 filename="miembros-theos"
+                fetchData={fetchAllForExport}
+                confirmMessage={exportConfirm}
               />
               <button
                 onClick={() => hasAnyFilter ? setSaveListOpen(true) : undefined}
@@ -412,6 +410,12 @@ export default function MiembrosPage() {
               key === 'donadores'  ? showDonors :
               key === 'servidores' ? showServers :
               showActive
+            const count =
+              key === 'todos'      ? counts?.total :
+              key === 'donadores'  ? counts?.donadores :
+              key === 'servidores' ? counts?.servidores :
+              counts?.activos_asistencia
+            const labelWithCount = count !== undefined ? `${label} · ${count.toLocaleString('es-CR')}` : label
             return (
               <button
                 key={key}
@@ -429,7 +433,7 @@ export default function MiembrosPage() {
                 )}
                 style={{ fontFamily: 'var(--font-body)' }}
               >
-                {label}
+                {labelWithCount}
               </button>
             )
           })}
@@ -621,7 +625,22 @@ export default function MiembrosPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleMembers.length === 0 ? (
+              {!shouldFetch ? (
+                <tr>
+                  <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center" style={{ fontFamily: 'var(--font-body)' }}>
+                    <Search size={26} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.75} />
+                    <p className="text-sm font-semibold text-navy-light/50">Usá el buscador o aplicá un filtro para ver miembros</p>
+                    <p className="text-[13px] text-navy-light/40 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
+                  </td>
+                </tr>
+              ) : loading && visibleMembers.length === 0 ? (
+                <tr>
+                  <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center" style={{ fontFamily: 'var(--font-body)' }}>
+                    <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+                    <p className="text-sm text-navy-light/50">Buscando miembros…</p>
+                  </td>
+                </tr>
+              ) : visibleMembers.length === 0 ? (
                 <tr>
                   <td
                     colSpan={visibleColumns.length + 2}
@@ -733,56 +752,26 @@ export default function MiembrosPage() {
           </table>
         </div>
 
-        {/* ── Load more / collapse ── */}
-        {hasMore && (
+        {/* ── Load more (server-side) ── */}
+        {shouldFetch && visibleMembers.length > 0 && (
           <div
             className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap"
             style={{ borderTop: '1px solid var(--outline-variant)' }}
           >
             <span className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-              Mostrando <strong className="text-navy">{visibleCount.toLocaleString('es-CR')}</strong> de{' '}
-              <strong className="text-navy">{displayMembers.length.toLocaleString('es-CR')}</strong> miembros
+              Mostrando <strong className="text-navy">{visibleMembers.length.toLocaleString('es-CR')}</strong> de{' '}
+              <strong className="text-navy">{resultTotal.toLocaleString('es-CR')}</strong> resultados
             </span>
-            <div className="flex items-center gap-2">
+            {hasMore && (
               <button
-                onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
-                className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors"
+                onClick={() => loadMore()}
+                disabled={loading}
+                className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50"
                 style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
               >
-                Cargar 10 más
-                <span
-                  className="rounded-full px-1.5 py-0.5 text-[10px]"
-                  style={{ background: 'var(--surface-low)', fontFamily: 'var(--font-body)' }}
-                >
-                  {Math.min(PAGE_SIZE, remaining)} de {remaining.toLocaleString('es-CR')} restantes
-                </span>
+                {loading ? 'Cargando…' : 'Cargar 50 más'}
               </button>
-              <button
-                onClick={() => setVisibleCount(displayMembers.length)}
-                className="rounded-lg border px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-              >
-                Mostrar todos ({displayMembers.length.toLocaleString('es-CR')})
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!hasMore && displayMembers.length > PAGE_SIZE && (
-          <div
-            className="flex items-center justify-between px-4 py-3"
-            style={{ borderTop: '1px solid var(--outline-variant)' }}
-          >
-            <span className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-              Mostrando todos — <strong className="text-navy">{displayMembers.length.toLocaleString('es-CR')}</strong> miembros
-            </span>
-            <button
-              onClick={() => setVisibleCount(PAGE_SIZE)}
-              className="text-xs text-navy-light/50 hover:text-navy transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              Colapsar lista
-            </button>
+            )}
           </div>
         )}
       </div>
