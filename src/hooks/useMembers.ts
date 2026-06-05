@@ -23,7 +23,7 @@ export function useMembers(filters: Filters = {}) {
       if (filters.search)                   params.set('search', filters.search)
       if (filters.is_active !== undefined)  params.set('is_active', String(filters.is_active))
       if (filters.is_donor !== undefined)   params.set('is_donor', String(filters.is_donor))
-      params.set('pageSize', '500') // cargamos todo para mantener filtros client-side
+      params.set('pageSize', '5000') // cargamos todo para mantener filtros/conteos client-side consistentes
 
       const res  = await fetch(`/api/members?${params}`)
       if (!res.ok) throw new Error('Error cargando miembros')
