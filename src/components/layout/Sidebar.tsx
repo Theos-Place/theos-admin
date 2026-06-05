@@ -70,7 +70,6 @@ const COMUNICACIONES_SUB = [
 ]
 
 const MIEMBROS_SUB = [
-  { href: '/miembros',        label: 'Todos los miembros', icon: Users     },
   { href: '/miembros/listas', label: 'Listas guardadas',   icon: Bookmark  },
 ]
 
