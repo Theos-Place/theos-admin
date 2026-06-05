@@ -164,7 +164,7 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'join_date', label: 'Fecha de ingreso', defaultVisible: false,
-    exportValue: m => m.join_date ? new Date(m.join_date).toLocaleDateString('es-CR') : '',
+    exportValue: m => m.join_date ? new Date(m.join_date).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '',
   },
   {
     key: 'gender', label: 'Género', defaultVisible: false,
@@ -750,7 +750,11 @@ export default function MiembrosPage() {
                             )
                           }
                           const rawVal = (member as Record<string, unknown>)[String(col.key)]
-                          const display = Array.isArray(rawVal) ? (rawVal as string[]).join(', ') : String(rawVal ?? '')
+                          // Si la columna define exportValue, usarlo también para mostrar
+                          // (formatea fechas como dd/mm/aaaa en vez del ISO crudo con hora).
+                          const display = col.exportValue
+                            ? col.exportValue(member)
+                            : Array.isArray(rawVal) ? (rawVal as string[]).join(', ') : String(rawVal ?? '')
                           return (
                             <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate" style={{ fontFamily: 'var(--font-body)' }}>
                               {display || '—'}

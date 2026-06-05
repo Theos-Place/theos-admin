@@ -16,7 +16,7 @@ function initials(firstName: string, lastName: string) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
 
