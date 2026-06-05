@@ -61,6 +61,7 @@ export type Member = {
   roles: MemberRole[]
   completed_studies: string[]
   current_study: string | null
+  current_study_week?: number | null
   sede: string
   age: number
   tipos_evento: string[]

@@ -125,7 +125,7 @@ export function MemberSummaryTab({
                 {currentStudyEntry.name}
               </p>
               <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
-                Semana {currentWeek} de {currentStudyEntry.weeks}
+                {currentWeek > 0 ? `Semana ${currentWeek} de ${currentStudyEntry.weeks}` : 'En curso'}
               </p>
             </div>
             <span
@@ -138,12 +138,14 @@ export function MemberSummaryTab({
               {STUDY_STAGES[currentStudyEntry.stage as keyof typeof STUDY_STAGES].label}
             </span>
           </div>
-          <div className="h-2 w-full rounded-full bg-surface-low overflow-hidden">
-            <div
-              className="h-full rounded-full bg-coral transition-all"
-              style={{ width: `${(currentWeek / currentStudyEntry.weeks) * 100}%` }}
-            />
-          </div>
+          {currentWeek > 0 && (
+            <div className="h-2 w-full rounded-full bg-surface-low overflow-hidden">
+              <div
+                className="h-full rounded-full bg-coral transition-all"
+                style={{ width: `${Math.min(100, (currentWeek / currentStudyEntry.weeks) * 100)}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
 

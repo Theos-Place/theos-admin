@@ -16,11 +16,6 @@ import type { StudyRow, ServiceRow, EventoRow, DonacionRow } from './_components
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getStudyWeek(memberId: string, totalWeeks: number): number {
-  const n = memberId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  return (n % (totalWeeks - 2)) + 2
-}
-
 const TABS = [
   { id: 'resumen', label: 'Resumen' },
   { id: 'personal', label: 'Info Personal' },
@@ -82,9 +77,7 @@ export default function MiembroDetailPage() {
     ? STUDY_CATALOG.find(s => s.code === member.current_study)
     : null
 
-  const currentWeek = currentStudyEntry && member
-    ? getStudyWeek(member.id, currentStudyEntry.weeks)
-    : 0
+  const currentWeek = member?.current_study_week ?? 0
 
   const activeService = member?.service_history.find(s => s.status === 'activo')
 

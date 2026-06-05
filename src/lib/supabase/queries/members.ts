@@ -48,6 +48,7 @@ export type DbMemberEnriched = DbMember & {
   estado_dirigente: 'activo' | 'en_descanso' | 'disponible' | null
   is_server: boolean
   current_study: string | null
+  current_study_week?: number | null
   completed_studies: string[]
   active_service: {
     position: string
@@ -304,7 +305,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       ),
       study_enrollments(
         status,
-        study_groups!study_enrollments_group_id_fkey(plan:study_plans(name))
+        study_groups!study_enrollments_group_id_fkey(current_week, plan:study_plans(name))
       )
     `)
     .eq('id', id)
@@ -389,7 +390,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   }>
   const enrollments = (memberRow.study_enrollments ?? []) as Array<{
     status: string
-    study_groups: { plan: { name: string } | null } | null
+    study_groups: { current_week: number | null; plan: { name: string } | null } | null
   }>
 
   const activeRoles = memberRoles.filter(r => r.is_active).map(r => r.role)
@@ -399,9 +400,10 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   const completedStudies = enrollments
     .filter(e => e.status === 'completed' && e.study_groups?.plan?.name)
     .map(e => e.study_groups!.plan!.name)
-  const currentStudy = enrollments
+  const currentEnrollment = enrollments
     .find(e => e.status === 'enrolled' && e.study_groups?.plan?.name)
-    ?.study_groups?.plan?.name ?? null
+  const currentStudy = currentEnrollment?.study_groups?.plan?.name ?? null
+  const currentStudyWeek = currentEnrollment?.study_groups?.current_week ?? null
   const sede = (memberRow.sede as { code: string; name: string } | null) ?? null
 
   // 4. Aplanar histórico
@@ -478,6 +480,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     estado_dirigente: estadoDirigente,
     is_server: volunteers.some(v => v.status === 'active'),
     current_study: currentStudy,
+    current_study_week: currentStudyWeek,
     completed_studies: completedStudies,
     active_service: activeVolunteer && activeVolunteer.service_positions
       ? {
