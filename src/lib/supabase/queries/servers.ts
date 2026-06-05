@@ -19,7 +19,7 @@ export type DbCommittee = {
       member_id: string
       status: 'active' | 'inactive' | 'on_leave' | 'pending'
       start_date: string | null
-      member: { first_name: string; last_name: string } | null
+      member: { first_name: string; last_name: string; email: string | null; phone: string | null; birth_date: string | null } | null
     }>
   }>
 }
@@ -75,7 +75,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
         id, title,
         volunteers(
           member_id, status, start_date,
-          member:members(first_name, last_name)
+          member:members(first_name, last_name, email, phone, birth_date)
         )
       )
     `)
@@ -251,6 +251,36 @@ export async function updateCommittee(
 ): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('areas').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+// Puestos (service_positions)
+export async function createServicePosition(input: {
+  area_id: string
+  title: string
+  description?: string | null
+  max_volunteers?: number
+}): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('service_positions')
+    .insert({ ...input, max_volunteers: input.max_volunteers ?? 1, is_active: true })
+    .select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function deleteServicePosition(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('service_positions').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Elimina un área o comité (fila de `areas`). El caller debe verificar antes que
+ *  no tenga servidores activos. */
+export async function deleteArea(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('areas').delete().eq('id', id)
   if (error) throw error
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid } from 'lucide-react'
+import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
@@ -213,11 +213,178 @@ function DeactivateConfirm({
   )
 }
 
+// ─── Delete: warning si hay activos, o confirmación con palabra "eliminar" ──────
+
+function DeleteDialog({
+  kind, name, activeCount, onConfirm, onCancel,
+}: {
+  kind: 'area' | 'committee'
+  name: string
+  activeCount: number
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const [text, setText] = useState('')
+  const label = kind === 'area' ? 'área' : 'comité'
+  const blocked = activeCount > 0
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: blocked ? 'rgba(233,185,73,0.15)' : 'rgba(239,85,84,0.12)' }}>
+            {blocked ? <AlertTriangle size={18} className="text-amber-500" /> : <Trash2 size={18} className="text-coral" />}
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-navy mb-1" style={{ fontFamily: 'var(--font-display)' }}>
+              {blocked ? `No se puede eliminar` : `Eliminar ${label}`}
+            </p>
+            {blocked ? (
+              <p className="text-[13px] text-navy-light/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+                &ldquo;{name}&rdquo; tiene <strong className="text-navy">{activeCount} persona{activeCount !== 1 ? 's' : ''} activa{activeCount !== 1 ? 's' : ''}</strong>.
+                Desvinculá o reasigná a esas personas antes de eliminar {kind === 'area' ? 'el área' : 'el comité'}.
+              </p>
+            ) : (
+              <p className="text-[13px] text-navy-light/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+                Se eliminará permanentemente {kind === 'area' ? 'el área' : 'el comité'} <strong className="text-navy">&ldquo;{name}&rdquo;</strong>
+                {kind === 'area' ? ' y todos sus comités y puestos.' : ' y sus puestos.'} Esta acción no se puede deshacer.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {!blocked && (
+          <div className="space-y-1.5">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>
+              Escribí <span className="text-coral font-semibold">eliminar</span> para confirmar
+            </label>
+            <input
+              autoFocus
+              className={inputCls}
+              style={{ fontFamily: 'var(--font-body)' }}
+              placeholder="eliminar"
+              value={text}
+              onChange={e => setText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && text.trim().toLowerCase() === 'eliminar') onConfirm() }}
+            />
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-1">
+          {!blocked && (
+            <button
+              disabled={text.trim().toLowerCase() !== 'eliminar'}
+              onClick={onConfirm}
+              className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Eliminar
+            </button>
+          )}
+          <button
+            onClick={onCancel}
+            className={`rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors ${blocked ? 'flex-1' : ''}`}
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          >
+            {blocked ? 'Entendido' : 'Cancelar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Position modal (Cambio 3) ──────────────────────────────────────────────────
+
+function PositionModal({
+  onSave, onClose,
+}: {
+  onSave: (data: { title: string; description: string; maxVolunteers: number }) => void
+  onClose: () => void
+}) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [maxVol, setMaxVol] = useState('1')
+  const valid = title.trim().length > 0
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Nuevo puesto</h2>
+          <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors"><X size={18} /></button>
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Nombre *</label>
+          <input autoFocus className={inputCls} style={{ fontFamily: 'var(--font-body)' }}
+            placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Descripción</label>
+          <textarea className={inputCls} style={{ fontFamily: 'var(--font-body)', resize: 'none' }} rows={3}
+            placeholder="Funciones del puesto..." value={description} onChange={e => setDescription(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Máximo de voluntarios</label>
+          <input type="number" min={1} className={inputCls} style={{ fontFamily: 'var(--font-body)' }}
+            value={maxVol} onChange={e => setMaxVol(e.target.value)} />
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button disabled={!valid}
+            onClick={() => onSave({ title: title.trim(), description: description.trim(), maxVolunteers: Math.max(1, Number(maxVol) || 1) })}
+            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40"
+            style={{ fontFamily: 'var(--font-body)' }}>
+            Crear puesto
+          </button>
+          <button onClick={onClose} className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DeleteSimpleConfirm({
+  title, message, onConfirm, onCancel,
+}: {
+  title: string; message: string; onConfirm: () => void; onCancel: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(239,85,84,0.12)' }}>
+            <Trash2 size={18} className="text-coral" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-navy mb-1" style={{ fontFamily: 'var(--font-display)' }}>{title}</p>
+            <p className="text-[13px] text-navy-light/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>{message}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onConfirm} className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
+            Eliminar
+          </button>
+          <button onClick={onCancel} className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ServidoresAdminPage() {
   const { adminAreas, adminCommittees } = useOrg()
-  const { committees: serverCommittees } = useServers()
+  const { committees: serverCommittees, refetch: refetchServers } = useServers()
 
   // Conteo real de servidores activos por comité (id de área-comité).
   const activeByCommittee = useMemo(() => {
@@ -227,9 +394,17 @@ export default function ServidoresAdminPage() {
     }
     return m
   }, [serverCommittees])
+  // Puestos reales por comité (desde useServers).
+  const positionsByCommittee = useMemo(() => {
+    const m: Record<string, { id: string; title: string }[]> = {}
+    for (const c of serverCommittees) m[c.id] = c.positions ?? []
+    return m
+  }, [serverCommittees])
+
   const [areas, setAreas]           = useState<Area[]>([])
   const [committees, setCommittees] = useState<Committee[]>([])
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null)
+  const [selectedCommId, setSelectedCommId] = useState<string | null>(null)
   useEffect(() => { setAreas(adminAreas); setCommittees(adminCommittees) }, [adminAreas, adminCommittees])
   useEffect(() => {
     setSelectedAreaId((prev) => prev ?? adminAreas[0]?.id ?? null)
@@ -238,19 +413,84 @@ export default function ServidoresAdminPage() {
   type AreaModal   = { open: boolean; editing: Area | null }
   type CommModal   = { open: boolean; editing: Committee | null }
   type DeactTarget = { type: 'area'; item: Area } | { type: 'committee'; item: Committee; memberCount: number } | null
+  // Eliminación (Cambio 4): warning si hay activos, o confirmación con palabra "eliminar".
+  type DeleteTarget = { kind: 'area' | 'committee'; id: string; name: string; activeCount: number } | null
 
   const [areaModal,   setAreaModal]   = useState<AreaModal>({ open: false, editing: null })
   const [commModal,   setCommModal]   = useState<CommModal>({ open: false, editing: null })
   const [deactTarget, setDeactTarget] = useState<DeactTarget>(null)
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
+  const [posModalFor, setPosModalFor] = useState<string | null>(null)   // committee id
+  const [posDeleteTarget, setPosDeleteTarget] = useState<{ id: string; title: string } | null>(null)
 
   const selectedArea   = areas.find(a => a.id === selectedAreaId)
   const areaComm       = committees.filter(c => c.area_code === selectedAreaId)
   const activeCount    = areas.filter(a => a.is_active).length
   const activeCommCount = committees.filter(c => c.is_active).length
 
+  const selectedComm    = committees.find(c => c.id === selectedCommId) ?? null
+  const selectedCommPositions = selectedCommId ? (positionsByCommittee[selectedCommId] ?? []) : []
+
   // Conteo real de miembros activos del comité.
   function getMemberCount(committee: Committee): number {
     return activeByCommittee[committee.id] ?? 0
+  }
+
+  // Personas activas de un área = suma de activos de sus comités.
+  function getAreaActiveCount(areaId: string): number {
+    return committees.filter(c => c.area_code === areaId).reduce((s, c) => s + (activeByCommittee[c.id] ?? 0), 0)
+  }
+
+  // ── Eliminación de área/comité ──────────────────────────────────────────────
+  function requestDeleteArea(area: Area) {
+    setDeleteTarget({ kind: 'area', id: area.id, name: area.name, activeCount: getAreaActiveCount(area.id) })
+  }
+  function requestDeleteCommittee(c: Committee) {
+    setDeleteTarget({ kind: 'committee', id: c.id, name: c.name, activeCount: activeByCommittee[c.id] ?? 0 })
+  }
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    const t = deleteTarget
+    setDeleteTarget(null)
+    try {
+      const res = await fetch(`/api/servers/areas/${t.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      if (t.kind === 'area') {
+        setAreas(prev => prev.filter(a => a.id !== t.id))
+        setCommittees(prev => prev.filter(c => c.area_code !== t.id))
+        if (selectedAreaId === t.id) setSelectedAreaId(null)
+      } else {
+        setCommittees(prev => prev.filter(c => c.id !== t.id))
+        if (selectedCommId === t.id) setSelectedCommId(null)
+      }
+      await refetchServers()
+    } catch { /* sin cambios si falla */ }
+  }
+
+  // ── Puestos (service_positions) ──────────────────────────────────────────────
+  async function createPosition(data: { title: string; description: string; maxVolunteers: number }) {
+    if (!posModalFor) return
+    const areaId = posModalFor
+    setPosModalFor(null)
+    try {
+      const res = await fetch('/api/servers/positions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ area_id: areaId, title: data.title, description: data.description || null, max_volunteers: data.maxVolunteers }),
+      })
+      if (!res.ok) throw new Error()
+      await refetchServers()
+    } catch { /* sin cambios si falla */ }
+  }
+  async function confirmDeletePosition() {
+    if (!posDeleteTarget) return
+    const id = posDeleteTarget.id
+    setPosDeleteTarget(null)
+    try {
+      const res = await fetch(`/api/servers/positions/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      await refetchServers()
+    } catch { /* sin cambios si falla */ }
   }
 
   // ── Area handlers ──────────────────────────────────────────────────────────
@@ -361,6 +601,26 @@ export default function ServidoresAdminPage() {
           onCancel={() => setDeactTarget(null)}
         />
       )}
+      {deleteTarget && (
+        <DeleteDialog
+          kind={deleteTarget.kind}
+          name={deleteTarget.name}
+          activeCount={deleteTarget.activeCount}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+      {posModalFor && (
+        <PositionModal onSave={createPosition} onClose={() => setPosModalFor(null)} />
+      )}
+      {posDeleteTarget && (
+        <DeleteSimpleConfirm
+          title="Eliminar puesto"
+          message={`Se eliminará el puesto "${posDeleteTarget.title}". Esta acción no se puede deshacer.`}
+          onConfirm={confirmDeletePosition}
+          onCancel={() => setPosDeleteTarget(null)}
+        />
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -377,8 +637,8 @@ export default function ServidoresAdminPage() {
         </div>
       </div>
 
-      {/* Two-panel layout */}
-      <div className="grid lg:grid-cols-[300px_1fr] gap-4">
+      {/* Paneles: áreas · comités · (puestos cuando hay comité seleccionado) */}
+      <div className={cn('grid gap-4', selectedComm ? 'lg:grid-cols-[260px_1fr_320px]' : 'lg:grid-cols-[300px_1fr]')}>
 
         {/* ── Left: areas ─────────────────────────────────────────── */}
         <div
@@ -451,6 +711,17 @@ export default function ServidoresAdminPage() {
                       title="Editar área"
                     >
                       <Edit2 size={12} />
+                    </button>
+                    {/* Delete */}
+                    <button
+                      onClick={() => requestDeleteArea(area)}
+                      className={cn(
+                        'rounded-lg p-1.5 transition-colors',
+                        isSelected ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-navy-light/40 hover:text-coral hover:bg-coral/10'
+                      )}
+                      title="Eliminar área"
+                    >
+                      <Trash2 size={12} />
                     </button>
                   </div>
 
@@ -526,11 +797,13 @@ export default function ServidoresAdminPage() {
                         return (
                           <tr
                             key={c.id}
-                            className={cn('group transition-colors hover:bg-surface-low', !c.is_active && 'opacity-50')}
+                            onClick={() => setSelectedCommId(prev => prev === c.id ? null : c.id)}
+                            className={cn('group transition-colors cursor-pointer', !c.is_active && 'opacity-50',
+                              selectedCommId === c.id ? 'bg-coral/5' : 'hover:bg-surface-low')}
                             style={i < areaComm.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                           >
                             <td className="px-5 py-3">
-                              <span className="text-[13px] text-navy font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+                              <span className={cn('text-[13px] font-medium', selectedCommId === c.id ? 'text-coral' : 'text-navy')} style={{ fontFamily: 'var(--font-body)' }}>
                                 {c.name}
                               </span>
                             </td>
@@ -545,7 +818,7 @@ export default function ServidoresAdminPage() {
                                 {memberCount > 0 ? `${memberCount} miembro${memberCount !== 1 ? 's' : ''}` : '—'}
                               </span>
                             </td>
-                            <td className="px-5 py-3">
+                            <td className="px-5 py-3" onClick={e => e.stopPropagation()}>
                               <label
                                 className="toggle"
                                 title={c.is_active ? 'Desactivar comité' : 'Activar comité'}
@@ -559,15 +832,25 @@ export default function ServidoresAdminPage() {
                                 <div className="toggle-track" />
                               </label>
                             </td>
-                            <td className="px-5 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => setCommModal({ open: true, editing: c })}
-                                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-                              >
-                                <Edit2 size={11} />
-                                Editar
-                              </button>
+                            <td className="px-5 py-3 text-right" onClick={e => e.stopPropagation()}>
+                              <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => setCommModal({ open: true, editing: c })}
+                                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
+                                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                                >
+                                  <Edit2 size={11} />
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={() => requestDeleteCommittee(c)}
+                                  className="inline-flex items-center justify-center rounded-full border h-7 w-7 text-navy-light/50 hover:text-coral hover:border-coral/30 transition-colors"
+                                  style={{ borderColor: 'var(--outline-variant)' }}
+                                  title="Eliminar comité"
+                                >
+                                  <Trash2 size={11} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         )
@@ -587,6 +870,69 @@ export default function ServidoresAdminPage() {
             <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
               Seleccioná un área para ver sus comités
             </p>
+          </div>
+        )}
+
+        {/* ── Third panel: puestos del comité seleccionado (Cambio 3) ── */}
+        {selectedComm && (
+          <div
+            className="rounded-2xl overflow-hidden flex flex-col"
+            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', minHeight: 480 }}
+          >
+            <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
+                  Puestos
+                </span>
+                <p className="text-base font-bold text-navy mt-0.5 truncate" style={{ fontFamily: 'var(--font-display)' }}>
+                  {selectedComm.name}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => setPosModalFor(selectedComm.id)}
+                  className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  <Plus size={12} />
+                  Nuevo
+                </button>
+                <button onClick={() => setSelectedCommId(null)} className="text-navy-light/40 hover:text-navy p-1" title="Cerrar">
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {selectedCommPositions.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-10 text-center">
+                <LayoutGrid size={26} className="text-navy-light/20" />
+                <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                  Este comité no tiene puestos
+                </p>
+                <button onClick={() => setPosModalFor(selectedComm.id)} className="text-[12px] text-coral hover:underline" style={{ fontFamily: 'var(--font-body)' }}>
+                  Crear el primero
+                </button>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto py-1.5">
+                {selectedCommPositions.map((p, i) => (
+                  <div
+                    key={p.id}
+                    className="group flex items-center gap-2 px-5 py-2.5 hover:bg-surface-low transition-colors"
+                    style={i < selectedCommPositions.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                  >
+                    <span className="flex-1 text-[13px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>{p.title}</span>
+                    <button
+                      onClick={() => setPosDeleteTarget({ id: p.id, title: p.title })}
+                      className="rounded-lg p-1.5 text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
+                      title="Eliminar puesto"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

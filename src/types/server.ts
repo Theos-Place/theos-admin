@@ -10,6 +10,9 @@ export type CommitteeServer = {
   position_id?: string
   start_date: string
   status: ServerStatus
+  email?: string | null
+  phone?: string | null
+  birth_date?: string | null
 }
 
 export type CommitteeLeader = {

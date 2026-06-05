@@ -6,6 +6,9 @@ import type { CommitteeServer, CommitteeGoal, CommitteeData } from '@/types/serv
 import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { useSortableTable } from '@/hooks/useSortableTable'
+import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { ExportButton } from '@/components/shared/ExportButton'
+import { type FlatServer, SERVER_COLUMNS } from '@/lib/servers/columns'
 import { CommitteeHeader } from './_components/CommitteeHeader'
 import { MembersTab } from './_components/MembersTab'
 import { VacanciesTab } from './_components/VacanciesTab'
@@ -35,6 +38,21 @@ export default function CommitteeDetailPage() {
   const [tab, setTab] = useState<Tab>('miembros')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
+  const [visibleColumns, setVisibleColumns] = useState<ColumnDef<FlatServer>[]>(
+    SERVER_COLUMNS.filter(c => c.defaultVisible),
+  )
+
+  // Servidores del comité aplanados para exportar (mismas columnas que el listado general).
+  const flatServers = useMemo<FlatServer[]>(
+    () => (committee?.members ?? []).map(m => ({
+      member_id: m.member_id, name: m.name, initials: m.initials,
+      position: m.position, start_date: m.start_date, status: m.status,
+      committee: committee?.name ?? '', area: committee?.area ?? '',
+      leader_name: committee?.leader.name ?? '',
+      email: m.email ?? null, phone: m.phone ?? null, birth_date: m.birth_date ?? null,
+    })),
+    [committee],
+  )
 
   // Server row menu
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -322,6 +340,21 @@ export default function CommitteeDetailPage() {
             onChangePosition={handleChangePositionOpen}
             onDisconnect={setDisconnectTarget}
             onAddServerClick={() => setAddServerOpen(true)}
+            toolbarExtra={
+              <>
+                <ColumnSelector<FlatServer>
+                  columns={SERVER_COLUMNS}
+                  storageKey="theos_columns_servers"
+                  onChange={setVisibleColumns}
+                />
+                <ExportButton<FlatServer>
+                  data={flatServers}
+                  columns={visibleColumns}
+                  allColumns={SERVER_COLUMNS}
+                  filename={`servidores-${committee.name.replace(/\s+/g, '-').toLowerCase()}`}
+                />
+              </>
+            }
           />
         )}
 

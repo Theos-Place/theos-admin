@@ -8,50 +8,9 @@ import { useServers } from '@/hooks/useServers'
 import { useOrg } from '@/lib/org'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
+import { type FlatServer, SERVER_COLUMNS } from '@/lib/servers/columns'
 import { cn } from '@/lib/utils'
 import { Plus, Users, Briefcase, ClipboardList, AlertCircle } from 'lucide-react'
-
-type FlatServer = {
-  member_id: string
-  name: string
-  initials: string
-  position: string
-  start_date: string
-  status: 'active' | 'inactive'
-  committee: string
-  area: string
-  leader_name: string
-}
-
-function calcularAntiguedad(startDate: string): string {
-  const start = new Date(startDate)
-  const now = new Date()
-  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
-  if (months < 12) return `${months} mes${months !== 1 ? 'es' : ''}`
-  const years = Math.floor(months / 12)
-  const rem   = months % 12
-  return rem > 0 ? `${years} año${years !== 1 ? 's' : ''}, ${rem} mes${rem !== 1 ? 'es' : ''}` : `${years} año${years !== 1 ? 's' : ''}`
-}
-
-const SERVER_COLUMNS: ColumnDef<FlatServer>[] = [
-  { key: 'name',       label: 'Nombre',            defaultVisible: true, alwaysVisible: true },
-  { key: 'position',   label: 'Puesto de servicio', defaultVisible: true },
-  { key: 'committee',  label: 'Comité',             defaultVisible: true },
-  { key: 'area',       label: 'Área',               defaultVisible: true },
-  {
-    key: 'start_date', label: 'Fecha de inicio', defaultVisible: true,
-    exportValue: s => new Date(s.start_date).toLocaleDateString('es-CR'),
-  },
-  {
-    key: 'seniority', label: 'Antigüedad', defaultVisible: true,
-    exportValue: s => calcularAntiguedad(s.start_date),
-  },
-  {
-    key: 'status', label: 'Estado', defaultVisible: true,
-    exportValue: s => s.status === 'active' ? 'Activo' : 'Inactivo',
-  },
-  { key: 'leader_name', label: 'Líder del comité', defaultVisible: false },
-]
 
 function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onClick: () => void }) {
   const activeMembers = committee.members.filter(m => m.status === 'active')
@@ -171,6 +130,9 @@ export default function ServidoresPage() {
         committee: c.name,
         area: c.area,
         leader_name: c.leader.name,
+        email: m.email ?? null,
+        phone: m.phone ?? null,
+        birth_date: m.birth_date ?? null,
       }))
     )
   }, [MOCK_COMMITTEES, areaFilter])

@@ -37,6 +37,7 @@ type Props = {
   onChangePosition: (member: CommitteeServer) => void
   onDisconnect: (member: CommitteeServer) => void
   onAddServerClick: () => void
+  toolbarExtra?: React.ReactNode
 }
 
 export function MembersTab({
@@ -53,6 +54,7 @@ export function MembersTab({
   onChangePosition,
   onDisconnect,
   onAddServerClick,
+  toolbarExtra,
 }: Props) {
   return (
     <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -83,6 +85,7 @@ export function MembersTab({
             </button>
           ))}
         </div>
+        {toolbarExtra}
         <button
           className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors"
           style={{ fontFamily: 'var(--font-body)' }}
