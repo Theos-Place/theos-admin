@@ -52,27 +52,11 @@ export default function RespuestasPage() {
     return () => { alive = false }
   }, [id])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p>
-      </div>
-    )
-  }
+  const dataFields = (form?.fields ?? []).filter(f => f.type !== 'section')
 
-  if (!form) {
-    return (
-      <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Formulario no encontrado.</p>
-      </div>
-    )
-  }
+  type ChartData = { field: FormTemplate['fields'][number]; items: { label: string; count: number; total: number }[]; average: number | undefined }
 
-  const dataFields = form.fields.filter(f => f.type !== 'section')
-
-  type ChartData = { field: typeof form.fields[0]; items: { label: string; count: number; total: number }[]; average: number | undefined }
-
-  // Build summary data for chartable fields
+  // Build summary data for chartable fields (hook antes de cualquier return condicional)
   const summaryCharts = useMemo((): ChartData[] => {
     return dataFields
       .filter(f => ['scale', 'radio', 'select', 'yes_no', 'checkbox'].includes(f.type))
@@ -128,6 +112,22 @@ export default function RespuestasPage() {
       })
       .filter((c): c is ChartData => c !== null)
   }, [dataFields, responses])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p>
+      </div>
+    )
+  }
+
+  if (!form) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Formulario no encontrado.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

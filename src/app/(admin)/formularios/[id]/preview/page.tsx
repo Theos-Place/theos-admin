@@ -131,6 +131,8 @@ export default function PreviewPage() {
     return () => { alive = false }
   }, [id])
 
+  const pages = useMemo(() => splitIntoPages(form?.fields ?? []), [form?.fields])
+
   if (loadingForm) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-low)' }}>
@@ -147,7 +149,6 @@ export default function PreviewPage() {
     )
   }
 
-  const pages = useMemo(() => splitIntoPages(form.fields), [form.fields])
   const isMultiStep = pages.length > 1
   const totalPages = pages.length
   const isLastPage = currentPage === totalPages - 1

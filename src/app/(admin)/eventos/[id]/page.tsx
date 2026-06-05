@@ -103,6 +103,31 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [flyerDragOver, setFlyerDragOver] = useState(false)
   const flyerInputRef = useRef<HTMLInputElement>(null)
 
+  // Servidores derived (hooks deben ir antes de cualquier return condicional)
+  const allBookings: VolunteerBooking[] = useMemo(() => [
+    ...(event?.volunteer_bookings ?? []).map(vb => ({
+      id: vb.member_id,
+      member_id: vb.member_id,
+      member_name: vb.member_name,
+      member_initials: getInitials(vb.member_name),
+      role: vb.role,
+      status: vb.status as 'confirmed' | 'pending' | 'declined',
+      is_recurring: false,
+    })),
+    ...localBookings,
+  ], [event?.volunteer_bookings, localBookings])
+
+  const filteredMembers = useMemo(() => {
+    const q = searchQuery.toLowerCase()
+    return mockMembers.filter(m => {
+      const nameMatch = `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        (m.cedula ?? '').includes(q)
+      const committeeMatch = !filterCommittee ||
+        m.service_history.some(s => s.committee === event?.committee_id && s.status === 'activo')
+      return nameMatch && committeeMatch
+    }).slice(0, 8)
+  }, [searchQuery, filterCommittee, event?.committee_id])
+
   if (!event) {
     return (
       <div className="space-y-4">
@@ -127,20 +152,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     ? checkinCount * event.payment_amount
     : 0
 
-  // Servidores derived
-  const allBookings: VolunteerBooking[] = useMemo(() => [
-    ...event.volunteer_bookings.map(vb => ({
-      id: vb.member_id,
-      member_id: vb.member_id,
-      member_name: vb.member_name,
-      member_initials: getInitials(vb.member_name),
-      role: vb.role,
-      status: vb.status as 'confirmed' | 'pending' | 'declined',
-      is_recurring: false,
-    })),
-    ...localBookings,
-  ], [event.volunteer_bookings, localBookings])
-
   const groupedBookings = allBookings.reduce<Record<string, VolunteerBooking[]>>((acc, b) => {
     if (!acc[b.role]) acc[b.role] = []
     acc[b.role].push(b)
@@ -152,17 +163,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const declinedCount  = allBookings.filter(b => b.status === 'declined').length
 
   const selectedMember = selectedMemberId ? mockMembers.find(m => m.id === selectedMemberId) : null
-
-  const filteredMembers = useMemo(() => {
-    const q = searchQuery.toLowerCase()
-    return mockMembers.filter(m => {
-      const nameMatch = `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-        (m.cedula ?? '').includes(q)
-      const committeeMatch = !filterCommittee ||
-        m.service_history.some(s => s.committee === event.committee_id && s.status === 'activo')
-      return nameMatch && committeeMatch
-    }).slice(0, 8)
-  }, [searchQuery, filterCommittee, event.committee_id])
 
   function resetModal() {
     setModalStep(1)
