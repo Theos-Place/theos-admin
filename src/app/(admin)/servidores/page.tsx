@@ -248,9 +248,6 @@ export default function ServidoresPage() {
           </button>
         ))}
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-            {flatServers.length} servidores
-          </span>
           <ColumnSelector<FlatServer>
             columns={SERVER_COLUMNS}
             storageKey="theos_columns_servers"

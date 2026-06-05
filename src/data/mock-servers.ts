@@ -39,7 +39,7 @@ export const MOCK_COMMITTEES: CommitteeData[] = [
   },
   {
     id: 'charlas',
-    name: 'Comité de Charlas',
+    name: 'Charlistas',
     area: 'Área Espiritual',
     area_code: 'espiritual',
     leader: { member_id: 'm020', name: 'Gabriel Picado', initials: 'GP' },
@@ -160,21 +160,6 @@ export const MOCK_COMMITTEES: CommitteeData[] = [
       { member_id: 'm100', name: 'Diego Sequeira',  initials: 'DS', position: 'Coordinador de Base de Datos',          start_date: '2020-06-01', status: 'active' },
       { member_id: 'm101', name: 'Luciana Peña',    initials: 'LP', position: 'Coordinador de Página Web',             start_date: '2021-09-15', status: 'active' },
       { member_id: 'm102', name: 'Steven Mora',     initials: 'SM', position: 'Colaborador de Actualización de Perfiles', start_date: '2022-11-01', status: 'active' },
-    ],
-  },
-  // ── Área Staff ──
-  {
-    id: 'lideres',
-    name: 'Comité de Líderes',
-    area: 'Área Staff',
-    area_code: 'staff',
-    leader: { member_id: 'm090', name: 'Fernando Zeledón', initials: 'FZ' },
-    ideal_capacity: 8,
-    open_vacancies: 0,
-    members: [
-      { member_id: 'm090', name: 'Fernando Zeledón', initials: 'FZ', position: 'Coordinador de Evaluaciones', start_date: '2018-05-01', status: 'active' },
-      { member_id: 'm091', name: 'Gloria Ávila',     initials: 'GA', position: 'Coordinador de Dones',        start_date: '2019-11-15', status: 'active' },
-      { member_id: 'm092', name: 'Héctor Rodríguez', initials: 'HR', position: 'Coordinador de Seguimiento',  start_date: '2021-01-10', status: 'active' },
     ],
   },
   // ── Área de Finanzas ──
@@ -352,7 +337,7 @@ export const MOCK_VACANCIES: Vacancy[] = [
   {
     id: 'vac-008',
     committee_id: 'charlas',
-    committee_name: 'Comité de Charlas',
+    committee_name: 'Charlistas',
     area: 'Área Espiritual',
     title: 'Orador de apoyo para charlas dominicales',
     position: 'Orador de Apoyo',
@@ -461,7 +446,7 @@ export const MOCK_APPLICATIONS: Application[] = [
     status: 'pending',
     notes: '',
     service_history: [
-      { committee: 'Comité de Charlas', position: 'Colaborador de Actividades', period: '2022 – 2024' },
+      { committee: 'Charlistas', position: 'Colaborador de Actividades', period: '2022 – 2024' },
     ],
   },
   {

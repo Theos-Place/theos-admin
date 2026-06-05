@@ -5,7 +5,7 @@ export const AREAS = [
     committees: [
       'Comité de Anfitriones',
       'Comité de Bautizos',
-      'Comité de Charlas',
+      'Charlistas',
       'Comité de Hombres',
       'Comité de Matrimonios',
       'Comité de Mujeres',
@@ -59,7 +59,6 @@ export const AREAS = [
     code: 'staff',
     name: 'Área Staff',
     committees: [
-      'Comité de Líderes',
       'Comité de Planificación',
       'Comité de Servidores',
     ],
