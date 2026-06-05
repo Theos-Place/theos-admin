@@ -319,7 +319,7 @@ export default function CommitteeDetailPage() {
               )}
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Vacantes (${committeeVacancies.length})` : 'Metas'}
+              {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Puestos de Servicio (${committeeVacancies.length})` : 'Metas'}
             </button>
           ))}
         </div>

@@ -161,7 +161,7 @@ export default function ServidoresPage() {
           style={{ fontFamily: 'var(--font-body)' }}
         >
           <Plus size={14} />
-          Nueva vacante
+          Nuevo puesto de servicio
         </Link>
       </div>
 

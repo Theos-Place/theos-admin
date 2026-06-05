@@ -75,7 +75,7 @@ const MIEMBROS_SUB = [
 
 const SERVIDORES_SUB = [
   { href: '/servidores',                label: 'Por comités',          icon: LayoutGrid   },
-  { href: '/servidores/vacantes',       label: 'Vacantes',             icon: Bookmark     },
+  { href: '/servidores/vacantes',       label: 'Puestos de Servicio',  icon: Bookmark     },
   { href: '/servidores/aplicaciones',   label: 'Aplicaciones',         icon: ClipboardList},
 ]
 

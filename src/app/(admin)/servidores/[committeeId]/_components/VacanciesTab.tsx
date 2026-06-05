@@ -36,7 +36,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
           style={{ fontFamily: 'var(--font-body)' }}
         >
           <Plus size={13} />
-          Solicitar nueva vacante
+          Solicitar nuevo puesto
         </Link>
       </div>
 
@@ -46,7 +46,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
           style={{ background: 'var(--surface-low)' }}
         >
           <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-            No hay vacantes para este comité.
+            No hay puestos de servicio para este comité.
           </p>
         </div>
       )}

@@ -63,7 +63,7 @@ export default function VacanteDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-60">
         <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-          Vacante no encontrada.
+          Puesto no encontrado.
         </p>
       </div>
     )
@@ -126,11 +126,11 @@ export default function VacanteDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'closed' }),
       })
-      if (!res.ok) throw new Error('No se pudo cerrar la vacante')
+      if (!res.ok) throw new Error('No se pudo cerrar el puesto')
       await refetch()
     } catch (e) {
       setVacancyClosed(false)
-      showToast(e instanceof Error ? e.message : 'Error al cerrar la vacante')
+      showToast(e instanceof Error ? e.message : 'Error al cerrar el puesto')
     }
   }
 
@@ -150,7 +150,7 @@ export default function VacanteDetailPage() {
       {/* Header */}
       <div className="ph">
         <button className="btn btn-ghost btn-sm" onClick={() => window.history.back()} style={{ marginBottom: 10 }}>
-          ← Volver a vacantes
+          ← Volver a puestos de servicio
         </button>
         <div className="ph-row">
           <div>
@@ -174,7 +174,7 @@ export default function VacanteDetailPage() {
             <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/vacantes/${id}/editar`}>Editar publicación</button>
             {!vacancyClosed && vacancy.status !== 'closed' && (
               <button className="btn btn-ghost btn-sm" style={{ color: 'var(--brand-coral)', borderColor: 'rgba(239,85,84,0.3)' }} onClick={() => setCloseVacancyOpen(true)}>
-                Cerrar vacante
+                Cerrar puesto
               </button>
             )}
           </div>
@@ -508,12 +508,12 @@ export default function VacanteDetailPage() {
 
       </div>{/* end .card */}
 
-      {/* ── Modal: Cerrar vacante ── */}
+      {/* ── Modal: Cerrar puesto ── */}
       {closeVacancyOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
             <div className="flex items-start justify-between">
-              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Cerrar vacante</p>
+              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Cerrar puesto</p>
               <button onClick={() => setCloseVacancyOpen(false)} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
             </div>
             <p className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
@@ -525,14 +525,14 @@ export default function VacanteDetailPage() {
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none resize-none"
                 style={{ fontFamily: 'var(--font-body)' }}
                 rows={2}
-                placeholder="¿Por qué se cierra esta vacante?"
+                placeholder="¿Por qué se cierra este puesto?"
                 value={closeReason}
                 onChange={e => setCloseReason(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
               <button onClick={() => setCloseVacancyOpen(false)} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
-              <button onClick={handleCloseVacancy} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Cerrar vacante</button>
+              <button onClick={handleCloseVacancy} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Cerrar puesto</button>
             </div>
           </div>
         </div>
@@ -554,7 +554,7 @@ export default function VacanteDetailPage() {
               </button>
             </div>
             <p className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-              {rejectModal.applicant_name} será marcado como no seleccionado para esta vacante.
+              {rejectModal.applicant_name} será marcado como no seleccionado para este puesto.
             </p>
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>

@@ -65,7 +65,7 @@ export default function EditarVacantePage() {
     return (
       <div className="flex items-center justify-center min-h-60">
         <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-          Cargando vacante...
+          Cargando puesto...
         </p>
       </div>
     )
@@ -75,7 +75,7 @@ export default function EditarVacantePage() {
     return (
       <div className="flex items-center justify-center min-h-60">
         <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-          Vacante no encontrada.
+          Puesto no encontrado.
         </p>
       </div>
     )
@@ -96,7 +96,7 @@ export default function EditarVacantePage() {
             className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Ver vacante
+            Ver puesto
           </button>
         </div>
       </div>
@@ -116,11 +116,11 @@ export default function EditarVacantePage() {
       {/* Header */}
       <div className="ph">
         <button className="btn btn-ghost btn-sm" onClick={() => router.push(`/servidores/vacantes/${id}`)} style={{ marginBottom: 10 }}>
-          ← Volver a la vacante
+          ← Volver al puesto
         </button>
         <div className="ph-row">
           <div>
-            <div className="ptitle">Editar vacante</div>
+            <div className="ptitle">Editar puesto</div>
             <div className="psub">{vacancy.committee_name}</div>
           </div>
           <div className="ph-actions">
@@ -144,7 +144,7 @@ export default function EditarVacantePage() {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Título de la vacante</label>
+              <label className="form-label">Título del puesto</label>
               <input className={inputCls} value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej. Colaborador de Alabanza" />
             </div>
             <div className="form-group">

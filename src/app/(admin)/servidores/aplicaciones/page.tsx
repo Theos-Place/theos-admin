@@ -75,7 +75,7 @@ export default function AplicacionesPage() {
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
             style={{ fontFamily: 'var(--font-body)' }}
-            placeholder="Buscar por nombre o vacante..."
+            placeholder="Buscar por nombre o puesto..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -126,7 +126,7 @@ export default function AplicacionesPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {['Aplicante', 'Vacante / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
+                {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50"
@@ -188,7 +188,7 @@ export default function AplicacionesPage() {
                       className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
                       style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
                     >
-                      Ver vacante
+                      Ver puesto
                       <ChevronRight size={11} />
                     </Link>
                   </td>

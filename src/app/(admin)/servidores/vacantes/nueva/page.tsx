@@ -90,7 +90,7 @@ function NuevaVacanteContent() {
             <Check size={24} className="text-teal-deep" />
           </div>
           <p className="text-xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
-            Vacante guardada
+            Puesto guardado
           </p>
           <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
             Las publicadas quedan disponibles para que los miembros apliquen; los borradores los podés editar luego.
@@ -122,7 +122,7 @@ function NuevaVacanteContent() {
               style={{ fontFamily: 'var(--font-body)' }}
             >
               <ChevronLeft size={16} />
-              Vacantes
+              Puestos de Servicio
             </Link>
             <span className="text-navy-light/20">|</span>
             <span className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
@@ -178,7 +178,7 @@ function NuevaVacanteContent() {
               style={{ fontFamily: 'var(--font-body)' }}
               rows={4}
               maxLength={500}
-              placeholder="Describe la vacante de forma atractiva..."
+              placeholder="Describe el puesto de forma atractiva..."
               value={description}
               onChange={e => setDesc(e.target.value)}
             />
@@ -283,7 +283,7 @@ function NuevaVacanteContent() {
             )}
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            {saving ? 'Guardando...' : 'Publicar vacante'}
+            {saving ? 'Guardando...' : 'Publicar puesto'}
           </button>
         </div>
 
@@ -311,11 +311,11 @@ function NuevaVacanteContent() {
             style={{ fontFamily: 'var(--font-body)' }}
           >
             <ChevronLeft size={16} />
-            Vacantes
+            Puestos de Servicio
           </Link>
           <span className="text-navy-light/20">|</span>
           <span className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
-            Solicitar vacante
+            Solicitar puesto
           </span>
         </div>
         <button
@@ -394,7 +394,7 @@ function NuevaVacanteContent() {
             className={cn(inputCls, 'resize-none')}
             style={{ fontFamily: 'var(--font-body)' }}
             rows={4}
-            placeholder="¿Por qué se necesita esta vacante? ¿Qué impacto tendrá en el comité?"
+            placeholder="¿Por qué se necesita este puesto? ¿Qué impacto tendrá en el comité?"
             value={justification}
             onChange={e => setJustification(e.target.value)}
           />

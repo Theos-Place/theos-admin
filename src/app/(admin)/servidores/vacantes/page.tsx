@@ -70,7 +70,7 @@ export default function VacantesPage() {
             className="text-2xl text-white"
             style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
           >
-            Vacantes
+            Puestos de Servicio
           </h1>
           <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
             {published} publicadas · {draft} en borrador · {filled} ocupadas
@@ -82,7 +82,7 @@ export default function VacantesPage() {
           style={{ fontFamily: 'var(--font-body)' }}
         >
           <Plus size={14} />
-          Nueva vacante
+          Nuevo puesto de servicio
         </Link>
       </div>
 
