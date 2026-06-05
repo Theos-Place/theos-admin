@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { type VacancyStatus } from '@/data/mock-servers'
+import { type VacancyStatus } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { useOrg } from '@/lib/org'
 import { cn } from '@/lib/utils'
@@ -43,7 +43,7 @@ export default function VacantesPage() {
       const matchArea   = areaFilter === 'all' || v.area === areaFilter
       return matchStatus && matchArea
     })
-  }, [statusFilter, areaFilter])
+  }, [MOCK_VACANCIES, statusFilter, areaFilter])
 
   const appCountByVacancy = useMemo(() => {
     const map: Record<string, number> = {}
@@ -51,7 +51,7 @@ export default function VacantesPage() {
       map[a.vacancy_id] = (map[a.vacancy_id] ?? 0) + 1
     })
     return map
-  }, [])
+  }, [MOCK_APPLICATIONS])
 
   const areaOptions = [
     { key: 'all', label: 'Todas las áreas' },
