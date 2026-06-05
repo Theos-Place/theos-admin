@@ -241,6 +241,31 @@ export async function getUserAccess(): Promise<UserAccessRow[]> {
   return Array.from(byMember.values()).filter(u => u.roles.length > 0)
 }
 
+/** Asigna (o reactiva) un rol a un miembro en member_roles. */
+export async function assignMemberRole(memberId: string, role: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { data: existing } = await supabase
+    .from('member_roles').select('id').eq('member_id', memberId).eq('role', role).maybeSingle()
+  if (existing) {
+    const { error } = await supabase.from('member_roles')
+      .update({ is_active: true, revoked_at: null }).eq('id', (existing as { id: string }).id)
+    if (error) throw error
+  } else {
+    const { error } = await supabase.from('member_roles')
+      .insert({ member_id: memberId, role, is_active: true })
+    if (error) throw error
+  }
+}
+
+/** Revoca un rol (is_active=false, conserva el historial). */
+export async function revokeMemberRole(memberId: string, role: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('member_roles')
+    .update({ is_active: false, revoked_at: new Date().toISOString() })
+    .eq('member_id', memberId).eq('role', role)
+  if (error) throw error
+}
+
 // ── Queries ────────────────────────────────────────────────
 
 /** Lista paginada de miembros con datos relacionados ligeros para el list view.

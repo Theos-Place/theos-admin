@@ -65,21 +65,35 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
     )
   }
 
-  function handleRevoke(roleId: RoleId) {
+  async function handleRevoke(roleId: RoleId) {
     setUser(prev => prev ? { ...prev, roles: prev.roles.filter(r => r !== roleId) } : prev)
     setHistory(prev => [
       { date: new Date().toISOString().split('T')[0], actor: 'Admin Theos', action: 'revoked', role: roleId },
       ...prev,
     ])
+    try {
+      await fetch(`/api/accesos/${memberId}/roles`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: roleId }),
+      })
+    } catch { /* revertir queda a discreción; el optimista ya se aplicó */ }
   }
 
-  function handleAddRole(roleId: RoleId) {
+  async function handleAddRole(roleId: RoleId) {
     setUser(prev => prev ? { ...prev, roles: [...prev.roles, roleId], is_active: true } : prev)
     setHistory(prev => [
       { date: new Date().toISOString().split('T')[0], actor: 'Admin Theos', action: 'assigned', role: roleId },
       ...prev,
     ])
     setConfirmAdd(null)
+    try {
+      await fetch(`/api/accesos/${memberId}/roles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: roleId }),
+      })
+    } catch { /* el optimista ya se aplicó */ }
   }
 
   // 'miembro' es implícito — se excluye de toda la UI de gestión
