@@ -44,12 +44,10 @@ const EVENTOS_SUB = [
 ]
 
 const EMPLEADOS_SUB = [
-  { href: '/empleados',         label: 'Lista de empleados', icon: Users     },
   { href: '/empleados/puestos', label: 'Puestos pagados',    icon: Tag       },
 ]
 
 const FORMULARIOS_SUB = [
-  { href: '/formularios',       label: 'Todos los formularios', icon: FileText  },
   { href: '/formularios/nuevo', label: 'Nuevo formulario',      icon: Plus      },
 ]
 
@@ -63,7 +61,6 @@ const FINANZAS_SUB = [
 ]
 
 const COMUNICACIONES_SUB = [
-  { href: '/comunicaciones',              label: 'Panel principal',    icon: PanelIcon   },
   { href: '/comunicaciones/nueva',        label: 'Nueva comunicación', icon: Send        },
   { href: '/comunicaciones/plantillas',   label: 'Plantillas',         icon: FileText    },
   { href: '/comunicaciones/configuracion',label: 'Configuración',      icon: Settings    },
@@ -74,7 +71,6 @@ const MIEMBROS_SUB = [
 ]
 
 const SERVIDORES_SUB = [
-  { href: '/servidores',                label: 'Por comités',          icon: LayoutGrid   },
   { href: '/servidores/vacantes',       label: 'Puestos de Servicio',  icon: Bookmark     },
   { href: '/servidores/aplicaciones',   label: 'Aplicaciones',         icon: ClipboardList},
 ]
