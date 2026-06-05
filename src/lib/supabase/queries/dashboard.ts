@@ -24,7 +24,7 @@ export type DashboardStats = {
   members: { total: number; active: number; new_this_month: number; without_cedula: number; duplicates_suggested: number }
   studies: { active_groups: number; students: number; open_registration: number; waitlist_n1: number; closing_soon: number; without_leader: number }
   events: { upcoming_this_month: number; this_week: number; pending_payments: number; near_capacity: number }
-  servers: { active: number; committees: number; open_vacancies: number; pending_applications: number }
+  servers: { active: number; positions: number; committees: number; open_vacancies: number; pending_applications: number }
   finance: { donors_active: number; pending_refunds: number; income_this_month: number }
   communications: { sent_this_month: number; total_recipients: number; failed: number }
 }
@@ -84,6 +84,12 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
   const failedComms = await count(supabase, 'message_logs', (q) =>
     q.in('status', ['failed', 'bounced']).gte('created_at', monthStart))
 
+  // Personas únicas sirviendo (member_id distintos entre volunteers activos);
+  // serversActive cuenta filas = puestos ocupados (una persona puede tener varios).
+  const { data: volRows } = await supabase
+    .from('volunteers').select('member_id').eq('status', 'active')
+  const serversUnique = new Set((volRows ?? []).map(r => (r as { member_id: string }).member_id)).size
+
   return {
     members: {
       total: membersTotal, active: membersActive, new_this_month: membersNew,
@@ -98,7 +104,8 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
       pending_payments: pendingPayments, near_capacity: 0, // heurística, pendiente
     },
     servers: {
-      active: serversActive, committees, open_vacancies: openVacancies, pending_applications: pendingApps,
+      active: serversUnique, positions: serversActive, committees,
+      open_vacancies: openVacancies, pending_applications: pendingApps,
     },
     finance: { donors_active: donorsActive, pending_refunds: pendingRefunds, income_this_month: incomeThisMonth },
     communications: { sent_this_month: sentThisMonth, total_recipients: totalRecipients, failed: failedComms },

@@ -21,7 +21,7 @@ const EMPTY_STATS = {
   members: { total: 0, active: 0, new_this_month: 0, without_cedula: 0, duplicates_suggested: 0 },
   studies: { active_groups: 0, students: 0, open_registration: 0, waitlist_n1: 0, closing_soon: 0, without_leader: 0 },
   events: { upcoming_this_month: 0, this_week: 0, pending_payments: 0, near_capacity: 0 },
-  servers: { active: 0, committees: 0, open_vacancies: 0, pending_applications: 0 },
+  servers: { active: 0, positions: 0, committees: 0, open_vacancies: 0, pending_applications: 0 },
   finance: { donors_active: 0, pending_refunds: 0, income_this_month: 0 },
   communications: { sent_this_month: 0, total_recipients: 0, failed: 0 },
 }
@@ -106,10 +106,10 @@ function isSameDay(a: Date, b: Date) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function StatCard({
-  icon: Icon, value, label, delta, color, href,
+  icon: Icon, value, label, delta, sub, color, href,
 }: {
   icon: React.ElementType; value: string | number; label: string
-  delta?: string; color: string; href: string
+  delta?: string; sub?: string; color: string; href: string
 }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -126,6 +126,9 @@ function StatCard({
         {typeof value === 'number' ? value.toLocaleString('es-CR') : value}
       </div>
       <div className="text-sm text-[#161440]/60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>{label}</div>
+      {sub && (
+        <div className="text-[12px] text-[#161440]/45" style={{ fontFamily: 'var(--font-body)' }}>{sub}</div>
+      )}
       {delta && (
         <div className="flex items-center gap-1 text-[12px] text-[#3DB97A]" style={{ fontFamily: 'var(--font-body)' }}>
           <TrendingUp size={12} />
@@ -389,7 +392,7 @@ export default function DashboardPage() {
           <StatCard icon={Users}     value={DASHBOARD_STATS.members.total}  label="Miembros"       delta={`+${DASHBOARD_STATS.members.new_this_month}/mes`} color="#161440" href="/miembros" />
           <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_groups} label="Grupos activos" color="#519DA2" href="/estudios/grupos" />
           <StatCard icon={TrendingUp} value={DASHBOARD_STATS.finance.donors_active} label="Donadores activos" color="#3DB97A" href="/finanzas/donaciones" />
-          <StatCard icon={UsersRound} value={DASHBOARD_STATS.servers.active} label="Servidores activos" color="#EF5554" href="/servidores" />
+          <StatCard icon={UsersRound} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#EF5554" href="/servidores" />
         </div>
       )}
 
