@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { CreditCard, Eye, EyeOff, Search, Check, X } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -8,7 +8,7 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
-import { type Payment, type PaymentMethod, type PaymentStatus } from '@/data/mock-finance'
+import { type Payment, type PaymentMethod, type PaymentStatus } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
 
 function formatDate(d: string | null) {
@@ -17,13 +17,14 @@ function formatDate(d: string | null) {
 }
 
 export default function PagosPage() {
-  const { payments: MOCK_PAYMENTS } = useFinance()
+  const { payments: allPayments, refetch } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   const [entityFilter, setEntityFilter] = useState<'all' | 'event' | 'study_group'>('all')
   const [methodFilter, setMethodFilter] = useState<'all' | PaymentMethod>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | PaymentStatus>('all')
   const [search, setSearch] = useState('')
-  const [payments, setPayments] = useState(MOCK_PAYMENTS)
+  const [payments, setPayments] = useState<Payment[]>([])
+  useEffect(() => { setPayments(allPayments) }, [allPayments])
   const [refundTarget, setRefundTarget] = useState<Payment | null>(null)
   const [sinpeTarget, setSinpeTarget] = useState<Payment | null>(null)
   const [sinpeConf, setSinpeConf] = useState('')
@@ -51,28 +52,53 @@ export default function PagosPage() {
     })
   }, [payments, search, entityFilter, methodFilter, statusFilter])
 
-  function handleRefundConfirm(data: { type: 'full' | 'partial'; amount: number; reason: string; reasonDetail: string }) {
+  async function handleRefundConfirm(data: { type: 'full' | 'partial'; amount: number; reason: string; reasonDetail: string }) {
     if (!refundTarget) return
-    setPayments(prev => prev.map(p =>
-      p.id === refundTarget.id
-        ? { ...p, status: data.type === 'full' ? 'refunded' : 'partial_refund' }
-        : p
-    ))
+    const target = refundTarget
     setRefundTarget(null)
-    showToast(`Solicitud de devolución creada para ${refundTarget.member_name}`)
+    try {
+      const res = await fetch('/api/finance/refunds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payment_id: target.id,
+          member_id: target.member_id || null,
+          amount: data.amount,
+          method: target.method,
+          reason: [data.reason, data.reasonDetail].filter(Boolean).join(' — ') || null,
+          sinpe_pending: target.method === 'sinpe',
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+      showToast(`Solicitud de devolución creada para ${target.member_name}`)
+    } catch {
+      showToast('Error al crear la devolución')
+    }
   }
 
-  function handleConfirmSinpe() {
+  async function handleConfirmSinpe() {
     if (!sinpeTarget || !sinpeConf) return
-    setPayments(prev => prev.map(p =>
-      p.id === sinpeTarget.id
-        ? { ...p, status: 'paid', sinpe_confirmation: sinpeConf, paid_at: sinpeDate || new Date().toISOString() }
-        : p
-    ))
+    const target = sinpeTarget
     setSinpeTarget(null)
     setSinpeConf('')
     setSinpeDate('')
-    showToast(`Pago SINPE confirmado para ${sinpeTarget.member_name}`)
+    try {
+      const res = await fetch(`/api/finance/payments/${target.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'paid',
+          sinpe_confirmation: sinpeConf,
+          paid_at: sinpeDate || new Date().toISOString(),
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+      showToast(`Pago SINPE confirmado para ${target.member_name}`)
+    } catch {
+      showToast('Error al confirmar el pago')
+    }
   }
 
   return (

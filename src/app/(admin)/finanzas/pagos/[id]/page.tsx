@@ -8,7 +8,7 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
-import { type Payment } from '@/data/mock-finance'
+import { type Payment } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
 
 function formatDate(d: string | null) {
@@ -22,7 +22,7 @@ function formatDateShort(d: string | null) {
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { payments } = useFinance()
+  const { payments, refetch } = useFinance()
   const [payment, setPayment] = useState<Payment | null>(null)
   useEffect(() => { setPayment(payments.find(p => p.id === id) ?? null) }, [payments, id])
   const [showRefund, setShowRefund] = useState(false)
@@ -46,13 +46,28 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
     )
   }
 
-  function handleRefund(data: { type: 'full' | 'partial'; amount: number; reason: string }) {
-    setPayment(prev => prev
-      ? { ...prev, status: data.type === 'full' ? 'refunded' : 'partial_refund' }
-      : prev
-    )
+  async function handleRefund(data: { type: 'full' | 'partial'; amount: number; reason: string }) {
+    if (!payment) return
     setShowRefund(false)
-    showToast('Solicitud de devolución creada')
+    try {
+      const res = await fetch('/api/finance/refunds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payment_id: payment.id,
+          member_id: payment.member_id || null,
+          amount: data.amount,
+          method: payment.method,
+          reason: data.reason || null,
+          sinpe_pending: payment.method === 'sinpe',
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+      showToast('Solicitud de devolución creada')
+    } catch {
+      showToast('Error al crear la devolución')
+    }
   }
 
   const isRefundable = payment.status === 'paid'

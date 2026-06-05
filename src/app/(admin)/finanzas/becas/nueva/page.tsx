@@ -1,53 +1,67 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Search, Check, X } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
-import { mockMembers } from '@/data/mock-members'
+import { useEvents } from '@/hooks/useEvents'
+import { useStudies } from '@/hooks/useStudies'
 import { TOAST_MS, REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
 
-const EVENTS = [
-  { id: 'evt-camp-jun25', name: 'Campamento Junio 2025', amount: 45000 },
-  { id: 'evt-retiro-lid', name: 'Retiro de Liderazgo', amount: 25000 },
-  { id: 'evt-taller-fin', name: 'Taller de Finanzas', amount: 15000 },
-  { id: 'evt-adoracion',  name: 'Noche de Adoración', amount: 8000 },
-  { id: 'evt-camp-ver26', name: 'Campamento Verano 2026', amount: 55000 },
-]
-
-const GROUPS = [
-  { id: 'grp-alpha',    name: 'Grupo Alpha',    amount: 20000 },
-  { id: 'grp-omega',    name: 'Grupo Omega',     amount: 15000 },
-  { id: 'grp-genesis',  name: 'Grupo Génesis',   amount: 30000 },
-  { id: 'grp-esperanza',name: 'Grupo Esperanza', amount: 20000 },
-]
+type MemberLite = { id: string; first_name: string; last_name: string; cedula: string | null }
+type EntityOption = { id: string; name: string; amount: number }
 
 export default function NuevaBecaPage() {
   const router = useRouter()
+  const { events } = useEvents()
+  const { groups, studyTypes } = useStudies()
 
   const [memberQuery, setMemberQuery] = useState('')
-  const [selectedMember, setSelectedMember] = useState<typeof mockMembers[0] | null>(null)
+  const [memberResults, setMemberResults] = useState<MemberLite[]>([])
+  const [selectedMember, setSelectedMember] = useState<MemberLite | null>(null)
   const [entityType, setEntityType] = useState<'event' | 'study_group'>('event')
   const [entityQuery, setEntityQuery] = useState('')
-  const [selectedEntity, setSelectedEntity] = useState<{ id: string; name: string; amount: number } | null>(null)
+  const [selectedEntity, setSelectedEntity] = useState<EntityOption | null>(null)
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
   const [percentage, setPercentage] = useState(50)
   const [fixedAmount, setFixedAmount] = useState('')
   const [notes, setNotes] = useState('')
   const [toast, setToast] = useState('')
+  const [saving, setSaving] = useState(false)
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(''), TOAST_MS)
   }
 
-  const memberResults = useMemo(() => {
-    if (!memberQuery.trim() || selectedMember) return []
-    const q = memberQuery.toLowerCase()
-    return mockMembers.filter(m =>
-      `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-      (m.cedula ?? '').includes(q)
-    ).slice(0, 6)
+  // Eventos con pago y grupos de estudio (costo del plan) como opciones reales.
+  const EVENTS: EntityOption[] = useMemo(
+    () => events.filter(e => e.requires_payment).map(e => ({ id: e.id, name: e.name, amount: e.payment_amount ?? 0 })),
+    [events],
+  )
+  const GROUPS: EntityOption[] = useMemo(
+    () => groups.map(g => {
+      const plan = studyTypes.find(t => t.code === g.study_type_id)
+      const label = [plan?.name ?? g.study_type_id, g.zone].filter(Boolean).join(' — ')
+      return { id: g.id, name: label, amount: plan?.cost ?? 0 }
+    }),
+    [groups, studyTypes],
+  )
+
+  // Búsqueda de miembros contra la BD.
+  useEffect(() => {
+    const q = memberQuery.trim()
+    if (!q || selectedMember) { setMemberResults([]); return }
+    const ctrl = new AbortController()
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`, { signal: ctrl.signal })
+        if (!res.ok) return
+        const { members } = await res.json()
+        setMemberResults(members ?? [])
+      } catch { /* abortado */ }
+    }, 250)
+    return () => { clearTimeout(t); ctrl.abort() }
   }, [memberQuery, selectedMember])
 
   const entityList = entityType === 'event' ? EVENTS : GROUPS
@@ -65,10 +79,32 @@ export default function NuevaBecaPage() {
   const effectivePercentage = originalAmount > 0 ? Math.round((discountAmount / originalAmount) * 100) : 0
   const isFullScholarship = discountType === 'percentage' ? percentage === 100 : discountAmount >= originalAmount
 
-  function handleCreate() {
-    if (!selectedMember || !selectedEntity) return
-    showToast('Beca creada exitosamente')
-    setTimeout(() => router.push('/finanzas/becas'), REDIRECT_AFTER_SAVE_MS)
+  async function handleCreate() {
+    if (!selectedMember || !selectedEntity || saving) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/finance/scholarships', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          member_id: selectedMember.id,
+          entity_type: entityType,
+          event_id: entityType === 'event' ? selectedEntity.id : null,
+          study_group_id: entityType === 'study_group' ? selectedEntity.id : null,
+          discount_type: discountType,
+          discount_value: discountType === 'percentage' ? percentage : discountAmount,
+          original_amount: originalAmount,
+          final_amount: finalAmount,
+          notes: notes.trim() || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      showToast('Beca creada exitosamente')
+      setTimeout(() => router.push('/finanzas/becas'), REDIRECT_AFTER_SAVE_MS)
+    } catch {
+      setSaving(false)
+      showToast('Error al crear la beca')
+    }
   }
 
   return (
@@ -330,11 +366,11 @@ export default function NuevaBecaPage() {
           {/* Submit */}
           <button
             onClick={handleCreate}
-            disabled={!selectedMember || !selectedEntity}
+            disabled={!selectedMember || !selectedEntity || saving}
             className="w-full rounded-full py-3 text-sm text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}
           >
-            Crear beca
+            {saving ? 'Creando...' : 'Crear beca'}
           </button>
         </div>
       </div>

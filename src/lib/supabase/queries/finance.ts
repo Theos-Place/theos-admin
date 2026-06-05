@@ -184,6 +184,12 @@ export async function createPayment(input: PaymentWriteInput): Promise<{ id: str
   return data as { id: string }
 }
 
+export async function updatePayment(id: string, patch: Partial<PaymentWriteInput>): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('payments').update(patch).eq('id', id)
+  if (error) throw error
+}
+
 export type ScholarshipWriteInput = {
   member_id: string
   entity_type?: 'study_group' | 'event' | null
