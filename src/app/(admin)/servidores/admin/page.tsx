@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
+import { useServers } from '@/hooks/useServers'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 const labelCls = 'text-[10px] tracking-widest uppercase text-navy-light/40'
@@ -216,6 +217,16 @@ function DeactivateConfirm({
 
 export default function ServidoresAdminPage() {
   const { adminAreas, adminCommittees } = useOrg()
+  const { committees: serverCommittees } = useServers()
+
+  // Conteo real de servidores activos por comité (id de área-comité).
+  const activeByCommittee = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const c of serverCommittees) {
+      m[c.id] = c.members.filter(mem => mem.status === 'active').length
+    }
+    return m
+  }, [serverCommittees])
   const [areas, setAreas]           = useState<Area[]>([])
   const [committees, setCommittees] = useState<Committee[]>([])
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null)
@@ -237,11 +248,9 @@ export default function ServidoresAdminPage() {
   const activeCount    = areas.filter(a => a.is_active).length
   const activeCommCount = committees.filter(c => c.is_active).length
 
-  // Simulated member count per committee (mock — committees from mock-servers have partial data)
+  // Conteo real de miembros activos del comité.
   function getMemberCount(committee: Committee): number {
-    // Deterministic mock count based on committee id to keep UI interesting
-    const seed = committee.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
-    return seed % 22
+    return activeByCommittee[committee.id] ?? 0
   }
 
   // ── Area handlers ──────────────────────────────────────────────────────────

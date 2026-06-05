@@ -55,7 +55,6 @@ const SERVER_COLUMNS: ColumnDef<FlatServer>[] = [
 
 function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onClick: () => void }) {
   const activeMembers = committee.members.filter(m => m.status === 'active')
-  const pct = Math.min(100, Math.round((activeMembers.length / committee.ideal_capacity) * 100))
   const avatars = activeMembers.slice(0, 4)
 
   return (
@@ -92,27 +91,6 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
         <p className="text-[12px] text-navy-light/60 truncate" style={{ fontFamily: 'var(--font-body)' }}>
           {committee.leader.name}
         </p>
-      </div>
-
-      {/* Capacity bar */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-            Ocupación
-          </span>
-          <span className="text-[10px] font-medium text-navy-light/60" style={{ fontFamily: 'var(--font-mono)' }}>
-            {activeMembers.length} / {committee.ideal_capacity}
-          </span>
-        </div>
-        <div className="h-1.5 w-full rounded-full bg-navy-light/10 overflow-hidden">
-          <div
-            className={cn(
-              'h-full rounded-full transition-all duration-300',
-              pct >= 90 ? 'bg-coral' : pct >= 60 ? 'bg-teal-deep' : 'bg-navy/40'
-            )}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
       </div>
 
       {/* Avatars + count */}
