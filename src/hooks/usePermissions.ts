@@ -1,13 +1,13 @@
 'use client'
 
-import { useMockAuth } from './useMockAuth'
+import { useAuth } from './useAuth'
 import { ROLES } from '@/data/mock-auth'
 
 type Action = 'view' | 'create' | 'edit' | 'delete' | 'export'
 type Scope = 'own' | 'committee' | 'all'
 
 export function usePermissions() {
-  const { user } = useMockAuth()
+  const { user } = useAuth()
 
   function can(module: string, action: Action): boolean {
     if (!user?.roles?.length) return false

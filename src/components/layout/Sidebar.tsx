@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Shield } from 'lucide-react'
-import { useMockAuth } from '@/hooks/useMockAuth'
+import { useAuth } from '@/hooks/useAuth'
 
 const EVENTOS_SUB = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
@@ -110,7 +110,7 @@ const ROLE_LABELS: Record<string, string> = {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user } = useMockAuth()
+  const { user } = useAuth()
   const userName  = user?.name ?? ''
   const userRole  = user?.role ?? ''
   const userRoles = user?.roles ?? []

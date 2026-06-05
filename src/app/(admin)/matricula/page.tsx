@@ -8,7 +8,7 @@ import {
   CreditCard, Smartphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useMockAuth } from '@/hooks/useMockAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { mockMembers } from '@/data/mock-members'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { getEligibleStudies, type EligibilityResult, type EligibleGroup } from '@/lib/enrollment-eligibility'
@@ -47,7 +47,7 @@ type ConfirmState = { group: EligibleGroup; study: EligibilityResult }
 export default function MatriculaPage() {
   const router = useRouter()
 
-  const { user } = useMockAuth()
+  const { user } = useAuth()
   const userRoles = user?.roles ?? []
   const [selectedMemberId, setSelectedMemberId] = useState<string>('')
   const [activeFilter, setActiveFilter]   = useState<FilterTab>('available')

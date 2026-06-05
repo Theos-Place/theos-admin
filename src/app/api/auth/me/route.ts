@@ -39,7 +39,10 @@ export async function GET() {
       .eq('member_id', member.id)
       .eq('is_active', true)
 
-    const roles = (roleRows ?? []).map(r => r.role as RoleId)
+    // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
+    // por defecto (solo ve su propio perfil) si no tiene otros roles activos.
+    const explicitRoles = (roleRows ?? []).map(r => r.role as RoleId)
+    const roles: RoleId[] = explicitRoles.length ? explicitRoles : ['miembro']
     const name = `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim() || (member.email ?? '')
 
     return NextResponse.json({

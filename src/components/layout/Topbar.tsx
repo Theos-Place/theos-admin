@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, Search, User, Settings, LogOut, ChevronDown } from 'lucide-react'
-import { useMockAuth } from '@/hooks/useMockAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/data/mock-auth'
 import { NotificationsBell } from './NotificationsDropdown'
 
@@ -24,7 +24,7 @@ function initials(name: string) {
 
 export function Topbar({ title, onMenuToggle }: TopbarProps) {
   const router = useRouter()
-  const { user } = useMockAuth()
+  const { user } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 

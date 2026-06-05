@@ -6,12 +6,12 @@ import { Check, Loader2 } from 'lucide-react'
 import { sedeLabel } from '@/lib/sedes'
 import { useMember } from '@/hooks/useMember'
 import { PhoneInput } from '@/components/shared/PhoneInput'
-import { useMockAuth } from '@/hooks/useMockAuth'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const { user } = useMockAuth()
+  const { user } = useAuth()
   const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('direccion')
 
   const { member, loading } = useMember(id)

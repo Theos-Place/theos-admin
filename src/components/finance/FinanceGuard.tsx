@@ -1,9 +1,9 @@
 'use client'
 import { Lock } from 'lucide-react'
-import { useMockAuth } from '@/hooks/useMockAuth'
+import { useAuth } from '@/hooks/useAuth'
 
 export function FinanceGuard({ children }: { children: React.ReactNode }) {
-  const { loaded, hasRole } = useMockAuth()
+  const { loaded, hasRole } = useAuth()
 
   if (!loaded) return null
 

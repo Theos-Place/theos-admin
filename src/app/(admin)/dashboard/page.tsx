@@ -9,7 +9,7 @@ import {
   LayoutDashboard, GraduationCap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useMockAuth } from '@/hooks/useMockAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import type { RoleId } from '@/data/mock-auth'
 import { type EventType } from '@/data/mock-events'
@@ -222,7 +222,7 @@ function ModuleCard({
 
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { user, loaded, hasRole } = useMockAuth()
+  const { user, loaded, hasRole } = useAuth()
   const { can } = usePermissions()
   const { events: MOCK_EVENTS } = useEvents()
   const { stats, activity: RECENT_ACTIVITY } = useDashboard()
