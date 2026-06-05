@@ -158,10 +158,18 @@ export default function ServidoresPage() {
     SERVER_COLUMNS.filter(c => c.defaultVisible)
   )
 
-  const totalActive = useMemo(
-    () => MOCK_COMMITTEES.reduce((s, c) => s + c.members.filter(m => m.status === 'active').length, 0),
-    [MOCK_COMMITTEES]
-  )
+  // Puestos ocupados = asignaciones activas (una persona en 2 puestos cuenta 2).
+  // Personas únicas = member_id distintos entre los activos.
+  const { puestosOcupados, personasUnicas } = useMemo(() => {
+    const ids = new Set<string>()
+    let count = 0
+    for (const c of MOCK_COMMITTEES) {
+      for (const m of c.members) {
+        if (m.status === 'active') { count++; ids.add(m.member_id) }
+      }
+    }
+    return { puestosOcupados: count, personasUnicas: ids.size }
+  }, [MOCK_COMMITTEES])
   const totalCommittees = MOCK_COMMITTEES.length
   const openVacancies   = MOCK_VACANCIES.filter(v => v.status === 'published').length
   const pendingApps     = MOCK_APPLICATIONS.filter(a => a.status === 'pending').length
@@ -204,7 +212,7 @@ export default function ServidoresPage() {
             Servidores
           </h1>
           <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
-            {totalActive} servidores activos en {totalCommittees} comités
+            {personasUnicas} personas en {puestosOcupados} puestos · {totalCommittees} comités
           </p>
         </div>
         <Link
@@ -218,10 +226,11 @@ export default function ServidoresPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Servidores activos', value: totalActive,      icon: Users,         color: 'text-navy' },
-          { label: 'Comités activos',    value: totalCommittees,   icon: Briefcase,     color: 'text-teal-deep' },
+          { label: 'Puestos ocupados',   value: puestosOcupados,   icon: Users,         color: 'text-navy' },
+          { label: 'Personas únicas',    value: personasUnicas,    icon: Users,         color: 'text-teal-deep' },
+          { label: 'Comités activos',    value: totalCommittees,   icon: Briefcase,     color: 'text-navy' },
           { label: 'Vacantes abiertas',  value: openVacancies,     icon: AlertCircle,   color: openVacancies > 0 ? 'text-coral' : 'text-navy' },
           { label: 'Apps pendientes',    value: pendingApps,       icon: ClipboardList, color: 'text-navy' },
         ].map(({ label, value, icon: Icon, color }) => (
