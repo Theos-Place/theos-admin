@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { type FormTemplate } from '@/data/mock-forms'
+import { type FormTemplate } from '@/types/forms'
 import { useForms } from '@/hooks/useForms'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
@@ -57,32 +57,47 @@ function thisMonth(dateStr: string | null) {
 }
 
 export default function FormulariosPage() {
-  const { forms } = useForms()
+  const { forms, refetch } = useForms()
   const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>([])
   useEffect(() => { setLocalTemplates(forms) }, [forms])
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
-  function handleDuplicate(formId: string) {
+  async function handleDuplicate(formId: string) {
     const template = localTemplates.find(t => t.id === formId)
     if (!template) return
-    const clone: FormTemplate = {
-      ...template,
-      id: `form-${Date.now()}`,
-      name: `${template.name} (copia)`,
-      responses_count: 0,
-      last_response_at: null,
-      created_at: new Date().toISOString(),
-      is_active: false,
-    }
-    setLocalTemplates(prev => [...prev, clone])
     setMenuOpen(null)
+    try {
+      const res = await fetch('/api/forms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${template.name} (copia)`,
+          description: template.description,
+          category: template.category,
+          entity_type: template.entity_type,
+          entity_id: template.entity_id,
+          is_active: false,
+          fields: template.fields,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
-  function handleArchive(formId: string) {
-    setLocalTemplates(prev => prev.map(t => t.id === formId ? { ...t, is_active: false } : t))
+  async function handleArchive(formId: string) {
     setMenuOpen(null)
+    try {
+      const res = await fetch(`/api/forms/${formId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: false }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
   const stats = useMemo(() => {

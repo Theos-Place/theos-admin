@@ -1,10 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MOCK_FORM_TEMPLATES, PERSONAL_DATA_FIELDS, type FormFieldNew, type LogicRule } from '@/data/mock-forms'
+import { type FormFieldNew, type LogicRule, type FormTemplate } from '@/types/forms'
+import { PERSONAL_DATA_FIELDS } from '@/data/mock-forms'
+import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { mockMembers, type Member } from '@/data/mock-members'
 import { PublicField } from '@/components/forms/PublicField'
 import { cn } from '@/lib/utils'
@@ -112,12 +114,30 @@ function getPageBreakForPage(fields: FormFieldNew[], pageIndex: number): FormFie
 
 export default function PreviewPage() {
   const { id } = useParams<{ id: string }>()
-  const form = useMemo(() => MOCK_FORM_TEMPLATES.find(f => f.id === id), [id])
+  const [form, setForm] = useState<FormTemplate | null>(null)
+  const [loadingForm, setLoadingForm] = useState(true)
 
   const [answers, setAnswers] = useState<AnswerMap>({})
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(0)
+
+  useEffect(() => {
+    let alive = true
+    fetch(`/api/forms/${id}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(db => { if (alive) { setForm(db ? toDomainFormTemplate(db) : null); setLoadingForm(false) } })
+      .catch(() => { if (alive) setLoadingForm(false) })
+    return () => { alive = false }
+  }, [id])
+
+  if (loadingForm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-low)' }}>
+        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p>
+      </div>
+    )
+  }
 
   if (!form) {
     return (
@@ -166,9 +186,16 @@ export default function PreviewPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const errs = getRequiredErrorsForPage(currentPage)
     if (errs.length > 0) { setErrors(errs); return }
+    try {
+      await fetch(`/api/forms/${id}/responses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guest_name: 'Vista previa', guest_email: 'preview@theosplace.org', answers }),
+      })
+    } catch { /* igual mostramos confirmación */ }
     setSubmitted(true)
   }
 

@@ -1,14 +1,15 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { MOCK_FORM_TEMPLATES, MOCK_RESPONSES, type FormResponse } from '@/data/mock-forms'
+import { type FormResponse, type FormTemplate } from '@/types/forms'
+import { toDomainFormTemplate, toDomainFormResponse } from '@/lib/forms/adapter'
 import { ResponseSummaryChart } from '@/components/forms/ResponseSummaryChart'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Download, X, ChevronRight } from 'lucide-react'
 
-function exportToCSV(form: ReturnType<typeof MOCK_FORM_TEMPLATES.find>, responses: FormResponse[]) {
+function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   if (!form) return
   const dataFields = form.fields.filter(f => f.type !== 'section')
   const headers = ['Miembro', 'Fecha', ...dataFields.map(f => f.label)]
@@ -32,9 +33,32 @@ function exportToCSV(form: ReturnType<typeof MOCK_FORM_TEMPLATES.find>, response
 
 export default function RespuestasPage() {
   const { id } = useParams<{ id: string }>()
-  const form = useMemo(() => MOCK_FORM_TEMPLATES.find(f => f.id === id), [id])
-  const responses = useMemo(() => MOCK_RESPONSES.filter(r => r.form_id === id), [id])
+  const [form, setForm] = useState<FormTemplate | null>(null)
+  const [responses, setResponses] = useState<FormResponse[]>([])
+  const [loading, setLoading] = useState(true)
   const [detailResponse, setDetailResponse] = useState<FormResponse | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    Promise.all([
+      fetch(`/api/forms/${id}`).then(r => (r.ok ? r.json() : null)),
+      fetch(`/api/forms/${id}/responses`).then(r => (r.ok ? r.json() : [])),
+    ]).then(([f, rs]) => {
+      if (!alive) return
+      setForm(f ? toDomainFormTemplate(f) : null)
+      setResponses(Array.isArray(rs) ? rs.map(toDomainFormResponse) : [])
+      setLoading(false)
+    }).catch(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [id])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p>
+      </div>
+    )
+  }
 
   if (!form) {
     return (

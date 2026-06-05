@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MOCK_FORM_TEMPLATES, type FormTemplate, type FormFieldNew, type FieldType } from '@/data/mock-forms'
-import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
+import { type FormTemplate, type FormFieldNew, type FieldType } from '@/types/forms'
+import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
@@ -92,17 +92,33 @@ interface FormBuilderProps {
 export function FormBuilder({ formId }: FormBuilderProps) {
   const router = useRouter()
 
-  const existing = formId ? MOCK_FORM_TEMPLATES.find(f => f.id === formId) : null
-
-  const [name, setName]               = useState(existing?.name ?? '')
-  const [description, setDescription] = useState(existing?.description ?? '')
-  const [category, setCategory]       = useState<FormTemplate['category']>(existing?.category ?? 'event_registration')
-  const [status, setStatus]           = useState<FormStatus>(existing?.is_active ? 'active' : 'draft')
-  const [fields, setFields]           = useState<FormFieldNew[]>(existing?.fields ?? [])
+  const [name, setName]               = useState('')
+  const [description, setDescription] = useState('')
+  const [category, setCategory]       = useState<FormTemplate['category']>('event_registration')
+  const [status, setStatus]           = useState<FormStatus>('draft')
+  const [fields, setFields]           = useState<FormFieldNew[]>([])
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
   const [focusLogic, setFocusLogic]   = useState(false)
   const [showLogicPanel, setShowLogicPanel] = useState(false)
   const [saved, setSaved]             = useState(false)
+  const [saving, setSaving]           = useState(false)
+
+  // Edición: carga el formulario de la BD (async).
+  useEffect(() => {
+    if (!formId) return
+    fetch(`/api/forms/${formId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(db => {
+        if (!db) return
+        const f = toDomainFormTemplate(db)
+        setName(f.name)
+        setDescription(f.description)
+        setCategory(f.category)
+        setStatus(f.is_active ? 'active' : 'draft')
+        setFields(f.fields)
+      })
+      .catch(() => {})
+  }, [formId])
 
   const activeField = fields.find(f => f.id === activeFieldId) ?? null
 
@@ -131,9 +147,32 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     if (activeFieldId === id) setActiveFieldId(null)
   }
 
-  function handleSave() {
-    setSaved(true)
-    setTimeout(() => setSaved(false), MOCK_SAVE_DELAY_MS)
+  async function handleSave(nextStatus?: FormStatus) {
+    if (saving) return
+    setSaving(true)
+    const isActive = (nextStatus ?? status) === 'active'
+    const payload = { name, description, category, is_active: isActive, fields }
+    try {
+      if (formId) {
+        const res = await fetch(`/api/forms/${formId}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        })
+        if (!res.ok) throw new Error()
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      } else {
+        const res = await fetch('/api/forms', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        })
+        if (!res.ok) throw new Error()
+        const { id } = await res.json()
+        router.push(`/formularios/${id}`)
+      }
+    } catch {
+      // queda en el editor para reintentar
+    } finally {
+      setSaving(false)
+    }
   }
 
   const backHref = formId ? `/formularios/${formId}` : '/formularios'
@@ -209,20 +248,21 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           </Link>
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => handleSave()}
+            disabled={saving}
             className={cn(
-              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] text-white transition-colors',
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] text-white transition-colors disabled:opacity-50',
               saved ? 'bg-teal-deep' : 'bg-coral hover:bg-coral-deep'
             )}
             style={{ fontFamily: 'var(--font-body)' }}
           >
             {saved ? <Check size={12} /> : <Save size={12} />}
-            {saved ? 'Guardado' : 'Guardar'}
+            {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar'}
           </button>
           {status === 'draft' && (
             <button
               type="button"
-              onClick={() => { setStatus('active'); handleSave() }}
+              onClick={() => { setStatus('active'); handleSave('active') }}
               className="flex items-center gap-1.5 rounded-full bg-navy px-3 py-1.5 text-[12px] text-white hover:bg-navy-light transition-colors"
               style={{ fontFamily: 'var(--font-body)' }}
             >
