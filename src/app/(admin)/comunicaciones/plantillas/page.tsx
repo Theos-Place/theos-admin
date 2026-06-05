@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { type MessageTemplate, type CommunicationChannel } from '@/data/mock-communications'
+import { type MessageTemplate, type CommunicationChannel } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
 import { TemplateCard } from '@/components/communications/TemplateCard'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import { Plus, FileText } from 'lucide-react'
 
@@ -29,11 +30,10 @@ const CHANNEL_FILTERS: { key: 'all' | CommunicationChannel; label: string }[] = 
 
 export default function PlantillasPage() {
   const router = useRouter()
-  const { templates: allTemplates } = useCommunications()
-  const [templates, setTemplates] = useState<MessageTemplate[]>([])
-  useEffect(() => { setTemplates(allTemplates) }, [allTemplates])
+  const { templates, refetch } = useCommunications()
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
+  const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null)
 
   const filtered = useMemo(() => {
     return templates.filter(t => {
@@ -43,19 +43,34 @@ export default function PlantillasPage() {
     })
   }, [templates, categoryFilter, channelFilter])
 
-  function handleDuplicate(t: MessageTemplate) {
-    const clone: MessageTemplate = {
-      ...t,
-      id: `tpl-${Date.now()}`,
-      name: `${t.name} (copia)`,
-      used_count: 0,
-      created_at: new Date().toISOString(),
-    }
-    setTemplates(prev => [...prev, clone])
+  async function handleDuplicate(t: MessageTemplate) {
+    try {
+      const res = await fetch('/api/communications/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${t.name} (copia)`,
+          category: t.category,
+          channel: t.channel,
+          subject: t.subject ?? null,
+          body: t.body,
+          is_active: t.is_active,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
-  function handleDelete(t: MessageTemplate) {
-    setTemplates(prev => prev.filter(p => p.id !== t.id))
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    const id = deleteTarget.id
+    setDeleteTarget(null)
+    try {
+      const res = await fetch(`/api/communications/templates/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      await refetch()
+    } catch { /* sin cambios si falla */ }
   }
 
   function handleUse(t: MessageTemplate) {
@@ -140,11 +155,19 @@ export default function PlantillasPage() {
               onUse={handleUse}
               onEdit={() => {}}
               onDuplicate={handleDuplicate}
-              onDelete={handleDelete}
+              onDelete={setDeleteTarget}
             />
           ))}
         </div>
       )}
+
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        title="Eliminar plantilla"
+        description={`Se eliminará la plantilla "${deleteTarget?.name ?? ''}". Esta acción no se puede deshacer.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

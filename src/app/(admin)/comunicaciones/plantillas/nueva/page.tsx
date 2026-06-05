@@ -2,13 +2,13 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { WhatsAppPreview } from '@/components/communications/WhatsAppPreview'
 import { EmailPreview } from '@/components/communications/EmailPreview'
 import { VariableChips, AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
-import { MOCK_LONG_SEND_DELAY_MS } from '@/lib/constants'
-import type { CommunicationChannel, MessageTemplate } from '@/data/mock-communications'
+import type { CommunicationChannel, MessageTemplate } from '@/types/communication'
 
 type Category = MessageTemplate['category']
 
@@ -34,6 +34,8 @@ function insertAtCursor(ref: React.RefObject<HTMLTextAreaElement | null>, value:
 }
 
 export default function NuevaPlantillaPage() {
+  const router = useRouter()
+  const [saving, setSaving] = useState(false)
   const [name, setName] = useState('')
   const [category, setCategory] = useState<Category>('general')
   const [channel, setChannel] = useState<CommunicationChannel>('whatsapp')
@@ -46,9 +48,28 @@ export default function NuevaPlantillaPage() {
   const waRef = useRef<HTMLTextAreaElement>(null)
   const emailRef = useRef<HTMLTextAreaElement>(null)
 
-  function handleSave() {
-    setSaved(true)
-    setTimeout(() => setSaved(false), MOCK_LONG_SEND_DELAY_MS)
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/communications/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          category,
+          channel,
+          subject: (channel === 'email' || channel === 'both') ? (subject.trim() || null) : null,
+          body: channel === 'email' ? emailBody : waBody,
+          is_active: true,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      setSaved(true)
+      setTimeout(() => router.push('/comunicaciones/plantillas'), 900)
+    } catch {
+      setSaving(false)
+    }
   }
 
   const labelCls = 'text-[11px] text-navy-light/50 mb-1 block'
@@ -203,7 +224,7 @@ export default function NuevaPlantillaPage() {
             <button
               type="button"
               onClick={handleSave}
-              disabled={!name.trim() || (!waBody && !emailBody)}
+              disabled={saving || !name.trim() || (!waBody && !emailBody)}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed',
                 saved ? 'bg-teal-deep' : 'bg-coral hover:bg-coral-deep'
