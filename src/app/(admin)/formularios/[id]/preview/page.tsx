@@ -9,8 +9,11 @@ import { PERSONAL_DATA_FIELDS } from '@/data/mock-forms'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { mockMembers, type Member } from '@/data/mock-members'
 import { PublicField } from '@/components/forms/PublicField'
+import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, User, Pencil } from 'lucide-react'
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // ─── Personal data helpers ─────────────────────────────────────────────────────
 
@@ -114,6 +117,7 @@ function getPageBreakForPage(fields: FormFieldNew[], pageIndex: number): FormFie
 
 export default function PreviewPage() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
   const [form, setForm] = useState<FormTemplate | null>(null)
   const [loadingForm, setLoadingForm] = useState(true)
 
@@ -121,6 +125,10 @@ export default function PreviewPage() {
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(0)
+  // Invitado: usuario sin sesión. Debe identificar su respuesta con un correo.
+  const isGuest = !user
+  const [guestEmail, setGuestEmail] = useState('')
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -190,13 +198,42 @@ export default function PreviewPage() {
   async function handleSubmit() {
     const errs = getRequiredErrorsForPage(currentPage)
     if (errs.length > 0) { setErrors(errs); return }
+    setSubmitError(null)
+
+    // Construir identidad del que responde.
+    // Autenticado con member → member_id. Autenticado sin member → su correo.
+    // Invitado → correo obligatorio y con formato válido.
+    let identity: { member_id?: string; guest_name?: string; guest_email?: string }
+    if (user?.member_id) {
+      identity = { member_id: user.member_id }
+    } else if (user?.email) {
+      identity = { guest_name: PREVIEW_MEMBER ? `${PREVIEW_MEMBER.first_name} ${PREVIEW_MEMBER.last_name}` : 'Usuario', guest_email: user.email }
+    } else {
+      const email = guestEmail.trim()
+      if (!EMAIL_RE.test(email)) {
+        setSubmitError('Ingresá un correo electrónico válido para identificar tu respuesta.')
+        return
+      }
+      identity = { guest_name: 'Invitado', guest_email: email }
+    }
+
     try {
-      await fetch(`/api/forms/${id}/responses`, {
+      const res = await fetch(`/api/forms/${id}/responses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guest_name: 'Vista previa', guest_email: 'preview@theosplace.org', answers }),
+        body: JSON.stringify({ ...identity, answers }),
       })
-    } catch { /* igual mostramos confirmación */ }
+      if (!res.ok) {
+        const detail = await res.json().catch(() => null)
+        console.error('Error al enviar formulario:', res.status, detail)
+        setSubmitError('Ocurrió un error al enviar el formulario. Verificá tu correo e intentá de nuevo.')
+        return
+      }
+    } catch (err) {
+      console.error('Error de red al enviar formulario:', err)
+      setSubmitError('Ocurrió un error al enviar el formulario. Verificá tu correo e intentá de nuevo.')
+      return
+    }
     setSubmitted(true)
   }
 
@@ -401,6 +438,32 @@ export default function PreviewPage() {
 
           {/* Footer actions */}
           <div className="px-8 pb-8">
+            {/* Correo obligatorio para invitados (sin sesión) — identifica la respuesta */}
+            {isGuest && isLastPage && (
+              <div className="mb-5">
+                <label className="block text-sm font-semibold text-navy mb-1.5" style={{ fontFamily: 'var(--font-body)' }}>
+                  Correo electrónico <span className="text-coral">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={e => { setGuestEmail(e.target.value); setSubmitError(null) }}
+                  placeholder="Tu correo para identificar tu respuesta"
+                  className="w-full rounded-2xl border px-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30"
+                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                />
+              </div>
+            )}
+
+            {submitError && (
+              <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
+                <AlertTriangle size={14} className="text-coral shrink-0" />
+                <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                  {submitError}
+                </p>
+              </div>
+            )}
+
             {errors.length > 0 && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
                 <AlertTriangle size={14} className="text-coral shrink-0" />

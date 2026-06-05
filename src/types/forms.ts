@@ -80,6 +80,8 @@ export interface FormTemplate {
   entity_id: string | null
   entity_name: string | null
   is_active: boolean
+  is_public: boolean
+  requires_auth: boolean
   created_at: string
   created_by: string
   fields: FormFieldNew[]

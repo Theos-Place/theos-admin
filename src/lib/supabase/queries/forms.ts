@@ -27,6 +27,8 @@ export type DbFormTemplate = {
   entity_type: 'event' | 'study_group' | 'general' | null
   entity_id: string | null
   is_active: boolean
+  is_public: boolean
+  requires_auth: boolean
   created_at: string
   created_by: string | null
   fields: DbFormField[]
@@ -44,7 +46,7 @@ export type DbFormResponse = {
 }
 
 const FORM_SELECT = `
-  id, title, description, category, entity_type, entity_id, is_active, created_at, created_by,
+  id, title, description, category, entity_type, entity_id, is_active, is_public, requires_auth, created_at, created_by,
   fields:form_fields(
     id, field_type, label, placeholder, help_text, description, is_required,
     options, conditions, sort_order, scale_min, scale_max, scale_min_label, scale_max_label
