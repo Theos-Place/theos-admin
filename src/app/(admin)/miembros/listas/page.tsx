@@ -159,10 +159,10 @@ export default function ListasGuardadasPage() {
         >
           <Bookmark size={28} className="text-navy-light/20 mx-auto mb-3" />
           <p className="text-sm font-semibold text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-            No hay listas guardadas
+            No hay listas guardadas aún
           </p>
           <p className="text-[13px] text-navy-light/40 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
-            Aplicá filtros en la búsqueda de miembros y guardá una lista
+            Creá tu primera lista desde la página de miembros aplicando filtros.
           </p>
         </div>
       ) : (
