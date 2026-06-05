@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Download, FileSpreadsheet, FileText, Check } from 'lucide-react'
+import { Download, FileSpreadsheet, FileText, Check, AlertTriangle } from 'lucide-react'
 import { type ColumnDef } from './ColumnSelector'
 import { generateCSV } from '@/lib/export'
 
@@ -54,11 +54,11 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
   const [open, setOpen] = useState(false)
   const [onlyVisible, setOnlyVisible] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [pendingFormat, setPendingFormat] = useState<'csv' | 'excel' | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
-  // Obtiene los datos a exportar: completos (fetchData) o los ya cargados.
-  async function resolveData(): Promise<T[] | null> {
-    if (confirmMessage && !window.confirm(confirmMessage)) return null
+  // Trae los datos a exportar: completos (fetchData) o los ya cargados.
+  async function fetchRows(): Promise<T[] | null> {
     if (!fetchData) return data
     setBusy(true)
     try { return await fetchData() }
@@ -77,27 +77,33 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
   const activeCols = onlyVisible ? columns : allColumns
   const exportCols = activeCols.filter(c => c.exportable !== false)
 
-  async function handleCSV() {
-    const rows0 = await resolveData()
+  async function runExport(format: 'csv' | 'excel') {
+    const rows0 = await fetchRows()
     if (!rows0) return
-    const headers = exportCols.map(c => c.label)
-    const rows = rows0.map(row =>
-      exportCols.map(col => {
-        const val = col.exportValue ? col.exportValue(row) : (row as Record<string, unknown>)[String(col.key)]
-        if (val === null || val === undefined) return ''
-        return String(val)
-      })
-    )
-    generateCSV(headers, rows, filename)
-    setOpen(false)
+    if (format === 'csv') {
+      const headers = exportCols.map(c => c.label)
+      const rows = rows0.map(row =>
+        exportCols.map(col => {
+          const val = col.exportValue ? col.exportValue(row) : (row as Record<string, unknown>)[String(col.key)]
+          if (val === null || val === undefined) return ''
+          return String(val)
+        })
+      )
+      generateCSV(headers, rows, filename)
+    } else {
+      exportToExcel(rows0, exportCols, filename)
+    }
   }
 
-  async function handleExcel() {
-    const rows0 = await resolveData()
-    if (!rows0) return
-    exportToExcel(rows0, exportCols, filename)
+  // Si hay confirmMessage, primero pide confirmación (modal estilado); si no, exporta directo.
+  function requestExport(format: 'csv' | 'excel') {
     setOpen(false)
+    if (confirmMessage) { setPendingFormat(format); return }
+    runExport(format)
   }
+
+  function handleCSV()   { requestExport('csv') }
+  function handleExcel() { requestExport('excel') }
 
   return (
     <div className="relative" ref={ref}>
@@ -175,6 +181,41 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
             <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
               <span className="font-semibold text-navy">{data.length.toLocaleString('es-CR')}</span> registros a exportar
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación (export sin filtros / volumen alto) */}
+      {pendingFormat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(233,185,73,0.15)' }}>
+                <AlertTriangle size={18} className="text-amber-500" />
+              </div>
+              <div>
+                <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Confirmar exportación</p>
+                <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+                  {confirmMessage}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPendingFormat(null)}
+                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { const f = pendingFormat; setPendingFormat(null); runExport(f) }}
+                className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                Exportar {pendingFormat === 'excel' ? 'Excel' : 'CSV'}
+              </button>
+            </div>
           </div>
         </div>
       )}
