@@ -87,7 +87,29 @@ const QUICK_CHIPS = [
   { key: 'todos',      label: 'Todos' },
   { key: 'donadores',  label: 'Donadores' },
   { key: 'servidores', label: 'Servidores' },
+  { key: 'activo',     label: 'Activo (asistencia)' },
 ] as const
+
+// Los últimos 6 meses calendario en formato YYYY-MM (incluye el mes actual).
+function ultimos6Meses(): string[] {
+  const out: string[] = []
+  const d = new Date()
+  for (let i = 0; i < 6; i++) {
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+    d.setMonth(d.getMonth() - 1)
+  }
+  return out
+}
+
+/** Activo por asistencia: al menos 1 asistencia en cada uno de los últimos 6 meses.
+ *  Usa attendance_months (liviano, del listado) y cae a attendance_history si falta. */
+function esActivoPorAsistencia(m: Member, meses: string[]): boolean {
+  const fromMonths = m.attendance_months ?? []
+  const fromHistory = (m.attendance_history ?? []).map(a => (a.date ?? '').slice(0, 7)).filter(Boolean)
+  const set = new Set([...fromMonths, ...fromHistory])
+  if (set.size === 0) return false
+  return meses.every(mo => set.has(mo))
+}
 
 const GENDER_LABELS: Record<string, string> = {
   M: 'Masculino', F: 'Femenino', otro: 'No indica',
@@ -113,7 +135,7 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
     key: 'phone', label: 'Teléfono', defaultVisible: false,
   },
   {
-    key: 'status', label: 'Estado', defaultVisible: true,
+    key: 'status', label: 'Estado', defaultVisible: false,
     exportValue: m => m.is_active ? 'Activo' : 'Inactivo',
   },
   {
@@ -210,6 +232,7 @@ export default function MiembrosPage() {
 
   const [showDonors,     setShowDonors]     = useState(false)
   const [showServers,    setShowServers]    = useState(false)
+  const [showActive,     setShowActive]     = useState(false)
   const [search,         setSearch]         = useState('')
   const [filtersOpen,    setFiltersOpen]    = useState(false)
   const [visibleCount,   setVisibleCount]   = useState(PAGE_SIZE)
@@ -231,7 +254,8 @@ export default function MiembrosPage() {
     setTimeout(() => setToast(''), TOAST_LONG_MS)
   }
 
-  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || search.trim() !== ''
+  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || showActive || search.trim() !== ''
+  const quickActiveCount = (showDonors ? 1 : 0) + (showServers ? 1 : 0) + (showActive ? 1 : 0)
 
   function handleComunicarLista() {
     const ids = displayMembers.map(m => m.id).join(',')
@@ -277,6 +301,10 @@ export default function MiembrosPage() {
     let list = filters.filteredMembers.length > 0 ? filters.filteredMembers : supabaseMembers
     if (showDonors)  list = list.filter(m => m.is_donor)
     if (showServers) list = list.filter(m => m.is_server)
+    if (showActive) {
+      const meses = ultimos6Meses()
+      list = list.filter(m => esActivoPorAsistencia(m, meses))
+    }
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(m =>
@@ -287,7 +315,7 @@ export default function MiembrosPage() {
       )
     }
     return list
-  }, [filters.filteredMembers, showDonors, showServers, search])
+  }, [filters.filteredMembers, supabaseMembers, showDonors, showServers, showActive, search])
 
   // Reset visible window and clear selection whenever the filtered set changes
   useEffect(() => {
@@ -380,16 +408,18 @@ export default function MiembrosPage() {
         <div className="flex items-center gap-1.5 flex-wrap">
           {QUICK_CHIPS.map(({ key, label }) => {
             const active =
-              key === 'todos'      ? (!showDonors && !showServers) :
+              key === 'todos'      ? (!showDonors && !showServers && !showActive) :
               key === 'donadores'  ? showDonors :
-              showServers
+              key === 'servidores' ? showServers :
+              showActive
             return (
               <button
                 key={key}
                 onClick={() => {
-                  if (key === 'todos') { setShowDonors(false); setShowServers(false) }
+                  if (key === 'todos') { setShowDonors(false); setShowServers(false); setShowActive(false) }
                   else if (key === 'donadores') setShowDonors(v => !v)
-                  else setShowServers(v => !v)
+                  else if (key === 'servidores') setShowServers(v => !v)
+                  else setShowActive(v => !v)
                 }}
                 className={cn(
                   'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
@@ -439,6 +469,17 @@ export default function MiembrosPage() {
           />
         </div>
       </div>
+
+      {/* ── Conteo de filtros rápidos activos ── */}
+      {quickActiveCount > 0 && (
+        <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="font-medium text-navy" style={{ fontWeight: 500 }}>
+            {quickActiveCount} {quickActiveCount === 1 ? 'filtro activo' : 'filtros activos'}
+          </span>
+          {' · '}
+          {displayMembers.length.toLocaleString('es-CR')} resultados
+        </p>
+      )}
 
       {/* ── Advanced filters panel ── */}
       {filtersOpen && (

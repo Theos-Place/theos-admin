@@ -71,6 +71,8 @@ export type Member = {
   join_date: string
   medicamentos: string | null
   attendance_history: AttendanceRecord[]
+  /** Meses (YYYY-MM) con al menos una asistencia. Liviano, viene del listado. */
+  attendance_months?: string[]
   service_history: ServiceRecord[]
   family_members: FamilyEntry[]
   donations: DonationRecord[]

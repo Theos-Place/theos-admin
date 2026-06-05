@@ -81,6 +81,7 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
     join_date: db.created_at,
     medicamentos: db.medications,
     attendance_history: [],
+    attendance_months: enriched?.attendance_months ?? [],
     family_members: [],
     donations: [],
     form_responses: [],

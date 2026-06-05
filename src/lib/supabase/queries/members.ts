@@ -50,6 +50,7 @@ export type DbMemberEnriched = DbMember & {
   current_study: string | null
   current_study_week?: number | null
   completed_studies: string[]
+  attendance_months?: string[]
   active_service: {
     position: string
     committee: string
@@ -102,7 +103,8 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       study_enrollments(
         status,
         study_groups!study_enrollments_group_id_fkey(plan:study_plans(name))
-      )
+      ),
+      event_checkins(checked_in_at)
     `,
       { count: 'exact' },
     )
@@ -159,6 +161,12 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
 
     const sede = (row.sede as { code: string; name: string } | null) ?? null
 
+    // Meses (YYYY-MM) con al menos una asistencia — para el filtro "Activo (asistencia)".
+    const checkins = (row.event_checkins as Array<{ checked_in_at: string | null }> | null) ?? []
+    const attendanceMonths = Array.from(new Set(
+      checkins.map(c => (c.checked_in_at ?? '').slice(0, 7)).filter(Boolean),
+    ))
+
     return {
       ...(row as DbMember),
       sede,
@@ -167,6 +175,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       is_server: volunteers.some(v => v.status === 'active'),
       current_study: currentStudy,
       completed_studies: completedStudies,
+      attendance_months: attendanceMonths,
       active_service: activeVolunteer && activeVolunteer.service_positions
         ? {
             position: activeVolunteer.service_positions.title,
