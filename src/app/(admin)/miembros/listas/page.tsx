@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { listStore } from '@/data/mock-member-lists'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import {
   Bookmark, MessageCircle, MoreHorizontal, Users, Plus, Search, ChevronLeft,
@@ -33,6 +34,7 @@ export default function ListasGuardadasPage() {
   const [editTarget, setEditTarget] = useState<string | null>(null)
   const [editName, setEditName]   = useState('')
   const [editTags, setEditTags]   = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   const allTags = Array.from(new Set(lists.flatMap(l => l.tags))).sort()
 
@@ -50,10 +52,16 @@ export default function ListasGuardadasPage() {
     router.push(`/comunicaciones/nueva?mode=manual&members=${ids}&segment_label=${label}&list_id=${list.id}`)
   }
 
-  function handleDelete(id: string) {
-    listStore.remove(id)
-    setLists(listStore.getAll())
+  function requestDelete(id: string, name: string) {
     setOpenMenu(null)
+    setDeleteTarget({ id, name })
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return
+    listStore.remove(deleteTarget.id)
+    setLists(listStore.getAll())
+    setDeleteTarget(null)
   }
 
   function handleRefresh(id: string) {
@@ -222,7 +230,7 @@ export default function ListasGuardadasPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => handleDelete(list.id)}
+                        onClick={() => requestDelete(list.id, list.name)}
                         className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors"
                         style={{ fontFamily: 'var(--font-body)' }}
                       >
@@ -359,6 +367,14 @@ export default function ListasGuardadasPage() {
       {openMenu && (
         <div className="fixed inset-0 z-10" onClick={() => setOpenMenu(null)} />
       )}
+
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        title="Eliminar lista"
+        description={`Se eliminará la lista "${deleteTarget?.name ?? ''}". Esta acción no se puede deshacer.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

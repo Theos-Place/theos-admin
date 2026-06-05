@@ -24,6 +24,8 @@ export type CommitteeLeader = {
 export type CommitteePosition = {
   id: string
   title: string
+  /** Servidores con status active u on_leave en este puesto. */
+  active_count?: number
 }
 
 export type CommitteeData = {

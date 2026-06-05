@@ -50,7 +50,11 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
     },
     ideal_capacity: db.ideal_capacity ?? 0,
     members,
-    positions: db.positions.map((p) => ({ id: p.id, title: p.title })),
+    positions: db.positions.map((p) => ({
+      id: p.id,
+      title: p.title,
+      active_count: p.volunteers.filter((v) => v.status === 'active' || v.status === 'on_leave').length,
+    })),
     open_vacancies: openVacancies,
   }
 }

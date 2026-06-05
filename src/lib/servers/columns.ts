@@ -41,7 +41,7 @@ export const SERVER_COLUMNS: ColumnDef<FlatServer>[] = [
     exportValue: s => calcularAntiguedad(s.start_date),
   },
   {
-    key: 'status', label: 'Estado', defaultVisible: true,
+    key: 'status', label: 'Estado', defaultVisible: false,
     exportValue: s => (s.status === 'active' ? 'Activo' : 'Inactivo'),
   },
   { key: 'leader_name', label: 'Líder del comité', defaultVisible: false },

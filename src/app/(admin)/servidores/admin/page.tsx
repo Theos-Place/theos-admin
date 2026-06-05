@@ -5,6 +5,9 @@ import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid, Trash2 } from 
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
+import type { CommitteePosition } from '@/types/server'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 const labelCls = 'text-[10px] tracking-widest uppercase text-navy-light/40'
@@ -213,89 +216,6 @@ function DeactivateConfirm({
   )
 }
 
-// ─── Delete: warning si hay activos, o confirmación con palabra "eliminar" ──────
-
-function DeleteDialog({
-  kind, name, activeCount, onConfirm, onCancel,
-}: {
-  kind: 'area' | 'committee'
-  name: string
-  activeCount: number
-  onConfirm: () => void
-  onCancel: () => void
-}) {
-  const [text, setText] = useState('')
-  const label = kind === 'area' ? 'área' : 'comité'
-  const blocked = activeCount > 0
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
-        <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
-            style={{ background: blocked ? 'rgba(233,185,73,0.15)' : 'rgba(239,85,84,0.12)' }}>
-            {blocked ? <AlertTriangle size={18} className="text-amber-500" /> : <Trash2 size={18} className="text-coral" />}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-navy mb-1" style={{ fontFamily: 'var(--font-display)' }}>
-              {blocked ? `No se puede eliminar` : `Eliminar ${label}`}
-            </p>
-            {blocked ? (
-              <p className="text-[13px] text-navy-light/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
-                &ldquo;{name}&rdquo; tiene <strong className="text-navy">{activeCount} persona{activeCount !== 1 ? 's' : ''} activa{activeCount !== 1 ? 's' : ''}</strong>.
-                Desvinculá o reasigná a esas personas antes de eliminar {kind === 'area' ? 'el área' : 'el comité'}.
-              </p>
-            ) : (
-              <p className="text-[13px] text-navy-light/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
-                Se eliminará permanentemente {kind === 'area' ? 'el área' : 'el comité'} <strong className="text-navy">&ldquo;{name}&rdquo;</strong>
-                {kind === 'area' ? ' y todos sus comités y puestos.' : ' y sus puestos.'} Esta acción no se puede deshacer.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {!blocked && (
-          <div className="space-y-1.5">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>
-              Escribí <span className="text-coral font-semibold">eliminar</span> para confirmar
-            </label>
-            <input
-              autoFocus
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
-              placeholder="eliminar"
-              value={text}
-              onChange={e => setText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && text.trim().toLowerCase() === 'eliminar') onConfirm() }}
-            />
-          </div>
-        )}
-
-        <div className="flex gap-2 pt-1">
-          {!blocked && (
-            <button
-              disabled={text.trim().toLowerCase() !== 'eliminar'}
-              onClick={onConfirm}
-              className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              Eliminar
-            </button>
-          )}
-          <button
-            onClick={onCancel}
-            className={`rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors ${blocked ? 'flex-1' : ''}`}
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-          >
-            {blocked ? 'Entendido' : 'Cancelar'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── Position modal (Cambio 3) ──────────────────────────────────────────────────
 
 function PositionModal({
@@ -349,37 +269,6 @@ function PositionModal({
   )
 }
 
-function DeleteSimpleConfirm({
-  title, message, onConfirm, onCancel,
-}: {
-  title: string; message: string; onConfirm: () => void; onCancel: () => void
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
-        <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(239,85,84,0.12)' }}>
-            <Trash2 size={18} className="text-coral" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-navy mb-1" style={{ fontFamily: 'var(--font-display)' }}>{title}</p>
-            <p className="text-[13px] text-navy-light/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>{message}</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={onConfirm} className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
-            Eliminar
-          </button>
-          <button onClick={onCancel} className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ServidoresAdminPage() {
@@ -396,7 +285,7 @@ export default function ServidoresAdminPage() {
   }, [serverCommittees])
   // Puestos reales por comité (desde useServers).
   const positionsByCommittee = useMemo(() => {
-    const m: Record<string, { id: string; title: string }[]> = {}
+    const m: Record<string, CommitteePosition[]> = {}
     for (const c of serverCommittees) m[c.id] = c.positions ?? []
     return m
   }, [serverCommittees])
@@ -413,15 +302,16 @@ export default function ServidoresAdminPage() {
   type AreaModal   = { open: boolean; editing: Area | null }
   type CommModal   = { open: boolean; editing: Committee | null }
   type DeactTarget = { type: 'area'; item: Area } | { type: 'committee'; item: Committee; memberCount: number } | null
-  // Eliminación (Cambio 4): warning si hay activos, o confirmación con palabra "eliminar".
-  type DeleteTarget = { kind: 'area' | 'committee'; id: string; name: string; activeCount: number } | null
 
   const [areaModal,   setAreaModal]   = useState<AreaModal>({ open: false, editing: null })
   const [commModal,   setCommModal]   = useState<CommModal>({ open: false, editing: null })
   const [deactTarget, setDeactTarget] = useState<DeactTarget>(null)
-  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
   const [posModalFor, setPosModalFor] = useState<string | null>(null)   // committee id
-  const [posDeleteTarget, setPosDeleteTarget] = useState<{ id: string; title: string } | null>(null)
+  // Eliminación: usa los modales compartidos. confirmState para borrar con palabra
+  // "eliminar"; warn cuando hay servidores activos y se bloquea.
+  const [confirmState, setConfirmState] = useState<{ title: string; description: string; run: () => Promise<void> } | null>(null)
+  const [warn, setWarn] = useState<{ title: string; message: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const selectedArea   = areas.find(a => a.id === selectedAreaId)
   const areaComm       = committees.filter(c => c.area_code === selectedAreaId)
@@ -441,30 +331,52 @@ export default function ServidoresAdminPage() {
     return committees.filter(c => c.area_code === areaId).reduce((s, c) => s + (activeByCommittee[c.id] ?? 0), 0)
   }
 
-  // ── Eliminación de área/comité ──────────────────────────────────────────────
+  async function handleConfirmDelete() {
+    if (!confirmState) return
+    setDeleting(true)
+    try { await confirmState.run() }
+    finally { setDeleting(false); setConfirmState(null) }
+  }
+
+  // ── Eliminar área (Cambio 5): bloquea si hay servidores activos en sus comités ──
   function requestDeleteArea(area: Area) {
-    setDeleteTarget({ kind: 'area', id: area.id, name: area.name, activeCount: getAreaActiveCount(area.id) })
+    const active = getAreaActiveCount(area.id)
+    if (active > 0) {
+      setWarn({ title: 'No se puede eliminar', message: `No podés eliminar esta área porque tiene ${active} servidor(es) activo(s) en sus comités. Primero reasigná o desactivá esos servidores.` })
+      return
+    }
+    setConfirmState({
+      title: 'Eliminar área',
+      description: `Se eliminará el área "${area.name}" y todos sus comités y puestos. Esta acción no se puede deshacer.`,
+      run: async () => {
+        const res = await fetch(`/api/servers/areas/${area.id}`, { method: 'DELETE' })
+        if (!res.ok) return
+        setAreas(prev => prev.filter(a => a.id !== area.id))
+        setCommittees(prev => prev.filter(c => c.area_code !== area.id))
+        if (selectedAreaId === area.id) setSelectedAreaId(null)
+        await refetchServers()
+      },
+    })
   }
+
+  // ── Eliminar comité (Cambio 4): bloquea si hay servidores activos en sus puestos ──
   function requestDeleteCommittee(c: Committee) {
-    setDeleteTarget({ kind: 'committee', id: c.id, name: c.name, activeCount: activeByCommittee[c.id] ?? 0 })
-  }
-  async function confirmDelete() {
-    if (!deleteTarget) return
-    const t = deleteTarget
-    setDeleteTarget(null)
-    try {
-      const res = await fetch(`/api/servers/areas/${t.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
-      if (t.kind === 'area') {
-        setAreas(prev => prev.filter(a => a.id !== t.id))
-        setCommittees(prev => prev.filter(c => c.area_code !== t.id))
-        if (selectedAreaId === t.id) setSelectedAreaId(null)
-      } else {
-        setCommittees(prev => prev.filter(c => c.id !== t.id))
-        if (selectedCommId === t.id) setSelectedCommId(null)
-      }
-      await refetchServers()
-    } catch { /* sin cambios si falla */ }
+    const active = activeByCommittee[c.id] ?? 0
+    if (active > 0) {
+      setWarn({ title: 'No se puede eliminar', message: `No podés eliminar este comité porque tiene ${active} servidor(es) activo(s) en sus puestos. Primero reasigná o desactivá esos servidores.` })
+      return
+    }
+    setConfirmState({
+      title: 'Eliminar comité',
+      description: `Se eliminará el comité "${c.name}" y sus puestos. Esta acción no se puede deshacer.`,
+      run: async () => {
+        const res = await fetch(`/api/servers/areas/${c.id}`, { method: 'DELETE' })
+        if (!res.ok) return
+        setCommittees(prev => prev.filter(x => x.id !== c.id))
+        if (selectedCommId === c.id) setSelectedCommId(null)
+        await refetchServers()
+      },
+    })
   }
 
   // ── Puestos (service_positions) ──────────────────────────────────────────────
@@ -482,15 +394,23 @@ export default function ServidoresAdminPage() {
       await refetchServers()
     } catch { /* sin cambios si falla */ }
   }
-  async function confirmDeletePosition() {
-    if (!posDeleteTarget) return
-    const id = posDeleteTarget.id
-    setPosDeleteTarget(null)
-    try {
-      const res = await fetch(`/api/servers/positions/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
-      await refetchServers()
-    } catch { /* sin cambios si falla */ }
+
+  // ── Eliminar puesto (Cambio 3): bloquea si hay servidores active/on_leave ──
+  function requestDeletePosition(p: CommitteePosition) {
+    const active = p.active_count ?? 0
+    if (active > 0) {
+      setWarn({ title: 'No se puede eliminar', message: `No podés eliminar este puesto porque tiene ${active} servidor(es) activo(s) asignado(s). Primero reasigná o desactivá esos servidores.` })
+      return
+    }
+    setConfirmState({
+      title: 'Eliminar puesto',
+      description: `Se eliminará el puesto "${p.title}". Esta acción no se puede deshacer.`,
+      run: async () => {
+        const res = await fetch(`/api/servers/positions/${p.id}`, { method: 'DELETE' })
+        if (!res.ok) return
+        await refetchServers()
+      },
+    })
   }
 
   // ── Area handlers ──────────────────────────────────────────────────────────
@@ -601,26 +521,23 @@ export default function ServidoresAdminPage() {
           onCancel={() => setDeactTarget(null)}
         />
       )}
-      {deleteTarget && (
-        <DeleteDialog
-          kind={deleteTarget.kind}
-          name={deleteTarget.name}
-          activeCount={deleteTarget.activeCount}
-          onConfirm={confirmDelete}
-          onCancel={() => setDeleteTarget(null)}
-        />
-      )}
       {posModalFor && (
         <PositionModal onSave={createPosition} onClose={() => setPosModalFor(null)} />
       )}
-      {posDeleteTarget && (
-        <DeleteSimpleConfirm
-          title="Eliminar puesto"
-          message={`Se eliminará el puesto "${posDeleteTarget.title}". Esta acción no se puede deshacer.`}
-          onConfirm={confirmDeletePosition}
-          onCancel={() => setPosDeleteTarget(null)}
-        />
-      )}
+      <DeleteConfirmModal
+        open={!!confirmState}
+        title={confirmState?.title ?? ''}
+        description={confirmState?.description ?? ''}
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState(null)}
+      />
+      <ActiveWarningModal
+        open={!!warn}
+        title={warn?.title ?? ''}
+        message={warn?.message ?? ''}
+        onClose={() => setWarn(null)}
+      />
 
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -923,7 +840,7 @@ export default function ServidoresAdminPage() {
                   >
                     <span className="flex-1 text-[13px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>{p.title}</span>
                     <button
-                      onClick={() => setPosDeleteTarget({ id: p.id, title: p.title })}
+                      onClick={() => requestDeletePosition(p)}
                       className="rounded-lg p-1.5 text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
                       title="Eliminar puesto"
                     >
