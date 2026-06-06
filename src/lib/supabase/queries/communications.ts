@@ -213,3 +213,37 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   }).eq('id', id)
   if (error) throw error
 }
+
+export type MessageRecipient = {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  channel: 'whatsapp' | 'email'
+  status: 'sent' | 'failed'
+  delivered_at: string | null
+}
+
+/** Destinatarios reales de un broadcast (desde message_logs + member). */
+export async function getMessageRecipients(broadcastId: string): Promise<MessageRecipient[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('message_logs')
+    .select('id, member_id, recipient, channel, status, delivered_at, member:members(first_name, last_name, email, phone)')
+    .eq('broadcast_id', broadcastId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  const rows = (data ?? []) as unknown as Array<{
+    id: string; recipient: string; channel: 'whatsapp' | 'email'; status: string; delivered_at: string | null
+    member: { first_name: string; last_name: string; email: string | null; phone: string | null } | null
+  }>
+  return rows.map(r => ({
+    id: r.id,
+    name: r.member ? `${r.member.first_name} ${r.member.last_name}`.trim() : r.recipient,
+    email: r.member?.email ?? null,
+    phone: r.member?.phone ?? null,
+    channel: r.channel,
+    status: r.status === 'failed' || r.status === 'bounced' ? 'failed' : 'sent',
+    delivered_at: r.delivered_at,
+  }))
+}

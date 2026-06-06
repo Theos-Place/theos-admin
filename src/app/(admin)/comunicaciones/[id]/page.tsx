@@ -1,11 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { type CommunicationStatus } from '@/data/mock-communications'
 import { useCommunications } from '@/hooks/useCommunications'
-import { mockMembers } from '@/data/mock-members'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { DeliveryStats } from '@/components/communications/DeliveryStats'
 import { cn } from '@/lib/utils'
@@ -25,17 +24,13 @@ const STATUS_LABEL: Record<CommunicationStatus, string> = {
   draft: 'Borrador', sending: 'Enviando', sent: 'Enviado', failed: 'Fallido', partial: 'Parcial',
 }
 
-// Simulated recipient list from real member data
-function buildRecipients(total: number, failed: number) {
-  const pool = [...mockMembers].sort(() => Math.random() - 0.5).slice(0, Math.min(total, mockMembers.length))
-  return pool.map((m, i) => ({
-    id: m.id,
-    name: `${m.first_name} ${m.last_name}`,
-    email: m.email,
-    phone: m.phone,
-    status: i < failed ? 'failed' : 'sent' as 'sent' | 'failed',
-    delivered_at: i < failed ? null : new Date(Date.now() - Math.random() * 3600000).toISOString(),
-  }))
+type RecipientRow = {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  status: 'sent' | 'failed'
+  delivered_at: string | null
 }
 
 export default function ComunicacionDetallePage() {
@@ -44,11 +39,18 @@ export default function ComunicacionDetallePage() {
   const message = useMemo(() => messages.find(m => m.id === id), [messages, id])
   const [recipientFilter, setRecipientFilter] = useState<RecipientFilter>('all')
   const [retrying, setRetrying] = useState(false)
+  const [recipients, setRecipients] = useState<RecipientRow[]>([])
 
-  const recipients = useMemo(
-    () => message ? buildRecipients(Math.min(message.stats.total, 20), Math.min(message.stats.failed, 5)) : [],
-    [message]
-  )
+  // Destinatarios reales del broadcast (message_logs).
+  useEffect(() => {
+    if (!id) return
+    let alive = true
+    fetch(`/api/communications/messages/${id}/recipients`)
+      .then(r => (r.ok ? r.json() : []))
+      .then(d => { if (alive) setRecipients(Array.isArray(d) ? d : []) })
+      .catch(() => { if (alive) setRecipients([]) })
+    return () => { alive = false }
+  }, [id])
 
   if (!message) {
     return (
@@ -162,7 +164,7 @@ export default function ComunicacionDetallePage() {
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
         <div className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ borderColor: 'var(--outline-variant)' }}>
           <p className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
-            Destinatarios (muestra de {recipients.length})
+            Destinatarios ({recipients.length})
           </p>
           <div className="flex gap-1">
             {(['all', 'sent', 'failed'] as RecipientFilter[]).map(f => (
