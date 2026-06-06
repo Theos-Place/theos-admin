@@ -545,11 +545,6 @@ export const MOCK_EVENTS: MockEvent[] = [
     flyer_url: null,
   },
 ]
-
-export function getEvent(id: string): MockEvent | undefined {
-  return MOCK_EVENTS.find(e => e.id === id)
-}
-
 export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string }> = {
   charla:       { label: 'Charla',       color: 'navy' },
   campamento:   { label: 'Campamento',   color: 'teal' },

@@ -847,43 +847,6 @@ export const MOCK_DONATIONS: Donation[] = [
     is_identified: false,
   },
 ]
-
-export const MOCK_IMPORT_BATCHES: ImportBatch[] = [
-  {
-    id: 'batch-001',
-    filename: 'donaciones-enero-2026.csv',
-    imported_at: '2026-01-20T10:00:00Z',
-    imported_by: 'Daniel Torres Blanco',
-    total_rows: 52,
-    identified: 48,
-    unidentified: 3,
-    duplicates: 1,
-    status: 'completed',
-  },
-  {
-    id: 'batch-002',
-    filename: 'donaciones-marzo-2026.csv',
-    imported_at: '2026-03-22T09:30:00Z',
-    imported_by: 'Carmen Delgado Nieto',
-    total_rows: 61,
-    identified: 58,
-    unidentified: 2,
-    duplicates: 1,
-    status: 'completed',
-  },
-  {
-    id: 'batch-003',
-    filename: 'donaciones-mayo-2026.csv',
-    imported_at: '2026-05-15T11:00:00Z',
-    imported_by: 'Daniel Torres Blanco',
-    total_rows: 38,
-    identified: 33,
-    unidentified: 5,
-    duplicates: 0,
-    status: 'partial',
-  },
-]
-
 export const MOCK_REFUNDS: Refund[] = [
   {
     id: 'ref-001',

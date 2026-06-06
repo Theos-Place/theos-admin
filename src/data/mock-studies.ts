@@ -1058,11 +1058,3 @@ export const MOCK_RELOCATIONS: RelocationRequest[] = [
 export function getStudyType(id: string): StudyType | undefined {
   return STUDY_TYPES.find(s => s.id === id)
 }
-
-export function getGroup(id: string): StudyGroup | undefined {
-  return MOCK_GROUPS.find(g => g.id === id)
-}
-
-export function getLeader(id: string): StudyLeader | undefined {
-  return MOCK_LEADERS.find(l => l.id === id)
-}

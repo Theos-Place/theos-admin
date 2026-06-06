@@ -128,10 +128,3 @@ export const ROLES: Role[] = [
     permissions: [{ module: 'all', actions: ['view', 'create', 'edit', 'delete', 'export'], scope: 'all' }],
   },
 ]
-
-export const DEFAULT_ROLE: RoleId = 'miembro'
-
-// Datos de acceso hardcodeados eliminados: los usuarios reales viven en Supabase Auth
-// (auth.users + members.auth_user_id + member_roles). Se mantiene el export vacío
-// para los tipos/consumidores existentes.
-export const MOCK_USER_ACCESS: UserAccess[] = []
