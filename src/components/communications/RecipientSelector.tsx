@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search, X, Users, Filter, BookOpen, UsersRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mockMembers } from '@/data/mock-members'
-import { MOCK_EVENTS } from '@/data/mock-events'
 import { MOCK_GROUPS, type StudyGroup } from '@/data/mock-studies'
+
+type MemberLite = { id: string; first_name: string; last_name: string; email: string | null }
+type EventLite = { id: string; name: string; status: string; registrations: { member_id: string }[] }
 
 export type RecipientMode = 'filters' | 'manual' | 'group'
 
@@ -37,27 +38,41 @@ const MODE_OPTIONS: { key: RecipientMode; label: string; icon: React.ElementType
 
 export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel, filtersCount = 0 }: Props) {
   const [memberSearch, setMemberSearch] = useState('')
+  const [memberResults, setMemberResults] = useState<MemberLite[]>([])
+  const [selectedMembers, setSelectedMembers] = useState<MemberLite[]>([])
+  const [events, setEvents] = useState<EventLite[]>([])
 
-  const memberResults = useMemo(() => {
-    const q = memberSearch.toLowerCase().trim()
-    if (!q) return []
-    return mockMembers
-      .filter(m => !value.manualMemberIds.includes(m.id) && (
-        m.first_name.toLowerCase().includes(q) ||
-        m.last_name.toLowerCase().includes(q) ||
-        (m.email?.toLowerCase().includes(q) ?? false)
-      ))
-      .slice(0, 6)
+  // Carga de eventos reales (para el modo "grupo → evento").
+  useEffect(() => {
+    let alive = true
+    fetch('/api/events?pageSize=100')
+      .then(r => (r.ok ? r.json() : { events: [] }))
+      .then(d => { if (alive) setEvents((d.events ?? []) as EventLite[]) })
+      .catch(() => { if (alive) setEvents([]) })
+    return () => { alive = false }
+  }, [])
+
+  // Búsqueda real de miembros (debounced) para el modo "selección manual".
+  useEffect(() => {
+    const q = memberSearch.trim()
+    if (q.length < 2) { setMemberResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => {
+          if (!alive) return
+          const list = (d.members ?? []) as MemberLite[]
+          setMemberResults(list.filter(m => !value.manualMemberIds.includes(m.id)))
+        })
+        .catch(() => { if (alive) setMemberResults([]) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
   }, [memberSearch, value.manualMemberIds])
 
-  const selectedMembers = useMemo(
-    () => mockMembers.filter(m => value.manualMemberIds.includes(m.id)),
-    [value.manualMemberIds]
-  )
-
   const upcomingEvents = useMemo(
-    () => MOCK_EVENTS.filter(e => e.status !== 'cancelled' && e.status !== 'archived').slice(0, 10),
-    []
+    () => events.filter(e => e.status !== 'cancelled' && e.status !== 'archived').slice(0, 50),
+    [events]
   )
 
   const activeGroups = useMemo(
@@ -66,13 +81,13 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   )
 
   function setMode(mode: RecipientMode) {
+    setSelectedMembers([])
     onChange({ ...value, mode, manualMemberIds: [], groupEntity: null, groupId: '', label: '', count: 0 })
   }
 
-  function addMember(id: string) {
-    const member = mockMembers.find(m => m.id === id)
-    if (!member) return
-    const newIds = [...value.manualMemberIds, id]
+  function addMember(member: MemberLite) {
+    const newIds = [...value.manualMemberIds, member.id]
+    setSelectedMembers(prev => [...prev, member])
     onChange({
       ...value,
       manualMemberIds: newIds,
@@ -80,10 +95,12 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
       label: `${newIds.length} persona${newIds.length !== 1 ? 's' : ''} seleccionada${newIds.length !== 1 ? 's' : ''}`,
     })
     setMemberSearch('')
+    setMemberResults([])
   }
 
   function removeMember(id: string) {
     const newIds = value.manualMemberIds.filter(m => m !== id)
+    setSelectedMembers(prev => prev.filter(m => m.id !== id))
     onChange({
       ...value,
       manualMemberIds: newIds,
@@ -93,7 +110,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   }
 
   function setGroupEvent(eventId: string) {
-    const event = MOCK_EVENTS.find(e => e.id === eventId)
+    const event = events.find(e => e.id === eventId)
     if (!event) return
     onChange({
       ...value,
@@ -187,7 +204,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => addMember(m.id)}
+                  onClick={() => addMember(m)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-low transition-colors border-b last:border-b-0"
                   style={{ borderColor: 'var(--outline-variant)' }}
                 >
