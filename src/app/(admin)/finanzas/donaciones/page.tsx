@@ -1,20 +1,21 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Heart, Upload, Search, AlertTriangle, X, Check, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { useFinance } from '@/hooks/useFinance'
-import { mockMembers } from '@/data/mock-members'
 import { TOAST_MS } from '@/lib/constants'
+
+type MemberLite = { id: string; first_name: string; last_name: string; cedula: string | null }
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export default function DonacionesPage() {
-  const { donations: MOCK_DONATIONS } = useFinance()
+  const { donations: MOCK_DONATIONS, refetch } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -24,7 +25,25 @@ export default function DonacionesPage() {
   const [linkingId, setLinkingId] = useState<string | null>(null)
   const [linkSearch, setLinkSearch] = useState('')
   const [donations, setDonations] = useState(MOCK_DONATIONS)
+  const [linkResults, setLinkResults] = useState<MemberLite[]>([])
   const [toast, setToast] = useState('')
+
+  // Sincroniza con los datos reales cuando cargan/refrescan.
+  useEffect(() => { setDonations(MOCK_DONATIONS) }, [MOCK_DONATIONS])
+
+  // Búsqueda real de miembros para vincular (debounced).
+  useEffect(() => {
+    const q = linkSearch.trim()
+    if (q.length < 2) { setLinkResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => { if (alive) setLinkResults((d.members ?? []) as MemberLite[]) })
+        .catch(() => { if (alive) setLinkResults([]) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [linkSearch])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -57,16 +76,8 @@ export default function DonacionesPage() {
     })
   }, [donations, search, statusFilter, dateFrom, dateTo])
 
-  const linkResults = useMemo(() => {
-    if (!linkSearch.trim()) return []
-    const q = linkSearch.toLowerCase()
-    return mockMembers.filter(m =>
-      `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-      (m.cedula ?? '').includes(q)
-    ).slice(0, 6)
-  }, [linkSearch])
-
-  function handleLink(donationId: string, memberId: string, memberName: string, memberCedula: string) {
+  async function handleLink(donationId: string, memberId: string, memberName: string, memberCedula: string) {
+    // Optimista
     setDonations(prev => prev.map(d =>
       d.id === donationId
         ? { ...d, member_id: memberId, member_name: memberName, member_cedula: memberCedula ?? d.member_cedula, is_identified: true }
@@ -74,7 +85,20 @@ export default function DonacionesPage() {
     ))
     setLinkingId(null)
     setLinkSearch('')
-    showToast(`Donación vinculada a ${memberName}`)
+    try {
+      const res = await fetch(`/api/finance/donations/${donationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      showToast(`Donación vinculada a ${memberName}`)
+      refetch()
+    } catch (err) {
+      console.error('No se pudo vincular la donación:', err)
+      showToast('No se pudo vincular la donación. Intentá de nuevo.')
+      refetch()
+    }
   }
 
   return (

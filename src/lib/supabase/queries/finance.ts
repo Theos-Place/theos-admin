@@ -106,6 +106,16 @@ export async function getPayments(): Promise<DbPayment[]> {
   return (data ?? []) as unknown as DbPayment[]
 }
 
+/** Vincula una donación a un miembro (la identifica). */
+export async function linkDonation(donationId: string, memberId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('donations')
+    .update({ member_id: memberId, is_identified: true })
+    .eq('id', donationId)
+  if (error) throw error
+}
+
 export async function getDonations(): Promise<DbDonation[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
