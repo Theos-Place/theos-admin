@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import { UserPlus, UserMinus, ArrowRight } from 'lucide-react'
-import { mockMembers } from '@/data/mock-members'
+import type { Member } from '@/types/member'
 import { cn } from '@/lib/utils'
-
-type Member = (typeof mockMembers)[number]
 
 type Props = {
   member: Member
@@ -56,7 +54,8 @@ export function MemberFamilyTab({ member }: Props) {
       ) : (
         <div className="space-y-3">
           {member.family_members.map((fm) => {
-            const hasProfile = mockMembers.some(m => m.id === fm.id)
+            // Todo integrante de family_members referencia un miembro real → enlaza a su perfil.
+            const hasProfile = Boolean(fm.id)
             const inner = (
               <>
                 <div
