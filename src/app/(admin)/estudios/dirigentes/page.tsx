@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
 import { useSedes } from '@/lib/sedes'
-import { mockMembers } from '@/data/mock-members'
 import { LeaderCard } from '@/components/studies/LeaderCard'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
@@ -16,24 +15,63 @@ function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
 
-function NewLeaderModal({ onClose }: { onClose: () => void }) {
+type MemberLite = { id: string; first_name: string; last_name: string; cedula: string | null }
+
+function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { studyTypes: STUDY_TYPES } = useStudies()
   const [modalStep, setModalStep] = useState<ModalStep>('search')
   const [query, setQuery] = useState('')
+  const [memberResults, setMemberResults] = useState<MemberLite[]>([])
   const [selectedMember, setSelectedMember] = useState('')
+  const [chosenMember, setChosenMember] = useState<MemberLite | null>(null)
   const [selectedStudies, setSelectedStudies] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  const memberResults = mockMembers.filter(m =>
-    `${m.first_name} ${m.last_name}`.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 6)
-
-  const chosenMember = mockMembers.find(m => m.id === selectedMember)
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setMemberResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => { if (alive) setMemberResults(d.members ?? []) })
+        .catch(() => { if (alive) setMemberResults([]) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [query])
 
   function toggleStudy(code: string) {
     setSelectedStudies(prev =>
       prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
     )
+  }
+
+  async function saveLeader() {
+    if (!selectedMember || saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/studies/leaders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          member_id: selectedMember,
+          qualified_study_codes: selectedStudies,
+          availability_status: 'available',
+          is_active: true,
+        }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      onCreated()
+      setDone(true)
+    } catch (err) {
+      console.error('No se pudo crear el dirigente:', err)
+      setError('No se pudo crear el dirigente. Puede que ya exista.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (done) {
@@ -91,7 +129,7 @@ function NewLeaderModal({ onClose }: { onClose: () => void }) {
               {memberResults.map(m => (
                 <button
                   key={m.id}
-                  onClick={() => setSelectedMember(m.id)}
+                  onClick={() => { setSelectedMember(m.id); setChosenMember(m) }}
                   className={cn(
                     'w-full flex items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors',
                     selectedMember === m.id ? 'bg-coral/10 ring-1 ring-coral/30' : 'hover:bg-surface-low'
@@ -104,7 +142,7 @@ function NewLeaderModal({ onClose }: { onClose: () => void }) {
                     <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
                       {m.first_name} {m.last_name}
                     </p>
-                    <p className="text-[11px] text-navy-light/50">{m.sede} · {m.age} años</p>
+                    <p className="text-[11px] text-navy-light/50">{m.cedula ?? 'Sin cédula'}</p>
                   </div>
                 </button>
               ))}
@@ -155,16 +193,17 @@ function NewLeaderModal({ onClose }: { onClose: () => void }) {
                 </div>
               ))}
             </div>
+            {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
             <div className="flex justify-between gap-2">
               <button onClick={() => setModalStep('search')} className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
                 ← Atrás
               </button>
               <button
-                disabled={selectedStudies.length === 0}
-                onClick={() => setDone(true)}
+                disabled={selectedStudies.length === 0 || saving}
+                onClick={saveLeader}
                 className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
               >
-                Guardar dirigente
+                {saving ? 'Guardando…' : 'Guardar dirigente'}
               </button>
             </div>
           </>
@@ -175,7 +214,7 @@ function NewLeaderModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function DirigentesPage() {
-  const { leaders: MOCK_LEADERS, studyTypes: STUDY_TYPES } = useStudies()
+  const { leaders: MOCK_LEADERS, studyTypes: STUDY_TYPES, refetch } = useStudies()
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const [filterStatus, setFilterStatus] = useState('')
   const [filterZone, setFilterZone] = useState('')
@@ -207,7 +246,7 @@ export default function DirigentesPage() {
 
   return (
     <div className="space-y-5">
-      {showNewLeader && <NewLeaderModal onClose={() => setShowNewLeader(false)} />}
+      {showNewLeader && <NewLeaderModal onClose={() => setShowNewLeader(false)} onCreated={refetch} />}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4">

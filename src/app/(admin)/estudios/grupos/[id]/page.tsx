@@ -1,10 +1,9 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
-import { mockMembers } from '@/data/mock-members'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
@@ -34,11 +33,45 @@ function AttendanceBar({ pct }: { pct: number }) {
   )
 }
 
-function AddMemberModal({ onClose }: { onClose: () => void }) {
+function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
+  groupId: string
+  enrolledIds: Set<string>
+  onClose: () => void
+  onEnrolled: () => void
+}) {
   const [query, setQuery] = useState('')
-  const results = mockMembers.filter(m =>
-    `${m.first_name} ${m.last_name}`.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 6)
+  const [results, setResults] = useState<{ id: string; first_name: string; last_name: string; cedula: string | null }[]>([])
+  const [adding, setAdding] = useState<string | null>(null)
+
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => { if (alive) setResults(d.members ?? []) })
+        .catch(() => { if (alive) setResults([]) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [query])
+
+  async function enroll(memberId: string) {
+    setAdding(memberId)
+    try {
+      const res = await fetch(`/api/studies/groups/${groupId}/enrollments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      onEnrolled()
+      onClose()
+    } catch (err) {
+      console.error('No se pudo inscribir al miembro:', err)
+      setAdding(null)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -53,29 +86,35 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
         <input
           autoFocus
           className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-          placeholder="Buscar por nombre..."
+          placeholder="Buscar por nombre o cédula..."
           style={{ fontFamily: 'var(--font-body)' }}
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
         <div className="space-y-1 max-h-48 overflow-y-auto">
-          {results.map(m => (
-            <button
-              key={m.id}
-              onClick={onClose}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-surface-low text-left transition-colors"
-            >
-              <div className="h-8 w-8 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
-                {getInitials(`${m.first_name} ${m.last_name}`)}
-              </div>
-              <div>
-                <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                  {m.first_name} {m.last_name}
-                </p>
-                <p className="text-[11px] text-navy-light/50">{sedeLabel(m.sede)} · {m.age} años</p>
-              </div>
-            </button>
-          ))}
+          {results.map(m => {
+            const already = enrolledIds.has(m.id)
+            return (
+              <button
+                key={m.id}
+                disabled={already || adding === m.id}
+                onClick={() => enroll(m.id)}
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-surface-low text-left transition-colors disabled:opacity-50"
+              >
+                <div className="h-8 w-8 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
+                  {getInitials(`${m.first_name} ${m.last_name}`)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    {m.first_name} {m.last_name}
+                  </p>
+                  <p className="text-[11px] text-navy-light/50">{m.cedula ?? 'Sin cédula'}</p>
+                </div>
+                {already && <span className="text-[11px] text-navy-light/40">Ya inscrito</span>}
+                {adding === m.id && <span className="text-[11px] text-navy-light/40">…</span>}
+              </button>
+            )
+          })}
         </div>
         <button
           onClick={onClose}
@@ -166,7 +205,7 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
 
 export default function GrupoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { groups, studyTypes } = useStudies()
+  const { groups, studyTypes, refetch } = useStudies()
   const group = groups.find(g => g.id === id)
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
@@ -203,7 +242,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-5">
-      {showAddMember && <AddMemberModal onClose={() => setShowAddMember(false)} />}
+      {showAddMember && (
+        <AddMemberModal
+          groupId={id}
+          enrolledIds={new Set((group?.participants ?? []).map(p => p.member_id))}
+          onClose={() => setShowAddMember(false)}
+          onEnrolled={refetch}
+        />
+      )}
       {showSendMessage && <SendMessageModal onClose={() => setShowSendMessage(false)} />}
 
       {/* Back */}
