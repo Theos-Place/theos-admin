@@ -1,8 +1,9 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { MOCK_GROUPS, getStudyType } from '@/data/mock-studies'
+import type { StudyGroup, StudyType } from '@/types/study'
+import { toDomainStudyGroup, toDomainStudyType } from '@/lib/studies/adapter'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, Users } from 'lucide-react'
@@ -13,17 +14,42 @@ function getInitials(name: string) {
 
 export default function AsistenciaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const group = MOCK_GROUPS.find(g => g.id === id)
-  const studyType = group ? getStudyType(group.study_type_id) : null
-
-  const enrolled = group?.participants.filter(p => p.status === 'enrolled') ?? []
-  const [attendance, setAttendance] = useState<Record<string, boolean>>(() => {
-    const init: Record<string, boolean> = {}
-    enrolled.forEach(p => { init[p.member_id] = false })
-    return init
-  })
+  const [group, setGroup] = useState<StudyGroup | null>(null)
+  const [studyType, setStudyType] = useState<StudyType | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [attendance, setAttendance] = useState<Record<string, boolean>>({})
   const [notes, setNotes] = useState('')
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Carga el grupo real y su plan de estudio.
+  useEffect(() => {
+    let alive = true
+    Promise.all([
+      fetch(`/api/studies/groups/${id}`).then(r => (r.ok ? r.json() : null)),
+      fetch('/api/studies/plans').then(r => (r.ok ? r.json() : [])),
+    ]).then(([g, plans]) => {
+      if (!alive) return
+      const domainGroup = g ? toDomainStudyGroup(g) : null
+      setGroup(domainGroup)
+      if (domainGroup && Array.isArray(plans)) {
+        const plan = plans.find((p: { code: string }) => p.code === domainGroup.study_type_id)
+        setStudyType(plan ? toDomainStudyType(plan) : null)
+      }
+      const init: Record<string, boolean> = {}
+      domainGroup?.participants.filter(p => p.status === 'enrolled').forEach(p => { init[p.member_id] = false })
+      setAttendance(init)
+      setLoading(false)
+    }).catch(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [id])
+
+  const enrolled = group?.participants.filter(p => p.status === 'enrolled') ?? []
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p></div>
+  }
 
   if (!group) {
     return (
@@ -44,6 +70,30 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
     const all: Record<string, boolean> = {}
     enrolled.forEach(p => { all[p.member_id] = true })
     setAttendance(all)
+  }
+
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/studies/groups/${id}/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_date: new Date().toISOString().slice(0, 10),
+          notes: notes.trim() || null,
+          attendance: enrolled.map(p => ({ member_id: p.member_id, present: attendance[p.member_id] ?? false })),
+        }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setSaved(true)
+    } catch (err) {
+      console.error('No se pudo guardar la asistencia:', err)
+      setError('No se pudo guardar la asistencia. Intentá de nuevo.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (saved) {
@@ -181,12 +231,15 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         />
       </div>
 
+      {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+
       <button
-        onClick={() => setSaved(true)}
-        className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
+        onClick={handleSave}
+        disabled={saving}
+        className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
         style={{ fontFamily: 'var(--font-body)' }}
       >
-        Guardar asistencia
+        {saving ? 'Guardando…' : 'Guardar asistencia'}
       </button>
     </div>
   )

@@ -125,6 +125,50 @@ export async function getStudyGroups(): Promise<DbGroupEnriched[]> {
   return (data ?? []) as unknown as DbGroupEnriched[]
 }
 
+const GROUP_SELECT = `
+  id, name, leader_id, zone, schedule_days, schedule_time, location,
+  max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  plan:study_plans(code),
+  leader:members!study_groups_leader_id_fkey(first_name, last_name),
+  enrollments:study_enrollments!study_enrollments_group_id_fkey(
+    member_id, status, grade,
+    member:members(first_name, last_name)
+  )
+`
+
+export async function getGroupById(id: string): Promise<DbGroupEnriched | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_groups')
+    .select(GROUP_SELECT)
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return (data as unknown as DbGroupEnriched) ?? null
+}
+
+/** Registra la asistencia de una sesión: crea la sesión y las filas de presencia. */
+export async function saveGroupAttendance(
+  groupId: string,
+  input: { session_date: string; topic?: string | null; notes?: string | null; attendance: { member_id: string; present: boolean }[] },
+): Promise<{ session_id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_sessions')
+    .insert({ group_id: groupId, session_date: input.session_date, topic: input.topic ?? null, notes: input.notes ?? null })
+    .select('id')
+    .single()
+  if (error) throw error
+  const sessionId = (data as { id: string }).id
+
+  if (input.attendance.length > 0) {
+    const rows = input.attendance.map(a => ({ session_id: sessionId, member_id: a.member_id, present: a.present }))
+    const { error: aErr } = await supabase.from('study_attendance').insert(rows)
+    if (aErr) throw aErr
+  }
+  return { session_id: sessionId }
+}
+
 /** Dirigentes de estudio con miembro y evaluaciones. */
 export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
   const supabase = createAdminClient()

@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { updateGroup, type GroupWriteInput } from '@/lib/supabase/queries/studies'
+import { updateGroup, getGroupById, type GroupWriteInput } from '@/lib/supabase/queries/studies'
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params
+    const group = await getGroupById(id)
+    if (!group) return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 })
+    return NextResponse.json(group)
+  } catch (error) {
+    console.error('GET /api/studies/groups/[id]:', error)
+    const detail = error instanceof Error ? { message: error.message } : error
+    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+  }
+}
 
 export async function PUT(
   req: NextRequest,
