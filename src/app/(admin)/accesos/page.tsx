@@ -4,7 +4,6 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Search, UserPlus, Check, X, AlertTriangle, ChevronDown } from 'lucide-react'
 import { ROLES, type RoleId, type UserAccess } from '@/data/mock-auth'
-import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
 
@@ -425,18 +424,26 @@ function DarAccesoModal({
   onClose: () => void
   onConfirm: (memberId: string, name: string, email: string, initials: string, roles: RoleId[]) => void
 }) {
+  type MemberLite = { id: string; first_name: string; last_name: string; email: string | null; cedula: string | null }
   const [step, setStep]               = useState<1 | 2>(1)
   const [query, setQuery]             = useState('')
-  const [selected, setSelected]       = useState<typeof mockMembers[0] | null>(null)
+  const [selected, setSelected]       = useState<MemberLite | null>(null)
   const [selectedRoles, setSelectedRoles] = useState<Set<RoleId>>(new Set())
+  const [results, setResults]         = useState<MemberLite[]>([])
 
-  const results = useMemo(() => {
-    if (!query.trim()) return []
-    const q = query.toLowerCase()
-    return mockMembers
-      .filter(m => `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) || (m.email?.toLowerCase().includes(q) ?? false))
-      .slice(0, 6)
-  }, [query])
+  // Búsqueda real de miembros (debounced), excluyendo los que ya tienen acceso.
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => { if (alive) setResults(((d.members ?? []) as MemberLite[]).filter(m => !existingIds.includes(m.id))) })
+        .catch(() => { if (alive) setResults([]) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [query, existingIds])
 
   const AVATAR_COLORS2 = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949']
   function aBg(id: string) { return AVATAR_COLORS2[id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS2.length] }
