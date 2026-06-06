@@ -748,6 +748,56 @@ export async function createMember(member: Omit<DbMember, 'id' | 'created_at' | 
   return data as DbMember
 }
 
+/** Crea una family_unit e inserta a todos sus integrantes en family_members. */
+export async function createFamily(input: { name: string; members: Array<{ member_id: string; relation: string }> }) {
+  const supabase = createAdminClient()
+  const { data: unit, error: uErr } = await supabase
+    .from('family_units')
+    .insert({ name: input.name })
+    .select('id')
+    .single()
+  if (uErr) throw uErr
+  const unitId = (unit as { id: string }).id
+
+  if (input.members.length > 0) {
+    const rows = input.members.map(m => ({ family_unit_id: unitId, member_id: m.member_id, relation: m.relation }))
+    const { error: mErr } = await supabase.from('family_members').insert(rows)
+    if (mErr) throw mErr
+  }
+  return { id: unitId }
+}
+
+/** Devuelve los OTROS integrantes de la(s) familia(s) de un miembro (para check-in). */
+export async function getMemberFamily(memberId: string): Promise<Array<{ member_id: string; name: string; relation: string }>> {
+  const supabase = createAdminClient()
+  // Unidades familiares a las que pertenece el miembro.
+  const { data: own, error: oErr } = await supabase
+    .from('family_members')
+    .select('family_unit_id')
+    .eq('member_id', memberId)
+  if (oErr) throw oErr
+  const unitIds = (own ?? []).map((r: { family_unit_id: string }) => r.family_unit_id)
+  if (unitIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('family_members')
+    .select('member_id, relation, member:members!family_members_member_id_fkey(first_name, last_name)')
+    .in('family_unit_id', unitIds)
+    .neq('member_id', memberId)
+  if (error) throw error
+
+  const rows = (data ?? []) as unknown as Array<{ member_id: string; relation: string; member: { first_name: string; last_name: string } | null }>
+  // Dedupe por member_id (puede aparecer en varias unidades).
+  const seen = new Set<string>()
+  const out: Array<{ member_id: string; name: string; relation: string }> = []
+  for (const r of rows) {
+    if (seen.has(r.member_id)) continue
+    seen.add(r.member_id)
+    out.push({ member_id: r.member_id, name: `${r.member?.first_name ?? ''} ${r.member?.last_name ?? ''}`.trim(), relation: r.relation })
+  }
+  return out
+}
+
 export async function updateMember(id: string, updates: Partial<DbMember>) {
   const supabase = createAdminClient()
 

@@ -7,6 +7,7 @@ import { CheckinCard } from '@/components/events/CheckinCard'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { ChevronLeft, Scan, UserPlus, X } from 'lucide-react'
+import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 
 const AVATAR_COLORS: Record<string, string> = {
   A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',
@@ -48,6 +49,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [memberResults, setMemberResults] = useState<{ id: string; name: string }[]>([])
   const [searching, setSearching] = useState(false)
   const [showNewPerson, setShowNewPerson] = useState(false)
+  const [familyCheckin, setFamilyCheckin] = useState<{ member: { id: string; name: string }; family: { member_id: string; name: string; relation: string }[] } | null>(null)
+  const [checkingFamily, setCheckingFamily] = useState(false)
 
   // Sincroniza los check-ins ya registrados cuando carga el evento.
   useEffect(() => {
@@ -88,40 +91,69 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const registeredIds = new Set(event.registrations.map(r => r.member_id))
   const searchResults = memberResults
 
-  async function handleConfirm(type: AttendanceType) {
-    if (!selectedMember) return
-    const member = selectedMember
+  // Persiste un check-in (optimista con rollback). Reutilizado por el flujo
+  // individual, el de familia y el de persona nueva.
+  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType) {
     const subEventId = event!.sub_events.length > 0 ? event!.sub_events[0].id : null
+    const stamp = new Date().toISOString() + ':' + m.id
     const newCheckin: EventCheckin & { _new?: boolean } = {
-      member_id: member.id,
-      member_name: member.name,
+      member_id: m.id,
+      member_name: m.name,
       attendance_type: type,
       sub_event_id: subEventId,
-      checked_at: new Date().toISOString(),
+      checked_at: stamp,
       _new: true,
     }
-    // Optimista: mostramos el check-in de una.
     setCheckins(prev => [newCheckin, ...prev])
     setRecentCheckins(prev => [newCheckin, ...prev].slice(0, 8))
-    setSelectedMember(null)
-    setQuery('')
-    setTimeout(() => {
-      setRecentCheckins(prev => prev.map(c => ({ ...c, _new: false })))
-    }, 50)
-
-    // Persistimos en Supabase. Si falla, revertimos el optimista.
+    setTimeout(() => setRecentCheckins(prev => prev.map(c => ({ ...c, _new: false }))), 50)
     try {
       const res = await fetch(`/api/events/${id}/checkins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: member.id, sub_event_id: subEventId, method: 'manual' }),
+        body: JSON.stringify({ member_id: m.id, sub_event_id: subEventId, method: 'manual' }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
     } catch (err) {
       console.error('No se pudo registrar el check-in:', err)
-      setCheckins(prev => prev.filter(c => c.checked_at !== newCheckin.checked_at))
-      setRecentCheckins(prev => prev.filter(c => c.checked_at !== newCheckin.checked_at))
+      setCheckins(prev => prev.filter(c => c.checked_at !== stamp))
+      setRecentCheckins(prev => prev.filter(c => c.checked_at !== stamp))
     }
+  }
+
+  // Al elegir un miembro existente: si tiene familia, ofrecer registrar a todos.
+  async function handleSelectMember(member: { id: string; name: string }) {
+    try {
+      const res = await fetch(`/api/members/${member.id}/family`)
+      const family = res.ok ? await res.json() : []
+      if (Array.isArray(family) && family.length > 0) {
+        setFamilyCheckin({ member, family })
+        return
+      }
+    } catch { /* si falla, seguimos al flujo individual */ }
+    setSelectedMember(member)
+  }
+
+  async function handleConfirm(type: AttendanceType) {
+    if (!selectedMember) return
+    const member = selectedMember
+    setSelectedMember(null)
+    setQuery('')
+    await persistCheckin(member, type)
+  }
+
+  // Registra varios miembros (familia) al evento.
+  async function registerFamily(ids: string[]) {
+    if (!familyCheckin) return
+    setCheckingFamily(true)
+    const all = [{ member_id: familyCheckin.member.id, name: familyCheckin.member.name }, ...familyCheckin.family]
+    for (const id of ids) {
+      const m = all.find(x => x.member_id === id)
+      if (m) await persistCheckin({ id: m.member_id, name: m.name }, 'participant')
+    }
+    setCheckingFamily(false)
+    setFamilyCheckin(null)
+    setQuery('')
   }
 
   function handleSimulateQR() {
@@ -210,7 +242,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               {searchResults.map(r => (
                 <button
                   key={r.id}
-                  onClick={() => setSelectedMember(r)}
+                  onClick={() => handleSelectMember(r)}
                   className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left hover:bg-white/10 transition-all"
                   style={{ background: 'rgba(255,255,255,0.05)' }}
                 >
@@ -323,18 +355,102 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           initialName={query.trim()}
           onClose={() => setShowNewPerson(false)}
           onCreated={handlePersonCreated}
+          onCheckedIn={() => { setShowNewPerson(false); setQuery('') }}
+          persistCheckin={persistCheckin}
+        />
+      )}
+
+      {familyCheckin && (
+        <FamilyCheckinModal
+          member={familyCheckin.member}
+          family={familyCheckin.family}
+          busy={checkingFamily}
+          onRegister={registerFamily}
+          onClose={() => setFamilyCheckin(null)}
         />
       )}
     </div>
   )
 }
 
+// ─── Modal: check-in en familia (miembro existente con familia) ──────────────────
+
+function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
+  member: { id: string; name: string }
+  family: { member_id: string; name: string; relation: string }[]
+  busy: boolean
+  onRegister: (ids: string[]) => void
+  onClose: () => void
+}) {
+  // El miembro encontrado siempre va; los familiares arrancan seleccionados.
+  const [selected, setSelected] = useState<Set<string>>(new Set(family.map(f => f.member_id)))
+
+  function toggle(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-navy-ink/70 backdrop-blur-sm" />
+      <div className="relative w-full max-w-md rounded-3xl bg-navy border border-white/10 p-6 space-y-4" style={{ boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+          {member.name} viene con familia
+        </h3>
+        <p className="text-sm text-white/60" style={{ fontFamily: 'var(--font-body)' }}>¿Quién más llegó?</p>
+
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5">
+            <div className="h-8 w-8 rounded-full bg-coral flex items-center justify-center text-[10px] font-bold text-white">{getInitials(member.name)}</div>
+            <span className="flex-1 text-sm text-white" style={{ fontFamily: 'var(--font-body)' }}>{member.name}</span>
+            <span className="text-[11px] text-white/40">Titular</span>
+          </div>
+          {family.map(f => (
+            <label key={f.member_id} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5 cursor-pointer">
+              <input type="checkbox" checked={selected.has(f.member_id)} onChange={() => toggle(f.member_id)} className="accent-coral h-4 w-4" />
+              <div className="h-8 w-8 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(f.name)}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white truncate" style={{ fontFamily: 'var(--font-body)' }}>{f.name}</p>
+                <p className="text-[11px] text-white/40">{f.relation}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={() => onRegister([member.id])}
+            disabled={busy}
+            className="flex-1 rounded-2xl border border-white/15 py-3 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            Solo {member.name.split(' ')[0]}
+          </button>
+          <button
+            onClick={() => onRegister([member.id, ...Array.from(selected)])}
+            disabled={busy}
+            className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            {busy ? 'Registrando…' : `Registrar ${1 + selected.size}`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Modal: agregar persona nueva (primera visita) ──────────────────────────────
 
-function NewPersonModal({ initialName, onClose, onCreated }: {
+function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistCheckin }: {
   initialName: string
   onClose: () => void
   onCreated: (member: { id: string; name: string }) => void
+  onCheckedIn: () => void
+  persistCheckin: (m: { id: string; name: string }, type: AttendanceType) => Promise<void>
 }) {
   const parts = initialName.split(' ')
   const [firstName, setFirstName] = useState(parts[0] ?? '')
@@ -345,39 +461,80 @@ function NewPersonModal({ initialName, onClose, onCreated }: {
   const [birthDate, setBirthDate] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [familyDrafts, setFamilyDrafts] = useState<FamilyDraft[]>([])
+  const [showFamily, setShowFamily] = useState(false)
 
   const valid = firstName.trim().length > 0 && lastName.trim().length > 0
+
+  async function createMember(payload: Record<string, unknown>): Promise<{ id: string; name: string }> {
+    const res = await fetch('/api/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(data?.error === 'duplicate'
+        ? `Ya existe un miembro con la cédula o correo de ${payload.first_name}.`
+        : `No se pudo crear a ${payload.first_name}.`)
+    }
+    return { id: data.id as string, name: `${payload.first_name} ${payload.last_name}` }
+  }
 
   async function submit() {
     if (!valid || saving) return
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch('/api/members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          phone: phone.trim() || null,
-          email: email.trim() || null,
-          cedula: cedula.trim() || null,
-          birth_date: birthDate || null,
-          send_invite: true,
-        }),
+      const principal = await createMember({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+        cedula: cedula.trim() || null,
+        birth_date: birthDate || null,
+        send_invite: !!email.trim(),
       })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) {
-        console.error('No se pudo crear la persona:', res.status, data)
-        setError(data?.error === 'duplicate'
-          ? 'Ya existe un miembro con esa cédula o correo.'
-          : 'No se pudo crear la persona. Revisá los datos e intentá de nuevo.')
+
+      // Sin familia → flujo de una persona (el operador elige participante/servidor).
+      if (familyDrafts.length === 0) {
+        onCreated(principal)
         return
       }
-      onCreated({ id: data.id, name: `${firstName.trim()} ${lastName.trim()}` })
+
+      // Con familia → crear integrantes, armar familia y check-in de todos.
+      const entries: Array<{ member_id: string; relation: string }> = [{ member_id: principal.id, relation: 'Titular' }]
+      const toCheckin: Array<{ id: string; name: string }> = [principal]
+      for (const d of familyDrafts) {
+        if (d.kind === 'linked') {
+          entries.push({ member_id: d.member_id, relation: d.relation })
+          toCheckin.push({ id: d.member_id, name: `${d.first_name} ${d.last_name}` })
+        } else {
+          const created = await createMember({
+            first_name: d.first_name,
+            last_name: d.last_name || lastName.trim(),
+            cedula: d.cedula,
+            birth_date: d.birth_date,
+            phone: d.phone,
+            email: d.email,
+            send_invite: !!d.email,
+          })
+          entries.push({ member_id: created.id, relation: d.relation })
+          toCheckin.push(created)
+        }
+      }
+      const famRes = await fetch('/api/families', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: `Familia ${lastName.trim()}`, members: entries }),
+      })
+      if (!famRes.ok) throw new Error('Se crearon los miembros pero falló la creación de la familia.')
+
+      for (const m of toCheckin) await persistCheckin(m, 'participant')
+      onCheckedIn()
     } catch (err) {
-      console.error('Error de red al crear la persona:', err)
-      setError('No se pudo crear la persona. Intentá de nuevo.')
+      console.error('Error creando persona/familia:', err)
+      setError(err instanceof Error ? err.message : 'No se pudo crear. Intentá de nuevo.')
     } finally {
       setSaving(false)
     }
@@ -428,6 +585,27 @@ function NewPersonModal({ initialName, onClose, onCreated }: {
           </div>
         </div>
 
+        {/* Familia */}
+        <div className="space-y-2">
+          {familyDrafts.map((d, i) => (
+            <div key={i} className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2">
+              <div className="h-7 w-7 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(`${d.first_name} ${d.last_name}`)}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white truncate" style={{ fontFamily: 'var(--font-body)' }}>{d.first_name} {d.last_name}</p>
+                <p className="text-[11px] text-white/40">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
+              </div>
+              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/30 hover:text-coral"><X size={14} /></button>
+            </div>
+          ))}
+          <button
+            onClick={() => setShowFamily(true)}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-2.5 text-[13px] text-white/60 hover:text-white hover:border-white/30 transition-colors"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <UserPlus size={14} /> Agregar familia
+          </button>
+        </div>
+
         {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
 
         <p className="text-[11px] text-white/40" style={{ fontFamily: 'var(--font-body)' }}>
@@ -440,9 +618,18 @@ function NewPersonModal({ initialName, onClose, onCreated }: {
           className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
           style={{ fontFamily: 'var(--font-body)' }}
         >
-          {saving ? 'Creando…' : 'Crear y hacer check-in'}
+          {saving ? 'Creando…' : familyDrafts.length > 0 ? `Crear familia y check-in (${familyDrafts.length + 1})` : 'Crear y hacer check-in'}
         </button>
       </div>
+
+      {showFamily && (
+        <FamilyMemberModal
+          defaultLastName={lastName.trim()}
+          existingIds={familyDrafts.filter((f): f is Extract<FamilyDraft, { kind: 'linked' }> => f.kind === 'linked').map(f => f.member_id)}
+          onAdd={d => { setFamilyDrafts(prev => [...prev, d]); setShowFamily(false) }}
+          onClose={() => setShowFamily(false)}
+        />
+      )}
     </div>
   )
 }

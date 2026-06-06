@@ -1,0 +1,18 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createFamily } from '@/lib/supabase/queries/members'
+
+// POST: crea una familia. Body: { name, members: [{ member_id, relation }] }
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    if (!body?.name || !Array.isArray(body?.members) || body.members.length === 0) {
+      return NextResponse.json({ error: 'Se requiere name y al menos un integrante' }, { status: 400 })
+    }
+    const res = await createFamily({ name: body.name, members: body.members })
+    return NextResponse.json(res, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/families:', error)
+    const detail = error instanceof Error ? { message: error.message } : error
+    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+  }
+}

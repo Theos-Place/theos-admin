@@ -7,6 +7,7 @@ import { mockMembers, type Member } from '@/data/mock-members'
 import { CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
 import { cn } from '@/lib/utils'
 import { REDIRECT_LONG_AFTER_SAVE_MS } from '@/lib/constants'
+import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { NewMemberStep1 } from './_components/NewMemberStep1'
 import { NewMemberStep2 } from './_components/NewMemberStep2'
 import { NewMemberStep3 } from './_components/NewMemberStep3'
@@ -35,25 +36,6 @@ type Step1Data = {
   emergency_contact_phone: string
 }
 
-type FamilyManualData = {
-  first_name: string
-  last_name: string
-  relation: string
-  birth_date: string
-  email: string
-  phone: string
-}
-
-type FamilyItem =
-  | { kind: 'linked'; member: Member; relation: string }
-  | { kind: 'new'; data: FamilyManualData; cedula: string }
-
-type FamilyLookupState =
-  | { state: 'idle' }
-  | { state: 'found'; member: Member }
-  | { state: 'not-found' }
-  | { state: 'manual' }
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function calculateAge(dateStr: string): number {
@@ -65,8 +47,14 @@ function calculateAge(dateStr: string): number {
   return age
 }
 
-function defaultManualForm(): FamilyManualData {
-  return { first_name: '', last_name: '', relation: '', birth_date: '', email: '', phone: '' }
+function draftName(d: FamilyDraft): string {
+  return `${d.first_name} ${d.last_name}`.trim()
+}
+function draftInitials(d: FamilyDraft): string {
+  return ((d.first_name[0] ?? '?') + (d.last_name[0] ?? '?')).toUpperCase()
+}
+function draftIsMinor(d: FamilyDraft): boolean {
+  return d.kind === 'new' && !!d.birth_date && calculateAge(d.birth_date) < 18
 }
 
 // ─── Step Indicator ───────────────────────────────────────────────────────────
@@ -153,25 +141,21 @@ export default function NuevoMiembroPage() {
   const [tseLoading, setTseLoading] = useState(false)
   const [tseBanner, setTseBanner] = useState<{ type: 'success' | 'warn'; text: string } | null>(null)
 
-  // Step 2
-  const [hasFamily, setHasFamily] = useState(false)
-  const [familyMembers, setFamilyMembers] = useState<FamilyItem[]>([])
-  const [addingFamily, setAddingFamily] = useState(false)
-  const [familyCedulaInput, setFamilyCedulaInput] = useState('')
-  const [familyLookup, setFamilyLookup] = useState<FamilyLookupState>({ state: 'idle' })
-  const [newFamilyManual, setNewFamilyManual] = useState<FamilyManualData>(defaultManualForm())
-  const [familyManualErrors, setFamilyManualErrors] = useState<Partial<Record<string, string>>>({})
+  // Step 2 — ¿viene con familia?
+  const [comesWithFamily, setComesWithFamily] = useState<boolean | null>(null)
+  const [familyMembers, setFamilyMembers] = useState<FamilyDraft[]>([])
+  const [showFamilyModal, setShowFamilyModal] = useState(false)
 
   // Step 3
   const [sendWhatsapp, setSendWhatsapp] = useState(true)
   const [sendEmail, setSendEmail] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [showToast, setShowToast] = useState(false)
 
   // ── Derived values ────────────────────────────────────────────────────────
 
   const isMinor = data.birth_date ? calculateAge(data.birth_date) < 18 : false
-  const isFamilyMinor = newFamilyManual.birth_date ? calculateAge(newFamilyManual.birth_date) < 18 : false
   const availableCantons = data.province ? (CR_CANTONS[data.province] ?? []) : []
   const availableDistricts = data.canton ? (CR_DISTRICTS[data.canton] ?? []) : []
 
@@ -233,68 +217,34 @@ export default function NuevoMiembroPage() {
     setStep(2)
   }
 
-  function handleFamilyCedulaBlur() {
-    const cedula = familyCedulaInput.trim()
-    if (!cedula) { setFamilyLookup({ state: 'idle' }); return }
-    const normalize = (s: string) => s.replace(/[-\s]/g, '')
-    const found = mockMembers.find(m => m.cedula != null && normalize(m.cedula) === normalize(cedula))
-    if (found) {
-      setFamilyLookup({ state: 'found', member: found })
-      setNewFamilyManual(f => ({
-        ...f,
-        first_name: f.first_name || found.first_name,
-        last_name:  f.last_name  || found.last_name,
-      }))
-    } else {
-      setFamilyLookup({ state: 'not-found' })
-    }
-  }
-
-  function resetFamilyForm() {
-    setFamilyCedulaInput('')
-    setFamilyLookup({ state: 'idle' })
-    setNewFamilyManual(defaultManualForm())
-    setFamilyManualErrors({})
-    setAddingFamily(false)
-  }
-
-  function addFamilyMemberToList() {
-    const e: Record<string, string> = {}
-    if (!newFamilyManual.first_name.trim()) e.first_name = 'Requerido'
-    if (!newFamilyManual.last_name.trim())  e.last_name  = 'Requerido'
-    if (!newFamilyManual.relation)          e.relation   = 'Requerido'
-    if (Object.keys(e).length > 0) { setFamilyManualErrors(e); return }
-    const manualData = { ...newFamilyManual, last_name: newFamilyManual.last_name || data.last_name }
-    if (familyLookup.state === 'found') {
-      setFamilyMembers(prev => [...prev, { kind: 'linked', member: familyLookup.member, relation: newFamilyManual.relation }])
-    } else {
-      setFamilyMembers(prev => [...prev, { kind: 'new', cedula: familyCedulaInput.trim(), data: manualData }])
-    }
-    resetFamilyForm()
+  function addFamilyDraft(draft: FamilyDraft) {
+    setFamilyMembers(prev => [...prev, draft])
+    setShowFamilyModal(false)
   }
 
   function removeFamilyMember(idx: number) {
     setFamilyMembers(prev => prev.filter((_, i) => i !== idx))
   }
 
-  function familyItemName(item: FamilyItem): string {
-    if (item.kind === 'linked') return item.member.first_name + ' ' + item.member.last_name
-    return item.data.first_name + ' ' + (item.data.last_name || data.last_name)
-  }
-
-  function familyItemInitials(item: FamilyItem): string {
-    const name = familyItemName(item)
-    const parts = name.trim().split(' ')
-    return ((parts[0]?.[0] ?? '?') + (parts[1]?.[0] ?? '?')).toUpperCase()
-  }
-
-  function familyItemRelation(item: FamilyItem): string {
-    return item.kind === 'linked' ? item.relation : item.data.relation
+  async function createMember(payload: Record<string, unknown>): Promise<string> {
+    const res = await fetch('/api/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(json?.error === 'duplicate'
+        ? `Ya existe un miembro con la cédula o correo de ${payload.first_name}.`
+        : `No se pudo crear a ${payload.first_name}.`)
+    }
+    return json.id as string
   }
 
   async function handleSubmit() {
     setSubmitting(true)
-    const payload = {
+    setSubmitError(null)
+    const principalPayload = {
       first_name: data.first_name.trim(),
       last_name: data.last_name.trim(),
       cedula: data.cedula.trim() || null,
@@ -315,19 +265,49 @@ export default function NuevoMiembroPage() {
       emergency_contact_phone: data.emergency_contact_phone.trim() || null,
       is_donor: false,
       is_active: true,
+      send_invite: !!data.email.trim(),
     }
     try {
-      const res = await fetch('/api/members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!res.ok) throw new Error('Error guardando el miembro')
+      // 1. Miembro principal
+      const principalId = await createMember(principalPayload)
+
+      // 2. Integrantes: linked se reusan, new se crean
+      const familyEntries: Array<{ member_id: string; relation: string }> = [
+        { member_id: principalId, relation: 'Titular' },
+      ]
+      for (const item of familyMembers) {
+        if (item.kind === 'linked') {
+          familyEntries.push({ member_id: item.member_id, relation: item.relation })
+        } else {
+          const id = await createMember({
+            first_name: item.first_name,
+            last_name: item.last_name || data.last_name,
+            cedula: item.cedula,
+            birth_date: item.birth_date,
+            phone: item.phone,
+            email: item.email,
+            is_active: true,
+            send_invite: !!item.email,
+          })
+          familyEntries.push({ member_id: id, relation: item.relation })
+        }
+      }
+
+      // 3. Crear la familia (solo si hay más de un integrante o vino con familia)
+      if (familyEntries.length > 1) {
+        const famRes = await fetch('/api/families', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: `Familia ${data.last_name.trim()}`, members: familyEntries }),
+        })
+        if (!famRes.ok) throw new Error('Se crearon los miembros pero falló la creación de la familia.')
+      }
+
       setShowToast(true)
       setTimeout(() => router.push('/miembros'), REDIRECT_LONG_AFTER_SAVE_MS)
     } catch (e) {
       console.error(e)
-      alert('No se pudo guardar el miembro. Revisá los datos e intentá de nuevo.')
+      setSubmitError(e instanceof Error ? e.message : 'No se pudo guardar. Intentá de nuevo.')
       setSubmitting(false)
     }
   }
@@ -377,26 +357,14 @@ export default function NuevoMiembroPage() {
         {/* ── STEP 2 ── */}
         {step === 2 && (
           <NewMemberStep2
-            hasFamily={hasFamily}
-            onHasFamilyToggle={() => setHasFamily(h => !h)}
+            comesWithFamily={comesWithFamily}
+            onComesWithFamilyChange={setComesWithFamily}
             familyMembers={familyMembers}
-            addingFamily={addingFamily}
-            onSetAddingFamily={setAddingFamily}
-            familyCedulaInput={familyCedulaInput}
-            onFamilyCedulaInputChange={(val) => { setFamilyCedulaInput(val); setFamilyLookup({ state: 'idle' }) }}
-            onFamilyCedulaBlur={handleFamilyCedulaBlur}
-            familyLookup={familyLookup}
-            newFamilyManual={newFamilyManual}
-            onNewFamilyManualChange={(updates) => setNewFamilyManual(f => ({ ...f, ...updates }))}
-            familyManualErrors={familyManualErrors}
-            isFamilyMinor={isFamilyMinor}
-            parentLastName={data.last_name}
-            onAddFamilyMember={addFamilyMemberToList}
-            onResetFamilyForm={resetFamilyForm}
+            onOpenModal={() => setShowFamilyModal(true)}
             onRemoveFamilyMember={removeFamilyMember}
-            familyItemName={familyItemName}
-            familyItemInitials={familyItemInitials}
-            familyItemRelation={familyItemRelation}
+            draftName={draftName}
+            draftInitials={draftInitials}
+            draftIsMinor={draftIsMinor}
           />
         )}
 
@@ -411,10 +379,20 @@ export default function NuevoMiembroPage() {
             sendEmail={sendEmail}
             onSendEmailChange={setSendEmail}
             submitting={submitting}
+            submitError={submitError}
             onSubmit={handleSubmit}
-            familyItemName={familyItemName}
-            familyItemInitials={familyItemInitials}
-            familyItemRelation={familyItemRelation}
+            draftName={draftName}
+            draftInitials={draftInitials}
+            draftRelation={(d: FamilyDraft) => d.relation}
+          />
+        )}
+
+        {showFamilyModal && (
+          <FamilyMemberModal
+            defaultLastName={data.last_name}
+            existingIds={familyMembers.filter((f): f is Extract<FamilyDraft, { kind: 'linked' }> => f.kind === 'linked').map(f => f.member_id)}
+            onAdd={addFamilyDraft}
+            onClose={() => setShowFamilyModal(false)}
           />
         )}
 

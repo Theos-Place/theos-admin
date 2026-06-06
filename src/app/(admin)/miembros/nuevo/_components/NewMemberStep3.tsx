@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { useSedes } from '@/lib/sedes'
-import type { Member } from '@/data/mock-members'
+import type { FamilyDraft } from '@/components/members/FamilyMemberModal'
 
 type Step1Data = {
   first_name: string
@@ -24,19 +24,6 @@ type Step1Data = {
   emergency_contact_phone: string
 }
 
-type FamilyManualData = {
-  first_name: string
-  last_name: string
-  relation: string
-  birth_date: string
-  email: string
-  phone: string
-}
-
-type FamilyItem =
-  | { kind: 'linked'; member: Member; relation: string }
-  | { kind: 'new'; data: FamilyManualData; cedula: string }
-
 function calculateAge(dateStr: string): number {
   const birth = new Date(dateStr)
   const today = new Date()
@@ -49,16 +36,17 @@ function calculateAge(dateStr: string): number {
 type Props = {
   data: Step1Data
   isMinor: boolean
-  familyMembers: FamilyItem[]
+  familyMembers: FamilyDraft[]
   sendWhatsapp: boolean
   onSendWhatsappChange: (val: boolean) => void
   sendEmail: boolean
   onSendEmailChange: (val: boolean) => void
   submitting: boolean
+  submitError: string | null
   onSubmit: () => void
-  familyItemName: (item: FamilyItem) => string
-  familyItemInitials: (item: FamilyItem) => string
-  familyItemRelation: (item: FamilyItem) => string
+  draftName: (d: FamilyDraft) => string
+  draftInitials: (d: FamilyDraft) => string
+  draftRelation: (d: FamilyDraft) => string
 }
 
 export function NewMemberStep3({
@@ -70,10 +58,11 @@ export function NewMemberStep3({
   sendEmail,
   onSendEmailChange,
   submitting,
+  submitError,
   onSubmit,
-  familyItemName,
-  familyItemInitials,
-  familyItemRelation,
+  draftName: familyItemName,
+  draftInitials: familyItemInitials,
+  draftRelation: familyItemRelation,
 }: Props) {
   const { activeSedes: SEDES } = useSedes()
   return (
@@ -213,6 +202,10 @@ export function NewMemberStep3({
           </span>
         </label>
       </div>
+
+      {submitError && (
+        <p className="text-[13px] text-coral text-center" style={{ fontFamily: 'var(--font-body)' }}>{submitError}</p>
+      )}
 
       {/* Submit button */}
       <button
