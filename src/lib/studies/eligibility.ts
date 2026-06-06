@@ -1,6 +1,7 @@
-import { STUDY_CATALOG } from '@/data/study-catalog'
-import { MOCK_GROUPS, STUDY_TYPES } from '@/data/mock-studies'
-import type { Member } from '@/data/mock-members'
+// Elegibilidad de matrícula sobre datos reales (planes + grupos de dominio).
+// Versión server-side de la lógica que antes vivía en enrollment-eligibility.ts (mock).
+
+import type { StudyType, StudyGroup } from '@/types/study'
 
 export type EligibilityResult = {
   study_code: string
@@ -27,28 +28,40 @@ export type EligibleGroup = {
   cost: number | null
 }
 
+export type MemberStudyProfile = {
+  completed_codes: string[]
+  current_code: string | null
+  is_donor: boolean
+  is_server: boolean
+  charla_count: number
+}
+
 const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles',
   J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo',
 }
 
 function formatDays(days: string[]): string {
-  const labels = days.map(d => DAY_LABELS[d] ?? d)
+  const labels = (days ?? []).map(d => DAY_LABELS[d] ?? d)
+  if (labels.length === 0) return ''
   if (labels.length === 1) return labels[0]
   if (labels.length === 2) return `${labels[0]} y ${labels[1]}`
   return labels.slice(0, -1).join(', ') + ' y ' + labels[labels.length - 1]
 }
 
-export function getEligibleStudies(member: Member): EligibilityResult[] {
-  return STUDY_CATALOG.map(study => {
+export function computeEligibility(
+  plans: StudyType[],
+  groups: StudyGroup[],
+  profile: MemberStudyProfile,
+): EligibilityResult[] {
+  return plans.map(study => {
     const reasons_blocked: string[] = []
     const reasons_met: string[] = []
 
-    // 1. Prerequisito de estudio anterior
+    // 1. Prerequisito
     if (study.prerequisite) {
-      const hasPrereq = member.completed_studies?.includes(study.prerequisite as string)
-      const prereqName = STUDY_CATALOG.find(s => s.code === study.prerequisite)?.name
-      if (hasPrereq) {
+      const prereqName = plans.find(s => s.code === study.prerequisite)?.name ?? study.prerequisite
+      if (profile.completed_codes.includes(study.prerequisite)) {
         reasons_met.push(`Completaste ${prereqName}`)
       } else {
         reasons_blocked.push(`Necesitás completar ${prereqName} primero`)
@@ -57,50 +70,34 @@ export function getEligibleStudies(member: Member): EligibilityResult[] {
       reasons_met.push('No requiere estudios previos')
     }
 
-    // 2. No está cursando actualmente
-    if (member.current_study === study.code) {
+    // 2. No está cursándolo
+    if (profile.current_code === study.code) {
       reasons_blocked.push('Ya estás matriculado en este estudio')
     }
 
-    // 3. No lo completó ya
-    if (member.completed_studies?.includes(study.code as string)) {
+    // 3. No lo completó
+    if (profile.completed_codes.includes(study.code)) {
       reasons_blocked.push('Ya completaste este estudio')
     }
 
-    // 4. Compromisos requeridos
-    const studyType = STUDY_TYPES.find(s => s.code === study.code)
-    if (studyType) {
-      if (studyType.req_donor) {
-        if (member.is_donor) {
-          reasons_met.push('Sos donador activo ✓')
-        } else {
-          reasons_blocked.push('Requiere ser donador activo de Theos')
-        }
-      }
-      if (studyType.req_server) {
-        const isServer = member.service_history?.some(s => s.status === 'activo' && s.to === null)
-        if (isServer) {
-          reasons_met.push('Servís activamente en un comité ✓')
-        } else {
-          reasons_blocked.push('Requiere servir activamente en un comité')
-        }
-      }
-      if (studyType.req_attendee) {
-        const charlaCount = member.attendance_history?.filter(
-          a => a.type === 'Charla mensual' || a.type === 'Charla semanal'
-        ).length ?? 0
-        if (charlaCount >= 4) {
-          reasons_met.push('Asistís regularmente a las charlas ✓')
-        } else {
-          reasons_blocked.push('Requiere asistencia regular a las charlas (con check-in)')
-        }
-      }
+    // 4. Compromisos
+    if (study.req_donor) {
+      if (profile.is_donor) reasons_met.push('Sos donador activo ✓')
+      else reasons_blocked.push('Requiere ser donador activo de Theos')
+    }
+    if (study.req_server) {
+      if (profile.is_server) reasons_met.push('Servís activamente en un comité ✓')
+      else reasons_blocked.push('Requiere servir activamente en un comité')
+    }
+    if (study.req_attendee) {
+      if (profile.charla_count >= 4) reasons_met.push('Asistís regularmente a las charlas ✓')
+      else reasons_blocked.push('Requiere asistencia regular a las charlas (con check-in)')
     }
 
     const is_eligible = reasons_blocked.length === 0
 
     const available_groups: EligibleGroup[] = is_eligible
-      ? MOCK_GROUPS
+      ? groups
           .filter(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length
             return g.study_type_id === study.code && g.status === 'open' && active < g.max_capacity
@@ -117,8 +114,8 @@ export function getEligibleStudies(member: Member): EligibilityResult[] {
               max_capacity: g.max_capacity,
               filled: active,
               start_date: g.start_date,
-              requires_payment: studyType?.requires_payment ?? false,
-              cost: studyType?.cost ?? null,
+              requires_payment: study.requires_payment,
+              cost: study.cost ?? null,
             }
           })
       : []

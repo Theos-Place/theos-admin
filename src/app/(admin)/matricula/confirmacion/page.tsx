@@ -1,11 +1,11 @@
 'use client'
 
-import { useMemo, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, GraduationCap, MessageCircle } from 'lucide-react'
-import { MOCK_GROUPS, STUDY_TYPES } from '@/data/mock-studies'
-import { STUDY_CATALOG } from '@/data/study-catalog'
+import type { StudyGroup, StudyType } from '@/types/study'
+import { toDomainStudyGroup, toDomainStudyType } from '@/lib/studies/adapter'
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('es-CR', {
@@ -30,9 +30,34 @@ function ConfirmacionContent() {
   const groupId  = searchParams.get('group') ?? ''
   const studyCode = searchParams.get('study') ?? ''
 
-  const group = useMemo(() => MOCK_GROUPS.find(g => g.id === groupId), [groupId])
-  const study = useMemo(() => STUDY_CATALOG.find(s => s.code === studyCode), [studyCode])
-  const studyType = useMemo(() => STUDY_TYPES.find(s => s.code === studyCode), [studyCode])
+  const [group, setGroup] = useState<StudyGroup | null>(null)
+  const [study, setStudy] = useState<StudyType | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let alive = true
+    Promise.all([
+      fetch(`/api/studies/groups/${groupId}`).then(r => (r.ok ? r.json() : null)),
+      fetch('/api/studies/plans').then(r => (r.ok ? r.json() : [])),
+    ]).then(([g, plans]) => {
+      if (!alive) return
+      setGroup(g ? toDomainStudyGroup(g) : null)
+      const plan = Array.isArray(plans) ? plans.find((p: { code: string }) => p.code === studyCode) : null
+      setStudy(plan ? toDomainStudyType(plan) : null)
+      setLoading(false)
+    }).catch(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [groupId, studyCode])
+
+  const studyType = study
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+      </div>
+    )
+  }
 
   if (!group || !study) {
     return (

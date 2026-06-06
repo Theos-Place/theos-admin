@@ -147,6 +147,47 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
   return (data as unknown as DbGroupEnriched) ?? null
 }
 
+/** Perfil académico de un miembro para calcular elegibilidad de matrícula.
+ *  Devuelve los CÓDIGOS de plan (no nombres) y los compromisos reales. */
+export async function getMemberStudyProfile(memberId: string): Promise<{
+  completed_codes: string[]
+  current_code: string | null
+  is_donor: boolean
+  is_server: boolean
+  charla_count: number
+}> {
+  const supabase = createAdminClient()
+  const [memberRes, enrRes, volRes, chkRes] = await Promise.all([
+    supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
+    supabase
+      .from('study_enrollments')
+      .select('status, study_groups!study_enrollments_group_id_fkey(plan:study_plans(code))')
+      .eq('member_id', memberId),
+    supabase.from('volunteers').select('id').eq('member_id', memberId).eq('status', 'active').limit(1),
+    supabase
+      .from('event_checkins')
+      .select('id, events!inner(event_type)')
+      .eq('member_id', memberId)
+      .eq('events.event_type', 'charla'),
+  ])
+
+  const enrollments = (enrRes.data ?? []) as unknown as Array<{ status: string; study_groups: { plan: { code: string } | null } | null }>
+  const completed_codes = enrollments
+    .filter(e => e.status === 'completed' && e.study_groups?.plan?.code)
+    .map(e => e.study_groups!.plan!.code)
+  const current_code = enrollments
+    .find(e => e.status === 'enrolled' && e.study_groups?.plan?.code)
+    ?.study_groups?.plan?.code ?? null
+
+  return {
+    completed_codes,
+    current_code,
+    is_donor: Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor),
+    is_server: (volRes.data ?? []).length > 0,
+    charla_count: (chkRes.data ?? []).length,
+  }
+}
+
 /** Registra la asistencia de una sesión: crea la sesión y las filas de presencia. */
 export async function saveGroupAttendance(
   groupId: string,

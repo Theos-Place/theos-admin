@@ -1,18 +1,16 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
-  XCircle, Users, Calendar, MapPin, DollarSign, X, AlertCircle,
+  XCircle, Calendar, DollarSign, X, AlertCircle,
   CreditCard, Smartphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
-import { mockMembers } from '@/data/mock-members'
 import { STUDY_CATALOG } from '@/data/study-catalog'
-import { getEligibleStudies, type EligibilityResult, type EligibleGroup } from '@/lib/enrollment-eligibility'
-import { enrollmentStore } from '@/data/mock-enrollments'
+import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
 
 type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'campaña'
 
@@ -49,33 +47,39 @@ export default function MatriculaPage() {
 
   const { user } = useAuth()
   const userRoles = user?.roles ?? []
-  const [selectedMemberId, setSelectedMemberId] = useState<string>('')
+  const isAdminView = userRoles.some(r => ['admin', 'direccion'].includes(r))
+
+  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null)
+  const effectiveMemberId = selectedMember?.id ?? user?.member_id ?? null
+  const effectiveName = selectedMember?.name ?? user?.name ?? 'miembro'
+
   const [activeFilter, setActiveFilter]   = useState<FilterTab>('available')
   const [search, setSearch]               = useState('')
   const [expandedStudy, setExpandedStudy] = useState<string | null>(null)
   const [confirmModal, setConfirmModal]   = useState<ConfirmState | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'sinpe'>('sinpe')
+  const [enrolling, setEnrolling]         = useState(false)
 
-  // El miembro por defecto se resuelve por nombre contra el catálogo mock
-  // (matrícula sigue en mock — ver Fase 2). Si no calza, usa el primero.
-  const defaultMemberId = useMemo(() => {
-    const name = user?.name ?? ''
-    const matched = mockMembers.find(m => `${m.first_name} ${m.last_name}` === name)
-    return matched?.id ?? mockMembers[0].id
-  }, [user])
-  const effectiveMemberId = selectedMemberId || defaultMemberId
+  const [eligibilityResults, setEligibilityResults] = useState<EligibilityResult[]>([])
+  const [profile, setProfile] = useState<MemberStudyProfile | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const isAdminView = userRoles.some(r => ['admin', 'direccion'].includes(r))
-
-  const currentMember = useMemo(
-    () => mockMembers.find(m => m.id === effectiveMemberId) ?? mockMembers[0],
-    [effectiveMemberId]
-  )
-
-  const eligibilityResults = useMemo(
-    () => getEligibleStudies(currentMember),
-    [currentMember]
-  )
+  // Elegibilidad + perfil académico desde datos reales.
+  useEffect(() => {
+    if (!effectiveMemberId) { setLoading(false); return }
+    let alive = true
+    setLoading(true)
+    fetch(`/api/matricula/eligibility?member_id=${effectiveMemberId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!alive) return
+        setEligibilityResults(d?.eligibility ?? [])
+        setProfile(d?.profile ?? null)
+        setLoading(false)
+      })
+      .catch(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [effectiveMemberId])
 
   const filteredResults = useMemo(() => {
     let res = eligibilityResults
@@ -98,48 +102,38 @@ export default function MatriculaPage() {
     .map(stage => ({ stage, items: filteredResults.filter(r => r.stage === stage) }))
     .filter(g => g.items.length > 0)
 
-  // Métricas del perfil
-  const completedStudies = STUDY_CATALOG.filter(s =>
-    currentMember.completed_studies?.includes(s.code as string)
-  )
-  const currentStudyInfo = STUDY_CATALOG.find(s => s.code === currentMember.current_study)
-  const isActiveServer = currentMember.service_history?.some(s => s.status === 'activo' && s.to === null)
-  const charlaCount = currentMember.attendance_history?.filter(
-    a => a.type === 'Charla mensual' || a.type === 'Charla semanal'
-  ).length ?? 0
+  // Métricas del perfil (datos reales)
+  const completedStudies = STUDY_CATALOG.filter(s => profile?.completed_codes.includes(s.code))
+  const currentStudyInfo = STUDY_CATALOG.find(s => s.code === profile?.current_code)
+  const isDonor = profile?.is_donor ?? false
+  const isActiveServer = profile?.is_server ?? false
+  const charlaCount = profile?.charla_count ?? 0
   const availableCount = eligibilityResults.filter(r => r.is_eligible && r.available_groups.length > 0).length
 
-  function handleEnroll() {
-    if (!confirmModal) return
+  async function handleEnroll() {
+    if (!confirmModal || !effectiveMemberId || enrolling) return
     const { group, study } = confirmModal
-
-    enrollmentStore.add({
-      id: `enr-${Date.now()}`,
-      member_id: currentMember.id,
-      group_id: group.group_id,
-      study_code: study.study_code,
-      study_name: study.study_name,
-      zone: group.zone,
-      leader_name: group.leader_name,
-      schedule_days: group.schedule_days,
-      schedule_time: group.schedule_time,
-      start_date: group.start_date,
-      status: 'enrolled',
-      enrolled_at: new Date().toISOString(),
-      payment_method: group.requires_payment ? paymentMethod : null,
-    })
-
-    // Actualizar el mock en memoria
-    const member = mockMembers.find(m => m.id === currentMember.id)
-    if (member) member.current_study = study.study_code
-
-    router.push(`/matricula/confirmacion?group=${group.group_id}&study=${study.study_code}`)
+    setEnrolling(true)
+    try {
+      const res = await fetch(`/api/studies/groups/${group.group_id}/enrollments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: effectiveMemberId }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      router.push(`/matricula/confirmacion?group=${group.group_id}&study=${study.study_code}`)
+    } catch (err) {
+      console.error('No se pudo matricular:', err)
+      setEnrolling(false)
+    }
   }
 
   if (!effectiveMemberId) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+          No hay un miembro asociado a tu cuenta.
+        </p>
       </div>
     )
   }
@@ -167,30 +161,17 @@ export default function MatriculaPage() {
               Matrícula de Estudios
             </h1>
             <p className="mt-0.5 text-sm text-white/60" style={{ fontFamily: 'var(--font-body)' }}>
-              Hola, <span className="text-white font-medium">{currentMember.first_name} {currentMember.last_name}</span>
-              {' · '}{availableCount} estudio{availableCount !== 1 ? 's' : ''} disponible{availableCount !== 1 ? 's' : ''} para vos
+              Hola, <span className="text-white font-medium">{effectiveName}</span>
+              {' · '}{availableCount} estudio{availableCount !== 1 ? 's' : ''} disponible{availableCount !== 1 ? 's' : ''}
             </p>
           </div>
 
           {/* Selector de miembro — solo admin/direccion */}
           {isAdminView && (
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] uppercase tracking-widest text-white/40" style={{ fontFamily: 'var(--font-display)' }}>
-                Ver disponibilidad como:
-              </label>
-              <select
-                value={effectiveMemberId}
-                onChange={e => { setSelectedMemberId(e.target.value); setExpandedStudy(null) }}
-                className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white outline-none focus:border-coral/50"
-                style={{ fontFamily: 'var(--font-body)' }}
-              >
-                {mockMembers.map(m => (
-                  <option key={m.id} value={m.id} style={{ background: '#161440', color: 'white' }}>
-                    {m.first_name} {m.last_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <MemberPicker
+              selected={selectedMember}
+              onSelect={m => { setSelectedMember(m); setExpandedStudy(null) }}
+            />
           )}
         </div>
       </div>
@@ -254,7 +235,7 @@ export default function MatriculaPage() {
               Compromisos
             </p>
             <div className="space-y-1.5">
-              <CommitmentRow met={currentMember.is_donor}     label="Donador/a activo/a" />
+              <CommitmentRow met={isDonor}                    label="Donador/a activo/a" />
               <CommitmentRow met={!!isActiveServer}           label="Servidor/a en comité" />
               <CommitmentRow met={charlaCount >= 4}           label={`Asistencia a charlas (${charlaCount}/4)`} />
             </div>
@@ -296,7 +277,11 @@ export default function MatriculaPage() {
       </div>
 
       {/* Lista de estudios */}
-      {grouped.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+        </div>
+      ) : grouped.length === 0 ? (
         <div
           className="rounded-2xl p-12 text-center"
           style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
@@ -368,6 +353,68 @@ export default function MatriculaPage() {
 }
 
 // ─── Sub-componentes ──────────────────────────────────────────────────────────
+
+// Buscador de miembro para admin/dirección (ver disponibilidad como otra persona).
+function MemberPicker({ selected, onSelect }: {
+  selected: { id: string; name: string } | null
+  onSelect: (m: { id: string; name: string } | null) => void
+}) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<{ id: string; first_name: string; last_name: string }[]>([])
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => { if (alive) setResults(d.members ?? []) })
+        .catch(() => { if (alive) setResults([]) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [query])
+
+  return (
+    <div className="flex flex-col gap-1 relative w-64">
+      <label className="text-[10px] uppercase tracking-widest text-white/40" style={{ fontFamily: 'var(--font-display)' }}>
+        Ver disponibilidad como:
+      </label>
+      {selected ? (
+        <div className="flex items-center justify-between gap-2 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white">
+          <span className="truncate" style={{ fontFamily: 'var(--font-body)' }}>{selected.name}</span>
+          <button onClick={() => { onSelect(null); setQuery('') }} className="text-white/60 hover:text-white shrink-0"><X size={14} /></button>
+        </div>
+      ) : (
+        <>
+          <input
+            value={query}
+            onChange={e => { setQuery(e.target.value); setOpen(true) }}
+            onFocus={() => setOpen(true)}
+            placeholder="Buscar miembro…"
+            className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-coral/50"
+            style={{ fontFamily: 'var(--font-body)' }}
+          />
+          {open && results.length > 0 && (
+            <div className="absolute top-full mt-1 w-full rounded-xl bg-white overflow-hidden z-20" style={{ boxShadow: 'var(--shadow-lg)' }}>
+              {results.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => { onSelect({ id: m.id, name: `${m.first_name} ${m.last_name}` }); setOpen(false) }}
+                  className="w-full text-left px-3 py-2 text-sm text-navy hover:bg-surface-low transition-colors"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  {m.first_name} {m.last_name}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
 
 function CommitmentRow({ met, label }: { met: boolean; label: string }) {
   return (
