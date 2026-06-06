@@ -286,6 +286,34 @@ export async function deleteRegistration(eventId: string, memberId: string): Pro
   if (error) throw error
 }
 
+type VolunteerStatus = 'confirmed' | 'pending' | 'cancelled'
+
+/** Asigna un servidor (voluntario) a un evento. UNIQUE(event_id, member_id). */
+export async function createVolunteer(
+  eventId: string,
+  input: { member_id: string; role?: string | null; status?: VolunteerStatus },
+): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('event_volunteers')
+    .insert({ event_id: eventId, member_id: input.member_id, role: input.role ?? null, status: input.status ?? 'pending' })
+    .select('id')
+    .single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+/** Quita la asignación de un servidor en un evento. */
+export async function deleteVolunteer(eventId: string, memberId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('event_volunteers')
+    .delete()
+    .eq('event_id', eventId)
+    .eq('member_id', memberId)
+  if (error) throw error
+}
+
 /** Registra un check-in en un evento. attendance_type NO se persiste: se deriva
  *  al leer (es "server" si el miembro es voluntario del evento). */
 export async function createCheckin(

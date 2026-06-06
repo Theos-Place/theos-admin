@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useMemo } from 'react'
+import { use, useState, useMemo, useEffect } from 'react'
 import { useEvent } from '@/hooks/useEvents'
 import { mockMembers } from '@/data/mock-members'
 import { CancellationModal } from '@/components/events/CancellationModal'
@@ -87,7 +87,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [cancelled, setCancelled] = useState(false)
 
   // Servidores tab state
-  const [localBookings, setLocalBookings] = useState<VolunteerBooking[]>([])
+  const [localBookings] = useState<VolunteerBooking[]>([])
+  const [memberResults, setMemberResults] = useState<typeof mockMembers>([])
+  const [assigning, setAssigning] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [modalStep, setModalStep] = useState<1 | 2>(1)
   const [searchQuery, setSearchQuery] = useState('')
@@ -117,16 +119,27 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     ...localBookings,
   ], [event?.volunteer_bookings, localBookings])
 
+  // Búsqueda real de miembros (debounced) mientras el modal está abierto.
+  useEffect(() => {
+    if (!showAssignModal) return
+    const q = searchQuery.trim()
+    if (q.length < 2) { setMemberResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=10`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => { if (alive) setMemberResults((d.members ?? []) as typeof mockMembers) })
+        .catch(() => { if (alive) setMemberResults([]) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [searchQuery, showAssignModal])
+
   const filteredMembers = useMemo(() => {
-    const q = searchQuery.toLowerCase()
-    return mockMembers.filter(m => {
-      const nameMatch = `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-        (m.cedula ?? '').includes(q)
-      const committeeMatch = !filterCommittee ||
-        m.service_history.some(s => s.committee === event?.committee_id && s.status === 'activo')
-      return nameMatch && committeeMatch
-    }).slice(0, 8)
-  }, [searchQuery, filterCommittee, event?.committee_id])
+    if (!filterCommittee) return memberResults
+    return memberResults.filter(m =>
+      m.service_history?.some(s => s.committee === event?.committee_id && s.status === 'activo'),
+    )
+  }, [memberResults, filterCommittee, event?.committee_id])
 
   if (!event) {
     return (
@@ -162,7 +175,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const pendingCount   = allBookings.filter(b => b.status === 'pending').length
   const declinedCount  = allBookings.filter(b => b.status === 'declined').length
 
-  const selectedMember = selectedMemberId ? mockMembers.find(m => m.id === selectedMemberId) : null
+  const selectedMember = selectedMemberId ? memberResults.find(m => m.id === selectedMemberId) : null
 
   function resetModal() {
     setModalStep(1)
@@ -175,29 +188,41 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     setShowAssignModal(false)
   }
 
-  function confirmAssignment() {
-    if (!selectedMember) return
+  async function confirmAssignment() {
+    if (!selectedMember || assigning) return
     const role = assignRole === 'Otro' ? customRole.trim() || 'Otro' : assignRole
     if (!role) return
-    const newBooking: VolunteerBooking = {
-      id: `booking-${Date.now()}`,
-      member_id: selectedMember.id,
-      member_name: `${selectedMember.first_name} ${selectedMember.last_name}`,
-      member_initials: getInitials(`${selectedMember.first_name} ${selectedMember.last_name}`),
-      role,
-      status: 'pending',
-      is_recurring: assignRecurring,
-    }
-    setLocalBookings(prev => [...prev, newBooking])
     const name = `${selectedMember.first_name} ${selectedMember.last_name}`
-    setServerToast(`Recordatorio enviado a ${name} por WhatsApp y correo`)
-    setTimeout(() => setServerToast(null), TOAST_MS)
-    resetModal()
+    setAssigning(true)
+    try {
+      const res = await fetch(`/api/events/${id}/volunteers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: selectedMember.id, role, status: 'pending' }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      await refetch()
+      setServerToast(`${name} asignado como ${role}`)
+      setTimeout(() => setServerToast(null), TOAST_MS)
+      resetModal()
+    } catch (err) {
+      console.error('No se pudo asignar el servidor:', err)
+      setServerToast('No se pudo asignar el servidor. Intentá de nuevo.')
+      setTimeout(() => setServerToast(null), TOAST_MS)
+    } finally {
+      setAssigning(false)
+    }
   }
 
-  function removeBooking(bookingId: string) {
-    setLocalBookings(prev => prev.filter(b => b.id !== bookingId))
+  async function removeBooking(memberId: string) {
     setOpenServerMenu(null)
+    try {
+      const res = await fetch(`/api/events/${id}/volunteers/${memberId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      await refetch()
+    } catch (err) {
+      console.error('No se pudo quitar el servidor:', err)
+    }
   }
 
   function handleFlyerSelect(file: File) {
