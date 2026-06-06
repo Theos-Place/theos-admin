@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { type CommunicationChannel } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
-import { MOCK_MEMBER_LISTS } from '@/data/mock-member-lists'
+import type { MemberList } from '@/data/mock-member-lists'
 import { MessagePreview } from '@/components/communications/MessagePreview'
 import { type RecipientState, type RecipientMode } from '@/components/communications/RecipientSelector'
 import { ChevronLeft, Send, Save, Check } from 'lucide-react'
@@ -82,15 +82,22 @@ function NuevaComunicacionContent() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [previewChannel, setPreviewChannel] = useState<'whatsapp' | 'email'>(reenviarMsg?.channel === 'email' ? 'email' : 'whatsapp')
+  const [memberLists, setMemberLists] = useState<MemberList[]>([])
+
+  useEffect(() => {
+    let alive = true
+    fetch('/api/member-lists').then(r => (r.ok ? r.json() : [])).then(d => { if (alive) setMemberLists(Array.isArray(d) ? d : []) }).catch(() => {})
+    return () => { alive = false }
+  }, [])
 
   const filteredLists = useMemo(() => {
-    if (!listSearch.trim()) return MOCK_MEMBER_LISTS
+    if (!listSearch.trim()) return memberLists
     const q = listSearch.toLowerCase()
-    return MOCK_MEMBER_LISTS.filter(l => l.name.toLowerCase().includes(q) || l.segment_label.toLowerCase().includes(q))
-  }, [listSearch])
+    return memberLists.filter(l => l.name.toLowerCase().includes(q) || l.segment_label.toLowerCase().includes(q))
+  }, [listSearch, memberLists])
 
   function applyList(listId: string) {
-    const list = MOCK_MEMBER_LISTS.find(l => l.id === listId)
+    const list = memberLists.find(l => l.id === listId)
     if (!list) return
     setRecipients({ mode: 'manual', manualMemberIds: list.member_ids, groupEntity: null, groupId: '', label: list.name, count: list.member_count })
     setIsImported(true)

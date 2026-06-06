@@ -16,26 +16,5 @@ export type MemberList = {
   tags: string[]
 }
 
-// Sin listas de ejemplo: el store arranca vacío. Las listas se crean desde /miembros.
-const BASE: MemberList[] = []
-
-// Module-level mutable store so saves from /miembros persist to /miembros/listas within a session
-const _store: MemberList[] = [...BASE]
-
-export const listStore = {
-  getAll: (): MemberList[] => [..._store],
-  getById: (id: string): MemberList | undefined => _store.find(l => l.id === id),
-  add: (list: MemberList): void => { _store.push(list) },
-  remove: (id: string): void => {
-    const i = _store.findIndex(l => l.id === id)
-    if (i !== -1) _store.splice(i, 1)
-  },
-  update: (id: string, updates: Partial<MemberList>): void => {
-    const i = _store.findIndex(l => l.id === id)
-    if (i !== -1) Object.assign(_store[i], updates)
-  },
-}
-
-// Apunta al store vivo para que las listas guardadas también aparezcan donde se
-// consume (p. ej. comunicaciones), sin datos de ejemplo precargados.
-export const MOCK_MEMBER_LISTS = _store
+// Las listas guardadas ahora viven en Supabase (tabla member_lists).
+// Este archivo conserva solo el tipo de dominio MemberList que consumen las vistas.

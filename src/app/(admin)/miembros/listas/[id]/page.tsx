@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { listStore } from '@/data/mock-member-lists'
-import { mockMembers, type Member } from '@/data/mock-members'
+import type { MemberList } from '@/data/mock-member-lists'
+import { type Member } from '@/data/mock-members'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
@@ -96,18 +96,48 @@ export default function ListaDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
 
-  const list = useMemo(() => listStore.getById(id), [id])
+  const [list, setList] = useState<MemberList | null>(null)
+  const [listMembers, setListMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<Member>[]>(
     LIST_MEMBER_COLUMNS.filter(c => c.defaultVisible)
   )
 
-  const listMembers = useMemo(
-    () => mockMembers.filter(m => list?.member_ids.includes(m.id)),
-    [list]
-  )
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    fetch(`/api/member-lists/${id}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(async (l: MemberList | null) => {
+        if (!alive) return
+        setList(l)
+        if (l && l.member_ids.length > 0) {
+          const res = await fetch('/api/members/by-ids', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: l.member_ids }),
+          })
+          const d = res.ok ? await res.json() : { members: [] }
+          if (alive) setListMembers(d.members ?? [])
+        } else {
+          setListMembers([])
+        }
+        if (alive) setLoading(false)
+      })
+      .catch(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [id])
 
   const { sorted, sortKey, sortDir, toggleSort } = useSortableTable(listMembers)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+      </div>
+    )
+  }
 
   if (!list) {
     return (
@@ -219,7 +249,11 @@ export default function ListaDetailPage() {
               className="text-coral hover:underline"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
               onClick={() => {
-                listStore.update(list.id, { updated_at: new Date().toISOString() })
+                fetch(`/api/member-lists/${list.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ last_used_at: new Date().toISOString() }),
+                }).catch(() => {})
                 router.refresh()
               }}
             >

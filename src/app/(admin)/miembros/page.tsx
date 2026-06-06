@@ -17,7 +17,6 @@ import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { useMembers } from '@/hooks/useMembers'
 import { toDomainMember } from '@/lib/members/adapter'
 import type { MemberCounts } from '@/lib/supabase/queries/members'
-import { listStore } from '@/data/mock-member-lists'
 import type { FilterCondition } from '@/types/filters'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
 import { QueryBar } from '@/components/members/QueryBar'
@@ -295,20 +294,19 @@ export default function MiembrosPage() {
 
       const tags = saveListTags.split(',').map(t => t.trim()).filter(Boolean)
       const segLabel = buildSegmentLabel(filters.conditions, showDonors, showServers)
-      listStore.add({
-        id: `list-${Date.now()}`,
-        name: saveListName.trim(),
-        description: saveListDesc.trim() || null,
-        filters: { conditions: filters.conditions, groups: filters.groups },
-        segment_label: segLabel,
-        member_ids: ids,
-        member_count: total,
-        is_dynamic: saveListDynamic,
-        created_by: 'Admin Theos',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        last_used_at: null,
-        tags,
+      await fetch('/api/member-lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: saveListName.trim(),
+          description: saveListDesc.trim() || null,
+          filters: { conditions: filters.conditions, groups: filters.groups },
+          segment_label: segLabel,
+          member_ids: ids,
+          member_count: total,
+          is_dynamic: saveListDynamic,
+          tags,
+        }),
       })
       setSaveListOpen(false)
       setSaveListName('')

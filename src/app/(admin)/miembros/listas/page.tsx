@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { listStore } from '@/data/mock-member-lists'
+import type { MemberList } from '@/data/mock-member-lists'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import {
@@ -27,7 +27,7 @@ function timeAgo(dateStr: string | null): string {
 export default function ListasGuardadasPage() {
   const router = useRouter()
 
-  const [lists, setLists]         = useState(() => listStore.getAll())
+  const [lists, setLists]         = useState<MemberList[]>([])
   const [search, setSearch]       = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [openMenu, setOpenMenu]   = useState<string | null>(null)
@@ -35,6 +35,14 @@ export default function ListasGuardadasPage() {
   const [editName, setEditName]   = useState('')
   const [editTags, setEditTags]   = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+
+  async function loadLists() {
+    try {
+      const res = await fetch('/api/member-lists')
+      if (res.ok) setLists(await res.json())
+    } catch (err) { console.error('No se pudieron cargar las listas:', err) }
+  }
+  useEffect(() => { loadLists() }, [])
 
   const allTags = Array.from(new Set(lists.flatMap(l => l.tags))).sort()
 
@@ -57,17 +65,25 @@ export default function ListasGuardadasPage() {
     setDeleteTarget({ id, name })
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteTarget) return
-    listStore.remove(deleteTarget.id)
-    setLists(listStore.getAll())
+    try {
+      await fetch(`/api/member-lists/${deleteTarget.id}`, { method: 'DELETE' })
+      await loadLists()
+    } catch (err) { console.error('No se pudo eliminar la lista:', err) }
     setDeleteTarget(null)
   }
 
-  function handleRefresh(id: string) {
-    listStore.update(id, { updated_at: new Date().toISOString() })
-    setLists(listStore.getAll())
+  async function handleRefresh(id: string) {
     setOpenMenu(null)
+    try {
+      await fetch(`/api/member-lists/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ last_used_at: new Date().toISOString() }),
+      })
+      await loadLists()
+    } catch (err) { console.error('No se pudo actualizar la lista:', err) }
   }
 
   function openEdit(id: string) {
@@ -79,11 +95,17 @@ export default function ListasGuardadasPage() {
     setOpenMenu(null)
   }
 
-  function saveEdit() {
+  async function saveEdit() {
     if (!editTarget || !editName.trim()) return
     const tags = editTags.split(',').map(t => t.trim()).filter(Boolean)
-    listStore.update(editTarget, { name: editName.trim(), tags, updated_at: new Date().toISOString() })
-    setLists(listStore.getAll())
+    try {
+      await fetch(`/api/member-lists/${editTarget}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName.trim(), tags }),
+      })
+      await loadLists()
+    } catch (err) { console.error('No se pudo guardar la lista:', err) }
     setEditTarget(null)
   }
 

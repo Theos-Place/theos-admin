@@ -67,6 +67,7 @@ export type MemberFilters = {
   is_server?: boolean
   active_attendance?: boolean
   gender?: string
+  ids?: string[]
   page?: number
   pageSize?: number
 }
@@ -280,6 +281,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     is_server,
     active_attendance,
     gender,
+    ids,
     page = 1,
     pageSize = 50,
   } = filters
@@ -287,9 +289,14 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
   // active_attendance: lista de member_ids (hoy pocos/0; a escala conviene un RPC).
   let idFilter: string[] | null = null
   if (active_attendance) {
-    const ids = await getActiveAttendanceMemberIds()
-    if (ids.length === 0) return { members: [], total: 0 } // sin datos → 0 resultados, sin query
-    idFilter = ids
+    const aids = await getActiveAttendanceMemberIds()
+    if (aids.length === 0) return { members: [], total: 0 } // sin datos → 0 resultados, sin query
+    idFilter = aids
+  }
+  // ids explícitos (p. ej. integrantes de una lista guardada).
+  if (ids) {
+    if (ids.length === 0) return { members: [], total: 0 }
+    idFilter = idFilter ? idFilter.filter(x => ids.includes(x)) : ids
   }
 
   // is_server: inner join a volunteers activos (evita listas de ids enormes en la URL).
