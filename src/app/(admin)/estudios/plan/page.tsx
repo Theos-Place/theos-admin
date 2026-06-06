@@ -174,6 +174,14 @@ export default function PlanDeEstudiosPage() {
   const inicial    = useMemo(() => studyTypes.filter(s => s.stage === 'inicial'), [studyTypes])
   const intermedia = useMemo(() => studyTypes.filter(s => s.stage === 'intermedia'), [studyTypes])
   const campana    = useMemo(() => studyTypes.filter(s => s.stage === 'campaña'), [studyTypes])
+  // Listado final ordenado por etapa.
+  const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, 'campaña': 3 }
+  const sortedStudyTypes = useMemo(
+    () => [...studyTypes].sort((a, b) =>
+      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || a.code.localeCompare(b.code),
+    ),
+    [studyTypes],
+  )
 
   return (
     <div className="space-y-6">
@@ -307,11 +315,11 @@ export default function PlanDeEstudiosPage() {
               </tr>
             </thead>
             <tbody>
-              {studyTypes.map((s, i) => (
+              {sortedStudyTypes.map((s, i) => (
                 <tr
                   key={s.id}
                   className="hover:bg-surface-low transition-colors group"
-                  style={i < studyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                  style={i < sortedStudyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   <td className="px-4 py-3">
                     <StudyTypeBadge code={s.code} size="sm" />
