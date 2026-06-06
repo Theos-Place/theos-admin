@@ -176,9 +176,12 @@ export default function PlanDeEstudiosPage() {
   const campana    = useMemo(() => studyTypes.filter(s => s.stage === 'campaña'), [studyTypes])
   // Listado final ordenado por etapa.
   const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, 'campaña': 3 }
+  // Clave de orden dentro de la etapa: por código, con ajustes manuales puntuales
+  // (CTBD debe ir justo debajo de DIS3).
+  const sortKey = (code: string) => (code === 'CTBD' ? 'DIS3~' : code)
   const sortedStudyTypes = useMemo(
     () => [...studyTypes].sort((a, b) =>
-      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || a.code.localeCompare(b.code),
+      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || sortKey(a.code).localeCompare(sortKey(b.code)),
     ),
     [studyTypes],
   )
