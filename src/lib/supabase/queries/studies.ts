@@ -147,6 +147,80 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
   return (data as unknown as DbGroupEnriched) ?? null
 }
 
+/** Demanda de un estudio por zona: cuántos están por graduarse del prerequisito
+ *  y cuántos ya son elegibles (completaron prereq y no lo han tomado).
+ *  Agrega sobre study_enrollments (no recorre toda la membresía). */
+export async function getStudyDemand(studyCode: string): Promise<{
+  rows: Array<{ zone: string; graduating: number; eligible: number }>
+  totalGraduating: number
+  totalEligible: number
+}> {
+  const supabase = createAdminClient()
+
+  // Prerequisito del estudio objetivo.
+  const { data: plan, error: pErr } = await supabase
+    .from('study_plans')
+    .select('prerequisite_code')
+    .eq('code', studyCode)
+    .maybeSingle()
+  if (pErr) throw pErr
+  const prereq = (plan as { prerequisite_code: string | null } | null)?.prerequisite_code ?? null
+
+  // Inscripciones activas/completadas con código de plan y sede del miembro.
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .select(`
+      member_id, status,
+      study_groups!study_enrollments_group_id_fkey(plan:study_plans(code)),
+      member:members(sede:sedes(code))
+    `)
+    .in('status', ['enrolled', 'completed'])
+  if (error) throw error
+
+  const rows = (data ?? []) as unknown as Array<{
+    member_id: string; status: string
+    study_groups: { plan: { code: string } | null } | null
+    member: { sede: { code: string } | null } | null
+  }>
+
+  // Agrupar por miembro: set de completados, estudio actual, zona.
+  const byMember = new Map<string, { completed: Set<string>; current: string | null; zone: string | null }>()
+  for (const r of rows) {
+    const code = r.study_groups?.plan?.code
+    if (!code) continue
+    const entry = byMember.get(r.member_id) ?? { completed: new Set<string>(), current: null, zone: null }
+    entry.zone = r.member?.sede?.code ?? entry.zone
+    if (r.status === 'completed') entry.completed.add(code)
+    if (r.status === 'enrolled') entry.current = code
+    byMember.set(r.member_id, entry)
+  }
+
+  const zones: Record<string, { graduating: number; eligible: number }> = {}
+  for (const m of byMember.values()) {
+    if (!m.current || !m.zone) continue // solo miembros activos con sede conocida
+    const z = m.zone
+    zones[z] = zones[z] ?? { graduating: 0, eligible: 0 }
+    if (prereq && m.current === prereq) {
+      zones[z].graduating += 1
+      continue
+    }
+    const hasCompleted = prereq ? m.completed.has(prereq) : true
+    const hasntTaken = !m.completed.has(studyCode) && m.current !== studyCode
+    if (hasCompleted && hasntTaken) zones[z].eligible += 1
+  }
+
+  const rowsOut = Object.entries(zones)
+    .map(([zone, v]) => ({ zone, graduating: v.graduating, eligible: v.eligible }))
+    .filter(r => r.graduating + r.eligible > 0)
+    .sort((a, b) => (b.graduating + b.eligible) - (a.graduating + a.eligible))
+
+  return {
+    rows: rowsOut,
+    totalGraduating: rowsOut.reduce((s, r) => s + r.graduating, 0),
+    totalEligible: rowsOut.reduce((s, r) => s + r.eligible, 0),
+  }
+}
+
 /** Perfil académico de un miembro para calcular elegibilidad de matrícula.
  *  Devuelve los CÓDIGOS de plan (no nombres) y los compromisos reales. */
 export async function getMemberStudyProfile(memberId: string): Promise<{

@@ -1,79 +1,57 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useStudies } from '@/hooks/useStudies'
-import { mockMembers } from '@/data/mock-members'
-import { sedeLabel, useSedes } from '@/lib/sedes'
+import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
 import { Send, CheckCircle } from 'lucide-react'
 
 const INITIAL_DATE = '2026-05-16'
 
+type DemandRow = { zone: string; graduating: number; eligible: number }
+type Analysis = {
+  rows: DemandRow[]
+  totalGraduating: number
+  totalEligible: number
+  totalDemand: number
+  suggestedGroups: number
+}
+
 export default function AnalisisPage() {
   const { studyTypes: STUDY_TYPES } = useStudies()
-  const { sedes: SEDES } = useSedes()
   const [selectedStudyId, setSelectedStudyId] = useState('')
   const [groupInputs, setGroupInputs] = useState<Record<string, number>>({})
   const [totalInput, setTotalInput] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const [analysis, setAnalysis] = useState<Analysis | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const study = selectedStudyId ? (STUDY_TYPES.find(s => s.id === selectedStudyId) ?? null) : null
 
-  const analysis = useMemo(() => {
-    if (!study) return null
-
-    const byZone: Record<string, { graduating: number; eligible: number }> = {}
-    SEDES.forEach(s => { byZone[s.id] = { graduating: 0, eligible: 0 } })
-
-    for (const m of mockMembers) {
-      if (!m.completed_studies || !m.current_study) continue
-      const zone = m.sede
-
-      // About to graduate from prerequisite
-      if (study.prerequisite && m.current_study === study.prerequisite) {
-        byZone[zone] = byZone[zone] ?? { graduating: 0, eligible: 0 }
-        byZone[zone].graduating += 1
-        continue
-      }
-      // Already eligible (completed prereq but hasn't taken this study)
-      const hasCompleted = study.prerequisite
-        ? m.completed_studies.includes(study.prerequisite)
-        : true
-      const hasntTaken = !m.completed_studies.includes(study.code) && m.current_study !== study.code
-      if (hasCompleted && hasntTaken) {
-        byZone[zone] = byZone[zone] ?? { graduating: 0, eligible: 0 }
-        byZone[zone].eligible += 1
-      }
-    }
-
-    const rows = SEDES.map(s => ({
-      zone: s.id,
-      graduating: byZone[s.id]?.graduating ?? 0,
-      eligible: byZone[s.id]?.eligible ?? 0,
-    })).filter(r => r.graduating + r.eligible > 0)
-      .sort((a, b) => (b.graduating + b.eligible) - (a.graduating + a.eligible))
-
-    const totalGraduating = rows.reduce((sum, r) => sum + r.graduating, 0)
-    const totalEligible = rows.reduce((sum, r) => sum + r.eligible, 0)
-    const totalDemand = totalGraduating + totalEligible
-    const suggestedGroups = Math.ceil(totalDemand / 12)
-
-    return { rows, totalGraduating, totalEligible, totalDemand, suggestedGroups }
-  }, [study])
-
-  // Initialize zone inputs when analysis changes
-  useMemo(() => {
-    if (analysis) {
-      const inputs: Record<string, number> = {}
-      analysis.rows.forEach(r => {
-        inputs[r.zone] = Math.ceil((r.graduating + r.eligible) / 12)
+  // Demanda por zona desde el server (agregado sobre study_enrollments).
+  useEffect(() => {
+    if (!study) { setAnalysis(null); return }
+    let alive = true
+    setLoading(true)
+    fetch(`/api/studies/analysis?study_code=${encodeURIComponent(study.code)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { rows: DemandRow[]; totalGraduating: number; totalEligible: number } | null) => {
+        if (!alive) return
+        if (!d) { setAnalysis(null); setLoading(false); return }
+        const totalDemand = d.totalGraduating + d.totalEligible
+        const suggestedGroups = Math.ceil(totalDemand / 12)
+        setAnalysis({ ...d, totalDemand, suggestedGroups })
+        const inputs: Record<string, number> = {}
+        d.rows.forEach(r => { inputs[r.zone] = Math.ceil((r.graduating + r.eligible) / 12) })
+        setGroupInputs(inputs)
+        setTotalInput(suggestedGroups)
+        setSubmitted(false)
+        setLoading(false)
       })
-      setGroupInputs(inputs)
-      setTotalInput(analysis.suggestedGroups)
-      setSubmitted(false)
-    }
-  }, [analysis])
+      .catch(() => { if (alive) { setAnalysis(null); setLoading(false) } })
+    return () => { alive = false }
+  }, [study])
 
   function handleSubmit() {
     setSubmitted(true)
@@ -124,7 +102,13 @@ export default function AnalisisPage() {
         </select>
       </div>
 
-      {study && analysis && (
+      {selectedStudyId && loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+        </div>
+      )}
+
+      {study && analysis && !loading && (
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
