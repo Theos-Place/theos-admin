@@ -6,7 +6,7 @@ import { useEvent } from '@/hooks/useEvents'
 import { CheckinCard } from '@/components/events/CheckinCard'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
-import { ChevronLeft, Scan } from 'lucide-react'
+import { ChevronLeft, Scan, UserPlus, X } from 'lucide-react'
 
 const AVATAR_COLORS: Record<string, string> = {
   A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',
@@ -45,11 +45,34 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null)
   const [checkins, setCheckins] = useState<EventCheckin[]>([])
   const [recentCheckins, setRecentCheckins] = useState<(EventCheckin & { _new?: boolean })[]>([])
+  const [memberResults, setMemberResults] = useState<{ id: string; name: string }[]>([])
+  const [searching, setSearching] = useState(false)
+  const [showNewPerson, setShowNewPerson] = useState(false)
 
   // Sincroniza los check-ins ya registrados cuando carga el evento.
   useEffect(() => {
     if (event) setCheckins(event.checkins)
   }, [event])
+
+  // Búsqueda real entre TODOS los miembros (debounced).
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setMemberResults([]); return }
+    let alive = true
+    setSearching(true)
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => {
+          if (!alive) return
+          const list = (d.members ?? []) as Array<{ id: string; first_name: string; last_name: string }>
+          setMemberResults(list.map(m => ({ id: m.id, name: `${m.first_name} ${m.last_name}`.trim() })))
+        })
+        .catch(() => { if (alive) setMemberResults([]) })
+        .finally(() => { if (alive) setSearching(false) })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [query])
 
   if (!event) {
     return (
@@ -62,11 +85,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  const searchResults = query.trim().length > 0
-    ? event.registrations.filter(r =>
-        r.member_name.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8)
-    : []
+  const registeredIds = new Set(event.registrations.map(r => r.member_id))
+  const searchResults = memberResults
 
   async function handleConfirm(type: AttendanceType) {
     if (!selectedMember) return
@@ -110,6 +130,14 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     const random = registered[Math.floor(Math.random() * registered.length)]
     setSelectedMember({ id: random.member_id, name: random.member_name })
     setQuery(random.member_name)
+  }
+
+  // Crea un miembro nuevo (primera visita) y lo deja seleccionado para el check-in.
+  async function handlePersonCreated(member: { id: string; name: string }) {
+    setShowNewPerson(false)
+    setMemberResults([])
+    setSelectedMember(member)
+    setQuery(member.name)
   }
 
   return (
@@ -181,28 +209,51 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <div className="space-y-2 flex-1 overflow-y-auto">
               {searchResults.map(r => (
                 <button
-                  key={r.member_id}
-                  onClick={() => setSelectedMember({ id: r.member_id, name: r.member_name })}
+                  key={r.id}
+                  onClick={() => setSelectedMember(r)}
                   className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left hover:bg-white/10 transition-all"
                   style={{ background: 'rgba(255,255,255,0.05)' }}
                 >
-                  <div className={cn('h-10 w-10 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0', avatarColor(r.member_name))}>
-                    {getInitials(r.member_name)}
+                  <div className={cn('h-10 w-10 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0', avatarColor(r.name))}>
+                    {getInitials(r.name)}
                   </div>
                   <div>
-                    <p className="text-white font-medium" style={{ fontFamily: 'var(--font-body)' }}>{r.member_name}</p>
-                    <p className="text-white/40 text-[12px]">Inscrito · {r.payment_status === 'paid' ? 'Pago confirmado' : 'Pago pendiente'}</p>
+                    <p className="text-white font-medium" style={{ fontFamily: 'var(--font-body)' }}>{r.name}</p>
+                    <p className="text-white/40 text-[12px]">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
                   </div>
                 </button>
               ))}
+              <button
+                onClick={() => setShowNewPerson(true)}
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-coral hover:bg-coral/10 transition-all border border-dashed border-coral/40"
+              >
+                <UserPlus size={18} />
+                <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>Agregar a «{query.trim()}» como persona nueva</span>
+              </button>
             </div>
-          ) : query.trim().length > 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-white/30 text-sm">No se encontró nadie con ese nombre.</p>
+          ) : query.trim().length >= 2 ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4">
+              <p className="text-white/30 text-sm">{searching ? 'Buscando…' : 'No se encontró nadie con ese nombre.'}</p>
+              {!searching && (
+                <button
+                  onClick={() => setShowNewPerson(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  <UserPlus size={15} /> Agregar persona nueva
+                </button>
+              )}
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex flex-col items-center justify-center gap-4">
               <p className="text-white/20 text-sm">Escribí un nombre o usá el QR.</p>
+              <button
+                onClick={() => setShowNewPerson(true)}
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                <UserPlus size={15} /> Agregar persona nueva
+              </button>
             </div>
           )}
         </div>
@@ -265,6 +316,132 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             )}
           </div>
         </div>
+      </div>
+
+      {showNewPerson && (
+        <NewPersonModal
+          initialName={query.trim()}
+          onClose={() => setShowNewPerson(false)}
+          onCreated={handlePersonCreated}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── Modal: agregar persona nueva (primera visita) ──────────────────────────────
+
+function NewPersonModal({ initialName, onClose, onCreated }: {
+  initialName: string
+  onClose: () => void
+  onCreated: (member: { id: string; name: string }) => void
+}) {
+  const parts = initialName.split(' ')
+  const [firstName, setFirstName] = useState(parts[0] ?? '')
+  const [lastName, setLastName] = useState(parts.slice(1).join(' '))
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [cedula, setCedula] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const valid = firstName.trim().length > 0 && lastName.trim().length > 0
+
+  async function submit() {
+    if (!valid || saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone.trim() || null,
+          email: email.trim() || null,
+          cedula: cedula.trim() || null,
+          birth_date: birthDate || null,
+          send_invite: true,
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        console.error('No se pudo crear la persona:', res.status, data)
+        setError(data?.error === 'duplicate'
+          ? 'Ya existe un miembro con esa cédula o correo.'
+          : 'No se pudo crear la persona. Revisá los datos e intentá de nuevo.')
+        return
+      }
+      onCreated({ id: data.id, name: `${firstName.trim()} ${lastName.trim()}` })
+    } catch (err) {
+      console.error('Error de red al crear la persona:', err)
+      setError('No se pudo crear la persona. Intentá de nuevo.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const fieldCls = 'w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-coral/40'
+  const fieldStyle = { background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-body)' } as const
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-navy-ink/70 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-md rounded-3xl p-6 space-y-4 bg-navy border border-white/10"
+        style={{ boxShadow: 'var(--shadow-lg)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>Persona nueva</h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white"><X size={18} /></button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] text-white/50" style={fieldStyle}>Nombre *</label>
+            <input className={fieldCls} style={fieldStyle} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Nombre" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-white/50" style={fieldStyle}>Apellidos *</label>
+            <input className={fieldCls} style={fieldStyle} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Apellidos" />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] text-white/50" style={fieldStyle}>Teléfono</label>
+          <input className={fieldCls} style={fieldStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="8888-8888" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] text-white/50" style={fieldStyle}>Correo</label>
+          <input type="email" className={fieldCls} style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] text-white/50" style={fieldStyle}>Cédula</label>
+            <input className={fieldCls} style={fieldStyle} value={cedula} onChange={e => setCedula(e.target.value)} placeholder="1-2345-6789" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-white/50" style={fieldStyle}>Fecha de nacimiento</label>
+            <input type="date" className={fieldCls} style={fieldStyle} value={birthDate} onChange={e => setBirthDate(e.target.value)} />
+          </div>
+        </div>
+
+        {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+
+        <p className="text-[11px] text-white/40" style={{ fontFamily: 'var(--font-body)' }}>
+          Si tiene correo, se le enviará una invitación para completar su perfil y crear su contraseña.
+        </p>
+
+        <button
+          onClick={submit}
+          disabled={!valid || saving}
+          className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          {saving ? 'Creando…' : 'Crear y hacer check-in'}
+        </button>
       </div>
     </div>
   )

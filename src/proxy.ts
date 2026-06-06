@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 // Rutas accesibles sin sesión.
-const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario']
+const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil']
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))

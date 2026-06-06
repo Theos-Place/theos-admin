@@ -718,6 +718,23 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   }
 }
 
+/** Busca un miembro existente por cédula o correo (para evitar duplicados al crear). */
+export async function findMemberByCedulaOrEmail(cedula: string | null, email: string | null) {
+  if (!cedula && !email) return null
+  const supabase = createAdminClient()
+  const ors: string[] = []
+  if (cedula) ors.push(`cedula.eq.${cedula}`)
+  if (email) ors.push(`email.eq.${email}`)
+  const { data, error } = await supabase
+    .from('members')
+    .select('id')
+    .or(ors.join(','))
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data as { id: string } | null
+}
+
 export async function createMember(member: Omit<DbMember, 'id' | 'created_at' | 'updated_at' | 'sede_id'>) {
   const supabase = createAdminClient()
 
