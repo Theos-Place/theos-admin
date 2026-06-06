@@ -243,6 +243,28 @@ export async function updateEvent(
   return updated
 }
 
+/** Registra un check-in en un evento. attendance_type NO se persiste: se deriva
+ *  al leer (es "server" si el miembro es voluntario del evento). */
+export async function createCheckin(
+  eventId: string,
+  input: { member_id?: string | null; guest_name?: string | null; sub_event_id?: string | null; method?: 'manual' | 'qr' | 'smart_link' },
+): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('event_checkins')
+    .insert({
+      event_id: eventId,
+      member_id: input.member_id ?? null,
+      guest_name: input.guest_name ?? null,
+      sub_event_id: input.sub_event_id ?? null,
+      method: input.method ?? 'manual',
+    })
+    .select('id')
+    .single()
+  if (error) throw error
+  return data as { id: string }
+}
+
 /** Borrado lógico: marca is_active=false. El borrado duro lo hace el cascade. */
 export async function deleteEvent(id: string): Promise<void> {
   const supabase = createAdminClient()

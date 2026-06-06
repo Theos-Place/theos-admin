@@ -1,7 +1,8 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
-import { getEvent, type AttendanceType, type EventCheckin } from '@/data/mock-events'
+import { type AttendanceType, type EventCheckin } from '@/types/event'
+import { useEvent } from '@/hooks/useEvents'
 import { CheckinCard } from '@/components/events/CheckinCard'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -39,11 +40,16 @@ function Clock() {
 
 export default function CheckinLivePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const event = getEvent(id)
+  const { event } = useEvent(id)
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null)
-  const [checkins, setCheckins] = useState<EventCheckin[]>(event?.checkins ?? [])
+  const [checkins, setCheckins] = useState<EventCheckin[]>([])
   const [recentCheckins, setRecentCheckins] = useState<(EventCheckin & { _new?: boolean })[]>([])
+
+  // Sincroniza los check-ins ya registrados cuando carga el evento.
+  useEffect(() => {
+    if (event) setCheckins(event.checkins)
+  }, [event])
 
   if (!event) {
     return (
@@ -62,16 +68,19 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       ).slice(0, 8)
     : []
 
-  function handleConfirm(type: AttendanceType) {
+  async function handleConfirm(type: AttendanceType) {
     if (!selectedMember) return
+    const member = selectedMember
+    const subEventId = event!.sub_events.length > 0 ? event!.sub_events[0].id : null
     const newCheckin: EventCheckin & { _new?: boolean } = {
-      member_id: selectedMember.id,
-      member_name: selectedMember.name,
+      member_id: member.id,
+      member_name: member.name,
       attendance_type: type,
-      sub_event_id: event!.sub_events.length > 0 ? event!.sub_events[0].id : null,
+      sub_event_id: subEventId,
       checked_at: new Date().toISOString(),
       _new: true,
     }
+    // Optimista: mostramos el check-in de una.
     setCheckins(prev => [newCheckin, ...prev])
     setRecentCheckins(prev => [newCheckin, ...prev].slice(0, 8))
     setSelectedMember(null)
@@ -79,6 +88,20 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     setTimeout(() => {
       setRecentCheckins(prev => prev.map(c => ({ ...c, _new: false })))
     }, 50)
+
+    // Persistimos en Supabase. Si falla, revertimos el optimista.
+    try {
+      const res = await fetch(`/api/events/${id}/checkins`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: member.id, sub_event_id: subEventId, method: 'manual' }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    } catch (err) {
+      console.error('No se pudo registrar el check-in:', err)
+      setCheckins(prev => prev.filter(c => c.checked_at !== newCheckin.checked_at))
+      setRecentCheckins(prev => prev.filter(c => c.checked_at !== newCheckin.checked_at))
+    }
   }
 
   function handleSimulateQR() {
