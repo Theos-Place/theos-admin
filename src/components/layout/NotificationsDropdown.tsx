@@ -15,13 +15,8 @@ type Notification = {
   read: boolean
 }
 
-const INITIAL_NOTIFICATIONS: Notification[] = [
-  { id: '1', type: 'alert',   message: '3 devoluciones SINPE pendientes de procesar',    url: '/finanzas/devoluciones',      time: 'Hace 5 min',  read: false },
-  { id: '2', type: 'info',    message: 'Diego Salazar cerró el grupo Nivel 4 — San José B', url: '/estudios/grupos',           time: 'Hace 1 hora', read: false },
-  { id: '3', type: 'warning', message: '3 grupos de estudio sin dirigente asignado',     url: '/estudios/grupos',             time: 'Hace 2 horas',read: false },
-  { id: '4', type: 'info',    message: '8 aplicaciones de servicio pendientes de revisión', url: '/servidores/aplicaciones',  time: 'Ayer',        read: true  },
-  { id: '5', type: 'info',    message: 'Jennifer Zamora importó 23 donaciones',           url: '/finanzas/donaciones',        time: 'Ayer',        read: true  },
-]
+// Las notificaciones reales aún no están conectadas (Fase 2). Sin datos ficticios.
+const INITIAL_NOTIFICATIONS: Notification[] = []
 
 const TYPE_CONFIG: Record<NotifType, { Icon: React.ElementType; color: string; bg: string }> = {
   alert:   { Icon: AlertCircle,   color: '#EF5554', bg: 'rgba(239,85,84,0.10)'   },
@@ -108,6 +103,11 @@ export function NotificationsBell() {
 
           {/* Notifications list */}
           <div className="max-h-[340px] overflow-y-auto">
+            {notifications.length === 0 && (
+              <p className="px-4 py-8 text-center text-[13px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                No tenés notificaciones.
+              </p>
+            )}
             {notifications.map(n => {
               const cfg = TYPE_CONFIG[n.type]
               return (
