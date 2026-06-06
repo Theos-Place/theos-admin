@@ -243,6 +243,49 @@ export async function updateEvent(
   return updated
 }
 
+type PaymentStatus = 'pending' | 'paid' | 'exempted'
+
+/** Inscribe a un miembro en un evento. UNIQUE(event_id, member_id) evita duplicados. */
+export async function createRegistration(
+  eventId: string,
+  input: { member_id: string; payment_status?: PaymentStatus },
+): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('event_registrations')
+    .insert({ event_id: eventId, member_id: input.member_id, payment_status: input.payment_status ?? 'pending' })
+    .select('id')
+    .single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+/** Cambia el estado de pago de una inscripción. */
+export async function updateRegistrationPayment(
+  eventId: string,
+  memberId: string,
+  paymentStatus: PaymentStatus,
+): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('event_registrations')
+    .update({ payment_status: paymentStatus })
+    .eq('event_id', eventId)
+    .eq('member_id', memberId)
+  if (error) throw error
+}
+
+/** Elimina la inscripción de un miembro en un evento. */
+export async function deleteRegistration(eventId: string, memberId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('event_registrations')
+    .delete()
+    .eq('event_id', eventId)
+    .eq('member_id', memberId)
+  if (error) throw error
+}
+
 /** Registra un check-in en un evento. attendance_type NO se persiste: se deriva
  *  al leer (es "server" si el miembro es voluntario del evento). */
 export async function createCheckin(

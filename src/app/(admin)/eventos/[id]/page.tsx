@@ -77,7 +77,7 @@ const TAB_LABELS: Record<Tab, string> = {
 
 export default function EventoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { event, loading } = useEvent(id)
+  const { event, loading, refetch } = useEvent(id)
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
   const [showMenu, setShowMenu] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -282,9 +282,11 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       {activeTab === 'inscripciones' && (
         <EventRegistrationsTab
           event={event}
+          eventId={id}
           registrationCount={registrationCount}
           circumference={circumference}
           onSendMessage={() => setShowMessageModal(true)}
+          onChanged={refetch}
         />
       )}
 
