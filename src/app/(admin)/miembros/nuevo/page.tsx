@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
-import { mockMembers, type Member } from '@/data/mock-members'
+import { type Member } from '@/data/mock-members'
 import { CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
 import { cn } from '@/lib/utils'
 import { REDIRECT_LONG_AFTER_SAVE_MS } from '@/lib/constants'
@@ -178,8 +178,20 @@ export default function NuevoMiembroPage() {
   async function handleCedulaBlur() {
     const cedula = data.cedula.trim()
     if (!cedula) return
-    const found = mockMembers.find(m => m.cedula != null && m.cedula === cedula)
-    setDuplicate(found ?? null)
+    // Duplicado real: busca la cédula en la BD.
+    try {
+      const norm = (s: string) => s.replace(/[-\s]/g, '')
+      const res = await fetch(`/api/members?search=${encodeURIComponent(cedula)}&pageSize=5`)
+      if (res.ok) {
+        const d = await res.json()
+        const found = (d.members ?? []).find((m: Member) => m.cedula != null && norm(m.cedula) === norm(cedula))
+        setDuplicate(found ?? null)
+      } else {
+        setDuplicate(null)
+      }
+    } catch {
+      setDuplicate(null)
+    }
     setDismissedDuplicate(false)
     setTseLoading(true)
     setTseBanner(null)
