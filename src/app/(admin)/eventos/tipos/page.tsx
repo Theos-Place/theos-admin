@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { EVENT_TYPES, type EventTypeEntry } from '@/data/mock-events'
+import { useState, useEffect } from 'react'
+import { type EventTypeEntry } from '@/data/mock-events'
 import { cn } from '@/lib/utils'
 import {
   Plus, Edit2, X, Mic, Tent, Users, Star, BookOpen,
@@ -221,23 +221,68 @@ function TypeModal({
 }
 
 export default function TiposEventoPage() {
-  const [types, setTypes] = useState<EventTypeEntry[]>(EVENT_TYPES)
+  const [types, setTypes] = useState<EventTypeEntry[]>([])
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<EventTypeEntry | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  function handleSave(data: FormState) {
-    if (editTarget) {
-      setTypes(ts => ts.map(t => t.id === editTarget.id ? { ...t, ...data } : t))
-    } else {
-      const newId = data.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-      setTypes(ts => [...ts, { id: newId, ...data }])
+  async function loadTypes() {
+    try {
+      const res = await fetch('/api/events/types')
+      if (res.ok) setTypes(await res.json())
+    } catch (err) {
+      console.error('No se pudieron cargar los tipos de evento:', err)
     }
-    setShowModal(false)
-    setEditTarget(null)
   }
 
-  function toggleEventType(id: string) {
-    setTypes(ts => ts.map(t => t.id === id ? { ...t, is_active: !t.is_active } : t))
+  useEffect(() => { loadTypes() }, [])
+
+  async function handleSave(data: FormState) {
+    if (saving) return
+    setSaving(true)
+    try {
+      if (editTarget) {
+        const res = await fetch(`/api/events/types/${editTarget.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      } else {
+        const newId = data.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+        const res = await fetch('/api/events/types', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: newId, ...data }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      }
+      await loadTypes()
+      setShowModal(false)
+      setEditTarget(null)
+    } catch (err) {
+      console.error('No se pudo guardar el tipo de evento:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function toggleEventType(id: string) {
+    const current = types.find(t => t.id === id)
+    if (!current) return
+    const next = !current.is_active
+    setTypes(ts => ts.map(t => t.id === id ? { ...t, is_active: next } : t))
+    try {
+      const res = await fetch(`/api/events/types/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: next }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    } catch (err) {
+      console.error('No se pudo cambiar el estado del tipo:', err)
+      setTypes(ts => ts.map(t => t.id === id ? { ...t, is_active: !next } : t))
+    }
   }
 
   return (

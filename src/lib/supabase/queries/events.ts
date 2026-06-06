@@ -286,6 +286,62 @@ export async function deleteRegistration(eventId: string, memberId: string): Pro
   if (error) throw error
 }
 
+// ── Tipos de evento (catálogo event_types) ─────────────────
+
+export type DbEventType = {
+  id: string
+  name: string
+  color: string
+  icon: string
+  description: string | null
+  is_active: boolean
+}
+
+export async function getEventTypes(): Promise<DbEventType[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('event_types')
+    .select('id, name, color, icon, description, is_active')
+    .order('name', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as DbEventType[]
+}
+
+export async function createEventType(input: {
+  id: string; name: string; color?: string; icon?: string; description?: string | null; is_active?: boolean
+}): Promise<DbEventType> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('event_types')
+    .insert({
+      id: input.id,
+      name: input.name,
+      color: input.color ?? '#161440',
+      icon: input.icon ?? 'calendar',
+      description: input.description ?? null,
+      is_active: input.is_active ?? true,
+    })
+    .select('id, name, color, icon, description, is_active')
+    .single()
+  if (error) throw error
+  return data as DbEventType
+}
+
+export async function updateEventType(
+  id: string,
+  patch: Partial<Omit<DbEventType, 'id'>>,
+): Promise<DbEventType> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('event_types')
+    .update(patch)
+    .eq('id', id)
+    .select('id, name, color, icon, description, is_active')
+    .single()
+  if (error) throw error
+  return data as DbEventType
+}
+
 type VolunteerStatus = 'confirmed' | 'pending' | 'cancelled'
 
 /** Asigna un servidor (voluntario) a un evento. UNIQUE(event_id, member_id). */
