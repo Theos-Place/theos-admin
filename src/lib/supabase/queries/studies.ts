@@ -427,6 +427,25 @@ export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): 
   if (error) throw error
 }
 
+/** Agrega un estudio al historial de un miembro SIN grupo (ej. estudios viejos,
+ *  cuando el sistema no existía). group_id queda nulo; el plan va directo. */
+export async function addMemberStudy(input: {
+  member_id: string
+  plan_id: string
+  completed_at: string | null
+  status?: string
+}): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('study_enrollments').insert({
+    member_id: input.member_id,
+    plan_id: input.plan_id,
+    group_id: null,
+    status: input.status ?? 'completed',
+    completed_at: input.completed_at,
+  })
+  if (error) throw error
+}
+
 export type CloseResult = {
   member_id: string
   status_result: 'aprobado' | 'reprobado' | 'retirado'

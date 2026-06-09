@@ -111,6 +111,7 @@ type Props = {
   revealDonations: boolean
   onToggleRevealDonations: () => void
   donationsCount: number
+  onAddStudy?: () => void
 }
 
 export function MemberParticipationTab({
@@ -132,6 +133,7 @@ export function MemberParticipationTab({
   revealDonations,
   onToggleRevealDonations,
   donationsCount,
+  onAddStudy,
 }: Props) {
   return (
     <div className="space-y-3">
@@ -141,6 +143,17 @@ export function MemberParticipationTab({
         open={openSections.estudios}
         onToggle={() => onToggleSection('estudios')}
       >
+        {onAddStudy && (
+          <div className="flex justify-end px-4 pt-3">
+            <button
+              type="button"
+              onClick={onAddStudy}
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              + Agregar estudio
+            </button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>

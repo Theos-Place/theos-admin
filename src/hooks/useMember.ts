@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import type { DbMemberFull } from '@/lib/supabase/queries/members'
 import { toDomainMemberFull } from '@/lib/members/adapter'
 import type { Member } from '@/types/member'
@@ -13,6 +13,8 @@ type State =
  *  (attendance, service, donations, form_responses). Devuelve `Member` ya adaptado. */
 export function useMember(id: string | undefined) {
   const [state, setState] = useState<State>({ status: 'loading' })
+  const [reload, setReload] = useState(0)
+  const refetch = useCallback(() => setReload(n => n + 1), [])
 
   useEffect(() => {
     if (!id) {
@@ -42,7 +44,7 @@ export function useMember(id: string | undefined) {
       })
 
     return () => { cancelled = true }
-  }, [id])
+  }, [id, reload])
 
   const member: Member | null = useMemo(
     () => (state.status === 'ready' ? toDomainMemberFull(state.raw) : null),
@@ -54,5 +56,6 @@ export function useMember(id: string | undefined) {
     loading: state.status === 'loading',
     notFound: state.status === 'not_found',
     error: state.status === 'error' ? state.error : null,
+    refetch,
   }
 }
