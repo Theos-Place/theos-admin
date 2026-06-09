@@ -499,6 +499,7 @@ export type DbFamilyMember = {
 }
 
 export type DbMemberFull = DbMemberEnriched & {
+  study_history: Array<{ code: string; name: string; year: number | null; weeks: number | null; status: string }>
   attendance: DbAttendance[]
   service_history: DbService[]
   donations: DbDonation[]
@@ -528,8 +529,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         )
       ),
       study_enrollments(
-        status,
-        study_groups!study_enrollments_group_id_fkey(current_week, plan:study_plans(name))
+        status, completed_at, enrolled_at,
+        study_groups!study_enrollments_group_id_fkey(current_week, starts_at, plan:study_plans(code, name, duration_weeks))
       )
     `)
     .eq('id', id)
@@ -614,7 +615,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   }>
   const enrollments = (memberRow.study_enrollments ?? []) as Array<{
     status: string
-    study_groups: { current_week: number | null; plan: { name: string } | null } | null
+    completed_at: string | null
+    enrolled_at: string | null
+    study_groups: { current_week: number | null; starts_at: string | null; plan: { code: string | null; name: string | null; duration_weeks: number | null } | null } | null
   }>
 
   const activeRoles = memberRoles.filter(r => r.is_active).map(r => r.role)
@@ -623,7 +626,21 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   const activeVolunteer = volunteers.find(v => v.status === 'active') ?? null
   const completedStudies = enrollments
     .filter(e => e.status === 'completed' && e.study_groups?.plan?.name)
-    .map(e => e.study_groups!.plan!.name)
+    .map(e => e.study_groups!.plan!.name as string)
+  // Historial de estudios con fecha real (de la inscripción o del grupo).
+  const studyHistory = enrollments
+    .filter(e => e.study_groups?.plan?.code)
+    .map(e => {
+      const d = e.completed_at ?? e.enrolled_at ?? e.study_groups!.starts_at ?? null
+      return {
+        code: e.study_groups!.plan!.code as string,
+        name: e.study_groups!.plan!.name ?? '',
+        year: d ? Number(d.slice(0, 4)) : null,
+        weeks: e.study_groups!.plan!.duration_weeks ?? null,
+        status: e.status,
+      }
+    })
+    .sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
   const currentEnrollment = enrollments
     .find(e => e.status === 'enrolled' && e.study_groups?.plan?.name)
   const currentStudy = currentEnrollment?.study_groups?.plan?.name ?? null
@@ -706,6 +723,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     current_study: currentStudy,
     current_study_week: currentStudyWeek,
     completed_studies: completedStudies,
+    study_history: studyHistory,
     active_service: activeVolunteer && activeVolunteer.service_positions
       ? {
           position: activeVolunteer.service_positions.title,

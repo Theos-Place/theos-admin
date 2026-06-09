@@ -148,6 +148,7 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
 
   return {
     ...base,
+    study_history: db.study_history ?? [],
     attendance_history: attendanceHistory,
     service_history: serviceHistory,
     donations,

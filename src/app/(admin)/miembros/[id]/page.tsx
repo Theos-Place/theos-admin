@@ -89,27 +89,16 @@ export default function MiembroDetailPage() {
   // ── Typed rows for sortable tables ──────────────────────────────────────────
 
   const estudiosRows: StudyRow[] = useMemo(() => {
-    if (!member) return []
-    return [
-      ...member.completed_studies.map((code, i) => {
-        const entry = STUDY_CATALOG.find(s => s.code === code)
-        return {
-          code,
-          name: entry?.name ?? code,
-          startYear: 2025 - (member.completed_studies.length - i),
-          duration: entry ? `${entry.weeks} sem.` : '—',
-          status: 'Completado',
-        }
-      }),
-      ...(member.current_study ? [{
-        code: member.current_study,
-        name: currentStudyEntry?.name ?? member.current_study,
-        startYear: 2025,
-        duration: '—',
-        status: 'En curso',
-      }] : []),
-    ]
-  }, [member, currentStudyEntry])
+    if (!member?.study_history) return []
+    const STATUS: Record<string, string> = { completed: 'Aprobado', dropped: 'Reprobó', enrolled: 'En curso', waitlist: 'En espera', transferred: 'Transferido' }
+    return member.study_history.map(s => ({
+      code: s.code,
+      name: s.name || STUDY_CATALOG.find(x => x.code === s.code)?.name || s.code,
+      startYear: s.year ?? 0,
+      duration: s.weeks ? `${s.weeks} sem.` : '—',
+      status: STATUS[s.status] ?? s.status,
+    }))
+  }, [member])
 
   const servicioRows: ServiceRow[] = useMemo(() =>
     (member?.service_history ?? []).map(s => ({
