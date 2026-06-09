@@ -79,6 +79,7 @@ export function toDomainStudyGroup(db: DbGroupEnriched): StudyGroup {
     name: db.name ?? '',
     study_type_id: db.plan?.code ?? '',
     leader_id: db.leader_id,
+    co_leader_id: db.co_leader_id ?? null,
     leader_name: leaderName,
     co_leader_name: coLeaderName,
     zone: db.zone ?? '',

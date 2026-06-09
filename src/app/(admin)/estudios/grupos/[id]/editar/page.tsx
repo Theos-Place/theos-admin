@@ -1,11 +1,12 @@
 'use client'
 
-import { use, useMemo, useState } from 'react'
+import { use, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
+import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { cn } from '@/lib/utils'
 import { ChevronLeft } from 'lucide-react'
 
@@ -20,19 +21,9 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params)
   const router = useRouter()
   const { activeSedes: SEDES } = useSedes()
-  const { groups, studyTypes, leaders, refetch } = useStudies()
+  const { groups, studyTypes, refetch } = useStudies()
   const group = groups.find(g => g.id === id)
   const studyType = studyTypes.find(s => s.id === group?.study_type_id) ?? null
-
-  // Prefill — match dirigente por id, co-dirigente por nombre
-  const initialLeader = useMemo(
-    () => leaders.find(l => l.member_id === group?.leader_id)?.id ?? '',
-    [leaders, group?.leader_id],
-  )
-  const initialCoLeader = useMemo(
-    () => (group?.co_leader_name ? leaders.find(l => l.member_name === group.co_leader_name)?.id ?? '' : ''),
-    [leaders, group?.co_leader_name],
-  )
 
   const [zone, setZone] = useState(group?.zone ?? '')
   const [days, setDays] = useState<string[]>(group?.schedule_days ?? [])
@@ -48,10 +39,10 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Hidrata selectores de dirigente una vez que cargan los leaders
-  if (!hydrated && group && leaders.length > 0) {
-    setLeaderId(initialLeader)
-    setCoLeaderId(initialCoLeader)
+  // Hidrata los selectores con el dirigente/co-dirigente actuales (member_id).
+  if (!hydrated && group) {
+    setLeaderId(group.leader_id ?? '')
+    setCoLeaderId(group.co_leader_id ?? '')
     setHydrated(true)
   }
 
@@ -70,8 +61,8 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  const leaderMemberId = leaders.find(l => l.id === leaderId)?.member_id ?? null
-  const coLeaderMemberId = leaders.find(l => l.id === coLeaderId)?.member_id ?? null
+  const leaderMemberId = leaderId || null
+  const coLeaderMemberId = coLeaderId || null
 
   async function handleSave() {
     setSaving(true)
@@ -129,23 +120,23 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
           {/* Dirigente */}
           <div className="space-y-1">
             <label className={labelCls}>Dirigente</label>
-            <select className={inputCls} value={leaderId} onChange={e => setLeaderId(e.target.value)}>
-              <option value="">Sin asignar</option>
-              {leaders.map(l => <option key={l.id} value={l.id}>{l.member_name}</option>)}
-            </select>
+            <DirigentesCombobox
+              value={leaderId || null}
+              onChange={id => setLeaderId(id ?? '')}
+              excludeId={coLeaderId || undefined}
+              placeholder="Buscar dirigente…"
+            />
           </div>
 
           {/* Co-dirigente */}
           <div className="space-y-1">
             <label className={labelCls}>Co-dirigente</label>
-            <select
-              className={inputCls}
-              value={coLeaderId}
-              onChange={e => setCoLeaderId(e.target.value)}
-            >
-              <option value="">Sin co-dirigente</option>
-              {leaders.filter(l => l.id !== leaderId).map(l => <option key={l.id} value={l.id}>{l.member_name}</option>)}
-            </select>
+            <DirigentesCombobox
+              value={coLeaderId || null}
+              onChange={id => setCoLeaderId(id ?? '')}
+              excludeId={leaderId || undefined}
+              placeholder="Buscar co-dirigente…"
+            />
           </div>
 
           {/* Zona */}

@@ -6,6 +6,7 @@ import { useStudies } from '@/hooks/useStudies'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
+import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 
@@ -49,7 +50,6 @@ export default function NuevoGrupoPage() {
   })
   const [selectedLeader, setSelectedLeader] = useState('')
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
-  const [showAllLeaders, setShowAllLeaders] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [created, setCreated] = useState(false)
 
@@ -64,11 +64,6 @@ export default function NuevoGrupoPage() {
   }
 
   const studyType = studyTypes.find(s => s.id === step1.study_type_id)
-
-  // Lista unificada de dirigentes. Compatibles = los que han impartido este estudio.
-  const compatibleLeaders = dirigentes.filter(d => !studyType || d.estudios_habilitados.includes(studyType.code))
-  // Búsqueda expandida: todos los dirigentes.
-  const displayLeaders = showAllLeaders ? dirigentes : compatibleLeaders
 
   const leaderData = dirigentes.find(d => d.member_id === selectedLeader)
   const coLeaderData = dirigentes.find(d => d.member_id === selectedCoLeader)
@@ -354,90 +349,29 @@ export default function NuevoGrupoPage() {
             Paso 2 — Seleccionar dirigente
           </h2>
 
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-sm text-navy-light/60 font-body">
-              {showAllLeaders
-                ? 'Mostrando todos los dirigentes.'
-                : <>Mostrando dirigentes disponibles para {step1.zone && step1.zone !== 'all' ? sedeLabel(step1.zone) : 'todas las zonas'}{step1.study_type_id && studyType ? ` que pueden impartir ${studyType.code}` : ''}.</>}
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowAllLeaders(v => !v)}
-              className="text-xs text-coral hover:text-coral-deep transition-colors font-body shrink-0"
-            >
-              {showAllLeaders ? 'Ver solo compatibles' : 'Ampliar búsqueda a todos los dirigentes'}
-            </button>
+          <div className="space-y-1">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+              Dirigente *
+            </label>
+            <DirigentesCombobox
+              value={selectedLeader || null}
+              onChange={id => setSelectedLeader(id ?? '')}
+              excludeId={selectedCoLeader || undefined}
+              placeholder="Buscar dirigente…"
+            />
           </div>
 
-          {displayLeaders.length === 0 ? (
-            <div className="rounded-xl bg-amber-50 px-4 py-3">
-              <p className="text-sm text-amber-700 font-body">
-                No hay dirigentes disponibles con esas combinaciones. Probá ampliar la búsqueda a todos los dirigentes.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[420px] overflow-y-auto">
-              {displayLeaders.map(leader => (
-                <div
-                  key={leader.member_id}
-                  onClick={() => setSelectedLeader(leader.member_id)}
-                  className={cn(
-                    'rounded-xl border p-3 cursor-pointer transition-all',
-                    selectedLeader === leader.member_id
-                      ? 'border-coral bg-coral/5'
-                      : 'hover:bg-surface-low'
-                  )}
-                  style={{ borderColor: selectedLeader === leader.member_id ? undefined : 'var(--outline-variant)' }}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      className="accent-coral"
-                      checked={selectedLeader === leader.member_id}
-                      onChange={() => setSelectedLeader(leader.member_id)}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="text-sm font-medium text-navy font-body">
-                          {leader.member_name}
-                        </p>
-                        <span className={cn(
-                          'rounded-md px-1.5 py-0.5 text-[10px] font-medium',
-                          leader.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-navy/10 text-navy-light/60'
-                        )}>
-                          {leader.status === 'activo' ? 'Activo' : 'Inactivo'}
-                        </span>
-                        <span className="text-[11px] text-navy-light/50 font-body">{leader.total_grupos} grupos · {leader.total_activos} activos</span>
-                      </div>
-                      {leader.estudios_habilitados.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {leader.estudios_habilitados.slice(0, 8).map(c => (
-                            <StudyTypeBadge key={c} code={c} size="sm" />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
           {selectedLeader && (
-            <div className="mt-3 space-y-1">
+            <div className="space-y-1">
               <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
                 Co-dirigente (opcional)
               </label>
-              <select
-                value={selectedCoLeader}
-                onChange={e => setSelectedCoLeader(e.target.value)}
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              >
-                <option value="">Sin co-dirigente</option>
-                {dirigentes.filter(d => d.member_id !== selectedLeader).map(d => (
-                  <option key={d.member_id} value={d.member_id}>{d.member_name}</option>
-                ))}
-              </select>
+              <DirigentesCombobox
+                value={selectedCoLeader || null}
+                onChange={id => setSelectedCoLeader(id ?? '')}
+                excludeId={selectedLeader || undefined}
+                placeholder="Buscar co-dirigente…"
+              />
             </div>
           )}
 

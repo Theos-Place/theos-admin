@@ -44,6 +44,7 @@ export type StudyGroup = {
   name?: string
   study_type_id: string
   leader_id: string | null
+  co_leader_id?: string | null
   leader_name: string | null
   co_leader_name?: string | null
   zone: string
