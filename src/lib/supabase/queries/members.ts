@@ -511,7 +511,7 @@ export type DbFamilyMember = {
 }
 
 export type DbMemberFull = DbMemberEnriched & {
-  study_history: Array<{ group_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
+  study_history: Array<{ group_id: string | null; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
   attendance: DbAttendance[]
   service_history: DbService[]
   donations: DbDonation[]
@@ -542,7 +542,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       ),
       study_enrollments(
         status, completed_at, enrolled_at,
-        study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks))
+        study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks)),
+        plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks)
       )
     `)
     .eq('id', id)
@@ -625,39 +626,43 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       area: { name: string; parent: { name: string } | null } | null
     } | null
   }>
+  type PlanEmbed = { code: string | null; name: string | null; duration_weeks: number | null } | null
   const enrollments = (memberRow.study_enrollments ?? []) as Array<{
     status: string
     completed_at: string | null
     enrolled_at: string | null
-    study_groups: { id: string; current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: { code: string | null; name: string | null; duration_weeks: number | null } | null } | null
+    study_groups: { id: string; current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: PlanEmbed } | null
+    plan_direct: PlanEmbed
   }>
 
   const activeRoles = memberRoles.filter(r => r.is_active).map(r => r.role)
   const activeDirigente = memberRoles.find(r => r.is_active && r.role === 'dirigente')
   const estadoDirigente = activeDirigente?.status_detail ?? null
   const activeVolunteer = volunteers.find(v => v.status === 'active') ?? null
+  // El plan puede venir del grupo o, si el estudio no tuvo grupo (sistema no
+  // existía), directo de la inscripción (plan_direct). Excluimos lo que la
+  // persona dirigió (solo aplica a estudios con grupo).
+  const planOf = (e: typeof enrollments[number]) => e.study_groups?.plan ?? e.plan_direct
+  const ledByMember = (e: typeof enrollments[number]) =>
+    !!e.study_groups && (e.study_groups.leader_id === id || e.study_groups.co_leader_id === id)
   const completedStudies = enrollments
-    .filter(e => e.status === 'completed' && e.study_groups?.plan?.name
-      && e.study_groups.leader_id !== id
-      && e.study_groups.co_leader_id !== id)
-    .map(e => e.study_groups!.plan!.name as string)
-  // Historial de estudios con fecha real (de la inscripción o del grupo).
+    .filter(e => e.status === 'completed' && planOf(e)?.name && !ledByMember(e))
+    .map(e => planOf(e)!.name as string)
+  // Historial de estudios con fecha real (del grupo si existe; si no, de la inscripción).
   const studyHistory = enrollments
-    // Solo lo que llevó como estudiante: excluir grupos que la persona dirigió.
-    .filter(e => e.study_groups?.plan?.code
-      && e.study_groups.leader_id !== id
-      && e.study_groups.co_leader_id !== id)
+    .filter(e => planOf(e)?.code && !ledByMember(e))
     .map(e => {
+      const plan = planOf(e)!
       // La fecha del grupo (starts_at) trae mes+año reales (del nombre del grupo);
-      // completed_at/enrolled_at quedaron en enero por defecto en la importación.
-      const d = e.study_groups!.starts_at ?? e.completed_at ?? e.enrolled_at ?? null
+      // sin grupo, usamos la fecha registrada en la inscripción.
+      const d = e.study_groups?.starts_at ?? e.completed_at ?? e.enrolled_at ?? null
       return {
-        group_id: e.study_groups!.id,
-        code: e.study_groups!.plan!.code as string,
-        name: e.study_groups!.plan!.name ?? '',
+        group_id: e.study_groups?.id ?? null,
+        code: plan.code as string,
+        name: plan.name ?? '',
         date: d ? d.slice(0, 10) : null,
         year: d ? Number(d.slice(0, 4)) : null,
-        weeks: e.study_groups!.plan!.duration_weeks ?? null,
+        weeks: plan.duration_weeks ?? null,
         status: e.status,
       }
     })

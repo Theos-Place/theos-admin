@@ -60,7 +60,7 @@ export type Member = {
   is_server: boolean
   roles: MemberRole[]
   completed_studies: string[]
-  study_history?: Array<{ group_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
+  study_history?: Array<{ group_id: string | null; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
   current_study: string | null
   current_study_week?: number | null
   sede: string

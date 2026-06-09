@@ -73,7 +73,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number }
@@ -193,12 +193,16 @@ export function MemberParticipationTab({
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <Link
-                        href={`/estudios/grupos/${row.groupId}`}
-                        className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap font-body"
-                      >
-                        Ver grupo →
-                      </Link>
+                      {row.groupId ? (
+                        <Link
+                          href={`/estudios/grupos/${row.groupId}`}
+                          className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap font-body"
+                        >
+                          Ver grupo →
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-navy-light/30 whitespace-nowrap font-body">Sin grupo</span>
+                      )}
                     </td>
                   </tr>
                 )
