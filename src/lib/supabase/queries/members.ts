@@ -151,6 +151,20 @@ export async function getMemberCounts(): Promise<MemberCounts> {
   return { total, donadores, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
 }
 
+/** Aplica búsqueda de texto sobre miembros: nombre, apellidos, cédula, teléfono y
+ *  email. Tokeniza por espacios — cada palabra debe coincidir en algún campo (AND
+ *  entre palabras), así "Juan Pérez" matchea nombre+apellido. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyMemberSearch<T extends { or: (f: string) => any }>(query: T, search: string): T {
+  let q = query
+  for (const tok of search.trim().split(/\s+/)) {
+    const s = tok.replace(/[%,().]/g, '')
+    if (!s) continue
+    q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,cedula.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%`)
+  }
+  return q
+}
+
 /** Solo los IDs (y total) que coinciden con los filtros, sin paginar. Liviano:
  *  select('id'). Sirve para guardar listas / acciones sobre "todos los resultados". */
 export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: string[]; total: number }> {
@@ -171,7 +185,7 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
     .range(0, 199999)
 
   if (search) {
-    query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,cedula.ilike.%${search}%,email.ilike.%${search}%`)
+    query = applyMemberSearch(query, search)
   }
   if (is_donor !== undefined) query = query.eq('is_donor', is_donor)
   if (is_server) query = query.eq('volunteers.status', 'active')
@@ -327,9 +341,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
   if (is_server) query = query.eq('volunteers.status', 'active')
 
   if (search) {
-    query = query.or(
-      `first_name.ilike.%${search}%,last_name.ilike.%${search}%,cedula.ilike.%${search}%,email.ilike.%${search}%`,
-    )
+    query = applyMemberSearch(query, search)
   }
   if (province) query = query.eq('province', province)
   if (is_donor !== undefined) query = query.eq('is_donor', is_donor)
