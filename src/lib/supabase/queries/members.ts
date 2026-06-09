@@ -530,7 +530,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       ),
       study_enrollments(
         status, completed_at, enrolled_at,
-        study_groups!study_enrollments_group_id_fkey(current_week, starts_at, plan:study_plans(code, name, duration_weeks))
+        study_groups!study_enrollments_group_id_fkey(current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks))
       )
     `)
     .eq('id', id)
@@ -617,7 +617,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     status: string
     completed_at: string | null
     enrolled_at: string | null
-    study_groups: { current_week: number | null; starts_at: string | null; plan: { code: string | null; name: string | null; duration_weeks: number | null } | null } | null
+    study_groups: { current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: { code: string | null; name: string | null; duration_weeks: number | null } | null } | null
   }>
 
   const activeRoles = memberRoles.filter(r => r.is_active).map(r => r.role)
@@ -625,11 +625,16 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   const estadoDirigente = activeDirigente?.status_detail ?? null
   const activeVolunteer = volunteers.find(v => v.status === 'active') ?? null
   const completedStudies = enrollments
-    .filter(e => e.status === 'completed' && e.study_groups?.plan?.name)
+    .filter(e => e.status === 'completed' && e.study_groups?.plan?.name
+      && e.study_groups.leader_id !== id
+      && e.study_groups.co_leader_id !== id)
     .map(e => e.study_groups!.plan!.name as string)
   // Historial de estudios con fecha real (de la inscripción o del grupo).
   const studyHistory = enrollments
-    .filter(e => e.study_groups?.plan?.code)
+    // Solo lo que llevó como estudiante: excluir grupos que la persona dirigió.
+    .filter(e => e.study_groups?.plan?.code
+      && e.study_groups.leader_id !== id
+      && e.study_groups.co_leader_id !== id)
     .map(e => {
       const d = e.completed_at ?? e.enrolled_at ?? e.study_groups!.starts_at ?? null
       return {
