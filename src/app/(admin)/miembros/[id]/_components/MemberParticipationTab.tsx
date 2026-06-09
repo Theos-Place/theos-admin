@@ -158,7 +158,7 @@ export function MemberParticipationTab({
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-[var(--outline-variant)]">
-                {([['name', 'Estudio'], ['startYear', 'Inicio'], ['duration', 'Duración'], ['status', 'Estado']] as [keyof StudyRow, string][]).map(([key, label]) => (
+                {([['name', 'Estudio'], ['startYear', 'Inicio'], ['status', 'Estado']] as [keyof StudyRow, string][]).map(([key, label]) => (
                   <th
                     key={key}
                     onClick={() => estudiosTable.toggleSort(key)}
@@ -194,9 +194,6 @@ export function MemberParticipationTab({
                     </td>
                     <td className="px-4 py-2.5 text-navy-light/50 text-xs font-body">
                       {row.startLabel}
-                    </td>
-                    <td className="px-4 py-2.5 text-navy-light/50 text-xs font-body">
-                      {row.duration}
                     </td>
                     <td className="px-4 py-2.5">
                       <span
