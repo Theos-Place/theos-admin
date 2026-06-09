@@ -86,7 +86,7 @@ function StudyCardFull({ study }: { study: StudyType }) {
   return (
     <div
       className="rounded-xl bg-surface-low flex flex-col gap-0"
-      style={{ padding: '14px 16px' }}
+      style={{ padding: '14px 16px', opacity: study.is_archived ? 0.6 : 1 }}
       onClick={() => router.push(`/estudios/plan/${study.id}`)}
       role="button"
       tabIndex={0}
@@ -95,12 +95,19 @@ function StudyCardFull({ study }: { study: StudyType }) {
       {/* Header: código + nombre + semanas */}
       <div className="flex items-start justify-between mb-2">
         <div>
-          <span
-            style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: 'var(--brand-coral)', textTransform: 'uppercase' }}
-            className="font-display"
-          >
-            {study.code}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: 'var(--brand-coral)', textTransform: 'uppercase' }}
+              className="font-display"
+            >
+              {study.code}
+            </span>
+            {study.is_archived && (
+              <span className="rounded-full bg-navy/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-navy/50" style={{ fontFamily: 'var(--font-display)' }}>
+                Archivado
+              </span>
+            )}
+          </div>
           <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--brand-navy)', marginTop: 2, fontFamily: 'var(--font-display)' }}>
             {study.name}
           </div>
