@@ -786,6 +786,14 @@ export async function findMemberByCedulaOrEmail(cedula: string | null, email: st
   return data as { id: string } | null
 }
 
+/** Fusiona dos miembros duplicados: reasigna todo lo de `dupId` a `keepId` y
+ *  borra el duplicado. Corre la función transaccional `merge_members` en la BD. */
+export async function mergeMembers(keepId: string, dupId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.rpc('merge_members', { keep_id: keepId, dup_id: dupId })
+  if (error) throw error
+}
+
 export async function createMember(member: Omit<DbMember, 'id' | 'created_at' | 'updated_at' | 'sede_id'>) {
   const supabase = createAdminClient()
 

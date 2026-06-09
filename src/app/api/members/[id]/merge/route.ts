@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { mergeMembers } from '@/lib/supabase/queries/members'
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params // miembro que se CONSERVA
+    const body = (await req.json()) as { duplicate_id?: string }
+    if (!body.duplicate_id) return NextResponse.json({ error: 'Falta duplicate_id' }, { status: 400 })
+    if (body.duplicate_id === id) return NextResponse.json({ error: 'No se puede fusionar consigo mismo' }, { status: 400 })
+
+    await mergeMembers(id, body.duplicate_id)
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('POST /api/members/[id]/merge:', error)
+    const detail = error instanceof Error ? { message: error.message } : error
+    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+  }
+}

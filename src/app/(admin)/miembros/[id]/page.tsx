@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { useMember } from '@/hooks/useMember'
@@ -59,6 +59,7 @@ export default function MiembroDetailPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [revealDonations, setRevealDonations] = useState(false)
   const [showAddStudy, setShowAddStudy] = useState(false)
+  const [showMerge, setShowMerge] = useState(false)
   const [openSections, setOpenSections] = useState({
     estudios: true,
     servicio: false,
@@ -176,7 +177,7 @@ export default function MiembroDetailPage() {
         onMenuToggle={() => setMenuOpen(o => !o)}
         onMenuClose={() => setMenuOpen(false)}
         onDeactivate={() => setMenuOpen(false)}
-        onMerge={() => setMenuOpen(false)}
+        onMerge={() => { setMenuOpen(false); setShowMerge(true) }}
       />
 
       {/* ── Tab bar ── */}
@@ -252,6 +253,15 @@ export default function MiembroDetailPage() {
           memberId={id}
           onClose={() => setShowAddStudy(false)}
           onAdded={() => { setShowAddStudy(false); refetch() }}
+        />
+      )}
+
+      {showMerge && member && (
+        <MergeMemberModal
+          keepId={id}
+          keepName={`${member.first_name} ${member.last_name}`.trim()}
+          onClose={() => setShowMerge(false)}
+          onMerged={() => { setShowMerge(false); refetch() }}
         />
       )}
 
@@ -342,6 +352,121 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
           </button>
           <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
             {saving ? 'Guardando…' : 'Agregar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal: fusionar miembro duplicado ──────────────────────────────────────────
+
+type SearchHit = { id: string; first_name: string; last_name: string; cedula: string | null; email: string | null }
+
+function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
+  keepId: string
+  keepName: string
+  onClose: () => void
+  onMerged: () => void
+}) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<SearchHit[]>([])
+  const [picked, setPicked] = useState<SearchHit | null>(null)
+  const [searching, setSearching] = useState(false)
+  const [merging, setMerging] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setResults([]); return }
+    let alive = true
+    setSearching(true)
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`)
+        .then(r => (r.ok ? r.json() : { data: [] }))
+        .then(d => { if (alive) setResults((Array.isArray(d) ? d : d.data ?? []).filter((m: SearchHit) => m.id !== keepId)) })
+        .catch(() => { if (alive) setResults([]) })
+        .finally(() => { if (alive) setSearching(false) })
+    }, 250)
+    return () => { alive = false; clearTimeout(t) }
+  }, [query, keepId])
+
+  async function handleMerge() {
+    if (!picked) return
+    setMerging(true)
+    setErr(null)
+    try {
+      const res = await fetch(`/api/members/${keepId}/merge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duplicate_id: picked.id }),
+      })
+      if (!res.ok) throw new Error('Error al fusionar')
+      onMerged()
+    } catch (e) {
+      console.error(e)
+      setErr('No se pudo fusionar. Intentá de nuevo.')
+      setMerging(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
+        <div>
+          <p className="text-base font-bold text-navy font-display">Fusionar duplicado</p>
+          <p className="text-[13px] text-navy-light/60 font-body mt-1">
+            Buscá el registro duplicado. Toda su información (estudios, asistencias, servicio, pagos…) se moverá a <strong className="text-navy">{keepName}</strong> y el duplicado se <strong>eliminará</strong>. Esta acción no se puede deshacer.
+          </p>
+        </div>
+
+        {!picked ? (
+          <>
+            <input
+              autoFocus
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              placeholder="Buscar por nombre, cédula, teléfono o correo…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
+            <div className="max-h-64 overflow-y-auto space-y-1">
+              {searching && <p className="text-xs text-navy-light/40 px-1 font-body">Buscando…</p>}
+              {!searching && query.trim().length >= 2 && results.length === 0 && (
+                <p className="text-xs text-navy-light/40 px-1 font-body">Sin resultados.</p>
+              )}
+              {results.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => setPicked(m)}
+                  className="w-full text-left rounded-xl px-3 py-2 hover:bg-surface-low transition-colors"
+                >
+                  <p className="text-sm text-navy font-body">{m.first_name} {m.last_name}</p>
+                  <p className="text-[11px] text-navy-light/50 font-body">
+                    {m.cedula ? `Cédula ${m.cedula}` : 'Sin cédula'}{m.email ? ` · ${m.email}` : ''}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="rounded-xl bg-coral-soft/15 px-3 py-3">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display mb-1">Se eliminará y fusionará en {keepName}</p>
+            <p className="text-sm text-navy font-body">{picked.first_name} {picked.last_name}</p>
+            <p className="text-[11px] text-navy-light/50 font-body">
+              {picked.cedula ? `Cédula ${picked.cedula}` : 'Sin cédula'}{picked.email ? ` · ${picked.email}` : ''}
+            </p>
+            <button onClick={() => setPicked(null)} className="mt-2 text-[11px] text-coral hover:underline font-body">Elegir otro</button>
+          </div>
+        )}
+
+        {err && <p className="text-sm text-coral font-body">{err}</p>}
+
+        <div className="flex gap-2 pt-1">
+          <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
+            Cancelar
+          </button>
+          <button onClick={handleMerge} disabled={!picked || merging} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+            {merging ? 'Fusionando…' : 'Fusionar y eliminar duplicado'}
           </button>
         </div>
       </div>
