@@ -62,12 +62,12 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   const { id } = use(params)
   const router = useRouter()
 
-  const { studyTypes, groups } = useStudies()
+  const { studyTypes, groups, refetch } = useStudies()
   const studyType = studyTypes.find(s => s.id === id)
   const catalog   = STUDY_CATALOG.find(s => s.code === id)
 
   const [showArchive, setShowArchive] = useState(false)
-  const [archived,    setArchived]    = useState(false)
+  const [busy,        setBusy]        = useState(false)
   const [search,       setSearch]      = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [zoneFilter,   setZoneFilter]   = useState<string>('all')
@@ -127,13 +127,34 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   }
 
   const stageInfo = STUDY_STAGES[view.stage as keyof typeof STUDY_STAGES]
+  const isArchived = studyType.is_archived
+
+  // Archivar/desarchivar persiste (is_active) y refresca.
+  async function setArchive(val: boolean) {
+    if (busy) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/studies/plans/${studyType!.plan_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !val }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      await refetch()
+    } catch (err) {
+      console.error('No se pudo cambiar el archivado:', err)
+    } finally {
+      setBusy(false)
+      setShowArchive(false)
+    }
+  }
 
   return (
     <div className="page">
 
       {showArchive && (
         <ConfirmModal
-          onConfirm={() => { setArchived(true); setShowArchive(false) }}
+          onConfirm={() => setArchive(true)}
           onCancel={() => setShowArchive(false)}
         />
       )}
@@ -152,12 +173,16 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <div className="ptitle">{view.name}</div>
             <div className="psub">
               {stageInfo?.label}
-              {archived && <span style={{ marginLeft: 8, color: 'var(--brand-coral)', fontWeight: 600 }}>[Archivado]</span>}
+              {isArchived && <span style={{ marginLeft: 8, color: 'var(--brand-coral)', fontWeight: 600 }}>[Archivado]</span>}
             </div>
           </div>
           <div className="ph-actions">
-            {!archived && (
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowArchive(true)}>
+            {isArchived ? (
+              <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setArchive(false)}>
+                <Archive size={13} /> Desarchivar
+              </button>
+            ) : (
+              <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setShowArchive(true)}>
                 <Archive size={13} /> Archivar
               </button>
             )}
