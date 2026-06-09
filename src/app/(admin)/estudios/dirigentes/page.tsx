@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudies } from '@/hooks/useStudies'
+import { useAuth } from '@/hooks/useAuth'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
-import { Search, ChevronRight, Users } from 'lucide-react'
+import { Search, ChevronRight, Users, Plus } from 'lucide-react'
 
 function initials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
@@ -81,11 +82,14 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
 
 export default function DirigentesPage() {
   const router = useRouter()
-  const { dirigentes, loading } = useDirigentes()
+  const { dirigentes, loading, refetch } = useDirigentes()
   const { studyTypes } = useStudies()
+  const { hasRole } = useAuth()
+  const canAdd = hasRole('admin', 'coordinador_dirigentes')
   const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
   const [tipo, setTipo] = useState('')
   const [query, setQuery] = useState('')
+  const [showAdd, setShowAdd] = useState(false)
 
   // Tipos de estudio que algún dirigente ha dado (para el filtro).
   const tiposDados = useMemo(() => {
@@ -112,11 +116,21 @@ export default function DirigentesPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Dirigentes</h1>
-        <p className="text-sm text-navy-light/60 font-body">
-          {counts.activos} activos · {counts.inactivos} inactivos (con historial)
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Dirigentes</h1>
+          <p className="text-sm text-navy-light/60 font-body">
+            {counts.activos} activos · {counts.inactivos} inactivos (con historial)
+          </p>
+        </div>
+        {canAdd && (
+          <button
+            onClick={() => setShowAdd(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body shrink-0"
+          >
+            <Plus size={14} /> Agregar dirigente
+          </button>
+        )}
       </div>
 
       {/* Filtros */}
@@ -171,6 +185,105 @@ export default function DirigentesPage() {
           ))}
         </div>
       )}
+
+      {showAdd && (
+        <AddDirigenteModal onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); refetch() }} />
+      )}
+    </div>
+  )
+}
+
+// ─── Modal: agregar dirigente ───────────────────────────────────────────────────
+type MemberHit = { id: string; first_name: string; last_name: string; cedula: string | null }
+
+function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<MemberHit[]>([])
+  const [picked, setPicked] = useState<MemberHit | null>(null)
+  const [activo, setActivo] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setResults([]); return }
+    let alive = true
+    const t = setTimeout(() => {
+      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => { if (alive) setResults(Array.isArray(d) ? d : d.members ?? d.data ?? []) })
+        .catch(() => { if (alive) setResults([]) })
+    }, 250)
+    return () => { alive = false; clearTimeout(t) }
+  }, [query])
+
+  async function handleSave() {
+    if (!picked) return
+    setSaving(true)
+    setErr(null)
+    try {
+      const res = await fetch('/api/studies/dirigentes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: picked.id, active: activo }),
+      })
+      if (!res.ok) throw new Error('Error guardando')
+      onSaved()
+    } catch (e) {
+      console.error(e)
+      setErr('No se pudo agregar. Intentá de nuevo.')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
+        <p className="text-base font-bold text-navy font-display">Agregar dirigente</p>
+
+        {!picked ? (
+          <>
+            <input
+              autoFocus
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              placeholder="Buscar miembro por nombre, cédula…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
+            <div className="max-h-64 overflow-y-auto space-y-1">
+              {results.map(m => (
+                <button key={m.id} onClick={() => setPicked(m)} className="w-full text-left rounded-xl px-3 py-2 hover:bg-surface-low transition-colors">
+                  <p className="text-sm text-navy font-body">{m.first_name} {m.last_name}</p>
+                  <p className="text-[11px] text-navy-light/50 font-body">{m.cedula ? `Cédula ${m.cedula}` : 'Sin cédula'}</p>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="rounded-xl bg-surface-low px-3 py-2.5">
+              <p className="text-sm text-navy font-body">{picked.first_name} {picked.last_name}</p>
+              <button onClick={() => setPicked(null)} className="mt-1 text-[11px] text-coral hover:underline font-body">Elegir otro</button>
+            </div>
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" checked={activo} onChange={e => setActivo(e.target.checked)} className="accent-coral h-4 w-4 mt-0.5 rounded" />
+              <span className="text-sm text-navy-light/80 font-body">
+                Marcar como <strong className="text-navy">activo</strong>
+                <span className="block text-[11px] text-navy-light/50">Si lo activás, se agrega al Comité de Dirigentes. Si no, queda como dirigente inactivo.</span>
+              </span>
+            </label>
+          </>
+        )}
+
+        {err && <p className="text-sm text-coral font-body">{err}</p>}
+
+        <div className="flex gap-2 pt-1">
+          <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
+          <button onClick={handleSave} disabled={!picked || saving} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+            {saving ? 'Guardando…' : 'Agregar'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

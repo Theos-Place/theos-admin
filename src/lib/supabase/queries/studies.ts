@@ -345,6 +345,40 @@ export async function getActiveDirigentes(): Promise<Array<{ member_id: string; 
   return [...seen].map(([member_id, member_name]) => ({ member_id, member_name }))
 }
 
+/** Marca a un miembro como dirigente. Crea la designación (study_leaders).
+ *  Si `active`, además lo agrega como servidor activo al Comité de Dirigentes
+ *  (puesto "Dirigente"). Inactivo = solo designación, sin comité. */
+export async function addDirigente(memberId: string, active: boolean): Promise<void> {
+  const supabase = createAdminClient()
+  const { error: lErr } = await supabase.from('study_leaders').upsert(
+    {
+      member_id: memberId,
+      is_active: active,
+      availability_status: active ? 'available' : 'inactive',
+      zone_preference: [],
+      qualified_study_codes: [],
+    },
+    { onConflict: 'member_id' },
+  )
+  if (lErr) throw lErr
+
+  if (active) {
+    const { data: area } = await supabase
+      .from('areas').select('id').eq('area_type', 'committee').ilike('name', 'Comité de Dirigentes').maybeSingle()
+    if (area) {
+      const { data: pos } = await supabase
+        .from('service_positions').select('id').eq('area_id', (area as { id: string }).id).eq('is_active', true).limit(1).maybeSingle()
+      if (pos) {
+        const { error: vErr } = await supabase.from('volunteers').upsert(
+          { member_id: memberId, position_id: (pos as { id: string }).id, status: 'active' },
+          { onConflict: 'member_id,position_id' },
+        )
+        if (vErr) throw vErr
+      }
+    }
+  }
+}
+
 /** Lista de espera de estudios. */
 export async function getWaitlist(): Promise<DbWaitlistEntry[]> {
   const supabase = createAdminClient()

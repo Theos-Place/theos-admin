@@ -43,9 +43,13 @@ export function buildDirigentes(
   groups: StudyGroup[],
   plans: StudyType[],
   activeDirigentes: ActiveDirigente[],
+  /** Designados manualmente (tabla study_leaders): aparecen aunque no hayan
+   *  liderado grupos. Quedan INACTIVO salvo que estén en el comité activo. */
+  designated: ActiveDirigente[] = [],
 ): Dirigente[] {
   const planName = (code: string) => plans.find(p => p.code === code)?.name ?? code
   const activeMap = new Map(activeDirigentes.map(a => [a.member_id, a.member_name]))
+  const designatedMap = new Map(designated.map(a => [a.member_id, a.member_name]))
 
   type Acc = { name: string; activos: DirigenteGrupo[]; completados: DirigenteGrupo[]; codes: Set<string> }
   const byLeader = new Map<string, Acc>()
@@ -70,12 +74,12 @@ export function buildDirigentes(
     else acc.activos.push(entry)
   }
 
-  // Unión: quienes lideraron grupos ∪ servidores activos del comité.
-  const ids = new Set<string>([...byLeader.keys(), ...activeMap.keys()])
+  // Unión: lideraron grupos ∪ activos del comité ∪ designados manualmente.
+  const ids = new Set<string>([...byLeader.keys(), ...activeMap.keys(), ...designatedMap.keys()])
   const out: Dirigente[] = []
   for (const id of ids) {
     const acc = byLeader.get(id)
-    const name = activeMap.get(id) ?? acc?.name ?? ''
+    const name = activeMap.get(id) || acc?.name || designatedMap.get(id) || ''
     const completados = (acc?.completados ?? []).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
     const activos = (acc?.activos ?? []).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
     out.push({
