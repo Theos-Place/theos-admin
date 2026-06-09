@@ -7,7 +7,6 @@ import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
-import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
@@ -78,12 +77,8 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
     exportValue: g => STATUS_EXPORT[g.status] ?? g.status,
   },
   {
-    key: 'current_week', label: 'Semana actual', defaultVisible: true,
-    exportValue: g => g.current_week > 0 ? `Semana ${g.current_week}` : '—',
-  },
-  {
-    key: 'start_date', label: 'Fecha inicio', defaultVisible: false,
-    exportValue: g => new Date(g.start_date).toLocaleDateString('es-CR'),
+    key: 'start_date', label: 'Fecha inicio', defaultVisible: true,
+    exportValue: g => g.start_date ? new Date(g.start_date).toLocaleDateString('es-CR') : '—',
   },
   {
     key: 'end_date', label: 'Fecha fin', defaultVisible: false,
@@ -341,15 +336,10 @@ export default function GruposPage() {
                           return <td key="max_capacity" className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{group.max_capacity}</td>
                         case 'status':
                           return <td key="status" className="px-4 py-3"><GroupStatusBadge status={group.status} /></td>
-                        case 'current_week':
-                          return (
-                            <td key="current_week" className="px-4 py-3">
-                              {studyType && group.current_week > 0
-                                ? <WeekProgressBar current={group.current_week} total={studyType.weeks} className="w-20" />
-                                : <span className="text-[11px] text-navy-light/30">—</span>
-                              }
-                            </td>
-                          )
+                        case 'start_date':
+                          return <td key="start_date" className="px-4 py-3 text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{group.start_date ? new Date(group.start_date).toLocaleDateString('es-CR') : '—'}</td>
+                        case 'end_date':
+                          return <td key="end_date" className="px-4 py-3 text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{group.end_date ? new Date(group.end_date).toLocaleDateString('es-CR') : '—'}</td>
                         default: {
                           const rawVal = (group as Record<string, unknown>)[String(col.key)]
                           return <td key={String(col.key)} className="px-4 py-3 text-sm text-navy-light/70 max-w-[160px] truncate" style={{ fontFamily: 'var(--font-body)' }}>{rawVal != null ? String(rawVal) : '—'}</td>
