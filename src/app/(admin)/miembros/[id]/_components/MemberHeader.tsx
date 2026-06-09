@@ -1,8 +1,60 @@
-import { Star } from 'lucide-react'
+import { useState } from 'react'
+import { Star, Heart, Hammer, CalendarCheck, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { mockMembers } from '@/data/mock-members'
+import type { Member } from '@/types/member'
 
-type Member = (typeof mockMembers)[number]
+/** Asistente activo: al menos una asistencia en cada uno de los últimos 6 meses. */
+function isAttendanceActive(months: string[] = []): boolean {
+  const set = new Set(months)
+  const now = new Date()
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    if (!set.has(key)) return false
+  }
+  return true
+}
+
+function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
+  active: boolean
+  icon: React.ElementType
+  label: string
+  tooltip: string
+  activeColor: string
+}) {
+  const [show, setShow] = useState(false)
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className="relative inline-flex"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+      >
+        <Icon size={18} strokeWidth={1.75} className={cn('transition-colors', active ? activeColor : 'text-navy-light/20')} />
+        {show && active && (
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-navy px-2 py-1 text-[10px] text-white z-50 shadow-[var(--shadow-md)]">
+            {tooltip}
+          </div>
+        )}
+      </div>
+      <span className={cn('text-[9px] font-body', active ? 'text-navy-light/60' : 'text-navy-light/30')}>{label}</span>
+    </div>
+  )
+}
+
+function MemberActivityIcons({ member }: { member: Member }) {
+  const attendanceActive = isAttendanceActive(member.attendance_months)
+  const studyingActive = !!member.current_study
+  const committee = member.comites?.[0]
+  return (
+    <div className="mt-3 flex items-center gap-5">
+      <ActivityIcon active={member.is_donor} icon={Heart} label="Donador" activeColor="text-coral" tooltip="Donador" />
+      <ActivityIcon active={member.is_server} icon={Hammer} label="Servidor" activeColor="text-teal-deep" tooltip={committee ? `Servidor en ${committee}` : 'Servidor activo'} />
+      <ActivityIcon active={attendanceActive} icon={CalendarCheck} label="Asistente" activeColor="text-navy" tooltip="Asistente activo (últimos 6 meses)" />
+      <ActivityIcon active={studyingActive} icon={BookOpen} label="Estudiante" activeColor="text-coral" tooltip={member.current_study ? `Estudiando ${member.current_study}` : 'Estudiante activo'} />
+    </div>
+  )
+}
 
 const AVATAR_COLORS = ['bg-navy', 'bg-coral', 'bg-teal-deep', 'bg-navy-light']
 
@@ -117,6 +169,9 @@ export function MemberHeader({
               </span>
             )}
           </div>
+
+          {/* Iconos de actividad */}
+          <MemberActivityIcons member={member} />
         </div>
         </div>
 
