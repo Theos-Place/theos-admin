@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mergeMembers } from '@/lib/supabase/queries/members'
+import { requireRoles } from '@/lib/auth/guard'
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireRoles('admin', 'editor_perfiles')
+    if (auth.res) return auth.res
     const { id } = await params // miembro que se CONSERVA
     const body = (await req.json()) as { duplicate_id?: string }
     if (!body.duplicate_id) return NextResponse.json({ error: 'Falta duplicate_id' }, { status: 400 })
@@ -15,7 +18,6 @@ export async function POST(
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('POST /api/members/[id]/merge:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

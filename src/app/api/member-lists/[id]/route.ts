@@ -9,8 +9,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(list)
   } catch (error) {
     console.error('GET /api/member-lists/[id]:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
@@ -21,8 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PATCH /api/member-lists/[id]:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
@@ -33,7 +31,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('DELETE /api/member-lists/[id]:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

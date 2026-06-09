@@ -14,10 +14,7 @@ export async function GET(
     return NextResponse.json(member)
   } catch (error) {
     console.error('GET /api/members/[id]:', error)
-    const detail = error instanceof Error
-      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
-      : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
@@ -32,9 +29,6 @@ export async function PUT(
     return NextResponse.json(member)
   } catch (error) {
     console.error('PUT /api/members/[id]:', error)
-    const detail = error instanceof Error
-      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
-      : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

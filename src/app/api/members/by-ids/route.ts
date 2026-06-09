@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('POST /api/members/by-ids:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

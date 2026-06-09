@@ -25,10 +25,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('GET /api/members:', error)
-    const detail = error instanceof Error
-      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
-      : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
@@ -79,9 +76,6 @@ export async function POST(req: NextRequest) {
     if (e?.code === '23505') {
       return NextResponse.json({ error: 'duplicate' }, { status: 409 })
     }
-    const detail = error instanceof Error
-      ? { message: error.message, ...(error as unknown as Record<string, unknown>) }
-      : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

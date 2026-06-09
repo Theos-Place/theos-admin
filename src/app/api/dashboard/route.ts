@@ -6,7 +6,6 @@ export async function GET() {
     return NextResponse.json(await getDashboardStats())
   } catch (error) {
     console.error('GET /api/dashboard:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

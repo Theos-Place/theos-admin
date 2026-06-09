@@ -6,8 +6,7 @@ export async function GET() {
     return NextResponse.json(await getMessages())
   } catch (error) {
     console.error('GET /api/communications/messages:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
@@ -17,7 +16,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(b, { status: 201 })
   } catch (error) {
     console.error('POST /api/communications/messages:', error)
-    const detail = error instanceof Error ? { message: error.message } : error
-    return NextResponse.json({ error: 'Error interno', detail }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
