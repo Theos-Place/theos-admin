@@ -28,6 +28,11 @@ const QUEUE_MAP: Record<string, string> = {
   'Cómo Tomar Buenas Desiciones (Viviendo en Integri)': 'CTBD',
   'Pre Matrimonial': 'PREMAT', 'Hebreos': 'HEB', 'Romanos': 'ROM',
   'Amor sin Fronteras': 'ASF',
+  // Planes nuevos creados desde el histórico
+  'Efesios': 'EFE', 'Galatas': 'GAL', 'Gálatas': 'GAL', 'Apocalipsis': 'APO',
+  '¿Adónde va este bus?': 'BUS',
+  // "Bienestar Integral" es el mismo estudio que CTBD (Cómo Tomar Buenas Decisiones)
+  'Bienestar Integral': 'CTBD',
 }
 
 function parseCSV(text: string): string[][] {
