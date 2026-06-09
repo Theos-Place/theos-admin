@@ -133,8 +133,8 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
     render: m => {
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
-        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.position}</span>
-        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+        ? <span className="font-body text-[13px]">{active.position}</span>
+        : <span className="text-navy-light/30 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.position ?? '',
   },
@@ -143,8 +143,8 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
     render: m => {
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
-        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.committee}</span>
-        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+        ? <span className="font-body text-[13px]">{active.committee}</span>
+        : <span className="text-navy-light/30 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.committee ?? '',
   },
@@ -153,8 +153,8 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
     render: m => {
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
-        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.area}</span>
-        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+        ? <span className="font-body text-[13px]">{active.area}</span>
+        : <span className="text-navy-light/30 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.area ?? '',
   },
@@ -361,12 +361,11 @@ export default function MiembrosPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
           >
             Miembros
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-navy-light/60 font-body">
             {counts ? `${counts.total.toLocaleString('es-CR')} registrados` : 'Cargando…'}
             {error && <span className="text-coral"> · {error}</span>}
           </p>
@@ -392,8 +391,7 @@ export default function MiembrosPage() {
                 onClick={() => hasAnyFilter ? setSaveListOpen(true) : undefined}
                 disabled={!hasAnyFilter}
                 title={!hasAnyFilter ? 'Aplicá filtros primero para guardar una lista' : ''}
-                className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
               >
                 <Bookmark size={13} strokeWidth={1.75} />
                 Guardar lista
@@ -403,8 +401,7 @@ export default function MiembrosPage() {
           {can('comunicaciones', 'create') && (
             <button
               onClick={handleComunicarLista}
-              className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <MessageCircle size={15} strokeWidth={1.75} />
               Comunicar
@@ -413,8 +410,7 @@ export default function MiembrosPage() {
           {can('miembros', 'create') && (
             <button
               onClick={() => router.push('/miembros/nuevo')}
-              className="flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white transition-all hover:bg-coral-deep active:scale-95"
-              style={{ boxShadow: 'var(--shadow-pulse)', fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white transition-all hover:bg-coral-deep active:scale-95 shadow-[var(--shadow-pulse)] font-body"
             >
               <UserPlus size={15} strokeWidth={1.75} />
               Nuevo miembro
@@ -448,12 +444,11 @@ export default function MiembrosPage() {
                   else setShowActive(v => !v)
                 }}
                 className={cn(
-                  'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
+                  'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150 font-body',
                   active
                     ? 'bg-navy text-white'
                     : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
                 )}
-                style={{ fontFamily: 'var(--font-body)' }}
               >
                 {labelWithCount}
               </button>
@@ -464,12 +459,11 @@ export default function MiembrosPage() {
           <button
             onClick={() => setFiltersOpen(o => !o)}
             className={cn(
-              'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-all duration-150',
+              'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-all duration-150 font-body',
               filtersOpen || activeFilterCount > 0
                 ? 'bg-navy text-white'
                 : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             <SlidersHorizontal size={13} strokeWidth={1.75} />
             Filtros
@@ -490,16 +484,15 @@ export default function MiembrosPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email…"
-            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body"
           />
         </div>
       </div>
 
       {/* ── Conteo de filtros rápidos activos ── */}
       {quickActiveCount > 0 && (
-        <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-          <span className="font-medium text-navy" style={{ fontWeight: 500 }}>
+        <p className="text-sm text-navy-light/60 font-body">
+          <span className="font-medium text-navy">
             {quickActiveCount} {quickActiveCount === 1 ? 'filtro activo' : 'filtros activos'}
           </span>
           {' · '}
@@ -541,8 +534,8 @@ export default function MiembrosPage() {
       {/* ── Summary bar ── */}
       {activeFilterCount > 0 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
-            <span className="font-medium text-navy" style={{ fontWeight: 500 }}>
+          <p className="text-sm text-navy-light/60 font-body">
+            <span className="font-medium text-navy">
               {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
             </span>
             {' · '}
@@ -550,8 +543,7 @@ export default function MiembrosPage() {
           </p>
           <button
             onClick={() => filters.clearAll()}
-            className="flex items-center gap-1 text-sm text-coral hover:underline transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex items-center gap-1 text-sm text-coral hover:underline transition-colors font-body"
           >
             <X size={12} strokeWidth={2} />
             Limpiar todo
@@ -562,10 +554,9 @@ export default function MiembrosPage() {
       {/* ── Selection banner ── */}
       {selectedIds.size > 0 && (
         <div
-          className="flex items-center gap-3 rounded-2xl px-4 py-3 flex-wrap"
-          style={{ background: 'rgba(22,20,64,0.04)', border: '1px solid rgba(22,20,64,0.12)' }}
+          className="flex items-center gap-3 rounded-2xl px-4 py-3 flex-wrap bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.12)]"
         >
-          <span className="text-[13px] font-semibold text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="text-[13px] font-semibold text-navy font-body">
             {allFilteredSelected
               ? `${displayMembers.length.toLocaleString('es-CR')} miembros seleccionados (todos los resultados)`
               : `${selectedIds.size} miembro${selectedIds.size !== 1 ? 's' : ''} seleccionado${selectedIds.size !== 1 ? 's' : ''}`
@@ -575,8 +566,8 @@ export default function MiembrosPage() {
           {!allFilteredSelected && (
             <button
               onClick={() => setSelectedIds(new Set(displayMembers.map(m => m.id)))}
-              className="text-[12px] font-semibold underline transition-colors"
-              style={{ color: 'var(--coral, #EF5554)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+              className="text-[12px] font-semibold underline transition-colors text-[var(--coral,#EF5554)] cursor-pointer font-body"
+              style={{ background: 'none', border: 'none' }}
             >
               Seleccionar los {displayMembers.length.toLocaleString('es-CR')} resultados filtrados
             </button>
@@ -594,16 +585,14 @@ export default function MiembrosPage() {
             />
             <button
               onClick={handleComunicarSeleccion}
-              className="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <MessageCircle size={14} strokeWidth={1.75} />
               Comunicar ({(allFilteredSelected ? displayMembers.length : selectedIds.size).toLocaleString('es-CR')})
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="flex items-center gap-1 rounded-xl border px-3.5 py-2 text-sm text-navy-light/60 hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light/60 hover:bg-surface-low transition-colors font-body"
             >
               <X size={13} />
               Cancelar
@@ -614,13 +603,12 @@ export default function MiembrosPage() {
 
       {/* ── Table card ── */}
       <div
-        className="overflow-hidden rounded-2xl"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+              <tr className="border-b border-[var(--outline-variant)]">
                 <th className="w-10 px-4 py-3.5">
                   <input
                     type="checkbox"
@@ -649,7 +637,7 @@ export default function MiembrosPage() {
             <tbody>
               {!shouldFetch ? (
                 <tr>
-                  <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
                     <Search size={26} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.75} />
                     <p className="text-sm font-semibold text-navy-light/50">Usá el buscador o aplicá un filtro para ver miembros</p>
                     <p className="text-[13px] text-navy-light/40 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
@@ -657,7 +645,7 @@ export default function MiembrosPage() {
                 </tr>
               ) : loading && visibleMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
                     <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
                     <p className="text-sm text-navy-light/50">Buscando miembros…</p>
                   </td>
@@ -666,8 +654,7 @@ export default function MiembrosPage() {
                 <tr>
                   <td
                     colSpan={visibleColumns.length + 2}
-                    className="px-4 py-12 text-center text-sm text-navy-light/40"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="px-4 py-12 text-center text-sm text-navy-light/40 font-body"
                   >
                     Sin resultados para los filtros aplicados
                   </td>
@@ -700,32 +687,32 @@ export default function MiembrosPage() {
                           return (
                             <td key="name" className="px-4 py-3.5">
                               <div className="flex items-center gap-3">
-                                <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs', avatarColor(member.id))} style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+                                <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-display font-extrabold', avatarColor(member.id))}>
                                   {initials(member)}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="truncate text-navy" style={{ fontFamily: 'var(--font-body)' }}>{member.first_name} {member.last_name}</p>
-                                  <p className="truncate text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>{member.email}</p>
+                                  <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
+                                  <p className="truncate text-xs text-navy-light/50 font-body">{member.email}</p>
                                 </div>
                               </div>
                             </td>
                           )
                         case 'cedula':
                           return (
-                            <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                            <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums font-mono text-[12px]">
                               {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/30 font-sans">Sin cédula</span>}
                             </td>
                           )
                         case 'age':
                           return (
-                            <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                            <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap font-mono text-[12px]">
                               {member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'}
                             </td>
                           )
                         case 'status':
                           return (
                             <td key="status" className="px-4 py-3.5">
-                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
+                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
                                 {member.is_active ? 'Activo' : 'Inactivo'}
                               </span>
                             </td>
@@ -734,8 +721,8 @@ export default function MiembrosPage() {
                           return (
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
-                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral" style={{ fontFamily: 'var(--font-body)' }}>Sí</span>
-                                : <span className="text-sm text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>—</span>
+                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
+                                : <span className="text-sm text-navy-light/30 font-body">—</span>
                               }
                             </td>
                           )
@@ -754,7 +741,7 @@ export default function MiembrosPage() {
                             ? col.exportValue(member)
                             : Array.isArray(rawVal) ? (rawVal as string[]).join(', ') : String(rawVal ?? '')
                           return (
-                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate font-body">
                               {display || '—'}
                             </td>
                           )
@@ -781,10 +768,9 @@ export default function MiembrosPage() {
         {/* ── Load more (server-side) ── */}
         {shouldFetch && visibleMembers.length > 0 && (
           <div
-            className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap"
-            style={{ borderTop: '1px solid var(--outline-variant)' }}
+            className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap border-t border-[var(--outline-variant)]"
           >
-            <span className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+            <span className="text-xs text-navy-light/50 font-body">
               Mostrando <strong className="text-navy">{visibleMembers.length.toLocaleString('es-CR')}</strong> de{' '}
               <strong className="text-navy">{resultTotal.toLocaleString('es-CR')}</strong> resultados
             </span>
@@ -792,8 +778,7 @@ export default function MiembrosPage() {
               <button
                 onClick={() => loadMore()}
                 disabled={loading}
-                className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
               >
                 {loading ? 'Cargando…' : 'Cargar 50 más'}
               </button>
@@ -805,11 +790,10 @@ export default function MiembrosPage() {
       {saveListOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
           <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+            className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
           >
             <div className="flex items-center justify-between">
-              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-base font-bold text-navy font-display">
                 Guardar lista de miembros
               </p>
               <button onClick={() => setSaveListOpen(false)}>
@@ -819,37 +803,34 @@ export default function MiembrosPage() {
 
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
                   Nombre de la lista *
                 </label>
                 <input
                   autoFocus
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   placeholder="Ej. Donadores Heredia..."
                   value={saveListName}
                   onChange={e => setSaveListName(e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
                   Descripción (opcional)
                 </label>
                 <input
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   placeholder="Para qué sirve esta lista..."
                   value={saveListDesc}
                   onChange={e => setSaveListDesc(e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
                   Tags (separados por coma)
                 </label>
                 <input
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   placeholder="donadores, heredia..."
                   value={saveListTags}
                   onChange={e => setSaveListTags(e.target.value)}
@@ -857,7 +838,7 @@ export default function MiembrosPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
                   Tipo de lista
                 </label>
                 {[
@@ -875,8 +856,8 @@ export default function MiembrosPage() {
                       {saveListDynamic === opt.val && <Check size={9} className="text-white" strokeWidth={3} />}
                     </div>
                     <div>
-                      <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{opt.label}</p>
-                      <p className="text-[11px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{opt.desc}</p>
+                      <p className="text-[13px] font-medium text-navy font-body">{opt.label}</p>
+                      <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">{opt.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -884,8 +865,7 @@ export default function MiembrosPage() {
             </div>
 
             <div
-              className="rounded-xl px-3 py-2.5 text-[12px] text-navy-light/60"
-              style={{ background: 'var(--surface-low)', fontFamily: 'var(--font-body)' }}
+              className="rounded-xl px-3 py-2.5 text-[12px] text-navy-light/60 bg-surface-low font-body"
             >
               Resumen: <strong className="text-navy">{resultTotal.toLocaleString('es-CR')} miembros</strong>
               {' · '}{buildSegmentLabel(filters.conditions, showDonors, showServers)}
@@ -894,16 +874,14 @@ export default function MiembrosPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setSaveListOpen(false)}
-                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="flex-1 rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveList}
                 disabled={!saveListName.trim() || savingList}
-                className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
               >
                 {savingList ? 'Obteniendo miembros…' : 'Guardar lista'}
               </button>
@@ -914,17 +892,16 @@ export default function MiembrosPage() {
 
       {/* ── Toast ── */}
       {toast === 'saved' && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-2xl"
-          style={{ background: '#161440', boxShadow: '0 20px 48px rgba(22,20,64,0.30)' }}>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-2xl bg-navy shadow-[0_20px_48px_rgba(22,20,64,0.30)]">
           <Check size={15} className="text-teal-deep shrink-0" strokeWidth={2.5} />
-          <p className="text-[13px] text-white" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[13px] text-white font-body">
             Lista guardada
           </p>
           <span className="text-white/20 mx-1">·</span>
           <button
             onClick={() => { setToast(''); router.push('/miembros/listas') }}
-            className="text-[13px] text-coral hover:underline"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+            className="text-[13px] text-coral hover:underline cursor-pointer font-body"
+            style={{ background: 'none', border: 'none' }}
           >
             Ver mis listas →
           </button>

@@ -171,26 +171,24 @@ function NuevaComunicacionContent() {
           <Check size={28} className="text-teal-deep" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-extrabold text-navy" style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
+          <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
             ¡Mensaje enviado!
           </h2>
-          <p className="text-sm text-navy-light/60 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 mt-1 font-body">
             Enviado a {recipients.count.toLocaleString('es-CR')} personas
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/comunicaciones"
-            className="rounded-full border px-5 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border px-5 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             Ver historial
           </Link>
           <button
             type="button"
             onClick={() => { setSent(false); setWaBody(''); setEmailBody(''); setSubject('') }}
-            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Nueva comunicación
           </button>
@@ -205,13 +203,12 @@ function NuevaComunicacionContent() {
       <div>
         <Link
           href="/comunicaciones"
-          className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2 font-body"
         >
           <ChevronLeft size={15} />
           Comunicaciones
         </Link>
-        <h1 className="text-2xl text-navy" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Nueva comunicación
         </h1>
       </div>
@@ -276,8 +273,7 @@ function NuevaComunicacionContent() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
             >
               <Save size={14} />
               Guardar borrador
@@ -286,8 +282,7 @@ function NuevaComunicacionContent() {
               type="button"
               onClick={() => setShowConfirmModal(true)}
               disabled={recipients.count === 0 || (!waBody && !emailBody)}
-              className="flex items-center gap-1.5 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1.5 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
             >
               <Send size={14} />
               {scheduled ? 'Programar envío' : 'Enviar ahora'}
@@ -297,7 +292,7 @@ function NuevaComunicacionContent() {
 
         {/* Right: Preview */}
         <div className="space-y-3 lg:sticky lg:top-4">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
             Vista previa
           </p>
           <MessagePreview
@@ -350,7 +345,7 @@ export default function NuevaComunicacionPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando...</div>
+        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
       </div>
     }>
       <NuevaComunicacionContent />

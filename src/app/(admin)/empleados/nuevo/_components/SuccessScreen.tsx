@@ -14,29 +14,25 @@ export function SuccessScreen({ selected }: SuccessScreenProps) {
           <Check size={28} className="text-teal-deep" />
         </div>
         <p
-          className="text-xl font-bold text-navy"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-xl font-bold text-navy font-display"
         >
           Contrato formalizado
         </p>
         <p
-          className="text-sm text-navy-light/60"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="text-sm text-navy-light/60 font-body"
         >
           {selected?.first_name} {selected?.last_name} fue agregado como empleado.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link
             href="/empleados"
-            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Ver empleados
           </Link>
           <Link
             href="/empleados/nuevo"
-            className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Contratar otro
           </Link>

@@ -72,8 +72,8 @@ export default function NuevaPlantillaPage() {
     }
   }
 
-  const labelCls = 'text-[11px] text-navy-light/50 mb-1 block'
-  const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+  const labelCls = 'text-[11px] text-navy-light/50 mb-1 block font-body'
+  const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
   return (
     <div className="space-y-4">
@@ -81,26 +81,24 @@ export default function NuevaPlantillaPage() {
       <div>
         <Link
           href="/comunicaciones/plantillas"
-          className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2 font-body"
         >
           <ChevronLeft size={15} />
           Plantillas
         </Link>
-        <h1 className="text-2xl text-navy" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Nueva plantilla
         </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
         {/* Left: Form */}
-        <div className="rounded-2xl p-6 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
           {/* Name */}
           <div>
-            <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre de la plantilla</label>
+            <label className={labelCls}>Nombre de la plantilla</label>
             <input
               className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
               placeholder="ej. Bienvenida nueva persona"
               value={name}
               onChange={e => setName(e.target.value)}
@@ -110,10 +108,9 @@ export default function NuevaPlantillaPage() {
           {/* Category + Channel */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Categoría</label>
+              <label className={labelCls}>Categoría</label>
               <select
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={category}
                 onChange={e => setCategory(e.target.value as Category)}
               >
@@ -121,10 +118,9 @@ export default function NuevaPlantillaPage() {
               </select>
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Canal</label>
+              <label className={labelCls}>Canal</label>
               <select
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={channel}
                 onChange={e => {
                   setChannel(e.target.value as CommunicationChannel)
@@ -141,22 +137,21 @@ export default function NuevaPlantillaPage() {
           {/* Email subject */}
           {(channel === 'email' || channel === 'both') && (
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Asunto del correo</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Asunto con variables: Hola {nombre}..." value={subject} onChange={e => setSubject(e.target.value)} />
+              <label className={labelCls}>Asunto del correo</label>
+              <input className={inputCls} placeholder="Asunto con variables: Hola {nombre}..." value={subject} onChange={e => setSubject(e.target.value)} />
             </div>
           )}
 
           {/* WhatsApp body */}
           {(channel === 'whatsapp' || channel === 'both') && (
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>
+              <label className={labelCls}>
                 Cuerpo del mensaje WhatsApp <span className="text-navy-light/30">(soporta *negrita*, _itálica_, ~tachado~)</span>
               </label>
               <textarea
                 ref={waRef}
                 rows={7}
                 className={cn(inputCls, 'resize-none')}
-                style={{ fontFamily: 'var(--font-body)' }}
                 placeholder="Hola {nombre} 👋&#10;&#10;..."
                 value={waBody}
                 onChange={e => setWaBody(e.target.value)}
@@ -168,12 +163,11 @@ export default function NuevaPlantillaPage() {
           {/* Email body */}
           {(channel === 'email' || channel === 'both') && (
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Cuerpo del correo</label>
+              <label className={labelCls}>Cuerpo del correo</label>
               <textarea
                 ref={emailRef}
                 rows={7}
                 className={cn(inputCls, 'resize-none')}
-                style={{ fontFamily: 'var(--font-body)' }}
                 placeholder="Hola {nombre},&#10;&#10;..."
                 value={emailBody}
                 onChange={e => setEmailBody(e.target.value)}
@@ -183,8 +177,8 @@ export default function NuevaPlantillaPage() {
           )}
 
           {/* Variables panel */}
-          <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--surface-low)' }}>
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="rounded-xl p-4 space-y-3 bg-surface-low">
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-semibold font-display">
               Variables disponibles
             </p>
             <div className="space-y-2">
@@ -200,24 +194,22 @@ export default function NuevaPlantillaPage() {
                           insertAtCursor(emailRef, v.key, setEmailBody)
                         }
                       }}
-                      className="rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all"
-                      style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-mono)' }}
+                      className="rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
                     >
                       {v.key}
                     </button>
                   </div>
-                  <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>{v.description}</span>
+                  <span className="text-[11px] text-navy-light/40 font-body">{v.description}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+          <div className="flex items-center gap-3 pt-2 border-t border-[var(--outline-variant)]">
             <Link
               href="/comunicaciones/plantillas"
-              className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
             >
               Cancelar
             </Link>
@@ -226,10 +218,9 @@ export default function NuevaPlantillaPage() {
               onClick={handleSave}
               disabled={saving || !name.trim() || (!waBody && !emailBody)}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed',
+                'inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body',
                 saved ? 'bg-teal-deep' : 'bg-coral hover:bg-coral-deep'
               )}
-              style={{ fontFamily: 'var(--font-body)' }}
             >
               {saved ? <><Check size={14} /> Guardada</> : 'Guardar plantilla'}
             </button>
@@ -239,7 +230,7 @@ export default function NuevaPlantillaPage() {
         {/* Right: Preview */}
         <div className="space-y-3 lg:sticky lg:top-4">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
               Vista previa
             </p>
             {channel === 'both' && (
@@ -249,8 +240,7 @@ export default function NuevaPlantillaPage() {
                     key={ch}
                     type="button"
                     onClick={() => setPreviewChannel(ch)}
-                    className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium transition-all', previewChannel === ch ? 'bg-navy text-white' : 'text-navy-light/50')}
-                    style={{ fontFamily: 'var(--font-display)' }}
+                    className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium transition-all font-display', previewChannel === ch ? 'bg-navy text-white' : 'text-navy-light/50')}
                   >
                     {ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
                   </button>

@@ -21,14 +21,12 @@ export function MemberWalletTab({ member }: Props) {
         {/* Logo */}
         <div className="flex items-baseline gap-0.5 mb-4">
           <span
-            className="text-lg text-white"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+            className="text-lg text-white font-display font-extrabold"
           >
             Theos
           </span>
           <span
-            className="text-lg text-coral"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+            className="text-lg text-coral font-display font-extrabold"
           >
             PLACE
           </span>
@@ -36,22 +34,19 @@ export function MemberWalletTab({ member }: Props) {
 
         {/* Identificador del carné: cédula si la tiene */}
         <p
-          className="text-xs text-white/40 mb-1"
-          style={{ fontFamily: 'var(--font-mono)' }}
+          className="text-xs text-white/40 mb-1 font-mono"
         >
           {member.cedula ? `#${member.cedula}` : ''}
         </p>
 
         {/* Name */}
         <p
-          className="text-white text-base leading-tight"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+          className="text-white text-base leading-tight font-display font-extrabold"
         >
           {member.first_name}
         </p>
         <p
-          className="text-white/60 text-sm mb-5"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+          className="text-white/60 text-sm mb-5 font-display font-extrabold"
         >
           {member.last_name}
         </p>
@@ -72,12 +67,11 @@ export function MemberWalletTab({ member }: Props) {
         {/* Pass status */}
         <span
           className={cn(
-            'rounded-full px-2.5 py-0.5 text-xs',
+            'rounded-full px-2.5 py-0.5 text-xs font-body',
             member.wallet_pass_status === 'active'
               ? 'bg-teal/20 text-teal'
               : 'bg-white/10 text-white/40'
           )}
-          style={{ fontFamily: 'var(--font-body)' }}
         >
           {member.wallet_pass_status === 'active' ? 'Pase activo' : 'No generado'}
         </span>
@@ -86,10 +80,9 @@ export function MemberWalletTab({ member }: Props) {
       {/* Status badge below */}
       <p
         className={cn(
-          'text-xs',
+          'text-xs font-body',
           member.wallet_pass_status === 'active' ? 'text-teal-deep' : 'text-navy-light/40'
         )}
-        style={{ fontFamily: 'var(--font-body)' }}
       >
         {member.wallet_pass_status === 'active'
           ? 'Pase digital activo y válido'
@@ -101,32 +94,28 @@ export function MemberWalletTab({ member }: Props) {
         {member.wallet_pass_status === 'not_generated' && (
           <button
             type="button"
-            className="w-full rounded-full bg-coral py-2.5 text-sm text-white transition-all hover:bg-coral-deep active:scale-95"
-            style={{ boxShadow: 'var(--shadow-pulse)', fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-full bg-coral py-2.5 text-sm text-white transition-all hover:bg-coral-deep active:scale-95 shadow-[var(--shadow-pulse)] font-body"
           >
             Generar pase
           </button>
         )}
         <button
           type="button"
-          className="flex items-center justify-center gap-2 w-full rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          className="flex items-center justify-center gap-2 w-full rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
         >
           <Smartphone size={14} strokeWidth={1.75} />
           Enviar a Apple Wallet
         </button>
         <button
           type="button"
-          className="flex items-center justify-center gap-2 w-full rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          className="flex items-center justify-center gap-2 w-full rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
         >
           <Smartphone size={14} strokeWidth={1.75} />
           Enviar a Google Wallet
         </button>
         <button
           type="button"
-          className="flex items-center justify-center gap-2 w-full rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          className="flex items-center justify-center gap-2 w-full rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
         >
           <MessageCircle size={14} strokeWidth={1.75} />
           Reenviar por WhatsApp

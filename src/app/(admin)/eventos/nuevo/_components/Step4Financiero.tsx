@@ -50,8 +50,8 @@ export function Step4Financiero({
   return (
     <div className="space-y-4">
       {/* Pago */}
-      <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-        <div className="card-title" style={{ marginBottom: 16 }}>Financiero</div>
+      <div className="card py-5 px-6 w-full">
+        <div className="card-title mb-4">Financiero</div>
         <div className="space-y-4">
           <Toggle
             checked={requires_payment}
@@ -65,15 +65,13 @@ export function Step4Financiero({
                   <FieldLabel>Monto</FieldLabel>
                   <div className="relative">
                     <span
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50"
-                      style={{ fontFamily: 'var(--font-mono)' }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50 font-mono"
                     >
                       ₡
                     </span>
                     <input
                       type="number"
-                      className={cn(inputCls, 'pl-7')}
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      className={cn(inputCls, 'pl-7', 'font-body')}
                       placeholder="15000"
                       value={payment_amount}
                       onChange={e => onPaymentAmountChange(e.target.value)}
@@ -92,8 +90,7 @@ export function Step4Financiero({
                           onChange={() => onTogglePaymentMethod(m)}
                         />
                         <span
-                          className="text-sm text-navy"
-                          style={{ fontFamily: 'var(--font-body)' }}
+                          className="text-sm text-navy font-body"
                         >
                           {m}
                         </span>
@@ -108,8 +105,8 @@ export function Step4Financiero({
       </div>
 
       {/* Resumen */}
-      <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-        <div className="card-title" style={{ marginBottom: 16 }}>Resumen del evento</div>
+      <div className="card py-5 px-6 w-full">
+        <div className="card-title mb-4">Resumen del evento</div>
         <div className="space-y-1">
           <SummaryRow label="Nombre" value={name || '—'} />
           <SummaryRow label="Tipo" value={selectedTypeName ?? '—'} />

@@ -47,65 +47,62 @@ export default function CompletarPerfilPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--surface-low)' }}>
-      <div className="w-full max-w-sm rounded-3xl bg-white p-7 space-y-5" style={{ boxShadow: 'var(--shadow-lg)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-surface-low">
+      <div className="w-full max-w-sm rounded-3xl bg-white p-7 space-y-5 shadow-[var(--shadow-lg)]">
         <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-navy" style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
+          <h1 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
             Completá tu perfil
           </h1>
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             Creá una contraseña para acceder a tu cuenta de Theos Place.
           </p>
         </div>
 
         {!ready ? (
-          <p className="text-sm text-navy-light/50 py-6 text-center" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p>
+          <p className="text-sm text-navy-light/50 py-6 text-center font-body">Cargando…</p>
         ) : done ? (
           <div className="py-6 text-center space-y-3">
             <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
               <Check size={26} className="text-teal-deep" />
             </div>
-            <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>¡Listo! Tu contraseña quedó guardada.</p>
+            <p className="text-sm text-navy font-body">¡Listo! Tu contraseña quedó guardada.</p>
           </div>
         ) : !hasSession ? (
-          <p className="text-sm text-coral py-4" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-coral py-4 font-body">
             Este link no es válido o ya expiró. Pedí una nueva invitación.
           </p>
         ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Contraseña</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Contraseña</label>
               <div className="relative">
                 <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full rounded-2xl border pl-9 pr-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                  className="w-full rounded-2xl border pl-9 pr-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 border-[var(--outline-variant)] font-body"
                   placeholder="Mínimo 8 caracteres"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Repetir contraseña</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Repetir contraseña</label>
               <input
                 type="password"
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
-                className="w-full rounded-2xl border px-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="w-full rounded-2xl border px-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 border-[var(--outline-variant)] font-body"
                 placeholder="Repetí la contraseña"
               />
             </div>
 
-            {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
 
             <button
               onClick={submit}
               disabled={saving}
-              className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               {saving ? 'Guardando…' : 'Guardar contraseña'}
             </button>

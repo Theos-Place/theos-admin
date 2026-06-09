@@ -42,19 +42,13 @@ export function Step1Informacion({
 }: Step1Props) {
   const { allCommittees: ALL_COMMITTEES } = useOrg()
   return (
-    <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-      <div className="card-title" style={{ marginBottom: 20 }}>Información principal</div>
+    <div className="card py-5 px-6 w-full">
+      <div className="card-title mb-5">Información principal</div>
 
       {/* Nombre */}
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-5">
         <input
-          className="w-full border-0 border-b bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 transition-colors"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            borderBottomWidth: '2px',
-            borderBottomColor: 'var(--outline-variant)',
-          }}
+          className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 transition-colors font-display"
           placeholder="Nombre del evento..."
           value={name}
           onChange={e => onNameChange(e.target.value)}
@@ -62,7 +56,7 @@ export function Step1Informacion({
       </div>
 
       {/* Tipo de evento */}
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-5">
         <FieldLabel>Tipo de evento</FieldLabel>
         <div className="grid grid-cols-5 gap-2">
           {activeEventTypes.map(t => {
@@ -82,8 +76,7 @@ export function Step1Informacion({
               >
                 <Icon size={18} />
                 <span
-                  className="text-[11px] font-medium"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  className="text-[11px] font-medium font-display"
                 >
                   {t.name}
                 </span>
@@ -94,12 +87,11 @@ export function Step1Informacion({
       </div>
 
       {/* Comité + Descripción en grid */}
-      <div className="form-row" style={{ marginBottom: 20 }}>
+      <div className="form-row mb-5">
         <div>
           <FieldLabel>Comité organizador</FieldLabel>
           <select
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'font-body')}
             value={committee}
             onChange={e => onCommitteeChange(e.target.value)}
           >
@@ -113,15 +105,13 @@ export function Step1Informacion({
           <div className="flex items-center justify-between mb-1">
             <FieldLabel>Descripción</FieldLabel>
             <span
-              className="text-[10px] text-navy-light/40"
-              style={{ fontFamily: 'var(--font-mono)' }}
+              className="text-[10px] text-navy-light/40 font-mono"
             >
               {description.length}/500
             </span>
           </div>
           <textarea
-            className={cn(inputCls, 'resize-none')}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'resize-none', 'font-body')}
             rows={3}
             maxLength={500}
             placeholder="Describe el evento..."
@@ -164,41 +154,35 @@ export function Step1Informacion({
           >
             <ImageIcon size={28} className="text-navy-light/30" />
             <p
-              className="text-[13px] font-medium text-navy-light/60"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-[13px] font-medium text-navy-light/60 font-body"
             >
               Subí el flyer del evento
             </p>
             <p
-              className="text-[11px] text-navy-light/40"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-[11px] text-navy-light/40 font-body"
             >
               PNG, JPG, WebP — máx 5MB · Recomendado: 1200×630px
             </p>
           </div>
         ) : (
           <div
-            className="relative rounded-xl overflow-hidden border"
-            style={{ borderColor: 'var(--outline-variant)' }}
+            className="relative rounded-xl overflow-hidden border border-[var(--outline-variant)]"
           >
             <img src={flyer} alt="Flyer del evento" className="w-full object-cover max-h-48" />
             <div
-              className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2"
-              style={{ background: 'rgba(22,20,64,0.6)' }}
+              className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2 bg-[rgba(22,20,64,0.6)]"
             >
               <button
                 type="button"
                 onClick={() => flyerInputRef.current?.click()}
-                className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors font-body"
               >
                 Cambiar
               </button>
               <button
                 type="button"
                 onClick={onFlyerRemove}
-                className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body"
               >
                 Eliminar
               </button>

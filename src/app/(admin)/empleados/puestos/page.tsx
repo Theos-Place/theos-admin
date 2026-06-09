@@ -40,24 +40,21 @@ export default function PuestosPage() {
     <div className="space-y-6">
       {/* Header */}
       <div
-        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4"
-        style={{ boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]"
       >
         <div>
           <h1
-            className="text-2xl text-white"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
           >
             Puestos pagados
           </h1>
-          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-white/50 font-body">
             Roles remunerados definidos en la organización
           </p>
         </div>
         <Link
           href="/empleados/puestos/nuevo"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
         >
           <Plus size={14} />
           Nuevo puesto
@@ -66,19 +63,17 @@ export default function PuestosPage() {
 
       {/* Confidentiality note */}
       <div
-        className="flex items-center gap-2.5 rounded-xl px-4 py-3"
-        style={{ background: 'var(--surface-low)' }}
+        className="flex items-center gap-2.5 rounded-xl px-4 py-3 bg-surface-low"
       >
         <Lock size={13} className="text-navy-light/40 shrink-0" />
-        <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-[12px] text-navy-light/50 font-body">
           Los rangos salariales son confidenciales — solo visibles para Administración y Dirección.
         </p>
       </div>
 
       {/* Area filter */}
       <select
-        className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full max-w-xs"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full max-w-xs font-body"
         value={areaFilter}
         onChange={e => setAreaFilter(e.target.value)}
       >
@@ -93,12 +88,11 @@ export default function PuestosPage() {
           <div key={area.code} className="space-y-3">
             <div className="flex items-center gap-3">
               <p
-                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/50"
-                style={{ fontFamily: 'var(--font-display)' }}
+                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/50 font-display"
               >
                 {area.name}
               </p>
-              <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
+              <div className="flex-1 h-px bg-[var(--outline-variant)]" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -107,29 +101,25 @@ export default function PuestosPage() {
                 return (
                   <div
                     key={pos.id}
-                    className="rounded-2xl p-5 space-y-4"
-                    style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+                    className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1.5">
                         <p
-                          className="text-base font-bold text-navy leading-snug"
-                          style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.01em' }}
+                          className="text-base font-bold text-navy leading-snug font-display tracking-[-0.01em]"
                         >
                           {pos.name}
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/60"
-                            style={{ fontFamily: 'var(--font-display)' }}
+                            className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display"
                           >
                             {pos.committee_name}
                           </span>
                           <ContractTypeBadge type={pos.contract_type} size="sm" />
                           {!pos.is_active && (
                             <span
-                              className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral"
-                              style={{ fontFamily: 'var(--font-display)' }}
+                              className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral font-display"
                             >
                               Inactivo
                             </span>
@@ -140,7 +130,7 @@ export default function PuestosPage() {
 
                     {/* Salary range */}
                     <div className="space-y-0.5">
-                      <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                      <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
                         Rango salarial
                       </p>
                       <div className="flex items-center gap-2">
@@ -151,22 +141,21 @@ export default function PuestosPage() {
                     </div>
 
                     {/* Assigned employee */}
-                    <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+                    <div className="flex items-center justify-between pt-3 border-t border-[var(--outline-variant)]">
                       {assigned ? (
                         <div className="flex items-center gap-2">
                           <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                            <span className="text-[9px] font-bold text-white font-display">
                               {assigned.member_initials}
                             </span>
                           </div>
-                          <span className="text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                          <span className="text-[12px] text-navy-light/70 font-body">
                             {assigned.member_name}
                           </span>
                         </div>
                       ) : (
                         <span
-                          className="rounded-full bg-navy-light/10 px-2.5 py-0.5 text-[10px] text-navy-light/40"
-                          style={{ fontFamily: 'var(--font-display)' }}
+                          className="rounded-full bg-navy-light/10 px-2.5 py-0.5 text-[10px] text-navy-light/40 font-display"
                         >
                           Sin asignar
                         </span>
@@ -174,8 +163,7 @@ export default function PuestosPage() {
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/empleados/puestos/${pos.id}`}
-                          className="rounded-full border px-3 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
-                          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                          className="rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body"
                         >
                           Ver detalle
                         </Link>

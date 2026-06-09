@@ -117,26 +117,23 @@ export default function ListasGuardadasPage() {
         <div>
           <Link
             href="/miembros"
-            className="inline-flex items-center gap-1 text-sm text-navy-light/50 hover:text-navy transition-colors mb-1"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1 text-sm text-navy-light/50 hover:text-navy transition-colors mb-1 font-body"
           >
             <ChevronLeft size={14} />
             Miembros
           </Link>
           <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
           >
             Listas guardadas
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-navy-light/60 font-body">
             {lists.length} lista{lists.length !== 1 ? 's' : ''} · Segmentos para comunicaciones y reportes
           </p>
         </div>
         <Link
           href="/miembros"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all shrink-0 font-body"
         >
           <Plus size={14} />
           Nueva lista
@@ -152,17 +149,15 @@ export default function ListasGuardadasPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar lista..."
-            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body"
           />
         </div>
         <button
           onClick={() => setActiveTag(null)}
           className={cn(
-            'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all',
+            'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
             !activeTag ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent'
           )}
-          style={{ fontFamily: 'var(--font-display)' }}
         >
           Todas
         </button>
@@ -171,10 +166,9 @@ export default function ListasGuardadasPage() {
             key={tag}
             onClick={() => setActiveTag(activeTag === tag ? null : tag)}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all',
+              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
               activeTag === tag ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent'
             )}
-            style={{ fontFamily: 'var(--font-display)' }}
           >
             {tag}
           </button>
@@ -184,14 +178,13 @@ export default function ListasGuardadasPage() {
       {/* Grid */}
       {filtered.length === 0 ? (
         <div
-          className="rounded-2xl p-12 text-center"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl p-12 text-center bg-surface-card shadow-[var(--shadow-md)]"
         >
           <Bookmark size={28} className="text-navy-light/20 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm font-semibold text-navy-light/50 font-body">
             No hay listas guardadas aún
           </p>
-          <p className="text-[13px] text-navy-light/40 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[13px] text-navy-light/40 mt-1 font-body">
             Creá tu primera lista desde la página de miembros aplicando filtros.
           </p>
         </div>
@@ -200,23 +193,21 @@ export default function ListasGuardadasPage() {
           {filtered.map(list => (
             <div
               key={list.id}
-              className="rounded-2xl p-5 space-y-4 relative"
-              style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+              className="rounded-2xl p-5 space-y-4 relative bg-surface-card shadow-[var(--shadow-md)]"
             >
               {/* Card header */}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-3 min-w-0">
                   <div
-                    className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(22,20,64,0.07)' }}
+                    className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-[rgba(22,20,64,0.07)]"
                   >
                     <Bookmark size={16} className="text-navy" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-navy leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+                    <p className="text-sm font-bold text-navy leading-snug font-display">
                       {list.name}
                     </p>
-                    <p className="text-[11px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">
                       {list.member_count.toLocaleString('es-CR')} miembros
                     </p>
                   </div>
@@ -232,29 +223,25 @@ export default function ListasGuardadasPage() {
                   </button>
                   {openMenu === list.id && (
                     <div
-                      className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden"
-                      style={{ background: 'var(--surface-card)', boxShadow: '0 8px 32px rgba(22,20,64,0.16)', border: '1px solid var(--outline-variant)' }}
+                      className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden bg-surface-card shadow-[0_8px_32px_rgba(22,20,64,0.16)] border border-[var(--outline-variant)]"
                     >
                       <button
                         onClick={() => openEdit(list.id)}
-                        className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors"
-                        style={{ fontFamily: 'var(--font-body)' }}
+                        className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
                       >
                         <Edit2 size={13} /> Editar nombre/tags
                       </button>
                       {!list.is_dynamic && (
                         <button
                           onClick={() => handleRefresh(list.id)}
-                          className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors"
-                          style={{ fontFamily: 'var(--font-body)' }}
+                          className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
                         >
                           <RefreshCw size={13} /> Actualizar snapshot
                         </button>
                       )}
                       <button
                         onClick={() => requestDelete(list.id, list.name)}
-                        className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors"
-                        style={{ fontFamily: 'var(--font-body)' }}
+                        className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors font-body"
                       >
                         <Trash2 size={13} /> Eliminar
                       </button>
@@ -265,8 +252,7 @@ export default function ListasGuardadasPage() {
 
               {/* Segment label */}
               <div
-                className="rounded-lg px-3 py-2 text-[12px] text-navy-light/60"
-                style={{ background: 'var(--surface-low)', fontFamily: 'var(--font-mono)' }}
+                className="rounded-lg px-3 py-2 text-[12px] text-navy-light/60 bg-surface-low font-mono"
               >
                 {list.segment_label}
               </div>
@@ -275,18 +261,16 @@ export default function ListasGuardadasPage() {
               <div className="flex flex-wrap gap-1.5">
                 <span
                   className={cn(
-                    'rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
+                    'rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display',
                     list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/60'
                   )}
-                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {list.is_dynamic ? 'Dinámica' : 'Snapshot'}
                 </span>
                 {list.tags.map(tag => (
                   <span
                     key={tag}
-                    className="rounded-full bg-surface-low px-2.5 py-0.5 text-[10px] text-navy-light/50"
-                    style={{ fontFamily: 'var(--font-body)', border: '0.5px solid var(--outline-variant)' }}
+                    className="rounded-full bg-surface-low px-2.5 py-0.5 text-[10px] text-navy-light/50 font-body border-[0.5px] border-[var(--outline-variant)]"
                   >
                     {tag}
                   </span>
@@ -294,25 +278,23 @@ export default function ListasGuardadasPage() {
               </div>
 
               {/* Meta */}
-              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[11px] text-navy-light/40 font-body">
                 Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                 {list.last_used_at && ` · Último uso: ${timeAgo(list.last_used_at)}`}
               </p>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 pt-1" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+              <div className="flex items-center gap-2 pt-1 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={() => handleComunicar(list.id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral/10 py-1.5 text-[12px] font-medium text-coral hover:bg-coral/20 transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral/10 py-1.5 text-[12px] font-medium text-coral hover:bg-coral/20 transition-colors font-body"
                 >
                   <MessageCircle size={13} />
                   Comunicar
                 </button>
                 <Link
                   href={`/miembros/listas/${list.id}`}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[var(--outline-variant)] py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                 >
                   <Users size={13} />
                   Ver lista
@@ -327,11 +309,10 @@ export default function ListasGuardadasPage() {
       {editTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
           <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+            className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
           >
             <div className="flex items-center justify-between">
-              <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-base font-bold text-navy font-display">
                 Editar lista
               </p>
               <button onClick={() => setEditTarget(null)}>
@@ -340,24 +321,22 @@ export default function ListasGuardadasPage() {
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
                   Nombre
                 </label>
                 <input
                   autoFocus
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
                   Tags (separados por coma)
                 </label>
                 <input
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   value={editTags}
                   onChange={e => setEditTags(e.target.value)}
                   placeholder="donadores, heredia..."
@@ -367,16 +346,14 @@ export default function ListasGuardadasPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setEditTarget(null)}
-                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="flex-1 rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 Cancelar
               </button>
               <button
                 onClick={saveEdit}
                 disabled={!editName.trim()}
-                className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 font-body"
               >
                 Guardar
               </button>

@@ -16,7 +16,8 @@ function ThetaSVG({ size, opacity }: { size: number; opacity: number }) {
       height={size}
       viewBox="0 0 100 100"
       fill="none"
-      style={{ opacity, display: 'block' }}
+      className="block"
+      style={{ opacity }}
     >
       <circle cx="50" cy="50" r="40" stroke="white" strokeWidth="10" />
       <rect x="14" y="45" width="72" height="10" fill="white" />
@@ -26,27 +27,18 @@ function ThetaSVG({ size, opacity }: { size: number; opacity: number }) {
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="flex min-h-screen">
 
       {/* Panel decorativo — solo desktop */}
       <div
-        className="hidden lg:flex"
-        style={{
-          width: '60%',
-          background: '#161440',
-          position: 'relative',
-          overflow: 'hidden',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
+        className="hidden lg:flex w-[60%] bg-navy relative overflow-hidden items-center justify-center shrink-0"
       >
         {/* Patrón de thetas */}
         {THETA_POSITIONS.map((pos, i) => (
           <div
             key={i}
+            className="absolute"
             style={{
-              position: 'absolute',
               top:    pos.top,
               left:   (pos as { left?: string }).left,
               right:  (pos as { right?: string }).right,
@@ -58,37 +50,17 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Contenido central */}
         <div
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            textAlign: 'center',
-            padding: '0 48px',
-            maxWidth: 480,
-          }}
+          className="relative z-[1] text-center px-12 max-w-[480px]"
         >
           {/* Logo texto */}
-          <div style={{ marginBottom: 28 }}>
+          <div className="mb-7">
             <div
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 72,
-                fontWeight: 800,
-                color: 'white',
-                lineHeight: 0.9,
-                letterSpacing: '-0.03em',
-              }}
+              className="font-display text-[72px] font-extrabold text-white leading-[0.9] tracking-[-0.03em]"
             >
               Theos
             </div>
             <div
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 22,
-                fontWeight: 800,
-                color: '#70BDC2',
-                letterSpacing: '0.35em',
-                marginTop: 4,
-              }}
+              className="font-display text-[22px] font-extrabold text-teal tracking-[0.35em] mt-1"
             >
               PLACE
             </div>
@@ -96,15 +68,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           {/* Tagline */}
           <p
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 16,
-              color: 'rgba(255,255,255,0.7)',
-              lineHeight: 1.6,
-              marginBottom: 36,
-              maxWidth: 340,
-              margin: '0 auto 36px',
-            }}
+            className="font-body text-base text-[rgba(255,255,255,0.7)] leading-[1.6] mb-9 max-w-[340px] mx-auto"
           >
             disfrutá de una relación cada vez más cercana con Dios
           </p>
@@ -113,15 +77,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       {/* Panel del formulario */}
       <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '48px 32px',
-          background: '#F8FAFB',
-          minHeight: '100vh',
-        }}
+        className="flex-1 flex items-center justify-center py-12 px-8 bg-[#F8FAFB] min-h-screen"
       >
         {children}
       </div>

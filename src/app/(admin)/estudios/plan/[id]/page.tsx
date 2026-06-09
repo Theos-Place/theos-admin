@@ -27,16 +27,15 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onCancel} />
       <div
-        className="relative rounded-2xl p-6 max-w-sm w-full mx-4 space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+        className="relative rounded-2xl p-6 max-w-sm w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
       >
         <div className="flex items-center gap-3">
           <Archive size={20} className="text-coral" />
-          <h3 className="font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <h3 className="font-semibold text-navy font-display">
             Archivar estudio
           </h3>
         </div>
-        <p className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/70 font-body">
           Al archivar este tipo de estudio no podrás crear nuevos grupos con él. Los grupos existentes no se ven afectados.
         </p>
         <div className="flex gap-3">
@@ -99,8 +98,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         <div className="ph">
           <div className="ptitle">Plan de Estudios</div>
         </div>
-        <div className="card" style={{ padding: 22 }}>
-          <p className="text-sm text-center py-8" style={{ color: 'var(--fg-muted)', fontFamily: 'var(--font-body)' }}>
+        <div className="card p-[22px]">
+          <p className="text-sm text-center py-8 text-[var(--fg-muted)] font-body">
             Tipo de estudio no encontrado.
           </p>
         </div>
@@ -163,9 +162,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       {/* ── Header ── */}
       <div className="ph">
         <button
-          className="btn btn-ghost btn-sm"
+          className="btn btn-ghost btn-sm mb-[10px]"
           onClick={() => router.back()}
-          style={{ marginBottom: 10 }}
         >
           ← Volver
         </button>
@@ -174,7 +172,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <div className="ptitle">{view.name}</div>
             <div className="psub">
               {stageInfo?.label}
-              {isArchived && <span style={{ marginLeft: 8, color: 'var(--brand-coral)', fontWeight: 600 }}>[Archivado]</span>}
+              {isArchived && <span className="ml-2 text-coral font-semibold">[Archivado]</span>}
             </div>
           </div>
           <div className="ph-actions">
@@ -199,12 +197,12 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
       {/* ── Card info ── */}
       <div className="card">
-        <div className="card-hd" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="card-hd flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <StudyTypeBadge code={view.code} />
             <div>
               <div className="card-title">{view.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 2, fontFamily: 'var(--font-body)' }}>
+              <div className="text-[12px] text-[var(--fg-muted)] mt-0.5 font-body">
                 {stageInfo?.label} · {view.weeks} semanas
                 {view.level && ` · Nivel ${view.level}`}
               </div>
@@ -212,13 +210,13 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div className="py-5 px-[22px] flex flex-col gap-[18px]">
 
           {/* Descripción */}
           {view.description && (
             <div>
               <div className="st">Descripción</div>
-              <p style={{ fontSize: 13, color: 'var(--brand-navy)', lineHeight: 1.6, marginTop: 4, fontFamily: 'var(--font-body)' }}>
+              <p className="text-[13px] text-navy-light leading-[1.6] mt-1 font-body">
                 {view.description}
               </p>
             </div>
@@ -227,10 +225,10 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           {/* Mentor */}
           <div>
             <div className="st">Mentor</div>
-            <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4, fontFamily: 'var(--font-body)' }}>
+            <div className="text-[13px] font-semibold mt-1 font-body">
               {view.mentor
                 ? view.mentor
-                : <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>Sin mentor asignado</span>}
+                : <span className="text-[var(--fg-muted)] font-normal">Sin mentor asignado</span>}
             </div>
           </div>
 
@@ -238,38 +236,32 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           {view.commitments && (
             <div>
               <div className="st">Compromisos</div>
-              <div style={{
-                fontSize: 12, color: 'var(--fg-muted)',
-                background: 'var(--surface-low)', padding: '6px 10px',
-                borderRadius: 8, marginTop: 4, display: 'inline-block',
-                fontFamily: 'var(--font-body)',
-              }}>
+              <div className="text-[12px] text-[var(--fg-muted)] bg-surface-low py-1.5 px-2.5 rounded-lg mt-1 inline-block font-body">
                 📋 {view.commitments}
               </div>
             </div>
           )}
 
           {/* Fila de datos rápidos */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
             <div>
               <div className="st">Duración</div>
-              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>{view.weeks} semanas</div>
+              <div className="font-semibold text-[13px] font-body">{view.weeks} semanas</div>
             </div>
             {view.level && (
               <div>
                 <div className="st">Nivel</div>
-                <span style={{
-                  fontSize: 12, padding: '2px 8px', borderRadius: 999,
-                  background: getLevelColor(view.level), fontWeight: 600,
-                  fontFamily: 'var(--font-body)',
-                }}>
+                <span
+                  className="text-[12px] py-0.5 px-2 rounded-full font-semibold font-body"
+                  style={{ background: getLevelColor(view.level) }}
+                >
                   {view.level}
                 </span>
               </div>
             )}
             <div>
               <div className="st">Costo</div>
-              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>
+              <div className="font-semibold text-[13px] font-body">
                 {view.requires_payment
                   ? `₡${(view.cost ?? 0).toLocaleString('es-CR')}`
                   : 'Gratuito'}
@@ -277,7 +269,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </div>
             <div>
               <div className="st">Prerequisito</div>
-              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>
+              <div className="font-semibold text-[13px] font-body">
                 {view.prerequisite
                   ? studyTypes.find(s => s.code === view.prerequisite)?.name
                     || STUDY_CATALOG.find(s => s.code === view.prerequisite)?.name
@@ -290,8 +282,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           {view.requires_invitation && (
             <div>
               <div className="st">Acceso</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-                <span className="badge" style={{ background: 'rgba(155,127,212,0.15)', color: '#7C5EC2' }}>Solo por invitación</span>
+              <div className="flex gap-2 flex-wrap mt-1.5">
+                <span className="badge bg-[rgba(155,127,212,0.15)] text-[#7C5EC2]">Solo por invitación</span>
               </div>
             </div>
           )}
@@ -300,7 +292,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           {(view.req_donor || view.req_server || view.req_attendee) && (
             <div>
               <div className="st">Compromisos requeridos para matricular</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+              <div className="flex gap-2 flex-wrap mt-1.5">
                 {view.req_donor    && <span className="badge b-donor">Ser donador activo</span>}
                 {view.req_server   && <span className="badge b-server">Servir en un comité</span>}
                 {view.req_attendee && <span className="badge b-study">Asistencia regular a charlas</span>}
@@ -313,10 +305,10 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
       {/* ── Grupos ── */}
       <div className="card">
-        <div className="card-hd" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="card-hd flex items-center justify-between">
           <div className="card-title">
             Listado de grupos
-            <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--fg-muted)', marginLeft: 8, fontFamily: 'var(--font-body)' }}>
+            <span className="text-[12px] font-normal text-[var(--fg-muted)] ml-2 font-body">
               ({filteredGroups.length}{filteredGroups.length !== studyGroups.length ? ` de ${studyGroups.length}` : ''})
             </span>
           </div>
@@ -329,12 +321,11 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         </div>
 
         {/* Filters */}
-        <div style={{ padding: '12px 22px', display: 'flex', flexWrap: 'wrap', gap: 8, borderBottom: '1px solid rgba(22,20,64,0.09)' }}>
-          <div style={{ position: 'relative' }}>
-            <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(41,54,92,0.4)', pointerEvents: 'none' }} />
+        <div className="py-3 px-[22px] flex flex-wrap gap-2 border-b border-[rgba(22,20,64,0.09)]">
+          <div className="relative">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgba(41,54,92,0.4)] pointer-events-none" />
             <input
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)', paddingLeft: 30, minWidth: 200 }}
+              className={`${inputCls} font-body pl-[30px] min-w-[200px]`}
               placeholder="Buscar por dirigente o zona..."
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -342,7 +333,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             {search && (
               <button
                 onClick={() => setSearch('')}
-                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: 'rgba(41,54,92,0.4)' }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[rgba(41,54,92,0.4)]"
               >
                 <X size={14} />
               </button>
@@ -350,8 +341,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           </div>
 
           <select
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={`${inputCls} font-body`}
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
           >
@@ -364,8 +354,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           </select>
 
           <select
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={`${inputCls} font-body`}
             value={zoneFilter}
             onChange={e => setZoneFilter(e.target.value)}
           >
@@ -378,21 +367,20 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
         {/* Table or empty */}
         {filteredGroups.length === 0 ? (
-          <div style={{ padding: '40px 22px', textAlign: 'center' }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-display)' }}>Sin resultados</p>
-            <p style={{ fontSize: 12, color: 'rgba(41,54,92,0.35)', marginTop: 4, fontFamily: 'var(--font-body)' }}>Probá con otros filtros</p>
+          <div className="py-10 px-[22px] text-center">
+            <p className="text-[14px] font-semibold text-[rgba(41,54,92,0.4)] font-display">Sin resultados</p>
+            <p className="text-[12px] text-[rgba(41,54,92,0.35)] mt-1 font-body">Probá con otros filtros</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(22,20,64,0.09)' }}>
+                  <tr className="border-b border-[rgba(22,20,64,0.09)]">
                     {['Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Semana', ''].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left"
-                        style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-display)' }}
+                        className="px-4 py-3 text-left text-[10px] tracking-[0.07em] uppercase text-[rgba(41,54,92,0.4)] font-display"
                       >
                         {h}
                       </th>
@@ -403,39 +391,36 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                   {visibleGroups.map(group => (
                     <tr
                       key={group.id}
-                      className="hover:bg-surface-low transition-colors cursor-pointer"
-                      style={{ borderBottom: '1px solid rgba(22,20,64,0.06)' }}
+                      className="hover:bg-surface-low transition-colors cursor-pointer border-b border-[rgba(22,20,64,0.06)]"
                       onClick={() => router.push(`/estudios/grupos/${group.id}`)}
                     >
                       <td className="px-4 py-3">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{
-                            width: 28, height: 28, borderRadius: '50%', background: 'var(--brand-navy)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0,
-                          }}>
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white shrink-0">
                             {group.leader_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) ?? '?'}
                           </div>
-                          <span style={{ fontSize: 13, color: 'var(--brand-navy)', fontFamily: 'var(--font-body)' }}>
-                            {group.leader_name ?? <span style={{ color: '#d97706', fontSize: 11 }}>Sin asignar</span>}
+                          <span className="text-[13px] text-navy-light font-body">
+                            {group.leader_name ?? <span className="text-[#d97706] text-[11px]">Sin asignar</span>}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3" style={{ fontSize: 13, color: 'rgba(41,54,92,0.7)', fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-[13px] text-[rgba(41,54,92,0.7)] font-body">
                         {sedeLabel(group.zone)}
                       </td>
-                      <td className="px-4 py-3" style={{ fontSize: 12, color: 'rgba(41,54,92,0.6)', fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-[12px] text-[rgba(41,54,92,0.6)] font-body">
                         {group.schedule_days.join('/')} {group.schedule_time}
                       </td>
                       <td className="px-4 py-3">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 60, height: 5, borderRadius: 999, background: 'rgba(22,20,64,0.12)', overflow: 'hidden' }}>
-                            <div style={{
-                              height: '100%', borderRadius: 999, background: 'var(--brand-coral)',
-                              width: `${(group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length / group.max_capacity) * 100}%`,
-                            }} />
+                        <div className="flex items-center gap-2">
+                          <div className="w-[60px] h-[5px] rounded-full bg-[rgba(22,20,64,0.12)] overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-coral"
+                              style={{
+                                width: `${(group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length / group.max_capacity) * 100}%`,
+                              }}
+                            />
                           </div>
-                          <span style={{ fontSize: 12, color: 'rgba(41,54,92,0.7)', fontFamily: 'var(--font-body)' }}>
+                          <span className="text-[12px] text-[rgba(41,54,92,0.7)] font-body">
                             {group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length}/{group.max_capacity}
                           </span>
                         </div>
@@ -443,7 +428,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                       <td className="px-4 py-3">
                         <GroupStatusBadge status={group.status} />
                       </td>
-                      <td className="px-4 py-3" style={{ fontSize: 12, color: 'rgba(41,54,92,0.6)', fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-[12px] text-[rgba(41,54,92,0.6)] font-body">
                         {group.status === 'in_progress' ? `Sem. ${group.current_week}` : '—'}
                       </td>
                       <td className="px-4 py-3">
@@ -461,11 +446,11 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {hasMore && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 22px', borderTop: '1px solid rgba(22,20,64,0.09)' }}>
-                <span style={{ fontSize: 12, color: 'rgba(41,54,92,0.5)', fontFamily: 'var(--font-body)' }}>
+              <div className="flex items-center justify-between py-3 px-[22px] border-t border-[rgba(22,20,64,0.09)]">
+                <span className="text-[12px] text-[rgba(41,54,92,0.5)] font-body">
                   Mostrando {visibleCount} de {filteredGroups.length} grupos
                 </span>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="flex gap-2">
                   <button
                     className="btn btn-ghost btn-sm"
                     onClick={() => setVisibleCount(v => v + PAGE_SIZE)}

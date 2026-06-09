@@ -45,21 +45,19 @@ export function Step3SubEventos({
   return (
     <div className="space-y-4">
       {/* Sub-eventos */}
-      <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-        <div className="card-title" style={{ marginBottom: 16 }}>Sub-eventos</div>
+      <div className="card py-5 px-6 w-full">
+        <div className="card-title mb-4">Sub-eventos</div>
 
         {sub_events.length > 0 && (
           <div className="space-y-2 mb-3">
             {sub_events.map(se => (
               <div
                 key={se.id}
-                className="flex items-center justify-between rounded-xl px-3 py-2.5"
-                style={{ background: 'var(--surface-low)' }}
+                className="flex items-center justify-between rounded-xl px-3 py-2.5 bg-surface-low"
               >
                 <div>
                   <p
-                    className="text-sm font-medium text-navy"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="text-sm font-medium text-navy font-body"
                   >
                     {se.name}
                   </p>
@@ -79,13 +77,11 @@ export function Step3SubEventos({
 
         {showSubEventForm ? (
           <div
-            className="rounded-xl border p-3 space-y-2"
-            style={{ borderColor: 'var(--outline-variant)' }}
+            className="rounded-xl border border-[var(--outline-variant)] p-3 space-y-2"
           >
             <div className="form-row">
               <input
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
+                className={`${inputCls} font-body`}
                 placeholder="Nombre del sub-evento"
                 value={newSubName}
                 onChange={e => onNewSubNameChange(e.target.value)}
@@ -93,8 +89,7 @@ export function Step3SubEventos({
               />
               <input
                 type="number"
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
+                className={`${inputCls} font-body`}
                 placeholder="Capacidad"
                 value={newSubCap}
                 onChange={e => onNewSubCapChange(e.target.value)}
@@ -130,8 +125,7 @@ export function Step3SubEventos({
 
         {sub_events.length === 0 && !showSubEventForm && (
           <p
-            className="text-[12px] text-navy-light/40 mt-2"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="text-[12px] text-navy-light/40 mt-2 font-body"
           >
             Opcional. Agrega divisiones como Kids, Teens o sesiones por día.
           </p>
@@ -139,8 +133,8 @@ export function Step3SubEventos({
       </div>
 
       {/* Inscripción */}
-      <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-        <div className="card-title" style={{ marginBottom: 16 }}>Inscripciones</div>
+      <div className="card py-5 px-6 w-full">
+        <div className="card-title mb-4">Inscripciones</div>
         <div className="space-y-4">
           <Toggle
             checked={requires_registration}
@@ -154,8 +148,7 @@ export function Step3SubEventos({
                   <FieldLabel>Capacidad máxima</FieldLabel>
                   <input
                     type="number"
-                    className={inputCls}
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className={`${inputCls} font-body`}
                     placeholder="100"
                     value={max_capacity}
                     onChange={e => onMaxCapacityChange(e.target.value)}
@@ -164,8 +157,7 @@ export function Step3SubEventos({
                 <div>
                   <FieldLabel>Prerrequisito (opcional)</FieldLabel>
                   <select
-                    className={inputCls}
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className={`${inputCls} font-body`}
                     value={prerequisite}
                     onChange={e => onPrerequisiteChange(e.target.value)}
                   >
@@ -186,8 +178,8 @@ export function Step3SubEventos({
       </div>
 
       {/* Encuesta */}
-      <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-        <div className="card-title" style={{ marginBottom: 16 }}>Encuesta de satisfacción</div>
+      <div className="card py-5 px-6 w-full">
+        <div className="card-title mb-4">Encuesta de satisfacción</div>
         <div className="space-y-4">
           <Toggle
             checked={has_satisfaction_survey}

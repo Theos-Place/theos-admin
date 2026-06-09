@@ -48,7 +48,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
   const enrolled = group?.participants.filter(p => p.status === 'enrolled') ?? []
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p></div>
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/50 font-body">Cargando…</p></div>
   }
 
   if (!group) {
@@ -57,7 +57,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
           <ChevronLeft size={16} /> Grupos
         </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Grupo no encontrado.</p>
+        <p className="text-navy-light/60 font-body">Grupo no encontrado.</p>
       </div>
     )
   }
@@ -101,10 +101,10 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
       <div className="flex items-center justify-center min-h-60">
         <div className="text-center space-y-3">
           <CheckCircle size={48} className="text-teal-deep mx-auto" />
-          <p className="text-xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-xl font-bold text-navy font-display">
             Asistencia guardada
           </p>
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             {presentCount} de {enrolled.length} participantes presentes.
           </p>
           <Link
@@ -122,8 +122,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
     <div className="max-w-xl space-y-5">
       <Link
         href={`/estudios/grupos/${id}`}
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver al grupo
       </Link>
@@ -131,26 +130,24 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
       {/* Header */}
       <div>
         <h1
-          className="text-2xl text-navy"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
         >
           Pasar lista
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           {group.study_type_id} — {sedeLabel(group.zone)}
         </p>
-        <p className="text-sm text-navy-light/50 capitalize" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 capitalize font-body">
           {today}
         </p>
       </div>
 
       {/* Session info & counter */}
-      <div className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/40"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
             >
               Sesión {sessionNum} de {studyType?.weeks ?? '?'}
             </p>
@@ -158,17 +155,15 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
           <div className="flex items-center gap-4">
             <div className="text-center">
               <p
-                className="text-2xl font-bold text-coral"
-                style={{ fontFamily: 'var(--font-display)' }}
+                className="text-2xl font-bold text-coral font-display"
               >
                 {presentCount} / {enrolled.length}
               </p>
-              <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>presentes</p>
+              <p className="text-[11px] text-navy-light/50 font-body">presentes</p>
             </div>
             <button
               onClick={markAll}
-              className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
             >
               <Users size={14} /> Marcar todos presentes
             </button>
@@ -177,8 +172,8 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Participant list */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <div className="divide-y" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+        <div className="divide-y border-[var(--outline-variant)]">
           {enrolled.map(p => {
             const present = attendance[p.member_id] ?? false
             return (
@@ -190,8 +185,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
                   {getInitials(p.member_name)}
                 </div>
                 <span
-                  className="flex-1 text-sm text-navy"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="flex-1 text-sm text-navy font-body"
                 >
                   {p.member_name}
                 </span>
@@ -201,9 +195,9 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
                     'rounded-full px-4 py-1.5 text-[12px] font-medium transition-all',
                     present
                       ? 'bg-teal-deep text-white'
-                      : 'bg-surface-low text-navy-light/50 hover:bg-surface-card'
+                      : 'bg-surface-low text-navy-light/50 hover:bg-surface-card',
+                    'font-display',
                   )}
-                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {present ? 'Presente' : 'Ausente'}
                 </button>
@@ -216,14 +210,12 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
       {/* Notes */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widest uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display"
         >
           Notas de la sesión
         </label>
         <textarea
-          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
           rows={3}
           placeholder="Temas tratados, observaciones del grupo, etc."
           value={notes}
@@ -231,13 +223,12 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         />
       </div>
 
-      {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+      {error && <p className="text-[12px] text-coral font-body">{error}</p>}
 
       <button
         onClick={handleSave}
         disabled={saving}
-        className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
       >
         {saving ? 'Guardando…' : 'Guardar asistencia'}
       </button>

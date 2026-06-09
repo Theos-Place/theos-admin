@@ -33,7 +33,7 @@ function Clock() {
     return () => clearInterval(interval)
   }, [])
   return (
-    <span className="tabular-nums text-white/70 text-lg" style={{ fontFamily: 'var(--font-mono)' }}>
+    <span className="tabular-nums text-white/70 text-lg font-mono">
       {time}
     </span>
   )
@@ -173,7 +173,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="min-h-screen bg-navy flex flex-col" style={{ fontFamily: 'var(--font-body)' }}>
+    <div className="min-h-screen bg-navy flex flex-col font-body">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
         <div className="flex items-center gap-4">
@@ -186,7 +186,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           </Link>
           <div className="h-5 w-px bg-white/10" />
           <div>
-            <p className="text-white font-semibold text-sm" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-white font-semibold text-sm font-display">
               {event.name}
             </p>
             <p className="text-white/40 text-[11px]">Check-in en vivo</p>
@@ -196,8 +196,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           <Clock />
           <div className="text-right">
             <p
-              className="text-4xl font-extrabold text-white tabular-nums"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-4xl font-extrabold text-white tabular-nums font-display"
             >
               {checkins.length}
             </p>
@@ -213,8 +212,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           {/* Search */}
           <div className="relative">
             <input
-              className="w-full rounded-2xl px-5 py-4 text-base text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-coral/40 transition-all"
-              style={{ background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-body)' }}
+              className="w-full rounded-2xl px-5 py-4 text-base text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-coral/40 transition-all bg-[rgba(255,255,255,0.08)] font-body"
               placeholder="Buscar por nombre..."
               value={query}
               onChange={e => { setQuery(e.target.value); setSelectedMember(null) }}
@@ -243,14 +241,13 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 <button
                   key={r.id}
                   onClick={() => handleSelectMember(r)}
-                  className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left hover:bg-white/10 transition-all"
-                  style={{ background: 'rgba(255,255,255,0.05)' }}
+                  className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left hover:bg-white/10 transition-all bg-[rgba(255,255,255,0.05)]"
                 >
                   <div className={cn('h-10 w-10 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0', avatarColor(r.name))}>
                     {getInitials(r.name)}
                   </div>
                   <div>
-                    <p className="text-white font-medium" style={{ fontFamily: 'var(--font-body)' }}>{r.name}</p>
+                    <p className="text-white font-medium font-body">{r.name}</p>
                     <p className="text-white/40 text-[12px]">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
                   </div>
                 </button>
@@ -260,7 +257,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-coral hover:bg-coral/10 transition-all border border-dashed border-coral/40"
               >
                 <UserPlus size={18} />
-                <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>Agregar a «{query.trim()}» como persona nueva</span>
+                <span className="text-sm font-medium font-body">Agregar a «{query.trim()}» como persona nueva</span>
               </button>
             </div>
           ) : query.trim().length >= 2 ? (
@@ -269,8 +266,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               {!searching && (
                 <button
                   onClick={() => setShowNewPerson(true)}
-                  className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body"
                 >
                   <UserPlus size={15} /> Agregar persona nueva
                 </button>
@@ -281,8 +277,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               <p className="text-white/20 text-sm">Escribí un nombre o usá el QR.</p>
               <button
                 onClick={() => setShowNewPerson(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors font-body"
               >
                 <UserPlus size={15} /> Agregar persona nueva
               </button>
@@ -313,7 +308,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
           {/* Feed check-ins recientes */}
           <div className="flex-1 space-y-2 overflow-y-auto">
-            <p className="text-[10px] tracking-widest uppercase text-white/30 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] tracking-widest uppercase text-white/30 mb-3 font-display">
               Recientes
             </p>
             {recentCheckins.length === 0 ? (
@@ -332,7 +327,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     {getInitials(ci.member_name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm truncate" style={{ fontFamily: 'var(--font-body)' }}>{ci.member_name}</p>
+                    <p className="text-white text-sm truncate font-body">{ci.member_name}</p>
                     <p className="text-white/40 text-[11px]">
                       {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -396,16 +391,16 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-navy-ink/70 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md rounded-3xl bg-navy border border-white/10 p-6 space-y-4" style={{ boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
-        <h3 className="text-lg font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+      <div className="relative w-full max-w-md rounded-3xl bg-navy border border-white/10 p-6 space-y-4 shadow-[var(--shadow-lg)]" onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-extrabold text-white font-display">
           {member.name} viene con familia
         </h3>
-        <p className="text-sm text-white/60" style={{ fontFamily: 'var(--font-body)' }}>¿Quién más llegó?</p>
+        <p className="text-sm text-white/60 font-body">¿Quién más llegó?</p>
 
         <div className="space-y-2 max-h-72 overflow-y-auto">
           <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5">
             <div className="h-8 w-8 rounded-full bg-coral flex items-center justify-center text-[10px] font-bold text-white">{getInitials(member.name)}</div>
-            <span className="flex-1 text-sm text-white" style={{ fontFamily: 'var(--font-body)' }}>{member.name}</span>
+            <span className="flex-1 text-sm text-white font-body">{member.name}</span>
             <span className="text-[11px] text-white/40">Titular</span>
           </div>
           {family.map(f => (
@@ -413,7 +408,7 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
               <input type="checkbox" checked={selected.has(f.member_id)} onChange={() => toggle(f.member_id)} className="accent-coral h-4 w-4" />
               <div className="h-8 w-8 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(f.name)}</div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white truncate" style={{ fontFamily: 'var(--font-body)' }}>{f.name}</p>
+                <p className="text-sm text-white truncate font-body">{f.name}</p>
                 <p className="text-[11px] text-white/40">{f.relation}</p>
               </div>
             </label>
@@ -424,16 +419,14 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
           <button
             onClick={() => onRegister([member.id])}
             disabled={busy}
-            className="flex-1 rounded-2xl border border-white/15 py-3 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-2xl border border-white/15 py-3 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50 font-body"
           >
             Solo {member.name.split(' ')[0]}
           </button>
           <button
             onClick={() => onRegister([member.id, ...Array.from(selected)])}
             disabled={busy}
-            className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {busy ? 'Registrando…' : `Registrar ${1 + selected.size}`}
           </button>
@@ -547,12 +540,11 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-navy-ink/70 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-md rounded-3xl p-6 space-y-4 bg-navy border border-white/10"
-        style={{ boxShadow: 'var(--shadow-lg)' }}
+        className="relative w-full max-w-md rounded-3xl p-6 space-y-4 bg-navy border border-white/10 shadow-[var(--shadow-lg)]"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>Persona nueva</h3>
+          <h3 className="text-lg font-extrabold text-white font-display">Persona nueva</h3>
           <button onClick={onClose} className="text-white/40 hover:text-white"><X size={18} /></button>
         </div>
 
@@ -591,7 +583,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
             <div key={i} className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2">
               <div className="h-7 w-7 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(`${d.first_name} ${d.last_name}`)}</div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white truncate" style={{ fontFamily: 'var(--font-body)' }}>{d.first_name} {d.last_name}</p>
+                <p className="text-sm text-white truncate font-body">{d.first_name} {d.last_name}</p>
                 <p className="text-[11px] text-white/40">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
               </div>
               <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/30 hover:text-coral"><X size={14} /></button>
@@ -599,24 +591,22 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
           ))}
           <button
             onClick={() => setShowFamily(true)}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-2.5 text-[13px] text-white/60 hover:text-white hover:border-white/30 transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-2.5 text-[13px] text-white/60 hover:text-white hover:border-white/30 transition-colors font-body"
           >
             <UserPlus size={14} /> Agregar familia
           </button>
         </div>
 
-        {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+        {error && <p className="text-[12px] text-coral font-body">{error}</p>}
 
-        <p className="text-[11px] text-white/40" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-[11px] text-white/40 font-body">
           Si tiene correo, se le enviará una invitación para completar su perfil y crear su contraseña.
         </p>
 
         <button
           onClick={submit}
           disabled={!valid || saving}
-          className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
         >
           {saving ? 'Creando…' : familyDrafts.length > 0 ? `Crear familia y check-in (${familyDrafts.length + 1})` : 'Crear y hacer check-in'}
         </button>

@@ -12,7 +12,7 @@ const DISCONNECT_REASONS: { value: DisconnectReason; label: string }[] = [
   { value: 'otro',        label: 'Otro' },
 ]
 
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
 // ── Disconnect modal ─────────────────────────────────────────────────────────
 
@@ -42,15 +42,14 @@ export function DisconnectModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
       <div
-        className="w-full max-w-sm rounded-2xl p-6 space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-base font-bold text-navy font-display">
               Desvincular servidor
             </p>
-            <p className="text-sm text-navy-light/60 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/60 mt-0.5 font-body">
               {target.name}
             </p>
           </div>
@@ -61,12 +60,11 @@ export function DisconnectModal({
 
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
               Motivo
             </label>
             <select
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={reason}
               onChange={e => onReasonChange(e.target.value as DisconnectReason)}
             >
@@ -78,12 +76,11 @@ export function DisconnectModal({
 
           {reason === 'otro' && (
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
                 Especificar motivo
               </label>
               <input
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                 placeholder="Describe el motivo..."
                 value={otherReason}
                 onChange={e => onOtherReasonChange(e.target.value)}
@@ -92,13 +89,12 @@ export function DisconnectModal({
           )}
 
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
               Fecha efectiva de salida
             </label>
             <input
               type="date"
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={date}
               onChange={e => onDateChange(e.target.value)}
             />
@@ -106,8 +102,7 @@ export function DisconnectModal({
         </div>
 
         <div
-          className="rounded-xl px-3 py-2.5 text-[12px] text-amber-700 bg-amber-50"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="rounded-xl px-3 py-2.5 text-[12px] text-amber-700 bg-amber-50 font-body"
         >
           Esta acción moverá al servidor al historial del comité.
         </div>
@@ -115,15 +110,13 @@ export function DisconnectModal({
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Confirmar salida
           </button>
@@ -152,32 +145,32 @@ type EditCommitteeModalProps = {
 export function EditCommitteeModal({ form, onFormChange, onSave, onCancel }: EditCommitteeModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Editar comité</p>
+          <p className="text-base font-bold text-navy font-display">Editar comité</p>
           <button onClick={onCancel} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
         </div>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Nombre</label>
-            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.name} onChange={e => onFormChange(p => ({ ...p, name: e.target.value }))} />
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Nombre</label>
+            <input className={inputCls} value={form.name} onChange={e => onFormChange(p => ({ ...p, name: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Área</label>
-            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.area} onChange={e => onFormChange(p => ({ ...p, area: e.target.value }))} />
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Área</label>
+            <input className={inputCls} value={form.area} onChange={e => onFormChange(p => ({ ...p, area: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Código de área</label>
-            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.area_code} onChange={e => onFormChange(p => ({ ...p, area_code: e.target.value }))} />
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Código de área</label>
+            <input className={inputCls} value={form.area_code} onChange={e => onFormChange(p => ({ ...p, area_code: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Capacidad ideal</label>
-            <input type="number" min="1" max="100" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={form.ideal_capacity} onChange={e => onFormChange(p => ({ ...p, ideal_capacity: e.target.value }))} />
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Capacidad ideal</label>
+            <input type="number" min="1" max="100" className={inputCls} value={form.ideal_capacity} onChange={e => onFormChange(p => ({ ...p, ideal_capacity: e.target.value }))} />
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
-          <button onClick={onSave} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cambios</button>
+          <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
+          <button onClick={onSave} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
         </div>
       </div>
     </div>
@@ -216,16 +209,15 @@ export function AddServerModal({
 }: AddServerModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Añadir servidor</p>
+          <p className="text-base font-bold text-navy font-display">Añadir servidor</p>
           <button onClick={onClose} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Puesto</label>
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Puesto</label>
           <select
             className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
             value={positionId}
             onChange={e => onPositionChange(e.target.value)}
           >
@@ -236,8 +228,7 @@ export function AddServerModal({
         <div className={positionId ? 'relative' : 'relative opacity-50 pointer-events-none'}>
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
           <input
-            className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
             value={serverSearch}
             onChange={e => onServerSearchChange(e.target.value)}
@@ -254,20 +245,20 @@ export function AddServerModal({
                 className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors text-left"
               >
                 <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{m.first_name[0]}{m.last_name[0]}</span>
+                  <span className="text-[10px] font-bold text-white font-display">{m.first_name[0]}{m.last_name[0]}</span>
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{m.first_name} {m.last_name}</p>
-                  <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>{m.email}</p>
+                  <p className="text-[13px] font-medium text-navy font-body">{m.first_name} {m.last_name}</p>
+                  <p className="text-[11px] text-navy-light/40 font-body">{m.email}</p>
                 </div>
                 <Plus size={14} className="ml-auto text-coral shrink-0" />
               </button>
             ))}
           </div>
         ) : serverSearch.trim() ? (
-          <p className="text-center text-sm text-navy-light/40 py-4" style={{ fontFamily: 'var(--font-body)' }}>No se encontraron miembros.</p>
+          <p className="text-center text-sm text-navy-light/40 py-4 font-body">No se encontraron miembros.</p>
         ) : (
-          <p className="text-center text-[12px] text-navy-light/30 py-4" style={{ fontFamily: 'var(--font-body)' }}>Escribí un nombre para buscar</p>
+          <p className="text-center text-[12px] text-navy-light/30 py-4 font-body">Escribí un nombre para buscar</p>
         )}
       </div>
     </div>
@@ -295,19 +286,18 @@ export function ChangePositionModal({
 }: ChangePositionModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Cambiar puesto</p>
-            <p className="text-sm text-navy-light/60 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{target.name}</p>
+            <p className="text-base font-bold text-navy font-display">Cambiar puesto</p>
+            <p className="text-sm text-navy-light/60 mt-0.5 font-body">{target.name}</p>
           </div>
           <button onClick={onCancel} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Nuevo puesto</label>
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Nuevo puesto</label>
           <select
-            className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             value={newPosition}
             onChange={e => onPositionChange(e.target.value)}
           >
@@ -316,8 +306,8 @@ export function ChangePositionModal({
           </select>
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
-          <button onClick={onConfirm} disabled={!newPosition} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep disabled:opacity-40 transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Confirmar</button>
+          <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
+          <button onClick={onConfirm} disabled={!newPosition} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep disabled:opacity-40 transition-colors font-body">Confirmar</button>
         </div>
       </div>
     </div>

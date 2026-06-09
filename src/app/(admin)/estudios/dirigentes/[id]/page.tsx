@@ -82,8 +82,8 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
     return (
       <div className="page">
         <div className="ph"><div className="ptitle">Dirigentes</div></div>
-        <div className="card" style={{ padding: 22 }}>
-          <p style={{ fontSize: 13, color: 'var(--fg-muted)', textAlign: 'center', padding: '32px 0', fontFamily: 'var(--font-body)' }}>
+        <div className="card p-[22px]">
+          <p className="text-[13px] text-[var(--fg-muted)] text-center py-8 font-body">
             Dirigente no encontrado.
           </p>
         </div>
@@ -132,11 +132,10 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={() => setEditOpen(false)} />
           <div
-            className="relative rounded-2xl p-6 max-w-lg w-full mx-4 space-y-6 overflow-y-auto max-h-[90vh]"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+            className="relative rounded-2xl p-6 max-w-lg w-full mx-4 space-y-6 overflow-y-auto max-h-[90vh] bg-surface-card shadow-[var(--shadow-lg)]"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+              <h2 className="text-base font-bold text-navy font-display">
                 Editar dirigente — {leader.member_name}
               </h2>
               <button onClick={() => setEditOpen(false)} className="text-navy-light/40 hover:text-navy transition-colors">
@@ -146,12 +145,12 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
 
             {/* ── Sección 1: Estudios que puede impartir ── */}
             <div className="space-y-3">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">
                 Estudios que puede impartir
               </p>
               <div className="flex flex-wrap gap-1.5 min-h-[28px]">
                 {qualifications.length === 0 && (
-                  <span className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                  <span className="text-[12px] text-navy-light/40 font-body">
                     Sin estudios asignados
                   </span>
                 )}
@@ -160,8 +159,7 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                   return (
                     <span
                       key={code}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-navy/8 px-3 py-1 text-[12px] font-medium text-navy"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-navy/8 px-3 py-1 text-[12px] font-medium text-navy font-display"
                     >
                       {study ? `${study.code} — ${study.name}` : code}
                       <button
@@ -177,8 +175,7 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
               </div>
               <div className="flex gap-2">
                 <select
-                  className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   value={studyToAdd}
                   onChange={e => setStudyToAdd(e.target.value)}
                 >
@@ -198,19 +195,18 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                     setQualifications(q => [...q, studyToAdd])
                     setStudyToAdd('')
                   }}
-                  className="inline-flex items-center gap-1 rounded-full bg-coral px-3 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="inline-flex items-center gap-1 rounded-full bg-coral px-3 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
                 >
                   <Plus size={13} /> Agregar
                 </button>
               </div>
             </div>
 
-            <div style={{ height: 1, background: 'var(--outline-variant)' }} />
+            <div className="h-px bg-[var(--outline-variant)]" />
 
             {/* ── Sección 2: Zonas de preferencia ── */}
             <div className="space-y-3">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">
                 Zonas de preferencia
               </p>
               <div className="flex flex-wrap gap-2">
@@ -225,11 +221,11 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                         'rounded-full px-3.5 py-1.5 text-[12px] font-medium border-2 transition-all duration-150',
                         selected
                           ? 'border-teal-deep bg-teal-soft/15 text-teal-deep'
-                          : 'border-transparent text-navy-light/60 hover:bg-surface-low'
+                          : 'border-transparent text-navy-light/60 hover:bg-surface-low',
+                        'font-display',
                       )}
                       style={{
                         borderColor: selected ? undefined : 'var(--outline-variant)',
-                        fontFamily: 'var(--font-display)',
                       }}
                     >
                       {selected ? '✓ ' : ''}{sede.name}
@@ -238,22 +234,22 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                 })}
               </div>
               {zones.length === 0 && (
-                <p className="text-[11px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[11px] text-coral font-body">
                   Seleccioná al menos una zona
                 </p>
               )}
               {zones.length > 0 && (
-                <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[11px] text-navy-light/50 font-body">
                   {zones.length} zona{zones.length !== 1 ? 's' : ''} seleccionada{zones.length !== 1 ? 's' : ''}
                 </p>
               )}
             </div>
 
-            <div style={{ height: 1, background: 'var(--outline-variant)' }} />
+            <div className="h-px bg-[var(--outline-variant)]" />
 
             {/* ── Sección 3: Estado de disponibilidad ── */}
             <div className="space-y-3">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">
                 Estado de disponibilidad
               </p>
               <div className="space-y-2">
@@ -282,7 +278,7 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                         <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium', cfg.className)}>
                           {cfg.label}
                         </span>
-                        <p className="text-[12px] text-navy-light/60 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+                        <p className="text-[12px] text-navy-light/60 mt-1 font-body">
                           {cfg.description}
                         </p>
                       </div>
@@ -296,16 +292,14 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
             <div className="flex gap-2 justify-end pt-1">
               <button
                 onClick={() => setEditOpen(false)}
-                className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
                 disabled={zones.length === 0}
-                className="rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body"
               >
                 Guardar cambios
               </button>
@@ -316,11 +310,11 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
 
       {/* ── Header ── */}
       <div className="ph">
-        <button className="btn btn-ghost btn-sm" onClick={() => router.back()} style={{ marginBottom: 10 }}>
+        <button className="btn btn-ghost btn-sm mb-[10px]" onClick={() => router.back()}>
           ← Volver a dirigentes
         </button>
         <div className="ph-row">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div className="flex items-center gap-3 flex-wrap">
             <div className={cn('h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0', avatarColor)}>
               {initials}
             </div>
@@ -357,15 +351,15 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
       </div>
 
       {/* ── Stats ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
         {[
           { label: 'Grupos liderados',      value: leader.stats.groups_led },
           { label: 'Calificación prom.',    value: `${leader.stats.avg_rating.toFixed(1)} / 5` },
           { label: 'Participantes activos', value: leader.stats.current_participants },
         ].map(({ label, value }) => (
-          <div key={label} className="card" style={{ padding: '18px 22px' }}>
+          <div key={label} className="card py-[18px] px-[22px]">
             <div className="st">{label}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--brand-navy)', fontFamily: 'var(--font-display)', marginTop: 8 }}>
+            <div className="text-[22px] font-extrabold text-navy-light font-display mt-2">
               {value}
             </div>
           </div>
@@ -373,10 +367,10 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
       </div>
 
       {/* ── Tabs card ── */}
-      <div className="card" style={{ width: '100%' }}>
+      <div className="card w-full">
 
         {/* Tab bar */}
-        <div style={{ display: 'flex', borderBottom: '1px solid rgba(22,20,64,0.09)', padding: '0 22px' }}>
+        <div className="flex border-b border-[rgba(22,20,64,0.09)] px-[22px]">
           {tabs.map(t => (
             <button
               key={t}
@@ -385,9 +379,9 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                 'px-4 py-3 text-sm transition-all border-b-2 -mb-px',
                 activeTab === t
                   ? 'border-coral text-coral font-medium'
-                  : 'border-transparent text-navy-light/60 hover:text-navy'
+                  : 'border-transparent text-navy-light/60 hover:text-navy',
+                'font-body',
               )}
-              style={{ fontFamily: 'var(--font-body)' }}
             >
               {tabLabels[t]}
             </button>
@@ -401,16 +395,16 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
               <div className="card-title">Grupos liderados ({leaderGroups.length})</div>
             </div>
             {leaderGroups.length === 0 ? (
-              <div style={{ padding: '40px 22px', textAlign: 'center' }}>
-                <p style={{ fontSize: 13, color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-body)' }}>Sin grupos registrados.</p>
+              <div className="py-10 px-[22px] text-center">
+                <p className="text-[13px] text-[rgba(41,54,92,0.4)] font-body">Sin grupos registrados.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(22,20,64,0.09)' }}>
+                    <tr className="border-b border-[rgba(22,20,64,0.09)]">
                       {['Estudio', 'Zona', 'Participantes', 'Estado'].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
+                        <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50 font-display">
                           {h}
                         </th>
                       ))}
@@ -418,10 +412,10 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                   </thead>
                   <tbody>
                     {leaderGroups.map(g => (
-                      <tr key={g.id} className="hover:bg-surface-low transition-colors" style={{ borderBottom: '1px solid rgba(22,20,64,0.06)' }}>
+                      <tr key={g.id} className="hover:bg-surface-low transition-colors border-b border-[rgba(22,20,64,0.06)]">
                         <td className="px-4 py-3"><StudyTypeBadge code={g.study_type_id} size="sm" /></td>
-                        <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{sedeLabel(g.zone)}</td>
-                        <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                        <td className="px-4 py-3 text-sm text-navy-light/70 font-body">{sedeLabel(g.zone)}</td>
+                        <td className="px-4 py-3 text-sm text-navy font-body">
                           {g.participants.filter(p => p.status !== 'withdrawn').length}/{g.max_capacity}
                         </td>
                         <td className="px-4 py-3"><GroupStatusBadge status={g.status} /></td>
@@ -436,61 +430,39 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
 
       {/* Tab: Evaluaciones */}
       {activeTab === 'evaluaciones' && (
-        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="py-5 px-[22px] flex flex-col gap-5">
           <div>
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <p className="text-5xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-5xl font-bold text-navy font-display">
                   {avgRating.toFixed(1)}
                 </p>
-                <p className="text-sm text-navy-light/50 mt-1" style={{ fontFamily: 'var(--font-body)' }}>de 5</p>
+                <p className="text-sm text-navy-light/50 mt-1 font-body">de 5</p>
                 <div className="mt-2 flex justify-center">
                   <StarRating score={Math.round(avgRating)} />
                 </div>
               </div>
               <div className="flex-1">
                 {/* Título de la sección */}
-                <div className="st" style={{ marginBottom: 16 }}>
+                <div className="st mb-4">
                   Evaluaciones por grupo
                 </div>
 
                 {/* Gráfico de barras */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: 12,
-                  height: 120,
-                  paddingTop: 24,
-                  marginBottom: 20,
-                }}>
+                <div className="flex items-end gap-3 h-[120px] pt-6 mb-5">
                   {leader.evaluations?.map((ev, i) => (
-                    <div key={i} style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 4,
-                      flex: 1,
-                    }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-navy)' }}>
+                    <div key={i} className="flex flex-col items-center gap-1 flex-1">
+                      <span className="text-[11px] font-bold text-navy-light">
                         {ev.score}
                       </span>
-                      <div style={{
-                        width: '100%',
-                        height: `${(ev.score / 5) * 80}px`,
-                        background: ev.score <= 2 ? 'var(--brand-coral)' : 'var(--brand-teal)',
-                        borderRadius: '6px 6px 0 0',
-                        minHeight: 8,
-                      }} />
-                      <span style={{
-                        fontSize: 10,
-                        color: 'var(--fg-muted)',
-                        textAlign: 'center',
-                        maxWidth: 60,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontFamily: 'var(--font-body)',
-                      }}>
+                      <div
+                        className="w-full rounded-t-[6px] min-h-[8px]"
+                        style={{
+                          height: `${(ev.score / 5) * 80}px`,
+                          background: ev.score <= 2 ? 'var(--brand-coral)' : 'var(--brand-teal)',
+                        }}
+                      />
+                      <span className="text-[10px] text-[var(--fg-muted)] text-center max-w-[60px] overflow-hidden text-ellipsis whitespace-nowrap font-body">
                         {ev.group_name || `Grupo ${i + 1}`}
                       </span>
                     </div>
@@ -500,11 +472,11 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="flex flex-col gap-2.5">
             {leader.evaluations.map(ev => (
               <div
                 key={ev.id}
-                style={{ borderRadius: 14, padding: '14px 16px', background: 'var(--surface-low)' }}
+                className="rounded-[14px] py-[14px] px-4 bg-surface-low"
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
@@ -522,14 +494,14 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
                         </span>
                       )}
                     </div>
-                    <p className="text-[12px] text-navy-light/50 mt-1" style={{ fontFamily: 'var(--font-body)' }}>{ev.group_name}</p>
+                    <p className="text-[12px] text-navy-light/50 mt-1 font-body">{ev.group_name}</p>
                   </div>
                   <div className="text-right">
                     <StarRating score={ev.score} />
-                    <p className="text-[11px] text-navy-light/40 mt-1" style={{ fontFamily: 'var(--font-body)' }}>{ev.date}</p>
+                    <p className="text-[11px] text-navy-light/40 mt-1 font-body">{ev.date}</p>
                   </div>
                 </div>
-                <p className="text-sm text-navy-light/70 italic" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-sm text-navy-light/70 italic font-body">
                   &ldquo;{ev.comments}&rdquo;
                 </p>
               </div>
@@ -540,39 +512,38 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
 
       {/* Tab: Cualificaciones */}
       {activeTab === 'cualificaciones' && (
-        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="py-5 px-[22px] flex flex-col gap-5">
 
           <div>
-            <div className="st" style={{ marginBottom: 8 }}>Puede impartir</div>
+            <div className="st mb-2">Puede impartir</div>
             <div className="flex flex-wrap gap-1.5">
               {qualifications.map(code => (
                 <StudyTypeBadge key={code} code={code} size="md" />
               ))}
               {qualifications.length === 0 && (
-                <p style={{ fontSize: 13, color: 'rgba(41,54,92,0.4)', fontFamily: 'var(--font-body)' }}>Sin estudios registrados.</p>
+                <p className="text-[13px] text-[rgba(41,54,92,0.4)] font-body">Sin estudios registrados.</p>
               )}
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid rgba(22,20,64,0.09)', paddingTop: 16 }}>
-            <div className="st" style={{ marginBottom: 6 }}>Zonas de preferencia</div>
-            <p style={{ fontSize: 13, color: 'var(--brand-navy)', fontFamily: 'var(--font-body)' }}>
+          <div className="border-t border-[rgba(22,20,64,0.09)] pt-4">
+            <div className="st mb-1.5">Zonas de preferencia</div>
+            <p className="text-[13px] text-navy-light font-body">
               {zones.length > 0 ? zones.map(z => sedeLabel(z)).join(' · ') : '—'}
             </p>
           </div>
 
-          <div style={{ borderTop: '1px solid rgba(22,20,64,0.09)', paddingTop: 16 }}>
-            <div className="st" style={{ marginBottom: 6 }}>Estado de disponibilidad</div>
+          <div className="border-t border-[rgba(22,20,64,0.09)] pt-4">
+            <div className="st mb-1.5">Estado de disponibilidad</div>
             <span className={cn('rounded-md px-2.5 py-1 text-[12px] font-medium', avail.className)}>
               {avail.label}
             </span>
           </div>
 
-          <div style={{ borderTop: '1px solid rgba(22,20,64,0.09)', paddingTop: 16 }}>
+          <div className="border-t border-[rgba(22,20,64,0.09)] pt-4">
             <button
               onClick={() => setEditOpen(true)}
-              className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral-deep transition-colors font-body"
             >
               <Pencil size={13} /> Editar cualificaciones
             </button>

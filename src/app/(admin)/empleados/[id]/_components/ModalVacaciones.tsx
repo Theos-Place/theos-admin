@@ -44,18 +44,17 @@ export function ModalVacaciones({
 }: ModalVacacionesProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         {vacSaved ? (
           <div className="text-center space-y-3 py-4">
             <div className="h-12 w-12 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
               <Check size={22} className="text-teal-deep" />
             </div>
-            <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Solicitud registrada</p>
+            <p className="text-base font-bold text-navy font-display">Solicitud registrada</p>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >
               Cerrar
             </button>
@@ -63,16 +62,15 @@ export function ModalVacaciones({
         ) : (
           <>
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Registrar solicitud</h2>
+              <h2 className="text-base font-bold text-navy font-display">Registrar solicitud</h2>
               <button type="button" onClick={onClose}>
                 <X size={18} className="text-navy-light/40" />
               </button>
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Tipo</label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Tipo</label>
               <select
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
+                className={cn(inputCls, 'font-body')}
                 value={vacType}
                 onChange={e => onVacTypeChange(e.target.value as VacationRecordType)}
               >
@@ -83,21 +81,19 @@ export function ModalVacaciones({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Desde</label>
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Desde</label>
                 <input
                   type="date"
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className={cn(inputCls, 'font-body')}
                   value={vacFrom}
                   onChange={e => onVacFromChange(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Hasta</label>
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Hasta</label>
                 <input
                   type="date"
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className={cn(inputCls, 'font-body')}
                   value={vacTo}
                   onChange={e => onVacToChange(e.target.value)}
                 />
@@ -106,16 +102,15 @@ export function ModalVacaciones({
             {vacFrom && vacTo && (
               <div className="rounded-lg bg-navy/5 px-3 py-2 flex items-center gap-2">
                 <Clock size={13} className="text-navy-light/50" />
-                <p className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-navy-light/60 font-body">
                   {diasHabilesModal} día{diasHabilesModal !== 1 ? 's' : ''} hábil{diasHabilesModal !== 1 ? 'es' : ''}
                 </p>
               </div>
             )}
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Notas</label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Notas</label>
               <textarea
-                className={cn(inputCls, 'resize-none')}
-                style={{ fontFamily: 'var(--font-body)' }}
+                className={cn(inputCls, 'resize-none font-body')}
                 rows={2}
                 placeholder="Descripción de la solicitud..."
                 value={vacNotes}
@@ -126,8 +121,7 @@ export function ModalVacaciones({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 Cancelar
               </button>
@@ -136,10 +130,9 @@ export function ModalVacaciones({
                 onClick={onSave}
                 disabled={!vacFrom || !vacTo}
                 className={cn(
-                  'rounded-full px-4 py-2 text-sm text-white transition-colors',
+                  'rounded-full px-4 py-2 text-sm text-white transition-colors font-body',
                   vacFrom && vacTo ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
                 )}
-                style={{ fontFamily: 'var(--font-body)' }}
               >
                 Guardar solicitud
               </button>

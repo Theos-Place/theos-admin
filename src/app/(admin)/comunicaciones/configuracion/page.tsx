@@ -183,30 +183,30 @@ export default function ConfiguracionPage() {
     } catch { /* sin cambios si falla */ }
   }
 
-  const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
-  const labelCls = 'text-[11px] text-navy-light/50 mb-1 block'
+  const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
+  const labelCls = 'text-[11px] text-navy-light/50 mb-1 block font-body'
 
   function SmtpCard({ config }: { config: ChannelConfig }) {
     const result = verifyResult[config.id]
     return (
-      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-body)' }}>{config.name}</p>
-            <p className="text-[12px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm font-semibold text-navy font-body">{config.name}</p>
+            <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
               {config.smtp_host}:{config.smtp_port} · {config.smtp_user}
             </p>
-            <p className="text-[12px] text-navy-light/40 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[12px] text-navy-light/40 mt-0.5 font-body">
               De: {config.smtp_from_name} &lt;{config.smtp_from_email}&gt;
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {config.is_verified ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-[10px] font-semibold text-teal-deep" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-[10px] font-semibold text-teal-deep font-display">
                 <CheckCircle2 size={10} /> Verificado
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700 font-display">
                 <AlertCircle size={10} /> Sin verificar
               </span>
             )}
@@ -214,27 +214,26 @@ export default function ConfiguracionPage() {
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px]', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ Conexión exitosa' : '✗ No se pudo conectar. Verificá los datos.'}
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-1 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+        <div className="flex items-center gap-2 pt-1 border-t border-[var(--outline-variant)]">
           <button
             type="button"
             onClick={() => handleVerify(config.id)}
             disabled={verifying === config.id}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
           >
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Verificar
           </button>
-          <button type="button" onClick={() => openEditSmtp(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => openEditSmtp(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -245,44 +244,43 @@ export default function ConfiguracionPage() {
   function WaCard({ config }: { config: ChannelConfig }) {
     const result = verifyResult[config.id]
     return (
-      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-body)' }}>{config.name}</p>
-            <p className="text-[12px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm font-semibold text-navy font-body">{config.name}</p>
+            <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
               {config.wa_phone_number} · ID: {config.wa_account_id}
             </p>
           </div>
           <span className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold shrink-0',
+            'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold shrink-0 font-display',
             config.is_verified ? 'bg-teal-soft/30 text-teal-deep' : 'bg-red-50 text-red-600'
-          )} style={{ fontFamily: 'var(--font-display)' }}>
+          )}>
             {config.is_verified ? <><CheckCircle2 size={10} /> Conectado</> : <><XCircle size={10} /> Desconectado</>}
           </span>
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px]', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ WhatsApp conectado correctamente' : '✗ No se pudo conectar con la API.'}
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-1 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+        <div className="flex items-center gap-2 pt-1 border-t border-[var(--outline-variant)]">
           <button
             type="button"
             onClick={() => handleVerify(config.id)}
             disabled={verifying === config.id}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
           >
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Reconectar
           </button>
-          <button type="button" onClick={() => openEditWa(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => openEditWa(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -294,27 +292,26 @@ export default function ConfiguracionPage() {
     <>
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-2xl bg-navy px-6 py-5" style={{ boxShadow: 'var(--shadow-md)' }}>
-        <h1 className="text-2xl text-white" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+      <div className="rounded-2xl bg-navy px-6 py-5 shadow-[var(--shadow-md)]">
+        <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
           Configuración
         </h1>
-        <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="mt-1 text-sm text-white/50 font-body">
           Configurá los canales de envío de mensajes
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="flex gap-1 border-b border-[var(--outline-variant)]">
         {(['smtp', 'whatsapp'] as SmtpTab[]).map(t => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
             className={cn(
-              'px-5 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-all',
+              'px-5 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-all font-body',
               tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/50 hover:text-navy'
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             {t === 'smtp' ? 'SMTP / Correo' : 'WhatsApp'}
           </button>
@@ -325,14 +322,13 @@ export default function ConfiguracionPage() {
       {tab === 'smtp' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/60 font-body">
               {smtpConfigs.length} cuenta{smtpConfigs.length !== 1 ? 's' : ''} configurada{smtpConfigs.length !== 1 ? 's' : ''}
             </p>
             <button
               type="button"
               onClick={() => setShowSmtpForm(!showSmtpForm)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all font-body"
             >
               <Plus size={14} />
               Agregar cuenta SMTP
@@ -340,36 +336,35 @@ export default function ConfiguracionPage() {
           </div>
 
           {showSmtpForm && (
-            <div className="rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-              <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Nueva cuenta SMTP</p>
+            <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+              <p className="text-sm font-bold text-navy font-display">Nueva cuenta SMTP</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre de la configuración</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="ej. Gmail Diana" value={smtpForm.name} onChange={e => setSmtpForm(p => ({ ...p, name: e.target.value }))} />
+                  <label className={labelCls}>Nombre de la configuración</label>
+                  <input className={inputCls} placeholder="ej. Gmail Diana" value={smtpForm.name} onChange={e => setSmtpForm(p => ({ ...p, name: e.target.value }))} />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Servidor SMTP</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="smtp.gmail.com" value={smtpForm.host} onChange={e => setSmtpForm(p => ({ ...p, host: e.target.value }))} />
+                  <label className={labelCls}>Servidor SMTP</label>
+                  <input className={inputCls} placeholder="smtp.gmail.com" value={smtpForm.host} onChange={e => setSmtpForm(p => ({ ...p, host: e.target.value }))} />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Puerto</label>
-                  <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={smtpForm.port} onChange={e => setSmtpForm(p => ({ ...p, port: e.target.value }))}>
+                  <label className={labelCls}>Puerto</label>
+                  <select className={inputCls} value={smtpForm.port} onChange={e => setSmtpForm(p => ({ ...p, port: e.target.value }))}>
                     <option value="587">587 (TLS)</option>
                     <option value="465">465 (SSL)</option>
                     <option value="25">25 (SMTP)</option>
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Usuario</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="usuario@dominio.com" value={smtpForm.user} onChange={e => setSmtpForm(p => ({ ...p, user: e.target.value }))} />
+                  <label className={labelCls}>Usuario</label>
+                  <input className={inputCls} placeholder="usuario@dominio.com" value={smtpForm.user} onChange={e => setSmtpForm(p => ({ ...p, user: e.target.value }))} />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Contraseña</label>
+                  <label className={labelCls}>Contraseña</label>
                   <div className="relative">
                     <input
                       type={showPwd ? 'text' : 'password'}
                       className={cn(inputCls, 'pr-10')}
-                      style={{ fontFamily: 'var(--font-body)' }}
                       placeholder="••••••••"
                       value={smtpForm.password}
                       onChange={e => setSmtpForm(p => ({ ...p, password: e.target.value }))}
@@ -380,26 +375,26 @@ export default function ConfiguracionPage() {
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre remitente</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Theos Place" value={smtpForm.from_name} onChange={e => setSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
+                  <label className={labelCls}>Nombre remitente</label>
+                  <input className={inputCls} placeholder="Theos Place" value={smtpForm.from_name} onChange={e => setSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Email remitente</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="noreply@theosplace.org" value={smtpForm.from_email} onChange={e => setSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
+                  <label className={labelCls}>Email remitente</label>
+                  <input className={inputCls} placeholder="noreply@theosplace.org" value={smtpForm.from_email} onChange={e => setSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
                 </div>
-                <div className="sm:col-span-2 flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--surface-low)' }}>
+                <div className="sm:col-span-2 flex items-center justify-between p-3 rounded-xl bg-surface-low">
                   <div>
-                    <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>Usar SSL/TLS</p>
-                    <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Recomendado para mayor seguridad</p>
+                    <p className="text-sm text-navy font-body">Usar SSL/TLS</p>
+                    <p className="text-[11px] text-navy-light/40 font-body">Recomendado para mayor seguridad</p>
                   </div>
                   <button type="button" onClick={() => setSmtpForm(p => ({ ...p, ssl: !p.ssl }))} className={cn('relative h-6 w-11 rounded-full transition-colors', smtpForm.ssl ? 'bg-coral' : 'bg-navy/20')}>
                     <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', smtpForm.ssl ? 'translate-x-5' : 'translate-x-0')} />
                   </button>
                 </div>
               </div>
-              <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-                <button type="button" onClick={() => setShowSmtpForm(false)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
-                <button type="button" onClick={handleAddSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cuenta</button>
+              <div className="flex items-center gap-3 pt-2 border-t border-[var(--outline-variant)]">
+                <button type="button" onClick={() => setShowSmtpForm(false)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
+                <button type="button" onClick={handleAddSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cuenta</button>
               </div>
             </div>
           )}
@@ -414,32 +409,31 @@ export default function ConfiguracionPage() {
       {tab === 'whatsapp' && (
         <div className="space-y-4">
           {/* Info notice */}
-          <div className="rounded-2xl p-5 flex gap-3" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-5 flex gap-3 bg-surface-card shadow-[var(--shadow-md)]">
             <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-[13px] font-semibold text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[13px] font-semibold text-navy font-body">
                 Para conectar WhatsApp Business API necesitás:
               </p>
-              <ol className="text-[12px] text-navy-light/60 space-y-0.5 list-decimal list-inside" style={{ fontFamily: 'var(--font-body)' }}>
+              <ol className="text-[12px] text-navy-light/60 space-y-0.5 list-decimal list-inside font-body">
                 <li>Una cuenta de Meta Business verificada</li>
                 <li>Un número de teléfono dedicado</li>
                 <li>El token de acceso de la API de WhatsApp Cloud</li>
               </ol>
-              <p className="text-[12px] text-blue-500 mt-2" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-blue-500 mt-2 font-body">
                 Más info en: developers.facebook.com/docs/whatsapp
               </p>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/60 font-body">
               {waConfigs.length} cuenta{waConfigs.length !== 1 ? 's' : ''} configurada{waConfigs.length !== 1 ? 's' : ''}
             </p>
             <button
               type="button"
               onClick={() => setShowWaForm(!showWaForm)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all font-body"
             >
               <Plus size={14} />
               Agregar cuenta WhatsApp
@@ -447,28 +441,27 @@ export default function ConfiguracionPage() {
           </div>
 
           {showWaForm && (
-            <div className="rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-              <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Nueva cuenta WhatsApp Business</p>
+            <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+              <p className="text-sm font-bold text-navy font-display">Nueva cuenta WhatsApp Business</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre de la configuración</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="ej. WhatsApp Theos Norte" value={waForm.name} onChange={e => setWaForm(p => ({ ...p, name: e.target.value }))} />
+                  <label className={labelCls}>Nombre de la configuración</label>
+                  <input className={inputCls} placeholder="ej. WhatsApp Theos Norte" value={waForm.name} onChange={e => setWaForm(p => ({ ...p, name: e.target.value }))} />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>ID de la cuenta / instancia</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="104521839021847" value={waForm.account_id} onChange={e => setWaForm(p => ({ ...p, account_id: e.target.value }))} />
+                  <label className={labelCls}>ID de la cuenta / instancia</label>
+                  <input className={inputCls} placeholder="104521839021847" value={waForm.account_id} onChange={e => setWaForm(p => ({ ...p, account_id: e.target.value }))} />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Número de WhatsApp</label>
-                  <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="+506 8800-0000" value={waForm.phone} onChange={e => setWaForm(p => ({ ...p, phone: e.target.value }))} />
+                  <label className={labelCls}>Número de WhatsApp</label>
+                  <input className={inputCls} placeholder="+506 8800-0000" value={waForm.phone} onChange={e => setWaForm(p => ({ ...p, phone: e.target.value }))} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Token de acceso</label>
+                  <label className={labelCls}>Token de acceso</label>
                   <div className="relative">
                     <input
                       type={showToken ? 'text' : 'password'}
                       className={cn(inputCls, 'pr-10')}
-                      style={{ fontFamily: 'var(--font-body)' }}
                       placeholder="EAABs..."
                       value={waForm.token}
                       onChange={e => setWaForm(p => ({ ...p, token: e.target.value }))}
@@ -479,9 +472,9 @@ export default function ConfiguracionPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-                <button type="button" onClick={() => setShowWaForm(false)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
-                <button type="button" onClick={handleAddWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cuenta</button>
+              <div className="flex items-center gap-3 pt-2 border-t border-[var(--outline-variant)]">
+                <button type="button" onClick={() => setShowWaForm(false)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
+                <button type="button" onClick={handleAddWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cuenta</button>
               </div>
             </div>
           )}
@@ -496,51 +489,51 @@ export default function ConfiguracionPage() {
     {/* ── Modal: Editar SMTP ── */}
     {editingConfig && editingConfig.type === 'smtp' && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-        <div className="w-full max-w-lg rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-            <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Editar cuenta SMTP</p>
+        <div className="w-full max-w-lg rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
+            <p className="text-sm font-bold text-navy font-display">Editar cuenta SMTP</p>
             <button type="button" onClick={() => setEditingConfig(null)}><X size={18} className="text-navy-light/40" /></button>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre de la configuración</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.name} onChange={e => setEditSmtpForm(p => ({ ...p, name: e.target.value }))} />
+              <label className={labelCls}>Nombre de la configuración</label>
+              <input className={inputCls} value={editSmtpForm.name} onChange={e => setEditSmtpForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Servidor SMTP</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.host} onChange={e => setEditSmtpForm(p => ({ ...p, host: e.target.value }))} />
+              <label className={labelCls}>Servidor SMTP</label>
+              <input className={inputCls} value={editSmtpForm.host} onChange={e => setEditSmtpForm(p => ({ ...p, host: e.target.value }))} />
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Puerto</label>
-              <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.port} onChange={e => setEditSmtpForm(p => ({ ...p, port: e.target.value }))}>
+              <label className={labelCls}>Puerto</label>
+              <select className={inputCls} value={editSmtpForm.port} onChange={e => setEditSmtpForm(p => ({ ...p, port: e.target.value }))}>
                 <option value="587">587 (TLS)</option><option value="465">465 (SSL)</option><option value="25">25 (SMTP)</option>
               </select>
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Usuario</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.user} onChange={e => setEditSmtpForm(p => ({ ...p, user: e.target.value }))} />
+              <label className={labelCls}>Usuario</label>
+              <input className={inputCls} value={editSmtpForm.user} onChange={e => setEditSmtpForm(p => ({ ...p, user: e.target.value }))} />
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Contraseña (dejar en blanco para no cambiar)</label>
+              <label className={labelCls}>Contraseña (dejar en blanco para no cambiar)</label>
               <div className="relative">
-                <input type={showEditPwd ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} style={{ fontFamily: 'var(--font-body)' }} placeholder="••••••••" value={editSmtpForm.password} onChange={e => setEditSmtpForm(p => ({ ...p, password: e.target.value }))} />
+                <input type={showEditPwd ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="••••••••" value={editSmtpForm.password} onChange={e => setEditSmtpForm(p => ({ ...p, password: e.target.value }))} />
                 <button type="button" onClick={() => setShowEditPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
                   {showEditPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre remitente</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.from_name} onChange={e => setEditSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
+              <label className={labelCls}>Nombre remitente</label>
+              <input className={inputCls} value={editSmtpForm.from_name} onChange={e => setEditSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Email remitente</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editSmtpForm.from_email} onChange={e => setEditSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
+              <label className={labelCls}>Email remitente</label>
+              <input className={inputCls} value={editSmtpForm.from_email} onChange={e => setEditSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
             </div>
           </div>
-          <div className="flex items-center gap-3 px-6 py-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-            <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
-            <button type="button" onClick={handleSaveEditSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cambios</button>
+          <div className="flex items-center gap-3 px-6 py-4 border-t border-[var(--outline-variant)]">
+            <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
+            <button type="button" onClick={handleSaveEditSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
           </div>
         </div>
       </div>
@@ -549,37 +542,37 @@ export default function ConfiguracionPage() {
     {/* ── Modal: Editar WhatsApp ── */}
     {editingConfig && editingConfig.type === 'whatsapp' && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-            <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Editar cuenta WhatsApp</p>
+        <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
+            <p className="text-sm font-bold text-navy font-display">Editar cuenta WhatsApp</p>
             <button type="button" onClick={() => setEditingConfig(null)}><X size={18} className="text-navy-light/40" /></button>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Nombre de la configuración</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editWaForm.name} onChange={e => setEditWaForm(p => ({ ...p, name: e.target.value }))} />
+              <label className={labelCls}>Nombre de la configuración</label>
+              <input className={inputCls} value={editWaForm.name} onChange={e => setEditWaForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>ID de la cuenta</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editWaForm.account_id} onChange={e => setEditWaForm(p => ({ ...p, account_id: e.target.value }))} />
+              <label className={labelCls}>ID de la cuenta</label>
+              <input className={inputCls} value={editWaForm.account_id} onChange={e => setEditWaForm(p => ({ ...p, account_id: e.target.value }))} />
             </div>
             <div>
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Número de WhatsApp</label>
-              <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={editWaForm.phone} onChange={e => setEditWaForm(p => ({ ...p, phone: e.target.value }))} />
+              <label className={labelCls}>Número de WhatsApp</label>
+              <input className={inputCls} value={editWaForm.phone} onChange={e => setEditWaForm(p => ({ ...p, phone: e.target.value }))} />
             </div>
             <div className="sm:col-span-2">
-              <label className={labelCls} style={{ fontFamily: 'var(--font-body)' }}>Token (dejar en blanco para no cambiar)</label>
+              <label className={labelCls}>Token (dejar en blanco para no cambiar)</label>
               <div className="relative">
-                <input type={showEditToken ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} style={{ fontFamily: 'var(--font-body)' }} placeholder="EAABs..." value={editWaForm.token} onChange={e => setEditWaForm(p => ({ ...p, token: e.target.value }))} />
+                <input type={showEditToken ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="EAABs..." value={editWaForm.token} onChange={e => setEditWaForm(p => ({ ...p, token: e.target.value }))} />
                 <button type="button" onClick={() => setShowEditToken(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
                   {showEditToken ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 px-6 py-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-            <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
-            <button type="button" onClick={handleSaveEditWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Guardar cambios</button>
+          <div className="flex items-center gap-3 px-6 py-4 border-t border-[var(--outline-variant)]">
+            <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
+            <button type="button" onClick={handleSaveEditWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
           </div>
         </div>
       </div>

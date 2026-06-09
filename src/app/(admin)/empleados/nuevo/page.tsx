@@ -157,7 +157,7 @@ export default function NuevoEmpleadoPage() {
       <StepProgress steps={STEPS} currentStep={step} />
 
       {error && (
-        <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>
+        <p className="text-sm text-coral font-body">{error}</p>
       )}
 
       {step === 1 && (
@@ -208,8 +208,7 @@ export default function NuevoEmpleadoPage() {
         <button
           type="button"
           onClick={() => setStep(s => s - 1)}
-          className="flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors font-body"
         >
           <ChevronLeft size={15} />
           Volver al paso anterior

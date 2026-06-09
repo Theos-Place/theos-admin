@@ -143,8 +143,8 @@ export default function PreviewPage() {
 
   if (loadingForm) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-low)' }}>
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p>
+      <div className="min-h-screen flex items-center justify-center bg-surface-low">
+        <p className="text-sm text-navy-light/50 font-body">Cargando…</p>
       </div>
     )
   }
@@ -152,7 +152,7 @@ export default function PreviewPage() {
   if (!form) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Formulario no encontrado.</p>
+        <p className="text-sm text-navy-light/50 font-body">Formulario no encontrado.</p>
       </div>
     )
   }
@@ -239,22 +239,21 @@ export default function PreviewPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--surface-low)' }}>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-surface-low">
         <div className="w-full max-w-md text-center space-y-5">
           <div className="h-16 w-16 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
             <Check size={28} className="text-teal-deep" />
           </div>
-          <h2 className="text-2xl font-extrabold text-navy" style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
+          <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
             ¡Respuesta enviada!
           </h2>
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             Gracias por completar el formulario. Tu respuesta fue registrada correctamente.
           </p>
           <button
             type="button"
             onClick={() => { setSubmitted(false); setAnswers({}); setCurrentPage(0) }}
-            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Enviar otra respuesta
           </button>
@@ -266,19 +265,18 @@ export default function PreviewPage() {
   const fieldsToRender = pages[currentPage] ?? []
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--surface-low)' }}>
+    <div className="min-h-screen bg-surface-low">
       {/* Preview banner */}
       <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-2 bg-amber-500">
         <div className="flex items-center gap-2">
           <AlertTriangle size={14} className="text-white" />
-          <span className="text-[12px] font-semibold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+          <span className="text-[12px] font-semibold text-white font-display">
             VISTA PREVIA — Este formulario no está guardando respuestas
           </span>
         </div>
         <Link
           href={`/formularios/${id}`}
-          className="flex items-center gap-1 text-[12px] text-white/80 hover:text-white transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="flex items-center gap-1 text-[12px] text-white/80 hover:text-white transition-colors font-body"
         >
           <ChevronLeft size={13} />
           Volver al editor
@@ -287,19 +285,18 @@ export default function PreviewPage() {
 
       <div className="px-4 py-10">
         <div
-          className="w-full max-w-lg mx-auto rounded-2xl overflow-hidden"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          className="w-full max-w-lg mx-auto rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
         >
           {/* Form header */}
-          <div className="px-8 pt-8 pb-6 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+          <div className="px-8 pt-8 pb-6 border-b border-[var(--outline-variant)]">
             <div className="flex justify-center mb-6">
               <Image src="/logo-theos-white.png" alt="Theos Place" width={100} height={28} className="object-contain opacity-60" />
             </div>
-            <h1 className="text-2xl font-extrabold text-navy text-center" style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
+            <h1 className="text-2xl font-extrabold text-navy text-center font-display tracking-[-0.02em]">
               {form.name}
             </h1>
             {form.description && (
-              <p className="text-sm text-navy-light/60 mt-2 text-center leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-navy-light/60 mt-2 text-center leading-relaxed font-body">
                 {form.description}
               </p>
             )}
@@ -308,10 +305,10 @@ export default function PreviewPage() {
             {isMultiStep && (
               <div className="mt-5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-semibold text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                  <span className="text-[12px] font-semibold text-navy-light/60 font-body">
                     Página {currentPage + 1} de {totalPages}
                   </span>
-                  <span className="text-[12px] font-semibold text-coral" style={{ fontFamily: 'var(--font-mono)' }}>
+                  <span className="text-[12px] font-semibold text-coral font-mono">
                     {progress}%
                   </span>
                 </div>
@@ -322,12 +319,12 @@ export default function PreviewPage() {
                   />
                 </div>
                 {currentPageBreak?.label && (
-                  <p className="text-sm font-bold text-navy mt-1" style={{ fontFamily: 'var(--font-display)' }}>
+                  <p className="text-sm font-bold text-navy mt-1 font-display">
                     {currentPageBreak.label}
                   </p>
                 )}
                 {currentPageBreak?.description && (
-                  <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[12px] text-navy-light/50 font-body">
                     {currentPageBreak.description}
                   </p>
                 )}
@@ -347,50 +344,39 @@ export default function PreviewPage() {
                 return (
                   <div
                     key={field.id}
-                    style={{
-                      background: 'rgba(112,189,194,.06)',
-                      border: '1px solid rgba(112,189,194,.3)',
-                      borderRadius: 14,
-                      padding: '16px 18px',
-                    }}
+                    className="bg-[rgba(112,189,194,.06)] border border-[rgba(112,189,194,.3)] rounded-[14px] py-4 px-[18px]"
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <div className="flex items-start justify-between mb-[14px]">
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <div className="flex items-center gap-1.5 mb-1">
                           <User size={14} color="#2a8b8f" />
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#2a8b8f', fontFamily: 'var(--font-display)' }}>
+                          <span className="text-[13px] font-bold text-[#2a8b8f] font-display">
                             Tus datos personales
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--fg-muted, #8c8fb0)', fontFamily: 'var(--font-body)' }}>
+                        <div className="text-[11px] text-[var(--fg-muted,#8c8fb0)] font-body">
                           Tomados de tu perfil — no editables acá
                         </div>
                       </div>
                       <button
                         type="button"
-                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
-                        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         onClick={() => alert('Redirigir al perfil del miembro para editar datos')}
                       >
                         <Pencil size={11} />
                         Editar mis datos
                       </button>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2.5">
                       {selectedFields.map(f => (
                         <div
                           key={f.key}
-                          style={{
-                            background: 'var(--surface-card)',
-                            border: '1px solid var(--outline-variant)',
-                            borderRadius: 8,
-                            padding: '8px 12px',
-                          }}
+                          className="bg-surface-card border border-[var(--outline-variant)] rounded-lg py-2 px-3"
                         >
-                          <div style={{ fontSize: 10, color: 'var(--fg-muted, #8c8fb0)', textTransform: 'uppercase', letterSpacing: '.05em', fontFamily: 'var(--font-display)' }}>
+                          <div className="text-[10px] text-[var(--fg-muted,#8c8fb0)] uppercase tracking-[.05em] font-display">
                             {f.label}
                           </div>
-                          <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, fontFamily: 'var(--font-body)' }}>
+                          <div className="text-[13px] font-semibold mt-[3px] font-body">
                             {getMemberFieldValue(PREVIEW_MEMBER, f.key)}
                           </div>
                         </div>
@@ -409,7 +395,7 @@ export default function PreviewPage() {
                   style={{ animation: 'slideDown 200ms ease-out' }}
                 >
                   {field.type !== 'section' && (
-                    <label className="block" style={{ fontFamily: 'var(--font-body)' }}>
+                    <label className="block font-body">
                       <span className="text-sm font-semibold text-navy">
                         {field.label}
                         {field.is_required && <span className="ml-1 text-coral">*</span>}
@@ -427,7 +413,7 @@ export default function PreviewPage() {
                   />
 
                   {hasError && (
-                    <p className="text-[11px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[11px] text-coral font-body">
                       Este campo es obligatorio.
                     </p>
                   )}
@@ -441,7 +427,7 @@ export default function PreviewPage() {
             {/* Correo obligatorio para invitados (sin sesión) — identifica la respuesta */}
             {isGuest && isLastPage && (
               <div className="mb-5">
-                <label className="block text-sm font-semibold text-navy mb-1.5" style={{ fontFamily: 'var(--font-body)' }}>
+                <label className="block text-sm font-semibold text-navy mb-1.5 font-body">
                   Correo electrónico <span className="text-coral">*</span>
                 </label>
                 <input
@@ -449,8 +435,7 @@ export default function PreviewPage() {
                   value={guestEmail}
                   onChange={e => { setGuestEmail(e.target.value); setSubmitError(null) }}
                   placeholder="Tu correo para identificar tu respuesta"
-                  className="w-full rounded-2xl border px-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                  className="w-full rounded-2xl border px-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 border-[var(--outline-variant)] font-body"
                 />
               </div>
             )}
@@ -458,7 +443,7 @@ export default function PreviewPage() {
             {submitError && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
                 <AlertTriangle size={14} className="text-coral shrink-0" />
-                <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-coral font-body">
                   {submitError}
                 </p>
               </div>
@@ -467,7 +452,7 @@ export default function PreviewPage() {
             {errors.length > 0 && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
                 <AlertTriangle size={14} className="text-coral shrink-0" />
-                <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-coral font-body">
                   Por favor completá los campos obligatorios marcados en rojo.
                 </p>
               </div>
@@ -479,8 +464,7 @@ export default function PreviewPage() {
                   <button
                     type="button"
                     onClick={handlePrev}
-                    className="flex items-center gap-1.5 rounded-2xl border px-5 py-3 text-sm font-semibold text-navy-light hover:bg-surface-low transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                    className="flex items-center gap-1.5 rounded-2xl border px-5 py-3 text-sm font-semibold text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                   >
                     <ChevronLeft size={15} />
                     Anterior
@@ -490,8 +474,7 @@ export default function PreviewPage() {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
                   >
                     Siguiente
                     <ChevronRight size={15} />
@@ -500,8 +483,7 @@ export default function PreviewPage() {
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
                   >
                     Enviar respuesta
                   </button>
@@ -511,14 +493,13 @@ export default function PreviewPage() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="w-full rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="w-full rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
               >
                 Enviar respuesta
               </button>
             )}
 
-            <p className="text-center text-[11px] text-navy-light/30 mt-3" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-center text-[11px] text-navy-light/30 mt-3 font-body">
               Theos Place · {form.name}
             </p>
           </div>

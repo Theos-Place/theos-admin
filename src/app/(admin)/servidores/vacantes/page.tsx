@@ -62,24 +62,21 @@ export default function VacantesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div
-        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4"
-        style={{ boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]"
       >
         <div>
           <h1
-            className="text-2xl text-white"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
           >
             Puestos de Servicio
           </h1>
-          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-white/50 font-body">
             {published} publicadas · {draft} en borrador · {filled} ocupadas
           </p>
         </div>
         <Link
           href="/servidores/vacantes/nueva"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
         >
           <Plus size={14} />
           Nuevo puesto de servicio
@@ -94,20 +91,18 @@ export default function VacantesPage() {
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
               className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150',
+                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
                 statusFilter === f.key
                   ? 'bg-navy text-white border-navy'
                   : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
               )}
-              style={{ fontFamily: 'var(--font-display)' }}
             >
               {f.label}
             </button>
           ))}
         </div>
         <select
-          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
           value={areaFilter}
           onChange={e => setAreaFilter(e.target.value)}
         >
@@ -125,33 +120,28 @@ export default function VacantesPage() {
           return (
             <div
               key={v.id}
-              className="rounded-2xl px-5 py-4 space-y-3"
-              style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+              className="rounded-2xl px-5 py-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1.5">
                   <p
-                    className="text-base font-bold text-navy"
-                    style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.01em' }}
+                    className="text-base font-bold text-navy font-display tracking-[-0.01em]"
                   >
                     {v.title}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
-                      className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/60"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display"
                     >
                       {v.committee_name}
                     </span>
                     <span
-                      className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/50"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/50 font-display"
                     >
                       {v.area}
                     </span>
                     <span
-                      className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', STATUS_COLORS[v.status])}
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', STATUS_COLORS[v.status])}
                     >
                       {STATUS_LABELS[v.status]}
                     </span>
@@ -160,34 +150,33 @@ export default function VacantesPage() {
               </div>
 
               <p
-                className="text-[13px] text-navy-light/70 line-clamp-2"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="text-[13px] text-navy-light/70 line-clamp-2 font-body"
               >
                 {v.description}
               </p>
 
               <div className="flex items-center gap-4 flex-wrap">
-                <span className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-[12px] text-navy-light/50 font-body">
                   📅 {v.schedule}
                 </span>
-                <span className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-[12px] text-navy-light/50 font-body">
                   ⏱ {v.commitment}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+              <div className="flex items-center justify-between pt-1 border-t border-[var(--outline-variant)]">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
                     <Users size={13} className="text-navy-light/40" />
-                    <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                    <span className="text-[12px] text-navy-light/60 font-body">
                       {appCount} aplicacion{appCount !== 1 ? 'es' : ''}
                     </span>
                   </div>
-                  <span className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-mono)' }}>
+                  <span className="text-[12px] text-navy-light/50 font-mono">
                     {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}
                   </span>
                   {v.published_at && (
-                    <span className="text-[11px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>
+                    <span className="text-[11px] text-navy-light/30 font-body">
                       Publicada {new Date(v.published_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })}
                     </span>
                   )}
@@ -195,22 +184,19 @@ export default function VacantesPage() {
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/servidores/vacantes/${v.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                    className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                   >
                     Ver aplicaciones
                     <ChevronRight size={12} />
                   </Link>
                   <button
-                    className="rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                    className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                   >
                     Editar
                   </button>
                   {v.status === 'published' && (
                     <button
-                      className="rounded-full border px-3 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors"
-                      style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                      className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
                     >
                       Cerrar
                     </button>
@@ -223,10 +209,9 @@ export default function VacantesPage() {
 
         {filtered.length === 0 && (
           <div
-            className="rounded-2xl px-5 py-12 text-center"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+            className="rounded-2xl px-5 py-12 text-center bg-surface-card shadow-[var(--shadow-md)]"
           >
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/40 font-body">
               No hay vacantes con ese filtro.
             </p>
           </div>

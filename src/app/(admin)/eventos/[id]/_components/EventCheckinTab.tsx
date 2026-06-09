@@ -32,9 +32,9 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
           {event.sub_events.map(se => {
             const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
             return (
-              <div key={se.id} className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-                <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>{se.name}</p>
-                <p className="mt-1 text-3xl font-extrabold text-navy tabular-nums" style={{ fontFamily: 'var(--font-display)' }}>{seCheckins}</p>
+              <div key={se.id} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
+                <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">{se.name}</p>
+                <p className="mt-1 text-3xl font-extrabold text-navy tabular-nums font-display">{seCheckins}</p>
                 <CapacityBar current={seCheckins} max={se.max_capacity} />
               </div>
             )
@@ -43,18 +43,18 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
       )}
 
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/60 font-body">
           {checkinCount} check-ins registrados
         </p>
       </div>
 
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-          <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Últimos check-ins</p>
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+        <div className="px-4 py-3 border-b border-b-[var(--outline-variant)]">
+          <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">Últimos check-ins</p>
         </div>
         {event.checkins.length === 0 ? (
           <div className="px-4 py-8 text-center">
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Aún no hay check-ins registrados.</p>
+            <p className="text-sm text-navy-light/40 font-body">Aún no hay check-ins registrados.</p>
           </div>
         ) : (
           <div>
@@ -67,8 +67,8 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
                   {getInitials(ci.member_name)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>{ci.member_name}</p>
-                  <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-sm text-navy truncate font-body">{ci.member_name}</p>
+                  <p className="text-[11px] text-navy-light/50 font-body">
                     {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
                     {ci.sub_event_id && ` · ${ci.sub_event_id}`}
                   </p>

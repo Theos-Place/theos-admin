@@ -126,24 +126,21 @@ export default function FormulariosPage() {
     <div className="space-y-6" onClick={() => setMenuOpen(null)}>
       {/* Header */}
       <div
-        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4"
-        style={{ boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]"
       >
         <div>
           <h1
-            className="text-2xl text-white"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
           >
             Formularios
           </h1>
-          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-white/50 font-body">
             Constructor de formularios de inscripción y encuestas
           </p>
         </div>
         <Link
           href="/formularios/nuevo"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
         >
           <Plus size={14} />
           Nuevo formulario
@@ -158,11 +155,11 @@ export default function FormulariosPage() {
           { label: 'Sin respuestas',            value: stats.noResponses,        color: stats.noResponses > 0 ? 'text-coral' : 'text-navy' },
           { label: 'Promedio respuestas',       value: stats.avg,                color: 'text-navy' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">
               {label}
             </p>
-            <p className={cn('mt-2 text-4xl font-extrabold tabular-nums', color)} style={{ fontFamily: 'var(--font-display)' }}>
+            <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>
               {value}
             </p>
           </div>
@@ -177,12 +174,11 @@ export default function FormulariosPage() {
               key={f.key}
               onClick={() => setCategoryFilter(f.key)}
               className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all',
+                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
                 categoryFilter === f.key
                   ? 'bg-navy text-white border-navy'
                   : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
               )}
-              style={{ fontFamily: 'var(--font-display)' }}
             >
               {f.label}
             </button>
@@ -191,8 +187,7 @@ export default function FormulariosPage() {
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
           <input
-            className="rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full sm:w-56"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full sm:w-56 font-body"
             placeholder="Buscar formulario..."
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -201,11 +196,11 @@ export default function FormulariosPage() {
       </div>
 
       {/* List */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {filtered.length === 0 ? (
           <div className="py-16 flex flex-col items-center gap-3">
             <FileText size={28} className="text-navy-light/20" />
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>No hay formularios con ese filtro.</p>
+            <p className="text-sm text-navy-light/40 font-body">No hay formularios con ese filtro.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -215,8 +210,7 @@ export default function FormulariosPage() {
                   {['Formulario', 'Categoría', 'Respuestas', 'Última respuesta', 'Estado', ''].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
                     >
                       {h}
                     </th>
@@ -238,15 +232,15 @@ export default function FormulariosPage() {
                       {/* Nombre */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--surface-low)' }}>
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-surface-low">
                             <CatIcon size={15} className="text-navy-light/50" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                            <p className="text-sm font-medium text-navy font-body">
                               {form.name}
                             </p>
                             {form.entity_name && (
-                              <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                              <span className="text-[11px] text-navy-light/40 font-body">
                                 {form.entity_name}
                               </span>
                             )}
@@ -256,7 +250,7 @@ export default function FormulariosPage() {
 
                       {/* Categoría */}
                       <td className="px-4 py-3">
-                        <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                        <span className="text-[12px] text-navy-light/60 font-body">
                           {CATEGORY_LABELS[form.category] ?? form.category}
                         </span>
                       </td>
@@ -265,7 +259,7 @@ export default function FormulariosPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <MessageSquare size={12} className="text-navy-light/30" />
-                          <span className="text-sm text-navy tabular-nums" style={{ fontFamily: 'var(--font-mono)' }}>
+                          <span className="text-sm text-navy tabular-nums font-mono">
                             {form.responses_count}
                           </span>
                         </div>
@@ -273,7 +267,7 @@ export default function FormulariosPage() {
 
                       {/* Última respuesta */}
                       <td className="px-4 py-3">
-                        <span className="text-[12px] text-navy-light/50 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                        <span className="text-[12px] text-navy-light/50 whitespace-nowrap font-body">
                           {form.last_response_at
                             ? new Date(form.last_response_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
                             : '—'}
@@ -284,10 +278,9 @@ export default function FormulariosPage() {
                       <td className="px-4 py-3">
                         <span
                           className={cn(
-                            'rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
+                            'rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display',
                             form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/50'
                           )}
-                          style={{ fontFamily: 'var(--font-display)' }}
                         >
                           {form.is_active ? 'Activo' : 'Inactivo'}
                         </span>
@@ -298,22 +291,19 @@ export default function FormulariosPage() {
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link
                             href={`/formularios/${form.id}`}
-                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
-                            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                           >
                             Editar
                           </Link>
                           <Link
                             href={`/formularios/${form.id}/respuestas`}
-                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
-                            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                           >
                             Respuestas
                           </Link>
                           <Link
                             href={`/formularios/${form.id}/preview`}
-                            className="rounded-lg p-1.5 text-navy-light border hover:bg-surface-low transition-colors"
-                            style={{ borderColor: 'var(--outline-variant)' }}
+                            className="rounded-lg p-1.5 text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors"
                           >
                             <Eye size={12} />
                           </Link>
@@ -321,21 +311,18 @@ export default function FormulariosPage() {
                             <button
                               type="button"
                               onClick={() => setMenuOpen(menuOpen === form.id ? null : form.id)}
-                              className="rounded-lg p-1.5 text-navy-light border hover:bg-surface-low transition-colors"
-                              style={{ borderColor: 'var(--outline-variant)' }}
+                              className="rounded-lg p-1.5 text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors"
                             >
                               <MoreHorizontal size={12} />
                             </button>
                             {menuOpen === form.id && (
                               <div
-                                className="absolute right-0 top-8 z-20 rounded-xl border py-1 min-w-36 shadow-lg"
-                                style={{ background: 'var(--surface-card)', borderColor: 'var(--outline-variant)' }}
+                                className="absolute right-0 top-8 z-20 rounded-xl border py-1 min-w-36 shadow-lg bg-surface-card border-[var(--outline-variant)]"
                               >
                                 <button
                                   type="button"
                                   onClick={() => handleDuplicate(form.id)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                                  style={{ fontFamily: 'var(--font-body)' }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                                 >
                                   <Copy size={13} className="text-navy-light/50" />
                                   Duplicar
@@ -343,8 +330,7 @@ export default function FormulariosPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleArchive(form.id)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors"
-                                  style={{ fontFamily: 'var(--font-body)' }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
                                 >
                                   <Archive size={13} className="text-coral/60" />
                                   Archivar

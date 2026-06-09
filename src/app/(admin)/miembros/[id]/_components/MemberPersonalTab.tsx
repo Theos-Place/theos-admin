@@ -36,12 +36,11 @@ function InfoRow({
       <div className="mt-0.5 text-navy-light/40 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">
         <p
-          className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-0.5"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-0.5 font-display"
         >
           {label}
         </p>
-        <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy font-body">
           {value || '—'}
         </p>
       </div>
@@ -68,11 +67,10 @@ type Props = {
 export function MemberPersonalTab({ member }: Props) {
   return (
     <div
-      className="rounded-2xl bg-surface-card p-5"
-      style={{ boxShadow: 'var(--shadow-md)' }}
+      className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
     >
       {/* Non-editable: name + cedula */}
-      <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+      <div className="mb-4 pb-4 border-b border-[var(--outline-variant)]">
         <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Nombre completo" value={`${member.first_name} ${member.last_name}`} editable={false} />
         <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Cédula" value={member.cedula ?? 'Sin cédula'} editable={false} />
       </div>
@@ -81,8 +79,7 @@ export function MemberPersonalTab({ member }: Props) {
         {/* Contacto */}
         <div>
           <p
-            className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3 font-display"
           >
             Contacto
           </p>
@@ -104,8 +101,7 @@ export function MemberPersonalTab({ member }: Props) {
         {/* Datos personales */}
         <div>
           <p
-            className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3 font-display"
           >
             Datos personales
           </p>
@@ -133,10 +129,9 @@ export function MemberPersonalTab({ member }: Props) {
 
       {/* Salud */}
       {(member.allergies || member.medicamentos) && (
-        <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+        <div className="mt-4 pt-4 border-t border-[var(--outline-variant)]">
           <p
-            className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-[10px] uppercase tracking-wider text-navy-light/40 mb-3 font-display"
           >
             Salud
           </p>

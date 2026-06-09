@@ -28,12 +28,11 @@ const STATUS_LABELS: Record<VacancyStatus, string> = {
 
 export function VacanciesTab({ committeeId, vacancies }: Props) {
   return (
-    <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="py-4 px-[22px] flex flex-col gap-2.5">
       <div className="flex justify-end">
         <Link
           href={`/servidores/vacantes/nueva?comite=${committeeId}`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
         >
           <Plus size={13} />
           Solicitar nuevo puesto
@@ -42,10 +41,9 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
 
       {vacancies.length === 0 && (
         <div
-          className="rounded-xl px-5 py-10 text-center"
-          style={{ background: 'var(--surface-low)' }}
+          className="rounded-xl px-5 py-10 text-center bg-surface-low"
         >
-          <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/40 font-body">
             No hay puestos de servicio para este comité.
           </p>
         </div>
@@ -55,25 +53,23 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
         <Link
           key={v.id}
           href={`/servidores/vacantes/${v.id}`}
-          className="block rounded-2xl px-5 py-4 hover:shadow-lg transition-all duration-150"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          className="block rounded-2xl px-5 py-4 hover:shadow-lg transition-all duration-150 bg-surface-card shadow-[var(--shadow-md)]"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-sm font-semibold text-navy font-display">
                 {v.title}
               </p>
-              <p className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-navy-light/60 font-body">
                 {v.position}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-mono)' }}>
+              <span className="text-[11px] text-navy-light/50 font-mono">
                 {v.slots_filled}/{v.slots_total} cupos
               </span>
               <span
-                className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', STATUS_COLORS[v.status])}
-                style={{ fontFamily: 'var(--font-display)' }}
+                className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', STATUS_COLORS[v.status])}
               >
                 {STATUS_LABELS[v.status]}
               </span>

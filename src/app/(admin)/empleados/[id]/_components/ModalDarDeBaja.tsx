@@ -30,48 +30,45 @@ export function ModalDarDeBaja({
 }: ModalDarDeBajaProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertOctagon size={18} className="text-coral" />
-            <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Dar de baja</h2>
+            <h2 className="text-base font-bold text-navy font-display">Dar de baja</h2>
           </div>
           <button type="button" onClick={onClose}>
             <X size={18} className="text-navy-light/40" />
           </button>
         </div>
         <div className="rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
-          <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[12px] text-coral font-body">
             Esta acción marca al empleado como inactivo. Escribí el nombre completo para confirmar.
           </p>
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
             Escribí "<span className="font-semibold text-navy">{memberName}</span>" para confirmar
           </label>
           <input
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'font-body')}
             placeholder={memberName}
             value={terminateConfirm}
             onChange={e => onTerminateConfirmChange(e.target.value)}
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Fecha de baja</label>
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Fecha de baja</label>
           <input
             type="date"
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'font-body')}
             value={terminateDate}
             onChange={e => onTerminateDateChange(e.target.value)}
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Motivo</label>
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Motivo</label>
           <textarea
-            className={cn(inputCls, 'resize-none')}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'resize-none font-body')}
             rows={2}
             placeholder="Motivo de la baja..."
             value={terminateReason}
@@ -82,8 +79,7 @@ export function ModalDarDeBaja({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </button>
@@ -92,10 +88,9 @@ export function ModalDarDeBaja({
             onClick={onConfirm}
             disabled={terminateConfirm !== memberName}
             className={cn(
-              'rounded-full px-4 py-2 text-sm text-white transition-colors',
+              'rounded-full px-4 py-2 text-sm text-white transition-colors font-body',
               terminateConfirm === memberName ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             Confirmar baja
           </button>

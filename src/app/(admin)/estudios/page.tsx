@@ -48,12 +48,11 @@ export default function EstudiosPage() {
       {/* Header */}
       <div>
         <h1
-          className="text-2xl text-navy"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
         >
           Estudios Bíblicos
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           {activeGroups.length} grupos activos en este período
         </p>
       </div>
@@ -66,19 +65,17 @@ export default function EstudiosPage() {
           { label: 'Lista de espera N1',    value: n1WaitList.length,     icon: Clock,        color: 'text-amber-600' },
           { label: 'Por cerrar (30 días)',  value: closingSoon.length,    icon: AlertTriangle, color: 'text-coral' },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-start justify-between">
               <p
-                className="text-[10px] tracking-widest uppercase text-navy-light/40"
-                style={{ fontFamily: 'var(--font-display)' }}
+                className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
               >
                 {label}
               </p>
               <Icon size={16} className={color} />
             </div>
             <p
-              className={`mt-2 text-3xl font-bold ${color}`}
-              style={{ fontFamily: 'var(--font-display)' }}
+              className={`mt-2 text-3xl font-bold font-display ${color}`}
             >
               {value}
             </p>
@@ -89,18 +86,16 @@ export default function EstudiosPage() {
       {/* Main grid */}
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* Left: Active groups table */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
             <h2
-              className="text-sm font-semibold text-navy"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-sm font-semibold text-navy font-display"
             >
               Grupos activos
             </h2>
             <Link
               href="/estudios/grupos"
-              className="text-[12px] text-coral hover:text-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
             >
               Ver todos →
             </Link>
@@ -112,8 +107,7 @@ export default function EstudiosPage() {
                   {['Estudio', 'Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', ''].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
                     >
                       {h}
                     </th>
@@ -124,22 +118,21 @@ export default function EstudiosPage() {
                 {activeGroups.slice(0, 10).map(group => (
                   <tr
                     key={group.id}
-                    className="hover:bg-surface-low transition-colors"
-                    style={{ borderBottom: '1px solid var(--outline-variant)' }}
+                    className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
                   >
                     <td className="px-4 py-3">
                       <StudyTypeBadge code={group.study_type_id} size="sm" />
                     </td>
-                    <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
                       {group.leader_name ?? <span className="text-amber-600 text-[11px]">Sin asignar</span>}
                     </td>
-                    <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
                       {sedeLabel(group.zone)}
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
                       {formatSchedule(group.schedule_days, group.schedule_time)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-sm text-navy font-body">
                       {group.participants.filter(p => p.status !== 'withdrawn').length}/{group.max_capacity}
                     </td>
                     <td className="px-4 py-3">
@@ -148,8 +141,7 @@ export default function EstudiosPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/estudios/grupos/${group.id}`}
-                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low border transition-colors"
-                        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low border transition-colors border-[var(--outline-variant)] font-body"
                       >
                         Ver
                       </Link>
@@ -164,10 +156,9 @@ export default function EstudiosPage() {
         {/* Right column */}
         <div className="space-y-4">
           {/* Quick access */}
-          <div className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display"
             >
               Accesos rápidos
             </h3>
@@ -180,7 +171,7 @@ export default function EstudiosPage() {
                 >
                   <Icon size={16} className="text-navy-light/50 group-hover:text-coral transition-colors" />
                   <div>
-                    <p className="text-sm text-navy font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-sm text-navy font-medium font-body">
                       {label}
                     </p>
                     <p className="text-[11px] text-navy-light/50">{desc}</p>
@@ -191,10 +182,9 @@ export default function EstudiosPage() {
           </div>
 
           {/* Alerts */}
-          <div className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display"
             >
               Alertas
             </h3>
@@ -202,7 +192,7 @@ export default function EstudiosPage() {
               {pendingLeaderGroups.length > 0 && (
                 <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
                   <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                  <p className="text-[12px] text-amber-700" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[12px] text-amber-700 font-body">
                     <strong>{pendingLeaderGroups.length}</strong> grupo{pendingLeaderGroups.length > 1 ? 's' : ''} sin dirigente asignado
                   </p>
                 </div>
@@ -210,7 +200,7 @@ export default function EstudiosPage() {
               {closingSoon.length > 0 && (
                 <div className="flex items-start gap-2 rounded-xl bg-coral/5 px-3 py-2.5">
                   <Clock size={14} className="text-coral mt-0.5 shrink-0" />
-                  <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[12px] text-coral font-body">
                     <strong>{closingSoon.length}</strong> grupo{closingSoon.length > 1 ? 's' : ''} cierran en los próximos 30 días
                   </p>
                 </div>
@@ -218,13 +208,13 @@ export default function EstudiosPage() {
               {pendingRelocations.length > 0 && (
                 <div className="flex items-start gap-2 rounded-xl bg-navy/5 px-3 py-2.5">
                   <ListChecks size={14} className="text-navy mt-0.5 shrink-0" />
-                  <p className="text-[12px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[12px] text-navy font-body">
                     <strong>{pendingRelocations.length}</strong> solicitud{pendingRelocations.length > 1 ? 'es' : ''} de reubicación pendiente{pendingRelocations.length > 1 ? 's' : ''}
                   </p>
                 </div>
               )}
               {pendingLeaderGroups.length === 0 && closingSoon.length === 0 && pendingRelocations.length === 0 && (
-                <p className="text-[12px] text-navy-light/40 text-center py-2" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-navy-light/40 text-center py-2 font-body">
                   Sin alertas activas
                 </p>
               )}

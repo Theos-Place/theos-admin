@@ -14,10 +14,10 @@ function Toggle({ checked, onChange, label, sublabel }: {
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{label}</p>
-        {sublabel && <p className="text-[11px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>{sublabel}</p>}
+        <p className="text-sm text-navy font-body">{label}</p>
+        {sublabel && <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">{sublabel}</p>}
       </div>
-      <label className="toggle shrink-0" style={{ cursor: 'pointer' }}>
+      <label className="toggle shrink-0 cursor-pointer">
         <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
         <div className="toggle-track" />
       </label>
@@ -46,8 +46,8 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
     return (
       <div className="page">
         <div className="ph"><div className="ptitle">Editar estudio</div></div>
-        <div className="card" style={{ padding: 22 }}>
-          <p className="text-sm text-navy-light/50 text-center py-8" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="card p-[22px]">
+          <p className="text-sm text-navy-light/50 text-center py-8 font-body">
             Estudio no encontrado.
           </p>
         </div>
@@ -126,7 +126,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
 
       {/* Header */}
       <div className="ph">
-        <button className="btn btn-ghost btn-sm" onClick={() => router.back()} style={{ marginBottom: 10 }}>
+        <button className="btn btn-ghost btn-sm mb-[10px]" onClick={() => router.back()}>
           ← Volver
         </button>
         <div className="ph-row">
@@ -148,7 +148,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
       {/* Información básica */}
       <div className="card">
         <div className="card-hd"><div className="card-title">Información básica</div></div>
-        <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="py-[18px] px-[22px] flex flex-col gap-[14px]">
 
           <div className="form-group">
             <label className="form-label" htmlFor="edit-study-name">Nombre del estudio *</label>
@@ -180,7 +180,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
               ))}
             </select>
             {qualifiedLeaders.length === 0 && (
-              <span style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 3, fontFamily: 'var(--font-body)' }}>
+              <span className="text-[11px] text-[var(--fg-muted)] mt-[3px] font-body">
                 No hay dirigentes calificados para este estudio
               </span>
             )}
@@ -201,11 +201,11 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
       {/* Configuración */}
       <div className="card">
         <div className="card-hd"><div className="card-title">Configuración</div></div>
-        <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="py-[18px] px-[22px] flex flex-col gap-4">
 
           <Toggle checked={form.requires_payment} onChange={v => set('requires_payment', v)} label="¿Requiere pago?" />
           {form.requires_payment && (
-            <div className="form-group" style={{ paddingLeft: 16, maxWidth: 220 }}>
+            <div className="form-group pl-4 max-w-[220px]">
               <label className="form-label" htmlFor="edit-study-cost">Monto (₡)</label>
               <input id="edit-study-cost" type="number" className="form-input" value={form.cost} onChange={e => set('cost', Number(e.target.value))} />
             </div>

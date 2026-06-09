@@ -86,14 +86,13 @@ export function EventHeader({
       {/* Back */}
       <Link
         href="/eventos"
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Eventos
       </Link>
 
       {/* Header card */}
-      <div className="rounded-2xl bg-navy px-6 py-5" style={{ boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl bg-navy px-6 py-5 shadow-[var(--shadow-md)]">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-3 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -101,12 +100,11 @@ export function EventHeader({
               <EventStatusBadge status={cancelled ? 'cancelled' : event.status} size="sm" />
             </div>
             <h1
-              className="text-2xl text-white font-bold leading-tight"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+              className="text-2xl text-white font-bold leading-tight font-display font-extrabold tracking-[-0.02em]"
             >
               {event.name}
             </h1>
-            <div className="flex flex-wrap gap-4 text-sm text-white/60" style={{ fontFamily: 'var(--font-body)' }}>
+            <div className="flex flex-wrap gap-4 text-sm text-white/60 font-body">
               <span className="flex items-center gap-1.5">
                 <Calendar size={13} className="text-white/40" />
                 {startDate.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -130,19 +128,17 @@ export function EventHeader({
             <div className="relative">
               <button
                 onClick={onCalendarPopoverToggle}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
               >
                 <CalendarPlus size={13} />
                 Agregar a mi calendario
               </button>
               {showCalendarPopover && (
                 <div
-                  className="absolute right-0 top-full mt-2 rounded-2xl p-4 w-72 z-30 space-y-3"
-                  style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--outline-variant)' }}
+                  className="absolute right-0 top-full mt-2 rounded-2xl p-4 w-72 z-30 space-y-3 bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                    <p className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
                       Exportar evento
                     </p>
                     <button onClick={onCalendarPopoverClose} className="text-navy-light/40 hover:text-navy transition-colors">
@@ -160,8 +156,8 @@ export function EventHeader({
                       <ExternalLink size={14} className="text-navy" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>Google Calendar</p>
-                      <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Abre en una nueva pestaña</p>
+                      <p className="text-sm font-medium text-navy font-body">Google Calendar</p>
+                      <p className="text-[11px] text-navy-light/50 font-body">Abre en una nueva pestaña</p>
                     </div>
                   </a>
                   <div>
@@ -173,8 +169,8 @@ export function EventHeader({
                         <Download size={14} className="text-navy" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>Apple / Outlook (.ics)</p>
-                        <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Descargar archivo de calendario</p>
+                        <p className="text-sm font-medium text-navy font-body">Apple / Outlook (.ics)</p>
+                        <p className="text-[11px] text-navy-light/50 font-body">Descargar archivo de calendario</p>
                       </div>
                     </button>
                     {event.is_recurring && (
@@ -185,7 +181,7 @@ export function EventHeader({
                           checked={icsWithRRule}
                           onChange={e => onIcsWithRRuleChange(e.target.checked)}
                         />
-                        <span className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                        <span className="text-[11px] text-navy-light/60 font-body">
                           Incluir toda la serie de recurrencia
                         </span>
                       </label>
@@ -196,16 +192,14 @@ export function EventHeader({
             </div>
             <Link
               href={`/eventos/${id}/editar`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
             >
               <Edit2 size={13} />
               Editar
             </Link>
             <Link
               href={`/eventos/${id}/checkin`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
             >
               <QrCode size={13} />
               Check-in →
@@ -219,13 +213,11 @@ export function EventHeader({
               </button>
               {showMenu && (
                 <div
-                  className="absolute right-0 top-full mt-1 rounded-xl overflow-hidden w-44 z-20"
-                  style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+                  className="absolute right-0 top-full mt-1 rounded-xl overflow-hidden w-44 z-20 bg-surface-card shadow-[var(--shadow-lg)]"
                 >
                   <button
                     onClick={onCancelClick}
-                    className="w-full text-left px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body"
                   >
                     Cancelar evento
                   </button>

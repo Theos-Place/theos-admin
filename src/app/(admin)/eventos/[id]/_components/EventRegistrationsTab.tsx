@@ -76,7 +76,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="rounded-2xl p-4 flex flex-col items-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-4 flex flex-col items-center bg-surface-card shadow-[var(--shadow-md)]">
           <svg viewBox="0 0 100 100" className="w-20 h-20">
             <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" stroke="var(--surface-low)" />
             <circle
@@ -90,8 +90,8 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
               {event.max_capacity > 0 ? Math.round((registrationCount / event.max_capacity) * 100) : 0}%
             </text>
           </svg>
-          <p className="text-[11px] text-navy-light/50 mt-1" style={{ fontFamily: 'var(--font-body)' }}>Ocupación</p>
-          <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-[11px] text-navy-light/50 mt-1 font-body">Ocupación</p>
+          <p className="text-sm font-medium text-navy font-display">
             {registrationCount}/{event.max_capacity || '∞'}
           </p>
         </div>
@@ -100,52 +100,50 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           { label: 'Pendientes', value: event.registrations.filter(r => r.payment_status === 'pending').length, color: 'text-amber-600' },
           { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/60' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>{label}</p>
-            <p className={cn('mt-2 text-4xl font-extrabold tabular-nums', color)} style={{ fontFamily: 'var(--font-display)' }}>{value}</p>
+          <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">{label}</p>
+            <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>{value}</p>
           </div>
         ))}
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/60 font-body">
           {registrationCount} inscritos
         </p>
         <div className="flex gap-2">
           <button
             onClick={() => setShowInscribir(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             <UserPlus size={13} /> Inscribir
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
+          <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body">
             <Download size={13} /> Exportar
           </button>
           <button
             onClick={onSendMessage}
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
           >
             <Send size={13} /> Enviar recordatorio
           </button>
         </div>
       </div>
 
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr>
                 {['Nombre', 'Fecha inscripción', 'Pago', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50 font-display">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {event.registrations.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/40 font-body">
                     Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
                   </td>
                 </tr>
@@ -157,10 +155,10 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                       <div className={cn('h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(reg.member_name))}>
                         {getInitials(reg.member_name)}
                       </div>
-                      <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{reg.member_name}</span>
+                      <span className="text-sm text-navy font-body">{reg.member_name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
                     {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                   </td>
                   <td className="px-4 py-3">
@@ -168,8 +166,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                       value={reg.payment_status}
                       disabled={busyMember === reg.member_id}
                       onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}
-                      className="rounded-md border px-2 py-1 text-[12px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30"
-                      style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                      className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[12px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body"
                     >
                       {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
                     </select>
@@ -178,8 +175,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     <button
                       onClick={() => removeRegistration(reg.member_id)}
                       disabled={busyMember === reg.member_id}
-                      className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 hover:text-coral transition-colors"
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 hover:text-coral transition-colors font-body"
                     >
                       <Trash2 size={13} /> Quitar
                     </button>
@@ -252,12 +248,11 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-3xl bg-white p-6 space-y-4"
-        style={{ boxShadow: 'var(--shadow-lg)' }}
+        className="w-full max-w-md rounded-3xl bg-white p-6 space-y-4 shadow-[var(--shadow-lg)]"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-extrabold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Inscribir miembro</h3>
+          <h3 className="text-lg font-extrabold text-navy font-display">Inscribir miembro</h3>
           <button onClick={onClose} className="text-navy-light/50 hover:text-navy"><X size={18} /></button>
         </div>
 
@@ -268,15 +263,14 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Buscar por nombre o cédula…"
-            className="w-full rounded-2xl border pl-9 pr-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-2xl border border-[var(--outline-variant)] pl-9 pr-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 font-body"
           />
         </div>
 
         <div className="max-h-72 overflow-y-auto space-y-1">
-          {loading && <p className="text-[12px] text-navy-light/40 py-2 text-center" style={{ fontFamily: 'var(--font-body)' }}>Buscando…</p>}
+          {loading && <p className="text-[12px] text-navy-light/40 py-2 text-center font-body">Buscando…</p>}
           {!loading && query.trim().length >= 2 && results.length === 0 && (
-            <p className="text-[12px] text-navy-light/40 py-2 text-center" style={{ fontFamily: 'var(--font-body)' }}>Sin resultados.</p>
+            <p className="text-[12px] text-navy-light/40 py-2 text-center font-body">Sin resultados.</p>
           )}
           {results.map(m => {
             const name = `${m.first_name} ${m.last_name}`
@@ -287,17 +281,16 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
                   {getInitials(name)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>{name}</p>
+                  <p className="text-sm text-navy truncate font-body">{name}</p>
                   {m.cedula && <p className="text-[11px] text-navy-light/40">{m.cedula}</p>}
                 </div>
                 {already ? (
-                  <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Ya inscrito</span>
+                  <span className="text-[11px] text-navy-light/40 font-body">Ya inscrito</span>
                 ) : (
                   <button
                     onClick={() => inscribir(m.id)}
                     disabled={adding === m.id}
-                    className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
                   >
                     {adding === m.id ? '…' : 'Inscribir'}
                   </button>

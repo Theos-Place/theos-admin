@@ -116,7 +116,7 @@ export default function RespuestasPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando…</p>
+        <p className="text-sm text-navy-light/50 font-body">Cargando…</p>
       </div>
     )
   }
@@ -124,7 +124,7 @@ export default function RespuestasPage() {
   if (!form) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Formulario no encontrado.</p>
+        <p className="text-sm text-navy-light/50 font-body">Formulario no encontrado.</p>
       </div>
     )
   }
@@ -136,32 +136,29 @@ export default function RespuestasPage() {
         <div>
           <Link
             href="/formularios"
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2 font-body"
           >
             <ChevronLeft size={15} />
             Formularios
           </Link>
-          <h1 className="text-2xl text-navy" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+          <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
             {form.name}
           </h1>
-          <p className="text-sm text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/50 mt-0.5 font-body">
             {responses.length} respuesta{responses.length !== 1 ? 's' : ''} · {dataFields.length} campos
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Link
             href={`/formularios/${id}`}
-            className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             Editar formulario
           </Link>
           <button
             type="button"
             onClick={() => exportToCSV(form, responses)}
-            className="flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
           >
             <Download size={13} />
             Exportar CSV
@@ -170,14 +167,13 @@ export default function RespuestasPage() {
       </div>
 
       {responses.length === 0 ? (
-        <div className="rounded-2xl py-16 flex flex-col items-center gap-3" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="rounded-2xl py-16 flex flex-col items-center gap-3 bg-surface-card shadow-[var(--shadow-md)]">
+          <p className="text-sm text-navy-light/40 font-body">
             Este formulario todavía no tiene respuestas.
           </p>
           <Link
             href={`/formularios/${id}/preview`}
-            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             Ver vista previa
           </Link>
@@ -190,8 +186,7 @@ export default function RespuestasPage() {
               {summaryCharts.map(chart => (
                 <div
                   key={chart.field.id}
-                  className="rounded-2xl p-5"
-                  style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+                  className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
                 >
                   <ResponseSummaryChart
                     title={chart.field.label}
@@ -205,9 +200,9 @@ export default function RespuestasPage() {
           )}
 
           {/* Individual responses table */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--outline-variant)' }}>
-              <p className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="px-5 py-4 border-b flex items-center justify-between border-[var(--outline-variant)]">
+              <p className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
                 Respuestas individuales
               </p>
             </div>
@@ -218,8 +213,7 @@ export default function RespuestasPage() {
                     {['Miembro', 'Fecha de envío', ''].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/40"
-                        style={{ fontFamily: 'var(--font-display)' }}
+                        className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/40 font-display"
                       >
                         {h}
                       </th>
@@ -238,22 +232,21 @@ export default function RespuestasPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                            <span className="text-[10px] font-bold text-white font-display">
                               {resp.member_name.split(' ').map(w => w[0]).slice(0, 2).join('')}
                             </span>
                           </div>
-                          <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{resp.member_name}</p>
+                          <p className="text-sm text-navy font-body">{resp.member_name}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
                         {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </td>
                       <td className="px-4 py-3">
                         <button
                           type="button"
                           onClick={() => setDetailResponse(resp)}
-                          className="flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
-                          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                          className="flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         >
                           Ver detalle
                           <ChevronRight size={12} />
@@ -272,15 +265,14 @@ export default function RespuestasPage() {
       {detailResponse && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-navy-ink/40 backdrop-blur-sm">
           <div
-            className="h-full w-full max-w-md overflow-y-auto"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+            className="h-full w-full max-w-md overflow-y-auto bg-surface-card shadow-[var(--shadow-md)]"
           >
-            <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)', background: 'var(--surface-card)' }}>
+            <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)] bg-surface-card">
               <div>
-                <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-sm font-bold text-navy font-display">
                   {detailResponse.member_name}
                 </p>
-                <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[11px] text-navy-light/40 font-body">
                   {new Date(detailResponse.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
@@ -300,10 +292,10 @@ export default function RespuestasPage() {
 
                 return (
                   <div key={f.id} className="space-y-1">
-                    <p className="text-[11px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                    <p className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
                       {f.label}
                     </p>
-                    <p className="text-sm text-navy leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-sm text-navy leading-relaxed font-body">
                       {displayAns}
                     </p>
                   </div>

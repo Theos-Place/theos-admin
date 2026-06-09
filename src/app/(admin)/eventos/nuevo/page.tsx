@@ -152,26 +152,23 @@ export default function NuevoEventoPage() {
         <div className="ph">
           <div className="ptitle">Crear evento</div>
         </div>
-        <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+        <div className="card p-10 text-center">
           <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">✓</span>
           </div>
           <p
-            className="text-xl font-bold text-navy mb-2"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-xl font-bold text-navy mb-2 font-display"
           >
             Evento publicado
           </p>
           <p
-            className="text-sm text-navy-light/60 mb-6"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="text-sm text-navy-light/60 mb-6 font-body"
           >
             El evento quedó disponible para inscripciones.
           </p>
           <Link
             href="/eventos"
-            className="btn btn-primary"
-            style={{ display: 'inline-flex', margin: '0 auto' }}
+            className="btn btn-primary inline-flex mx-auto"
           >
             Ver todos los eventos
           </Link>
@@ -221,20 +218,13 @@ export default function NuevoEventoPage() {
 
       {/* ── Grid: stepper sidebar + contenido ── */}
       <div
-        className="sidebar-content-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'clamp(180px, 20%, 240px) 1fr',
-          gap: 24,
-          width: '100%',
-          alignItems: 'start',
-        }}
+        className="sidebar-content-grid grid grid-cols-[clamp(180px,20%,240px)_1fr] gap-6 w-full items-start"
       >
         {/* Sidebar de pasos */}
         <StepSidebar step={step} onStepClick={setStep} />
 
         {/* Contenido del paso activo */}
-        <div style={{ width: '100%', minWidth: 0 }}>
+        <div className="w-full min-w-0">
 
           {step === 1 && (
             <Step1Informacion
@@ -326,7 +316,7 @@ export default function NuevoEventoPage() {
 
           {/* Navegación inferior */}
           {step > 1 && (
-            <div style={{ marginTop: 12 }}>
+            <div className="mt-3">
               <button
                 type="button"
                 onClick={() => setStep(s => s - 1)}

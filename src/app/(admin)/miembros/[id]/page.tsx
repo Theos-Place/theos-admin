@@ -150,14 +150,14 @@ export default function MiembroDetailPage() {
   if (isNotFound) notFound()
   if (error) {
     return (
-      <div className="p-8 text-center text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="p-8 text-center text-coral font-body">
         Error cargando miembro: {error}
       </div>
     )
   }
   if (loading || !member) {
     return (
-      <div className="p-8 text-center text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="p-8 text-center text-navy-light/50 font-body">
         Cargando…
       </div>
     )
@@ -179,8 +179,7 @@ export default function MiembroDetailPage() {
 
       {/* ── Tab bar ── */}
       <div
-        className="sticky top-0 z-10 rounded-2xl bg-surface-card overflow-x-auto"
-        style={{ boxShadow: 'var(--shadow-md)' }}
+        className="sticky top-0 z-10 rounded-2xl bg-surface-card overflow-x-auto shadow-[var(--shadow-md)]"
       >
         <div className="flex min-w-max">
           {TABS.map(tab => (
@@ -188,12 +187,11 @@ export default function MiembroDetailPage() {
               key={tab.id}
               onClick={() => changeTab(tab.id)}
               className={cn(
-                'px-5 py-3.5 text-sm whitespace-nowrap transition-all relative',
+                'px-5 py-3.5 text-sm whitespace-nowrap transition-all relative font-body',
                 activeTab === tab.id
                   ? 'text-navy font-medium'
                   : 'text-navy-light/50 hover:text-navy'
               )}
-              style={{ fontFamily: 'var(--font-body)' }}
             >
               {tab.label}
               {activeTab === tab.id && (

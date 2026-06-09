@@ -73,17 +73,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full" style={{ maxWidth: 400 }}>
+    <div className="w-full max-w-[400px]">
 
       {/* Header */}
       <div className="mb-8">
         <h1
-          className="text-3xl text-navy mb-2"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.025em' }}
+          className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]"
         >
           Bienvenido de vuelta
         </h1>
-        <p className="text-sm text-navy-light/50 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 leading-relaxed font-body">
           Ingresá tu correo y contraseña para<br />
           acceder al sistema administrativo.
         </p>
@@ -92,8 +91,7 @@ export default function LoginPage() {
       {/* Auth error banner */}
       {authError && (
         <div
-          className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep"
-          style={{ background: 'rgba(239,85,84,0.07)', border: '1px solid rgba(239,85,84,0.2)', fontFamily: 'var(--font-body)' }}
+          className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body"
         >
           <AlertCircle size={15} className="shrink-0 mt-0.5" />
           {authError}
@@ -104,7 +102,7 @@ export default function LoginPage() {
 
         {/* Correo */}
         <div>
-          <label htmlFor="login-identifier" className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>
+          <label htmlFor="login-identifier" className={`${LABEL} font-body`}>
             Correo electrónico o cédula
           </label>
           <input
@@ -115,11 +113,10 @@ export default function LoginPage() {
             value={email}
             onChange={e => { setEmail(e.target.value); if (emailErr) setEmailErr('') }}
             placeholder="ejemplo@correo.com o 1-0384-0921"
-            className={`${INPUT} ${emailErr ? INPUT_ERROR : INPUT_NORMAL}`}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={`${INPUT} font-body ${emailErr ? INPUT_ERROR : INPUT_NORMAL}`}
           />
           {emailErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral font-body">
               <AlertCircle size={12} className="shrink-0" />
               {emailErr}
             </p>
@@ -128,7 +125,7 @@ export default function LoginPage() {
 
         {/* Contraseña */}
         <div>
-          <label htmlFor="login-password" className={LABEL} style={{ fontFamily: 'var(--font-body)' }}>
+          <label htmlFor="login-password" className={`${LABEL} font-body`}>
             Contraseña
           </label>
           <div className="relative">
@@ -139,8 +136,7 @@ export default function LoginPage() {
               value={password}
               onChange={e => { setPassword(e.target.value); if (passErr) setPassErr('') }}
               placeholder="••••••••"
-              className={`${INPUT} pr-11 ${passErr ? INPUT_ERROR : INPUT_NORMAL}`}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={`${INPUT} pr-11 font-body ${passErr ? INPUT_ERROR : INPUT_NORMAL}`}
             />
             <button
               type="button"
@@ -153,7 +149,7 @@ export default function LoginPage() {
             </button>
           </div>
           {passErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral font-body">
               <AlertCircle size={12} className="shrink-0" />
               {passErr}
             </p>
@@ -186,7 +182,7 @@ export default function LoginPage() {
               )}
             </div>
           </div>
-          <span className="text-[13px] text-navy-light/60 select-none" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="text-[13px] text-navy-light/60 select-none font-body">
             Recordarme
           </span>
         </label>
@@ -195,10 +191,9 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all"
+          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body"
           style={{
             background: loading ? '#c0453a' : '#EF5554',
-            fontFamily: 'var(--font-body)',
             boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
@@ -213,7 +208,7 @@ export default function LoginPage() {
       </form>
 
       {/* Recuperar */}
-      <p className="mt-5 text-center text-[13px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+      <p className="mt-5 text-center text-[13px] text-navy-light/50 font-body">
         ¿Olvidaste tu contraseña?{' '}
         <Link href="/recuperar" className="text-navy-light hover:text-navy font-medium transition-colors">
           Recuperar acceso →

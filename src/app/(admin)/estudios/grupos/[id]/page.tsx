@@ -22,7 +22,7 @@ function AttendanceBar({ pct }: { pct: number }) {
       <div className="h-1.5 w-20 rounded-full bg-surface-low overflow-hidden">
         <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{pct}%</span>
+      <span className="text-[11px] text-navy-light/60 font-body">{pct}%</span>
     </div>
   )
 }
@@ -71,17 +71,15 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+        className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
       >
-        <h3 className="font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+        <h3 className="font-semibold text-navy font-display">
           Añadir miembro
         </h3>
         <input
           autoFocus
-          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
           placeholder="Buscar por nombre o cédula..."
-          style={{ fontFamily: 'var(--font-body)' }}
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
@@ -99,7 +97,7 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
                   {getInitials(`${m.first_name} ${m.last_name}`)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-sm text-navy font-body">
                     {m.first_name} {m.last_name}
                   </p>
                   <p className="text-[11px] text-navy-light/50">{m.cedula ?? 'Sin cédula'}</p>
@@ -112,8 +110,7 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
         </div>
         <button
           onClick={onClose}
-          className="w-full rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          className="w-full rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
         >
           Cancelar
         </button>
@@ -132,11 +129,10 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
         <div
-          className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+          className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3 bg-surface-card shadow-[var(--shadow-lg)]"
         >
           <Send size={32} className="text-teal-deep mx-auto" />
-          <p className="font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Mensaje enviado</p>
+          <p className="font-semibold text-navy font-display">Mensaje enviado</p>
           <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors">
             Cerrar
           </button>
@@ -149,10 +145,9 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+        className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
       >
-        <h3 className="font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Enviar mensaje al grupo</h3>
+        <h3 className="font-semibold text-navy font-display">Enviar mensaje al grupo</h3>
         <div className="flex gap-2">
           {['whatsapp', 'email'].map(c => (
             <button
@@ -160,17 +155,16 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
               onClick={() => setChannel(c as 'whatsapp' | 'email')}
               className={cn(
                 'flex-1 rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all',
-                channel === c ? 'bg-navy text-white border-navy' : 'text-navy-light hover:bg-surface-low'
+                channel === c ? 'bg-navy text-white border-navy' : 'text-navy-light hover:bg-surface-low',
+                'border-[var(--outline-variant)] font-display',
               )}
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
             >
               {c === 'whatsapp' ? 'WhatsApp' : 'Correo'}
             </button>
           ))}
         </div>
         <textarea
-          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
           rows={4}
           placeholder="Escribe tu mensaje..."
           value={msg}
@@ -186,8 +180,7 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
           </button>
           <button
             onClick={onClose}
-            className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             Cancelar
           </button>
@@ -224,7 +217,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
         <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
           <ChevronLeft size={16} /> Grupos
         </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Grupo no encontrado.</p>
+        <p className="text-navy-light/60 font-body">Grupo no encontrado.</p>
       </div>
     )
   }
@@ -254,21 +247,20 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {/* Back */}
       <Link
         href="/estudios/grupos"
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Grupos
       </Link>
 
       {/* Header card */}
-      <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <StudyTypeBadge code={group.study_type_id} name={studyType?.name} size="md" />
               <GroupStatusBadge status={group.status} />
             </div>
-            <div className="flex flex-wrap gap-4 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+            <div className="flex flex-wrap gap-4 text-sm text-navy-light/60 font-body">
               <span>Dirigente: <strong className="text-navy">{group.leader_name ?? 'Sin asignar'}</strong></span>
               <span>Zona: <strong className="text-navy">{sedeLabel(group.zone)}</strong></span>
               <span>Horario: <strong className="text-navy">{group.schedule_days.join('/')} {group.schedule_time}</strong></span>
@@ -281,16 +273,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             {group.status === 'in_progress' && (
               <Link
                 href={`/estudios/grupos/${id}/cierre`}
-                className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
               >
                 Cerrar grupo
               </Link>
             )}
             <Link
               href={`/estudios/grupos/${id}/editar`}
-              className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors flex items-center"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors flex items-center border-[var(--outline-variant)] font-body"
             >
               <Edit2 size={14} />
             </Link>
@@ -299,7 +289,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="flex gap-1 border-b border-[var(--outline-variant)]">
         {tabs.map(t => (
           <button
             key={t}
@@ -308,9 +298,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               'px-4 py-2.5 text-sm transition-all border-b-2 -mb-px',
               activeTab === t
                 ? 'border-coral text-coral font-medium'
-                : 'border-transparent text-navy-light/60 hover:text-navy'
+                : 'border-transparent text-navy-light/60 hover:text-navy',
+              'font-body',
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             {tabLabels[t]}
           </button>
@@ -321,7 +311,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {activeTab === 'participantes' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/60 font-body">
               {enrolled.length} inscritos de {group.max_capacity} lugares
             </p>
             <button
@@ -332,15 +322,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
 
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
                   {['Nombre', 'Estado', 'Asistencia', studyType?.requires_grade ? 'Nota' : '', 'Acciones'].filter(Boolean).map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
                     >
                       {h}
                     </th>
@@ -351,15 +340,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 {group.participants.map(p => (
                   <tr
                     key={p.member_id}
-                    className="hover:bg-surface-low transition-colors"
-                    style={{ borderBottom: '1px solid var(--outline-variant)' }}
+                    className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy">
                           {getInitials(p.member_name)}
                         </div>
-                        <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                        <span className="text-sm text-navy font-body">
                           {p.member_name}
                         </span>
                       </div>
@@ -387,7 +375,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       <AttendanceBar pct={p.attendance_pct} />
                     </td>
                     {studyType?.requires_grade && (
-                      <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
                         {p.grade ?? '—'}
                       </td>
                     )}
@@ -395,16 +383,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="flex items-center gap-1">
                         {group.status !== 'finished' && (
                           <button
-                            className="rounded-lg px-2 py-1 text-[10px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors"
-                            style={{ fontFamily: 'var(--font-body)' }}
+                            className="rounded-lg px-2 py-1 text-[10px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
                           >
                             Desinscribir
                           </button>
                         )}
                         <Link
                           href={`/miembros/${p.member_id}`}
-                          className="rounded-lg px-2 py-1 text-[10px] text-navy-light border hover:bg-surface-low transition-colors"
-                          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                          className="rounded-lg px-2 py-1 text-[10px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         >
                           Perfil
                         </Link>
@@ -417,10 +403,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* WhatsApp section */}
-          <div className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display"
             >
               Grupo de WhatsApp
             </h3>
@@ -428,24 +413,23 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <div className="flex items-center gap-3">
                 <MessageCircle size={16} className="text-teal-deep" />
                 <a href={waUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-teal-deep hover:underline" style={{ fontFamily: 'var(--font-body)' }}>
+                  className="text-sm text-teal-deep hover:underline font-body">
                   Ver grupo de WhatsApp
                 </a>
               </div>
             ) : group.status === 'finished' ? (
-              <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-navy-light/40 font-body">
                 Grupo finalizado — sin grupo de WhatsApp.
               </p>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-sm text-navy-light/60 font-body">
                   Crea el grupo en WhatsApp y pega el link de invitación aquí.
                 </p>
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                    className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                     placeholder="https://chat.whatsapp.com/..."
-                    style={{ fontFamily: 'var(--font-body)' }}
                     value={waInput}
                     onChange={e => setWaInput(e.target.value)}
                   />
@@ -474,10 +458,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </Link>
           </div>
 
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             {sessions.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-sm text-navy-light/40 font-body">
                   No tenemos asistencia registrada para este grupo.
                 </p>
               </div>
@@ -488,8 +472,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     {['Sesión', 'Fecha', 'Asistencia'].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                        style={{ fontFamily: 'var(--font-display)' }}
+                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
                       >
                         {h}
                       </th>
@@ -500,16 +483,15 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   {sessions.map((s, i) => (
                     <tr
                       key={s.id}
-                      className="hover:bg-surface-low transition-colors"
-                      style={{ borderBottom: '1px solid var(--outline-variant)' }}
+                      className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
                     >
-                      <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-navy font-body">
                         Sesión {i + 1}
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
                         {new Date(s.date).toLocaleDateString('es-CR')}
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-navy font-body">
                         {s.present}/{s.total} presentes
                       </td>
                     </tr>
@@ -533,9 +515,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
 
-          <div className="rounded-2xl p-10 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-10 text-center bg-surface-card shadow-[var(--shadow-md)]">
             <MessageCircle size={28} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.25} />
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/40 font-body">
               No hay comunicaciones registradas para este grupo.
             </p>
           </div>
@@ -544,7 +526,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
 
       {/* Tab: Información */}
       {activeTab === 'información' && (
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <div className="grid grid-cols-2 gap-4">
             {[
               { label: 'Tipo de estudio', value: `${group.study_type_id} — ${studyType?.name}` },
@@ -561,12 +543,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             ].map(({ label, value }) => (
               <div key={label} className="space-y-0.5">
                 <p
-                  className="text-[10px] tracking-widest uppercase text-navy-light/40"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
                 >
                   {label}
                 </p>
-                <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-sm text-navy font-body">
                   {value}
                 </p>
               </div>
@@ -574,10 +555,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {group.status !== 'finished' && (
-            <div className="flex gap-2 pt-2 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="flex gap-2 pt-2 border-t border-[var(--outline-variant)]">
               <button
-                className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
               >
                 Cambiar dirigente
               </button>

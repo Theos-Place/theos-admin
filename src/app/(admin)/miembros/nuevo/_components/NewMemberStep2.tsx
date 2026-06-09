@@ -25,12 +25,12 @@ export function NewMemberStep2({
 }: Props) {
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+      <h2 className="text-sm font-medium text-navy font-display font-extrabold">
         Núcleo familiar
       </h2>
 
       <div className="space-y-2">
-        <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy font-body">
           ¿Esta persona viene con familia?
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -40,10 +40,10 @@ export function NewMemberStep2({
               type="button"
               onClick={() => onComesWithFamilyChange(val)}
               className={cn(
-                'rounded-xl border px-4 py-3 text-sm transition-all text-left',
+                'rounded-xl border px-4 py-3 text-sm transition-all text-left font-body',
                 comesWithFamily === val ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:bg-surface-low',
               )}
-              style={{ borderColor: comesWithFamily === val ? undefined : 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              style={{ borderColor: comesWithFamily === val ? undefined : 'var(--outline-variant)' }}
             >
               {label}
             </button>
@@ -57,26 +57,25 @@ export function NewMemberStep2({
             <div key={idx} className="flex items-center gap-3 rounded-xl bg-surface-low px-4 py-3">
               <div
                 className={cn(
-                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white text-xs',
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white text-xs font-display font-extrabold',
                   item.kind === 'linked' ? 'bg-teal-deep' : 'bg-navy',
                 )}
-                style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
               >
                 {draftInitials(item)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>{draftName(item)}</p>
+                <p className="text-sm text-navy truncate font-body">{draftName(item)}</p>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>
+                  <span className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep font-body">
                     {item.relation}
                   </span>
                   {item.kind === 'linked' ? (
-                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[10px] text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>⇄ Perfil existente</span>
+                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[10px] text-teal-deep font-body">⇄ Perfil existente</span>
                   ) : (
-                    <span className="rounded-full bg-surface-card px-2 py-0.5 text-[10px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Perfil nuevo</span>
+                    <span className="rounded-full bg-surface-card px-2 py-0.5 text-[10px] text-navy-light/50 font-body">Perfil nuevo</span>
                   )}
                   {draftIsMinor(item) && (
-                    <span className="rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Menor</span>
+                    <span className="rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white font-display">Menor</span>
                   )}
                 </div>
               </div>
@@ -94,8 +93,7 @@ export function NewMemberStep2({
           <button
             type="button"
             onClick={onOpenModal}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed py-3 text-sm text-navy-light/50 hover:border-coral/40 hover:text-coral transition-all"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--outline-variant)] py-3 text-sm text-navy-light/50 hover:border-coral/40 hover:text-coral transition-all font-body"
           >
             <UserPlus size={15} /> Agregar integrante
           </button>

@@ -52,37 +52,33 @@ export function MemberSummaryTab({
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-3">
         <div
-          className="rounded-2xl bg-surface-card p-4"
-          style={{ boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-2 mb-2">
             <MapPin size={14} className="text-coral" strokeWidth={1.75} />
             <span
-              className="text-[10px] uppercase tracking-wider text-navy-light/50"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] uppercase tracking-wider text-navy-light/50 font-display"
             >
               Sede
             </span>
           </div>
-          <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm font-medium text-navy font-body">
             {sedeLabel(member.sede)}
           </p>
         </div>
 
         <div
-          className="rounded-2xl bg-surface-card p-4"
-          style={{ boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-2 mb-2">
             <BookOpen size={14} className="text-teal-deep" strokeWidth={1.75} />
             <span
-              className="text-[10px] uppercase tracking-wider text-navy-light/50"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] uppercase tracking-wider text-navy-light/50 font-display"
             >
               Nivel actual
             </span>
           </div>
-          <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm font-medium text-navy font-body">
             {currentStudyEntry
               ? currentStudyEntry.name
               : lastStudyEntry
@@ -92,19 +88,17 @@ export function MemberSummaryTab({
         </div>
 
         <div
-          className="rounded-2xl bg-surface-card p-4"
-          style={{ boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-2 mb-2">
             <Users size={14} className="text-navy" strokeWidth={1.75} />
             <span
-              className="text-[10px] uppercase tracking-wider text-navy-light/50"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] uppercase tracking-wider text-navy-light/50 font-display"
             >
               Servicio
             </span>
           </div>
-          <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm font-medium text-navy font-body">
             {activeService ? activeService.committee : 'Ninguno'}
           </p>
         </div>
@@ -113,27 +107,24 @@ export function MemberSummaryTab({
       {/* Study progress */}
       {currentStudyEntry && (
         <div
-          className="rounded-2xl bg-surface-card p-5"
-          style={{ boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center justify-between mb-3">
             <div>
               <p
-                className="text-sm font-medium text-navy"
-                style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+                className="text-sm font-medium text-navy font-display font-extrabold"
               >
                 {currentStudyEntry.name}
               </p>
-              <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-xs text-navy-light/50 mt-0.5 font-body">
                 {currentWeek > 0 ? `Semana ${currentWeek} de ${currentStudyEntry.weeks}` : 'En curso'}
               </p>
             </div>
             <span
               className={cn(
-                'rounded-full px-2.5 py-0.5 text-xs',
+                'rounded-full px-2.5 py-0.5 text-xs font-body',
                 studyStageColor(currentStudyEntry.stage)
               )}
-              style={{ fontFamily: 'var(--font-body)' }}
             >
               {STUDY_STAGES[currentStudyEntry.stage as keyof typeof STUDY_STAGES].label}
             </span>
@@ -152,12 +143,10 @@ export function MemberSummaryTab({
       {/* Completed studies */}
       {member.completed_studies.length > 0 && (
         <div
-          className="rounded-2xl bg-surface-card p-5"
-          style={{ boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
         >
           <h3
-            className="text-sm font-medium text-navy mb-3"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+            className="text-sm font-medium text-navy mb-3 font-display font-extrabold"
           >
             Estudios completados
           </h3>
@@ -168,14 +157,13 @@ export function MemberSummaryTab({
                 <div key={code} className="flex items-center gap-3">
                   <span
                     className={cn(
-                      'rounded-lg px-2 py-0.5 text-[10px] font-medium',
+                      'rounded-lg px-2 py-0.5 text-[10px] font-medium font-mono',
                       entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50'
                     )}
-                    style={{ fontFamily: 'var(--font-mono)' }}
                   >
                     {code}
                   </span>
-                  <span className="flex-1 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                  <span className="flex-1 text-sm text-navy-light/70 font-body">
                     {entry ? entry.name : code}
                   </span>
                   <Check size={13} className="text-teal-deep" strokeWidth={2.5} />
@@ -189,12 +177,10 @@ export function MemberSummaryTab({
       {/* Recent attendance */}
       {member.attendance_history.length > 0 && (
         <div
-          className="rounded-2xl bg-surface-card p-5"
-          style={{ boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
         >
           <h3
-            className="text-sm font-medium text-navy mb-3"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+            className="text-sm font-medium text-navy mb-3 font-display font-extrabold"
           >
             Asistencia reciente
           </h3>
@@ -202,29 +188,27 @@ export function MemberSummaryTab({
             {member.attendance_history.slice(0, 5).map((ev, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-sm text-navy truncate font-body">
                     {ev.name}
                   </p>
-                  <p className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-xs text-navy-light/50 font-body">
                     {formatDate(ev.date)}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span
                     className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px]',
+                      'rounded-full px-2 py-0.5 text-[10px] font-body',
                       TYPE_BADGE[ev.type] ?? 'bg-surface-low text-navy-light/50'
                     )}
-                    style={{ fontFamily: 'var(--font-body)' }}
                   >
                     {ev.type}
                   </span>
                   <span
                     className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px]',
+                      'rounded-full px-2 py-0.5 text-[10px] font-body',
                       ATTENDANCE_BADGE[ev.attendance_type] ?? 'bg-surface-low text-navy-light/50'
                     )}
-                    style={{ fontFamily: 'var(--font-body)' }}
                   >
                     {ev.attendance_type === 'servidor' ? 'Servidor' : 'Participante'}
                   </span>

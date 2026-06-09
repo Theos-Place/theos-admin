@@ -79,13 +79,12 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
         <div
-          className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+          className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3 bg-surface-card shadow-[var(--shadow-lg)]"
         >
-          <p className="text-lg font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-lg font-bold text-navy font-display">
             Dirigente registrado
           </p>
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             {chosenMember?.first_name} fue agregado como dirigente con {selectedStudies.length} estudios cualificados.
           </p>
           <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors">
@@ -100,11 +99,10 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative rounded-2xl p-5 max-w-md w-full mx-4 space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+        className="relative rounded-2xl p-5 max-w-md w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
       >
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <h3 className="font-semibold text-navy font-display">
             {modalStep === 'search' ? 'Nuevo dirigente' : 'Cualificaciones'}
           </h3>
           <button onClick={onClose} className="text-navy-light/50 hover:text-navy transition-colors">
@@ -118,9 +116,8 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
               <Search size={14} className="text-navy-light/40" />
               <input
                 autoFocus
-                className="flex-1 bg-transparent text-sm text-navy outline-none"
+                className="flex-1 bg-transparent text-sm text-navy outline-none font-body"
                 placeholder="Buscar miembro..."
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
               />
@@ -139,7 +136,7 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
                     {getInitials(`${m.first_name} ${m.last_name}`)}
                   </div>
                   <div>
-                    <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-sm text-navy font-body">
                       {m.first_name} {m.last_name}
                     </p>
                     <p className="text-[11px] text-navy-light/50">{m.cedula ?? 'Sin cédula'}</p>
@@ -148,7 +145,7 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
               ))}
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+              <button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
                 Cancelar
               </button>
               <button
@@ -164,13 +161,13 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
 
         {modalStep === 'studies' && (
           <>
-            <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/60 font-body">
               Selecciona los estudios que <strong className="text-navy">{chosenMember?.first_name}</strong> puede impartir:
             </p>
             <div className="space-y-3">
               {['niveles', 'inicial', 'intermedia'].map(stage => (
                 <div key={stage}>
-                  <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-1.5" style={{ fontFamily: 'var(--font-display)' }}>
+                  <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-1.5 font-display">
                     {stage === 'niveles' ? 'Niveles' : stage === 'inicial' ? 'Etapa Inicial' : 'Etapa Intermedia'}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -182,9 +179,9 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
                           'rounded-lg px-2.5 py-1 text-[11px] font-medium border transition-all',
                           selectedStudies.includes(s.code)
                             ? 'bg-navy text-white border-navy'
-                            : 'text-navy-light hover:bg-surface-low'
+                            : 'text-navy-light hover:bg-surface-low',
+                          'border-[var(--outline-variant)] font-display',
                         )}
-                        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
                       >
                         {s.code}
                       </button>
@@ -193,9 +190,9 @@ function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated
                 </div>
               ))}
             </div>
-            {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
             <div className="flex justify-between gap-2">
-              <button onClick={() => setModalStep('search')} className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)' }}>
+              <button onClick={() => setModalStep('search')} className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
                 ← Atrás
               </button>
               <button
@@ -252,32 +249,29 @@ export default function DirigentesPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
           >
             Dirigentes
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-navy-light/60 font-body">
             {MOCK_LEADERS.length} dirigentes registrados
           </p>
         </div>
         <button
           onClick={() => setShowNewLeader(true)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
         >
           <Plus size={14} /> Nuevo dirigente
         </button>
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-3" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="flex flex-wrap gap-3 font-body">
         {/* Search input */}
         <div className="relative flex items-center">
           <Search size={13} className="absolute left-3 text-navy-light/40 pointer-events-none" />
           <input
-            className={`${inputCls} pl-8 pr-8`}
-            style={{ minWidth: 220 }}
+            className={`${inputCls} pl-8 pr-8 min-w-[220px]`}
             placeholder="Buscar por nombre o cédula..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -329,7 +323,7 @@ export default function DirigentesPage() {
 
       {/* Result count */}
       {search.trim() && (
-        <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-[12px] text-navy-light/50 font-body">
           {filteredLeaders.length} resultado{filteredLeaders.length !== 1 ? 's' : ''} para &ldquo;{search}&rdquo;
         </p>
       )}
@@ -342,11 +336,11 @@ export default function DirigentesPage() {
           </Link>
         ))}
         {filteredLeaders.length === 0 && (
-          <div className="col-span-full rounded-2xl p-12 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="col-span-full rounded-2xl p-12 text-center bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-sm font-semibold text-navy font-display">
               No se encontraron dirigentes
             </p>
-            <p className="mt-1 text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="mt-1 text-sm text-navy-light/40 font-body">
               {search.trim()
                 ? `No hay resultados para "${search}"`
                 : 'No hay dirigentes con esos filtros.'
@@ -355,8 +349,7 @@ export default function DirigentesPage() {
             {search.trim() && (
               <button
                 onClick={() => setSearch('')}
-                className="mt-3 rounded-full border px-3 py-1.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="mt-3 rounded-full border px-3 py-1.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
               >
                 Limpiar búsqueda
               </button>

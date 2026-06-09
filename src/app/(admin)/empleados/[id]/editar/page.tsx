@@ -69,7 +69,7 @@ export default function EditarEmpleadoPage() {
   if (loading && !employee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando empleado...</p>
+        <p className="text-sm text-navy-light/50 font-body">Cargando empleado...</p>
       </div>
     )
   }
@@ -77,7 +77,7 @@ export default function EditarEmpleadoPage() {
   if (!employee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           Empleado no encontrado.
         </p>
       </div>
@@ -91,13 +91,12 @@ export default function EditarEmpleadoPage() {
           <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
             <Check size={24} className="text-teal-deep" />
           </div>
-          <p className="text-xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-xl font-bold text-navy font-display">
             Cambios guardados
           </p>
           <Link
             href={`/empleados/${id}`}
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Ver expediente
           </Link>
@@ -110,28 +109,25 @@ export default function EditarEmpleadoPage() {
     <div className="space-y-4">
       {/* Top bar */}
       <div
-        className="sticky top-0 z-10 rounded-2xl px-5 py-3 flex items-center justify-between gap-3"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="sticky top-0 z-10 rounded-2xl px-5 py-3 flex items-center justify-between gap-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-center gap-3">
           <Link
             href={`/empleados/${id}`}
-            className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
           >
             <ChevronLeft size={16} />
             {employee.member_name}
           </Link>
           <span className="text-navy-light/20">|</span>
-          <span className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <span className="text-sm font-semibold text-navy font-display">
             Editar
           </span>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/empleados/${id}`}
-            className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </Link>
@@ -139,8 +135,7 @@ export default function EditarEmpleadoPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
@@ -148,28 +143,27 @@ export default function EditarEmpleadoPage() {
       </div>
 
       {error && (
-        <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>
+        <p className="text-sm text-coral font-body">{error}</p>
       )}
 
-      <div className="rounded-2xl p-5 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
         {/* Info no editable */}
-        <div className="rounded-xl p-4 space-y-1" style={{ background: 'var(--surface-low)' }}>
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Persona</p>
-          <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>{employee.member_name}</p>
-          <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="rounded-xl p-4 space-y-1 bg-surface-low">
+          <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">Persona</p>
+          <p className="text-sm font-semibold text-navy font-display">{employee.member_name}</p>
+          <p className="text-[12px] text-navy-light/50 font-body">
             Inicio: {new Date(employee.start_date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
 
         {/* Email */}
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
             Correo de contacto
           </label>
           <input
             type="email"
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'font-body')}
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
@@ -177,12 +171,11 @@ export default function EditarEmpleadoPage() {
 
         {/* Puesto */}
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
             Puesto
           </label>
           <select
-            className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'font-body')}
             value={positionId}
             onChange={e => setPositionId(e.target.value)}
           >
@@ -196,7 +189,7 @@ export default function EditarEmpleadoPage() {
 
         {/* Tipo de contrato */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
             Tipo de contrato
           </label>
           <div className="flex gap-4">
@@ -209,7 +202,7 @@ export default function EditarEmpleadoPage() {
                   checked={contractType === val}
                   onChange={() => setContractType(val)}
                 />
-                <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{label}</span>
+                <span className="text-sm text-navy font-body">{label}</span>
               </label>
             ))}
           </div>
@@ -218,15 +211,14 @@ export default function EditarEmpleadoPage() {
         {/* Días de vacaciones (solo planilla) */}
         {contractType === 'planilla' && (
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
               Días de vacaciones por año
             </label>
             <input
               type="number"
               min="0"
               max="30"
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={cn(inputCls, 'font-body')}
               value={vacationDays}
               onChange={e => setVacationDays(e.target.value)}
             />
@@ -236,16 +228,15 @@ export default function EditarEmpleadoPage() {
         {/* Notas */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
               Notas internas
             </label>
-            <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-mono)' }}>
+            <span className="text-[10px] text-navy-light/40 font-mono">
               {notes.length}/500
             </span>
           </div>
           <textarea
-            className={cn(inputCls, 'resize-none')}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'resize-none font-body')}
             rows={4}
             maxLength={500}
             placeholder="Observaciones, acuerdos, notas de evaluación..."

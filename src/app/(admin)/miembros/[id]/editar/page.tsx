@@ -75,8 +75,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         <div className="ph">
           <div className="ptitle">Editar perfil</div>
         </div>
-        <div className="card" style={{ padding: 22 }}>
-          <p className="text-sm text-navy-light/50 text-center py-8" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="card p-[22px]">
+          <p className="text-sm text-navy-light/50 text-center py-8 font-body">
             {loading ? 'Cargando…' : 'Miembro no encontrado.'}
           </p>
         </div>
@@ -133,9 +133,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       {/* ── Header ── */}
       <div className="ph">
         <button
-          className="btn btn-ghost btn-sm"
+          className="btn btn-ghost btn-sm mb-[10px]"
           onClick={() => router.back()}
-          style={{ marginBottom: 10 }}
         >
           ← Volver
         </button>
@@ -148,14 +147,13 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             {/* Toggle estado — solo admins */}
             {isAdmin && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--fg-muted)', fontFamily: 'var(--font-body)' }}>
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-[12px] text-[var(--fg-muted)] font-body">
                   Estado:
                 </span>
                 <label
-                  className="toggle"
+                  className="toggle cursor-pointer"
                   title={isActive ? 'Clic para desactivar este miembro' : 'Clic para activar este miembro'}
-                  style={{ cursor: 'pointer' }}
                 >
                   <input
                     type="checkbox"
@@ -170,12 +168,10 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   />
                   <div className="toggle-track" />
                 </label>
-                <span style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-body)',
-                  color: isActive ? 'var(--success)' : 'var(--fg-muted)',
-                }}>
+                <span
+                  className="text-[12px] font-semibold font-body"
+                  style={{ color: isActive ? 'var(--success)' : 'var(--fg-muted)' }}
+                >
                   {isActive ? 'Activo' : 'Inactivo'}
                 </span>
               </div>
@@ -190,7 +186,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
               disabled={saving}
             >
               {saving
-                ? <><Loader2 size={14} className="animate-spin" style={{ display: 'inline', marginRight: 6 }} />Guardando...</>
+                ? <><Loader2 size={14} className="animate-spin inline mr-[6px]" />Guardando...</>
                 : 'Guardar cambios'
               }
             </button>
@@ -199,14 +195,14 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       </div>
 
       {/* ── Secciones ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%' }}>
+      <div className="flex flex-col gap-5 w-full">
 
         {/* ── Sección 1: Datos personales ── */}
         <div className="card">
           <div className="card-hd">
             <div className="card-title">Datos personales</div>
           </div>
-          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="py-[18px] px-[22px] flex flex-col gap-[14px]">
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label" htmlFor="edit-first-name">Nombre *</label>
@@ -317,7 +313,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div className="card-hd">
             <div className="card-title">Dirección</div>
           </div>
-          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="py-[18px] px-[22px] flex flex-col gap-[14px]">
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Provincia</label>
@@ -370,10 +366,10 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
             {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
             <div className="form-group">
               <label className="form-label">Sede</label>
-              <p className="text-sm text-navy-light/70 py-2" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-navy-light/70 py-2 font-body">
                 {sede ? sedeLabel(sede) : 'Sin sede asignada'}
               </p>
-              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[11px] text-navy-light/40 font-body">
                 Se asigna automáticamente según la charla a la que más asiste.
               </p>
             </div>
@@ -385,7 +381,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div className="card-hd">
             <div className="card-title">Trabajo y ocupación</div>
           </div>
-          <div style={{ padding: '18px 22px' }}>
+          <div className="py-[18px] px-[22px]">
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label" htmlFor="edit-profession">Profesión / Ocupación</label>
@@ -416,18 +412,17 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div className="card-hd">
             <div className="card-title">Contacto de emergencia y salud</div>
           </div>
-          <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="py-[18px] px-[22px] flex flex-col gap-5">
 
             {/* Contacto de emergencia */}
-            <div style={{ background: 'rgba(112, 189, 194, 0.12)', border: '1px solid rgba(112, 189, 194, 0.30)', borderRadius: 12, padding: 16 }}>
-              <p className="form-label" style={{ marginBottom: 12 }}>Contacto de emergencia</p>
+            <div className="bg-[rgba(112,189,194,0.12)] border border-[rgba(112,189,194,0.30)] rounded-xl p-4">
+              <p className="form-label mb-3">Contacto de emergencia</p>
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label" htmlFor="edit-emergency-name">Nombre</label>
                   <input
                     id="edit-emergency-name"
-                    className="form-input"
-                    style={{ background: '#fff' }}
+                    className="form-input bg-white"
                     value={emergencyContactName}
                     onChange={e => setEmergencyContactName(e.target.value)}
                     placeholder="Nombre completo..."
@@ -474,8 +469,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       {/* ── Toast ── */}
       {toast && (
         <div
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)', fontFamily: 'var(--font-body)' }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body"
         >
           <Check size={15} className="text-[#3DB97A] shrink-0" />
           Perfil actualizado exitosamente
@@ -484,39 +478,27 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
       {/* ── Modal desactivar ── */}
       {deactivateModalOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 20,
-        }}>
-          <div style={{
-            background: 'var(--surface-card)', borderRadius: 20,
-            padding: 28, maxWidth: 440, width: '100%',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          }}>
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.45)] z-[1000] flex items-center justify-center p-5">
+          <div className="bg-surface-card rounded-[20px] p-7 max-w-[440px] w-full shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
             {/* Ícono de advertencia */}
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: '50%',
-                background: 'rgba(239,85,84,.1)', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
-              }}>
+            <div className="text-center mb-5">
+              <div className="w-[52px] h-[52px] rounded-full bg-[rgba(239,85,84,.1)] flex items-center justify-center mx-auto mb-3">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-coral)" strokeWidth="2">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                   <line x1="12" y1="9" x2="12" y2="13"/>
                   <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--brand-navy)', fontFamily: 'var(--font-display)' }}>
+              <h3 className="text-[16px] font-bold text-navy-light font-display">
                 ¿Desactivar a {member.first_name} {member.last_name}?
               </h3>
-              <p style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 6, fontFamily: 'var(--font-body)' }}>
+              <p className="text-[13px] text-[var(--fg-muted)] mt-[6px] font-body">
                 El perfil quedará inaccesible y la persona será removida de todos sus roles activos. El historial se conserva intacto.
               </p>
             </div>
 
             {/* Motivo obligatorio */}
-            <div className="form-group" style={{ marginBottom: 20 }}>
+            <div className="form-group mb-5">
               <label className="form-label">Motivo de desactivación *</label>
               <select
                 className="form-select"
@@ -532,7 +514,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Botones */}
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <div className="flex gap-2 justify-end">
               <button
                 className="btn btn-ghost"
                 onClick={() => {

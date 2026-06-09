@@ -113,24 +113,23 @@ export default function ReportesPage() {
 
         {/* Header */}
         <div
-          className="rounded-2xl px-6 py-5 flex items-center gap-3"
-          style={{ background: '#161440', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl px-6 py-5 flex items-center gap-3 bg-navy shadow-[var(--shadow-md)]"
         >
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.10)' }}>
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(255,255,255,0.10)]">
             <BarChart2 size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-xl text-white" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+            <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
               Reportes financieros
             </h1>
-            <p className="text-[12px] text-white/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[12px] text-white/50 mt-0.5 font-body">
               Análisis y exportación de datos financieros
             </p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-2xl" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="flex gap-1 p-1 rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
           {([
             ['donations', 'Donaciones'],
             ['payments', 'Pagos por entidad'],
@@ -139,11 +138,10 @@ export default function ReportesPage() {
             <button
               key={v}
               onClick={() => setActiveTab(v)}
-              className="flex-1 rounded-xl py-2.5 px-4 text-sm font-medium transition-all"
+              className="flex-1 rounded-xl py-2.5 px-4 text-sm font-medium transition-all font-body"
               style={{
                 background: activeTab === v ? '#161440' : 'transparent',
                 color: activeTab === v ? 'white' : 'rgba(22,20,64,0.55)',
-                fontFamily: 'var(--font-body)',
               }}
             >
               {l}
@@ -156,41 +154,39 @@ export default function ReportesPage() {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-[12px]" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>Desde</span>
+                <span className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">Desde</span>
                 <input type="date" value={donDateFrom} onChange={e => setDonDateFrom(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm outline-none" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }} />
+                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[12px]" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>Hasta</span>
+                <span className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">Hasta</span>
                 <input type="date" value={donDateTo} onChange={e => setDonDateTo(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm outline-none" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }} />
+                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <button onClick={exportDonationsCSV}
-                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium"
-                style={{ background: '#161440', color: 'white', fontFamily: 'var(--font-body)' }}>
+                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
                 <Download size={14} />
                 Exportar a Excel
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                    <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Estado'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests"
-                          style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredDonations.slice(0, 15).map((d, i) => (
-                      <tr key={d.id} className="border-b hover:bg-gray-50 transition-colors"
-                        style={{ borderColor: 'var(--outline-variant)', background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
-                        <td className="px-5 py-3.5"><p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{d.member_name}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px]" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>{d.member_cedula}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px]" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>{new Date(d.donation_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</p></td>
+                      <tr key={d.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
+                        style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                        <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{d.member_name}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{d.member_cedula}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{new Date(d.donation_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5">
                           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
@@ -212,13 +208,11 @@ export default function ReportesPage() {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
               <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)}
-                className="rounded-xl border px-4 py-2.5 text-sm outline-none"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }}>
+                className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
                 {ENTITIES.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
               <button onClick={exportPaymentsCSV}
-                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium"
-                style={{ background: '#161440', color: 'white', fontFamily: 'var(--font-body)' }}>
+                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
                 <Download size={14} />
                 Exportar a Excel
               </button>
@@ -231,36 +225,35 @@ export default function ReportesPage() {
                 { label: 'Pendiente', value: pendingPayments.reduce((s, p) => s + p.amount, 0), color: '#E9B949' },
                 { label: 'Devuelto', value: refundedPayments.reduce((s, p) => s + p.amount, 0), color: '#519DA2' },
               ].map(({ label, value, color }) => (
-                <div key={label} className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-                  <p className="text-[10px] uppercase tracking-widests mb-1.5" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>{label}</p>
-                  <p className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-display)', color }}>
+                <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
+                  <p className="text-[10px] uppercase tracking-widests mb-1.5 font-display text-[rgba(22,20,64,0.40)]">{label}</p>
+                  <p className="text-lg font-extrabold font-display" style={{ color }}>
                     <AmountDisplay amount={value} defaultHidden={false} />
                   </p>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                    <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Entidad', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests"
-                          style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredPayments.slice(0, 15).map((p, i) => (
-                      <tr key={p.id} className="border-b hover:bg-gray-50 transition-colors"
-                        style={{ borderColor: 'var(--outline-variant)', background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
-                        <td className="px-5 py-3.5"><p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{p.member_name}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{p.entity_name}</p></td>
+                      <tr key={p.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
+                        style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                        <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} defaultHidden={false} /></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>{p.method}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>{p.status}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>{p.created_at.split('T')[0]}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{p.method}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{p.status}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">{p.created_at.split('T')[0]}</p></td>
                       </tr>
                     ))}
                   </tbody>
@@ -275,15 +268,14 @@ export default function ReportesPage() {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-[12px]" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>Año</span>
+                <span className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">Año</span>
                 <select value={yearFilter} onChange={e => setYearFilter(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm outline-none" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }}>
+                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
                   {['2024', '2025', '2026'].map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
               <button onClick={exportTransparencyCSV}
-                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium"
-                style={{ background: '#161440', color: 'white', fontFamily: 'var(--font-body)' }}>
+                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
                 <Download size={14} />
                 Exportar informe completo
               </button>
@@ -291,15 +283,15 @@ export default function ReportesPage() {
 
             {/* Top months */}
             {topMonths.length > 0 && (
-              <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-                <p className="text-[11px] uppercase tracking-widests mb-4" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+              <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+                <p className="text-[11px] uppercase tracking-widests mb-4 font-display text-[rgba(22,20,64,0.40)]">
                   Top meses {yearFilter}
                 </p>
                 <div className="flex gap-4">
                   {topMonths.map((m, i) => (
                     <div key={m.name} className="flex-1 rounded-xl p-3.5" style={{ background: i === 0 ? 'rgba(22,20,64,0.06)' : 'rgba(22,20,64,0.03)' }}>
-                      <p className="text-[12px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{m.name}</p>
-                      <p className="text-[11px] mt-1" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[12px] font-medium font-body text-navy">{m.name}</p>
+                      <p className="text-[11px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
                         ₡{m.total.toLocaleString('es-CR')}
                       </p>
                     </div>
@@ -309,44 +301,43 @@ export default function ReportesPage() {
             )}
 
             {/* Monthly chart table */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                    <tr className="border-b border-[var(--outline-variant)]">
                       {['Mes', 'Total donaciones', 'Donadores únicos', ''].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests"
-                          style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {monthlyData.map((m, i) => (
-                      <tr key={m.name} className="border-b hover:bg-gray-50 transition-colors"
-                        style={{ borderColor: 'var(--outline-variant)', background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                      <tr key={m.name} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
+                        style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
                         <td className="px-5 py-3.5">
-                          <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{m.name}</p>
+                          <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: m.total > 0 ? '#161440' : 'rgba(22,20,64,0.30)' }}>
+                          <p className="text-[13px] font-body" style={{ color: m.total > 0 ? '#161440' : 'rgba(22,20,64,0.30)' }}>
                             {m.total > 0 ? `₡${m.total.toLocaleString('es-CR')}` : '—'}
                           </p>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.60)' }}>
+                          <p className="text-[13px] font-body text-[rgba(22,20,64,0.60)]">
                             {m.uniqueDonors > 0 ? m.uniqueDonors : '—'}
                           </p>
                         </td>
-                        <td className="px-5 py-3.5" style={{ width: '30%' }}>
+                        <td className="px-5 py-3.5 w-[30%]">
                           {m.total > 0 && (
                             <div className="flex items-center gap-2">
-                              <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(22,20,64,0.06)' }}>
+                              <div className="flex-1 h-2 rounded-full bg-[rgba(22,20,64,0.06)]">
                                 <div
-                                  className="h-2 rounded-full transition-all"
-                                  style={{ width: `${(m.total / maxMonthTotal) * 100}%`, background: '#519DA2' }}
+                                  className="h-2 rounded-full transition-all bg-teal-deep"
+                                  style={{ width: `${(m.total / maxMonthTotal) * 100}%` }}
                                 />
                               </div>
-                              <span className="text-[10px] w-6 text-right" style={{ color: 'rgba(22,20,64,0.40)', fontFamily: 'var(--font-body)' }}>
+                              <span className="text-[10px] w-6 text-right text-[rgba(22,20,64,0.40)] font-body">
                                 {Math.round((m.total / maxMonthTotal) * 100)}%
                               </span>
                             </div>
@@ -362,14 +353,14 @@ export default function ReportesPage() {
         )}
 
         {/* QuickBooks section */}
-        <div className="rounded-2xl p-6" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(22,20,64,0.06)' }}>
-              <Package size={18} style={{ color: '#161440' }} />
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(22,20,64,0.06)]">
+              <Package size={18} className="text-navy" />
             </div>
             <div>
-              <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>Exportar para QuickBooks</p>
-              <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm font-bold font-display text-navy">Exportar para QuickBooks</p>
+              <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
                 Formatos compatibles para importar en QuickBooks
               </p>
             </div>
@@ -377,24 +368,22 @@ export default function ReportesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={exportQuickBooksDonations}
-              className="flex items-center gap-3 rounded-xl p-4 transition-all hover:opacity-80 border"
-              style={{ border: '1px solid var(--outline-variant)', background: 'var(--surface-low)' }}
+              className="flex items-center gap-3 rounded-xl p-4 transition-all hover:opacity-80 border border-[var(--outline-variant)] bg-surface-low"
             >
-              <Download size={16} style={{ color: '#519DA2', flexShrink: 0 }} />
+              <Download size={16} className="text-teal-deep shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>Exportar donaciones</p>
-                <p className="text-[11px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>Formato CSV compatible QuickBooks</p>
+                <p className="text-sm font-medium font-body text-navy">Exportar donaciones</p>
+                <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
             <button
               onClick={exportQuickBooksPayments}
-              className="flex items-center gap-3 rounded-xl p-4 transition-all hover:opacity-80 border"
-              style={{ border: '1px solid var(--outline-variant)', background: 'var(--surface-low)' }}
+              className="flex items-center gap-3 rounded-xl p-4 transition-all hover:opacity-80 border border-[var(--outline-variant)] bg-surface-low"
             >
-              <Download size={16} style={{ color: '#3DB97A', flexShrink: 0 }} />
+              <Download size={16} className="text-[#3DB97A] shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>Exportar pagos</p>
-                <p className="text-[11px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>Formato CSV compatible QuickBooks</p>
+                <p className="text-sm font-medium font-body text-navy">Exportar pagos</p>
+                <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
           </div>

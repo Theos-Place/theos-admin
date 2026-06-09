@@ -64,7 +64,7 @@ export default function EditarVacantePage() {
   if (loading && !vacancy) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           Cargando puesto...
         </p>
       </div>
@@ -74,7 +74,7 @@ export default function EditarVacantePage() {
   if (!vacancy) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -88,13 +88,12 @@ export default function EditarVacantePage() {
           <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
             <Check size={24} className="text-teal-deep" />
           </div>
-          <p className="text-xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-xl font-bold text-navy font-display">
             Cambios guardados
           </p>
           <button
             onClick={() => router.push(`/servidores/vacantes/${id}`)}
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Ver puesto
           </button>
@@ -115,7 +114,7 @@ export default function EditarVacantePage() {
     <div className="page">
       {/* Header */}
       <div className="ph">
-        <button className="btn btn-ghost btn-sm" onClick={() => router.push(`/servidores/vacantes/${id}`)} style={{ marginBottom: 10 }}>
+        <button className="btn btn-ghost btn-sm mb-[10px]" onClick={() => router.push(`/servidores/vacantes/${id}`)}>
           ← Volver al puesto
         </button>
         <div className="ph-row">
@@ -133,14 +132,14 @@ export default function EditarVacantePage() {
       </div>
 
       {error && (
-        <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)', marginBottom: 8 }}>
+        <p className="text-sm text-coral font-body mb-2">
           {error}
         </p>
       )}
 
       {/* Form card */}
-      <div className="card" style={{ padding: '20px 22px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="card py-5 px-[22px]">
+        <div className="flex flex-col gap-4">
 
           <div className="form-row">
             <div className="form-group">
@@ -169,16 +168,16 @@ export default function EditarVacantePage() {
             </div>
           </div>
 
-          <div className="form-group" style={{ maxWidth: 160 }}>
+          <div className="form-group max-w-40">
             <label className="form-label">Cupos disponibles</label>
             <input type="number" min="1" max="50" className={inputCls} value={slotsTotal} onChange={e => setSlotsTotal(e.target.value)} />
           </div>
 
           <div className="form-group">
             <label className="form-label">Funciones principales</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {functions.map((fn, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: 8 }}>
+                <div key={idx} className="flex gap-2">
                   <input
                     className={inputCls}
                     value={fn}
@@ -189,8 +188,7 @@ export default function EditarVacantePage() {
                     <button
                       type="button"
                       onClick={() => removeFunction(idx)}
-                      className="shrink-0 rounded-xl border px-3 text-navy-light/50 hover:text-coral hover:border-coral/20 transition-colors"
-                      style={{ borderColor: 'var(--outline-variant)' }}
+                      className="shrink-0 rounded-xl border border-[var(--outline-variant)] px-3 text-navy-light/50 hover:text-coral hover:border-coral/20 transition-colors"
                     >
                       ×
                     </button>
@@ -200,8 +198,7 @@ export default function EditarVacantePage() {
               <button
                 type="button"
                 onClick={addFunction}
-                className="self-start rounded-full border px-4 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="self-start rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 + Agregar función
               </button>

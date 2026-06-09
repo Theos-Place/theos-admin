@@ -49,33 +49,30 @@ export function StepDocuments({
     <div className="space-y-4">
       {/* Resumen */}
       <div
-        className="rounded-2xl p-5 space-y-3"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[11px] tracking-widests uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
         >
           Resumen del contrato
         </p>
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center shrink-0">
-            <span className="text-[11px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            <span className="text-[11px] font-bold text-white font-display">
               {selected?.first_name[0]}{selected?.last_name[0]}
             </span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-sm font-semibold text-navy font-display">
               {selected?.first_name} {selected?.last_name}
             </p>
-            <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[12px] text-navy-light/50 font-body">
               {selected?.email}
             </p>
           </div>
         </div>
         <div
-          className="grid grid-cols-2 gap-3 pt-2 border-t"
-          style={{ borderColor: 'var(--outline-variant)' }}
+          className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--outline-variant)]"
         >
           {[
             { label: 'Puesto',  value: selectedPosition?.name ?? '—' },
@@ -97,12 +94,11 @@ export function StepDocuments({
           ].map(({ label, value }) => (
             <div key={label}>
               <p
-                className="text-[10px] uppercase tracking-widests text-navy-light/40"
-                style={{ fontFamily: 'var(--font-display)' }}
+                className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display"
               >
                 {label}
               </p>
-              <p className="text-sm text-navy mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-navy mt-0.5 font-body">
                 {value}
               </p>
             </div>
@@ -111,7 +107,7 @@ export function StepDocuments({
         {salaryOutOfRange && (
           <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
             <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[12px] text-amber-700" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[12px] text-amber-700 font-body">
               Salario fuera del rango aprobado — requiere aprobación adicional.
             </p>
           </div>
@@ -123,17 +119,15 @@ export function StepDocuments({
 
       {/* Documentos requeridos */}
       <div
-        className="rounded-2xl p-5 space-y-3"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-center justify-between">
           <p
-            className="text-[11px] tracking-widests uppercase text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
           >
             Documentos requeridos
           </p>
-          <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span className="text-[11px] text-navy-light/40 font-mono">
             {REQUIRED_DOCS.filter(d => uploadedDocs[d.key]).length}/{REQUIRED_DOCS.length}
           </span>
         </div>
@@ -144,8 +138,7 @@ export function StepDocuments({
             return (
               <div
                 key={doc.key}
-                className="flex items-center justify-between gap-3 rounded-xl p-3"
-                style={{ background: 'var(--surface-low)' }}
+                className="flex items-center justify-between gap-3 rounded-xl p-3 bg-surface-low"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -161,7 +154,7 @@ export function StepDocuments({
                     )}
                   </div>
                   <div>
-                    <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[13px] font-medium text-navy font-body">
                       {doc.label}
                     </p>
                     {uploaded && (
@@ -194,8 +187,7 @@ export function StepDocuments({
                     <button
                       type="button"
                       onClick={() => fileInputRefs.current[doc.key]?.click()}
-                      className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] text-navy-light hover:bg-white transition-colors"
-                      style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[11px] text-navy-light hover:bg-white transition-colors font-body"
                     >
                       <Upload size={12} />
                       Subir
@@ -210,12 +202,10 @@ export function StepDocuments({
 
       {/* Documentos opcionales */}
       <div
-        className="rounded-2xl p-5 space-y-3"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[11px] tracking-widests uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
         >
           Documentos adicionales
         </p>
@@ -225,8 +215,7 @@ export function StepDocuments({
           return (
             <div
               key={doc.key}
-              className="flex items-center justify-between gap-3 rounded-xl p-3"
-              style={{ background: 'var(--surface-low)' }}
+              className="flex items-center justify-between gap-3 rounded-xl p-3 bg-surface-low"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -242,7 +231,7 @@ export function StepDocuments({
                   )}
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[13px] font-medium text-navy font-body">
                     {doc.label}
                   </p>
                   {uploaded && (
@@ -275,8 +264,7 @@ export function StepDocuments({
                   <button
                     type="button"
                     onClick={() => fileInputRefs.current[doc.key]?.click()}
-                    className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] text-navy-light hover:bg-white transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                    className="flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[11px] text-navy-light hover:bg-white transition-colors font-body"
                   >
                     <Upload size={12} />
                     Subir
@@ -290,8 +278,7 @@ export function StepDocuments({
 
       {!canFinish && (
         <p
-          className="text-center text-[12px] text-navy-light/40"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="text-center text-[12px] text-navy-light/40 font-body"
         >
           Subí los 3 documentos requeridos para formalizar el contrato.
         </p>

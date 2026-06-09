@@ -114,23 +114,21 @@ export default function EventosPage() {
   return (
     <div className="space-y-6">
       {/* Header editorial */}
-      <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4" style={{ boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
         <div>
           <h1
-            className="text-2xl text-white"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
           >
             Eventos
           </h1>
-          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-white/50 font-body">
             {loading ? 'Cargando…' : `${events.length} eventos en el sistema`}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => downloadAllEventsICS(filtered)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
           >
             <Download size={13} />
             Exportar calendario
@@ -138,24 +136,21 @@ export default function EventosPage() {
           <a
             href="/calendario"
             target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
           >
             <ExternalLink size={13} />
             Ver calendario público
           </a>
           <Link
             href="/eventos/embed"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
           >
             <Code size={13} />
             Compartir calendario
           </Link>
           <Link
             href="/eventos/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
           >
             <Plus size={14} />
             Crear evento
@@ -173,18 +168,15 @@ export default function EventosPage() {
         ].map(({ label, value, color }) => (
           <div
             key={label}
-            className="rounded-2xl p-5"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+            className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
           >
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/40"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
             >
               {label}
             </p>
             <p
-              className={cn('mt-2 text-4xl font-extrabold tabular-nums', color)}
-              style={{ fontFamily: 'var(--font-display)' }}
+              className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}
             >
               {value.toLocaleString()}
             </p>
@@ -195,8 +187,7 @@ export default function EventosPage() {
       {/* Toggle Vista */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div
-          className="inline-flex rounded-full p-1"
-          style={{ background: 'var(--surface-low)' }}
+          className="inline-flex rounded-full p-1 bg-surface-low"
         >
           <button
             onClick={() => setView('list')}
@@ -204,9 +195,9 @@ export default function EventosPage() {
               'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-all duration-150',
               view === 'list'
                 ? 'bg-navy text-white shadow-sm'
-                : 'text-navy-light/60 hover:text-navy'
+                : 'text-navy-light/60 hover:text-navy',
+              'font-body'
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             <LayoutList size={14} />
             Lista
@@ -217,9 +208,9 @@ export default function EventosPage() {
               'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-all duration-150',
               view === 'calendar'
                 ? 'bg-navy text-white shadow-sm'
-                : 'text-navy-light/60 hover:text-navy'
+                : 'text-navy-light/60 hover:text-navy',
+              'font-body'
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             <Calendar size={14} />
             Calendario
@@ -236,9 +227,9 @@ export default function EventosPage() {
                   'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150',
                   typeFilter === f.key
                     ? 'bg-navy text-white border-navy'
-                    : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
+                    : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent',
+                  'font-display'
                 )}
-                style={{ fontFamily: 'var(--font-display)' }}
               >
                 {f.label}
               </button>
@@ -249,7 +240,7 @@ export default function EventosPage() {
 
       {/* Vista Lista */}
       {view === 'list' && (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -257,8 +248,7 @@ export default function EventosPage() {
                   {['Evento', 'Tipo', 'Fecha', 'Capacidad', 'Inscritos', 'Estado', ''].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
                     >
                       {h}
                     </th>
@@ -289,7 +279,7 @@ export default function EventosPage() {
                             <img src={event.flyer_url} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
                           )}
                           <span className={cn('h-2 w-2 rounded-full shrink-0', dotColor)} />
-                          <span className="text-sm font-medium text-navy truncate max-w-[200px]" style={{ fontFamily: 'var(--font-body)' }}>
+                          <span className="text-sm font-medium text-navy truncate max-w-[200px] font-body">
                             {event.name}
                           </span>
                         </div>
@@ -297,13 +287,13 @@ export default function EventosPage() {
                       <td className="px-4 py-3">
                         <EventTypeBadge type={event.event_type} size="sm" />
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
                         {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-3">
                         <CapacityBar current={event.registrations.length} max={event.max_capacity} />
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy tabular-nums" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-navy tabular-nums font-body">
                         {event.registrations.length}
                       </td>
                       <td className="px-4 py-3">
@@ -312,8 +302,7 @@ export default function EventosPage() {
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                         <Link
                           href={`/eventos/${event.id}`}
-                          className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
-                          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                          className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                         >
                           →
                         </Link>
@@ -326,7 +315,7 @@ export default function EventosPage() {
           </div>
           {filtered.length === 0 && (
             <div className="px-5 py-10 text-center">
-              <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-navy-light/40 font-body">
                 No hay eventos con ese filtro.
               </p>
             </div>

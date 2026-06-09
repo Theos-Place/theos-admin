@@ -38,7 +38,7 @@ type ThetaPosition = {
 
 function ThetaSVG({ size, opacity }: { size: number; opacity: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" style={{ opacity, display: 'block' }}>
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" className="block" style={{ opacity }}>
       <circle cx="50" cy="50" r="40" stroke="white" strokeWidth="10" />
       <rect x="14" y="45" width="72" height="10" fill="white" />
     </svg>
@@ -122,22 +122,22 @@ function StatCard({
       <div className="absolute top-3 right-3 opacity-[0.07]">
         <Icon size={52} strokeWidth={1.5} color={color} />
       </div>
-      <div className="text-3xl font-bold mb-1" style={{ fontFamily: 'var(--font-display)', color }}>
+      <div className="text-3xl font-bold mb-1 font-display" style={{ color }}>
         {typeof value === 'number' ? value.toLocaleString('es-CR') : value}
       </div>
-      <div className="text-sm text-[#161440]/60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>{label}</div>
+      <div className="text-sm text-navy/60 mb-2 font-body">{label}</div>
       {sub && (
-        <div className="text-[12px] text-[#161440]/45" style={{ fontFamily: 'var(--font-body)' }}>{sub}</div>
+        <div className="text-[12px] text-navy/45 font-body">{sub}</div>
       )}
       {delta && (
-        <div className="flex items-center gap-1 text-[12px] text-[#3DB97A]" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="flex items-center gap-1 text-[12px] text-[#3DB97A] font-body">
           <TrendingUp size={12} />
           {delta}
         </div>
       )}
       {hovered && (
-        <div className="absolute bottom-3 right-3 text-[11px] font-medium flex items-center gap-1"
-          style={{ color, fontFamily: 'var(--font-body)' }}>
+        <div className="absolute bottom-3 right-3 text-[11px] font-medium flex items-center gap-1 font-body"
+          style={{ color }}>
           Ver detalle <ArrowUpRight size={11} />
         </div>
       )}
@@ -161,9 +161,9 @@ function AlertRow({
       style={{ background: c.bg }}>
       <div className="flex items-center gap-3">
         <div className="w-2 h-2 rounded-full shrink-0" style={{ background: c.dot }} />
-        <span className="text-[13px] text-[#161440]/80" style={{ fontFamily: 'var(--font-body)' }}>{text}</span>
+        <span className="text-[13px] text-navy/80 font-body">{text}</span>
       </div>
-      {href && <ChevronRight size={14} className="shrink-0 text-[#161440]/30" />}
+      {href && <ChevronRight size={14} className="shrink-0 text-navy/30" />}
     </div>
   )
   if (href) return <Link href={href}>{inner}</Link>
@@ -181,29 +181,28 @@ function ModuleCard({
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div className="text-lg mb-0.5" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, color: '#161440' }}>
+          <div className="text-lg mb-0.5 font-display font-extrabold text-navy">
             {icon} {title}
           </div>
-          <div className="text-[12px] text-[#161440]/50" style={{ fontFamily: 'var(--font-body)' }}>{subtitle}</div>
+          <div className="text-[12px] text-navy/50 font-body">{subtitle}</div>
         </div>
       </div>
       <div className="h-px bg-[rgba(22,20,64,0.07)] mb-3" />
       <div className="space-y-2 mb-4">
         {rows.map((row, i) => (
           <div key={i} className="flex items-center justify-between">
-            <span className="text-[13px] text-[#161440]/60" style={{ fontFamily: 'var(--font-body)' }}>{row.label}</span>
+            <span className="text-[13px] text-navy/60 font-body">{row.label}</span>
             <div className="flex items-center gap-2">
               {row.badge ? (
-                <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full"
+                <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full font-body"
                   style={{
                     color: row.badge === 'coral' ? '#EF5554' : '#C08A00',
                     background: row.badge === 'coral' ? 'rgba(239,85,84,0.10)' : 'rgba(233,185,73,0.15)',
-                    fontFamily: 'var(--font-body)',
                   }}>
                   {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
                 </span>
               ) : (
-                <span className="text-[13px] font-semibold text-[#161440]" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-[13px] font-semibold text-navy font-body">
                   {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
                 </span>
               )}
@@ -212,8 +211,7 @@ function ModuleCard({
         ))}
       </div>
       <Link href={href}
-        className="flex items-center gap-1 text-[12px] font-medium transition-colors hover:opacity-80"
-        style={{ color: '#EF5554', fontFamily: 'var(--font-body)' }}>
+        className="flex items-center gap-1 text-[12px] font-medium transition-colors hover:opacity-80 text-coral font-body">
         {hrefLabel} <ChevronRight size={13} />
       </Link>
     </div>
@@ -276,40 +274,38 @@ export default function DashboardPage() {
   if (isMember) {
     return (
       <div className="px-6 py-8 max-w-3xl mx-auto space-y-6">
-        <div className="bg-[#161440] rounded-2xl px-6 py-6 text-white relative overflow-hidden">
+        <div className="bg-navy rounded-2xl px-6 py-6 text-white relative overflow-hidden">
           {HEADER_THETAS.map((p) => (
-            <div key={p.id} style={{ position: 'absolute', top: p.top, left: p.left, right: p.right }}>
+            <div key={p.id} className="absolute" style={{ top: p.top, left: p.left, right: p.right }}>
               <ThetaSVG size={p.size} opacity={p.opacity} />
             </div>
           ))}
           <div className="relative">
-            <h1 className="text-2xl text-white mb-1" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+            <h1 className="text-2xl text-white mb-1 font-display font-extrabold">
               {getGreeting(today.getHours())}, {user?.name?.split(' ')[0] ?? 'bienvenido'} 👋
             </h1>
-            <p className="text-white/50 text-[13px]" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-white/50 text-[13px] font-body">
               {formatDay(today)} · {formatTime(today)}
             </p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-          <div className="text-lg font-bold text-[#161440] mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="text-lg font-bold text-navy mb-4 font-display">
             Mi perfil
           </div>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#EF5554] flex items-center justify-center text-white font-bold text-lg"
-              style={{ fontFamily: 'var(--font-display)' }}>
+            <div className="w-14 h-14 rounded-2xl bg-coral flex items-center justify-center text-white font-bold text-lg font-display">
               {user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2) ?? 'U'}
             </div>
             <div>
-              <div className="font-semibold text-[#161440]" style={{ fontFamily: 'var(--font-body)' }}>{user?.name ?? 'Usuario'}</div>
-              <div className="text-[12px] text-[#161440]/50" style={{ fontFamily: 'var(--font-body)' }}>{user?.email}</div>
+              <div className="font-semibold text-navy font-body">{user?.name ?? 'Usuario'}</div>
+              <div className="text-[12px] text-navy/50 font-body">{user?.email}</div>
             </div>
           </div>
           {user?.member_id && (
             <Link href={`/miembros/${user.member_id}`}
-              className="inline-flex items-center gap-1 text-[12px] font-medium text-[#EF5554]"
-              style={{ fontFamily: 'var(--font-body)' }}>
+              className="inline-flex items-center gap-1 text-[12px] font-medium text-coral font-body">
               Ver mi perfil completo <ChevronRight size={13} />
             </Link>
           )}
@@ -317,7 +313,7 @@ export default function DashboardPage() {
 
         {upcomingEvents.length > 0 && (
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-            <div className="text-lg font-bold text-[#161440] mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+            <div className="text-lg font-bold text-navy mb-4 font-display">
               Próximos eventos
             </div>
             <div className="space-y-3">
@@ -325,8 +321,8 @@ export default function DashboardPage() {
                 <div key={ev.id} className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type] }} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium text-[#161440] truncate" style={{ fontFamily: 'var(--font-body)' }}>{ev.name}</div>
-                    <div className="text-[11px] text-[#161440]/50" style={{ fontFamily: 'var(--font-body)' }}>
+                    <div className="text-[13px] font-medium text-navy truncate font-body">{ev.name}</div>
+                    <div className="text-[11px] text-navy/50 font-body">
                       {formatShortDate(ev.start_at)} · {formatEventTime(ev.start_at)}
                     </div>
                   </div>
@@ -344,21 +340,21 @@ export default function DashboardPage() {
     <div className="px-6 py-8 space-y-6">
 
       {/* Header */}
-      <div className="bg-[#161440] rounded-2xl px-6 py-5 relative overflow-hidden">
+      <div className="bg-navy rounded-2xl px-6 py-5 relative overflow-hidden">
         {HEADER_THETAS.map((p) => (
-          <div key={p.id} style={{ position: 'absolute', top: p.top, left: p.left, right: p.right }}>
+          <div key={p.id} className="absolute" style={{ top: p.top, left: p.left, right: p.right }}>
             <ThetaSVG size={p.size} opacity={p.opacity} />
           </div>
         ))}
         <div className="relative flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl text-white mb-0.5" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+            <h1 className="text-2xl text-white mb-0.5 font-display font-extrabold">
               {getGreeting(today.getHours())}, {user?.name?.split(' ')[0] ?? 'bienvenido'} 👋
             </h1>
-            <p className="text-white/50 text-[13px] mb-1" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-white/50 text-[13px] mb-1 font-body">
               {formatDay(today)} · {formatTime(today)}
             </p>
-            <p className="text-white/30 text-[12px]" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-white/30 text-[12px] font-body">
               Theos Place · Sistema Administrativo
             </p>
           </div>
@@ -366,8 +362,7 @@ export default function DashboardPage() {
             {isFinance && (
               <button
                 onClick={() => setShowAmounts(v => !v)}
-                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] text-white/60 hover:text-white border border-white/15 hover:bg-white/10 transition-all"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] text-white/60 hover:text-white border border-white/15 hover:bg-white/10 transition-all font-body"
               >
                 {showAmounts ? <EyeOff size={13} /> : <Eye size={13} />}
                 {showAmounts ? 'Ocultar montos' : 'Mostrar montos'}
@@ -376,8 +371,7 @@ export default function DashboardPage() {
             {isAdminOrDir && (
               <Link
                 href="/eventos"
-                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:opacity-90"
-                style={{ background: '#EF5554', fontFamily: 'var(--font-body)', boxShadow: '0 4px 14px rgba(239,85,84,0.35)' }}
+                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:opacity-90 bg-coral font-body shadow-[0_4px_14px_rgba(239,85,84,0.35)]"
               >
                 Check-in rápido →
               </Link>
@@ -403,16 +397,16 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="font-bold text-[#161440] text-base" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+              <div className="font-bold text-navy text-base font-display font-extrabold">
                 Hoy · {formatShortDate(today.toISOString())}
               </div>
-              <div className="text-[12px] text-[#161440]/40" style={{ fontFamily: 'var(--font-body)' }}>Eventos programados</div>
+              <div className="text-[12px] text-navy/40 font-body">Eventos programados</div>
             </div>
-            <Calendar size={18} className="text-[#161440]/30" />
+            <Calendar size={18} className="text-navy/30" />
           </div>
 
           {todayEvents.length === 0 ? (
-            <div className="text-[13px] text-[#161440]/40 py-4 text-center" style={{ fontFamily: 'var(--font-body)' }}>
+            <div className="text-[13px] text-navy/40 py-4 text-center font-body">
               No hay eventos programados para hoy
             </div>
           ) : (
@@ -423,8 +417,8 @@ export default function DashboardPage() {
                   <div key={ev.id} className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
                     <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: EVENT_TYPE_COLORS[ev.event_type] }} />
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-semibold text-[#161440] truncate" style={{ fontFamily: 'var(--font-body)' }}>{ev.name}</div>
-                      <div className="text-[11px] text-[#161440]/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                      <div className="text-[13px] font-semibold text-navy truncate font-body">{ev.name}</div>
+                      <div className="text-[11px] text-navy/50 mt-0.5 font-body">
                         {formatEventTime(ev.start_at)} · {ev.location} · {ev.registrations.length} inscritos
                       </div>
                     </div>
@@ -435,8 +429,7 @@ export default function DashboardPage() {
           )}
 
           <Link href="/eventos"
-            className="flex items-center gap-1 text-[12px] font-medium text-[#EF5554]"
-            style={{ fontFamily: 'var(--font-body)' }}>
+            className="flex items-center gap-1 text-[12px] font-medium text-coral font-body">
             Ver todos los eventos <ChevronRight size={13} />
           </Link>
         </div>
@@ -445,15 +438,15 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="font-bold text-[#161440] text-base" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+              <div className="font-bold text-navy text-base font-display font-extrabold">
                 Check-ins de hoy
               </div>
-              <div className="text-[12px] text-[#161440]/40" style={{ fontFamily: 'var(--font-body)' }}>Asistencias registradas</div>
+              <div className="text-[12px] text-navy/40 font-body">Asistencias registradas</div>
             </div>
             <CheckCircle2 size={18} className="text-[#3DB97A]/60" />
           </div>
 
-          <div className="text-4xl font-bold text-[#161440] mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="text-4xl font-bold text-navy mb-4 font-display">
             {totalTodayCheckins.toLocaleString('es-CR')}
           </div>
 
@@ -461,26 +454,24 @@ export default function DashboardPage() {
             <div className="space-y-2 mb-4">
               {todayCheckins.map((c, i) => (
                 <div key={i} className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[#161440]/08 flex items-center justify-center text-[11px] font-bold text-[#161440]/60"
-                    style={{ fontFamily: 'var(--font-display)' }}>
+                  <div className="w-7 h-7 rounded-lg bg-[#161440]/08 flex items-center justify-center text-[11px] font-bold text-navy/60 font-display">
                     {c.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[13px] text-[#161440]/80 truncate" style={{ fontFamily: 'var(--font-body)' }}>{c.name}</span>
+                    <span className="text-[13px] text-navy/80 truncate font-body">{c.name}</span>
                   </div>
-                  <span className="text-[11px] text-[#161440]/40 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>{c.time}</span>
+                  <span className="text-[11px] text-navy/40 shrink-0 font-body">{c.time}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-[13px] text-[#161440]/40 py-2" style={{ fontFamily: 'var(--font-body)' }}>
+            <div className="text-[13px] text-navy/40 py-2 font-body">
               Aún no hay check-ins hoy
             </div>
           )}
 
           <Link href="/eventos"
-            className="flex items-center gap-1 text-[12px] font-medium text-[#EF5554]"
-            style={{ fontFamily: 'var(--font-body)' }}>
+            className="flex items-center gap-1 text-[12px] font-medium text-coral font-body">
             Ir a check-in <ChevronRight size={13} />
           </Link>
         </div>
@@ -544,37 +535,35 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <div className="text-lg mb-0.5" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, color: '#161440' }}>₡ Finanzas</div>
-                <div className="text-[12px] text-[#161440]/50" style={{ fontFamily: 'var(--font-body)' }}>Ingresos este mes</div>
+                <div className="text-lg mb-0.5 font-display font-extrabold text-navy">₡ Finanzas</div>
+                <div className="text-[12px] text-navy/50 font-body">Ingresos este mes</div>
               </div>
             </div>
             <div className="h-px bg-[rgba(22,20,64,0.07)] mb-3" />
             <div className="space-y-2 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-[#161440]/60" style={{ fontFamily: 'var(--font-body)' }}>Pagos recibidos</span>
-                <span className="text-[13px] font-semibold text-[#161440]" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-[13px] text-navy/60 font-body">Pagos recibidos</span>
+                <span className="text-[13px] font-semibold text-navy font-body">
                   {showAmounts
                     ? `₡${DASHBOARD_STATS.finance.income_this_month.toLocaleString('es-CR')}`
                     : '₡ •••,•••'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-[#161440]/60" style={{ fontFamily: 'var(--font-body)' }}>Donadores activos</span>
-                <span className="text-[13px] font-semibold text-[#161440]" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-[13px] text-navy/60 font-body">Donadores activos</span>
+                <span className="text-[13px] font-semibold text-navy font-body">
                   {DASHBOARD_STATS.finance.donors_active.toLocaleString('es-CR')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-[#161440]/60" style={{ fontFamily: 'var(--font-body)' }}>Devoluciones pend.</span>
-                <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full"
-                  style={{ color: '#EF5554', background: 'rgba(239,85,84,0.10)', fontFamily: 'var(--font-body)' }}>
+                <span className="text-[13px] text-navy/60 font-body">Devoluciones pend.</span>
+                <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full text-coral bg-[rgba(239,85,84,0.10)] font-body">
                   {DASHBOARD_STATS.finance.pending_refunds}
                 </span>
               </div>
             </div>
             <Link href="/finanzas"
-              className="flex items-center gap-1 text-[12px] font-medium text-[#EF5554]"
-              style={{ fontFamily: 'var(--font-body)' }}>
+              className="flex items-center gap-1 text-[12px] font-medium text-coral font-body">
               Ver finanzas → <ChevronRight size={13} />
             </Link>
           </div>
@@ -598,7 +587,7 @@ export default function DashboardPage() {
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle size={16} className="text-[#E9B949]" />
-          <span className="font-bold text-[#161440]" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+          <span className="font-bold text-navy font-display font-extrabold">
             Pendientes de tu atención
           </span>
         </div>
@@ -627,11 +616,10 @@ export default function DashboardPage() {
       {/* Módulo 5 — Próximos eventos */}
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
         <div className="flex items-center justify-between mb-4">
-          <span className="font-bold text-[#161440] uppercase tracking-wider text-[11px]"
-            style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
+          <span className="font-bold text-navy uppercase text-[11px] font-display tracking-[0.08em]">
             Próximos eventos
           </span>
-          <Link href="/eventos" className="text-[12px] text-[#EF5554] font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+          <Link href="/eventos" className="text-[12px] text-coral font-medium font-body">
             Ver calendario →
           </Link>
         </div>
@@ -639,7 +627,7 @@ export default function DashboardPage() {
         <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
 
         {upcomingEvents.length === 0 ? (
-          <div className="text-[13px] text-[#161440]/40 py-4 text-center" style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="text-[13px] text-navy/40 py-4 text-center font-body">
             No hay eventos próximos este mes
           </div>
         ) : (
@@ -650,17 +638,16 @@ export default function DashboardPage() {
               const isNearFull = pct >= 0.9
               return (
                 <div key={ev.id} className="flex items-center gap-4">
-                  <div className="text-[11px] text-[#161440]/50 w-20 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>
+                  <div className="text-[11px] text-navy/50 w-20 shrink-0 font-body">
                     {formatShortDate(ev.start_at)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-medium text-[#161440] truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                      <span className="text-[13px] font-medium text-navy truncate font-body">
                         {ev.name}
                       </span>
                       {isNearFull && (
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                          style={{ background: 'rgba(239,85,84,0.10)', color: '#EF5554', fontFamily: 'var(--font-body)' }}>
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 bg-[rgba(239,85,84,0.10)] text-coral font-body">
                           casi lleno
                         </span>
                       )}
@@ -669,12 +656,12 @@ export default function DashboardPage() {
                       <div className="flex-1 h-1.5 rounded-full bg-[rgba(22,20,64,0.07)] overflow-hidden max-w-[120px]">
                         <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
                       </div>
-                      <span className="text-[11px] text-[#161440]/50 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>
+                      <span className="text-[11px] text-navy/50 shrink-0 font-body">
                         {ev.registrations.length}/{ev.max_capacity}
                       </span>
                     </div>
                   </div>
-                  <div className="text-[12px] text-[#161440]/50 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>
+                  <div className="text-[12px] text-navy/50 shrink-0 font-body">
                     {formatEventTime(ev.start_at)}
                   </div>
                 </div>
@@ -695,12 +682,12 @@ export default function DashboardPage() {
             className="w-full flex items-center justify-between px-5 py-4 text-left"
           >
             <div className="flex items-center gap-2">
-              <Clock size={15} className="text-[#161440]/40" />
-              <span className="font-bold text-[#161440]" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+              <Clock size={15} className="text-navy/40" />
+              <span className="font-bold text-navy font-display font-extrabold">
                 Actividad reciente
               </span>
             </div>
-            <ChevronRight size={16} className={cn('text-[#161440]/30 transition-transform', activityCollapsed ? '' : 'rotate-90')} />
+            <ChevronRight size={16} className={cn('text-navy/30 transition-transform', activityCollapsed ? '' : 'rotate-90')} />
           </button>
 
           {!activityCollapsed && (
@@ -709,13 +696,12 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {RECENT_ACTIVITY.map(item => (
                   <div key={item.id} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5"
-                      style={{ background: '#161440', fontFamily: 'var(--font-display)' }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5 bg-navy font-display">
                       {item.actor_initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] text-[#161440]/80 leading-snug" style={{ fontFamily: 'var(--font-body)' }}>
-                        <span className="font-semibold text-[#161440]">{item.actor}</span>{' '}
+                      <p className="text-[13px] text-navy/80 leading-snug font-body">
+                        <span className="font-semibold text-navy">{item.actor}</span>{' '}
                         {item.action}{' '}
                         {item.resource_url ? (
                           <Link href={item.resource_url} className="text-[#519DA2] hover:underline">
@@ -724,7 +710,7 @@ export default function DashboardPage() {
                         ) : item.resource}
                       </p>
                     </div>
-                    <span className="text-[11px] text-[#161440]/40 shrink-0 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                    <span className="text-[11px] text-navy/40 shrink-0 mt-0.5 font-body">
                       {item.time}
                     </span>
                   </div>
@@ -744,8 +730,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
   if (hasRole('dirigente')) {
     return (
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-        <div className="font-bold text-[#161440] uppercase tracking-wider text-[11px] mb-4"
-          style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
+        <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
           Mis grupos
         </div>
         <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
@@ -756,20 +741,19 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           ].map((g, i) => (
             <div key={i} className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
               <div>
-                <div className="text-[13px] font-semibold text-[#161440]" style={{ fontFamily: 'var(--font-body)' }}>{g.name}</div>
-                <div className="text-[11px] text-[#161440]/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                <div className="text-[13px] font-semibold text-navy font-body">{g.name}</div>
+                <div className="text-[11px] text-navy/50 mt-0.5 font-body">
                   {g.participants}/{g.total} participantes · Semana {g.week}/{g.weeks}
                 </div>
               </div>
               <Link href="/estudios/grupos"
-                className="text-[12px] font-medium text-[#EF5554] shrink-0"
-                style={{ fontFamily: 'var(--font-body)' }}>
+                className="text-[12px] font-medium text-coral shrink-0 font-body">
                 Ver grupo →
               </Link>
             </div>
           ))}
         </div>
-        <div className="text-[12px] text-[#E9B949] font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="text-[12px] text-[#E9B949] font-medium font-body">
           3 evaluaciones pendientes de recibir
         </div>
       </div>
@@ -779,8 +763,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
   if (hasRole('lider_comite')) {
     return (
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-        <div className="font-bold text-[#161440] uppercase tracking-wider text-[11px] mb-4"
-          style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
+        <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
           Mi comité — Bienvenida
         </div>
         <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
@@ -792,14 +775,13 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
             { label: 'Aplicaciones pend.', value: '3' },
           ].map((s, i) => (
             <div key={i}>
-              <div className="text-[11px] text-[#161440]/50" style={{ fontFamily: 'var(--font-body)' }}>{s.label}</div>
-              <div className="text-[15px] font-bold text-[#161440]" style={{ fontFamily: 'var(--font-display)' }}>{s.value}</div>
+              <div className="text-[11px] text-navy/50 font-body">{s.label}</div>
+              <div className="text-[15px] font-bold text-navy font-display">{s.value}</div>
             </div>
           ))}
         </div>
         <Link href="/servidores"
-          className="flex items-center gap-1 text-[12px] font-medium text-[#EF5554]"
-          style={{ fontFamily: 'var(--font-body)' }}>
+          className="flex items-center gap-1 text-[12px] font-medium text-coral font-body">
           Gestionar mi comité → <ChevronRight size={13} />
         </Link>
       </div>
@@ -809,8 +791,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
   if (hasRole('coordinador_estudios', 'coordinador_dirigentes')) {
     return (
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-        <div className="font-bold text-[#161440] uppercase tracking-wider text-[11px] mb-4"
-          style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
+        <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
           Resumen de dirigentes
         </div>
         <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
@@ -821,19 +802,17 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
             { label: 'Disponibles',     value: '3',  color: '#519DA2' },
           ].map((s, i) => (
             <div key={i} className="text-center p-3 rounded-xl bg-[rgba(22,20,64,0.02)]">
-              <div className="text-2xl font-bold mb-0.5" style={{ fontFamily: 'var(--font-display)', color: s.color }}>{s.value}</div>
-              <div className="text-[11px] text-[#161440]/50" style={{ fontFamily: 'var(--font-body)' }}>{s.label}</div>
+              <div className="text-2xl font-bold mb-0.5 font-display" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-[11px] text-navy/50 font-body">{s.label}</div>
             </div>
           ))}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[12px] px-2 py-1 rounded-full font-semibold"
-            style={{ background: 'rgba(239,85,84,0.10)', color: '#EF5554', fontFamily: 'var(--font-body)' }}>
+          <span className="text-[12px] px-2 py-1 rounded-full font-semibold bg-[rgba(239,85,84,0.10)] text-coral font-body">
             1 evaluación baja (≤2)
           </span>
           <Link href="/estudios/dirigentes"
-            className="text-[12px] font-medium text-[#EF5554]"
-            style={{ fontFamily: 'var(--font-body)' }}>
+            className="text-[12px] font-medium text-coral font-body">
             Ver dirigentes →
           </Link>
         </div>

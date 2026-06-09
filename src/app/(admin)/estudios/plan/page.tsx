@@ -35,8 +35,7 @@ function StageLabel({ children, color }: { children: React.ReactNode; color: 'na
   }
   return (
     <span
-      className={cn('inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide', styles[color])}
-      style={{ fontFamily: 'var(--font-display)' }}
+      className={cn('inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide', styles[color], 'font-display')}
     >
       {children}
     </span>
@@ -61,16 +60,15 @@ function StudyCardCompact({ study }: { study: StudyType }) {
       )}
     >
       <StudyTypeBadge code={study.code} size="sm" />
-      <p className="text-xs text-navy leading-snug font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+      <p className="text-xs text-navy leading-snug font-medium font-body">
         {study.name}
       </p>
       <div className="flex items-center justify-between mt-0.5">
-        <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+        <span className="text-[10px] text-navy-light/40 font-body">
           {study.weeks} sem.
         </span>
         <span
-          className={cn('text-[10px] font-medium', study.cost === 0 ? 'text-teal-deep/70' : 'text-navy-light/50')}
-          style={{ fontFamily: 'var(--font-body)' }}
+          className={cn('text-[10px] font-medium', study.cost === 0 ? 'text-teal-deep/70' : 'text-navy-light/50', 'font-body')}
         >
           {formatCost(study.cost)}
         </span>
@@ -93,8 +91,8 @@ function StudyCardFull({ study }: { study: StudyType }) {
 
   return (
     <div
-      className="rounded-xl flex flex-col gap-0"
-      style={{ padding: '14px 16px', background: study.is_archived ? 'rgba(120,120,130,0.10)' : 'var(--surface-low)', opacity: study.is_archived ? 0.7 : 1, filter: study.is_archived ? 'grayscale(0.8)' : 'none' }}
+      className="rounded-xl flex flex-col gap-0 py-[14px] px-4"
+      style={{ background: study.is_archived ? 'rgba(120,120,130,0.10)' : 'var(--surface-low)', opacity: study.is_archived ? 0.7 : 1, filter: study.is_archived ? 'grayscale(0.8)' : 'none' }}
       onClick={() => router.push(`/estudios/plan/${study.id}`)}
       role="button"
       tabIndex={0}
@@ -105,29 +103,29 @@ function StudyCardFull({ study }: { study: StudyType }) {
         <div>
           <div className="flex items-center gap-1.5">
             <span
-              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: codeColor, textTransform: 'uppercase' }}
-              className="font-display"
+              style={{ color: codeColor }}
+              className="font-display text-[10px] font-bold tracking-[.08em] uppercase"
             >
               {study.code}
             </span>
             {study.is_archived && (
-              <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase" style={{ fontFamily: 'var(--font-display)', background: 'rgba(120,120,130,0.18)', color: '#6b7280' }}>
+              <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase font-display bg-[rgba(120,120,130,0.18)] text-[#6b7280]">
                 Descontinuado
               </span>
             )}
           </div>
-          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--brand-navy)', marginTop: 2, fontFamily: 'var(--font-display)' }}>
+          <div className="font-bold text-[14px] text-navy-light mt-0.5 font-display">
             {study.name}
           </div>
         </div>
-        <span style={{ fontSize: 11, color: 'var(--fg-muted)', whiteSpace: 'nowrap', marginLeft: 8, fontFamily: 'var(--font-body)' }}>
+        <span className="text-[11px] text-[var(--fg-muted)] whitespace-nowrap ml-2 font-body">
           {study.weeks} sem.
         </span>
       </div>
 
       {/* Mentor */}
       {cat?.mentor && (
-        <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginBottom: 6, fontFamily: 'var(--font-body)' }}>
+        <div className="text-[11px] text-[var(--fg-muted)] mb-1.5 font-body">
           Mentor: <strong>{cat.mentor}</strong>
         </div>
       )}
@@ -144,13 +142,10 @@ function StudyCardFull({ study }: { study: StudyType }) {
 
       {/* Nivel */}
       {cat?.level && (
-        <div style={{ marginTop: 8 }}>
+        <div className="mt-2">
           <span
-            style={{
-              fontSize: 10, padding: '2px 8px', borderRadius: 999,
-              background: getLevelColor(cat.level), fontWeight: 600,
-              fontFamily: 'var(--font-display)',
-            }}
+            className="text-[10px] py-0.5 px-2 rounded-full font-semibold font-display"
+            style={{ background: getLevelColor(cat.level) }}
           >
             {cat.level}
           </span>
@@ -158,11 +153,10 @@ function StudyCardFull({ study }: { study: StudyType }) {
       )}
 
       {/* Botón editar */}
-      <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
+      <div className="mt-2.5 flex justify-end">
         <button
           onClick={e => { e.stopPropagation(); router.push(`/estudios/plan/${study.code}/editar`) }}
-          className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-card hover:text-navy transition-colors"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-card hover:text-navy transition-colors border-[var(--outline-variant)] font-body"
         >
           <Pencil size={11} /> Editar
         </button>
@@ -176,9 +170,9 @@ function StageDivider({ label }: { label: string }) {
     <div className="flex items-center gap-3 py-2">
       <div className="flex items-center gap-1.5 text-navy-light/40">
         <ArrowDown size={13} strokeWidth={1.5} />
-        <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)' }}>{label}</span>
+        <span className="text-[11px] font-body">{label}</span>
       </div>
-      <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
+      <div className="flex-1 h-px bg-[var(--outline-variant)]" />
     </div>
   )
 }
@@ -230,19 +224,17 @@ export default function PlanDeEstudiosPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
           >
             Plan de Estudios Bíblicos
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-navy-light/60 font-body">
             Ruta de crecimiento espiritual de Theos Place
           </p>
         </div>
         <Link
           href="/estudios/plan/nuevo"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
         >
           <Plus size={14} strokeWidth={1.75} />
           Nuevo tipo
@@ -250,7 +242,7 @@ export default function PlanDeEstudiosPage() {
       </div>
 
       {/* ── Plan visual ── */}
-      <div className="rounded-2xl p-6" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
 
         {/* Stage header strip */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
@@ -261,14 +253,14 @@ export default function PlanDeEstudiosPage() {
           <StageLabel color="coral">Etapa Intermedia</StageLabel>
           <ChevronRight size={13} className="text-navy/25" strokeWidth={1.5} />
           <StageLabel color="purple">Campañas</StageLabel>
-          <span className="ml-auto text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="ml-auto text-[11px] text-navy-light/40 font-body">
             Plan de estudios bíblicos
           </span>
         </div>
 
         {/* ── Niveles (cadena horizontal, compact) ── */}
         <div className="mb-1">
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
             Fundamentos — sin costo, sin requisitos
           </p>
           <div className="flex flex-wrap items-center gap-2">
@@ -287,10 +279,10 @@ export default function PlanDeEstudiosPage() {
 
         {/* ── Etapa Inicial ── */}
         <div className="mb-1">
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
             Etapa Inicial — ₡15,000 · Requiere asistir a charlas
           </p>
-          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {inicial.map(s => <StudyCardFull key={s.id} study={s} />)}
           </div>
         </div>
@@ -299,10 +291,10 @@ export default function PlanDeEstudiosPage() {
 
         {/* ── Etapa Intermedia ── */}
         <div className="mb-1">
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
             Etapa Intermedia — ₡20,000 · Requiere donador + servidor + charlas
           </p>
-          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {intermedia.map(s => <StudyCardFull key={s.id} study={s} />)}
           </div>
         </div>
@@ -311,10 +303,10 @@ export default function PlanDeEstudiosPage() {
 
         {/* ── Campañas ── */}
         <div>
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
             Campañas — ₡25,000 · Sin prerrequisito
           </p>
-          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+          <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {campana.map(s => <StudyCardFull key={s.id} study={s} />)}
           </div>
         </div>
@@ -322,18 +314,16 @@ export default function PlanDeEstudiosPage() {
 
       {/* ── Tabla administrativa ── */}
       <div
-        className="overflow-hidden rounded-2xl"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div
-          className="flex items-center justify-between px-5 py-4"
-          style={{ borderBottom: '1px solid var(--outline-variant)' }}
+          className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]"
         >
           <div>
-            <h2 className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+            <h2 className="text-sm font-semibold text-navy font-display">
               Todos los tipos de estudio
             </h2>
-            <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-xs text-navy-light/50 mt-0.5 font-body">
               {studyTypes.length} estudios en total
             </p>
           </div>
@@ -342,12 +332,11 @@ export default function PlanDeEstudiosPage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+              <tr className="border-b border-[var(--outline-variant)]">
                 {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', 'Mentor', 'Prerrequisito', 'Compromisos', ''].map(h => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap"
-                    style={{ fontFamily: 'var(--font-display)' }}
+                    className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap font-display"
                   >
                     {h}
                   </th>
@@ -364,26 +353,26 @@ export default function PlanDeEstudiosPage() {
                   <td className="px-4 py-3">
                     <StudyTypeBadge code={s.code} size="sm" />
                   </td>
-                  <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-sm text-navy font-body">
                     {s.name}
                     {s.is_archived && (
-                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase align-middle" style={{ fontFamily: 'var(--font-display)', background: 'rgba(120,120,130,0.18)', color: '#6b7280' }}>
+                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase align-middle font-display bg-[rgba(120,120,130,0.18)] text-[#6b7280]">
                         Descontinuado
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-xs text-navy-light/60 font-body">
                     {s.stage === 'niveles' ? 'Niveles' : s.stage === 'inicial' ? 'Inicial' : s.stage === 'campaña' ? 'Campaña' : 'Intermedia'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                  <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[12px]">
                     {s.weeks}
                   </td>
-                  <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-sm whitespace-nowrap font-body">
                     <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/70'}>
                       {formatCost(s.cost)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
                     {STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
                       <span className="text-navy-light/30">—</span>
                     )}
@@ -391,7 +380,7 @@ export default function PlanDeEstudiosPage() {
                   <td className="px-4 py-3">
                     {s.prerequisite
                       ? <StudyTypeBadge code={s.prerequisite} size="sm" />
-                      : <span className="text-xs text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>—</span>
+                      : <span className="text-xs text-navy-light/30 font-body">—</span>
                     }
                   </td>
                   <td className="px-4 py-3">
@@ -400,8 +389,7 @@ export default function PlanDeEstudiosPage() {
                   <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                     <Link
                       href={`/estudios/plan/${s.id}`}
-                      className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
-                      style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                      className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                     >
                       Ver
                     </Link>

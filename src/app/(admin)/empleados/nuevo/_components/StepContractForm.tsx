@@ -40,12 +40,10 @@ export function StepContractForm({
 }: StepContractFormProps) {
   return (
     <div
-      className="rounded-2xl p-5 space-y-5"
-      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+      className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]"
     >
       <p
-        className="text-[11px] tracking-widths uppercase text-navy-light/40"
-        style={{ fontFamily: 'var(--font-display)' }}
+        className="text-[11px] tracking-widths uppercase text-navy-light/40 font-display"
       >
         Paso 2 — Definir contrato
       </p>
@@ -53,14 +51,12 @@ export function StepContractForm({
       {/* Puesto */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
         >
           Puesto <span className="text-coral">*</span>
         </label>
         <select
-          className={inputCls}
-          style={{ fontFamily: 'var(--font-body)' }}
+          className={cn(inputCls, 'font-body')}
           value={positionId}
           onChange={e => onPositionChange(e.target.value)}
         >
@@ -74,7 +70,7 @@ export function StepContractForm({
         {selectedPosition && (
           <div className="flex items-center gap-2 pt-1">
             <ContractTypeBadge type={selectedPosition.contract_type} size="sm" />
-            <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <span className="text-[11px] text-navy-light/40 font-body">
               Rango aprobado:
             </span>
             <SalaryBadge amount={selectedPosition.salary_min} size="sm" />
@@ -87,8 +83,7 @@ export function StepContractForm({
       {/* Tipo de contrato */}
       <div className="space-y-2">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
         >
           Tipo de contrato
         </label>
@@ -103,7 +98,7 @@ export function StepContractForm({
                   checked={contractType === val}
                   onChange={() => onContractTypeChange(val)}
                 />
-                <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-sm text-navy font-body">
                   {label}
                 </span>
               </label>
@@ -115,22 +110,19 @@ export function StepContractForm({
       {/* Salario */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
         >
           Salario mensual <span className="text-coral">*</span>
         </label>
         <div className="relative">
           <span
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50"
-            style={{ fontFamily: 'var(--font-mono)' }}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50 font-mono"
           >
             ₡
           </span>
           <input
             type="number"
-            className={cn(inputCls, 'pl-7')}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={cn(inputCls, 'pl-7 font-body')}
             placeholder="0"
             value={salary}
             onChange={e => onSalaryChange(e.target.value)}
@@ -139,7 +131,7 @@ export function StepContractForm({
         {salaryOutOfRange && selectedPosition && (
           <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-1">
             <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[12px] text-amber-700" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[12px] text-amber-700 font-body">
               El salario está fuera del rango aprobado para este puesto (₡
               {selectedPosition.salary_min.toLocaleString('es-CR')} — ₡
               {selectedPosition.salary_max.toLocaleString('es-CR')}). Se requiere aprobación adicional.
@@ -151,15 +143,13 @@ export function StepContractForm({
       {/* Fecha de inicio */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
         >
           Fecha de inicio <span className="text-coral">*</span>
         </label>
         <input
           type="date"
-          className={inputCls}
-          style={{ fontFamily: 'var(--font-body)' }}
+          className={cn(inputCls, 'font-body')}
           value={startDate}
           onChange={e => onStartDateChange(e.target.value)}
         />
@@ -168,14 +158,12 @@ export function StepContractForm({
       {/* Notas */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/40"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
         >
           Notas internas
         </label>
         <textarea
-          className={cn(inputCls, 'resize-none')}
-          style={{ fontFamily: 'var(--font-body)' }}
+          className={cn(inputCls, 'resize-none font-body')}
           rows={3}
           placeholder="Observaciones, acuerdos especiales, etc."
           value={notes}

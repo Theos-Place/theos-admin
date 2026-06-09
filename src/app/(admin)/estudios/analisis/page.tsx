@@ -57,34 +57,31 @@ export default function AnalisisPage() {
     setSubmitted(true)
   }
 
-  const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+  const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1
-          className="text-2xl text-navy"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
         >
           Análisis de bloque
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           Estimación de demanda para etapas Inicial e Intermedia
         </p>
       </div>
 
       {/* Study selector */}
-      <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
         <p
-          className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-2"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-2 font-display"
         >
           Seleccionar estudio a analizar
         </p>
         <select
           className={cn(inputCls, 'max-w-md')}
-          style={{ fontFamily: 'var(--font-body)' }}
           value={selectedStudyId}
           onChange={e => setSelectedStudyId(e.target.value)}
         >
@@ -118,14 +115,13 @@ export default function AnalisisPage() {
               { label: 'Elegibles sin inscribir', value: analysis.totalEligible, color: 'text-teal-deep' },
               { label: 'Grupos sugeridos', value: analysis.suggestedGroups, color: 'text-navy' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
                 <p
-                  className="text-[10px] tracking-widests uppercase text-navy-light/40"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display"
                 >
                   {label}
                 </p>
-                <p className={`mt-2 text-3xl font-bold ${color}`} style={{ fontFamily: 'var(--font-display)' }}>
+                <p className={`mt-2 text-3xl font-bold font-display ${color}`}>
                   {value}
                 </p>
               </div>
@@ -133,9 +129,9 @@ export default function AnalisisPage() {
           </div>
 
           {/* Zone breakdown table */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: 'var(--outline-variant)' }}>
-              <h2 className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="px-5 py-4 border-b flex items-center gap-2 border-[var(--outline-variant)]">
+              <h2 className="text-sm font-semibold text-navy font-display">
                 Desglose por zona
               </h2>
               <StudyTypeBadge code={study.code} size="sm" />
@@ -147,8 +143,7 @@ export default function AnalisisPage() {
                     {['Zona', 'Por graduarse', 'Otros elegibles', 'Total demanda', 'Grupos sugeridos'].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50"
-                        style={{ fontFamily: 'var(--font-display)' }}
+                        className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50 font-display"
                       >
                         {h}
                       </th>
@@ -159,41 +154,40 @@ export default function AnalisisPage() {
                   {analysis.rows.map(row => (
                     <tr
                       key={row.zone}
-                      className="hover:bg-surface-low transition-colors"
-                      style={{ borderBottom: '1px solid var(--outline-variant)' }}
+                      className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
                     >
-                      <td className="px-4 py-3 text-sm text-navy font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-navy font-medium font-body">
                         {sedeLabel(row.zone)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-coral font-body">
                         {row.graduating}
                       </td>
-                      <td className="px-4 py-3 text-sm text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-teal-deep font-body">
                         {row.eligible}
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm font-medium text-navy font-body">
                         {row.graduating + row.eligible}
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
                         {Math.ceil((row.graduating + row.eligible) / 12)}
                       </td>
                     </tr>
                   ))}
                   {/* Totals row */}
                   <tr className="bg-surface-low">
-                    <td className="px-4 py-3 text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                    <td className="px-4 py-3 text-sm font-bold text-navy font-display">
                       Total
                     </td>
-                    <td className="px-4 py-3 text-sm font-bold text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-sm font-bold text-coral font-body">
                       {analysis.totalGraduating}
                     </td>
-                    <td className="px-4 py-3 text-sm font-bold text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-sm font-bold text-teal-deep font-body">
                       {analysis.totalEligible}
                     </td>
-                    <td className="px-4 py-3 text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-sm font-bold text-navy font-body">
                       {analysis.totalDemand}
                     </td>
-                    <td className="px-4 py-3 text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-3 text-sm font-bold text-navy font-body">
                       {analysis.suggestedGroups}
                     </td>
                   </tr>
@@ -203,10 +197,9 @@ export default function AnalisisPage() {
           </div>
 
           {/* Panel de apertura */}
-          <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h2
-              className="text-[10px] tracking-widests uppercase text-navy-light/40"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display"
             >
               Panel de apertura
             </h2>
@@ -214,44 +207,42 @@ export default function AnalisisPage() {
             {submitted ? (
               <div className="flex items-center gap-3 rounded-xl bg-teal-soft/20 px-4 py-3">
                 <CheckCircle size={16} className="text-teal-deep" />
-                <p className="text-sm text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-sm text-teal-deep font-body">
                   Solicitudes enviadas al coordinador el {INITIAL_DATE}
                 </p>
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-3">
-                  <label className="text-sm text-navy-light/60 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>
+                  <label className="text-sm text-navy-light/60 shrink-0 font-body">
                     ¿Cuántos grupos querés abrir?
                   </label>
                   <input
                     type="number"
                     min={1}
                     className={cn(inputCls, 'w-20')}
-                    style={{ fontFamily: 'var(--font-body)' }}
                     value={totalInput ?? ''}
                     onChange={e => setTotalInput(Number(e.target.value))}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                  <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
                     Distribución por zona
                   </p>
                   {analysis.rows.map(row => (
                     <div key={row.zone} className="flex items-center gap-3">
-                      <span className="text-sm text-navy-light/60 w-36 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>
+                      <span className="text-sm text-navy-light/60 w-36 shrink-0 font-body">
                         {sedeLabel(row.zone)}
                       </span>
                       <input
                         type="number"
                         min={0}
                         className={cn(inputCls, 'w-16')}
-                        style={{ fontFamily: 'var(--font-body)' }}
                         value={groupInputs[row.zone] ?? 0}
                         onChange={e => setGroupInputs(prev => ({ ...prev, [row.zone]: Number(e.target.value) }))}
                       />
-                      <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                      <span className="text-[11px] text-navy-light/40 font-body">
                         grupos
                       </span>
                     </div>
@@ -260,8 +251,7 @@ export default function AnalisisPage() {
 
                 <button
                   onClick={handleSubmit}
-                  className="inline-flex items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="inline-flex items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
                 >
                   <Send size={14} /> Solicitar apertura
                 </button>
@@ -273,10 +263,9 @@ export default function AnalisisPage() {
 
       {!selectedStudyId && (
         <div
-          className="rounded-2xl p-10 text-center"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl p-10 text-center bg-surface-card shadow-[var(--shadow-md)]"
         >
-          <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/40 font-body">
             Seleccioná un estudio para ver el análisis de demanda.
           </p>
         </div>

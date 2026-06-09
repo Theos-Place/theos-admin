@@ -74,19 +74,17 @@ function StepIndicator({ current }: { current: number }) {
             <div className="flex flex-col items-center">
               <div
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full text-xs text-white transition-all',
+                  'flex h-8 w-8 items-center justify-center rounded-full text-xs text-white transition-all font-display font-extrabold',
                   done ? 'bg-coral' : active ? 'bg-navy' : 'bg-surface-low text-navy-light/50'
                 )}
-                style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
               >
                 {done ? <Check size={14} strokeWidth={2.5} /> : num}
               </div>
               <span
                 className={cn(
-                  'mt-1 text-[10px] text-center whitespace-nowrap',
+                  'mt-1 text-[10px] text-center whitespace-nowrap font-body',
                   active ? 'text-navy font-medium' : 'text-navy-light/50'
                 )}
-                style={{ fontFamily: 'var(--font-body)' }}
               >
                 {label}
               </span>
@@ -331,20 +329,18 @@ export default function NuevoMiembroPage() {
       {/* Header */}
       <div className="mb-6">
         <h1
-          className="text-2xl text-navy"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
         >
           Nuevo miembro
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           Completa los tres pasos para crear el perfil.
         </p>
       </div>
 
       {/* Card */}
       <div
-        className="rounded-2xl bg-surface-card p-6"
-        style={{ boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl bg-surface-card p-6 shadow-[var(--shadow-md)]"
       >
         <StepIndicator current={step} />
 
@@ -414,8 +410,7 @@ export default function NuevoMiembroPage() {
             <button
               type="button"
               onClick={() => setStep(s => s - 1)}
-              className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               Atrás
             </button>
@@ -423,8 +418,7 @@ export default function NuevoMiembroPage() {
             <button
               type="button"
               onClick={() => router.push('/miembros')}
-              className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               Cancelar
             </button>
@@ -434,8 +428,7 @@ export default function NuevoMiembroPage() {
             <button
               type="button"
               onClick={step === 1 ? proceedFromStep1 : () => setStep(3)}
-              className="rounded-xl bg-navy px-5 py-2 text-sm text-white transition-all hover:bg-navy-light active:scale-95"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="rounded-xl bg-navy px-5 py-2 text-sm text-white transition-all hover:bg-navy-light active:scale-95 font-body"
             >
               Siguiente
             </button>
@@ -446,11 +439,10 @@ export default function NuevoMiembroPage() {
       {/* Toast */}
       {showToast && (
         <div
-          className="fixed bottom-6 right-6 flex items-center gap-3 rounded-2xl bg-navy px-5 py-3.5 text-white"
-          style={{ boxShadow: 'var(--shadow-lg)' }}
+          className="fixed bottom-6 right-6 flex items-center gap-3 rounded-2xl bg-navy px-5 py-3.5 text-white shadow-[var(--shadow-lg)]"
         >
           <Check size={16} className="text-teal" strokeWidth={2.5} />
-          <span className="text-sm" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="text-sm font-body">
             ¡Perfil creado exitosamente!
           </span>
         </div>

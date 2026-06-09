@@ -31,10 +31,10 @@ export function EventInfoTab({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Descripción</h3>
-        <p className="text-sm text-navy-light/70 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>{event.description}</p>
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">Descripción</h3>
+        <p className="text-sm text-navy-light/70 leading-relaxed font-body">{event.description}</p>
+        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-t-[var(--outline-variant)]">
           {[
             { label: 'Tipo', value: event.event_type },
             { label: 'Comité', value: event.committee_id },
@@ -46,8 +46,8 @@ export function EventInfoTab({
             { label: 'Capacidad', value: `${event.max_capacity} personas` },
           ].map(({ label, value }) => (
             <div key={label} className="space-y-0.5">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>{label}</p>
-              <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{value}</p>
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">{label}</p>
+              <p className="text-sm text-navy font-body">{value}</p>
             </div>
           ))}
         </div>
@@ -55,14 +55,14 @@ export function EventInfoTab({
 
       <div className="space-y-4">
         {event.sub_events.length > 0 && (
-          <div className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>Sub-eventos</h3>
+          <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
+            <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3 font-display">Sub-eventos</h3>
             <div className="space-y-2">
               {event.sub_events.map(se => {
                 const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
                 return (
-                  <div key={se.id} className="rounded-xl px-3 py-2.5" style={{ background: 'var(--surface-low)' }}>
-                    <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{se.name}</p>
+                  <div key={se.id} className="rounded-xl px-3 py-2.5 bg-surface-low">
+                    <p className="text-sm font-medium text-navy font-body">{se.name}</p>
                     <CapacityBar current={seCheckins} max={se.max_capacity} />
                   </div>
                 )
@@ -71,23 +71,23 @@ export function EventInfoTab({
           </div>
         )}
 
-        <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Configuración</h3>
+        <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
+          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">Configuración</h3>
           {[
             { label: 'Recurrente', value: event.is_recurring ? event.recurrence_rule ?? 'Sí' : 'No' },
             { label: 'Encuesta', value: event.requires_survey ? 'Requerida' : 'No' },
             { label: 'Pago', value: event.requires_payment ? `₡${event.payment_amount?.toLocaleString()}` : 'Gratuito' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between text-sm">
-              <span className="text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>{label}</span>
-              <span className="text-navy font-medium" style={{ fontFamily: 'var(--font-body)' }}>{value}</span>
+              <span className="text-navy-light/50 font-body">{label}</span>
+              <span className="text-navy font-medium font-body">{value}</span>
             </div>
           ))}
         </div>
 
         {/* Flyer */}
-        <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Flyer / Banner</h3>
+        <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
+          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">Flyer / Banner</h3>
           <input
             ref={flyerInputRef}
             type="file"
@@ -115,25 +115,23 @@ export function EventInfoTab({
               )}
             >
               <ImageIcon size={24} className="text-navy-light/30" />
-              <p className="text-[12px] font-medium text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] font-medium text-navy-light/60 font-body">
                 Subir flyer
               </p>
-              <p className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[10px] text-navy-light/40 font-body">
                 PNG, JPG, WebP — máx 5MB
               </p>
             </div>
           ) : (
-            <div className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="relative rounded-xl overflow-hidden border border-[var(--outline-variant)]">
               <img src={flyerPreview} alt="Flyer del evento" className="w-full object-cover max-h-40" />
-              <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2" style={{ background: 'rgba(22,20,64,0.6)' }}>
+              <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2 bg-[rgba(22,20,64,0.6)]">
                 <button type="button" onClick={() => flyerInputRef.current?.click()}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}>
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors font-body">
                   Cambiar
                 </button>
                 <button type="button" onClick={onFlyerClear}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}>
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body">
                   Eliminar
                 </button>
               </div>

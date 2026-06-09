@@ -34,10 +34,10 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3 bg-surface-card shadow-[var(--shadow-lg)]">
           <Send size={32} className="text-teal-deep mx-auto" />
-          <p className="font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Mensaje enviado</p>
-          <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>Cerrar</button>
+          <p className="font-semibold text-navy font-display">Mensaje enviado</p>
+          <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar</button>
         </div>
       </div>
     )
@@ -45,19 +45,18 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
-        <h3 className="font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Enviar mensaje</h3>
+      <div className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
+        <h3 className="font-semibold text-navy font-display">Enviar mensaje</h3>
         <textarea
-          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
           rows={4}
           placeholder="Escribe el mensaje para los inscritos..."
           value={msg}
           onChange={e => setMsg(e.target.value)}
         />
         <div className="flex gap-2">
-          <button onClick={() => setSent(true)} disabled={!msg.trim()} className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40" style={{ fontFamily: 'var(--font-body)' }}>Enviar</button>
-          <button onClick={onClose} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>Cancelar</button>
+          <button onClick={() => setSent(true)} disabled={!msg.trim()} className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">Enviar</button>
+          <button onClick={onClose} className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
         </div>
       </div>
     </div>
@@ -147,7 +146,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
           <ChevronLeft size={16} /> Eventos
         </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-navy-light/60 font-body">
           {loading ? 'Cargando…' : 'Evento no encontrado.'}
         </p>
       </div>
@@ -265,7 +264,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       />
 
       {/* Tabs */}
-      <div className="relative border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="relative border-b border-b-[var(--outline-variant)]">
         <div className="flex">
           {TABS.map(t => (
             <button
@@ -273,9 +272,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
               onClick={() => setActiveTab(t)}
               className={cn(
                 'flex-1 px-2 py-2.5 text-[12px] transition-colors',
-                activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/50 hover:text-navy'
+                activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/50 hover:text-navy',
+                'font-body'
               )}
-              style={{ fontFamily: 'var(--font-body)' }}
             >
               {TAB_LABELS[t]}
             </button>
@@ -367,8 +366,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           <div className="flex justify-end">
             <button
               onClick={() => setShowMessageModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >
               <Send size={14} /> Enviar mensaje
             </button>
@@ -376,14 +374,14 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
           <div className="space-y-3">
             {FAKE_MESSAGES.map((msg, i) => (
-              <div key={i} className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={i} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
                 <div className="flex items-center justify-between mb-2">
                   <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-medium', msg.channel === 'WhatsApp' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy')}>
                     {msg.channel}
                   </span>
-                  <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>{msg.date}</span>
+                  <span className="text-[11px] text-navy-light/40 font-body">{msg.date}</span>
                 </div>
-                <p className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{msg.content}</p>
+                <p className="text-sm text-navy-light/70 font-body">{msg.content}</p>
               </div>
             ))}
           </div>
@@ -395,8 +393,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         <div className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Gauge tasa de asistencia */}
-            <div className="rounded-2xl p-5 flex flex-col items-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-4 self-start" style={{ fontFamily: 'var(--font-display)' }}>
+            <div className="rounded-2xl p-5 flex flex-col items-center bg-surface-card shadow-[var(--shadow-md)]">
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-4 self-start font-display">
                 Tasa de asistencia
               </p>
               <svg viewBox="0 0 100 60" className="w-40 h-24">
@@ -415,31 +413,31 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                   {attendanceRate}%
                 </text>
               </svg>
-              <p className="text-[12px] text-navy-light/50 mt-2" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-navy-light/50 mt-2 font-body">
                 {checkinCount} de {registrationCount} inscritos asistieron
               </p>
             </div>
 
             {/* Ingresos */}
             {event.requires_payment && event.payment_amount && (
-              <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-                <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+              <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+                <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3 font-display">
                   Ingresos estimados
                 </p>
-                <p className="text-4xl font-extrabold text-navy tabular-nums" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-4xl font-extrabold text-navy tabular-nums font-display">
                   ₡{incomeEstimate.toLocaleString()}
                 </p>
-                <p className="text-[12px] text-navy-light/50 mt-2" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-navy-light/50 mt-2 font-body">
                   {checkinCount} asistentes × ₡{event.payment_amount.toLocaleString()}
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Pagados</p>
-                    <p className="font-semibold text-navy" style={{ fontFamily: 'var(--font-body)' }}>{event.registrations.filter(r => r.payment_status === 'paid').length}</p>
+                    <p className="text-[10px] text-navy-light/40 font-display">Pagados</p>
+                    <p className="font-semibold text-navy font-body">{event.registrations.filter(r => r.payment_status === 'paid').length}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Pendientes</p>
-                    <p className="font-semibold text-amber-600" style={{ fontFamily: 'var(--font-body)' }}>{event.registrations.filter(r => r.payment_status === 'pending').length}</p>
+                    <p className="text-[10px] text-navy-light/40 font-display">Pendientes</p>
+                    <p className="font-semibold text-amber-600 font-body">{event.registrations.filter(r => r.payment_status === 'pending').length}</p>
                   </div>
                 </div>
               </div>
@@ -447,10 +445,10 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="flex gap-2">
-            <button className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
+            <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
               <Download size={14} /> Exportar asistencia
             </button>
-            <button className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors" style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
+            <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
               <Download size={14} /> Exportar inscritos
             </button>
           </div>

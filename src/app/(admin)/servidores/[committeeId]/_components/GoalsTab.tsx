@@ -17,7 +17,7 @@ type Props = {
   onAddGoal: () => void
 }
 
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
 export function GoalsTab({
   goals,
@@ -32,12 +32,11 @@ export function GoalsTab({
   onAddGoal,
 }: Props) {
   return (
-    <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="py-4 px-[22px] flex flex-col gap-2.5">
       {goals.map(g => (
         <div
           key={g.id}
-          className="flex items-start gap-3 rounded-2xl px-5 py-4"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          className="flex items-start gap-3 rounded-2xl px-5 py-4 bg-surface-card shadow-[var(--shadow-md)]"
         >
           <button
             onClick={() => onToggleGoal(g.id)}
@@ -53,25 +52,23 @@ export function GoalsTab({
           <div className="flex-1 space-y-0.5">
             <p
               className={cn(
-                'text-sm text-navy',
+                'text-sm text-navy font-body',
                 g.status === 'completed' && 'line-through text-navy-light/40'
               )}
-              style={{ fontFamily: 'var(--font-body)' }}
             >
               {g.description}
             </p>
             {g.due_date && (
-              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-mono)' }}>
+              <p className="text-[11px] text-navy-light/40 font-mono">
                 Límite: {new Date(g.due_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             )}
           </div>
           <span
             className={cn(
-              'rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0',
+              'rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0 font-display',
               g.status === 'completed' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-amber-500/10 text-amber-600'
             )}
-            style={{ fontFamily: 'var(--font-display)' }}
           >
             {g.status === 'completed' ? 'Completada' : 'En progreso'}
           </span>
@@ -80,12 +77,10 @@ export function GoalsTab({
 
       {showGoalForm ? (
         <div
-          className="rounded-2xl p-4 space-y-3"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
         >
           <textarea
             className={cn(inputCls, 'resize-none')}
-            style={{ fontFamily: 'var(--font-body)' }}
             rows={2}
             placeholder="Descripción de la meta..."
             value={newGoalText}
@@ -93,13 +88,12 @@ export function GoalsTab({
             autoFocus
           />
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
               Fecha límite (opcional)
             </label>
             <input
               type="date"
               className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
               value={newGoalDate}
               onChange={e => onNewGoalDateChange(e.target.value)}
             />
@@ -107,15 +101,13 @@ export function GoalsTab({
           <div className="flex gap-2">
             <button
               onClick={onAddGoal}
-              className="rounded-full bg-navy px-4 py-1.5 text-[12px] text-white hover:bg-navy/80 transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="rounded-full bg-navy px-4 py-1.5 text-[12px] text-white hover:bg-navy/80 transition-colors font-body"
             >
               Agregar meta
             </button>
             <button
               onClick={onHideGoalForm}
-              className="rounded-full border px-4 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-full border px-4 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
             >
               Cancelar
             </button>
@@ -124,8 +116,7 @@ export function GoalsTab({
       ) : (
         <button
           onClick={onShowGoalForm}
-          className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
         >
           <Plus size={13} />
           Agregar meta
@@ -133,7 +124,7 @@ export function GoalsTab({
       )}
 
       {goals.length === 0 && !showGoalForm && (
-        <p className="text-[12px] text-navy-light/40 text-center py-6" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-[12px] text-navy-light/40 text-center py-6 font-body">
           No hay metas definidas aún.
         </p>
       )}

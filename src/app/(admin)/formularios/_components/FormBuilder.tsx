@@ -181,13 +181,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     <div className="flex flex-col h-[calc(100vh-4rem)] -mx-6 -mt-6">
       {/* Top bar */}
       <div
-        className="sticky top-0 z-20 flex items-center gap-3 px-6 py-3 border-b shrink-0"
-        style={{ background: 'var(--surface-card)', borderColor: 'var(--outline-variant)' }}
+        className="sticky top-0 z-20 flex items-center gap-3 px-6 py-3 border-b shrink-0 bg-surface-card border-[var(--outline-variant)]"
       >
         <Link
           href="/formularios"
-          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors shrink-0 font-body"
         >
           <ChevronLeft size={16} />
           Formularios
@@ -196,8 +194,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
         {/* Editable name */}
         <input
-          className="flex-1 bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/30"
-          style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.01em' }}
+          className="flex-1 bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/30 font-display tracking-[-0.01em]"
           placeholder="Nombre del formulario"
           value={name}
           onChange={e => setName(e.target.value)}
@@ -205,8 +202,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
         {/* Category */}
         <select
-          className="rounded-xl bg-surface-low px-2.5 py-1.5 text-[12px] text-navy outline-none shrink-0"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="rounded-xl bg-surface-low px-2.5 py-1.5 text-[12px] text-navy outline-none shrink-0 font-body"
           value={category}
           onChange={e => setCategory(e.target.value as FormTemplate['category'])}
         >
@@ -220,10 +216,9 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           type="button"
           onClick={() => setStatus(s => s === 'draft' ? 'active' : 'draft')}
           className={cn(
-            'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors shrink-0',
+            'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors shrink-0 font-display',
             status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/50'
           )}
-          style={{ fontFamily: 'var(--font-display)' }}
         >
           {status === 'active' ? 'Activo' : 'Borrador'}
         </button>
@@ -232,16 +227,14 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           <button
             type="button"
             onClick={() => setShowLogicPanel(true)}
-            className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             <GitBranch size={12} />
             Lógica
           </button>
           <Link
             href={formId ? `/formularios/${formId}/preview` : '#'}
-            className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             <Eye size={12} />
             Vista previa
@@ -251,10 +244,9 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             onClick={() => handleSave()}
             disabled={saving}
             className={cn(
-              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] text-white transition-colors disabled:opacity-50',
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] text-white transition-colors disabled:opacity-50 font-body',
               saved ? 'bg-teal-deep' : 'bg-coral hover:bg-coral-deep'
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             {saved ? <Check size={12} /> : <Save size={12} />}
             {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar'}
@@ -263,8 +255,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             <button
               type="button"
               onClick={() => { setStatus('active'); handleSave('active') }}
-              className="flex items-center gap-1.5 rounded-full bg-navy px-3 py-1.5 text-[12px] text-white hover:bg-navy-light transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1.5 rounded-full bg-navy px-3 py-1.5 text-[12px] text-white hover:bg-navy-light transition-colors font-body"
             >
               <Send size={12} />
               Publicar
@@ -277,13 +268,12 @@ export function FormBuilder({ formId }: FormBuilderProps) {
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Field types */}
         <div
-          className="w-48 shrink-0 flex flex-col border-r overflow-y-auto"
-          style={{ background: 'var(--surface-low)', borderColor: 'var(--outline-variant)' }}
+          className="w-48 shrink-0 flex flex-col border-r overflow-y-auto bg-surface-low border-[var(--outline-variant)]"
         >
           <div className="p-3 space-y-4">
             {FIELD_GROUPS.map(group => (
               <div key={group.label} className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widests font-semibold text-navy-light/40 px-1 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-[9px] uppercase tracking-widests font-semibold text-navy-light/40 px-1 mb-2 font-display">
                   {group.label}
                 </p>
                 {group.types.map(({ type, label }) => (
@@ -291,8 +281,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                     key={type}
                     type="button"
                     onClick={() => addField(type)}
-                    className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-[12px] text-navy-light hover:bg-white hover:text-navy hover:shadow-sm transition-all text-left"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-[12px] text-navy-light hover:bg-white hover:text-navy hover:shadow-sm transition-all text-left font-body"
                     draggable
                     onDragStart={e => e.dataTransfer.setData('fieldType', type)}
                   >
@@ -310,8 +299,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           {/* Description input */}
           <div className="max-w-2xl mx-auto mb-4">
             <input
-              className="w-full bg-transparent text-sm text-navy-light/60 outline-none placeholder-navy-light/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-full bg-transparent text-sm text-navy-light/60 outline-none placeholder-navy-light/30 font-body"
               placeholder="Descripción del formulario (opcional)"
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -331,7 +319,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           </div>
           {fields.length > 0 && (
             <div className="max-w-2xl mx-auto mt-4">
-              <p className="text-center text-[11px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-center text-[11px] text-navy-light/30 font-body">
                 {fields.length} campo{fields.length !== 1 ? 's' : ''}
                 {' · '}
                 {fields.filter(f => f.is_required).length} obligatorio{fields.filter(f => f.is_required).length !== 1 ? 's' : ''}
@@ -342,14 +330,13 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
         {/* Right: Inspector */}
         <div
-          className="w-72 shrink-0 border-l overflow-hidden flex flex-col"
-          style={{ borderColor: 'var(--outline-variant)' }}
+          className="w-72 shrink-0 border-l overflow-hidden flex flex-col border-[var(--outline-variant)]"
         >
           {activeField ? (
             <>
-              <div className="px-4 py-3 border-b flex items-center gap-2 shrink-0" style={{ borderColor: 'var(--outline-variant)' }}>
+              <div className="px-4 py-3 border-b flex items-center gap-2 shrink-0 border-[var(--outline-variant)]">
                 <FieldTypeIcon type={activeField.type} size={13} className="text-navy-light/50" />
-                <p className="text-[12px] font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-[12px] font-semibold text-navy font-display">
                   {activeField.type === 'section' ? 'Separador' :
                     activeField.type === 'text' ? 'Texto corto' :
                     activeField.type === 'textarea' ? 'Párrafo' :
@@ -385,7 +372,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               <div className="h-12 w-12 rounded-xl bg-navy/5 flex items-center justify-center">
                 <FieldTypeIcon type="text" size={20} className="text-navy-light/20" />
               </div>
-              <p className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-navy-light/40 font-body">
                 Seleccioná un campo para editarlo
               </p>
             </div>
@@ -396,11 +383,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
       {/* Logic overview modal */}
       {showLogicPanel && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-navy-ink/40 backdrop-blur-sm">
-          <div className="h-full w-full max-w-md overflow-y-auto flex flex-col" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b shrink-0" style={{ borderColor: 'var(--outline-variant)', background: 'var(--surface-card)' }}>
+          <div className="h-full w-full max-w-md overflow-y-auto flex flex-col bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b shrink-0 border-[var(--outline-variant)] bg-surface-card">
               <div className="flex items-center gap-2">
                 <GitBranch size={16} className="text-navy-light/50" />
-                <p className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Lógica del formulario</p>
+                <p className="text-sm font-bold text-navy font-display">Lógica del formulario</p>
               </div>
               <button type="button" onClick={() => setShowLogicPanel(false)}>
                 <X size={18} className="text-navy-light/40" />
@@ -423,10 +410,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 })
                 return sections.map((section, si) => (
                   <div key={si} className="space-y-1">
-                    <p className="text-[11px] font-bold text-navy-light/50 uppercase tracking-widests" style={{ fontFamily: 'var(--font-display)' }}>
+                    <p className="text-[11px] font-bold text-navy-light/50 uppercase tracking-widests font-display">
                       📄 {section.pageLabel}
                     </p>
-                    <div className="ml-3 border-l space-y-0.5 pl-3" style={{ borderColor: 'var(--outline-variant)' }}>
+                    <div className="ml-3 border-l space-y-0.5 pl-3 border-[var(--outline-variant)]">
                       {section.fields.map(f => {
                         const rc = f.logic_rules?.length ?? 0
                         return (
@@ -436,7 +423,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                             onClick={() => { setActiveFieldId(f.id); setFocusLogic(true); setShowLogicPanel(false) }}
                             className="w-full flex items-center justify-between gap-2 py-1.5 text-left hover:text-coral transition-colors group"
                           >
-                            <span className="text-[12px] text-navy-light/60 group-hover:text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                            <span className="text-[12px] text-navy-light/60 group-hover:text-navy truncate font-body">
                               {f.label || <span className="italic text-navy-light/30">Sin etiqueta</span>}
                             </span>
                             {rc > 0 && (
@@ -449,7 +436,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                         )
                       })}
                       {section.fields.length === 0 && (
-                        <p className="text-[11px] text-navy-light/30 italic py-1" style={{ fontFamily: 'var(--font-body)' }}>Sin campos</p>
+                        <p className="text-[11px] text-navy-light/30 italic py-1 font-body">Sin campos</p>
                       )}
                     </div>
                   </div>
@@ -457,8 +444,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               })()}
             </div>
 
-            <div className="px-5 py-3 border-t text-center" style={{ borderColor: 'var(--outline-variant)' }}>
-              <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <div className="px-5 py-3 border-t text-center border-[var(--outline-variant)]">
+              <p className="text-[11px] text-navy-light/40 font-body">
                 {fields.filter(f => (f.logic_rules?.length ?? 0) > 0).length} campos con lógica · {fields.filter(f => f.type === 'page_break').length} bloque{fields.filter(f => f.type === 'page_break').length !== 1 ? 's' : ''} · {fields.filter(f => f.type !== 'page_break' && f.type !== 'section').length} campos total
               </p>
             </div>

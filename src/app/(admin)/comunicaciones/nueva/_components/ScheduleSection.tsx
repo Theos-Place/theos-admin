@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40 font-display'
 
 const TIMEZONES = [
   { value: 'America/Costa_Rica', label: 'Costa Rica (GMT-6)' },
@@ -29,14 +29,14 @@ export function ScheduleSection({
   setTimezone,
 }: Props) {
   return (
-    <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-      <p className={cn(SECTION_TITLE)} style={{ fontFamily: 'var(--font-display)' }}>
+    <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+      <p className={cn(SECTION_TITLE)}>
         4 · Programar (opcional)
       </p>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>¿Programar envío?</p>
-          <p className="text-[12px] text-navy-light/40 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy font-body">¿Programar envío?</p>
+          <p className="text-[12px] text-navy-light/40 mt-0.5 font-body">
             Elegí cuándo enviar el mensaje
           </p>
         </div>
@@ -63,10 +63,9 @@ export function ScheduleSection({
             />
           </div>
           <div className="flex items-center gap-2 pl-6">
-            <p className="text-[11px] text-navy-light/50 shrink-0" style={{ fontFamily: 'var(--font-body)' }}>Zona horaria:</p>
+            <p className="text-[11px] text-navy-light/50 shrink-0 font-body">Zona horaria:</p>
             <select
-              className="flex-1 rounded-xl bg-surface-low px-3 py-1.5 text-[12px] text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex-1 rounded-xl bg-surface-low px-3 py-1.5 text-[12px] text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={timezone}
               onChange={e => setTimezone(e.target.value)}
             >

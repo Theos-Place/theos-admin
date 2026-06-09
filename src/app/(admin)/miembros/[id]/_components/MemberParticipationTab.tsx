@@ -51,15 +51,14 @@ function SectionAccordion({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--outline-variant)' }}>
+    <div className="rounded-xl overflow-hidden border border-[var(--outline-variant)]">
       <button
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-3.5 bg-surface-card hover:bg-surface-low transition-colors"
       >
         <span
-          className="text-sm font-medium text-navy"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
+          className="text-sm font-medium text-navy font-display font-extrabold"
         >
           {title}
         </span>
@@ -145,13 +144,12 @@ export function MemberParticipationTab({
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+              <tr className="border-b border-[var(--outline-variant)]">
                 {([['name', 'Estudio'], ['startYear', 'Inicio'], ['duration', 'Duración'], ['status', 'Estado']] as [keyof StudyRow, string][]).map(([key, label]) => (
                   <th
                     key={key}
                     onClick={() => estudiosTable.toggleSort(key)}
-                    className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
-                    style={{ fontFamily: 'var(--font-display)' }}
+                    className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none font-display"
                   >
                     {label}{' '}
                     <span className="opacity-50">
@@ -174,24 +172,22 @@ export function MemberParticipationTab({
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <span
-                          className={cn('rounded px-1.5 py-0.5 text-[10px]', entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50')}
-                          style={{ fontFamily: 'var(--font-mono)' }}
+                          className={cn('rounded px-1.5 py-0.5 text-[10px] font-mono', entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50')}
                         >
                           {row.code}
                         </span>
-                        <span className="text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{row.name}</span>
+                        <span className="text-navy-light/70 font-body">{row.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-2.5 text-navy-light/50 text-xs font-body">
                       {row.startLabel}
                     </td>
-                    <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
+                    <td className="px-4 py-2.5 text-navy-light/50 text-xs font-body">
                       {row.duration}
                     </td>
                     <td className="px-4 py-2.5">
                       <span
-                        className={cn('rounded-full px-2.5 py-0.5 text-xs', (row.status === 'Completado' || row.status === 'Aprobado') ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral-soft/20 text-coral')}
-                        style={{ fontFamily: 'var(--font-body)' }}
+                        className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', (row.status === 'Completado' || row.status === 'Aprobado') ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral-soft/20 text-coral')}
                       >
                         {row.status}
                       </span>
@@ -199,8 +195,7 @@ export function MemberParticipationTab({
                     <td className="px-4 py-2.5 text-right">
                       <Link
                         href={`/estudios/grupos/${row.groupId}`}
-                        className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap"
-                        style={{ fontFamily: 'var(--font-body)' }}
+                        className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap font-body"
                       >
                         Ver grupo →
                       </Link>
@@ -212,11 +207,10 @@ export function MemberParticipationTab({
           </table>
         </div>
         {visibleEstudios < estudiosTable.sorted.length && (
-          <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+          <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
             <button
               onClick={onLoadMoreEstudios}
-              className="text-xs text-navy-light/50 hover:text-coral transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-xs text-navy-light/50 hover:text-coral transition-colors font-body"
             >
               Cargar {LOAD_MORE} más (quedan {estudiosTable.sorted.length - visibleEstudios})
             </button>
@@ -231,7 +225,7 @@ export function MemberParticipationTab({
         onToggle={() => onToggleSection('servicio')}
       >
         {servicioTable.sorted.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="px-4 py-6 text-sm text-navy-light/40 font-body">
             Sin historial de servicio
           </p>
         ) : (
@@ -239,13 +233,12 @@ export function MemberParticipationTab({
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                  <tr className="border-b border-[var(--outline-variant)]">
                     {([['position', 'Puesto'], ['committee', 'Comité'], ['from', 'Desde'], ['to', 'Hasta'], ['status', 'Estado']] as [keyof ServiceRow, string][]).map(([key, label]) => (
                       <th
                         key={key}
                         onClick={() => servicioTable.toggleSort(key)}
-                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
-                        style={{ fontFamily: 'var(--font-display)' }}
+                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none font-display"
                       >
                         {label}{' '}
                         <span className="opacity-50">
@@ -262,16 +255,15 @@ export function MemberParticipationTab({
                       className="hover:bg-surface-low transition-colors"
                       style={i < Math.min(visibleServicio, servicioTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                     >
-                      <td className="px-4 py-2.5 text-navy" style={{ fontFamily: 'var(--font-body)' }}>{row.position}</td>
-                      <td className="px-4 py-2.5 text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{row.committee}</td>
-                      <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>{formatDate(row.from)}</td>
-                      <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-2.5 text-navy font-body">{row.position}</td>
+                      <td className="px-4 py-2.5 text-navy-light/70 font-body">{row.committee}</td>
+                      <td className="px-4 py-2.5 text-navy-light/50 text-xs font-body">{formatDate(row.from)}</td>
+                      <td className="px-4 py-2.5 text-navy-light/50 text-xs font-body">
                         {row.to ? formatDate(row.to) : '—'}
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={cn('rounded-full px-2.5 py-0.5 text-xs', row.status === 'activo' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/50')}
-                          style={{ fontFamily: 'var(--font-body)' }}
+                          className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', row.status === 'activo' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/50')}
                         >
                           {row.status === 'activo' ? 'Activo' : 'Finalizado'}
                         </span>
@@ -282,11 +274,10 @@ export function MemberParticipationTab({
               </table>
             </div>
             {visibleServicio < servicioTable.sorted.length && (
-              <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+              <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreServicio}
-                  className="text-xs text-navy-light/50 hover:text-coral transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="text-xs text-navy-light/50 hover:text-coral transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {servicioTable.sorted.length - visibleServicio})
                 </button>
@@ -303,7 +294,7 @@ export function MemberParticipationTab({
         onToggle={() => onToggleSection('eventos')}
       >
         {eventosTable.sorted.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="px-4 py-6 text-sm text-navy-light/40 font-body">
             Sin registros de asistencia
           </p>
         ) : (
@@ -311,13 +302,12 @@ export function MemberParticipationTab({
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                  <tr className="border-b border-[var(--outline-variant)]">
                     {([['name', 'Evento'], ['type', 'Tipo'], ['date', 'Fecha'], ['attendance_type', 'Asistencia']] as [keyof EventoRow, string][]).map(([key, label]) => (
                       <th
                         key={key}
                         onClick={() => eventosTable.toggleSort(key)}
-                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
-                        style={{ fontFamily: 'var(--font-display)' }}
+                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none font-display"
                       >
                         {label}{' '}
                         <span className="opacity-50">
@@ -334,22 +324,20 @@ export function MemberParticipationTab({
                       className="hover:bg-surface-low transition-colors"
                       style={i < Math.min(visibleEventos, eventosTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                     >
-                      <td className="px-4 py-2.5 text-navy" style={{ fontFamily: 'var(--font-body)' }}>{row.name}</td>
+                      <td className="px-4 py-2.5 text-navy font-body">{row.name}</td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={cn('rounded-full px-2 py-0.5 text-[10px]', TYPE_BADGE[row.type] ?? 'bg-surface-low text-navy-light/50')}
-                          style={{ fontFamily: 'var(--font-body)' }}
+                          className={cn('rounded-full px-2 py-0.5 text-[10px] font-body', TYPE_BADGE[row.type] ?? 'bg-surface-low text-navy-light/50')}
                         >
                           {row.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-navy-light/50 text-xs whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                      <td className="px-4 py-2.5 text-navy-light/50 text-xs whitespace-nowrap font-body">
                         {formatDate(row.date)}
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={cn('rounded-full px-2 py-0.5 text-[10px]', ATTENDANCE_BADGE[row.attendance_type] ?? 'bg-surface-low text-navy-light/50')}
-                          style={{ fontFamily: 'var(--font-body)' }}
+                          className={cn('rounded-full px-2 py-0.5 text-[10px] font-body', ATTENDANCE_BADGE[row.attendance_type] ?? 'bg-surface-low text-navy-light/50')}
                         >
                           {row.attendance_type === 'servidor' ? 'Servidor' : 'Participante'}
                         </span>
@@ -360,11 +348,10 @@ export function MemberParticipationTab({
               </table>
             </div>
             {visibleEventos < eventosTable.sorted.length && (
-              <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+              <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreEventos}
-                  className="text-xs text-navy-light/50 hover:text-coral transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="text-xs text-navy-light/50 hover:text-coral transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {eventosTable.sorted.length - visibleEventos})
                 </button>
@@ -383,23 +370,21 @@ export function MemberParticipationTab({
         {hasFinanceRole ? (
           <div>
             <div
-              className="flex items-center justify-between px-4 py-3"
-              style={{ borderBottom: '1px solid var(--outline-variant)' }}
+              className="flex items-center justify-between px-4 py-3 border-b border-[var(--outline-variant)]"
             >
-              <p className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-xs text-navy-light/50 font-body">
                 {donationsCount} registros
               </p>
               <button
                 type="button"
                 onClick={onToggleRevealDonations}
-                className="rounded-lg border px-3 py-1 text-xs text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="rounded-lg border border-[var(--outline-variant)] px-3 py-1 text-xs text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 {revealDonations ? 'Ocultar montos' : 'Mostrar montos'}
               </button>
             </div>
             {donacionesTable.sorted.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="px-4 py-6 text-sm text-navy-light/40 font-body">
                 Sin registros de donaciones
               </p>
             ) : (
@@ -407,13 +392,12 @@ export function MemberParticipationTab({
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                      <tr className="border-b border-[var(--outline-variant)]">
                         {([['date', 'Fecha'], ['description', 'Descripción'], ['amount', 'Monto']] as [keyof DonacionRow, string][]).map(([key, label]) => (
                           <th
                             key={key}
                             onClick={() => donacionesTable.toggleSort(key)}
-                            className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none"
-                            style={{ fontFamily: 'var(--font-display)' }}
+                            className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/40 cursor-pointer hover:text-navy transition-colors select-none font-display"
                           >
                             {label}{' '}
                             <span className="opacity-50">
@@ -430,15 +414,15 @@ export function MemberParticipationTab({
                           className="hover:bg-surface-low transition-colors"
                           style={i < Math.min(visibleDonaciones, donacionesTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                         >
-                          <td className="px-4 py-2.5 text-navy-light/50 text-xs whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                          <td className="px-4 py-2.5 text-navy-light/50 text-xs whitespace-nowrap font-body">
                             {formatDate(row.date)}
                           </td>
-                          <td className="px-4 py-2.5 text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+                          <td className="px-4 py-2.5 text-navy-light/70 font-body">
                             {row.description}
                           </td>
                           <td
-                            className="px-4 py-2.5 text-right tabular-nums"
-                            style={{ fontFamily: revealDonations ? 'var(--font-mono)' : 'var(--font-body)', fontSize: '13px' }}
+                            className="px-4 py-2.5 text-right tabular-nums text-[13px]"
+                            style={{ fontFamily: revealDonations ? 'var(--font-mono)' : 'var(--font-body)' }}
                           >
                             {revealDonations ? (
                               <span className="text-navy">{formatAmount(row.amount)}</span>
@@ -452,11 +436,10 @@ export function MemberParticipationTab({
                   </table>
                 </div>
                 {visibleDonaciones < donacionesTable.sorted.length && (
-                  <div className="px-4 py-3" style={{ borderTop: '1px solid var(--outline-variant)' }}>
+                  <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                     <button
                       onClick={onLoadMoreDonaciones}
-                      className="text-xs text-navy-light/50 hover:text-coral transition-colors"
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      className="text-xs text-navy-light/50 hover:text-coral transition-colors font-body"
                     >
                       Cargar {LOAD_MORE} más (quedan {donacionesTable.sorted.length - visibleDonaciones})
                     </button>
@@ -468,7 +451,7 @@ export function MemberParticipationTab({
         ) : (
           <div className="flex items-center gap-3 px-4 py-6">
             <Lock size={16} className="text-navy-light/30" strokeWidth={1.75} />
-            <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/50 font-body">
               No tenés permisos para ver esta información.
             </p>
           </div>

@@ -119,22 +119,20 @@ export default function ImportarDonacionesPage() {
 
         {/* Header */}
         <div
-          className="rounded-2xl px-6 py-5 flex items-center justify-between"
-          style={{ background: '#161440', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl px-6 py-5 flex items-center justify-between bg-navy shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-3">
             <button
               onClick={() => step === 1 ? router.push('/finanzas/donaciones') : setStep(s => (s - 1) as 1 | 2 | 3)}
-              className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
-              style={{ color: 'rgba(255,255,255,0.60)' }}
+              className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]"
             >
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-xl text-white" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+              <h1 className="text-xl text-white font-display font-extrabold">
                 Importar donaciones
               </h1>
-              <p className="text-[12px] text-white/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-white/50 mt-0.5 font-body">
                 {fileName || 'Cargá el archivo CSV del banco'}
               </p>
             </div>
@@ -145,19 +143,18 @@ export default function ImportarDonacionesPage() {
             {[1, 2, 3].map((s, idx) => (
               <div key={s} className="flex items-center gap-2">
                 <div
-                  className="h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all"
+                  className="h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all font-display"
                   style={{
                     background: step > s ? '#3DB97A' : step === s ? '#EF5554' : 'rgba(255,255,255,0.15)',
                     color: step >= s ? 'white' : 'rgba(255,255,255,0.40)',
-                    fontFamily: 'var(--font-display)',
                   }}
                 >
                   {step > s ? <Check size={13} /> : s}
                 </div>
-                <span className="text-[11px] hidden sm:block" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-body)' }}>
+                <span className="text-[11px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
                   {s === 1 ? 'Cargar' : s === 2 ? 'Previsualizar' : 'Confirmar'}
                 </span>
-                {idx < 2 && <ChevronRight size={14} style={{ color: 'rgba(255,255,255,0.30)' }} />}
+                {idx < 2 && <ChevronRight size={14} className="text-[rgba(255,255,255,0.30)]" />}
               </div>
             ))}
           </div>
@@ -165,23 +162,22 @@ export default function ImportarDonacionesPage() {
 
         {/* Step 1 — Upload */}
         {step === 1 && (
-          <div className="rounded-2xl p-8 space-y-6" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-8 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
             <div
-              className="border-2 border-dashed rounded-2xl p-12 flex flex-col items-center gap-4 cursor-pointer transition-all hover:border-navy/30 hover:bg-navy/2"
-              style={{ borderColor: 'rgba(22,20,64,0.20)' }}
+              className="border-2 border-dashed rounded-2xl p-12 flex flex-col items-center gap-4 cursor-pointer transition-all hover:border-navy/30 hover:bg-navy/2 border-[rgba(22,20,64,0.20)]"
               onClick={() => fileInputRef.current?.click()}
             >
-              <div className="h-16 w-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(81,157,162,0.10)' }}>
-                <CloudUpload size={32} style={{ color: '#519DA2' }} />
+              <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(81,157,162,0.10)]">
+                <CloudUpload size={32} className="text-teal-deep" />
               </div>
               <div className="text-center">
-                <p className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+                <p className="text-base font-bold font-display text-navy">
                   Arrastrá el CSV aquí
                 </p>
-                <p className="text-sm mt-1" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.50)' }}>
+                <p className="text-sm mt-1 font-body text-[rgba(22,20,64,0.50)]">
                   o hacé clic para seleccionar
                 </p>
-                <p className="text-[11px] mt-2" style={{ color: 'rgba(22,20,64,0.35)', fontFamily: 'var(--font-body)' }}>
+                <p className="text-[11px] mt-2 text-[rgba(22,20,64,0.35)] font-body">
                   Formato: cédula, nombre, fecha, monto
                 </p>
               </div>
@@ -197,8 +193,7 @@ export default function ImportarDonacionesPage() {
             <div className="flex justify-center">
               <button
                 onClick={downloadTemplate}
-                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all border"
-                style={{ borderColor: 'var(--outline-variant)', color: '#161440', fontFamily: 'var(--font-body)' }}
+                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all border border-[var(--outline-variant)] text-navy font-body"
               >
                 <Download size={15} />
                 Descargar plantilla CSV
@@ -218,24 +213,23 @@ export default function ImportarDonacionesPage() {
                 { label: 'Sin cédula', count: sinCedula, color: '#EF5554', bg: 'rgba(239,85,84,0.10)', Icon: XCircle },
               ].map(({ label, count, color, bg, Icon }) => (
                 <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: bg }}>
-                  <Icon size={20} style={{ color, flexShrink: 0 }} />
+                  <Icon size={20} className="shrink-0" style={{ color }} />
                   <div>
-                    <p className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color }}>{count}</p>
-                    <p className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.60)' }}>{label}</p>
+                    <p className="text-xl font-extrabold font-display" style={{ color }}>{count}</p>
+                    <p className="text-[11px] font-body text-[rgba(22,20,64,0.60)]">{label}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Table */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                    <tr className="border-b border-[var(--outline-variant)]">
                       {['Cédula', 'Nombre del CSV', 'Fecha', 'Monto'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest"
-                          style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
                           {h}
                         </th>
                       ))}
@@ -243,21 +237,20 @@ export default function ImportarDonacionesPage() {
                   </thead>
                   <tbody>
                     {rows.map((row, i) => (
-                      <tr key={i} className="border-b hover:bg-gray-50 transition-colors"
-                        style={{ borderColor: 'var(--outline-variant)' }}>
+                      <tr key={i} className="border-b hover:bg-gray-50 transition-colors border-[var(--outline-variant)]">
                         <td className="px-5 py-3">
-                          <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>{row.cedula}</p>
+                          <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">{row.cedula}</p>
                         </td>
                         <td className="px-5 py-3">
-                          <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{row.csv_name || '—'}</p>
+                          <p className="text-[13px] font-body text-navy">{row.csv_name || '—'}</p>
                         </td>
                         <td className="px-5 py-3">
-                          <p className="text-[13px] whitespace-nowrap" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>
+                          <p className="text-[13px] whitespace-nowrap text-[rgba(22,20,64,0.60)] font-body">
                             {new Date(row.date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })}
                           </p>
                         </td>
                         <td className="px-5 py-3">
-                          <p className="text-[13px] font-medium" style={{ color: '#161440', fontFamily: 'var(--font-body)' }}>
+                          <p className="text-[13px] font-medium text-navy font-body">
                             ₡{row.amount.toLocaleString('es-CR')}
                           </p>
                         </td>
@@ -271,8 +264,7 @@ export default function ImportarDonacionesPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setStep(3)}
-                className="rounded-full px-6 py-2.5 text-sm text-white font-medium"
-                style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}
+                className="rounded-full px-6 py-2.5 text-sm text-white font-medium bg-coral font-body"
               >
                 Continuar →
               </button>
@@ -282,17 +274,17 @@ export default function ImportarDonacionesPage() {
 
         {/* Step 3 — Confirm */}
         {step === 3 && (
-          <div className="rounded-2xl p-8 space-y-6" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-8 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="space-y-2">
-              <p className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+              <p className="text-base font-bold font-display text-navy">
                 Resumen de importación
               </p>
-              <p className="text-sm" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.60)' }}>
+              <p className="text-sm font-body text-[rgba(22,20,64,0.60)]">
                 Revisá el resumen antes de confirmar
               </p>
             </div>
 
-            <div className="rounded-xl p-5 space-y-3" style={{ background: 'rgba(22,20,64,0.03)', border: '1px solid rgba(22,20,64,0.08)' }}>
+            <div className="rounded-xl p-5 space-y-3 bg-[rgba(22,20,64,0.03)] border border-[rgba(22,20,64,0.08)]">
               {[
                 { label: 'Archivo', value: fileName || 'donaciones.csv' },
                 { label: 'Total filas', value: `${rows.length}` },
@@ -300,9 +292,9 @@ export default function ImportarDonacionesPage() {
                 { label: 'Sin cédula', value: `${sinCedula}` },
                 { label: 'Monto total', value: `₡${rows.reduce((s, r) => s + r.amount, 0).toLocaleString('es-CR')}` },
               ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between text-sm" style={{ fontFamily: 'var(--font-body)' }}>
-                  <span style={{ color: 'rgba(22,20,64,0.55)' }}>{label}</span>
-                  <span className="font-medium" style={{ color: '#161440' }}>{value}</span>
+                <div key={label} className="flex justify-between text-sm font-body">
+                  <span className="text-[rgba(22,20,64,0.55)]">{label}</span>
+                  <span className="font-medium text-navy">{value}</span>
                 </div>
               ))}
             </div>
@@ -313,14 +305,13 @@ export default function ImportarDonacionesPage() {
                   type="checkbox"
                   checked={updateDonorStatus}
                   onChange={e => setUpdateDonorStatus(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded"
-                  style={{ accentColor: '#161440' }}
+                  className="mt-0.5 h-4 w-4 rounded accent-navy"
                 />
                 <div>
-                  <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>
+                  <p className="text-sm font-medium font-body text-navy">
                     Actualizar estado "Donador" en perfiles
                   </p>
-                  <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
                     Marcará como donadores a los miembros identificados en esta importación
                   </p>
                 </div>
@@ -330,14 +321,13 @@ export default function ImportarDonacionesPage() {
                   type="checkbox"
                   checked={applyFamilyLogic}
                   onChange={e => setApplyFamilyLogic(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded"
-                  style={{ accentColor: '#161440' }}
+                  className="mt-0.5 h-4 w-4 rounded accent-navy"
                 />
                 <div>
-                  <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>
+                  <p className="text-sm font-medium font-body text-navy">
                     Aplicar lógica familiar
                   </p>
-                  <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
                     Agrupa donaciones de miembros del mismo núcleo familiar
                   </p>
                 </div>
@@ -347,16 +337,14 @@ export default function ImportarDonacionesPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setStep(2)}
-                className="rounded-full border px-5 py-2.5 text-sm transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', color: 'rgba(22,20,64,0.70)', fontFamily: 'var(--font-body)' }}
+                className="rounded-full border px-5 py-2.5 text-sm transition-colors border-[var(--outline-variant)] text-[rgba(22,20,64,0.70)] font-body"
               >
                 ← Atrás
               </button>
               <button
                 onClick={handleConfirmImport}
                 disabled={importing || rows.length === 0}
-                className="flex-1 rounded-full py-2.5 text-sm text-white font-medium transition-all disabled:opacity-50"
-                style={{ background: '#3DB97A', fontFamily: 'var(--font-body)' }}
+                className="flex-1 rounded-full py-2.5 text-sm text-white font-medium transition-all disabled:opacity-50 bg-[#3DB97A] font-body"
               >
                 {importing ? 'Importando...' : 'Confirmar importación'}
               </button>
@@ -368,10 +356,9 @@ export default function ImportarDonacionesPage() {
       {/* Toast */}
       {toast && (
         <div
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)', fontFamily: 'var(--font-body)' }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body"
         >
-          <Check size={15} style={{ color: '#3DB97A' }} />
+          <Check size={15} className="text-[#3DB97A]" />
           {toast}
         </div>
       )}

@@ -113,69 +113,65 @@ export default function NuevaBecaPage() {
 
         {/* Header */}
         <div
-          className="rounded-2xl px-6 py-5 flex items-center gap-3"
-          style={{ background: '#161440', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl px-6 py-5 flex items-center gap-3 bg-navy shadow-[var(--shadow-md)]"
         >
           <button
             onClick={() => router.push('/finanzas/becas')}
-            className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all"
-            style={{ color: 'rgba(255,255,255,0.60)' }}
+            className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-[rgba(255,255,255,0.60)]"
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl text-white" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>Nueva beca</h1>
-            <p className="text-[12px] text-white/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Nueva beca</h1>
+            <p className="text-[12px] text-white/50 mt-0.5 font-body">
               Asignar descuento o apoyo económico
             </p>
           </div>
         </div>
 
-        <div className="rounded-2xl p-6 space-y-6" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-6 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
 
           {/* 1. Member search */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
               1. Miembro
             </label>
             {selectedMember ? (
-              <div className="flex items-center gap-3 rounded-xl p-3.5" style={{ background: 'rgba(112,189,194,0.08)', border: '1px solid rgba(112,189,194,0.25)' }}>
-                <div className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#161440', fontFamily: 'var(--font-display)' }}>
+              <div className="flex items-center gap-3 rounded-xl p-3.5 bg-[rgba(112,189,194,0.08)] border border-[rgba(112,189,194,0.25)]">
+                <div className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 bg-navy font-display">
                   {selectedMember.first_name[0]}{selectedMember.last_name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{selectedMember.first_name} {selectedMember.last_name}</p>
-                  <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>{selectedMember.cedula ?? 'Sin cédula'}</p>
+                  <p className="text-sm font-medium font-body text-navy">{selectedMember.first_name} {selectedMember.last_name}</p>
+                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">{selectedMember.cedula ?? 'Sin cédula'}</p>
                 </div>
                 <button onClick={() => { setSelectedMember(null); setMemberQuery('') }}>
-                  <X size={16} style={{ color: 'rgba(22,20,64,0.40)' }} />
+                  <X size={16} className="text-[rgba(22,20,64,0.40)]" />
                 </button>
               </div>
             ) : (
               <div className="relative">
-                <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5" style={{ borderColor: 'var(--outline-variant)' }}>
-                  <Search size={14} style={{ color: 'rgba(22,20,64,0.40)' }} />
+                <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 border-[var(--outline-variant)]">
+                  <Search size={14} className="text-[rgba(22,20,64,0.40)]" />
                   <input
                     type="text"
                     placeholder="Buscar por nombre o cédula..."
                     value={memberQuery}
                     onChange={e => setMemberQuery(e.target.value)}
-                    className="flex-1 bg-transparent text-sm outline-none"
-                    style={{ fontFamily: 'var(--font-body)', color: '#161440' }}
+                    className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
                   />
                 </div>
                 {memberResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border overflow-hidden z-10" style={{ borderColor: 'var(--outline-variant)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border overflow-hidden z-10 border-[var(--outline-variant)] bg-surface-card shadow-[var(--shadow-md)]">
                     {memberResults.map(m => (
                       <button key={m.id} onClick={() => { setSelectedMember(m); setMemberQuery('') }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left"
-                        style={{ borderColor: 'var(--outline-variant)' }}>
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#161440', fontFamily: 'var(--font-display)' }}>
+                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-[var(--outline-variant)]">
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 bg-navy font-display">
                           {m.first_name[0]}{m.last_name[0]}
                         </div>
                         <div>
-                          <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{m.first_name} {m.last_name}</p>
-                          <p className="text-[11px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>{m.cedula ?? 'Sin cédula'}</p>
+                          <p className="text-[13px] font-medium font-body text-navy">{m.first_name} {m.last_name}</p>
+                          <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">{m.cedula ?? 'Sin cédula'}</p>
                         </div>
                       </button>
                     ))}
@@ -187,14 +183,14 @@ export default function NuevaBecaPage() {
 
           {/* 2. Entity type */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
               2. Tipo de entidad
             </label>
             <div className="grid grid-cols-2 gap-2">
               {([['event', 'Evento'], ['study_group', 'Grupo de estudio']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => { setEntityType(v); setSelectedEntity(null); setEntityQuery('') }}
-                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left"
-                  style={{ borderColor: entityType === v ? '#EF5554' : 'var(--outline-variant)', background: entityType === v ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)', color: entityType === v ? '#EF5554' : 'rgba(22,20,64,0.70)', fontFamily: 'var(--font-body)' }}>
+                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left font-body"
+                  style={{ borderColor: entityType === v ? '#EF5554' : 'var(--outline-variant)', background: entityType === v ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)', color: entityType === v ? '#EF5554' : 'rgba(22,20,64,0.70)' }}>
                   {l}
                 </button>
               ))}
@@ -203,58 +199,55 @@ export default function NuevaBecaPage() {
 
           {/* 3. Entity search */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
               3. {entityType === 'event' ? 'Evento' : 'Grupo'}
             </label>
             {selectedEntity ? (
-              <div className="flex items-center gap-3 rounded-xl p-3.5" style={{ background: 'rgba(112,189,194,0.08)', border: '1px solid rgba(112,189,194,0.25)' }}>
+              <div className="flex items-center gap-3 rounded-xl p-3.5 bg-[rgba(112,189,194,0.08)] border border-[rgba(112,189,194,0.25)]">
                 <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{selectedEntity.name}</p>
-                  <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>
+                  <p className="text-sm font-medium font-body text-navy">{selectedEntity.name}</p>
+                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
                     ₡{selectedEntity.amount.toLocaleString('es-CR')}
                   </p>
                 </div>
                 <button onClick={() => { setSelectedEntity(null); setEntityQuery('') }}>
-                  <X size={16} style={{ color: 'rgba(22,20,64,0.40)' }} />
+                  <X size={16} className="text-[rgba(22,20,64,0.40)]" />
                 </button>
               </div>
             ) : (
               <div className="relative">
-                <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5" style={{ borderColor: 'var(--outline-variant)' }}>
-                  <Search size={14} style={{ color: 'rgba(22,20,64,0.40)' }} />
+                <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 border-[var(--outline-variant)]">
+                  <Search size={14} className="text-[rgba(22,20,64,0.40)]" />
                   <input
                     type="text"
                     placeholder={`Buscar ${entityType === 'event' ? 'evento' : 'grupo'}...`}
                     value={entityQuery}
                     onChange={e => setEntityQuery(e.target.value)}
-                    className="flex-1 bg-transparent text-sm outline-none"
-                    style={{ fontFamily: 'var(--font-body)', color: '#161440' }}
+                    className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
                   />
                 </div>
                 {entityResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border overflow-hidden z-10" style={{ borderColor: 'var(--outline-variant)', background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border overflow-hidden z-10 border-[var(--outline-variant)] bg-surface-card shadow-[var(--shadow-md)]">
                     {entityResults.map(e => (
                       <button key={e.id} onClick={() => { setSelectedEntity(e); setEntityQuery('') }}
-                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left"
-                        style={{ borderColor: 'var(--outline-variant)' }}>
-                        <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{e.name}</p>
-                        <p className="text-[12px]" style={{ color: '#519DA2', fontFamily: 'var(--font-body)' }}>₡{e.amount.toLocaleString('es-CR')}</p>
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-[var(--outline-variant)]">
+                        <p className="text-[13px] font-medium font-body text-navy">{e.name}</p>
+                        <p className="text-[12px] text-teal-deep font-body">₡{e.amount.toLocaleString('es-CR')}</p>
                       </button>
                     ))}
                   </div>
                 )}
                 {entityQuery && entityResults.length === 0 && (
                   <div className="mt-2">
-                    <p className="text-[12px] px-2" style={{ color: 'rgba(22,20,64,0.40)', fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[12px] px-2 text-[rgba(22,20,64,0.40)] font-body">
                       Opciones disponibles:
                     </p>
-                    <div className="mt-1 rounded-xl border overflow-hidden" style={{ borderColor: 'var(--outline-variant)' }}>
+                    <div className="mt-1 rounded-xl border overflow-hidden border-[var(--outline-variant)]">
                       {entityList.map(e => (
                         <button key={e.id} onClick={() => { setSelectedEntity(e); setEntityQuery('') }}
-                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left"
-                          style={{ borderColor: 'var(--outline-variant)' }}>
-                          <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{e.name}</p>
-                          <p className="text-[12px]" style={{ color: '#519DA2', fontFamily: 'var(--font-body)' }}>₡{e.amount.toLocaleString('es-CR')}</p>
+                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-[var(--outline-variant)]">
+                          <p className="text-[13px] font-body text-navy">{e.name}</p>
+                          <p className="text-[12px] text-teal-deep font-body">₡{e.amount.toLocaleString('es-CR')}</p>
                         </button>
                       ))}
                     </div>
@@ -266,14 +259,14 @@ export default function NuevaBecaPage() {
 
           {/* 4. Discount type */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
               4. Tipo de descuento
             </label>
             <div className="grid grid-cols-2 gap-2 mb-4">
               {([['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => setDiscountType(v)}
-                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left"
-                  style={{ borderColor: discountType === v ? '#EF5554' : 'var(--outline-variant)', background: discountType === v ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)', color: discountType === v ? '#EF5554' : 'rgba(22,20,64,0.70)', fontFamily: 'var(--font-body)' }}>
+                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left font-body"
+                  style={{ borderColor: discountType === v ? '#EF5554' : 'var(--outline-variant)', background: discountType === v ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)', color: discountType === v ? '#EF5554' : 'rgba(22,20,64,0.70)' }}>
                   {l}
                 </button>
               ))}
@@ -287,31 +280,28 @@ export default function NuevaBecaPage() {
                     min={0} max={100} step={5}
                     value={percentage}
                     onChange={e => setPercentage(Number(e.target.value))}
-                    className="flex-1"
-                    style={{ accentColor: '#EF5554' }}
+                    className="flex-1 accent-[#EF5554]"
                   />
                   <input
                     type="number"
                     min={0} max={100}
                     value={percentage}
                     onChange={e => setPercentage(Math.max(0, Math.min(100, Number(e.target.value))))}
-                    className="w-20 rounded-xl border px-3 py-2 text-sm text-center outline-none"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }}
+                    className="w-20 rounded-xl border px-3 py-2 text-sm text-center outline-none border-[var(--outline-variant)] font-body text-navy"
                   />
-                  <span className="text-sm font-medium" style={{ color: '#161440', fontFamily: 'var(--font-body)' }}>%</span>
+                  <span className="text-sm font-medium text-navy font-body">%</span>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold" style={{ color: '#161440', fontFamily: 'var(--font-display)' }}>₡</span>
+                <span className="text-sm font-bold text-navy font-display">₡</span>
                 <input
                   type="number"
                   min={0}
                   value={fixedAmount}
                   onChange={e => setFixedAmount(e.target.value)}
                   placeholder="Monto del descuento"
-                  className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }}
+                  className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
                 />
               </div>
             )}
@@ -319,28 +309,28 @@ export default function NuevaBecaPage() {
 
           {/* 5. Calculator */}
           {selectedEntity && (
-            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(22,20,64,0.10)' }}>
-              <div className="px-5 py-4 space-y-2" style={{ background: 'rgba(22,20,64,0.03)' }}>
-                <div className="flex justify-between text-sm" style={{ fontFamily: 'var(--font-body)' }}>
-                  <span style={{ color: 'rgba(22,20,64,0.55)' }}>Costo original:</span>
-                  <span style={{ color: '#161440' }}>₡{originalAmount.toLocaleString('es-CR')}</span>
+            <div className="rounded-xl overflow-hidden border border-[rgba(22,20,64,0.10)]">
+              <div className="px-5 py-4 space-y-2 bg-[rgba(22,20,64,0.03)]">
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-[rgba(22,20,64,0.55)]">Costo original:</span>
+                  <span className="text-navy">₡{originalAmount.toLocaleString('es-CR')}</span>
                 </div>
-                <div className="flex justify-between text-sm" style={{ fontFamily: 'var(--font-body)' }}>
-                  <span style={{ color: 'rgba(22,20,64,0.55)' }}>
+                <div className="flex justify-between text-sm font-body">
+                  <span className="text-[rgba(22,20,64,0.55)]">
                     Descuento ({discountType === 'percentage' ? `${percentage}%` : 'fijo'}):
                   </span>
-                  <span style={{ color: '#EF5554' }}>-₡{discountAmount.toLocaleString('es-CR')}</span>
+                  <span className="text-coral">-₡{discountAmount.toLocaleString('es-CR')}</span>
                 </div>
-                <div className="h-px" style={{ background: 'rgba(22,20,64,0.10)' }} />
-                <div className="flex justify-between text-sm font-bold" style={{ fontFamily: 'var(--font-body)' }}>
-                  <span style={{ color: '#161440' }}>Costo final:</span>
-                  <span style={{ color: '#3DB97A' }}>₡{finalAmount.toLocaleString('es-CR')}</span>
+                <div className="h-px bg-[rgba(22,20,64,0.10)]" />
+                <div className="flex justify-between text-sm font-bold font-body">
+                  <span className="text-navy">Costo final:</span>
+                  <span className="text-[#3DB97A]">₡{finalAmount.toLocaleString('es-CR')}</span>
                 </div>
               </div>
               {isFullScholarship && (
-                <div className="px-5 py-3 flex items-center gap-2" style={{ background: 'rgba(61,185,122,0.10)' }}>
-                  <Check size={14} style={{ color: '#3DB97A', flexShrink: 0 }} />
-                  <p className="text-[12px] font-medium" style={{ color: '#1E6B42', fontFamily: 'var(--font-body)' }}>
+                <div className="px-5 py-3 flex items-center gap-2 bg-[rgba(61,185,122,0.10)]">
+                  <Check size={14} className="text-[#3DB97A] shrink-0" />
+                  <p className="text-[12px] font-medium text-[#1E6B42] font-body">
                     Beca completa — inscripción gratuita
                   </p>
                 </div>
@@ -350,7 +340,7 @@ export default function NuevaBecaPage() {
 
           {/* 6. Notes */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
               Notas (opcional)
             </label>
             <textarea
@@ -358,8 +348,7 @@ export default function NuevaBecaPage() {
               onChange={e => setNotes(e.target.value)}
               placeholder="Motivo de la beca, observaciones..."
               rows={3}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy"
             />
           </div>
 
@@ -367,8 +356,7 @@ export default function NuevaBecaPage() {
           <button
             onClick={handleCreate}
             disabled={!selectedMember || !selectedEntity || saving}
-            className="w-full rounded-full py-3 text-sm text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-full py-3 text-sm text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-coral font-body"
           >
             {saving ? 'Creando...' : 'Crear beca'}
           </button>
@@ -376,9 +364,8 @@ export default function NuevaBecaPage() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)', fontFamily: 'var(--font-body)' }}>
-          <Check size={15} style={{ color: '#3DB97A' }} />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
+          <Check size={15} className="text-[#3DB97A]" />
           {toast}
         </div>
       )}

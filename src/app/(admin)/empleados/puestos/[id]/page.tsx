@@ -20,7 +20,7 @@ export default function PuestoDetailPage() {
   if (!position) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -31,8 +31,7 @@ export default function PuestoDetailPage() {
     <div className="space-y-4">
       <Link
         href="/empleados/puestos"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Puestos
@@ -40,68 +39,62 @@ export default function PuestoDetailPage() {
 
       {/* Header */}
       <div
-        className="rounded-2xl px-6 py-5 space-y-3"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl px-6 py-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold text-navy-light/60"
-                style={{ fontFamily: 'var(--font-display)' }}
+                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display"
               >
                 {position.committee_name}
               </span>
               <ContractTypeBadge type={position.contract_type} size="sm" />
               {!position.is_active && (
                 <span
-                  className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral font-display"
                 >
                   Inactivo
                 </span>
               )}
             </div>
             <h1
-              className="text-2xl text-navy"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+              className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
             >
               {position.name}
             </h1>
           </div>
           <Link
             href={`/empleados/puestos/${id}/editar`}
-            className="shrink-0 rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="shrink-0 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Editar
           </Link>
         </div>
 
-        <p className="text-sm text-navy-light/70 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/70 leading-relaxed font-body">
           {position.description}
         </p>
       </div>
 
       {/* Salary range */}
       <div
-        className="rounded-2xl p-5 space-y-3"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-center gap-2">
-          <p className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
             Rango salarial aprobado
           </p>
           <Lock size={11} className="text-navy-light/30" />
         </div>
         <div className="flex items-center gap-3">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Mínimo</p>
+            <p className="text-[10px] text-navy-light/40 font-display">Mínimo</p>
             <SalaryBadge amount={position.salary_min} size="md" />
           </div>
           <span className="text-navy-light/20 text-lg">—</span>
           <div className="space-y-0.5">
-            <p className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>Máximo</p>
+            <p className="text-[10px] text-navy-light/40 font-display">Máximo</p>
             <SalaryBadge amount={position.salary_max} size="md" />
           </div>
         </div>
@@ -109,33 +102,31 @@ export default function PuestoDetailPage() {
 
       {/* Assigned employee */}
       <div
-        className="rounded-2xl p-5 space-y-3"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[11px] tracking-widests uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+        <p className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
           Persona asignada
         </p>
         {assigned ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center">
-                <span className="text-[11px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                <span className="text-[11px] font-bold text-white font-display">
                   {assigned.member_initials}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-sm font-semibold text-navy font-display">
                   {assigned.member_name}
                 </p>
-                <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-navy-light/50 font-body">
                   {assigned.member_email}
                 </p>
               </div>
             </div>
             <Link
               href={`/empleados/${assigned.id}`}
-              className="rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               Ver expediente
             </Link>
@@ -143,15 +134,13 @@ export default function PuestoDetailPage() {
         ) : (
           <div className="flex items-center justify-between">
             <span
-              className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/40"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/40 font-display"
             >
               Sin asignar
             </span>
             <Link
               href="/empleados/nuevo"
-              className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               Contratar empleado
             </Link>

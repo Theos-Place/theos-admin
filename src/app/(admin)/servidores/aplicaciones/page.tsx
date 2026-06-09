@@ -52,17 +52,15 @@ export default function AplicacionesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div
-        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4"
-        style={{ boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]"
       >
         <div>
           <h1
-            className="text-2xl text-white"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
           >
             Aplicaciones
           </h1>
-          <p className="mt-1 text-sm text-white/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-white/50 font-body">
             {pending} pendiente{pending !== 1 ? 's' : ''} · {reviewing} en revisión
           </p>
         </div>
@@ -73,16 +71,14 @@ export default function AplicacionesPage() {
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
           <input
-            className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre o puesto..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <select
-          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
           value={committeeFilter}
           onChange={e => setCommitteeFilter(e.target.value)}
         >
@@ -100,16 +96,15 @@ export default function AplicacionesPage() {
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150',
+              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
               statusFilter === f.key
                 ? 'bg-navy text-white border-navy'
                 : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
             )}
-            style={{ fontFamily: 'var(--font-display)' }}
           >
             {f.label}
             {f.key === 'pending' && pending > 0 && (
-              <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[9px] px-1.5 py-0.5" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[9px] px-1.5 py-0.5 font-display">
                 {pending}
               </span>
             )}
@@ -119,8 +114,7 @@ export default function AplicacionesPage() {
 
       {/* Table */}
       <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
@@ -129,8 +123,7 @@ export default function AplicacionesPage() {
                 {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50"
-                    style={{ fontFamily: 'var(--font-display)' }}
+                    className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50 font-display"
                   >
                     {h}
                   </th>
@@ -146,38 +139,36 @@ export default function AplicacionesPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                        <span className="text-[10px] font-bold text-white font-display">
                           {a.applicant_initials}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                      <span className="text-sm font-medium text-navy font-body">
                         {a.applicant_name}
                       </span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[13px] font-medium text-navy font-body">
                       {a.vacancy_title}
                     </p>
-                    <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[11px] text-navy-light/50 font-body">
                       {a.committee_name}
                     </p>
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-medium text-navy-light/60"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-medium text-navy-light/60 font-display"
                     >
                       {a.area}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
                     {new Date(a.applied_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', APP_STATUS_COLORS[a.status])}
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', APP_STATUS_COLORS[a.status])}
                     >
                       {APP_STATUS_LABELS[a.status]}
                     </span>
@@ -185,8 +176,7 @@ export default function AplicacionesPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/servidores/vacantes/${a.vacancy_id}`}
-                      className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors"
-                      style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body"
                     >
                       Ver puesto
                       <ChevronRight size={11} />
@@ -199,7 +189,7 @@ export default function AplicacionesPage() {
         </div>
         {filtered.length === 0 && (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/40 font-body">
               No hay aplicaciones con ese filtro.
             </p>
           </div>

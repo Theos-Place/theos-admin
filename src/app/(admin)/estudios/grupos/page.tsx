@@ -148,12 +148,11 @@ export default function GruposPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
           >
             Grupos
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-navy-light/60 font-body">
             Todos los grupos de estudio bíblico
           </p>
         </div>
@@ -171,8 +170,7 @@ export default function GruposPage() {
           />
           <Link
             href="/estudios/grupos/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             <Plus size={14} />
             Nuevo grupo
@@ -181,13 +179,12 @@ export default function GruposPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex flex-wrap gap-3 items-end">
           {/* Status */}
           <div className="space-y-1.5">
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/40"
-              style={{ fontFamily: 'var(--font-display)' }}
+              className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
             >
               Estado
             </p>
@@ -200,9 +197,9 @@ export default function GruposPage() {
                     'rounded-lg px-2.5 py-1 text-[11px] font-medium border transition-all',
                     selectedStatuses.includes(s)
                       ? 'bg-navy text-white border-navy'
-                      : 'text-navy-light hover:bg-surface-low'
+                      : 'text-navy-light hover:bg-surface-low',
+                    'border-[var(--outline-variant)] font-display',
                   )}
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
                 >
                   {STATUS_LABELS[s]}
                 </button>
@@ -212,12 +209,11 @@ export default function GruposPage() {
 
           {/* Type */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
               Tipo de estudio
             </p>
             <select
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={cn(inputCls, 'font-body')}
               value={selectedType}
               onChange={e => setSelectedType(e.target.value)}
             >
@@ -230,12 +226,11 @@ export default function GruposPage() {
 
           {/* Zone */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
               Zona
             </p>
             <select
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={cn(inputCls, 'font-body')}
               value={selectedZone}
               onChange={e => setSelectedZone(e.target.value)}
             >
@@ -251,7 +246,7 @@ export default function GruposPage() {
 
           {/* Day */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
               Día
             </p>
             <div className="flex gap-1">
@@ -263,9 +258,9 @@ export default function GruposPage() {
                     'h-8 w-8 rounded-lg text-[12px] font-medium border transition-all',
                     selectedDay === d
                       ? 'bg-navy text-white border-navy'
-                      : 'text-navy-light hover:bg-surface-low'
+                      : 'text-navy-light hover:bg-surface-low',
+                    'border-[var(--outline-variant)] font-display',
                   )}
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
                 >
                   {d}
                 </button>
@@ -277,8 +272,7 @@ export default function GruposPage() {
 
       {/* Stats row */}
       <div
-        className="flex items-center gap-1 text-[12px] text-navy-light/60 px-1"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="flex items-center gap-1 text-[12px] text-navy-light/60 px-1 font-body"
       >
         <span><strong className="text-navy">{filtered.length}</strong> grupos filtrados</span>
         <span className="mx-2 text-navy-light/30">·</span>
@@ -288,7 +282,7 @@ export default function GruposPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -313,51 +307,49 @@ export default function GruposPage() {
                 return (
                   <tr
                     key={group.id}
-                    className="hover:bg-surface-low transition-colors"
-                    style={{ borderBottom: '1px solid var(--outline-variant)' }}
+                    className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
                   >
                     {visibleColumns.map(col => {
                       switch (String(col.key)) {
                         case 'study_type_id':
                           return <td key="study_type_id" className="px-4 py-3"><StudyTypeBadge code={group.study_type_id} size="sm" /></td>
                         case 'study_stage':
-                          return <td key="study_stage" className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{studyType?.stage ?? '—'}</td>
+                          return <td key="study_stage" className="px-4 py-3 text-[12px] text-navy-light/60 font-body">{studyType?.stage ?? '—'}</td>
                         case 'leader_name':
                           return (
                             <td key="leader_name" className="px-4 py-3">
                               {group.leader_name ? (
                                 <div className="flex items-center gap-2">
                                   <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">{getInitials(group.leader_name)}</div>
-                                  <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{group.leader_name}</span>
+                                  <span className="text-sm text-navy font-body">{group.leader_name}</span>
                                 </div>
                               ) : <span className="text-[11px] text-amber-600">Sin asignar</span>}
                             </td>
                           )
                         case 'zone':
-                          return <td key="zone" className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{sedeLabel(group.zone)}</td>
+                          return <td key="zone" className="px-4 py-3 text-sm text-navy-light/70 font-body">{sedeLabel(group.zone)}</td>
                         case 'schedule':
-                          return <td key="schedule" className="px-4 py-3 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{group.schedule_days.join('/')} {group.schedule_time}</td>
+                          return <td key="schedule" className="px-4 py-3 text-[12px] text-navy-light/60 font-body">{group.schedule_days.join('/')} {group.schedule_time}</td>
                         case 'participants_count':
-                          return <td key="participants_count" className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{enrolled}/{group.max_capacity}</td>
+                          return <td key="participants_count" className="px-4 py-3 text-sm text-navy font-body">{enrolled}/{group.max_capacity}</td>
                         case 'max_capacity':
-                          return <td key="max_capacity" className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{group.max_capacity}</td>
+                          return <td key="max_capacity" className="px-4 py-3 text-sm text-navy font-body">{group.max_capacity}</td>
                         case 'status':
                           return <td key="status" className="px-4 py-3"><GroupStatusBadge status={group.status} /></td>
                         case 'start_date':
-                          return <td key="start_date" className="px-4 py-3 text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{group.start_date ? new Date(group.start_date).toLocaleDateString('es-CR') : '—'}</td>
+                          return <td key="start_date" className="px-4 py-3 text-[12px] text-navy-light/70 font-body">{group.start_date ? new Date(group.start_date).toLocaleDateString('es-CR') : '—'}</td>
                         case 'end_date':
-                          return <td key="end_date" className="px-4 py-3 text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{group.end_date ? new Date(group.end_date).toLocaleDateString('es-CR') : '—'}</td>
+                          return <td key="end_date" className="px-4 py-3 text-[12px] text-navy-light/70 font-body">{group.end_date ? new Date(group.end_date).toLocaleDateString('es-CR') : '—'}</td>
                         default: {
                           const rawVal = (group as Record<string, unknown>)[String(col.key)]
-                          return <td key={String(col.key)} className="px-4 py-3 text-sm text-navy-light/70 max-w-[160px] truncate" style={{ fontFamily: 'var(--font-body)' }}>{rawVal != null ? String(rawVal) : '—'}</td>
+                          return <td key={String(col.key)} className="px-4 py-3 text-sm text-navy-light/70 max-w-[160px] truncate font-body">{rawVal != null ? String(rawVal) : '—'}</td>
                         }
                       }
                     })}
                     <td className="px-4 py-3">
                       <Link
                         href={`/estudios/grupos/${group.id}`}
-                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors"
-                        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                       >
                         Ver
                       </Link>
@@ -370,7 +362,7 @@ export default function GruposPage() {
         </div>
         {filtered.length === 0 && (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/40 font-body">
               No se encontraron grupos con esos filtros.
             </p>
           </div>

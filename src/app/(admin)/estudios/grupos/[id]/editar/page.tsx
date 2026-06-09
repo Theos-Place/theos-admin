@@ -13,8 +13,8 @@ const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles', J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo',
 }
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
-const labelCls = 'text-[11px] text-navy-light/60'
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
+const labelCls = 'text-[11px] text-navy-light/60 font-display'
 
 export default function EditarGrupoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -65,7 +65,7 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
         <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
           <ChevronLeft size={16} /> Grupos
         </Link>
-        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Grupo no encontrado.</p>
+        <p className="text-navy-light/60 font-body">Grupo no encontrado.</p>
       </div>
     )
   }
@@ -107,8 +107,7 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
     <div className="max-w-2xl space-y-6">
       <Link
         href={`/estudios/grupos/${id}`}
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver al grupo
       </Link>
@@ -116,21 +115,21 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
       <div className="flex items-center gap-3">
         <StudyTypeBadge code={group.study_type_id} name={studyType?.name} size="md" />
         <div>
-          <h1 className="text-2xl text-navy" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+          <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
             Editar grupo
           </h1>
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             {studyType?.name ?? group.study_type_id} · {sedeLabel(group.zone)}
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="grid grid-cols-2 gap-4">
           {/* Dirigente */}
           <div className="space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Dirigente</label>
-            <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={leaderId} onChange={e => setLeaderId(e.target.value)}>
+            <label className={labelCls}>Dirigente</label>
+            <select className={inputCls} value={leaderId} onChange={e => setLeaderId(e.target.value)}>
               <option value="">Sin asignar</option>
               {leaders.map(l => <option key={l.id} value={l.id}>{l.member_name}</option>)}
             </select>
@@ -138,10 +137,9 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
 
           {/* Co-dirigente */}
           <div className="space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Co-dirigente</label>
+            <label className={labelCls}>Co-dirigente</label>
             <select
               className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
               value={coLeaderId}
               onChange={e => setCoLeaderId(e.target.value)}
             >
@@ -152,8 +150,8 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
 
           {/* Zona */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Zona</label>
-            <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={zone} onChange={e => setZone(e.target.value)}>
+            <label className={labelCls}>Zona</label>
+            <select className={inputCls} value={zone} onChange={e => setZone(e.target.value)}>
               <option value="">Sin zona</option>
               {SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -161,7 +159,7 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
 
           {/* Días */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Días</label>
+            <label className={labelCls}>Días</label>
             <div className="flex gap-1.5 flex-wrap">
               {DAYS.map(d => (
                 <button
@@ -171,8 +169,8 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
                   className={cn(
                     'rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all',
                     days.includes(d) ? 'bg-navy text-white border-navy' : 'text-navy-light hover:bg-surface-low',
+                    'border-[var(--outline-variant)] font-display',
                   )}
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
                 >
                   {DAY_LABELS[d]}
                 </button>
@@ -182,54 +180,52 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
 
           {/* Horario */}
           <div className="space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Horario</label>
-            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="7:30pm" value={time} onChange={e => setTime(e.target.value)} />
+            <label className={labelCls}>Horario</label>
+            <input className={inputCls} placeholder="7:30pm" value={time} onChange={e => setTime(e.target.value)} />
           </div>
 
           {/* Capacidad */}
           <div className="space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Capacidad máxima</label>
-            <input type="number" min={1} className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={capacity} onChange={e => setCapacity(e.target.value)} />
+            <label className={labelCls}>Capacidad máxima</label>
+            <input type="number" min={1} className={inputCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
           </div>
 
           {/* Ubicación */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Ubicación</label>
-            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Edificio Meridiano, Escazú" value={location} onChange={e => setLocation(e.target.value)} />
+            <label className={labelCls}>Ubicación</label>
+            <input className={inputCls} placeholder="Edificio Meridiano, Escazú" value={location} onChange={e => setLocation(e.target.value)} />
           </div>
 
           {/* Fechas */}
           <div className="space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Fecha de inicio</label>
-            <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={startDate} onChange={e => setStartDate(e.target.value)} />
+            <label className={labelCls}>Fecha de inicio</label>
+            <input type="date" className={inputCls} value={startDate} onChange={e => setStartDate(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Fecha de cierre</label>
-            <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={endDate} onChange={e => setEndDate(e.target.value)} />
+            <label className={labelCls}>Fecha de cierre</label>
+            <input type="date" className={inputCls} value={endDate} onChange={e => setEndDate(e.target.value)} />
           </div>
 
           {/* WhatsApp */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Enlace de grupo de WhatsApp</label>
-            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="https://chat.whatsapp.com/..." value={waUrl} onChange={e => setWaUrl(e.target.value)} />
+            <label className={labelCls}>Enlace de grupo de WhatsApp</label>
+            <input className={inputCls} placeholder="https://chat.whatsapp.com/..." value={waUrl} onChange={e => setWaUrl(e.target.value)} />
           </div>
         </div>
 
-        {error && <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+        {error && <p className="text-sm text-coral font-body">{error}</p>}
 
         <div className="flex justify-between pt-2">
           <Link
             href={`/estudios/grupos/${id}`}
-            className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             Cancelar
           </Link>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>

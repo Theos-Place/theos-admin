@@ -44,18 +44,17 @@ export function Step2Programacion({
   onRecurrenceRuleChange,
 }: Step2Props) {
   return (
-    <div className="card" style={{ padding: '20px 24px', width: '100%' }}>
-      <div className="card-title" style={{ marginBottom: 20 }}>Programación y ubicación</div>
+    <div className="card py-5 px-6 w-full">
+      <div className="card-title mb-5">Programación y ubicación</div>
 
       {/* Fechas */}
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-5">
         <div className="form-row">
           <div>
             <FieldLabel>Fecha inicio</FieldLabel>
             <input
               type="date"
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={`${inputCls} font-body`}
               value={start_date}
               onChange={e => onStartDateChange(e.target.value)}
             />
@@ -64,8 +63,7 @@ export function Step2Programacion({
             <FieldLabel>Hora inicio</FieldLabel>
             <input
               type="time"
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={`${inputCls} font-body`}
               value={start_time}
               onChange={e => onStartTimeChange(e.target.value)}
             />
@@ -74,8 +72,7 @@ export function Step2Programacion({
             <FieldLabel>Fecha fin</FieldLabel>
             <input
               type="date"
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={`${inputCls} font-body`}
               value={end_date}
               onChange={e => onEndDateChange(e.target.value)}
             />
@@ -84,8 +81,7 @@ export function Step2Programacion({
             <FieldLabel>Hora fin</FieldLabel>
             <input
               type="time"
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={`${inputCls} font-body`}
               value={end_time}
               onChange={e => onEndTimeChange(e.target.value)}
             />
@@ -95,8 +91,7 @@ export function Step2Programacion({
 
       {/* Ubicación */}
       <div
-        className="pt-4 border-t space-y-4"
-        style={{ borderColor: 'var(--outline-variant)', marginBottom: 20 }}
+        className="pt-4 border-t border-t-[var(--outline-variant)] space-y-4 mb-5"
       >
         <Toggle
           checked={is_virtual}
@@ -108,8 +103,7 @@ export function Step2Programacion({
             <div>
               <FieldLabel>Dirección</FieldLabel>
               <input
-                className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
+                className={`${inputCls} font-body`}
                 placeholder="Dirección exacta del evento..."
                 value={location}
                 onChange={e => onLocationChange(e.target.value)}
@@ -119,8 +113,7 @@ export function Step2Programacion({
               <FieldLabel>Link Waze / Google Maps</FieldLabel>
               <div className="flex gap-2">
                 <input
-                  className={inputCls}
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className={`${inputCls} font-body`}
                   placeholder="https://maps.google.com/..."
                   value={location_map_url}
                   onChange={e => onLocationMapUrlChange(e.target.value)}
@@ -130,8 +123,7 @@ export function Step2Programacion({
                     href={location_map_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                   >
                     <ExternalLink size={13} />
                     Probar
@@ -145,8 +137,7 @@ export function Step2Programacion({
 
       {/* Recurrencia */}
       <div
-        className="pt-4 border-t space-y-4"
-        style={{ borderColor: 'var(--outline-variant)' }}
+        className="pt-4 border-t border-t-[var(--outline-variant)] space-y-4"
       >
         <Toggle
           checked={is_recurring}

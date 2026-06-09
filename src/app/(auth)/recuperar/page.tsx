@@ -37,39 +37,36 @@ export default function RecuperarPage() {
   if (sent) {
     return (
       <div
-        className="w-full text-center"
-        style={{ maxWidth: 400, animation: 'fadeIn 0.35s ease-out' }}
+        className="w-full text-center max-w-[400px]"
+        style={{ animation: 'fadeIn 0.35s ease-out' }}
       >
         <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
 
         <div className="flex justify-center mb-5">
           <div
-            className="h-16 w-16 rounded-2xl flex items-center justify-center"
-            style={{ background: 'rgba(112,189,194,0.15)' }}
+            className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(112,189,194,0.15)]"
           >
-            <CheckCircle size={28} style={{ color: '#519DA2' }} />
+            <CheckCircle size={28} className="text-teal-deep" />
           </div>
         </div>
 
         <h2
-          className="text-2xl text-navy mb-3"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.025em' }}
+          className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]"
         >
           Correo enviado
         </h2>
 
-        <p className="text-sm text-navy-light/55 leading-relaxed mb-2" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/55 leading-relaxed mb-2 font-body">
           Si el correo ingresado está registrado en el sistema, recibirás las instrucciones en los próximos minutos.
         </p>
 
-        <p className="text-[12px] text-navy-light/40 mb-8" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-[12px] text-navy-light/40 mb-8 font-body">
           Revisá también tu carpeta de spam.
         </p>
 
         <Link
           href="/login"
-          className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all"
-          style={{ background: '#EF5554', fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px rgba(239,85,84,0.28)' }}
+          className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
         >
           Volver al login
         </Link>
@@ -78,13 +75,12 @@ export default function RecuperarPage() {
   }
 
   return (
-    <div className="w-full" style={{ maxWidth: 400 }}>
+    <div className="w-full max-w-[400px]">
 
       {/* Back link */}
       <Link
         href="/login"
-        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/40 hover:text-navy-light transition-colors mb-7"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/40 hover:text-navy-light transition-colors mb-7 font-body"
       >
         <ChevronLeft size={15} />
         Volver al login
@@ -93,18 +89,16 @@ export default function RecuperarPage() {
       {/* Header */}
       <div className="mb-8">
         <div
-          className="h-11 w-11 rounded-xl flex items-center justify-center mb-5"
-          style={{ background: 'rgba(112,189,194,0.12)' }}
+          className="h-11 w-11 rounded-xl flex items-center justify-center mb-5 bg-[rgba(112,189,194,0.12)]"
         >
-          <Mail size={20} style={{ color: '#519DA2' }} />
+          <Mail size={20} className="text-teal-deep" />
         </div>
         <h1
-          className="text-3xl text-navy mb-2"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.025em' }}
+          className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]"
         >
           Recuperá tu acceso
         </h1>
-        <p className="text-sm text-navy-light/50 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 leading-relaxed font-body">
           Ingresá tu correo y te enviaremos<br />
           instrucciones para restablecer tu contraseña.
         </p>
@@ -114,8 +108,7 @@ export default function RecuperarPage() {
         <div>
           <label
             htmlFor="recuperar-email"
-            className="block text-[12px] font-medium text-navy-light/60 mb-1.5"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="block text-[12px] font-medium text-navy-light/60 mb-1.5 font-body"
           >
             Correo electrónico
           </label>
@@ -126,11 +119,10 @@ export default function RecuperarPage() {
             value={email}
             onChange={e => { setEmail(e.target.value); if (emailErr) setEmailErr('') }}
             placeholder="vos@theosplace.org"
-            className={`${INPUT} ${emailErr ? 'border-coral/50 focus:border-coral/60 focus:ring-coral/10' : 'border-[rgba(22,20,64,0.15)]'}`}
-            style={{ fontFamily: 'var(--font-body)' }}
+            className={`${INPUT} font-body ${emailErr ? 'border-coral/50 focus:border-coral/60 focus:ring-coral/10' : 'border-[rgba(22,20,64,0.15)]'}`}
           />
           {emailErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral font-body">
               <AlertCircle size={12} className="shrink-0" />
               {emailErr}
             </p>
@@ -140,10 +132,9 @@ export default function RecuperarPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all"
+          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body"
           style={{
             background: loading ? '#c0453a' : '#EF5554',
-            fontFamily: 'var(--font-body)',
             boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.28)',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}

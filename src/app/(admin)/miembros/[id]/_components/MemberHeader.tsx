@@ -43,17 +43,15 @@ export function MemberHeader({
 }: Props) {
   return (
     <div
-      className="rounded-2xl bg-surface-card p-5"
-      style={{ boxShadow: 'var(--shadow-md)' }}
+      className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
     >
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div
           className={cn(
-            'flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-white text-lg',
+            'flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-white text-lg font-display font-extrabold',
             avatarColor(member.id)
           )}
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}
         >
           {initials(member.first_name, member.last_name)}
         </div>
@@ -61,12 +59,11 @@ export function MemberHeader({
         {/* Name + details */}
         <div className="flex-1 min-w-0">
           <h1
-            className="text-2xl text-navy leading-tight"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy leading-tight font-display font-extrabold tracking-[-0.02em]"
           >
             {member.first_name} {member.last_name}
           </h1>
-          <p className="text-xs text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+          <p className="text-xs text-navy-light/50 mt-0.5 font-mono">
             {member.cedula ? `Cédula: ${member.cedula}` : 'Sin cédula'}
             {member.join_date ? ` · Se unió el ${formatDate(member.join_date)}` : ''}
           </p>
@@ -75,12 +72,11 @@ export function MemberHeader({
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span
               className={cn(
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs',
+                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-body',
                 member.is_active
                   ? 'bg-teal-soft/50 text-teal-deep'
                   : 'bg-surface-low text-navy-light/50'
               )}
-              style={{ fontFamily: 'var(--font-body)' }}
             >
               <span
                 className={cn(
@@ -92,24 +88,21 @@ export function MemberHeader({
             </span>
             {member.is_donor && (
               <span
-                className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body"
               >
                 Donador
               </span>
             )}
             {member.is_server && (
               <span
-                className="rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-xs text-teal-deep"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-xs text-teal-deep font-body"
               >
                 Servidor
               </span>
             )}
             {member.es_dirigente && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-navy/10 px-2.5 py-0.5 text-xs text-navy"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="inline-flex items-center gap-1 rounded-full bg-navy/10 px-2.5 py-0.5 text-xs text-navy font-body"
               >
                 <Star size={10} strokeWidth={2} />
                 Dirigente
@@ -117,8 +110,7 @@ export function MemberHeader({
             )}
             {member.roles.includes('admin') && (
               <span
-                className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body"
               >
                 Admin
               </span>
@@ -130,42 +122,36 @@ export function MemberHeader({
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onEdit}
-            className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Editar
           </button>
           <button
             onClick={onCommunicate}
-            className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Comunicar
           </button>
           <div className="relative">
             <button
               onClick={onMenuToggle}
-              className="rounded-xl border px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               ···
             </button>
             {menuOpen && (
               <div
-                className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-surface-card py-1 z-20"
-                style={{ boxShadow: 'var(--shadow-lg)', border: '1px solid var(--outline-variant)' }}
+                className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-surface-card py-1 z-20 shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
               >
                 <button
                   onClick={onDeactivate}
-                  className="w-full px-4 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full px-4 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low transition-colors font-body"
                 >
                   Desactivar perfil
                 </button>
                 <button
                   onClick={onMerge}
-                  className="w-full px-4 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full px-4 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low transition-colors font-body"
                 >
                   Fusionar duplicado
                 </button>

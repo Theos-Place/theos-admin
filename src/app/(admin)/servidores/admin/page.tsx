@@ -9,8 +9,8 @@ import type { CommitteePosition } from '@/types/server'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
-const labelCls = 'text-[10px] tracking-widest uppercase text-navy-light/40'
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
+const labelCls = 'text-[10px] tracking-widest uppercase text-navy-light/40 font-display'
 
 // ─── Area modal ───────────────────────────────────────────────────────────────
 
@@ -30,11 +30,10 @@ function AreaModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-base font-bold text-navy font-display">
             {initial ? 'Editar área' : 'Nueva área'}
           </h2>
           <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors">
@@ -43,11 +42,10 @@ function AreaModal({
         </div>
 
         <div className="space-y-1.5">
-          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Nombre *</label>
+          <label className={labelCls}>Nombre *</label>
           <input
             autoFocus
             className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
             placeholder="Ej. Área Espiritual"
             value={name}
             onChange={e => setName(e.target.value)}
@@ -59,15 +57,13 @@ function AreaModal({
           <button
             disabled={!valid}
             onClick={() => onSave(name.trim())}
-            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body"
           >
             {initial ? 'Guardar cambios' : 'Crear área'}
           </button>
           <button
             onClick={onClose}
-            className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </button>
@@ -101,11 +97,10 @@ function CommitteeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-base font-bold text-navy font-display">
             {initial ? 'Editar comité' : 'Nuevo comité'}
           </h2>
           <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors">
@@ -114,11 +109,10 @@ function CommitteeModal({
         </div>
 
         <div className="space-y-1.5">
-          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Nombre *</label>
+          <label className={labelCls}>Nombre *</label>
           <input
             autoFocus
             className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
             placeholder="Ej. Comité de Anfitriones"
             value={name}
             onChange={e => setName(e.target.value)}
@@ -126,10 +120,9 @@ function CommitteeModal({
         </div>
 
         <div className="space-y-1.5">
-          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Área *</label>
+          <label className={labelCls}>Área *</label>
           <select
             className={inputCls}
-            style={{ fontFamily: 'var(--font-body)' }}
             value={areaCode}
             onChange={e => setAreaCode(e.target.value)}
           >
@@ -143,15 +136,13 @@ function CommitteeModal({
           <button
             disabled={!valid}
             onClick={() => onSave(name.trim(), areaCode)}
-            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body"
           >
             {initial ? 'Guardar cambios' : 'Crear comité'}
           </button>
           <button
             onClick={onClose}
-            className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </button>
@@ -178,18 +169,17 @@ function DeactivateConfirm({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onCancel} />
       <div
-        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
       >
         <div className="flex items-start gap-3">
           <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
             <AlertTriangle size={18} className="text-amber-500" />
           </div>
           <div>
-            <p className="text-sm font-bold text-navy mb-1" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-sm font-bold text-navy mb-1 font-display">
               ¿Desactivar &ldquo;{name}&rdquo;?
             </p>
-            <p className="text-[13px] text-navy-light/60 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[13px] text-navy-light/60 leading-relaxed font-body">
               Este comité tiene <strong className="text-navy">{memberCount} miembro{memberCount !== 1 ? 's' : ''} activo{memberCount !== 1 ? 's' : ''}</strong>.
               Desactivarlo lo ocultará en formularios de postulación y perfil de servidores.
             </p>
@@ -198,15 +188,13 @@ function DeactivateConfirm({
         <div className="flex gap-2">
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-full bg-amber-500 px-4 py-2.5 text-sm text-white hover:bg-amber-600 transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-full bg-amber-500 px-4 py-2.5 text-sm text-white hover:bg-amber-600 transition-colors font-body"
           >
             Desactivar de igual manera
           </button>
           <button
             onClick={onCancel}
-            className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </button>
@@ -232,35 +220,33 @@ function PositionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
+      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Nuevo puesto</h2>
+          <h2 className="text-base font-bold text-navy font-display">Nuevo puesto</h2>
           <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors"><X size={18} /></button>
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Nombre *</label>
-          <input autoFocus className={inputCls} style={{ fontFamily: 'var(--font-body)' }}
+          <label className={labelCls}>Nombre *</label>
+          <input autoFocus className={inputCls}
             placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Descripción</label>
-          <textarea className={inputCls} style={{ fontFamily: 'var(--font-body)', resize: 'none' }} rows={3}
+          <label className={labelCls}>Descripción</label>
+          <textarea className={cn(inputCls, 'resize-none')} rows={3}
             placeholder="Funciones del puesto..." value={description} onChange={e => setDescription(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Máximo de voluntarios</label>
-          <input type="number" min={1} className={inputCls} style={{ fontFamily: 'var(--font-body)' }}
+          <label className={labelCls}>Máximo de voluntarios</label>
+          <input type="number" min={1} className={inputCls}
             value={maxVol} onChange={e => setMaxVol(e.target.value)} />
         </div>
         <div className="flex gap-2 pt-1">
           <button disabled={!valid}
             onClick={() => onSave({ title: title.trim(), description: description.trim(), maxVolunteers: Math.max(1, Number(maxVol) || 1) })}
-            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40"
-            style={{ fontFamily: 'var(--font-body)' }}>
+            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body">
             Crear puesto
           </button>
-          <button onClick={onClose} className="rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}>
+          <button onClick={onClose} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
             Cancelar
           </button>
         </div>
@@ -543,12 +529,11 @@ export default function ServidoresAdminPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
           >
             Áreas y comités
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="mt-1 text-sm text-navy-light/60 font-body">
             {activeCount} área{activeCount !== 1 ? 's' : ''} activa{activeCount !== 1 ? 's' : ''} · {activeCommCount} comités activos
           </p>
         </div>
@@ -559,20 +544,17 @@ export default function ServidoresAdminPage() {
 
         {/* ── Left: areas ─────────────────────────────────────────── */}
         <div
-          className="rounded-2xl overflow-hidden flex flex-col"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', minHeight: 480 }}
+          className="rounded-2xl overflow-hidden flex flex-col bg-surface-card shadow-[var(--shadow-md)] min-h-[480px]"
         >
           <div
-            className="flex items-center justify-between px-4 py-3.5"
-            style={{ borderBottom: '1px solid var(--outline-variant)' }}
+            className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--outline-variant)]"
           >
-            <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50 font-display">
               Áreas ({areas.length})
             </span>
             <button
               onClick={() => setAreaModal({ open: true, editing: null })}
-              className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors font-body"
             >
               <Plus size={12} />
               Nueva
@@ -589,17 +571,16 @@ export default function ServidoresAdminPage() {
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors group',
                     isSelected ? 'bg-navy text-white' : 'hover:bg-surface-low',
+                    i < areas.length - 1 && 'border-b border-[var(--outline-variant)]',
                   )}
-                  style={i < areas.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   <div className="flex-1 min-w-0">
                     <p
-                      className={cn('text-[13px] font-medium truncate', isSelected ? 'text-white' : 'text-navy')}
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      className={cn('text-[13px] font-medium truncate font-body', isSelected ? 'text-white' : 'text-navy')}
                     >
                       {area.name}
                     </p>
-                    <p className={cn('text-[11px] mt-0.5', isSelected ? 'text-white/50' : 'text-navy-light/40')} style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className={cn('text-[11px] mt-0.5 font-body', isSelected ? 'text-white/50' : 'text-navy-light/40')}>
                       {committees.filter(c => c.area_code === area.id && c.is_active).length} comité{committees.filter(c => c.area_code === area.id && c.is_active).length !== 1 ? 's' : ''} activo{committees.filter(c => c.area_code === area.id && c.is_active).length !== 1 ? 's' : ''}
                     </p>
                   </div>
@@ -607,9 +588,8 @@ export default function ServidoresAdminPage() {
                   <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
                     {/* Toggle */}
                     <label
-                      className="toggle"
+                      className="toggle cursor-pointer"
                       title={area.is_active ? 'Desactivar área' : 'Activar área'}
-                      style={{ cursor: 'pointer' }}
                     >
                       <input
                         type="checkbox"
@@ -652,25 +632,22 @@ export default function ServidoresAdminPage() {
         {/* ── Right: committees ────────────────────────────────────── */}
         {selectedArea ? (
           <div
-            className="rounded-2xl overflow-hidden flex flex-col"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', minHeight: 480 }}
+            className="rounded-2xl overflow-hidden flex flex-col bg-surface-card shadow-[var(--shadow-md)] min-h-[480px]"
           >
             <div
-              className="flex items-center justify-between px-5 py-3.5"
-              style={{ borderBottom: '1px solid var(--outline-variant)' }}
+              className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--outline-variant)]"
             >
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50 font-display">
                   Comités
                 </span>
-                <p className="text-base font-bold text-navy mt-0.5" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-base font-bold text-navy mt-0.5 font-display">
                   {selectedArea.name}
                 </p>
               </div>
               <button
                 onClick={() => setCommModal({ open: true, editing: null })}
-                className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors font-body"
               >
                 <Plus size={12} />
                 Nuevo
@@ -680,13 +657,12 @@ export default function ServidoresAdminPage() {
             {areaComm.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 p-12 text-center">
                 <LayoutGrid size={28} className="text-navy-light/20" />
-                <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-sm text-navy-light/40 font-body">
                   No hay comités en esta área
                 </p>
                 <button
                   onClick={() => setCommModal({ open: true, editing: null })}
-                  className="text-[12px] text-coral hover:underline"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="text-[12px] text-coral hover:underline font-body"
                 >
                   Crear el primero
                 </button>
@@ -696,12 +672,11 @@ export default function ServidoresAdminPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                      <tr className="border-b border-[var(--outline-variant)]">
                         {['Comité', 'Miembros activos', 'Estado', ''].map(h => (
                           <th
                             key={h}
-                            className="px-5 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap"
-                            style={{ fontFamily: 'var(--font-display)' }}
+                            className="px-5 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap font-display"
                           >
                             {h}
                           </th>
@@ -716,30 +691,28 @@ export default function ServidoresAdminPage() {
                             key={c.id}
                             onClick={() => setSelectedCommId(prev => prev === c.id ? null : c.id)}
                             className={cn('group transition-colors cursor-pointer', !c.is_active && 'opacity-50',
-                              selectedCommId === c.id ? 'bg-coral/5' : 'hover:bg-surface-low')}
-                            style={i < areaComm.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                              selectedCommId === c.id ? 'bg-coral/5' : 'hover:bg-surface-low',
+                              i < areaComm.length - 1 && 'border-b border-[var(--outline-variant)]')}
                           >
                             <td className="px-5 py-3">
-                              <span className={cn('text-[13px] font-medium', selectedCommId === c.id ? 'text-coral' : 'text-navy')} style={{ fontFamily: 'var(--font-body)' }}>
+                              <span className={cn('text-[13px] font-medium font-body', selectedCommId === c.id ? 'text-coral' : 'text-navy')}>
                                 {c.name}
                               </span>
                             </td>
                             <td className="px-5 py-3">
                               <span
                                 className={cn(
-                                  'text-[12px]',
+                                  'text-[12px] font-body',
                                   memberCount > 0 ? 'text-navy-light/70' : 'text-navy-light/30 italic'
                                 )}
-                                style={{ fontFamily: 'var(--font-body)' }}
                               >
                                 {memberCount > 0 ? `${memberCount} miembro${memberCount !== 1 ? 's' : ''}` : '—'}
                               </span>
                             </td>
                             <td className="px-5 py-3" onClick={e => e.stopPropagation()}>
                               <label
-                                className="toggle"
+                                className="toggle cursor-pointer"
                                 title={c.is_active ? 'Desactivar comité' : 'Activar comité'}
-                                style={{ cursor: 'pointer' }}
                               >
                                 <input
                                   type="checkbox"
@@ -753,16 +726,14 @@ export default function ServidoresAdminPage() {
                               <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                   onClick={() => setCommModal({ open: true, editing: c })}
-                                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                                 >
                                   <Edit2 size={11} />
                                   Editar
                                 </button>
                                 <button
                                   onClick={() => requestDeleteCommittee(c)}
-                                  className="inline-flex items-center justify-center rounded-full border h-7 w-7 text-navy-light/50 hover:text-coral hover:border-coral/30 transition-colors"
-                                  style={{ borderColor: 'var(--outline-variant)' }}
+                                  className="inline-flex items-center justify-center rounded-full border border-[var(--outline-variant)] h-7 w-7 text-navy-light/50 hover:text-coral hover:border-coral/30 transition-colors"
                                   title="Eliminar comité"
                                 >
                                   <Trash2 size={11} />
@@ -780,11 +751,10 @@ export default function ServidoresAdminPage() {
           </div>
         ) : (
           <div
-            className="rounded-2xl flex flex-col items-center justify-center gap-3 p-12 text-center"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', minHeight: 480 }}
+            className="rounded-2xl flex flex-col items-center justify-center gap-3 p-12 text-center bg-surface-card shadow-[var(--shadow-md)] min-h-[480px]"
           >
             <LayoutGrid size={32} className="text-navy-light/15" />
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/40 font-body">
               Seleccioná un área para ver sus comités
             </p>
           </div>
@@ -793,23 +763,21 @@ export default function ServidoresAdminPage() {
         {/* ── Third panel: puestos del comité seleccionado (Cambio 3) ── */}
         {selectedComm && (
           <div
-            className="rounded-2xl overflow-hidden flex flex-col"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)', minHeight: 480 }}
+            className="rounded-2xl overflow-hidden flex flex-col bg-surface-card shadow-[var(--shadow-md)] min-h-[480px]"
           >
-            <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--outline-variant)]">
               <div className="min-w-0">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50" style={{ fontFamily: 'var(--font-display)' }}>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50 font-display">
                   Puestos
                 </span>
-                <p className="text-base font-bold text-navy mt-0.5 truncate" style={{ fontFamily: 'var(--font-display)' }}>
+                <p className="text-base font-bold text-navy mt-0.5 truncate font-display">
                   {selectedComm.name}
                 </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => setPosModalFor(selectedComm.id)}
-                  className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors font-body"
                 >
                   <Plus size={12} />
                   Nuevo
@@ -823,10 +791,10 @@ export default function ServidoresAdminPage() {
             {selectedCommPositions.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 p-10 text-center">
                 <LayoutGrid size={26} className="text-navy-light/20" />
-                <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-sm text-navy-light/40 font-body">
                   Este comité no tiene puestos
                 </p>
-                <button onClick={() => setPosModalFor(selectedComm.id)} className="text-[12px] text-coral hover:underline" style={{ fontFamily: 'var(--font-body)' }}>
+                <button onClick={() => setPosModalFor(selectedComm.id)} className="text-[12px] text-coral hover:underline font-body">
                   Crear el primero
                 </button>
               </div>
@@ -835,10 +803,10 @@ export default function ServidoresAdminPage() {
                 {selectedCommPositions.map((p, i) => (
                   <div
                     key={p.id}
-                    className="group flex items-center gap-2 px-5 py-2.5 hover:bg-surface-low transition-colors"
-                    style={i < selectedCommPositions.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                    className={cn('group flex items-center gap-2 px-5 py-2.5 hover:bg-surface-low transition-colors',
+                      i < selectedCommPositions.length - 1 && 'border-b border-[var(--outline-variant)]')}
                   >
-                    <span className="flex-1 text-[13px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>{p.title}</span>
+                    <span className="flex-1 text-[13px] text-navy font-body">{p.title}</span>
                     <button
                       onClick={() => requestDeletePosition(p)}
                       className="rounded-lg p-1.5 text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"

@@ -15,8 +15,8 @@ interface StepSidebarProps {
 
 export function StepSidebar({ step, onStepClick }: StepSidebarProps) {
   return (
-    <div style={{ position: 'sticky', top: 76 }}>
-      <div className="card" style={{ padding: '8px 0' }}>
+    <div className="sticky top-[76px]">
+      <div className="card py-2">
         {STEPS.map((s, idx) => {
           const done   = s.num < step
           const active = s.num === step
@@ -37,8 +37,8 @@ export function StepSidebar({ step, onStepClick }: StepSidebarProps) {
                     active ? 'bg-coral text-white' :
                     done   ? 'bg-teal-deep text-white' :
                     'bg-navy-light/15 text-navy-light/50',
+                    'font-display',
                   )}
-                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {done ? '✓' : s.num}
                 </div>
@@ -46,14 +46,14 @@ export function StepSidebar({ step, onStepClick }: StepSidebarProps) {
                   className={cn(
                     'text-[13px] font-medium transition-colors',
                     active ? 'text-navy' : done ? 'text-teal-deep' : 'text-navy-light/40',
+                    'font-display',
                   )}
-                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {s.label}
                 </span>
               </button>
               {idx < STEPS.length - 1 && (
-                <div className="mx-4 h-px" style={{ background: 'var(--outline-variant)' }} />
+                <div className="mx-4 h-px bg-[var(--outline-variant)]" />
               )}
             </Fragment>
           )

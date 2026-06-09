@@ -104,13 +104,13 @@ export function EventServersTab({
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Stats pills */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1.5 text-[12px] text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1.5 text-[12px] text-teal-deep font-body">
             <Check size={12} strokeWidth={2.5} /> {confirmedCount} confirmados
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-[12px] text-amber-700" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-[12px] text-amber-700 font-body">
             <Clock size={12} strokeWidth={2} className="animate-pulse" /> {pendingCount} pendientes
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1.5 text-[12px] text-navy/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1.5 text-[12px] text-navy/50 font-body">
             <XIcon size={12} strokeWidth={2} /> {declinedCount} declinaron
           </span>
         </div>
@@ -124,13 +124,12 @@ export function EventServersTab({
               >
                 <div className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', recurringGlobal ? 'translate-x-4' : 'translate-x-0')} />
               </div>
-              <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Aplicar a toda la serie</span>
+              <span className="text-[12px] text-navy-light/60 font-body">Aplicar a toda la serie</span>
             </label>
           )}
           <button
             onClick={() => { onShowAssignModal(); setModalStep(1) }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
           >
             <UserPlus size={13} /> Asignar servidor
           </button>
@@ -139,23 +138,23 @@ export function EventServersTab({
 
       {/* Bookings grouped by role */}
       {Object.keys(groupedBookings).length === 0 ? (
-        <div className="rounded-2xl p-10 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-10 text-center bg-surface-card shadow-[var(--shadow-md)]">
           <UserPlus size={28} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.25} />
-          <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>No hay servidores asignados aún.</p>
+          <p className="text-sm text-navy-light/40 font-body">No hay servidores asignados aún.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {Object.entries(groupedBookings).map(([role, bookings]) => (
-            <div key={role} className="rounded-2xl p-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>{role}</p>
+            <div key={role} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display">{role}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {bookings.map(b => (
-                  <div key={b.id} className="relative flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'var(--surface-low)' }}>
+                  <div key={b.id} className="relative flex items-center gap-3 rounded-xl px-3 py-2.5 bg-surface-low">
                     <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(b.member_name))}>
                       {b.member_initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>{b.member_name}</p>
+                      <p className="text-sm font-medium text-navy truncate font-body">{b.member_name}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={cn(
                           'rounded-md px-1.5 py-0.5 text-[10px] font-medium',
@@ -166,7 +165,7 @@ export function EventServersTab({
                           {b.status === 'confirmed' ? '✓ Confirmado' : b.status === 'pending' ? '⏳ Pendiente' : '✗ Declinó'}
                         </span>
                         {b.is_recurring && (
-                          <span className="text-[10px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                          <span className="text-[10px] text-navy-light/40 font-body">
                             <Link2 size={10} className="inline" /> Serie
                           </span>
                         )}
@@ -181,20 +180,17 @@ export function EventServersTab({
                       </button>
                       {openServerMenu === b.id && (
                         <div
-                          className="absolute right-0 top-full mt-1 rounded-xl overflow-hidden w-36 z-20"
-                          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--outline-variant)' }}
+                          className="absolute right-0 top-full mt-1 rounded-xl overflow-hidden w-36 z-20 bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
                         >
                           <button
                             onClick={() => onServerMenuToggle(b.id)}
-                            className="w-full text-left px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors"
-                            style={{ fontFamily: 'var(--font-body)' }}
+                            className="w-full text-left px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                           >
                             Cambiar rol
                           </button>
                           <button
                             onClick={() => onRemoveBooking(b.id)}
-                            className="w-full text-left px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors"
-                            style={{ fontFamily: 'var(--font-body)' }}
+                            className="w-full text-left px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
                           >
                             Quitar
                           </button>
@@ -214,16 +210,15 @@ export function EventServersTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onResetModal} />
           <div
-            className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden"
-            style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+            className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]"
           >
             {/* Modal header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-b-[var(--outline-variant)]">
               <div className="flex items-center gap-3">
                 <span className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white', modalStep === 1 ? 'bg-coral' : 'bg-teal-deep')}>
                   {modalStep}
                 </span>
-                <span className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+                <span className="text-sm font-semibold text-navy font-display">
                   {modalStep === 1 ? 'Buscar miembro' : 'Definir rol'}
                 </span>
               </div>
@@ -244,8 +239,7 @@ export function EventServersTab({
                       placeholder="Nombre o cédula..."
                       value={searchQuery}
                       onChange={e => onSearchQueryChange(e.target.value)}
-                      className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy-light/40"
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy-light/40 font-body"
                     />
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -255,7 +249,7 @@ export function EventServersTab({
                       checked={filterCommittee}
                       onChange={e => onFilterCommitteeChange(e.target.checked)}
                     />
-                    <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                    <span className="text-[12px] text-navy-light/60 font-body">
                       Solo miembros del comité organizador
                     </span>
                   </label>
@@ -276,10 +270,10 @@ export function EventServersTab({
                           {(m.first_name[0] + m.last_name[0]).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                          <p className="text-sm text-navy truncate font-body">
                             {m.first_name} {m.last_name}
                           </p>
-                          <p className="text-[11px] text-navy-light/40 truncate" style={{ fontFamily: 'var(--font-mono)' }}>
+                          <p className="text-[11px] text-navy-light/40 truncate font-mono">
                             {m.cedula ?? 'Sin cédula'}
                             {m.service_history.filter(s => s.status === 'activo').map(s => ` · ${s.committee}`).join('')}
                           </p>
@@ -288,7 +282,7 @@ export function EventServersTab({
                       </button>
                     ))}
                     {filteredMembers.length === 0 && (
-                      <p className="text-sm text-navy-light/40 text-center py-4" style={{ fontFamily: 'var(--font-body)' }}>Sin resultados</p>
+                      <p className="text-sm text-navy-light/40 text-center py-4 font-body">Sin resultados</p>
                     )}
                   </div>
                 </>
@@ -302,22 +296,21 @@ export function EventServersTab({
                       {(selectedMember.first_name[0] + selectedMember.last_name[0]).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                      <p className="text-sm font-medium text-navy font-body">
                         {selectedMember.first_name} {selectedMember.last_name}
                       </p>
-                      <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-mono)' }}>
+                      <p className="text-[11px] text-navy-light/50 font-mono">
                         {selectedMember.cedula ?? 'Sin cédula'}
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                    <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
                       Rol en este evento
                     </label>
                     <select
-                      className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                       value={assignRole}
                       onChange={e => onAssignRoleChange(e.target.value)}
                     >
@@ -333,8 +326,7 @@ export function EventServersTab({
                         placeholder="Especificá el rol..."
                         value={customRole}
                         onChange={e => onCustomRoleChange(e.target.value)}
-                        className="mt-2 w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                        style={{ fontFamily: 'var(--font-body)' }}
+                        className="mt-2 w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                       />
                     )}
                   </div>
@@ -348,9 +340,9 @@ export function EventServersTab({
                         <div className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', assignRecurring ? 'translate-x-4' : 'translate-x-0')} />
                       </div>
                       <div>
-                        <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>Booking recurrente</p>
+                        <p className="text-sm text-navy font-body">Booking recurrente</p>
                         {assignRecurring && (
-                          <p className="text-[11px] text-navy-light/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                          <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">
                             Esta persona quedará asignada a todas las instancias futuras de esta serie
                           </p>
                         )}
@@ -362,11 +354,10 @@ export function EventServersTab({
             </div>
 
             {/* Modal footer */}
-            <div className="flex items-center justify-between gap-2 px-5 py-4 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="flex items-center justify-between gap-2 px-5 py-4 border-t border-t-[var(--outline-variant)]">
               <button
                 onClick={() => modalStep === 1 ? onResetModal() : setModalStep(1)}
-                className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 {modalStep === 1 ? 'Cancelar' : '← Atrás'}
               </button>
@@ -374,8 +365,7 @@ export function EventServersTab({
                 <button
                   onClick={() => { if (selectedMemberId) setModalStep(2) }}
                   disabled={!selectedMemberId}
-                  className="rounded-xl bg-navy px-4 py-2 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="rounded-xl bg-navy px-4 py-2 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
                 >
                   Continuar →
                 </button>
@@ -383,8 +373,7 @@ export function EventServersTab({
                 <button
                   onClick={onConfirmAssignment}
                   disabled={!assignRole || (assignRole === 'Otro' && !customRole.trim())}
-                  className="rounded-xl bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="rounded-xl bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
                 >
                   Asignar servidor
                 </button>
@@ -397,11 +386,10 @@ export function EventServersTab({
       {/* Toast */}
       {serverToast && (
         <div
-          className="fixed bottom-6 right-6 flex items-center gap-3 rounded-2xl bg-navy px-5 py-3.5 text-white z-50"
-          style={{ boxShadow: 'var(--shadow-lg)' }}
+          className="fixed bottom-6 right-6 flex items-center gap-3 rounded-2xl bg-navy px-5 py-3.5 text-white z-50 shadow-[var(--shadow-lg)]"
         >
           <Send size={14} className="text-teal-soft shrink-0" />
-          <span className="text-sm" style={{ fontFamily: 'var(--font-body)' }}>{serverToast}</span>
+          <span className="text-sm font-body">{serverToast}</span>
         </div>
       )}
     </div>

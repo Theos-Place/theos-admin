@@ -39,41 +39,41 @@ function CalendarioWidget() {
   }
 
   return (
-    <div style={{ '--cal-primary': primary, '--cal-accent': accent, '--cal-bg': bg, background: bg, minHeight: '100vh', fontFamily: 'system-ui, sans-serif' } as React.CSSProperties}>
+    <div className="min-h-screen font-[system-ui,sans-serif]" style={{ '--cal-primary': primary, '--cal-accent': accent, '--cal-bg': bg, background: bg } as React.CSSProperties}>
       {/* Header */}
-      <div style={{ background: primary, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Theos Place — Eventos</span>
-        <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>{events.length} eventos</span>
+      <div className="py-3 px-5 flex items-center justify-between" style={{ background: primary }}>
+        <span className="text-white font-bold text-[15px]">Theos Place — Eventos</span>
+        <span className="text-[rgba(255,255,255,0.6)] text-xs">{events.length} eventos</span>
       </div>
 
       {/* List view */}
       {view === 'list' && (
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="p-5 flex flex-col gap-3">
           {events.map(ev => {
             const { day, month, dow } = formatDate(ev.start_at)
             return (
-              <div key={ev.id} style={{ display: 'flex', gap: 16, padding: 16, borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', cursor: 'pointer' }}
+              <div key={ev.id} className="flex gap-4 p-4 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer"
                 onClick={() => setSelectedEvent(ev)}>
-                <div style={{ textAlign: 'center', minWidth: 44, paddingTop: 2 }}>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: primary, lineHeight: 1 }}>{day}</div>
-                  <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', marginTop: 2 }}>{month}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.3)', marginTop: 1 }}>{dow}</div>
+                <div className="text-center min-w-[44px] pt-0.5">
+                  <div className="text-[28px] font-extrabold leading-none" style={{ color: primary }}>{day}</div>
+                  <div className="text-[11px] uppercase text-[rgba(0,0,0,0.4)] mt-0.5">{month}</div>
+                  <div className="text-[10px] text-[rgba(0,0,0,0.3)] mt-px">{dow}</div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: primary, marginBottom: 4 }}>{ev.name}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-sm mb-1" style={{ color: primary }}>{ev.name}</div>
                   {showDesc && ev.description && (
-                    <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.55)', marginBottom: 4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as React.CSSProperties['WebkitBoxOrient'] }}>
+                    <div className="text-xs text-[rgba(0,0,0,0.55)] mb-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as React.CSSProperties['WebkitBoxOrient'] }}>
                       {ev.description}
                     </div>
                   )}
                   {showLoc && ev.location && (
-                    <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>📍 {ev.location}</div>
+                    <div className="text-[11px] text-[rgba(0,0,0,0.4)]">📍 {ev.location}</div>
                   )}
-                  <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)', marginTop: 2 }}>🕐 {formatEventTime(ev.start_at)}</div>
+                  <div className="text-[11px] text-[rgba(0,0,0,0.4)] mt-0.5">🕐 {formatEventTime(ev.start_at)}</div>
                 </div>
                 {showBtn && (
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={{ background: accent, color: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  <div className="flex items-center">
+                    <div className="text-white rounded-lg py-1.5 px-3 text-xs font-semibold whitespace-nowrap" style={{ background: accent }}>
                       Inscribirse
                     </div>
                   </div>
@@ -86,25 +86,25 @@ function CalendarioWidget() {
 
       {/* Monthly view */}
       {view === 'monthly' && (
-        <div style={{ padding: 20 }}>
+        <div className="p-5">
           {/* Month nav */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div className="flex items-center justify-between mb-4">
             <button onClick={() => { if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y-1) } else setCurrentMonth(m => m-1) }}
-              style={{ background: 'none', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 14, color: primary }}>
+              className="bg-none border border-[rgba(0,0,0,0.12)] rounded-lg py-1 px-2.5 cursor-pointer text-sm" style={{ color: primary }}>
               ‹
             </button>
-            <span style={{ fontWeight: 700, color: primary, fontSize: 15 }}>
+            <span className="font-bold text-[15px]" style={{ color: primary }}>
               {new Date(currentYear, currentMonth).toLocaleDateString('es-CR', { month: 'long', year: 'numeric' })}
             </span>
             <button onClick={() => { if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y+1) } else setCurrentMonth(m => m+1) }}
-              style={{ background: 'none', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 14, color: primary }}>
+              className="bg-none border border-[rgba(0,0,0,0.12)] rounded-lg py-1 px-2.5 cursor-pointer text-sm" style={{ color: primary }}>
               ›
             </button>
           </div>
           {/* Day headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>
+          <div className="grid grid-cols-[repeat(7,1fr)] gap-0.5 mb-1">
             {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d => (
-              <div key={d} style={{ textAlign: 'center', fontSize: 10, color: 'rgba(0,0,0,0.4)', padding: '4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{d}</div>
+              <div key={d} className="text-center text-[10px] text-[rgba(0,0,0,0.4)] py-1 uppercase tracking-[0.05em]">{d}</div>
             ))}
           </div>
           {/* Days grid */}
@@ -120,22 +120,22 @@ function CalendarioWidget() {
               return d.getMonth() === currentMonth && d.getFullYear() === currentYear
             })
             return (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
+              <div className="grid grid-cols-[repeat(7,1fr)] gap-0.5">
                 {cells.map((day, i) => {
                   const dayEvents = day ? monthEvents.filter(e => new Date(e.start_at).getDate() === day) : []
                   const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
                   return (
-                    <div key={i} style={{ minHeight: 64, borderRadius: 8, padding: 4, background: day ? 'rgba(255,255,255,0.8)' : 'transparent', border: isToday ? `2px solid ${accent}` : '1px solid rgba(0,0,0,0.06)' }}>
+                    <div key={i} className="min-h-[64px] rounded-lg p-1" style={{ background: day ? 'rgba(255,255,255,0.8)' : 'transparent', border: isToday ? `2px solid ${accent}` : '1px solid rgba(0,0,0,0.06)' }}>
                       {day && (
                         <>
-                          <div style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary, marginBottom: 2 }}>{day}</div>
+                          <div className="text-[11px] mb-0.5" style={{ fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary }}>{day}</div>
                           {dayEvents.slice(0, 2).map(ev => (
                             <div key={ev.id} onClick={() => setSelectedEvent(ev)}
-                              style={{ fontSize: 9, background: accent, color: '#fff', borderRadius: 4, padding: '1px 4px', marginBottom: 1, cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                              className="text-[9px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
                               {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                             </div>
                           ))}
-                          {dayEvents.length > 2 && <div style={{ fontSize: 9, color: 'rgba(0,0,0,0.4)' }}>+{dayEvents.length - 2} más</div>}
+                          {dayEvents.length > 2 && <div className="text-[9px] text-[rgba(0,0,0,0.4)]">+{dayEvents.length - 2} más</div>}
                         </>
                       )}
                     </div>
@@ -149,23 +149,23 @@ function CalendarioWidget() {
 
       {/* Weekly view */}
       {view === 'weekly' && (
-        <div style={{ padding: 20 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8 }}>
+        <div className="p-5">
+          <div className="grid grid-cols-[repeat(7,1fr)] gap-2">
             {Array.from({ length: 7 }, (_, i) => {
               const d = new Date()
               d.setDate(d.getDate() + i)
               const dayEvents = events.filter(e => new Date(e.start_at).toDateString() === d.toDateString())
               return (
-                <div key={i} style={{ background: '#fff', borderRadius: 12, padding: 12, border: '1px solid rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', marginBottom: 4 }}>
+                <div key={i} className="bg-white rounded-xl p-3 border border-[rgba(0,0,0,0.08)]">
+                  <div className="text-[10px] uppercase text-[rgba(0,0,0,0.4)] mb-1">
                     {d.toLocaleDateString('es-CR', { weekday: 'short' })}
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: primary, marginBottom: 8 }}>{d.getDate()}</div>
+                  <div className="text-xl font-bold mb-2" style={{ color: primary }}>{d.getDate()}</div>
                   {dayEvents.map(ev => (
-                    <div key={ev.id} style={{ background: `${accent}18`, border: `1px solid ${accent}40`, borderRadius: 8, padding: '6px 8px', marginBottom: 6, cursor: 'pointer' }}
+                    <div key={ev.id} className="rounded-lg py-1.5 px-2 mb-1.5 cursor-pointer" style={{ background: `${accent}18`, border: `1px solid ${accent}40` }}
                       onClick={() => setSelectedEvent(ev)}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: primary }}>{ev.name}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(0,0,0,0.4)', marginTop: 2 }}>{formatEventTime(ev.start_at)}</div>
+                      <div className="text-[11px] font-semibold" style={{ color: primary }}>{ev.name}</div>
+                      <div className="text-[10px] text-[rgba(0,0,0,0.4)] mt-0.5">{formatEventTime(ev.start_at)}</div>
                     </div>
                   ))}
                 </div>
@@ -177,17 +177,17 @@ function CalendarioWidget() {
 
       {/* Event detail modal */}
       {selectedEvent && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 100 }}
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center p-5 z-[100]"
           onClick={() => setSelectedEvent(null)}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
-            {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />}
-            <h3 style={{ fontWeight: 800, fontSize: 18, color: primary, marginBottom: 8 }}>{selectedEvent.name}</h3>
-            {showDesc && <p style={{ fontSize: 13, color: 'rgba(0,0,0,0.55)', marginBottom: 8 }}>{selectedEvent.description}</p>}
-            {showLoc && <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)', marginBottom: 4 }}>📍 {selectedEvent.location}</p>}
-            <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)', marginBottom: 12 }}>🕐 {formatEventTime(selectedEvent.start_at)}</p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {showBtn && <div style={{ flex: 1, background: accent, color: '#fff', borderRadius: 8, padding: '10px 0', textAlign: 'center', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Inscribirse</div>}
-              <div style={{ flex: 1, border: `1px solid rgba(0,0,0,0.15)`, borderRadius: 8, padding: '10px 0', textAlign: 'center', fontSize: 13, cursor: 'pointer', color: 'rgba(0,0,0,0.5)' }} onClick={() => setSelectedEvent(null)}>Cerrar</div>
+          <div className="bg-white rounded-2xl p-6 max-w-[400px] w-full" onClick={e => e.stopPropagation()}>
+            {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt="" className="w-full h-[140px] object-cover rounded-lg mb-3" />}
+            <h3 className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
+            {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.55)] mb-2">{selectedEvent.description}</p>}
+            {showLoc && <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📍 {selectedEvent.location}</p>}
+            <p className="text-xs text-[rgba(0,0,0,0.4)] mb-3">🕐 {formatEventTime(selectedEvent.start_at)}</p>
+            <div className="flex gap-2">
+              {showBtn && <div className="flex-1 text-white rounded-lg py-2.5 text-center font-semibold text-[13px] cursor-pointer" style={{ background: accent }}>Inscribirse</div>}
+              <div className="flex-1 border border-[rgba(0,0,0,0.15)] rounded-lg py-2.5 text-center text-[13px] cursor-pointer text-[rgba(0,0,0,0.5)]" onClick={() => setSelectedEvent(null)}>Cerrar</div>
             </div>
           </div>
         </div>
@@ -198,7 +198,7 @@ function CalendarioWidget() {
 
 export default function CalendarioPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#666' }}>Cargando calendario...</div>}>
+    <Suspense fallback={<div className="p-10 text-center text-[#666]">Cargando calendario...</div>}>
       <CalendarioWidget />
     </Suspense>
   )

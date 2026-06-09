@@ -29,10 +29,10 @@ type Step1Data = {
 }
 
 const inputCls =
-  'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/40 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0'
+  'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/40 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0 font-body'
 
 const selectCls =
-  'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0 appearance-none'
+  'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0 appearance-none font-body'
 
 function Field({
   label,
@@ -51,15 +51,14 @@ function Field({
     <div>
       <label
         htmlFor={htmlFor}
-        className="block text-[11px] font-medium text-navy-light/50 mb-1.5 uppercase tracking-wider"
-        style={{ fontFamily: 'var(--font-display)' }}
+        className="block text-[11px] font-medium text-navy-light/50 mb-1.5 uppercase tracking-wider font-display"
       >
         {label}
         {required && <span className="text-coral ml-1">*</span>}
       </label>
       {children}
       {error && (
-        <p className="text-xs text-coral mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-xs text-coral mt-1 font-body">
           {error}
         </p>
       )}
@@ -108,7 +107,6 @@ export function NewMemberStep1({
             placeholder="Ej: Alejandro"
             value={data.first_name}
             onChange={e => onData('first_name', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           />
         </Field>
         <Field label="Apellidos" htmlFor="member-last-name" required error={errors.last_name}>
@@ -119,7 +117,6 @@ export function NewMemberStep1({
             placeholder="Ej: Ruiz Moreno"
             value={data.last_name}
             onChange={e => onData('last_name', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           />
         </Field>
       </div>
@@ -152,7 +149,6 @@ export function NewMemberStep1({
                 ? 'bg-teal-soft/20 text-teal-deep'
                 : 'bg-amber-50 text-amber-700'
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             {tseBanner.text}
           </div>
@@ -171,7 +167,6 @@ export function NewMemberStep1({
           className={selectCls}
           value={data.sede}
           onChange={e => onData('sede', e.target.value)}
-          style={{ fontFamily: 'var(--font-body)' }}
         >
           <option value="">Seleccionar sede…</option>
           {SEDES.map(s => (
@@ -183,7 +178,6 @@ export function NewMemberStep1({
       {isMinor ? (
         <div
           className="rounded-xl bg-teal-soft/20 px-3 py-2.5 text-sm text-teal-deep"
-          style={{ fontFamily: 'var(--font-body)' }}
         >
           Modo menor de edad — correo y teléfono opcionales
         </div>
@@ -197,7 +191,6 @@ export function NewMemberStep1({
               placeholder="correo@ejemplo.com"
               value={data.email}
               onChange={e => onData('email', e.target.value)}
-              style={{ fontFamily: 'var(--font-body)' }}
             />
           </Field>
           <PhoneInput
@@ -216,7 +209,6 @@ export function NewMemberStep1({
             className={inputCls}
             value={data.birth_date}
             onChange={e => onData('birth_date', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           />
         </Field>
         <Field label="Género" htmlFor="member-gender">
@@ -225,7 +217,6 @@ export function NewMemberStep1({
             className={selectCls}
             value={data.gender}
             onChange={e => onData('gender', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             <option value="">Seleccionar…</option>
             <option value="M">Masculino</option>
@@ -241,7 +232,6 @@ export function NewMemberStep1({
           className={selectCls}
           value={data.marital_status}
           onChange={e => onData('marital_status', e.target.value)}
-          style={{ fontFamily: 'var(--font-body)' }}
         >
           <option value="">Seleccionar…</option>
           <option value="Soltero/a">Soltero/a</option>
@@ -258,7 +248,6 @@ export function NewMemberStep1({
             className={selectCls}
             value={data.province}
             onChange={e => onData('province', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             <option value="">Provincia…</option>
             {CR_PROVINCES.map(p => (
@@ -273,7 +262,6 @@ export function NewMemberStep1({
             value={data.canton}
             onChange={e => onData('canton', e.target.value)}
             disabled={!data.province}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             <option value="">Cantón…</option>
             {availableCantons.map(c => (
@@ -288,7 +276,6 @@ export function NewMemberStep1({
             value={data.district}
             onChange={e => onData('district', e.target.value)}
             disabled={!data.canton}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             <option value="">Distrito…</option>
             {availableDistricts.map(d => (
@@ -306,7 +293,7 @@ export function NewMemberStep1({
           rows={2}
           value={data.señas}
           onChange={e => onData('señas', e.target.value)}
-          style={{ fontFamily: 'var(--font-body)', resize: 'none' }}
+          style={{ resize: 'none' }}
         />
       </Field>
 
@@ -319,7 +306,6 @@ export function NewMemberStep1({
             placeholder="Ej: Ingeniero en Sistemas"
             value={data.profession}
             onChange={e => onData('profession', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           />
         </Field>
         <Field label="Lugar de trabajo" htmlFor="member-workplace">
@@ -330,7 +316,6 @@ export function NewMemberStep1({
             placeholder="Ej: Intel Costa Rica"
             value={data.workplace}
             onChange={e => onData('workplace', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           />
         </Field>
       </div>
@@ -343,7 +328,7 @@ export function NewMemberStep1({
           rows={2}
           value={data.alergias}
           onChange={e => onData('alergias', e.target.value)}
-          style={{ fontFamily: 'var(--font-body)', resize: 'none' }}
+          style={{ resize: 'none' }}
         />
       </Field>
 
@@ -355,7 +340,7 @@ export function NewMemberStep1({
           rows={2}
           value={data.medicamentos}
           onChange={e => onData('medicamentos', e.target.value)}
-          style={{ fontFamily: 'var(--font-body)', resize: 'none' }}
+          style={{ resize: 'none' }}
         />
       </Field>
 
@@ -368,7 +353,6 @@ export function NewMemberStep1({
             placeholder="Nombre completo..."
             value={data.emergency_contact_name}
             onChange={e => onData('emergency_contact_name', e.target.value)}
-            style={{ fontFamily: 'var(--font-body)' }}
           />
         </Field>
         <PhoneInput

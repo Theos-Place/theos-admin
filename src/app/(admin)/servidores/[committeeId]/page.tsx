@@ -148,7 +148,7 @@ export default function CommitteeDetailPage() {
   if (!committee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           Comité no encontrado.
         </p>
       </div>
@@ -305,19 +305,18 @@ export default function CommitteeDetailPage() {
       />
 
       {/* ── Tabs card ── */}
-      <div className="card" style={{ width: '100%', minWidth: 0 }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid rgba(22,20,64,0.09)', padding: '0 4px' }}>
+      <div className="card w-full min-w-0">
+        <div className="flex border-b border-[rgba(22,20,64,0.09)] py-0 px-1">
           {(['miembros', 'vacantes', 'metas'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px',
+                'px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
                 tab === t
                   ? 'border-coral text-navy font-semibold'
                   : 'border-transparent text-navy-light/50 hover:text-navy'
               )}
-              style={{ fontFamily: 'var(--font-display)' }}
             >
               {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Puestos de Servicio (${committeeVacancies.length})` : 'Metas'}
             </button>

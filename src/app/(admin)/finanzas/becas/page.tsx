@@ -56,26 +56,24 @@ export default function BecasPage() {
 
         {/* Header */}
         <div
-          className="rounded-2xl px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-          style={{ background: '#161440', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-navy shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.10)' }}>
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(255,255,255,0.10)]">
               <GraduationCap size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl text-white" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
                 Becas y cupones
               </h1>
-              <p className="text-[12px] text-white/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-white/50 mt-0.5 font-body">
                 Descuentos y apoyos económicos
               </p>
             </div>
           </div>
           <Link
             href="/finanzas/becas/nueva"
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 self-start sm:self-auto"
-            style={{ background: '#EF5554', fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px rgba(239,85,84,0.30)' }}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 self-start sm:self-auto bg-coral font-body shadow-[0_8px_24px_rgba(239,85,84,0.30)]"
           >
             <Plus size={15} />
             Nueva beca
@@ -84,17 +82,17 @@ export default function BecasPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[10px] uppercase tracking-widests mb-2" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Becas activas</p>
-            <p className="text-4xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: '#3DB97A' }}>{activeCount}</p>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">Becas activas</p>
+            <p className="text-4xl font-extrabold font-display text-[#3DB97A]">{activeCount}</p>
           </div>
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[10px] uppercase tracking-widests mb-2" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Usadas</p>
-            <p className="text-4xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: '#519DA2' }}>{usedCount}</p>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">Usadas</p>
+            <p className="text-4xl font-extrabold font-display text-teal-deep">{usedCount}</p>
           </div>
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[10px] uppercase tracking-widests mb-2" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Total descontado</p>
-            <p className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">Total descontado</p>
+            <p className="text-xl font-extrabold font-display text-navy">
               <AmountDisplay amount={totalDiscounted} defaultHidden={false} />
             </p>
           </div>
@@ -105,8 +103,8 @@ export default function BecasPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setTypeFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all"
-                style={{ background: typeFilter === v ? '#161440' : 'transparent', color: typeFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: typeFilter === v ? '#161440' : 'transparent', fontFamily: 'var(--font-display)' }}>
+                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
+                style={{ background: typeFilter === v ? '#161440' : 'transparent', color: typeFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: typeFilter === v ? '#161440' : 'transparent' }}>
                 {l}
               </button>
             ))}
@@ -114,8 +112,8 @@ export default function BecasPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['event', 'Eventos'], ['study_group', 'Grupos']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setEntityFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all"
-                style={{ background: entityFilter === v ? '#161440' : 'transparent', color: entityFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: entityFilter === v ? '#161440' : 'transparent', fontFamily: 'var(--font-display)' }}>
+                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
+                style={{ background: entityFilter === v ? '#161440' : 'transparent', color: entityFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: entityFilter === v ? '#161440' : 'transparent' }}>
                 {l}
               </button>
             ))}
@@ -123,8 +121,8 @@ export default function BecasPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['unused', 'Sin usar'], ['used', 'Usada']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setStatusFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all"
-                style={{ background: statusFilter === v ? '#161440' : 'transparent', color: statusFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: statusFilter === v ? '#161440' : 'transparent', fontFamily: 'var(--font-display)' }}>
+                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
+                style={{ background: statusFilter === v ? '#161440' : 'transparent', color: statusFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: statusFilter === v ? '#161440' : 'transparent' }}>
                 {l}
               </button>
             ))}
@@ -132,14 +130,13 @@ export default function BecasPage() {
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Entidad', 'Tipo descuento', 'Valor', 'Monto final', 'Estado', 'Creada por', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests"
-                      style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">
                       {h}
                     </th>
                   ))}
@@ -147,14 +144,14 @@ export default function BecasPage() {
               </thead>
               <tbody>
                 {filtered.map((s, i) => (
-                  <tr key={s.id} className="border-b hover:bg-gray-50 transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={s.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
+                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
                     <td className="px-5 py-4">
-                      <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{s.member_name}</p>
+                      <p className="text-[13px] font-medium font-body text-navy">{s.member_name}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{s.entity_name}</p>
-                      <p className="text-[11px]" style={{ color: 'rgba(22,20,64,0.40)', fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[13px] font-body text-navy">{s.entity_name}</p>
+                      <p className="text-[11px] text-[rgba(22,20,64,0.40)] font-body">
                         {s.entity_type === 'event' ? 'Evento' : 'Grupo'}
                       </p>
                     </td>
@@ -165,7 +162,7 @@ export default function BecasPage() {
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>
+                      <p className="text-[13px] font-medium font-body text-navy">
                         {s.discount_type === 'percentage'
                           ? `${s.discount_value}%`
                           : `₡${s.discount_value.toLocaleString('es-CR')}`
@@ -182,18 +179,17 @@ export default function BecasPage() {
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>{s.created_by}</p>
+                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{s.created_by}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-[12px] whitespace-nowrap" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>{formatDate(s.created_at)}</p>
+                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(s.created_at)}</p>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         {!s.is_used && (
                           <button
                             onClick={() => setConfirmRevoke(s)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap"
-                            style={{ borderColor: 'rgba(239,85,84,0.30)', color: '#EF5554', fontFamily: 'var(--font-body)' }}
+                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
                           >
                             Revocar
                           </button>
@@ -204,7 +200,7 @@ export default function BecasPage() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-5 py-12 text-center text-sm" style={{ color: 'rgba(22,20,64,0.40)', fontFamily: 'var(--font-body)' }}>
+                    <td colSpan={9} className="px-5 py-12 text-center text-sm text-[rgba(22,20,64,0.40)] font-body">
                       No hay becas que coincidan con los filtros
                     </td>
                   </tr>
@@ -217,31 +213,29 @@ export default function BecasPage() {
 
       {/* Revoke confirm modal */}
       {confirmRevoke && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(22,20,64,0.40)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
             <div className="px-6 py-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(239,85,84,0.10)' }}>
-                  <AlertTriangle size={18} style={{ color: '#EF5554' }} />
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(239,85,84,0.10)]">
+                  <AlertTriangle size={18} className="text-coral" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>¿Revocar esta beca?</p>
-                  <p className="text-[12px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.50)' }}>Esta acción no se puede deshacer</p>
+                  <p className="text-sm font-bold font-display text-navy">¿Revocar esta beca?</p>
+                  <p className="text-[12px] font-body text-[rgba(22,20,64,0.50)]">Esta acción no se puede deshacer</p>
                 </div>
               </div>
-              <p className="text-[13px] leading-relaxed" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>
+              <p className="text-[13px] leading-relaxed font-body text-[rgba(22,20,64,0.70)]">
                 La beca de <strong>{confirmRevoke.member_name}</strong> para <strong>{confirmRevoke.entity_name}</strong> será eliminada.
               </p>
             </div>
-            <div className="px-6 py-4 border-t flex gap-3" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
               <button onClick={() => setConfirmRevoke(null)}
-                className="flex-1 rounded-full border py-2.5 text-sm"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>
+                className="flex-1 rounded-full border py-2.5 text-sm border-[var(--outline-variant)] font-body text-[rgba(22,20,64,0.70)]">
                 Cancelar
               </button>
               <button onClick={() => handleRevoke(confirmRevoke)}
-                className="flex-1 rounded-full py-2.5 text-sm text-white"
-                style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}>
+                className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body">
                 Revocar
               </button>
             </div>
@@ -250,9 +244,8 @@ export default function BecasPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)', fontFamily: 'var(--font-body)' }}>
-          <Check size={15} style={{ color: '#3DB97A' }} />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
+          <Check size={15} className="text-[#3DB97A]" />
           {toast}
         </div>
       )}

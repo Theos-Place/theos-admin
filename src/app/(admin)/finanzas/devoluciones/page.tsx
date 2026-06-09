@@ -101,15 +101,14 @@ export default function DevolucionesPage() {
 
         {/* Header */}
         <div
-          className="rounded-2xl px-6 py-5 flex items-center gap-3"
-          style={{ background: '#161440', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl px-6 py-5 flex items-center gap-3 bg-navy shadow-[var(--shadow-md)]"
         >
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.10)' }}>
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(255,255,255,0.10)]">
             <ArrowLeftRight size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-xl text-white" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>Devoluciones</h1>
-            <p className="text-[12px] text-white/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Devoluciones</h1>
+            <p className="text-[12px] text-white/50 mt-0.5 font-body">
               Gestión de reembolsos y devoluciones
             </p>
           </div>
@@ -122,37 +121,35 @@ export default function DevolucionesPage() {
             { label: 'En proceso',    value: stats.processing, color: '#519DA2' },
             { label: 'Completadas',   value: stats.completed,  color: '#3DB97A' },
           ].map(({ label, value, color }) => (
-            <div key={label} className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-              <p className="text-[10px] uppercase tracking-widests mb-2" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>{label}</p>
-              <p className="text-4xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color }}>{value}</p>
+            <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+              <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">{label}</p>
+              <p className="text-4xl font-extrabold font-display" style={{ color }}>{value}</p>
             </div>
           ))}
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[10px] uppercase tracking-widests mb-2" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Total devuelto</p>
-            <p className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">Total devuelto</p>
+            <p className="text-xl font-extrabold font-display text-navy">
               <AmountDisplay amount={stats.totalAmount} defaultHidden={false} />
             </p>
           </div>
         </div>
 
         {/* Section A — Card (automatic) */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-            <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--outline-variant)]">
+            <p className="text-sm font-bold font-display text-navy">
               Automáticas — Tarjeta
             </p>
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-              style={{ background: 'rgba(112,189,194,0.15)', color: '#519DA2' }}>
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium bg-[rgba(112,189,194,0.15)] text-teal-deep">
               Procesadas por pasarela
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Estado', 'Solicitada', 'Procesada'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widests"
-                      style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">
                       {h}
                     </th>
                   ))}
@@ -160,30 +157,30 @@ export default function DevolucionesPage() {
               </thead>
               <tbody>
                 {cardRefunds.map((r, i) => (
-                  <tr key={r.id} className="border-b hover:bg-gray-50 transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={r.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
+                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{r.member_name}</p>
+                      <p className="text-[13px] font-medium font-body text-navy">{r.member_name}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{r.entity_name}</p>
+                      <p className="text-[13px] font-body text-navy">{r.entity_name}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>
+                      <p className="text-[13px] font-medium font-body text-navy">
                         <AmountDisplay amount={r.amount} defaultHidden={false} />
                       </p>
                     </td>
                     <td className="px-5 py-3.5"><RefundStatusBadge status={r.status} /></td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[12px] whitespace-nowrap" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>{formatDate(r.requested_at)}</p>
+                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.requested_at)}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[12px] whitespace-nowrap" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>{formatDate(r.processed_at)}</p>
+                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.processed_at)}</p>
                     </td>
                   </tr>
                 ))}
                 {cardRefunds.length === 0 && (
-                  <tr><td colSpan={6} className="px-5 py-8 text-center text-sm" style={{ color: 'rgba(22,20,64,0.35)', fontFamily: 'var(--font-body)' }}>Sin devoluciones por tarjeta</td></tr>
+                  <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones por tarjeta</td></tr>
                 )}
               </tbody>
             </table>
@@ -191,23 +188,21 @@ export default function DevolucionesPage() {
         </div>
 
         {/* Section B — SINPE (manual) */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-            <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--outline-variant)]">
+            <p className="text-sm font-bold font-display text-navy">
               Manuales — SINPE
             </p>
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-              style={{ background: 'rgba(239,85,84,0.10)', color: '#EF5554' }}>
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium bg-[rgba(239,85,84,0.10)] text-coral">
               Requieren proceso manual
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Motivo', 'Estado', 'Solicitada', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widests"
-                      style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">
                       {h}
                     </th>
                   ))}
@@ -215,40 +210,38 @@ export default function DevolucionesPage() {
               </thead>
               <tbody>
                 {sinpeRefunds.map((r, i) => (
-                  <tr key={r.id} className="border-b hover:bg-gray-50 transition-colors"
-                    style={{ borderColor: 'var(--outline-variant)', background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={r.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
+                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{r.member_name}</p>
+                      <p className="text-[13px] font-medium font-body text-navy">{r.member_name}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{r.entity_name}</p>
+                      <p className="text-[13px] font-body text-navy">{r.entity_name}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>
+                      <p className="text-[13px] font-medium font-body text-navy">
                         <AmountDisplay amount={r.amount} defaultHidden={false} />
                       </p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.60)', fontFamily: 'var(--font-body)' }}>{r.reason}</p>
+                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{r.reason}</p>
                     </td>
                     <td className="px-5 py-3.5"><RefundStatusBadge status={r.status} /></td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[12px] whitespace-nowrap" style={{ color: 'rgba(22,20,64,0.55)', fontFamily: 'var(--font-body)' }}>{formatDate(r.requested_at)}</p>
+                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.requested_at)}</p>
                     </td>
                     <td className="px-5 py-3.5">
                       {(r.status === 'pending' || r.status === 'processing') && (
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setCompleteTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap"
-                            style={{ borderColor: 'rgba(61,185,122,0.30)', color: '#3DB97A', fontFamily: 'var(--font-body)' }}
+                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
                           >
                             Completar
                           </button>
                           <button
                             onClick={() => setRejectTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap"
-                            style={{ borderColor: 'rgba(239,85,84,0.30)', color: '#EF5554', fontFamily: 'var(--font-body)' }}
+                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
                           >
                             Rechazar
                           </button>
@@ -258,7 +251,7 @@ export default function DevolucionesPage() {
                   </tr>
                 ))}
                 {sinpeRefunds.length === 0 && (
-                  <tr><td colSpan={7} className="px-5 py-8 text-center text-sm" style={{ color: 'rgba(22,20,64,0.35)', fontFamily: 'var(--font-body)' }}>Sin devoluciones SINPE</td></tr>
+                  <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones SINPE</td></tr>
                 )}
               </tbody>
             </table>
@@ -268,39 +261,35 @@ export default function DevolucionesPage() {
 
       {/* Complete modal */}
       {completeTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(22,20,64,0.40)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-              <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>Marcar devolución completada</p>
-              <button onClick={() => setCompleteTarget(null)}><X size={18} style={{ color: 'rgba(22,20,64,0.40)' }} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
+          <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--outline-variant)]">
+              <p className="text-sm font-bold font-display text-navy">Marcar devolución completada</p>
+              <button onClick={() => setCompleteTarget(null)}><X size={18} className="text-[rgba(22,20,64,0.40)]" /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
-              <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>
+              <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
                 Devolución de <strong>₡{completeTarget.amount.toLocaleString('es-CR')}</strong> a <strong>{completeTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[11px] uppercase tracking-widests mb-1.5 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Fecha de transferencia</label>
+                <label className="text-[11px] uppercase tracking-widests mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">Fecha de transferencia</label>
                 <input type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }} />
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-widests mb-1.5 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Número de confirmación</label>
+                <label className="text-[11px] uppercase tracking-widests mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">Número de confirmación</label>
                 <input type="text" value={completionConf} onChange={e => setCompletionConf(e.target.value)}
                   placeholder="ej. SINPE-2026-05-DV-99123"
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }} />
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
             </div>
-            <div className="px-6 py-4 border-t flex gap-3" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
               <button onClick={() => setCompleteTarget(null)}
-                className="flex-1 rounded-full border py-2.5 text-sm"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>
+                className="flex-1 rounded-full border py-2.5 text-sm border-[var(--outline-variant)] font-body text-[rgba(22,20,64,0.70)]">
                 Cancelar
               </button>
               <button onClick={handleComplete}
-                className="flex-1 rounded-full py-2.5 text-sm text-white"
-                style={{ background: '#3DB97A', fontFamily: 'var(--font-body)' }}>
+                className="flex-1 rounded-full py-2.5 text-sm text-white bg-[#3DB97A] font-body">
                 Confirmar
               </button>
             </div>
@@ -310,33 +299,30 @@ export default function DevolucionesPage() {
 
       {/* Reject modal */}
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(22,20,64,0.40)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-              <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>Rechazar devolución</p>
-              <button onClick={() => setRejectTarget(null)}><X size={18} style={{ color: 'rgba(22,20,64,0.40)' }} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
+          <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--outline-variant)]">
+              <p className="text-sm font-bold font-display text-navy">Rechazar devolución</p>
+              <button onClick={() => setRejectTarget(null)}><X size={18} className="text-[rgba(22,20,64,0.40)]" /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
-              <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>
+              <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
                 Rechazando devolución de <strong>{rejectTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[11px] uppercase tracking-widests mb-1.5 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Motivo del rechazo</label>
+                <label className="text-[11px] uppercase tracking-widests mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">Motivo del rechazo</label>
                 <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                   rows={3} placeholder="Explicá el motivo..."
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none"
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }} />
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
             </div>
-            <div className="px-6 py-4 border-t flex gap-3" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
               <button onClick={() => setRejectTarget(null)}
-                className="flex-1 rounded-full border py-2.5 text-sm"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}>
+                className="flex-1 rounded-full border py-2.5 text-sm border-[var(--outline-variant)] font-body text-[rgba(22,20,64,0.70)]">
                 Cancelar
               </button>
               <button onClick={handleReject}
-                className="flex-1 rounded-full py-2.5 text-sm text-white"
-                style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}>
+                className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body">
                 Rechazar
               </button>
             </div>
@@ -345,9 +331,8 @@ export default function DevolucionesPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)', fontFamily: 'var(--font-body)' }}>
-          <Check size={15} style={{ color: '#3DB97A' }} />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
+          <Check size={15} className="text-[#3DB97A]" />
           {toast}
         </div>
       )}

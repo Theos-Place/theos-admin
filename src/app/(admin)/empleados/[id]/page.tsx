@@ -165,7 +165,7 @@ export default function EmpleadoDetailPage() {
   if (!employee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           Empleado no encontrado.
         </p>
       </div>
@@ -231,8 +231,8 @@ export default function EmpleadoDetailPage() {
       />
 
       {/* Tabs */}
-      <div className="card" style={{ overflow: 'hidden' }}>
-        <div className="flex overflow-x-auto border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="card overflow-hidden">
+        <div className="flex overflow-x-auto border-b border-[var(--outline-variant)]">
           {TABS.map(t => {
             const Icon = t.icon
             return (
@@ -240,12 +240,11 @@ export default function EmpleadoDetailPage() {
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  'flex items-center gap-1.5 px-4 py-3 text-[12px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px',
+                  'flex items-center gap-1.5 px-4 py-3 text-[12px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px font-display',
                   tab === t.key
                     ? 'border-coral text-coral'
                     : 'border-transparent text-navy-light/50 hover:text-navy'
                 )}
-                style={{ fontFamily: 'var(--font-display)' }}
               >
                 <Icon size={13} />
                 {t.label}

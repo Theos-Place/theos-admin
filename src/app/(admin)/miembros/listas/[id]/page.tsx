@@ -71,8 +71,8 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
     render: m => {
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
-        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.position}</span>
-        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+        ? <span className="font-body text-[13px]">{active.position}</span>
+        : <span className="text-navy-light/30 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.position ?? '',
   },
@@ -81,8 +81,8 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
     render: m => {
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
-        ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{active.committee}</span>
-        : <span className="text-navy-light/30" style={{ fontSize: 12 }}>—</span>
+        ? <span className="font-body text-[13px]">{active.committee}</span>
+        : <span className="text-navy-light/30 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.committee ?? '',
   },
@@ -142,7 +142,7 @@ export default function ListaDetailPage() {
   if (!list) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           Lista no encontrada.
         </p>
       </div>
@@ -160,8 +160,7 @@ export default function ListaDetailPage() {
       {/* Back */}
       <Link
         href="/miembros/listas"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Listas guardadas
@@ -169,53 +168,48 @@ export default function ListaDetailPage() {
 
       {/* Header */}
       <div
-        className="rounded-2xl px-6 py-5"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl px-6 py-5 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-start gap-4 justify-between flex-wrap">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span
                 className={cn(
-                  'rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-widest uppercase',
+                  'rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-widest uppercase font-display',
                   list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/60'
                 )}
-                style={{ fontFamily: 'var(--font-display)' }}
               >
                 {list.is_dynamic ? 'Dinámica' : 'Snapshot'}
               </span>
-              <span className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <span className="text-[12px] text-navy-light/40 font-body">
                 {list.member_count.toLocaleString('es-CR')} miembros
               </span>
             </div>
             <h1
-              className="text-2xl text-navy"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+              className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
             >
               {list.name}
             </h1>
             {list.description && (
-              <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-navy-light/60 font-body">
                 {list.description}
               </p>
             )}
-            <p className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[12px] text-navy-light/40 font-body">
               Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Link
               href="/miembros"
-              className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <ExternalLink size={14} />
               Abrir en búsqueda
             </Link>
             <button
               onClick={handleComunicar}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all font-body"
             >
               <MessageCircle size={14} />
               Comunicar a esta lista
@@ -228,26 +222,24 @@ export default function ListaDetailPage() {
       {/* Dynamic / Snapshot banner */}
       {list.is_dynamic ? (
         <div
-          className="rounded-2xl px-5 py-3.5 flex items-center gap-3"
-          style={{ background: 'rgba(61,185,122,0.08)', border: '1px solid rgba(61,185,122,0.25)' }}
+          className="rounded-2xl px-5 py-3.5 flex items-center gap-3 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.25)]"
         >
           <RefreshCw size={14} className="text-teal-deep shrink-0" />
-          <p className="text-[13px] text-teal-deep" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[13px] text-teal-deep font-body">
             Esta lista se recalcula automáticamente con los filtros guardados
             <span className="text-teal-deep/60"> · Última actualización: {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
           </p>
         </div>
       ) : (
         <div
-          className="rounded-2xl px-5 py-3.5 flex items-center gap-3"
-          style={{ background: 'var(--surface-low)', border: '1px solid var(--outline-variant)' }}
+          className="rounded-2xl px-5 py-3.5 flex items-center gap-3 bg-surface-low border border-[var(--outline-variant)]"
         >
-          <p className="text-[13px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[13px] text-navy-light/60 font-body">
             Esta lista contiene un snapshot de <strong className="text-navy">{list.member_count.toLocaleString('es-CR')}</strong> miembros del {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             <span className="mx-2">·</span>
             <button
-              className="text-coral hover:underline"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+              className="text-coral hover:underline cursor-pointer font-body"
+              style={{ background: 'none', border: 'none' }}
               onClick={() => {
                 fetch(`/api/member-lists/${list.id}`, {
                   method: 'PATCH',
@@ -265,13 +257,12 @@ export default function ListaDetailPage() {
 
       {/* Segment label card */}
       <div
-        className="rounded-2xl px-5 py-4 space-y-1"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl px-5 py-4 space-y-1 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
           Filtros que generaron esta lista
         </p>
-        <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy font-body">
           {list.segment_label}
         </p>
         {list.tags.length > 0 && (
@@ -279,8 +270,7 @@ export default function ListaDetailPage() {
             {list.tags.map(tag => (
               <span
                 key={tag}
-                className="rounded-full bg-surface-low px-2.5 py-0.5 text-[10px] text-navy-light/60"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="rounded-full bg-surface-low px-2.5 py-0.5 text-[10px] text-navy-light/60 font-body"
               >
                 {tag}
               </span>
@@ -291,12 +281,11 @@ export default function ListaDetailPage() {
 
       {/* Members table */}
       <div
-        className="overflow-hidden rounded-2xl"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
       >
         {/* Toolbar */}
-        <div className="flex items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
-          <p className="text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--outline-variant)]">
+          <p className="text-[12px] text-navy-light/50 font-body">
             <strong className="text-navy">{listMembers.length}</strong> miembros en esta lista
             {list.member_count > listMembers.length && (
               <span className="ml-1 text-navy-light/30">(mock: mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
@@ -320,7 +309,7 @@ export default function ListaDetailPage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+              <tr className="border-b border-[var(--outline-variant)]">
                 {visibleColumns.map(col => (
                   <SortableHeader
                     key={String(col.key)}
@@ -339,8 +328,7 @@ export default function ListaDetailPage() {
                 <tr>
                   <td
                     colSpan={visibleColumns.length + 1}
-                    className="px-4 py-12 text-center text-sm text-navy-light/40"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="px-4 py-12 text-center text-sm text-navy-light/40 font-body"
                   >
                     No hay miembros en esta lista
                   </td>
@@ -359,32 +347,32 @@ export default function ListaDetailPage() {
                           return (
                             <td key="name" className="px-4 py-3.5">
                               <div className="flex items-center gap-3">
-                                <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs', avatarColor(member.id))} style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+                                <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-display font-extrabold', avatarColor(member.id))}>
                                   {initials(member)}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="truncate text-navy" style={{ fontFamily: 'var(--font-body)' }}>{member.first_name} {member.last_name}</p>
-                                  <p className="truncate text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>{member.email}</p>
+                                  <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
+                                  <p className="truncate text-xs text-navy-light/50 font-body">{member.email}</p>
                                 </div>
                               </div>
                             </td>
                           )
                         case 'cedula':
                           return (
-                            <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                            <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums font-mono text-[12px]">
                               {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/30">Sin cédula</span>}
                             </td>
                           )
                         case 'age':
                           return (
-                            <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                            <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap font-mono text-[12px]">
                               {member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'}
                             </td>
                           )
                         case 'status':
                           return (
                             <td key="status" className="px-4 py-3.5">
-                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')} style={{ fontFamily: 'var(--font-body)' }}>
+                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
                                 {member.is_active ? 'Activo' : 'Inactivo'}
                               </span>
                             </td>
@@ -393,7 +381,7 @@ export default function ListaDetailPage() {
                           return (
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
-                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral" style={{ fontFamily: 'var(--font-body)' }}>Sí</span>
+                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
                                 : <span className="text-sm text-navy-light/30">—</span>
                               }
                             </td>
@@ -409,7 +397,7 @@ export default function ListaDetailPage() {
                           const rawVal = (member as Record<string, unknown>)[String(col.key)]
                           const display = Array.isArray(rawVal) ? (rawVal as string[]).join(', ') : String(rawVal ?? '')
                           return (
-                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate font-body">
                               {display || '—'}
                             </td>
                           )

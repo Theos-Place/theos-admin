@@ -34,9 +34,8 @@ export function CommitteeHeader({
   return (
     <div className="ph">
       <button
-        className="btn btn-ghost btn-sm"
+        className="btn btn-ghost btn-sm mb-[10px]"
         onClick={onBack}
-        style={{ marginBottom: 10 }}
       >
         ← Volver a servidores
       </button>
@@ -46,31 +45,30 @@ export function CommitteeHeader({
           <div className="psub">
             {committeeOverride.area ?? committee.area} · {activeCount} servidor{activeCount !== 1 ? 'es' : ''} activo{activeCount !== 1 ? 's' : ''}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+          <div className="flex items-center gap-2 mt-1.5">
             <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center">
-              <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="text-[10px] font-bold text-white font-display">
                 {committee.leader.initials}
               </span>
             </div>
-            <span style={{ fontSize: 13, color: 'rgba(41,54,92,0.7)', fontFamily: 'var(--font-body)' }}>
+            <span className="text-[13px] text-[rgba(41,54,92,0.7)] font-body">
               {committee.leader.name}
             </span>
             <Link
               href={`/miembros/${committee.leader.member_id}`}
-              className="text-[11px] text-coral hover:underline"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-[11px] text-coral hover:underline font-body"
             >
               Ver perfil
             </Link>
           </div>
 
           {/* Encargados del comité */}
-          <div style={{ marginTop: 12 }}>
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40" style={{ fontFamily: 'var(--font-display)', marginBottom: 6 }}>
+          <div className="mt-3">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display mb-1.5">
               Encargados
             </p>
             {encargados.length === 0 ? (
-              <span className="text-[12px] text-navy-light/40 italic" style={{ fontFamily: 'var(--font-body)' }}>
+              <span className="text-[12px] text-navy-light/40 italic font-body">
                 Sin encargado asignado
               </span>
             ) : (
@@ -79,20 +77,19 @@ export function CommitteeHeader({
                   <Link
                     key={`${e.member_id}-${e.position}`}
                     href={`/miembros/${e.member_id}`}
-                    className="group flex items-center gap-2 rounded-2xl border px-2.5 py-1.5 transition-colors hover:bg-surface-low"
-                    style={{ borderColor: 'var(--outline-variant)' }}
+                    className="group flex items-center gap-2 rounded-2xl border px-2.5 py-1.5 transition-colors hover:bg-surface-low border-[var(--outline-variant)]"
                     title={`Ver perfil de ${e.name}`}
                   >
                     <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
-                      <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                      <span className="text-[10px] font-bold text-white font-display">
                         {e.initials}
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[12px] font-medium text-navy leading-tight group-hover:text-coral transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[12px] font-medium text-navy leading-tight group-hover:text-coral transition-colors font-body">
                         {e.name}
                       </p>
-                      <p className="text-[11px] text-navy-light/50 leading-tight" style={{ fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[11px] text-navy-light/50 leading-tight font-body">
                         {e.position}
                       </p>
                     </div>
@@ -102,8 +99,7 @@ export function CommitteeHeader({
                   <button
                     type="button"
                     onClick={() => setExpanded(true)}
-                    className="rounded-full bg-surface-low px-3 py-1.5 text-[12px] text-navy-light/70 hover:text-navy transition-colors"
-                    style={{ fontFamily: 'var(--font-body)' }}
+                    className="rounded-full bg-surface-low px-3 py-1.5 text-[12px] text-navy-light/70 hover:text-navy transition-colors font-body"
                   >
                     +{extra} más
                   </button>

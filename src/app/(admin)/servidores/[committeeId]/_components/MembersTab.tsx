@@ -57,29 +57,27 @@ export function MembersTab({
   toolbarExtra,
 }: Props) {
   return (
-    <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="py-4 px-[22px] flex flex-col gap-4">
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
           <input
-            className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
             value={search}
             onChange={e => onSearchChange(e.target.value)}
           />
         </div>
-        <div className="flex rounded-full p-1 gap-0.5" style={{ background: 'var(--surface-low)' }}>
+        <div className="flex rounded-full p-1 gap-0.5 bg-surface-low">
           {([['active', 'Activos'], ['inactive', 'Inactivos'], ['all', 'Todos']] as [StatusFilter, string][]).map(([v, l]) => (
             <button
               key={v}
               onClick={() => onStatusFilterChange(v)}
               className={cn(
-                'rounded-full px-3 py-1.5 text-[12px] transition-all duration-150',
+                'rounded-full px-3 py-1.5 text-[12px] transition-all duration-150 font-display',
                 statusFilter === v ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy'
               )}
-              style={{ fontFamily: 'var(--font-display)' }}
             >
               {l}
             </button>
@@ -87,8 +85,7 @@ export function MembersTab({
         </div>
         {toolbarExtra}
         <button
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
           onClick={onAddServerClick}
         >
           <Plus size={13} />
@@ -97,11 +94,11 @@ export function MembersTab({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden" style={{ borderRadius: 12, border: '1px solid rgba(22,20,64,0.09)' }}>
+      <div className="overflow-hidden rounded-xl border border-[rgba(22,20,64,0.09)]">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+              <tr className="border-b border-[var(--outline-variant)]">
                 <SortableHeader label="Servidor"   sortKey="name"       currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Puesto"     sortKey="position"   currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Inicio"     sortKey="start_date" currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
@@ -119,33 +116,32 @@ export function MembersTab({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                        <span className="text-[10px] font-bold text-white font-display">
                           {m.initials}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                      <span className="text-sm font-medium text-navy font-body">
                         {m.name}
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 max-w-[180px]" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/70 max-w-[180px] font-body">
                     {m.position}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
                     {new Date(m.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap" style={{ fontFamily: 'var(--font-body)' }}>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
                     {calcularAntiguedad(m.start_date)}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
-                        'rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                        'rounded-full px-2 py-0.5 text-[10px] font-semibold font-display',
                         m.status === 'active'
                           ? 'bg-teal-deep/10 text-teal-deep'
                           : 'bg-navy-light/10 text-navy-light/50'
                       )}
-                      style={{ fontFamily: 'var(--font-display)' }}
                     >
                       {m.status === 'active' ? 'Activo' : 'Inactivo'}
                     </span>
@@ -160,14 +156,12 @@ export function MembersTab({
                       </button>
                       {openMenu === m.member_id && (
                         <div
-                          className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden shadow-lg"
-                          style={{ background: 'var(--surface-card)', border: '1px solid var(--outline-variant)' }}
+                          className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden shadow-lg bg-surface-card border border-[var(--outline-variant)]"
                         >
                           <Link
                             href={`/miembros/${m.member_id}`}
                             onClick={() => onMenuToggle(m.member_id)}
-                            className="flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors"
-                            style={{ fontFamily: 'var(--font-body)' }}
+                            className="flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
                           >
                             <ExternalLink size={13} />
                             Ver perfil
@@ -177,8 +171,7 @@ export function MembersTab({
                               onChangePosition(m)
                               onMenuToggle(m.member_id)
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors"
-                            style={{ fontFamily: 'var(--font-body)' }}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
                           >
                             Cambiar puesto
                           </button>
@@ -187,8 +180,7 @@ export function MembersTab({
                               onDisconnect(m)
                               onMenuToggle(m.member_id)
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors"
-                            style={{ fontFamily: 'var(--font-body)' }}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors font-body"
                           >
                             Desvincular
                           </button>
@@ -203,7 +195,7 @@ export function MembersTab({
         </div>
         {sortedMembers.length === 0 && (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-sm text-navy-light/40 font-body">
               No hay servidores con ese filtro.
             </p>
           </div>

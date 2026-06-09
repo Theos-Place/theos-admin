@@ -14,7 +14,7 @@ const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles', J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo',
 }
 
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
 type Step1 = {
   study_type_id: string
@@ -107,10 +107,10 @@ export default function NuevoGrupoPage() {
       <div className="flex items-center justify-center min-h-60">
         <div className="text-center space-y-4">
           <CheckCircle size={48} className="text-teal-deep mx-auto" />
-          <p className="text-xl font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-xl font-bold text-navy font-display">
             ¡Grupo creado!
           </p>
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             El grupo quedó en estado &quot;Pendiente de apertura&quot;.
           </p>
           <Link
@@ -133,8 +133,7 @@ export default function NuevoGrupoPage() {
       {/* Back */}
       <Link
         href="/estudios/grupos"
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} />
         Volver a grupos
@@ -142,12 +141,11 @@ export default function NuevoGrupoPage() {
 
       <div>
         <h1
-          className="text-2xl text-navy"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+          className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
         >
           Nuevo grupo
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           Completa los 3 pasos para crear el grupo
         </p>
       </div>
@@ -161,15 +159,14 @@ export default function NuevoGrupoPage() {
                 'h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all',
                 step >= n
                   ? 'bg-coral text-white'
-                  : 'bg-surface-low text-navy-light/40'
+                  : 'bg-surface-low text-navy-light/40',
+                'font-display',
               )}
-              style={{ fontFamily: 'var(--font-display)' }}
             >
               {n}
             </div>
             <span
-              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/40')}
-              style={{ fontFamily: 'var(--font-body)' }}
+              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/40', 'font-body')}
             >
               {n === 1 ? 'Configuración' : n === 2 ? 'Dirigente' : 'Confirmación'}
             </span>
@@ -180,22 +177,20 @@ export default function NuevoGrupoPage() {
 
       {/* Step 1 */}
       {step === 1 && (
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
           >
             Paso 1 — Configuración
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Tipo de estudio *
               </label>
               <select
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={step1.study_type_id}
                 onChange={e => setS1('study_type_id', e.target.value)}
               >
@@ -213,12 +208,11 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Zona *
               </label>
               <select
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={step1.zone}
                 onChange={e => setS1('zone', e.target.value)}
               >
@@ -228,26 +222,24 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Edad desde
               </label>
               <input
                 type="number"
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 placeholder="18"
                 value={step1.age_from}
                 onChange={e => setS1('age_from', e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Edad hasta
               </label>
               <input
                 type="number"
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 placeholder="35"
                 value={step1.age_to}
                 onChange={e => setS1('age_to', e.target.value)}
@@ -255,7 +247,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Días preferidos
               </label>
               <div className="flex gap-1.5 flex-wrap">
@@ -268,9 +260,9 @@ export default function NuevoGrupoPage() {
                       'rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all',
                       step1.days.includes(d)
                         ? 'bg-navy text-white border-navy'
-                        : 'text-navy-light hover:bg-surface-low'
+                        : 'text-navy-light hover:bg-surface-low',
+                      'border-[var(--outline-variant)] font-display',
                     )}
-                    style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
                   >
                     {DAY_LABELS[d]}
                   </button>
@@ -279,12 +271,11 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Horario preferido
               </label>
               <input
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 placeholder="7:30pm"
                 value={step1.time}
                 onChange={e => setS1('time', e.target.value)}
@@ -292,12 +283,11 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Ubicación exacta
               </label>
               <input
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 placeholder="Edificio Meridiano, Escazú"
                 value={step1.location}
                 onChange={e => setS1('location', e.target.value)}
@@ -305,40 +295,37 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Capacidad máxima
               </label>
               <input
                 type="number"
                 min={1}
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={step1.capacity}
                 onChange={e => setS1('capacity', e.target.value)}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Fecha de inicio estimada
               </label>
               <input
                 type="date"
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={step1.start_date}
                 onChange={e => setS1('start_date', e.target.value)}
               />
             </div>
 
             <div className="col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] text-navy-light/60 font-display">
                 Fecha límite de inscripción (opcional)
               </label>
               <input
                 type="date"
                 className={inputCls}
-                style={{ fontFamily: 'var(--font-body)' }}
                 value={step1.signup_deadline}
                 onChange={e => setS1('signup_deadline', e.target.value)}
               />
@@ -349,8 +336,7 @@ export default function NuevoGrupoPage() {
             <button
               onClick={() => setStep(2)}
               disabled={!step1.study_type_id || !step1.zone}
-              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               Siguiente →
             </button>
@@ -360,22 +346,21 @@ export default function NuevoGrupoPage() {
 
       {/* Step 2 */}
       {step === 2 && (
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
           >
             Paso 2 — Seleccionar dirigente
           </h2>
 
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             Mostrando dirigentes disponibles para {step1.zone ? sedeLabel(step1.zone) : 'todas las zonas'}
             {step1.study_type_id && studyType ? ` que pueden impartir ${studyType.code}` : ''}.
           </p>
 
           {compatibleLeaders.length === 0 ? (
             <div className="rounded-xl bg-amber-50 px-4 py-3">
-              <p className="text-sm text-amber-700" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-amber-700 font-body">
                 No hay dirigentes disponibles con esas combinaciones. Considera ampliar la zona o seleccionar otro tipo de estudio.
               </p>
             </div>
@@ -402,7 +387,7 @@ export default function NuevoGrupoPage() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                        <p className="text-sm font-medium text-navy font-body">
                           {leader.member_name}
                         </p>
                         <span className="text-[10px] text-navy-light/50">{leader.zone_preference.map(id => sedeLabel(id)).join(' · ')}</span>
@@ -448,14 +433,13 @@ export default function NuevoGrupoPage() {
 
           {selectedLeader && (
             <div className="mt-3 space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
                 Co-dirigente (opcional)
               </label>
               <select
                 value={selectedCoLeader}
                 onChange={e => setSelectedCoLeader(e.target.value)}
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               >
                 <option value="">Sin co-dirigente</option>
                 {leaders.filter(l => l.id !== selectedLeader).map(l => (
@@ -473,7 +457,7 @@ export default function NuevoGrupoPage() {
                 checked={confirmed}
                 onChange={e => setConfirmed(e.target.checked)}
               />
-              <span className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+              <span className="text-sm text-navy-light/70 font-body">
                 Ya fue contactado y confirmó su disponibilidad
               </span>
             </label>
@@ -482,16 +466,14 @@ export default function NuevoGrupoPage() {
           <div className="flex justify-between pt-2">
             <button
               onClick={() => setStep(1)}
-              className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
             >
               ← Atrás
             </button>
             <button
               onClick={() => setStep(3)}
               disabled={!selectedLeader || !confirmed}
-              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               Siguiente →
             </button>
@@ -501,46 +483,45 @@ export default function NuevoGrupoPage() {
 
       {/* Step 3 */}
       {step === 3 && (
-        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
           >
             Paso 3 — Confirmación
           </h2>
 
-          <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--surface-low)' }}>
+          <div className="rounded-xl p-4 space-y-3 bg-surface-low">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Tipo</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Tipo</p>
                 <StudyTypeBadge code={studyType?.code ?? ''} name={studyType?.name} size="sm" />
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Zona</p>
-                <p className="text-navy" style={{ fontFamily: 'var(--font-body)' }}>{step1.zone ? sedeLabel(step1.zone) : '—'}</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Zona</p>
+                <p className="text-navy font-body">{step1.zone ? sedeLabel(step1.zone) : '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Días</p>
-                <p className="text-navy" style={{ fontFamily: 'var(--font-body)' }}>{step1.days.length > 0 ? step1.days.map(d => DAY_LABELS[d]).join(', ') : '—'}</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Días</p>
+                <p className="text-navy font-body">{step1.days.length > 0 ? step1.days.map(d => DAY_LABELS[d]).join(', ') : '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Horario</p>
-                <p className="text-navy" style={{ fontFamily: 'var(--font-body)' }}>{step1.time || '—'}</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Horario</p>
+                <p className="text-navy font-body">{step1.time || '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Dirigente</p>
-                <p className="text-navy" style={{ fontFamily: 'var(--font-body)' }}>{leaderData?.member_name ?? '—'}</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Dirigente</p>
+                <p className="text-navy font-body">{leaderData?.member_name ?? '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Inicio estimado</p>
-                <p className="text-navy" style={{ fontFamily: 'var(--font-body)' }}>{step1.start_date || '—'}</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Inicio estimado</p>
+                <p className="text-navy font-body">{step1.start_date || '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Capacidad</p>
-                <p className="text-navy" style={{ fontFamily: 'var(--font-body)' }}>{step1.capacity} personas</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Capacidad</p>
+                <p className="text-navy font-body">{step1.capacity} personas</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Estado inicial</p>
+                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Estado inicial</p>
                 <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
                   Pendiente de apertura
                 </span>
@@ -551,16 +532,14 @@ export default function NuevoGrupoPage() {
           <div className="flex justify-between pt-2">
             <button
               onClick={() => setStep(2)}
-              className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
             >
               ← Atrás
             </button>
             <button
               onClick={handleCreate}
               disabled={submitting}
-              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               {submitting ? 'Creando...' : 'Crear grupo'}
             </button>

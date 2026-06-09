@@ -37,8 +37,8 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
     return (
       <FinanceGuard>
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-          <p className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>Pago no encontrado</p>
-          <Link href="/finanzas/pagos" className="text-sm" style={{ color: '#519DA2', fontFamily: 'var(--font-body)' }}>
+          <p className="text-xl font-bold font-display text-navy">Pago no encontrado</p>
+          <Link href="/finanzas/pagos" className="text-sm text-teal-deep font-body">
             ← Volver a pagos
           </Link>
         </div>
@@ -79,28 +79,27 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Header */}
         <div
-          className="rounded-2xl px-6 py-5"
-          style={{ background: '#161440', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl px-6 py-5 bg-navy shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Link href="/finanzas/pagos" className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.60)' }}>
+            <Link href="/finanzas/pagos" className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]">
               <ArrowLeft size={18} />
             </Link>
-            <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.50)', fontFamily: 'var(--font-body)' }}>
+            <span className="text-[12px] text-[rgba(255,255,255,0.50)] font-body">
               Pagos / Detalle
             </span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl text-white mb-1" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <h1 className="text-2xl text-white mb-1 font-display font-extrabold tracking-[-0.02em]">
                 {payment.entity_name}
               </h1>
-              <p className="text-[14px] text-white/60" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[14px] text-white/60 font-body">
                 {payment.member_name}
               </p>
             </div>
             <div className="flex flex-col items-start sm:items-end gap-2">
-              <p className="text-3xl font-extrabold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-3xl font-extrabold text-white font-display">
                 <AmountDisplay amount={payment.amount} defaultHidden={false} />
               </p>
               <div className="flex items-center gap-2">
@@ -115,8 +114,8 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Left */}
-          <div className="rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[11px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+          <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
               Información del pago
             </p>
             {[
@@ -128,45 +127,45 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               { label: 'Pagado', value: formatDate(payment.paid_at) },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm gap-4">
-                <span style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.50)' }}>{label}</span>
-                <span className="font-medium text-right" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{value}</span>
+                <span className="font-body text-[rgba(22,20,64,0.50)]">{label}</span>
+                <span className="font-medium text-right font-body text-navy">{value}</span>
               </div>
             ))}
           </div>
 
           {/* Right */}
-          <div className="rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <p className="text-[11px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+          <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
               Detalles de la transacción
             </p>
             {payment.gateway_ref && (
               <div className="flex justify-between text-sm gap-4">
-                <span style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.50)' }}>Ref. pasarela</span>
-                <span className="font-medium font-mono text-right text-[12px]" style={{ color: '#161440' }}>{payment.gateway_ref}</span>
+                <span className="font-body text-[rgba(22,20,64,0.50)]">Ref. pasarela</span>
+                <span className="font-medium font-mono text-right text-[12px] text-navy">{payment.gateway_ref}</span>
               </div>
             )}
             {payment.sinpe_confirmation && (
               <div className="flex justify-between text-sm gap-4">
-                <span style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.50)' }}>Confirmación SINPE</span>
-                <span className="font-medium font-mono text-right text-[12px]" style={{ color: '#519DA2' }}>{payment.sinpe_confirmation}</span>
+                <span className="font-body text-[rgba(22,20,64,0.50)]">Confirmación SINPE</span>
+                <span className="font-medium font-mono text-right text-[12px] text-teal-deep">{payment.sinpe_confirmation}</span>
               </div>
             )}
             {payment.scholarship_id && (
-              <div className="rounded-xl p-3" style={{ background: 'rgba(61,185,122,0.08)', border: '1px solid rgba(61,185,122,0.20)' }}>
-                <p className="text-[12px] font-medium" style={{ color: '#1E6B42', fontFamily: 'var(--font-body)' }}>
+              <div className="rounded-xl p-3 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
+                <p className="text-[12px] font-medium text-[#1E6B42] font-body">
                   Beca aplicada — ID: {payment.scholarship_id}
                 </p>
               </div>
             )}
             {payment.notes && (
-              <div className="rounded-xl p-3" style={{ background: 'rgba(22,20,64,0.04)', border: '1px solid rgba(22,20,64,0.08)' }}>
-                <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.65)', fontFamily: 'var(--font-body)' }}>
+              <div className="rounded-xl p-3 bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.08)]">
+                <p className="text-[12px] text-[rgba(22,20,64,0.65)] font-body">
                   {payment.notes}
                 </p>
               </div>
             )}
             {!payment.gateway_ref && !payment.sinpe_confirmation && !payment.scholarship_id && !payment.notes && (
-              <p className="text-sm" style={{ color: 'rgba(22,20,64,0.35)', fontFamily: 'var(--font-body)' }}>
+              <p className="text-sm text-[rgba(22,20,64,0.35)] font-body">
                 Sin detalles adicionales
               </p>
             )}
@@ -174,12 +173,12 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
         </div>
 
         {/* Timeline */}
-        <div className="rounded-2xl p-6" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-[11px] uppercase tracking-widests mb-5" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+        <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
+          <p className="text-[11px] uppercase tracking-widests mb-5 font-display text-[rgba(22,20,64,0.40)]">
             Línea de tiempo
           </p>
           <div className="relative">
-            <div className="absolute left-3.5 top-3 bottom-3 w-0.5" style={{ background: 'rgba(22,20,64,0.10)' }} />
+            <div className="absolute left-3.5 top-3 bottom-3 w-0.5 bg-[rgba(22,20,64,0.10)]" />
             <div className="space-y-6">
               <TimelineItem
                 label="Creado"
@@ -212,8 +211,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
           <div className="flex justify-end">
             <button
               onClick={() => setShowRefund(true)}
-              className="rounded-full px-6 py-2.5 text-sm text-white font-medium transition-all"
-              style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}
+              className="rounded-full px-6 py-2.5 text-sm text-white font-medium transition-all bg-coral font-body"
             >
               Procesar devolución
             </button>
@@ -231,9 +229,8 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)', fontFamily: 'var(--font-body)' }}>
-          <Check size={15} style={{ color: '#3DB97A' }} />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
+          <Check size={15} className="text-[#3DB97A]" />
           {toast}
         </div>
       )}
@@ -251,8 +248,8 @@ function TimelineItem({ label, date, color, active }: { label: string; date: str
         {active && <Check size={12} className="text-white" />}
       </div>
       <div className="pt-0.5">
-        <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{label}</p>
-        <p className="text-[12px]" style={{ color: 'rgba(22,20,64,0.50)', fontFamily: 'var(--font-body)' }}>{date}</p>
+        <p className="text-sm font-medium font-body text-navy">{label}</p>
+        <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">{date}</p>
       </div>
     </div>
   )

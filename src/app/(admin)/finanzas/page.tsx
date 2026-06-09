@@ -84,18 +84,17 @@ export default function FinanzasPage() {
 
         {/* Header strip */}
         <div
-          className="rounded-2xl px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-          style={{ background: '#161440', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-navy shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.10)' }}>
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(255,255,255,0.10)]">
               <DollarSign size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl text-white" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
                 Finanzas
               </h1>
-              <p className="text-[12px] text-white/50 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-white/50 mt-0.5 font-body">
                 Gestión financiera de Theos Place
               </p>
             </div>
@@ -107,11 +106,10 @@ export default function FinanzasPage() {
                 <button
                   key={opt.value}
                   onClick={() => setPeriod(opt.value)}
-                  className="rounded-full px-3 py-1.5 text-[12px] transition-all"
+                  className="rounded-full px-3 py-1.5 text-[12px] transition-all font-body"
                   style={{
                     background: period === opt.value ? 'rgba(255,255,255,0.20)' : 'transparent',
                     color: period === opt.value ? 'white' : 'rgba(255,255,255,0.55)',
-                    fontFamily: 'var(--font-body)',
                     border: period === opt.value ? '1px solid rgba(255,255,255,0.25)' : '1px solid transparent',
                   }}
                 >
@@ -122,12 +120,10 @@ export default function FinanzasPage() {
             {/* Eye toggle */}
             <button
               onClick={() => setRevealAll(r => !r)}
-              className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-all"
+              className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-all font-body border border-transparent"
               style={{
                 background: revealAll ? 'rgba(81,157,162,0.25)' : 'rgba(255,255,255,0.10)',
                 color: revealAll ? '#70BDC2' : 'rgba(255,255,255,0.60)',
-                fontFamily: 'var(--font-body)',
-                border: '1px solid transparent',
               }}
             >
               {revealAll ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -139,39 +135,39 @@ export default function FinanzasPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total ingresos */}
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={16} style={{ color: '#3DB97A' }} />
-              <p className="text-[10px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Total ingresos</p>
+              <TrendingUp size={16} className="text-[#3DB97A]" />
+              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">Total ingresos</p>
             </div>
-            <p className="text-2xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+            <p className="text-2xl font-extrabold font-display text-navy">
               <AmountDisplay amount={totalIngresos} defaultHidden={false} revealed={revealAll} />
             </p>
           </div>
 
           {/* Donadores activos */}
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
-              <Heart size={16} style={{ color: '#519DA2' }} />
-              <p className="text-[10px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Donadores activos</p>
+              <Heart size={16} className="text-teal-deep" />
+              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">Donadores activos</p>
             </div>
-            <p className="text-4xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: '#519DA2' }}>
+            <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors}
             </p>
           </div>
 
           {/* Pagos pendientes */}
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <CreditCard size={16} style={{ color: pendingPayments > 0 ? '#EF5554' : '#161440' }} />
-              <p className="text-[10px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Pagos pendientes</p>
+              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">Pagos pendientes</p>
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-4xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: pendingPayments > 0 ? '#EF5554' : '#161440' }}>
+              <p className="text-4xl font-extrabold font-display" style={{ color: pendingPayments > 0 ? '#EF5554' : '#161440' }}>
                 {pendingPayments}
               </p>
               {pendingPayments > 0 && (
-                <span className="text-[10px] rounded-full px-2 py-0.5 font-medium" style={{ background: 'rgba(239,85,84,0.10)', color: '#EF5554' }}>
+                <span className="text-[10px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
                   Revisar
                 </span>
               )}
@@ -179,17 +175,17 @@ export default function FinanzasPage() {
           </div>
 
           {/* Devoluciones pendientes */}
-          <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <ArrowLeftRight size={16} style={{ color: pendingRefunds > 0 ? '#EF5554' : '#161440' }} />
-              <p className="text-[10px] uppercase tracking-widests" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>Devoluciones pend.</p>
+              <p className="text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">Devoluciones pend.</p>
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-4xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: pendingRefunds > 0 ? '#EF5554' : '#161440' }}>
+              <p className="text-4xl font-extrabold font-display" style={{ color: pendingRefunds > 0 ? '#EF5554' : '#161440' }}>
                 {pendingRefunds}
               </p>
               {pendingRefunds > 0 && (
-                <span className="text-[10px] rounded-full px-2 py-0.5 font-medium" style={{ background: 'rgba(239,85,84,0.10)', color: '#EF5554' }}>
+                <span className="text-[10px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
                   Revisar
                 </span>
               )}
@@ -204,22 +200,21 @@ export default function FinanzasPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Recent payments table */}
-          <div className="lg:col-span-2 rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-              <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>Pagos recientes</p>
-              <Link href="/finanzas/pagos" className="text-[12px] font-medium" style={{ color: '#519DA2', fontFamily: 'var(--font-body)' }}>
+          <div className="lg:col-span-2 rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
+              <p className="text-sm font-bold font-display text-navy">Pagos recientes</p>
+              <Link href="/finanzas/pagos" className="text-[12px] font-medium text-teal-deep font-body">
                 Ver todos →
               </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+                  <tr className="border-b border-[var(--outline-variant)]">
                     {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] uppercase tracking-widest"
-                        style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}
+                        className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]"
                       >
                         {h}
                       </th>
@@ -230,22 +225,22 @@ export default function FinanzasPage() {
                   {recentPayments.map((p, i) => (
                     <tr
                       key={p.id}
-                      className="border-b hover:bg-gray-50 transition-colors"
-                      style={{ borderColor: 'var(--outline-variant)', background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}
+                      className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
+                      style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}
                     >
                       <td className="px-4 py-3">
-                        <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>
+                        <p className="text-[13px] font-medium font-body text-navy">
                           {p.member_name.split(' ')[0]}
                         </p>
-                        <p className="text-[11px]" style={{ color: 'rgba(22,20,64,0.45)', fontFamily: 'var(--font-body)' }}>
+                        <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body">
                           {p.member_cedula}
                         </p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-[13px]" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>{p.entity_name}</p>
+                        <p className="text-[13px] font-body text-navy">{p.entity_name}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-[13px] font-medium" style={{ fontFamily: 'var(--font-body)', color: '#161440' }}>
+                        <p className="text-[13px] font-medium font-body text-navy">
                           <AmountDisplay amount={p.amount} revealed={revealAll} />
                         </p>
                       </td>
@@ -256,7 +251,7 @@ export default function FinanzasPage() {
                         <PaymentStatusBadge status={p.status} />
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-[12px] whitespace-nowrap" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.55)' }}>
+                        <p className="text-[12px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
                           {formatDate(p.created_at)}
                         </p>
                       </td>
@@ -270,33 +265,30 @@ export default function FinanzasPage() {
           {/* Quick access + alerts */}
           <div className="space-y-4">
             {/* Quick access */}
-            <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-              <p className="text-[11px] uppercase tracking-widest mb-3" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+              <p className="text-[11px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.40)]">
                 Accesos rápidos
               </p>
               <div className="space-y-2">
                 <Link
                   href="/finanzas/donaciones/importar"
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80"
-                  style={{ background: 'rgba(22,20,64,0.05)', color: '#161440', fontFamily: 'var(--font-body)' }}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 bg-[rgba(22,20,64,0.05)] text-navy font-body"
                 >
-                  <Upload size={15} style={{ color: '#519DA2' }} />
+                  <Upload size={15} className="text-teal-deep" />
                   Importar donaciones
                 </Link>
                 <Link
                   href="/finanzas/becas/nueva"
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80"
-                  style={{ background: 'rgba(22,20,64,0.05)', color: '#161440', fontFamily: 'var(--font-body)' }}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 bg-[rgba(22,20,64,0.05)] text-navy font-body"
                 >
-                  <GraduationCap size={15} style={{ color: '#3DB97A' }} />
+                  <GraduationCap size={15} className="text-[#3DB97A]" />
                   Nueva beca
                 </Link>
                 <Link
                   href="/finanzas/reportes"
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80"
-                  style={{ background: 'rgba(22,20,64,0.05)', color: '#161440', fontFamily: 'var(--font-body)' }}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 bg-[rgba(22,20,64,0.05)] text-navy font-body"
                 >
-                  <BarChart2 size={15} style={{ color: '#E9B949' }} />
+                  <BarChart2 size={15} className="text-[#E9B949]" />
                   Ver reportes
                 </Link>
               </div>
@@ -304,14 +296,14 @@ export default function FinanzasPage() {
 
             {/* SINPE refunds pending */}
             {sinpePendingRefunds.length > 0 && (
-              <Link href="/finanzas/devoluciones" className="block rounded-2xl p-4 transition-all hover:opacity-80" style={{ background: 'rgba(233,185,73,0.10)', border: '1px solid rgba(233,185,73,0.25)' }}>
+              <Link href="/finanzas/devoluciones" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(233,185,73,0.10)] border border-[rgba(233,185,73,0.25)]">
                 <div className="flex items-start gap-2.5">
-                  <RefreshCw size={15} style={{ color: '#E9B949', marginTop: 1, flexShrink: 0 }} />
+                  <RefreshCw size={15} className="text-[#E9B949] mt-[1px] shrink-0" />
                   <div>
-                    <p className="text-[13px] font-semibold" style={{ fontFamily: 'var(--font-body)', color: '#9B7200' }}>
+                    <p className="text-[13px] font-semibold font-body text-[#9B7200]">
                       {sinpePendingRefunds.length} devoluci{sinpePendingRefunds.length === 1 ? 'ón' : 'ones'} SINPE pendiente{sinpePendingRefunds.length !== 1 ? 's' : ''}
                     </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'rgba(155,114,0,0.70)', fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[11px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
                       Requieren procesamiento manual →
                     </p>
                   </div>
@@ -321,14 +313,14 @@ export default function FinanzasPage() {
 
             {/* Failed payments */}
             {failedRecent7.length > 0 && (
-              <Link href="/finanzas/pagos" className="block rounded-2xl p-4 transition-all hover:opacity-80" style={{ background: 'rgba(239,85,84,0.08)', border: '1px solid rgba(239,85,84,0.20)' }}>
+              <Link href="/finanzas/pagos" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(239,85,84,0.08)] border border-[rgba(239,85,84,0.20)]">
                 <div className="flex items-start gap-2.5">
-                  <AlertCircle size={15} style={{ color: '#EF5554', marginTop: 1, flexShrink: 0 }} />
+                  <AlertCircle size={15} className="text-coral mt-[1px] shrink-0" />
                   <div>
-                    <p className="text-[13px] font-semibold" style={{ fontFamily: 'var(--font-body)', color: '#C41A1A' }}>
+                    <p className="text-[13px] font-semibold font-body text-[#C41A1A]">
                       {failedRecent7.length} pago{failedRecent7.length !== 1 ? 's' : ''} fallido{failedRecent7.length !== 1 ? 's' : ''} (7 días)
                     </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'rgba(196,26,26,0.70)', fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[11px] mt-0.5 text-[rgba(196,26,26,0.70)] font-body">
                       Revisar en módulo de pagos →
                     </p>
                   </div>
@@ -338,14 +330,14 @@ export default function FinanzasPage() {
 
             {/* Unused scholarships */}
             {unusedScholarships > 0 && (
-              <Link href="/finanzas/becas" className="block rounded-2xl p-4 transition-all hover:opacity-80" style={{ background: 'rgba(61,185,122,0.08)', border: '1px solid rgba(61,185,122,0.20)' }}>
+              <Link href="/finanzas/becas" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
                 <div className="flex items-start gap-2.5">
-                  <GraduationCap size={15} style={{ color: '#3DB97A', marginTop: 1, flexShrink: 0 }} />
+                  <GraduationCap size={15} className="text-[#3DB97A] mt-[1px] shrink-0" />
                   <div>
-                    <p className="text-[13px] font-semibold" style={{ fontFamily: 'var(--font-body)', color: '#1E6B42' }}>
+                    <p className="text-[13px] font-semibold font-body text-[#1E6B42]">
                       {unusedScholarships} beca{unusedScholarships !== 1 ? 's' : ''} sin usar
                     </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'rgba(30,107,66,0.70)', fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[11px] mt-0.5 text-[rgba(30,107,66,0.70)] font-body">
                       Ver módulo de becas →
                     </p>
                   </div>
