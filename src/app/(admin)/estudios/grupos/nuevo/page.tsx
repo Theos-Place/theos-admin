@@ -50,6 +50,7 @@ export default function NuevoGrupoPage() {
   })
   const [selectedLeader, setSelectedLeader] = useState('')
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
+  const [pendingLeader, setPendingLeader] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [created, setCreated] = useState(false)
 
@@ -107,7 +108,9 @@ export default function NuevoGrupoPage() {
             ¡Grupo creado!
           </p>
           <p className="text-sm text-navy-light/60 font-body">
-            El grupo quedó en estado &quot;Pendiente de apertura&quot;.
+            {pendingLeader
+              ? 'El grupo quedó pendiente de dirigente. Se notificó al equipo de estudios.'
+              : 'El grupo quedó en estado "Pendiente de apertura".'}
           </p>
           <Link
             href="/estudios/grupos"
@@ -351,17 +354,29 @@ export default function NuevoGrupoPage() {
 
           <div className="space-y-1">
             <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
-              Dirigente *
+              Dirigente {pendingLeader ? '' : '*'}
             </label>
             <DirigentesCombobox
               value={selectedLeader || null}
               onChange={id => setSelectedLeader(id ?? '')}
               excludeId={selectedCoLeader || undefined}
-              placeholder="Buscar dirigente…"
+              placeholder={pendingLeader ? 'Pendiente de asignar' : 'Buscar dirigente…'}
             />
           </div>
 
-          {selectedLeader && (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="accent-coral"
+              checked={pendingLeader}
+              onChange={e => { setPendingLeader(e.target.checked); if (e.target.checked) { setSelectedLeader(''); setConfirmed(false) } }}
+            />
+            <span className="text-sm text-navy-light/70 font-body">
+              Dejar dirigente <strong>pendiente</strong> (asignar después)
+            </span>
+          </label>
+
+          {!pendingLeader && selectedLeader && (
             <div className="space-y-1">
               <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
                 Co-dirigente (opcional)
@@ -375,7 +390,7 @@ export default function NuevoGrupoPage() {
             </div>
           )}
 
-          {selectedLeader && (
+          {!pendingLeader && selectedLeader && (
             <label className="flex items-center gap-2 mt-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -398,7 +413,7 @@ export default function NuevoGrupoPage() {
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={!selectedLeader || !confirmed}
+              disabled={pendingLeader ? false : (!selectedLeader || !confirmed)}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               Siguiente →
@@ -436,7 +451,7 @@ export default function NuevoGrupoPage() {
               </div>
               <div>
                 <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Dirigente</p>
-                <p className="text-navy font-body">{leaderData?.member_name ?? '—'}</p>
+                <p className="text-navy font-body">{leaderData?.member_name ?? (pendingLeader ? 'Pendiente' : '—')}</p>
               </div>
               <div>
                 <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Inicio estimado</p>
@@ -448,8 +463,8 @@ export default function NuevoGrupoPage() {
               </div>
               <div>
                 <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Estado inicial</p>
-                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                  Pendiente de apertura
+                <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium', pendingLeader ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700')}>
+                  {pendingLeader ? 'Pendiente de dirigente' : 'Pendiente de apertura'}
                 </span>
               </div>
             </div>
