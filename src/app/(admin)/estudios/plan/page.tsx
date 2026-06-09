@@ -251,7 +251,7 @@ export default function PlanDeEstudiosPage() {
         {/* ── Etapa Inicial ── */}
         <div className="mb-1">
           <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-            Etapa Inicial — ₡15,000 · Requiere ser donador
+            Etapa Inicial — ₡15,000 · Requiere asistir a charlas
           </p>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
             {inicial.map(s => <StudyCardFull key={s.id} study={s} />)}
