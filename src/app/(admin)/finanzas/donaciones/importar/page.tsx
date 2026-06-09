@@ -119,7 +119,7 @@ export default function ImportarDonacionesPage() {
 
         {/* Header */}
         <div
-          className="rounded-2xl px-6 py-5 flex items-center justify-between bg-navy shadow-[var(--shadow-md)]"
+          className="rounded-2xl px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-navy shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-3">
             <button
@@ -206,7 +206,7 @@ export default function ImportarDonacionesPage() {
         {step === 2 && (
           <div className="space-y-5">
             {/* Summary */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { label: 'Filas en el archivo', count: rows.length, color: '#161440', bg: 'rgba(22,20,64,0.06)', Icon: CheckCircle2 },
                 { label: 'Con cédula', count: conCedula, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)', Icon: CheckCircle2 },

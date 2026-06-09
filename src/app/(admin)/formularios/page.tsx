@@ -203,7 +203,7 @@ export default function FormulariosPage() {
             <p className="text-sm text-navy-light/40 font-body">No hay formularios con ese filtro.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
@@ -346,6 +346,40 @@ export default function FormulariosPage() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {/* Mobile: tarjetas */}
+        {filtered.length > 0 && (
+          <ul className="md:hidden divide-y divide-[var(--outline-variant)]">
+            {filtered.map(form => {
+              const CatIcon = CATEGORY_ICONS[form.category] ?? FileText
+              return (
+                <li
+                  key={form.id}
+                  onClick={() => window.location.href = `/formularios/${form.id}`}
+                  className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+                >
+                  <div className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0 bg-surface-low">
+                    <CatIcon size={16} className="text-navy-light/50" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-navy font-body">{form.name}</p>
+                    <p className="truncate text-[12px] text-navy-light/50 font-body">
+                      {CATEGORY_LABELS[form.category] ?? form.category} · {form.responses_count} respuesta{form.responses_count !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold font-display',
+                      form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/50'
+                    )}
+                  >
+                    {form.is_active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
         )}
       </div>
     </div>

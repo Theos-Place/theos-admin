@@ -60,7 +60,7 @@ export function MembersTab({
     <div className="py-4 px-[22px] flex flex-col gap-4">
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-48">
+        <div className="relative flex-1 min-w-0 sm:min-w-48 w-full sm:w-auto">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
@@ -95,7 +95,7 @@ export function MembersTab({
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-[rgba(22,20,64,0.09)]">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-[var(--outline-variant)]">
@@ -193,6 +193,68 @@ export function MembersTab({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden">
+          {sortedMembers.map((m, i) => (
+            <li
+              key={m.member_id}
+              className="flex items-center gap-3 px-4 py-3"
+              style={i < sortedMembers.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+            >
+              <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
+                <span className="text-[10px] font-bold text-white font-display">{m.initials}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-navy font-body">{m.name}</p>
+                <p className="truncate text-[12px] text-navy-light/50 font-body">
+                  {m.position} · {calcularAntiguedad(m.start_date)}
+                </p>
+              </div>
+              <span
+                className={cn(
+                  'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold font-display',
+                  m.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/50',
+                )}
+              >
+                {m.status === 'active' ? 'Activo' : 'Inactivo'}
+              </span>
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => onMenuToggle(m.member_id)}
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-navy hover:bg-surface-low transition-colors"
+                >
+                  <MoreVertical size={14} />
+                </button>
+                {openMenu === m.member_id && (
+                  <div className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden shadow-lg bg-surface-card border border-[var(--outline-variant)]">
+                    <Link
+                      href={`/miembros/${m.member_id}`}
+                      onClick={() => onMenuToggle(m.member_id)}
+                      className="flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
+                    >
+                      <ExternalLink size={13} />
+                      Ver perfil
+                    </Link>
+                    <button
+                      onClick={() => { onChangePosition(m); onMenuToggle(m.member_id) }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
+                    >
+                      Cambiar puesto
+                    </button>
+                    <button
+                      onClick={() => { onDisconnect(m); onMenuToggle(m.member_id) }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors font-body"
+                    >
+                      Desvincular
+                    </button>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+
         {sortedMembers.length === 0 && (
           <div className="px-5 py-10 text-center">
             <p className="text-sm text-navy-light/40 font-body">

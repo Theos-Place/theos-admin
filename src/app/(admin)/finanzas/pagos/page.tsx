@@ -192,7 +192,7 @@ export default function PagosPage() {
 
         {/* Table */}
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
@@ -267,6 +267,56 @@ export default function PagosPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: tarjetas */}
+          <ul className="md:hidden">
+            {filtered.map((p, i) => (
+              <li
+                key={p.id}
+                className="px-4 py-3 space-y-2.5"
+                style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+              >
+                <Link href={`/finanzas/pagos/${p.id}`} className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium font-body text-navy truncate">{p.member_name}</p>
+                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
+                    <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <p className="text-[13px] font-medium font-body text-navy">
+                      <AmountDisplay amount={p.amount} revealed={revealAll} />
+                    </p>
+                    <PaymentStatusBadge status={p.status} />
+                  </div>
+                </Link>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <PaymentMethodBadge method={p.method} />
+                  <div className="flex-1" />
+                  {p.status === 'paid' && (
+                    <button
+                      onClick={() => setRefundTarget(p)}
+                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                    >
+                      Devolver
+                    </button>
+                  )}
+                  {p.status === 'pending' && p.method === 'sinpe' && (
+                    <button
+                      onClick={() => setSinpeTarget(p)}
+                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(81,157,162,0.30)] text-teal-deep font-body"
+                    >
+                      Confirmar SINPE
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+            {filtered.length === 0 && (
+              <li className="px-5 py-12 text-center text-sm font-body text-[rgba(22,20,64,0.40)]">
+                No hay pagos que coincidan con los filtros
+              </li>
+            )}
+          </ul>
         </div>
       </div>
 

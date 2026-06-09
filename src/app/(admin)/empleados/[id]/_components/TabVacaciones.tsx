@@ -84,9 +84,9 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
           {employee.vacation_records.map(v => (
             <div
               key={v.id}
-              className="flex items-center justify-between gap-3 rounded-xl p-3 bg-surface-low"
+              className="flex items-center justify-between gap-3 rounded-xl p-3 bg-surface-low flex-wrap"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 min-w-0">
                 <div className="h-7 w-7 rounded-lg bg-navy/10 flex items-center justify-center shrink-0 mt-0.5">
                   <Calendar size={13} className="text-navy-light/50" />
                 </div>

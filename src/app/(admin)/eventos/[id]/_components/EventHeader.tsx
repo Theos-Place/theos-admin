@@ -92,8 +92,8 @@ export function EventHeader({
       </Link>
 
       {/* Header card */}
-      <div className="rounded-2xl bg-navy px-6 py-5 shadow-[var(--shadow-md)]">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="rounded-2xl bg-navy px-4 py-4 sm:px-6 sm:py-5 shadow-[var(--shadow-md)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <EventTypeBadge type={cancelled ? 'charla' : event.event_type} size="sm" />
@@ -123,7 +123,7 @@ export function EventHeader({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:shrink-0">
             {/* Calendar export popover */}
             <div className="relative">
               <button

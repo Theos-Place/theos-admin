@@ -12,7 +12,7 @@ export function MemberFamilyTab({ member }: Props) {
     <div
       className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
         <h3
           className="text-sm font-medium text-navy font-display font-extrabold"
         >

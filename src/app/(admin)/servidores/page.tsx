@@ -138,7 +138,7 @@ export default function ServidoresPage() {
     <div className="space-y-6">
       {/* Header */}
       <div
-        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]"
+        className="rounded-2xl bg-navy px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-start sm:justify-between gap-4 shadow-[var(--shadow-md)]"
       >
         <div>
           <h1
@@ -201,7 +201,7 @@ export default function ServidoresPage() {
             {f.label}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
           <ColumnSelector<FlatServer>
             columns={SERVER_COLUMNS}
             storageKey="theos_columns_servers"

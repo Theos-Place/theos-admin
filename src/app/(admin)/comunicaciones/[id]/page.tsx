@@ -74,7 +74,7 @@ export default function ComunicacionDetallePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <Link
             href="/comunicaciones"
@@ -101,7 +101,7 @@ export default function ComunicacionDetallePage() {
             }
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <button
             type="button"
             onClick={() => window.location.href = `/comunicaciones/nueva?reenviar=${id}`}
@@ -158,7 +158,7 @@ export default function ComunicacionDetallePage() {
 
       {/* Recipients table */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="px-5 py-4 border-b flex items-center justify-between gap-4 border-[var(--outline-variant)]">
+        <div className="px-5 py-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-[var(--outline-variant)]">
           <p className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
             Destinatarios ({recipients.length})
           </p>
@@ -178,7 +178,7 @@ export default function ComunicacionDetallePage() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -224,6 +224,35 @@ export default function ComunicacionDetallePage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden divide-y divide-[var(--outline-variant)]">
+          {filtered.map((r, idx) => (
+            <li key={r.id} className="flex items-center gap-3 px-4 py-3">
+              <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-bold text-white">{r.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] text-navy font-body">{r.name}</p>
+                <p className="text-[11px] text-navy-light/50 font-body">
+                  {r.delivered_at
+                    ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
+                    : '—'}
+                </p>
+              </div>
+              {r.status === 'sent' ? (
+                <span className="inline-flex items-center gap-1 text-[12px] text-teal-deep shrink-0 font-body">
+                  <CheckCircle2 size={12} /> Enviado
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[12px] text-coral shrink-0 font-body">
+                  <XCircle size={12} /> Fallido
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+
         {message.stats.total > recipients.length && (
           <div className="px-5 py-3 border-t flex items-center justify-center gap-2 border-[var(--outline-variant)]">
             <RefreshCw size={13} className="text-navy-light/40" />

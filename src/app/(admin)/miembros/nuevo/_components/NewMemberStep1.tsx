@@ -98,7 +98,7 @@ export function NewMemberStep1({
   const { activeSedes: SEDES } = useSedes()
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Nombre" htmlFor="member-first-name" required error={errors.first_name}>
           <input
             id="member-first-name"
@@ -182,7 +182,7 @@ export function NewMemberStep1({
           Modo menor de edad — correo y teléfono opcionales
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Correo electrónico" htmlFor="member-email" error={errors.email}>
             <input
               id="member-email"
@@ -201,7 +201,7 @@ export function NewMemberStep1({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Fecha de nacimiento" htmlFor="member-birth-date">
           <input
             id="member-birth-date"
@@ -241,7 +241,7 @@ export function NewMemberStep1({
         </select>
       </Field>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Provincia" htmlFor="member-province">
           <select
             id="member-province"
@@ -297,7 +297,7 @@ export function NewMemberStep1({
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Profesión / Ocupación" htmlFor="member-profession">
           <input
             id="member-profession"
@@ -344,7 +344,7 @@ export function NewMemberStep1({
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Nombre contacto de emergencia" htmlFor="member-emergency-name">
           <input
             id="member-emergency-name"

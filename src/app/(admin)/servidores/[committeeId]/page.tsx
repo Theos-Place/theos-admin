@@ -306,13 +306,13 @@ export default function CommitteeDetailPage() {
 
       {/* ── Tabs card ── */}
       <div className="card w-full min-w-0">
-        <div className="flex border-b border-[rgba(22,20,64,0.09)] py-0 px-1">
+        <div className="flex overflow-x-auto border-b border-[rgba(22,20,64,0.09)] py-0 px-1">
           {(['miembros', 'vacantes', 'metas'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                'px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
+                'shrink-0 whitespace-nowrap px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
                 tab === t
                   ? 'border-coral text-navy font-semibold'
                   : 'border-transparent text-navy-light/50 hover:text-navy'

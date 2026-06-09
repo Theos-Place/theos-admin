@@ -175,8 +175,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   return (
     <div className="min-h-screen bg-navy flex flex-col font-body">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b border-white/10">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <Link
             href={`/eventos/${id}`}
             className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm"
@@ -184,16 +184,16 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <ChevronLeft size={16} />
             Volver
           </Link>
-          <div className="h-5 w-px bg-white/10" />
-          <div>
-            <p className="text-white font-semibold text-sm font-display">
+          <div className="h-5 w-px bg-white/10 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-white font-semibold text-sm font-display truncate">
               {event.name}
             </p>
             <p className="text-white/40 text-[11px]">Check-in en vivo</p>
           </div>
         </div>
-        <div className="flex items-center gap-6">
-          <Clock />
+        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+          <span className="hidden sm:inline-flex"><Clock /></span>
           <div className="text-right">
             <p
               className="text-4xl font-extrabold text-white tabular-nums font-display"
@@ -206,9 +206,9 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* Main */}
-      <div className="flex-1 flex gap-0 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-0 overflow-y-auto lg:overflow-hidden">
         {/* Panel izquierdo — 60% */}
-        <div className="w-3/5 p-6 flex flex-col gap-4 border-r border-white/10">
+        <div className="w-full lg:w-3/5 p-4 sm:p-6 flex flex-col gap-4 border-b lg:border-b-0 lg:border-r border-white/10">
           {/* Search */}
           <div className="relative">
             <input
@@ -286,7 +286,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         </div>
 
         {/* Panel derecho — 40% */}
-        <div className="w-2/5 p-6 flex flex-col gap-5">
+        <div className="w-full lg:w-2/5 p-4 sm:p-6 flex flex-col gap-5">
           {/* Marco QR */}
           <div className="flex flex-col items-center justify-center py-6">
             <div className="relative w-36 h-36">

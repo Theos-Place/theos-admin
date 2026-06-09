@@ -182,13 +182,13 @@ export default function VacanteDetailPage() {
 
       {/* Tabs card */}
       <div className="card">
-        <div className="flex border-b border-[rgba(22,20,64,0.09)] py-0 px-1">
+        <div className="flex overflow-x-auto border-b border-[rgba(22,20,64,0.09)] py-0 px-1">
         {(['descripcion', 'aplicaciones'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              'px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
+              'shrink-0 whitespace-nowrap px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
               tab === t
                 ? 'border-coral text-navy font-semibold'
                 : 'border-transparent text-navy-light/50 hover:text-navy'
@@ -247,7 +247,7 @@ export default function VacanteDetailPage() {
       {tab === 'aplicaciones' && (
         <div className="space-y-4 py-4 px-[22px]">
           {/* Stats */}
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {[
               ['Total', counts.total, 'text-navy'],
               ['Pendientes', counts.pending, 'text-amber-600'],
@@ -270,7 +270,7 @@ export default function VacanteDetailPage() {
           </div>
 
           {/* Table + panel */}
-          <div className="flex gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             {/* Table */}
             <div
               className={cn('rounded-2xl overflow-hidden transition-all duration-200 bg-surface-card shadow-[var(--shadow-md)]', selectedApp ? 'flex-1' : 'w-full')}
@@ -351,7 +351,7 @@ export default function VacanteDetailPage() {
             {/* Detail panel */}
             {selectedApp && (
               <div
-                className="w-72 shrink-0 rounded-2xl p-4 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
+                className="w-full lg:w-72 shrink-0 rounded-2xl p-4 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">

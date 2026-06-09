@@ -128,7 +128,7 @@ export default function EmpleadosPage() {
       <div
         className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-[var(--outline-variant)]">
@@ -207,6 +207,44 @@ export default function EmpleadosPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden">
+          {sortedEmployees.map((emp, i) => (
+            <li
+              key={emp.id}
+              onClick={() => router.push(`/empleados/${emp.id}`)}
+              className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+              style={i < sortedEmployees.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+            >
+              <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
+                <span className="text-[11px] font-bold text-white font-display">
+                  {emp.member_initials}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-navy font-body">
+                  {emp.member_name}
+                </p>
+                <p className="truncate text-[12px] text-navy-light/50 font-body">
+                  {emp.position_name}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span
+                  className={cn(
+                    'rounded-full px-2 py-0.5 text-[10px] font-medium font-display',
+                    emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/50'
+                  )}
+                >
+                  {emp.status === 'active' ? 'Activo' : 'Inactivo'}
+                </span>
+                <ContractTypeBadge type={emp.contract_type} size="sm" />
+              </div>
+            </li>
+          ))}
+        </ul>
+
         {displayed.length === 0 && (
           <div className="px-5 py-10 text-center">
             <p className="text-sm text-navy-light/40 font-body">
@@ -236,7 +274,7 @@ export default function EmpleadosPage() {
 
           {historyOpen && (
             <div className="border-t border-[var(--outline-variant)]">
-              <div className="overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr>
@@ -302,6 +340,29 @@ export default function EmpleadosPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile: tarjetas historial */}
+              <ul className="md:hidden">
+                {inactive.map((emp, i) => (
+                  <li
+                    key={emp.id}
+                    onClick={() => router.push(`/empleados/${emp.id}`)}
+                    className="flex items-center gap-3 px-4 py-3 opacity-70 active:bg-surface-low cursor-pointer"
+                    style={i < inactive.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                  >
+                    <div className="h-8 w-8 rounded-full bg-navy-light/20 flex items-center justify-center shrink-0">
+                      <span className="text-[10px] font-bold text-navy-light/50 font-display">
+                        {emp.member_initials}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-navy-light/70 font-body">{emp.member_name}</p>
+                      <p className="truncate text-[12px] text-navy-light/50 font-body">{emp.position_name}</p>
+                    </div>
+                    <ContractTypeBadge type={emp.contract_type} size="sm" />
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

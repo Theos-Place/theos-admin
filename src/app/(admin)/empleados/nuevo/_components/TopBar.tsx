@@ -13,18 +13,18 @@ interface TopBarProps {
 export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBarProps) {
   return (
     <div
-      className="sticky top-0 z-10 rounded-2xl px-5 py-3 flex items-center justify-between gap-3 bg-surface-card shadow-[var(--shadow-md)]"
+      className="sticky top-0 z-10 rounded-2xl px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-surface-card shadow-[var(--shadow-md)]"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <Link
           href="/empleados"
-          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body shrink-0"
         >
           <ChevronLeft size={16} />
           Empleados
         </Link>
-        <span className="text-navy-light/20">|</span>
-        <span className="text-sm font-semibold text-navy font-display">
+        <span className="text-navy-light/20 hidden sm:inline">|</span>
+        <span className="text-sm font-semibold text-navy font-display truncate hidden sm:inline">
           Contratar empleado
         </span>
         <span

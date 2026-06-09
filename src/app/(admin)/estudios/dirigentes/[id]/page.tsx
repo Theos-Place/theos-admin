@@ -370,7 +370,7 @@ export default function DirigentePage({ params }: { params: Promise<{ id: string
       <div className="card w-full">
 
         {/* Tab bar */}
-        <div className="flex border-b border-[rgba(22,20,64,0.09)] px-[22px]">
+        <div className="flex border-b border-[rgba(22,20,64,0.09)] px-[22px] overflow-x-auto">
           {tabs.map(t => (
             <button
               key={t}

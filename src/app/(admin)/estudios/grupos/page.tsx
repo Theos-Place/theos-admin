@@ -145,7 +145,7 @@ export default function GruposPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1
             className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
@@ -156,7 +156,7 @@ export default function GruposPage() {
             Todos los grupos de estudio bíblico
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <ColumnSelector<StudyGroup>
             columns={STUDY_GROUP_COLUMNS}
             storageKey="theos_columns_studies"
@@ -283,7 +283,7 @@ export default function GruposPage() {
 
       {/* Table */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -360,6 +360,37 @@ export default function GruposPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden">
+          {sortedGroups.map((group, i) => {
+            const studyType = STUDY_TYPES.find(s => s.id === group.study_type_id)
+            const enrolled = group.participants.filter(p => p.status !== 'withdrawn').length
+            return (
+              <li key={group.id} style={i < sortedGroups.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}>
+                <Link
+                  href={`/estudios/grupos/${group.id}`}
+                  className="flex items-start gap-3 px-4 py-3 active:bg-surface-low"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <StudyTypeBadge code={group.study_type_id} size="sm" />
+                      <GroupStatusBadge status={group.status} />
+                    </div>
+                    <p className="text-sm text-navy font-body truncate">
+                      {group.leader_name ?? <span className="text-amber-600">Sin dirigente</span>}
+                    </p>
+                    <p className="text-[12px] text-navy-light/60 font-body truncate">
+                      {sedeLabel(group.zone)} · {group.schedule_days.join('/')} {group.schedule_time} · {enrolled}/{group.max_capacity}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[11px] text-navy-light/40 font-body">{studyType?.stage ?? ''}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+
         {filtered.length === 0 && (
           <div className="px-5 py-10 text-center">
             <p className="text-sm text-navy-light/40 font-body">

@@ -178,10 +178,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const backHref = formId ? `/formularios/${formId}` : '/formularios'
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] -mx-6 -mt-6">
+    <div className="flex flex-col md:h-[calc(100vh-4rem)] -mx-6 -mt-6">
       {/* Top bar */}
       <div
-        className="sticky top-0 z-20 flex items-center gap-3 px-6 py-3 border-b shrink-0 bg-surface-card border-[var(--outline-variant)]"
+        className="sticky top-0 z-20 flex items-center gap-3 flex-wrap px-4 md:px-6 py-3 border-b shrink-0 bg-surface-card border-[var(--outline-variant)]"
       >
         <Link
           href="/formularios"
@@ -194,7 +194,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
         {/* Editable name */}
         <input
-          className="flex-1 bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/30 font-display tracking-[-0.01em]"
+          className="flex-1 basis-full md:basis-auto bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/30 font-display tracking-[-0.01em]"
           placeholder="Nombre del formulario"
           value={name}
           onChange={e => setName(e.target.value)}
@@ -265,10 +265,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
       </div>
 
       {/* Three-column layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 md:overflow-hidden">
         {/* Left: Field types */}
         <div
-          className="w-48 shrink-0 flex flex-col border-r overflow-y-auto bg-surface-low border-[var(--outline-variant)]"
+          className="w-full md:w-48 shrink-0 flex flex-col border-b md:border-b-0 md:border-r md:overflow-y-auto bg-surface-low border-[var(--outline-variant)]"
         >
           <div className="p-3 space-y-4">
             {FIELD_GROUPS.map(group => (
@@ -276,6 +276,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 <p className="text-[9px] uppercase tracking-widests font-semibold text-navy-light/40 px-1 mb-2 font-display">
                   {group.label}
                 </p>
+                <div className="grid grid-cols-2 gap-1 md:grid-cols-1">
                 {group.types.map(({ type, label }) => (
                   <button
                     key={type}
@@ -289,13 +290,14 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                     {label}
                   </button>
                 ))}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Center: Canvas */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 md:overflow-y-auto px-4 md:px-6 py-5">
           {/* Description input */}
           <div className="max-w-2xl mx-auto mb-4">
             <input
@@ -330,7 +332,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
         {/* Right: Inspector */}
         <div
-          className="w-72 shrink-0 border-l overflow-hidden flex flex-col border-[var(--outline-variant)]"
+          className={cn(
+            'w-full md:w-72 shrink-0 border-t md:border-t-0 md:border-l md:overflow-hidden flex flex-col border-[var(--outline-variant)]',
+            !activeField && 'hidden md:flex'
+          )}
         >
           {activeField ? (
             <>

@@ -99,9 +99,9 @@ export default function FinanzasPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Period selector */}
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-wrap">
               {PERIOD_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
@@ -207,7 +207,7 @@ export default function FinanzasPage() {
                 Ver todos →
               </Link>
             </div>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--outline-variant)]">
@@ -260,6 +260,31 @@ export default function FinanzasPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile: tarjetas */}
+            <ul className="md:hidden">
+              {recentPayments.map((p, i) => (
+                <li
+                  key={p.id}
+                  className="px-4 py-3 flex items-center gap-3"
+                  style={i < recentPayments.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium font-body text-navy truncate">
+                      {p.member_name.split(' ')[0]} <span className="text-[rgba(22,20,64,0.45)] font-normal">{p.member_cedula}</span>
+                    </p>
+                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
+                    <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <p className="text-[13px] font-medium font-body text-navy">
+                      <AmountDisplay amount={p.amount} revealed={revealAll} />
+                    </p>
+                    <PaymentStatusBadge status={p.status} />
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Quick access + alerts */}

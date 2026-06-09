@@ -122,7 +122,7 @@ export default function DonacionesPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => setRevealAll(r => !r)}
               className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-all bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] font-body"
@@ -200,13 +200,13 @@ export default function DonacionesPage() {
             type="date"
             value={dateFrom}
             onChange={e => setDateFrom(e.target.value)}
-            className="rounded-xl border px-3 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
+            className="rounded-xl border px-3 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy max-w-full"
           />
           <input
             type="date"
             value={dateTo}
             onChange={e => setDateTo(e.target.value)}
-            className="rounded-xl border px-3 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
+            className="rounded-xl border px-3 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy max-w-full"
           />
           <div className="flex gap-1.5">
             {(['all', 'identified', 'unidentified'] as const).map(s => (
@@ -228,7 +228,7 @@ export default function DonacionesPage() {
 
         {/* Table */}
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
@@ -291,6 +291,45 @@ export default function DonacionesPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: tarjetas */}
+          <ul className="md:hidden">
+            {filtered.map((d, i) => (
+              <li
+                key={d.id}
+                className="px-4 py-3 flex items-center gap-3"
+                style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium font-body truncate" style={{ color: d.is_identified ? '#161440' : '#EF5554' }}>
+                    {d.member_name}
+                  </p>
+                  <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">
+                    {d.member_cedula} · {formatDate(d.donation_date)}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <p className="text-[13px] font-medium font-body text-navy">
+                    <AmountDisplay amount={d.amount} revealed={revealAll} />
+                  </p>
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    style={{
+                      color: d.is_identified ? '#3DB97A' : '#EF5554',
+                      background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
+                    }}
+                  >
+                    {d.is_identified ? 'Identificado' : 'Sin identificar'}
+                  </span>
+                </div>
+              </li>
+            ))}
+            {filtered.length === 0 && (
+              <li className="px-5 py-12 text-center text-sm font-body text-[rgba(22,20,64,0.40)]">
+                No hay donaciones que coincidan con los filtros
+              </li>
+            )}
+          </ul>
         </div>
       </div>
 

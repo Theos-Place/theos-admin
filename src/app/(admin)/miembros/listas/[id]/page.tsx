@@ -168,7 +168,7 @@ export default function ListaDetailPage() {
 
       {/* Header */}
       <div
-        className="rounded-2xl px-6 py-5 bg-surface-card shadow-[var(--shadow-md)]"
+        className="rounded-2xl px-4 sm:px-6 py-5 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-start gap-4 justify-between flex-wrap">
           <div className="space-y-2">
@@ -186,7 +186,7 @@ export default function ListaDetailPage() {
               </span>
             </div>
             <h1
-              className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
+              className="text-xl sm:text-2xl text-navy font-display font-extrabold tracking-[-0.02em] break-words"
             >
               {list.name}
             </h1>
@@ -284,7 +284,7 @@ export default function ListaDetailPage() {
         className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
       >
         {/* Toolbar */}
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--outline-variant)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[var(--outline-variant)]">
           <p className="text-[12px] text-navy-light/50 font-body">
             <strong className="text-navy">{listMembers.length}</strong> miembros en esta lista
             {list.member_count > listMembers.length && (
@@ -306,7 +306,39 @@ export default function ListaDetailPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Tarjetas mobile */}
+        <div className="md:hidden divide-y divide-[var(--outline-variant)]">
+          {sorted.length === 0 ? (
+            <p className="px-4 py-12 text-center text-sm text-navy-light/40 font-body">
+              No hay miembros en esta lista
+            </p>
+          ) : (
+            sorted.map(member => (
+              <button
+                key={member.id}
+                onClick={() => router.push(`/miembros/${member.id}`)}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-low"
+              >
+                <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-display font-extrabold', avatarColor(member.id))}>
+                  {initials(member)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-navy font-body">{member.first_name} {member.last_name}</p>
+                  <p className="truncate text-xs text-navy-light/50 font-mono">
+                    {member.cedula ?? 'Sin cédula'}
+                    {member.birth_date ? ` · ${calcularEdad(member.birth_date)} años` : ''}
+                  </p>
+                </div>
+                <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
+                  {member.is_active ? 'Activo' : 'Inactivo'}
+                </span>
+                <ArrowRight size={15} className="shrink-0 text-navy-light/30" strokeWidth={1.75} />
+              </button>
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-[var(--outline-variant)]">

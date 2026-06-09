@@ -288,7 +288,7 @@ export default function PreviewPage() {
           className="w-full max-w-lg mx-auto rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
         >
           {/* Form header */}
-          <div className="px-8 pt-8 pb-6 border-b border-[var(--outline-variant)]">
+          <div className="px-5 sm:px-8 pt-8 pb-6 border-b border-[var(--outline-variant)]">
             <div className="flex justify-center mb-6">
               <Image src="/logo-theos-white.png" alt="Theos Place" width={100} height={28} className="object-contain opacity-60" />
             </div>
@@ -333,7 +333,7 @@ export default function PreviewPage() {
           </div>
 
           {/* Fields */}
-          <div className="px-8 py-6 space-y-6">
+          <div className="px-5 sm:px-8 py-6 space-y-6">
             {fieldsToRender.map(field => {
               if (!isFieldVisible(field, answers)) return null
 
@@ -367,7 +367,7 @@ export default function PreviewPage() {
                         Editar mis datos
                       </button>
                     </div>
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2.5">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2.5">
                       {selectedFields.map(f => (
                         <div
                           key={f.key}
@@ -423,7 +423,7 @@ export default function PreviewPage() {
           </div>
 
           {/* Footer actions */}
-          <div className="px-8 pb-8">
+          <div className="px-5 sm:px-8 pb-8">
             {/* Correo obligatorio para invitados (sin sesión) — identifica la respuesta */}
             {isGuest && isLastPage && (
               <div className="mb-5">

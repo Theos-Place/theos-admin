@@ -273,7 +273,7 @@ export default function DashboardPage() {
   // ── Simplified member view ──────────────────────────────────────────────────
   if (isMember) {
     return (
-      <div className="px-6 py-8 max-w-3xl mx-auto space-y-6">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-3xl mx-auto space-y-6">
         <div className="bg-navy rounded-2xl px-6 py-6 text-white relative overflow-hidden">
           {HEADER_THETAS.map((p) => (
             <div key={p.id} className="absolute" style={{ top: p.top, left: p.left, right: p.right }}>
@@ -337,18 +337,18 @@ export default function DashboardPage() {
 
   // ── Full dashboard ──────────────────────────────────────────────────────────
   return (
-    <div className="px-6 py-8 space-y-6">
+    <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
       {/* Header */}
-      <div className="bg-navy rounded-2xl px-6 py-5 relative overflow-hidden">
+      <div className="bg-navy rounded-2xl px-4 sm:px-6 py-5 relative overflow-hidden">
         {HEADER_THETAS.map((p) => (
           <div key={p.id} className="absolute" style={{ top: p.top, left: p.left, right: p.right }}>
             <ThetaSVG size={p.size} opacity={p.opacity} />
           </div>
         ))}
-        <div className="relative flex items-start justify-between gap-4">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl text-white mb-0.5 font-display font-extrabold">
+            <h1 className="text-xl sm:text-2xl text-white mb-0.5 font-display font-extrabold">
               {getGreeting(today.getHours())}, {user?.name?.split(' ')[0] ?? 'bienvenido'} 👋
             </h1>
             <p className="text-white/50 text-[13px] mb-1 font-body">
@@ -358,7 +358,7 @@ export default function DashboardPage() {
               Theos Place · Sistema Administrativo
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0 mt-1">
+          <div className="flex flex-wrap items-center gap-3 shrink-0 sm:mt-1">
             {isFinance && (
               <button
                 onClick={() => setShowAmounts(v => !v)}
@@ -637,8 +637,8 @@ export default function DashboardPage() {
               const barColor = capacityColor(pct)
               const isNearFull = pct >= 0.9
               return (
-                <div key={ev.id} className="flex items-center gap-4">
-                  <div className="text-[11px] text-navy/50 w-20 shrink-0 font-body">
+                <div key={ev.id} className="flex items-center gap-2.5 sm:gap-4">
+                  <div className="text-[11px] text-navy/50 w-14 sm:w-20 shrink-0 font-body">
                     {formatShortDate(ev.start_at)}
                   </div>
                   <div className="flex-1 min-w-0">

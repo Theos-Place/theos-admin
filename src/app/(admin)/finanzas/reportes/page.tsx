@@ -129,7 +129,7 @@ export default function ReportesPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+        <div className="flex flex-col sm:flex-row gap-1 p-1 rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
           {([
             ['donations', 'Donaciones'],
             ['payments', 'Pagos por entidad'],
@@ -219,7 +219,7 @@ export default function ReportesPage() {
             </div>
 
             {/* Stats for filtered */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { label: 'Total cobrado', value: paidPayments.reduce((s, p) => s + p.amount, 0), color: '#3DB97A' },
                 { label: 'Pendiente', value: pendingPayments.reduce((s, p) => s + p.amount, 0), color: '#E9B949' },
@@ -287,9 +287,9 @@ export default function ReportesPage() {
                 <p className="text-[11px] uppercase tracking-widests mb-4 font-display text-[rgba(22,20,64,0.40)]">
                   Top meses {yearFilter}
                 </p>
-                <div className="flex gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {topMonths.map((m, i) => (
-                    <div key={m.name} className="flex-1 rounded-xl p-3.5" style={{ background: i === 0 ? 'rgba(22,20,64,0.06)' : 'rgba(22,20,64,0.03)' }}>
+                    <div key={m.name} className="rounded-xl p-3.5" style={{ background: i === 0 ? 'rgba(22,20,64,0.06)' : 'rgba(22,20,64,0.03)' }}>
                       <p className="text-[12px] font-medium font-body text-navy">{m.name}</p>
                       <p className="text-[11px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
                         ₡{m.total.toLocaleString('es-CR')}

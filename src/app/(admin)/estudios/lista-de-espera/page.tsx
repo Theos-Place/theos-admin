@@ -242,7 +242,7 @@ export default function ListaEsperaPage() {
 
       {/* Table */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <table className="w-full border-collapse">
+        <table className="hidden md:table w-full border-collapse">
           <thead>
             <tr>
               <th className="px-4 py-3 w-10">
@@ -300,6 +300,37 @@ export default function ListaEsperaPage() {
             ))}
           </tbody>
         </table>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden">
+          {filtered.map((entry, i) => (
+            <li
+              key={entry.id}
+              onClick={() => toggleSelect(entry.id)}
+              className={cn(
+                'flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer',
+                selectedIds.includes(entry.id) ? 'bg-coral/5' : '',
+              )}
+              style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+            >
+              <input
+                type="checkbox"
+                className="accent-coral h-4 w-4 shrink-0"
+                checked={selectedIds.includes(entry.id)}
+                onClick={e => e.stopPropagation()}
+                onChange={() => toggleSelect(entry.id)}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-navy font-body truncate">{entry.member_name}</p>
+                <p className="text-[12px] text-navy-light/60 font-body truncate">
+                  {entry.age} años · {sedeLabel(entry.zone_preference)} · {entry.horario_preference}
+                </p>
+              </div>
+              <span className="shrink-0 text-[11px] text-navy-light/40 font-body">{entry.requested_at}</span>
+            </li>
+          ))}
+        </ul>
+
         {filtered.length === 0 && (
           <div className="px-5 py-10 text-center">
             <p className="text-sm text-navy-light/40 font-body">Sin registros.</p>
@@ -310,7 +341,7 @@ export default function ListaEsperaPage() {
       {/* Bulk action bar */}
       {selectedIds.length > 0 && (
         <div
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-5 py-3 z-40 bg-[var(--navy)] shadow-[var(--shadow-lg)]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3 rounded-2xl px-5 py-3 z-40 bg-[var(--navy)] shadow-[var(--shadow-lg)] w-[calc(100%-2rem)] max-w-md sm:w-auto sm:max-w-none"
         >
           <span className="text-sm text-white/70 font-body">
             {selectedIds.length} seleccionado{selectedIds.length > 1 ? 's' : ''}

@@ -221,7 +221,7 @@ export default function PlanDeEstudiosPage() {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1
             className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
@@ -242,7 +242,7 @@ export default function PlanDeEstudiosPage() {
       </div>
 
       {/* ── Plan visual ── */}
-      <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
+      <div className="rounded-2xl p-4 sm:p-6 bg-surface-card shadow-[var(--shadow-md)]">
 
         {/* Stage header strip */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">

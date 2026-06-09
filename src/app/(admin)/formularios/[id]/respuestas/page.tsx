@@ -132,7 +132,7 @@ export default function RespuestasPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Link
             href="/formularios"
@@ -148,7 +148,7 @@ export default function RespuestasPage() {
             {responses.length} respuesta{responses.length !== 1 ? 's' : ''} · {dataFields.length} campos
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <Link
             href={`/formularios/${id}`}
             className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
@@ -206,7 +206,7 @@ export default function RespuestasPage() {
                 Respuestas individuales
               </p>
             </div>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
@@ -257,6 +257,30 @@ export default function RespuestasPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile: tarjetas */}
+            <ul className="md:hidden divide-y divide-[var(--outline-variant)]">
+              {responses.map(resp => (
+                <li
+                  key={resp.id}
+                  onClick={() => setDetailResponse(resp)}
+                  className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+                >
+                  <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-bold text-white font-display">
+                      {resp.member_name.split(' ').map(w => w[0]).slice(0, 2).join('')}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-navy font-body">{resp.member_name}</p>
+                    <p className="truncate text-[12px] text-navy-light/50 font-body">
+                      {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <ChevronRight size={16} className="text-navy-light/30 shrink-0" />
+                </li>
+              ))}
+            </ul>
           </div>
         </>
       )}

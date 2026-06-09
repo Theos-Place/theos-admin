@@ -58,7 +58,7 @@ export function Step1Informacion({
       {/* Tipo de evento */}
       <div className="mb-5">
         <FieldLabel>Tipo de evento</FieldLabel>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {activeEventTypes.map(t => {
             const Icon = ICON_MAP[t.icon] ?? Mic
             return (

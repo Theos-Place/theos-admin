@@ -107,11 +107,11 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-navy-light/60 font-body">
           {registrationCount} inscritos
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setShowInscribir(true)}
             className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
@@ -131,7 +131,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
       </div>
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -184,6 +184,50 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: tarjetas */}
+        <div className="md:hidden">
+          {event.registrations.length === 0 ? (
+            <div className="px-4 py-8 text-center text-[13px] text-navy-light/40 font-body">
+              Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
+            </div>
+          ) : (
+            <ul>
+              {event.registrations.map((reg, idx) => (
+                <li
+                  key={reg.member_id}
+                  className={cn('flex items-center gap-3 px-4 py-3', idx % 2 === 1 ? 'bg-surface-low/40' : '', busyMember === reg.member_id && 'opacity-50')}
+                >
+                  <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(reg.member_name))}>
+                    {getInitials(reg.member_name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-navy font-body">{reg.member_name}</p>
+                    <p className="text-[11px] text-navy-light/50 font-body">
+                      {new Date(reg.registered_at).toLocaleDateString('es-CR')}
+                    </p>
+                  </div>
+                  <select
+                    value={reg.payment_status}
+                    disabled={busyMember === reg.member_id}
+                    onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}
+                    className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[12px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body shrink-0"
+                  >
+                    {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
+                  </select>
+                  <button
+                    onClick={() => removeRegistration(reg.member_id)}
+                    disabled={busyMember === reg.member_id}
+                    className="text-navy-light/40 hover:text-coral transition-colors shrink-0"
+                    aria-label="Quitar inscripción"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

@@ -67,8 +67,8 @@ export default function AplicacionesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-48">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 sm:min-w-48 w-full">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
@@ -78,7 +78,7 @@ export default function AplicacionesPage() {
           />
         </div>
         <select
-          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          className="w-full sm:w-auto rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
           value={committeeFilter}
           onChange={e => setCommitteeFilter(e.target.value)}
         >
@@ -116,7 +116,7 @@ export default function AplicacionesPage() {
       <div
         className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -187,6 +187,37 @@ export default function AplicacionesPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden">
+          {filtered.map((a, i) => (
+            <li
+              key={a.id}
+              style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+            >
+              <Link
+                href={`/servidores/vacantes/${a.vacancy_id}`}
+                className="flex items-center gap-3 px-4 py-3 active:bg-surface-low"
+              >
+                <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-white font-display">
+                    {a.applicant_initials}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-navy font-body">{a.applicant_name}</p>
+                  <p className="truncate text-[12px] text-navy-light/50 font-body">
+                    {a.vacancy_title} · {a.committee_name}
+                  </p>
+                </div>
+                <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
+                  {APP_STATUS_LABELS[a.status]}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
         {filtered.length === 0 && (
           <div className="px-5 py-10 text-center">
             <p className="text-sm text-navy-light/40 font-body">

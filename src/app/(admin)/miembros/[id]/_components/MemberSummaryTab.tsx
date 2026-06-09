@@ -50,7 +50,7 @@ export function MemberSummaryTab({
   return (
     <div className="space-y-4">
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div
           className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)]"
         >

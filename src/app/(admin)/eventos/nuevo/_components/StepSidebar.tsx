@@ -15,7 +15,7 @@ interface StepSidebarProps {
 
 export function StepSidebar({ step, onStepClick }: StepSidebarProps) {
   return (
-    <div className="sticky top-[76px]">
+    <div className="md:sticky md:top-[76px]">
       <div className="card py-2">
         {STEPS.map((s, idx) => {
           const done   = s.num < step

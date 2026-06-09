@@ -75,7 +75,7 @@ export function MemberPersonalTab({ member }: Props) {
         <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Cédula" value={member.cedula ?? 'Sin cédula'} editable={false} />
       </div>
 
-      <div className="grid grid-cols-2 gap-x-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
         {/* Contacto */}
         <div>
           <p

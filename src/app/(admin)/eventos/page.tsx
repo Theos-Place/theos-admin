@@ -114,7 +114,7 @@ export default function EventosPage() {
   return (
     <div className="space-y-6">
       {/* Header editorial */}
-      <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
+      <div className="rounded-2xl bg-navy px-4 py-4 sm:px-6 sm:py-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between shadow-[var(--shadow-md)]">
         <div>
           <h1
             className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
@@ -125,7 +125,7 @@ export default function EventosPage() {
             {loading ? 'Cargando…' : `${events.length} eventos en el sistema`}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
           <button
             onClick={() => downloadAllEventsICS(filtered)}
             className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
@@ -241,7 +241,7 @@ export default function EventosPage() {
       {/* Vista Lista */}
       {view === 'list' && (
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
@@ -313,6 +313,45 @@ export default function EventosPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: tarjetas */}
+          <ul className="md:hidden">
+            {filtered.map((event, idx) => {
+              const config = EVENT_TYPE_CONFIG[event.event_type]
+              const dotColors: Record<string, string> = {
+                navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
+                purple: 'bg-purple-700', amber: 'bg-amber-500',
+              }
+              const dotColor = dotColors[config.color] ?? 'bg-navy'
+              const startDate = new Date(event.start_at)
+              return (
+                <li
+                  key={event.id}
+                  onClick={() => router.push(`/eventos/${event.id}`)}
+                  className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+                  style={idx < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                >
+                  {event.flyer_url ? (
+                    <img src={event.flyer_url} alt="" className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                  ) : (
+                    <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', dotColor)} />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-navy font-body">{event.name}</p>
+                    <p className="truncate text-[12px] text-navy-light/60 font-body">
+                      {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {' · '}{event.registrations.length} inscritos
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <EventTypeBadge type={event.event_type} size="sm" />
+                    <EventStatusBadge status={event.status} size="sm" />
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+
           {filtered.length === 0 && (
             <div className="px-5 py-10 text-center">
               <p className="text-sm text-navy-light/40 font-body">
@@ -325,14 +364,18 @@ export default function EventosPage() {
 
       {/* Vista Calendario */}
       {view === 'calendar' && (
-        <CalendarGrid
-          events={calendarMonthEvents}
-          month={currentMonth}
-          year={currentYear}
-          onEventClick={id => router.push(`/eventos/${id}`)}
-          onPrev={handlePrev}
-          onNext={handleNext}
-        />
+        <div className="overflow-x-auto">
+          <div className="min-w-[640px] md:min-w-0">
+            <CalendarGrid
+              events={calendarMonthEvents}
+              month={currentMonth}
+              year={currentYear}
+              onEventClick={id => router.push(`/eventos/${id}`)}
+              onPrev={handlePrev}
+              onNext={handleNext}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

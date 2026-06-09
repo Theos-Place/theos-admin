@@ -108,31 +108,31 @@ export default function PuestoDetailPage() {
           Persona asignada
         </p>
         {assigned ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center">
                 <span className="text-[11px] font-bold text-white font-display">
                   {assigned.member_initials}
                 </span>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-navy font-display">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-navy font-display">
                   {assigned.member_name}
                 </p>
-                <p className="text-[12px] text-navy-light/50 font-body">
+                <p className="truncate text-[12px] text-navy-light/50 font-body">
                   {assigned.member_email}
                 </p>
               </div>
             </div>
             <Link
               href={`/empleados/${assigned.id}`}
-              className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              className="shrink-0 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               Ver expediente
             </Link>
           </div>
         ) : (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <span
               className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/40 font-display"
             >

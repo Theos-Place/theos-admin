@@ -228,7 +228,7 @@ export default function ReubicacionesPage() {
 
       {/* Table */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <table className="w-full border-collapse">
+        <table className="hidden md:table w-full border-collapse">
           <thead>
             <tr>
               {['Miembro', 'Estudio', 'Motivo', 'Fecha', 'Estado'].map(h => (
@@ -274,6 +274,34 @@ export default function ReubicacionesPage() {
             ))}
           </tbody>
         </table>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden">
+          {requests.map((req, i) => (
+            <li
+              key={req.id}
+              onClick={() => setSelectedRequest(req)}
+              className="flex items-start gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+              style={i < requests.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+            >
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-navy font-medium font-body">{req.member_name}</span>
+                  <StudyTypeBadge code={req.study_type} size="sm" />
+                </div>
+                <p className="text-[12px] text-navy-light/60 font-body line-clamp-2">{req.reason}</p>
+                <p className="text-[11px] text-navy-light/50 font-body">{req.requested_at}</p>
+              </div>
+              <span className={cn(
+                'shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium',
+                req.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-teal-soft/30 text-teal-deep'
+              )}>
+                {req.status === 'pending' ? 'Pendiente' : 'Resuelta'}
+              </span>
+            </li>
+          ))}
+        </ul>
+
         {requests.length === 0 && (
           <div className="px-5 py-10 text-center">
             <p className="text-sm text-navy-light/40 font-body">

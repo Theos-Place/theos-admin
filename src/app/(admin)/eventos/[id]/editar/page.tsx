@@ -302,9 +302,9 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
 
       {/* Sticky bar */}
       <div
-        className="sticky top-0 z-10 -mx-1 flex items-center justify-between gap-3 rounded-2xl px-5 py-3 bg-surface-card shadow-[var(--shadow-md)]"
+        className="sticky top-0 z-10 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 sm:px-5 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href={`/eventos/${id}`}
             className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
@@ -351,7 +351,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </div>
           <div className="space-y-1.5">
             <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">Tipo</label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {activeEventTypes.map(t => {
                 const Icon = ICON_MAP[t.icon] ?? Mic
                 return (

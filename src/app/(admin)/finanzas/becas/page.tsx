@@ -131,7 +131,7 @@ export default function BecasPage() {
 
         {/* Table */}
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
@@ -208,6 +208,52 @@ export default function BecasPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: tarjetas */}
+          <ul className="md:hidden">
+            {filtered.map((s, i) => (
+              <li
+                key={s.id}
+                className="px-4 py-3 space-y-2.5"
+                style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium font-body text-navy truncate">{s.member_name}</p>
+                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{s.entity_name}</p>
+                    <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">
+                      {s.discount_type === 'percentage' ? `${s.discount_value}%` : `₡${s.discount_value.toLocaleString('es-CR')}`}
+                      {' · '}{formatDate(s.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <p className="text-[13px] font-medium font-body text-navy">
+                      <AmountDisplay amount={s.final_amount} defaultHidden={false} />
+                    </p>
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      style={{ color: s.is_used ? '#519DA2' : '#3DB97A', background: s.is_used ? 'rgba(81,157,162,0.12)' : 'rgba(61,185,122,0.10)' }}>
+                      {s.is_used ? 'Usada' : 'Sin usar'}
+                    </span>
+                  </div>
+                </div>
+                {!s.is_used && (
+                  <div className="flex">
+                    <button
+                      onClick={() => setConfirmRevoke(s)}
+                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                    >
+                      Revocar
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+            {filtered.length === 0 && (
+              <li className="px-5 py-12 text-center text-sm text-[rgba(22,20,64,0.40)] font-body">
+                No hay becas que coincidan con los filtros
+              </li>
+            )}
+          </ul>
         </div>
       </div>
 

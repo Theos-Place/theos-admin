@@ -190,7 +190,7 @@ export default function AccesosPage() {
           <span className="text-teal-deep shrink-0">ℹ️</span>
           Todos los miembros tienen el rol <span className="font-medium text-navy-light/80">"Miembro"</span> por defecto. Los roles adicionales amplían sus permisos.
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--outline-variant)' }}>
@@ -309,6 +309,44 @@ export default function AccesosPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: tarjetas */}
+        <ul className="md:hidden divide-y" style={{ borderColor: 'var(--outline-variant)' }}>
+          {filtered.map(u => {
+            const extra = u.roles.filter(r => r !== 'miembro')
+            return (
+              <li
+                key={u.id}
+                onClick={() => router.push(`/accesos/${u.member_id}`)}
+                className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+              >
+                <div
+                  className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white"
+                  style={{ background: avatarBg(u.id), fontFamily: 'var(--font-display)' }}
+                >
+                  {u.member_initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{u.member_name}</p>
+                  <p className="truncate text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+                    {extra.length === 0 ? 'Solo acceso básico' : `${extra.length} rol${extra.length !== 1 ? 'es' : ''} · ${u.member_email}`}
+                  </p>
+                </div>
+                <span
+                  className={cn('shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/40')}
+                  style={{ background: u.is_active ? 'rgba(61,185,122,0.10)' : 'rgba(22,20,64,0.06)' }}
+                >
+                  {u.is_active ? 'Activo' : 'Inactivo'}
+                </span>
+              </li>
+            )
+          })}
+          {filtered.length === 0 && (
+            <li className="px-4 py-12 text-center text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              No hay usuarios que coincidan con los filtros
+            </li>
+          )}
+        </ul>
       </div>
 
       {/* Referencia de roles */}

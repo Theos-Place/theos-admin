@@ -340,7 +340,7 @@ export default function NuevoMiembroPage() {
 
       {/* Card */}
       <div
-        className="rounded-2xl bg-surface-card p-6 shadow-[var(--shadow-md)]"
+        className="rounded-2xl bg-surface-card p-4 sm:p-6 shadow-[var(--shadow-md)]"
       >
         <StepIndicator current={step} />
 

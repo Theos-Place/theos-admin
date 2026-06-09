@@ -144,7 +144,7 @@ export default function DevolucionesPage() {
               Procesadas por pasarela
             </span>
           </div>
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
@@ -185,6 +185,32 @@ export default function DevolucionesPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: tarjetas */}
+          <ul className="md:hidden">
+            {cardRefunds.map((r, i) => (
+              <li
+                key={r.id}
+                className="px-4 py-3 flex items-center gap-3"
+                style={i < cardRefunds.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium font-body text-navy truncate">{r.member_name}</p>
+                  <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{r.entity_name}</p>
+                  <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">Solicitada {formatDate(r.requested_at)}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <p className="text-[13px] font-medium font-body text-navy">
+                    <AmountDisplay amount={r.amount} defaultHidden={false} />
+                  </p>
+                  <RefundStatusBadge status={r.status} />
+                </div>
+              </li>
+            ))}
+            {cardRefunds.length === 0 && (
+              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones por tarjeta</li>
+            )}
+          </ul>
         </div>
 
         {/* Section B — SINPE (manual) */}
@@ -197,7 +223,7 @@ export default function DevolucionesPage() {
               Requieren proceso manual
             </span>
           </div>
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
@@ -256,6 +282,51 @@ export default function DevolucionesPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: tarjetas */}
+          <ul className="md:hidden">
+            {sinpeRefunds.map((r, i) => (
+              <li
+                key={r.id}
+                className="px-4 py-3 space-y-2.5"
+                style={i < sinpeRefunds.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium font-body text-navy truncate">{r.member_name}</p>
+                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{r.entity_name}</p>
+                    {r.reason && <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body mt-0.5">{r.reason}</p>}
+                    <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">Solicitada {formatDate(r.requested_at)}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <p className="text-[13px] font-medium font-body text-navy">
+                      <AmountDisplay amount={r.amount} defaultHidden={false} />
+                    </p>
+                    <RefundStatusBadge status={r.status} />
+                  </div>
+                </div>
+                {(r.status === 'pending' || r.status === 'processing') && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => setCompleteTarget(r)}
+                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
+                    >
+                      Completar
+                    </button>
+                    <button
+                      onClick={() => setRejectTarget(r)}
+                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+            {sinpeRefunds.length === 0 && (
+              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones SINPE</li>
+            )}
+          </ul>
         </div>
       </div>
 

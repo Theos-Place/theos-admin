@@ -264,29 +264,31 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       />
 
       {/* Tabs */}
-      <div className="relative border-b border-b-[var(--outline-variant)]">
-        <div className="flex">
-          {TABS.map(t => (
-            <button
-              key={t}
-              onClick={() => setActiveTab(t)}
-              className={cn(
-                'flex-1 px-2 py-2.5 text-[12px] transition-colors',
-                activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/50 hover:text-navy',
-                'font-body'
-              )}
-            >
-              {TAB_LABELS[t]}
-            </button>
-          ))}
+      <div className="overflow-x-auto border-b border-b-[var(--outline-variant)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="relative min-w-[480px] md:min-w-0">
+          <div className="flex">
+            {TABS.map(t => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={cn(
+                  'flex-1 whitespace-nowrap px-2 py-2.5 text-[12px] transition-colors',
+                  activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/50 hover:text-navy',
+                  'font-body'
+                )}
+              >
+                {TAB_LABELS[t]}
+              </button>
+            ))}
+          </div>
+          <div
+            className="absolute bottom-0 h-0.5 bg-coral transition-transform duration-200 ease-out"
+            style={{
+              width: `${tabWidthPct}%`,
+              transform: `translateX(${activeTabIndex * 100}%)`,
+            }}
+          />
         </div>
-        <div
-          className="absolute bottom-0 h-0.5 bg-coral transition-transform duration-200 ease-out"
-          style={{
-            width: `${tabWidthPct}%`,
-            transform: `translateX(${activeTabIndex * 100}%)`,
-          }}
-        />
       </div>
 
       {/* Tab: Información */}
@@ -444,7 +446,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
               <Download size={14} /> Exportar asistencia
             </button>

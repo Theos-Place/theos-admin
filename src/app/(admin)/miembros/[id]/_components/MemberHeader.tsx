@@ -45,7 +45,8 @@ export function MemberHeader({
     <div
       className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
     >
-      <div className="flex items-start gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex items-start gap-4 min-w-0 flex-1">
         {/* Avatar */}
         <div
           className={cn(
@@ -59,7 +60,7 @@ export function MemberHeader({
         {/* Name + details */}
         <div className="flex-1 min-w-0">
           <h1
-            className="text-2xl text-navy leading-tight font-display font-extrabold tracking-[-0.02em]"
+            className="text-xl sm:text-2xl text-navy leading-tight font-display font-extrabold tracking-[-0.02em] break-words"
           >
             {member.first_name} {member.last_name}
           </h1>
@@ -117,9 +118,10 @@ export function MemberHeader({
             )}
           </div>
         </div>
+        </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <button
             onClick={onEdit}
             className="rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"

@@ -239,14 +239,14 @@ export default function DirigentesPage() {
     })
   }, [filtered, search])
 
-  const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+  const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full sm:w-auto'
 
   return (
     <div className="space-y-5">
       {showNewLeader && <NewLeaderModal onClose={() => setShowNewLeader(false)} onCreated={refetch} />}
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1
             className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
@@ -268,10 +268,10 @@ export default function DirigentesPage() {
       {/* Filter bar */}
       <div className="flex flex-wrap gap-3 font-body">
         {/* Search input */}
-        <div className="relative flex items-center">
+        <div className="relative flex items-center w-full sm:w-auto">
           <Search size={13} className="absolute left-3 text-navy-light/40 pointer-events-none" />
           <input
-            className={`${inputCls} pl-8 pr-8 min-w-[220px]`}
+            className={`${inputCls} pl-8 pr-8 w-full sm:min-w-[220px]`}
             placeholder="Buscar por nombre o cédula..."
             value={search}
             onChange={e => setSearch(e.target.value)}

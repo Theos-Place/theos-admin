@@ -289,13 +289,13 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-[var(--outline-variant)]">
+      <div className="flex gap-1 border-b border-[var(--outline-variant)] overflow-x-auto">
         {tabs.map(t => (
           <button
             key={t}
             onClick={() => setActiveTab(t)}
             className={cn(
-              'px-4 py-2.5 text-sm transition-all border-b-2 -mb-px',
+              'px-4 py-2.5 text-sm transition-all border-b-2 -mb-px shrink-0 whitespace-nowrap',
               activeTab === t
                 ? 'border-coral text-coral font-medium'
                 : 'border-transparent text-navy-light/60 hover:text-navy',
@@ -322,8 +322,8 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
 
-          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-            <table className="w-full border-collapse">
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] overflow-x-auto">
+            <table className="w-full border-collapse min-w-[480px]">
               <thead>
                 <tr>
                   {['Nombre', 'Estado', 'Asistencia', studyType?.requires_grade ? 'Nota' : '', 'Acciones'].filter(Boolean).map(h => (
@@ -458,7 +458,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </Link>
           </div>
 
-          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] overflow-x-auto">
             {sessions.length === 0 ? (
               <div className="px-5 py-8 text-center">
                 <p className="text-sm text-navy-light/40 font-body">

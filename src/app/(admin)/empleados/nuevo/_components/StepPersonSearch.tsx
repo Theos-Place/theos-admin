@@ -35,7 +35,7 @@ export function StepPersonSearch({
         <div
           className="rounded-xl border border-[var(--outline-variant)] p-4 flex items-center justify-between gap-3"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="h-12 w-12 rounded-full bg-navy flex items-center justify-center shrink-0">
               <span
                 className="text-[13px] font-bold text-white font-display"
@@ -43,11 +43,11 @@ export function StepPersonSearch({
                 {selected.first_name[0]}{selected.last_name[0]}
               </span>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-navy font-display">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-navy font-display">
                 {selected.first_name} {selected.last_name}
               </p>
-              <p className="text-[12px] text-navy-light/50 font-body">
+              <p className="truncate text-[12px] text-navy-light/50 font-body">
                 {selected.email}
               </p>
               {selected.cedula && (
@@ -57,7 +57,7 @@ export function StepPersonSearch({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="h-7 w-7 rounded-full bg-teal-soft/30 flex items-center justify-center">
               <Check size={14} className="text-teal-deep" />
             </div>
