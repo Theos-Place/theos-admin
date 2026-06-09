@@ -1,10 +1,8 @@
-import { MapPin, BookOpen, Users, Check } from 'lucide-react'
+import { MapPin, BookOpen, Users } from 'lucide-react'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
-import type { mockMembers } from '@/data/mock-members'
-
-type Member = (typeof mockMembers)[number]
+import type { Member } from '@/types/member'
 
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
@@ -29,7 +27,13 @@ function formatDate(iso: string) {
 function studyStageColor(stage: string): string {
   if (stage === 'niveles') return 'bg-navy/10 text-navy'
   if (stage === 'inicial') return 'bg-teal-soft/30 text-teal-deep'
+  if (stage === 'campaña') return 'bg-purple-100 text-purple-700'
   return 'bg-coral-soft/20 text-coral'
+}
+
+/** Etapa (del catálogo) de un estudio por código. */
+function stageOf(code: string): string {
+  return STUDY_CATALOG.find(s => s.code === code)?.stage ?? 'intermedia'
 }
 
 type Props = {
@@ -47,6 +51,8 @@ export function MemberSummaryTab({
   activeService,
   lastStudyEntry,
 }: Props) {
+  // Estudios actualmente en curso (inscripciones con status 'enrolled').
+  const enrolledStudies = (member.study_history ?? []).filter(s => s.status === 'enrolled')
   return (
     <div className="space-y-4">
       {/* Stat cards */}
@@ -75,16 +81,20 @@ export function MemberSummaryTab({
             <span
               className="text-[10px] uppercase tracking-wider text-navy-light/50 font-display"
             >
-              Nivel actual
+              Estudios en curso
             </span>
           </div>
-          <p className="text-sm font-medium text-navy font-body">
-            {currentStudyEntry
-              ? currentStudyEntry.name
-              : lastStudyEntry
-              ? lastStudyEntry.name
-              : 'Sin estudios'}
-          </p>
+          {enrolledStudies.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {enrolledStudies.map(s => (
+                <span key={s.code + (s.date ?? '')} className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', studyStageColor(stageOf(s.code)))}>
+                  {s.name || s.code}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm font-medium text-navy-light/40 font-body">Sin estudios activos</p>
+          )}
         </div>
 
         <div
@@ -150,24 +160,19 @@ export function MemberSummaryTab({
           >
             Estudios completados
           </h3>
-          <div className="space-y-2">
-            {member.completed_studies.slice(-5).map(code => {
-              const entry = STUDY_CATALOG.find(s => s.code === code)
+          <div className="flex flex-wrap gap-1.5">
+            {member.completed_studies.map((code, i) => {
+              const entry = STUDY_CATALOG.find(s => s.code === code || s.name === code)
               return (
-                <div key={code} className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      'rounded-lg px-2 py-0.5 text-[10px] font-medium font-mono',
-                      entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50'
-                    )}
-                  >
-                    {code}
-                  </span>
-                  <span className="flex-1 text-sm text-navy-light/70 font-body">
-                    {entry ? entry.name : code}
-                  </span>
-                  <Check size={13} className="text-teal-deep" strokeWidth={2.5} />
-                </div>
+                <span
+                  key={code + i}
+                  className={cn(
+                    'rounded-full px-2.5 py-0.5 text-xs font-body',
+                    entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50'
+                  )}
+                >
+                  {entry ? entry.name : code}
+                </span>
               )
             })}
           </div>
