@@ -36,7 +36,7 @@ export default function NuevoGrupoPage() {
   const [submitting, setSubmitting] = useState(false)
   const [step1, setStep1] = useState<Step1>({
     study_type_id: '',
-    zone: '',
+    zone: 'all',
     age_from: '',
     age_to: '',
     days: [],
@@ -48,6 +48,7 @@ export default function NuevoGrupoPage() {
   })
   const [selectedLeader, setSelectedLeader] = useState('')
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
+  const [showAllLeaders, setShowAllLeaders] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [created, setCreated] = useState(false)
 
@@ -64,10 +65,12 @@ export default function NuevoGrupoPage() {
   const studyType = studyTypes.find(s => s.id === step1.study_type_id)
 
   const compatibleLeaders = leaders.filter(l =>
-    (step1.zone === '' || l.zone_preference.includes(step1.zone)) &&
+    (step1.zone === '' || step1.zone === 'all' || l.zone_preference.includes(step1.zone)) &&
     (!studyType || l.qualified_studies.includes(studyType.code)) &&
     l.availability_status !== 'resting'
   )
+  // Búsqueda expandida: todos los dirigentes, sin filtrar por zona/estudio.
+  const displayLeaders = showAllLeaders ? leaders : compatibleLeaders
 
   const leaderData = leaders.find(l => l.id === selectedLeader)
   const coLeaderData = leaders.find(l => l.id === selectedCoLeader)
@@ -81,10 +84,10 @@ export default function NuevoGrupoPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           study_type_id: studyType.code,
-          name: `${studyType.code} — ${step1.zone ? sedeLabel(step1.zone) : 'Sin zona'}`,
+          name: `${studyType.code} — ${step1.zone && step1.zone !== 'all' ? sedeLabel(step1.zone) : 'Todas las zonas'}`,
           leader_id: leaderData?.member_id ?? null,
           co_leader_id: coLeaderData?.member_id ?? null,
-          zone: step1.zone || null,
+          zone: step1.zone && step1.zone !== 'all' ? step1.zone : null,
           schedule_days: step1.days,
           schedule_time: step1.time || null,
           location: step1.location || null,
@@ -216,7 +219,7 @@ export default function NuevoGrupoPage() {
                 value={step1.zone}
                 onChange={e => setS1('zone', e.target.value)}
               >
-                <option value="">Seleccionar...</option>
+                <option value="all">Todas las zonas</option>
                 {SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
@@ -353,20 +356,30 @@ export default function NuevoGrupoPage() {
             Paso 2 — Seleccionar dirigente
           </h2>
 
-          <p className="text-sm text-navy-light/60 font-body">
-            Mostrando dirigentes disponibles para {step1.zone ? sedeLabel(step1.zone) : 'todas las zonas'}
-            {step1.study_type_id && studyType ? ` que pueden impartir ${studyType.code}` : ''}.
-          </p>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm text-navy-light/60 font-body">
+              {showAllLeaders
+                ? 'Mostrando todos los dirigentes.'
+                : <>Mostrando dirigentes disponibles para {step1.zone && step1.zone !== 'all' ? sedeLabel(step1.zone) : 'todas las zonas'}{step1.study_type_id && studyType ? ` que pueden impartir ${studyType.code}` : ''}.</>}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowAllLeaders(v => !v)}
+              className="text-xs text-coral hover:text-coral-deep transition-colors font-body shrink-0"
+            >
+              {showAllLeaders ? 'Ver solo compatibles' : 'Ampliar búsqueda a todos los dirigentes'}
+            </button>
+          </div>
 
-          {compatibleLeaders.length === 0 ? (
+          {displayLeaders.length === 0 ? (
             <div className="rounded-xl bg-amber-50 px-4 py-3">
               <p className="text-sm text-amber-700 font-body">
-                No hay dirigentes disponibles con esas combinaciones. Considera ampliar la zona o seleccionar otro tipo de estudio.
+                No hay dirigentes disponibles con esas combinaciones. Probá ampliar la búsqueda a todos los dirigentes.
               </p>
             </div>
           ) : (
             <div className="space-y-2">
-              {compatibleLeaders.map(leader => (
+              {displayLeaders.map(leader => (
                 <div
                   key={leader.id}
                   onClick={() => setSelectedLeader(leader.id)}

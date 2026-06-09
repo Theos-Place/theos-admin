@@ -644,6 +644,30 @@ export async function createLeader(input: LeaderWriteInput): Promise<{ id: strin
   return data as { id: string }
 }
 
+/** Actualiza (o crea) la configuración de un dirigente por member_id: estudios
+ *  que imparte (qualified_study_codes) y zonas dispuesto (zone_preference). */
+export async function updateDirigenteConfig(
+  memberId: string,
+  patch: { qualified_study_codes?: string[]; zone_preference?: string[] },
+): Promise<void> {
+  const supabase = createAdminClient()
+  const { data: existing } = await supabase
+    .from('study_leaders').select('id').eq('member_id', memberId).maybeSingle()
+  if (existing) {
+    const { error } = await supabase.from('study_leaders').update(patch).eq('member_id', memberId)
+    if (error) throw error
+  } else {
+    const { error } = await supabase.from('study_leaders').insert({
+      member_id: memberId,
+      is_active: false,
+      availability_status: 'inactive',
+      zone_preference: patch.zone_preference ?? [],
+      qualified_study_codes: patch.qualified_study_codes ?? [],
+    })
+    if (error) throw error
+  }
+}
+
 export async function updateLeader(id: string, patch: Partial<LeaderWriteInput>): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('study_leaders').update(patch).eq('id', id)

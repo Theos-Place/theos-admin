@@ -1,11 +1,14 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useDirigentes } from '@/hooks/useDirigentes'
+import { useStudies } from '@/hooks/useStudies'
+import { useAuth } from '@/hooks/useAuth'
+import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ExternalLink, Users } from 'lucide-react'
+import { ChevronLeft, ExternalLink, Users, X, Plus } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 
 function initials(name: string) {
@@ -105,6 +108,9 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
         )}
       </div>
 
+      {/* Configuración del dirigente */}
+      <DirigenteConfigCard memberId={d.member_id} />
+
       {/* Estudios activos */}
       <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">
         <h2 className="text-sm text-navy font-display font-extrabold mb-3">Dando ahora ({d.estudios_activos.length})</h2>
@@ -117,13 +123,123 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
 
       {/* Historial */}
       <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">
-        <h2 className="text-sm text-navy font-display font-extrabold mb-3">Historial de estudios ({d.estudios_completados.length})</h2>
+        <h2 className="text-sm text-navy font-display font-extrabold mb-3">Historial de estudios impartidos ({d.estudios_completados.length})</h2>
         {d.estudios_completados.length > 0 ? (
           <div className="space-y-1">{d.estudios_completados.map(g => <GrupoRow key={g.group_id} g={g} />)}</div>
         ) : (
           <p className="text-sm text-navy-light/40 font-body">Sin estudios registrados.</p>
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── Configuración editable del dirigente (estudios que imparte + zonas) ─────────
+function DirigenteConfigCard({ memberId }: { memberId: string }) {
+  const { studyTypes, leaders } = useStudies()
+  const { activeSedes: SEDES } = useSedes()
+  const { hasRole } = useAuth()
+  const canEdit = hasRole('admin', 'coordinador_dirigentes')
+
+  const leader = useMemo(() => leaders.find(l => l.member_id === memberId), [leaders, memberId])
+  const [studies, setStudies] = useState<string[]>([])
+  const [zones, setZones] = useState<string[]>([])
+  const [init, setInit] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  // Inicializa una sola vez con los datos del dirigente (si existen).
+  useEffect(() => {
+    if (init) return
+    if (leaders.length === 0) return
+    setStudies(leader?.qualified_studies ?? [])
+    setZones(leader?.zone_preference ?? [])
+    setInit(true)
+  }, [leaders, leader, init])
+
+  const addStudy = (code: string) => { if (code && !studies.includes(code)) { setStudies([...studies, code]); setSaved(false) } }
+  const removeStudy = (code: string) => { setStudies(studies.filter(c => c !== code)); setSaved(false) }
+  const addZone = (id: string) => { if (id && !zones.includes(id)) { setZones([...zones, id]); setSaved(false) } }
+  const removeZone = (id: string) => { setZones(zones.filter(z => z !== id)); setSaved(false) }
+
+  async function save() {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/studies/dirigentes/${memberId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qualified_study_codes: studies, zone_preference: zones }),
+      })
+      if (!res.ok) throw new Error()
+      setSaved(true)
+    } catch { /* noop */ }
+    finally { setSaving(false) }
+  }
+
+  const sedeName = (id: string) => SEDES.find(s => s.id === id)?.name ?? id
+
+  return (
+    <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5 space-y-4">
+      <h2 className="text-sm text-navy font-display font-extrabold">Configuración del dirigente</h2>
+
+      {/* Estudios que imparte */}
+      <div className="space-y-2">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">Estudios que imparte</p>
+        <div className="flex flex-wrap gap-1.5 items-center">
+          {studies.length === 0 && <span className="text-xs text-navy-light/40 font-body">Ninguno</span>}
+          {studies.map(code => (
+            <span key={code} className="inline-flex items-center gap-1">
+              <StudyTypeBadge code={code} size="sm" />
+              {canEdit && <button onClick={() => removeStudy(code)} className="text-navy-light/40 hover:text-coral"><X size={12} /></button>}
+            </span>
+          ))}
+        </div>
+        {canEdit && (
+          <select
+            value=""
+            onChange={e => addStudy(e.target.value)}
+            className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body w-full sm:w-auto"
+          >
+            <option value="">+ Agregar estudio…</option>
+            {studyTypes.filter(t => !studies.includes(t.code)).map(t => (
+              <option key={t.code} value={t.code}>{t.code} — {t.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* Zonas */}
+      <div className="space-y-2">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">Zonas donde da estudios</p>
+        <div className="flex flex-wrap gap-1.5 items-center">
+          {zones.length === 0 && <span className="text-xs text-navy-light/40 font-body">Ninguna</span>}
+          {zones.map(id => (
+            <span key={id} className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-0.5 text-xs text-navy font-body">
+              {sedeName(id)}
+              {canEdit && <button onClick={() => removeZone(id)} className="text-navy-light/40 hover:text-coral"><X size={11} /></button>}
+            </span>
+          ))}
+        </div>
+        {canEdit && (
+          <select
+            value=""
+            onChange={e => addZone(e.target.value)}
+            className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body w-full sm:w-auto"
+          >
+            <option value="">+ Agregar zona…</option>
+            {SEDES.filter(s => !zones.includes(s.id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        )}
+      </div>
+
+      {canEdit && (
+        <div className="flex items-center gap-3 pt-1">
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+            <Plus size={14} /> {saving ? 'Guardando…' : 'Guardar configuración'}
+          </button>
+          {saved && <span className="text-xs text-[#3DB97A] font-body">Guardado ✓</span>}
+        </div>
+      )}
     </div>
   )
 }
