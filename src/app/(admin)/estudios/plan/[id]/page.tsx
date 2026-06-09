@@ -1,12 +1,15 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
+import { useDirigentes } from '@/hooks/useDirigentes'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { sedeLabel } from '@/lib/sedes'
+import { cn } from '@/lib/utils'
 import { Archive, Pencil, Search, X } from 'lucide-react'
 
 const PAGE_SIZE = 10
@@ -222,13 +225,22 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </div>
           )}
 
-          {/* Mentor */}
+          {/* Dirigente referente */}
           <div>
-            <div className="st">Mentor</div>
-            <div className="text-[13px] font-semibold mt-1 font-body">
-              {view.mentor
-                ? view.mentor
-                : <span className="text-[var(--fg-muted)] font-normal">Sin mentor asignado</span>}
+            <div className="st">Dirigente referente</div>
+            <div className="mt-1">
+              <DirigenteReferenteSelect
+                value={studyType.mentor_id ?? null}
+                onChange={async (memberId) => {
+                  if (!studyType.plan_id) return
+                  await fetch(`/api/studies/plans/${studyType.plan_id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mentor_id: memberId }),
+                  })
+                  refetch()
+                }}
+              />
             </div>
           </div>
 
@@ -377,7 +389,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-[rgba(22,20,64,0.09)]">
-                    {['Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Semana', ''].map(h => (
+                    {['Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Año', ''].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-[10px] tracking-[0.07em] uppercase text-[rgba(41,54,92,0.4)] font-display"
@@ -429,15 +441,16 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                         <GroupStatusBadge status={group.status} />
                       </td>
                       <td className="px-4 py-3 text-[12px] text-[rgba(41,54,92,0.6)] font-body">
-                        {group.status === 'in_progress' ? `Sem. ${group.current_week}` : '—'}
+                        {group.start_date ? new Date(group.start_date).getFullYear() : '—'}
                       </td>
                       <td className="px-4 py-3">
-                        <button
+                        <Link
+                          href={`/estudios/grupos/${group.id}`}
                           className="btn btn-ghost btn-sm"
-                          onClick={e => { e.stopPropagation(); router.push(`/estudios/grupos/${group.id}`) }}
+                          onClick={e => e.stopPropagation()}
                         >
                           Ver →
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -470,6 +483,106 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
+    </div>
+  )
+}
+
+// ─── Selector de Dirigente referente (dropdown con búsqueda) ─────────────────────
+function dInitials(name: string) {
+  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
+}
+
+function DirigenteReferenteSelect({ value, onChange }: {
+  value: string | null
+  onChange: (memberId: string | null) => void
+}) {
+  const { dirigentes } = useDirigentes()
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  const selected = dirigentes.find(d => d.member_id === value)
+  const filtered = dirigentes
+    .filter(d => d.member_name.toLowerCase().includes(q.trim().toLowerCase()))
+    .slice(0, 50)
+
+  const Badge = ({ status }: { status: 'activo' | 'inactivo' }) => (
+    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium font-body',
+      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/50')}>
+      {status === 'activo' ? 'Activo' : 'Inactivo'}
+    </span>
+  )
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center gap-2 rounded-2xl border border-[var(--outline-variant)] bg-surface-low px-3 py-2 text-left hover:bg-surface-container transition-colors"
+      >
+        {selected ? (
+          <>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
+              {dInitials(selected.member_name) || '—'}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{selected.member_name}</span>
+            <Badge status={selected.status} />
+          </>
+        ) : (
+          <span className="flex-1 text-sm text-navy-light/50 font-body">Sin dirigente referente</span>
+        )}
+        <span className="text-navy-light/40 text-xs">▾</span>
+      </button>
+
+      {open && (
+        <div className="absolute z-30 mt-1 w-full rounded-2xl bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)] overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--outline-variant)]">
+            <Search size={14} className="text-navy-light/40 shrink-0" />
+            <input
+              autoFocus
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Buscar dirigente…"
+              className="w-full bg-transparent text-sm text-navy outline-none font-body"
+            />
+          </div>
+          <div className="max-h-64 overflow-y-auto py-1">
+            <button
+              type="button"
+              onClick={() => { onChange(null); setOpen(false) }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-navy-light/60 hover:bg-surface-low transition-colors font-body"
+            >
+              <X size={14} /> Quitar dirigente referente
+            </button>
+            {filtered.map(d => (
+              <button
+                key={d.member_id}
+                type="button"
+                onClick={() => { onChange(d.member_id); setOpen(false) }}
+                className={cn('flex w-full items-center gap-2 px-3 py-2 hover:bg-surface-low transition-colors',
+                  d.member_id === value && 'bg-coral/5')}
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
+                  {dInitials(d.member_name) || '—'}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-left text-sm text-navy font-body">{d.member_name}</span>
+                <Badge status={d.status} />
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <p className="px-3 py-3 text-xs text-navy-light/40 font-body">Sin resultados.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
