@@ -245,6 +245,10 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     commitments: 'Tareas + Proyecto final con exposición',
   },
 
+  // INTERMEDIA — solo por invitación (mentores)
+  { code: 'CDEB', name: 'Cómo Dar Estudios Bíblicos', stage: 'intermedia', prerequisite: null, weeks: 8, mentor: 'Eddy' },
+  { code: 'CDC',  name: 'Cómo Dar Charlas',           stage: 'intermedia', prerequisite: null, weeks: 8, mentor: 'Benja' },
+
   // CAMPAÑAS
   { code: 'TRANS', name: 'Transformados',                       stage: 'campaña', prerequisite: null, weeks: 8 },
   { code: 'UFA',   name: 'Una Fe Audaz',                        stage: 'campaña', prerequisite: null, weeks: 8 },

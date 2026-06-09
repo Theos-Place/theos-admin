@@ -179,19 +179,32 @@ export default function PlanDeEstudiosPage() {
   const { studyTypes } = useStudies()
   // Archivados (descontinuados) al final de su categoría.
   const archLast = (a: { is_archived: boolean }, b: { is_archived: boolean }) => Number(a.is_archived) - Number(b.is_archived)
-  const byStage = (stage: string) => [...studyTypes.filter(s => s.stage === stage)].sort(archLast)
+  // Orden manual dentro de cada etapa: HEAD van primero (en ese orden), TAIL al
+  // final (antes de los descontinuados), el resto alfabético.
+  const HEAD: Record<string, string[]> = { inicial: ['SCJ', 'BUS'], intermedia: ['DIS1', 'DIS2', 'DIS3'] }
+  const TAIL: Record<string, string[]> = { intermedia: ['CDEB', 'CDC'] }
+  // CTBD debe ir justo debajo de DIS3 en el listado por código.
+  const sortKey = (code: string) => (code === 'CTBD' ? 'DIS3~' : code)
+  const withinStage = (stage: string) => (a: StudyType, b: StudyType) => {
+    const al = archLast(a, b); if (al) return al
+    const head = HEAD[stage] ?? [], tail = TAIL[stage] ?? []
+    const grp = (c: string) => (head.includes(c) ? 0 : tail.includes(c) ? 2 : 1)
+    const ga = grp(a.code), gb = grp(b.code)
+    if (ga !== gb) return ga - gb
+    if (ga === 0) return head.indexOf(a.code) - head.indexOf(b.code)
+    if (ga === 2) return tail.indexOf(a.code) - tail.indexOf(b.code)
+    return sortKey(a.code).localeCompare(sortKey(b.code))
+  }
+  const byStage = (stage: string) => [...studyTypes.filter(s => s.stage === stage)].sort(withinStage(stage))
   const niveles    = useMemo(() => byStage('niveles'), [studyTypes])
   const inicial    = useMemo(() => byStage('inicial'), [studyTypes])
   const intermedia = useMemo(() => byStage('intermedia'), [studyTypes])
   const campana    = useMemo(() => byStage('campaña'), [studyTypes])
   // Listado final ordenado por etapa.
   const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, 'campaña': 3 }
-  // Clave de orden dentro de la etapa: por código, con ajustes manuales puntuales
-  // (CTBD debe ir justo debajo de DIS3).
-  const sortKey = (code: string) => (code === 'CTBD' ? 'DIS3~' : code)
   const sortedStudyTypes = useMemo(
     () => [...studyTypes].sort((a, b) =>
-      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || archLast(a, b) || sortKey(a.code).localeCompare(sortKey(b.code)),
+      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || withinStage(a.stage)(a, b),
     ),
     [studyTypes],
   )
