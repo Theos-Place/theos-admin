@@ -123,6 +123,12 @@ export default function GruposPage() {
       if (selectedZone && g.zone !== selectedZone) return false
       if (selectedDay && !g.schedule_days.includes(selectedDay)) return false
       return true
+    }).sort((a, b) => {
+      // Orden por defecto: fecha de finalización más reciente primero; sin fecha al final.
+      if (!a.end_date && !b.end_date) return 0
+      if (!a.end_date) return 1
+      if (!b.end_date) return -1
+      return b.end_date.localeCompare(a.end_date)
     })
   }, [MOCK_GROUPS, selectedStatuses, selectedType, selectedZone, selectedDay])
 
