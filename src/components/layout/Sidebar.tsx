@@ -136,6 +136,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const finanzasActive        = pathname === '/finanzas'        || pathname.startsWith('/finanzas/')
 
   const canViewListas = userRoles.some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
+  const canViewDuplicados = userRoles.some(r => ['admin', 'editor_perfiles'].includes(r))
+  // Submenú de Miembros según rol (Listas guardadas y/o Duplicados).
+  const miembrosSub = [
+    ...(canViewListas ? MIEMBROS_SUB : []),
+    ...(canViewDuplicados ? [{ href: '/miembros/duplicados', label: 'Duplicados', icon: Users }] : []),
+  ]
 
   return (
     <>
@@ -210,13 +216,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 >
                   <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', miembrosActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
                   <span className="flex-1 truncate font-body font-light">{label}</span>
-                  {canViewListas && (
+                  {miembrosSub.length > 0 && (
                     <ChevronDown size={14} className={cn('transition-transform duration-200', miembrosActive ? 'text-white rotate-180' : 'text-white/40')} />
                   )}
                 </Link>
-                {miembrosActive && canViewListas && (
+                {miembrosActive && miembrosSub.length > 0 && (
                   <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                    {MIEMBROS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
+                    {miembrosSub.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
                       const subActive = pathname === sub
                       return (
                         <Link
