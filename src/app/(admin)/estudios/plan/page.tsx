@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { StudyType } from '@/data/mock-studies'
 import { useStudies } from '@/hooks/useStudies'
+import { useDirigentes } from '@/hooks/useDirigentes'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
@@ -77,7 +78,7 @@ function StudyCardCompact({ study }: { study: StudyType }) {
   )
 }
 
-function StudyCardFull({ study }: { study: StudyType }) {
+function StudyCardFull({ study, mentor }: { study: StudyType; mentor: string | null }) {
   const router = useRouter()
   const cat = STUDY_CATALOG.find(s => s.code === study.code)
   // Color del código según su etapa (consistente con StudyTypeBadge).
@@ -123,10 +124,10 @@ function StudyCardFull({ study }: { study: StudyType }) {
         </span>
       </div>
 
-      {/* Mentor */}
-      {cat?.mentor && (
+      {/* Dirigente referente */}
+      {(mentor ?? cat?.mentor) && (
         <div className="text-[11px] text-[var(--fg-muted)] mb-1.5 font-body">
-          Mentor: <strong>{cat.mentor}</strong>
+          Dirigente referente: <strong>{mentor ?? cat?.mentor}</strong>
         </div>
       )}
 
@@ -179,6 +180,9 @@ function StageDivider({ label }: { label: string }) {
 
 export default function PlanDeEstudiosPage() {
   const { studyTypes } = useStudies()
+  const { dirigentes } = useDirigentes()
+  // Dirigente referente (mentor_id) resuelto a nombre desde la lista unificada.
+  const mentorName = (s: StudyType) => dirigentes.find(d => d.member_id === s.mentor_id)?.member_name ?? null
   // Archivados (descontinuados) al final de su categoría.
   const archLast = (a: { is_archived: boolean }, b: { is_archived: boolean }) => Number(a.is_archived) - Number(b.is_archived)
   // Orden manual dentro de cada etapa: HEAD van primero (en ese orden), TAIL al
@@ -283,7 +287,7 @@ export default function PlanDeEstudiosPage() {
             Etapa Inicial — ₡15,000 · Requiere asistir a charlas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-            {inicial.map(s => <StudyCardFull key={s.id} study={s} />)}
+            {inicial.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} />)}
           </div>
         </div>
 
@@ -295,7 +299,7 @@ export default function PlanDeEstudiosPage() {
             Etapa Intermedia — ₡20,000 · Requiere donador + servidor + charlas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-            {intermedia.map(s => <StudyCardFull key={s.id} study={s} />)}
+            {intermedia.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} />)}
           </div>
         </div>
 
@@ -307,7 +311,7 @@ export default function PlanDeEstudiosPage() {
             Campañas — ₡25,000 · Sin prerrequisito
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-            {campana.map(s => <StudyCardFull key={s.id} study={s} />)}
+            {campana.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} />)}
           </div>
         </div>
       </div>
@@ -373,7 +377,7 @@ export default function PlanDeEstudiosPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
-                    {STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
+                    {mentorName(s) ?? STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
                       <span className="text-navy-light/30">—</span>
                     )}
                   </td>
