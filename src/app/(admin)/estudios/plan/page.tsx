@@ -82,6 +82,14 @@ function StudyCardCompact({ study }: { study: StudyType }) {
 function StudyCardFull({ study }: { study: StudyType }) {
   const router = useRouter()
   const cat = STUDY_CATALOG.find(s => s.code === study.code)
+  // Color del código según su etapa (consistente con StudyTypeBadge).
+  const codeColor = study.stage === 'niveles'
+    ? 'var(--brand-navy)'
+    : study.stage === 'inicial'
+    ? '#0f766e'
+    : study.stage === 'campaña'
+    ? '#7e22ce'
+    : 'var(--brand-coral)'
 
   return (
     <div
@@ -97,7 +105,7 @@ function StudyCardFull({ study }: { study: StudyType }) {
         <div>
           <div className="flex items-center gap-1.5">
             <span
-              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: 'var(--brand-coral)', textTransform: 'uppercase' }}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: codeColor, textTransform: 'uppercase' }}
               className="font-display"
             >
               {study.code}
