@@ -206,6 +206,17 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const [showSendMessage, setShowSendMessage] = useState(false)
   const [waUrl, setWaUrl] = useState(group?.whatsapp_group_url ?? '')
   const [waInput, setWaInput] = useState('')
+  const [sessions, setSessions] = useState<Array<{ id: string; date: string; topic: string | null; present: number; total: number }>>([])
+
+  useEffect(() => {
+    if (!id) return
+    let alive = true
+    fetch(`/api/studies/groups/${id}/sessions`)
+      .then(r => (r.ok ? r.json() : []))
+      .then(d => { if (alive) setSessions(Array.isArray(d) ? d : []) })
+      .catch(() => { if (alive) setSessions([]) })
+    return () => { alive = false }
+  }, [id])
 
   if (!group) {
     return (
@@ -227,12 +238,6 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
     comunicaciones: 'Comunicaciones',
     información: 'Información',
   }
-
-  const fakeSessions = Array.from({ length: group.current_week }, (_, i) => ({
-    session: i + 1,
-    date: new Date(new Date(group.start_date).getTime() + i * 7 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CR'),
-    present: Math.round(enrolled.length * 0.75 + Math.random() * enrolled.length * 0.2),
-  }))
 
   return (
     <div className="space-y-5">
@@ -359,14 +364,23 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn(
-                        'rounded-md px-2 py-0.5 text-[10px] font-medium',
-                        p.status === 'enrolled' ? 'bg-teal-soft/30 text-teal-deep' :
-                        p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                        'bg-surface-low text-navy-light/40'
-                      )}>
-                        {p.status === 'enrolled' ? 'Inscrito' : p.status === 'pending' ? 'Pendiente' : 'Retirado'}
-                      </span>
+                      {group.status === 'finished' ? (
+                        <span className={cn(
+                          'rounded-md px-2 py-0.5 text-[10px] font-medium',
+                          p.status === 'withdrawn' ? 'bg-coral/15 text-coral' : 'bg-teal-soft/30 text-teal-deep'
+                        )}>
+                          {p.status === 'withdrawn' ? 'Reprobó' : 'Aprobado'}
+                        </span>
+                      ) : (
+                        <span className={cn(
+                          'rounded-md px-2 py-0.5 text-[10px] font-medium',
+                          p.status === 'enrolled' ? 'bg-teal-soft/30 text-teal-deep' :
+                          p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                          'bg-surface-low text-navy-light/40'
+                        )}>
+                          {p.status === 'enrolled' ? 'Inscrito' : p.status === 'pending' ? 'Pendiente' : 'Retirado'}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <AttendanceBar pct={p.attendance_pct} />
@@ -378,12 +392,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     )}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button
-                          className="rounded-lg px-2 py-1 text-[10px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors"
-                          style={{ fontFamily: 'var(--font-body)' }}
-                        >
-                          Desinscribir
-                        </button>
+                        {group.status !== 'finished' && (
+                          <button
+                            className="rounded-lg px-2 py-1 text-[10px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors"
+                            style={{ fontFamily: 'var(--font-body)' }}
+                          >
+                            Desinscribir
+                          </button>
+                        )}
                         <Link
                           href={`/miembros/${p.member_id}`}
                           className="rounded-lg px-2 py-1 text-[10px] text-navy-light border hover:bg-surface-low transition-colors"
@@ -415,6 +431,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   Ver grupo de WhatsApp
                 </a>
               </div>
+            ) : group.status === 'finished' ? (
+              <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                Grupo finalizado — sin grupo de WhatsApp.
+              </p>
             ) : (
               <div className="space-y-2">
                 <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
@@ -454,17 +474,17 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-            {fakeSessions.length === 0 ? (
+            {sessions.length === 0 ? (
               <div className="px-5 py-8 text-center">
                 <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-                  El grupo aún no ha comenzado.
+                  No tenemos asistencia registrada para este grupo.
                 </p>
               </div>
             ) : (
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    {['Sesión', 'Fecha', 'Asistencia', ''].map(h => (
+                    {['Sesión', 'Fecha', 'Asistencia'].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50"
@@ -476,28 +496,20 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   </tr>
                 </thead>
                 <tbody>
-                  {fakeSessions.map(s => (
+                  {sessions.map((s, i) => (
                     <tr
-                      key={s.session}
+                      key={s.id}
                       className="hover:bg-surface-low transition-colors"
                       style={{ borderBottom: '1px solid var(--outline-variant)' }}
                     >
                       <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                        Sesión {s.session}
+                        Sesión {i + 1}
                       </td>
                       <td className="px-4 py-3 text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-                        {s.date}
+                        {new Date(s.date).toLocaleDateString('es-CR')}
                       </td>
                       <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
-                        {s.present}/{enrolled.length} presentes
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          className="text-[11px] text-navy-light hover:text-coral transition-colors"
-                          style={{ fontFamily: 'var(--font-body)' }}
-                        >
-                          Ver detalle
-                        </button>
+                        {s.present}/{s.total} presentes
                       </td>
                     </tr>
                   ))}
@@ -559,14 +571,16 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             ))}
           </div>
 
-          <div className="flex gap-2 pt-2 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-            <button
-              className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
-            >
-              Cambiar dirigente
-            </button>
-          </div>
+          {group.status !== 'finished' && (
+            <div className="flex gap-2 pt-2 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
+              <button
+                className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              >
+                Cambiar dirigente
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

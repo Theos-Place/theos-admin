@@ -262,6 +262,23 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   }
 }
 
+/** Sesiones de asistencia de un grupo con conteo de presentes. */
+export async function getGroupSessions(groupId: string): Promise<Array<{ id: string; date: string; topic: string | null; present: number; total: number }>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_sessions')
+    .select('id, session_date, topic, study_attendance(present)')
+    .eq('group_id', groupId)
+    .order('session_date', { ascending: true })
+  if (error) throw error
+  const rows = (data ?? []) as unknown as Array<{ id: string; session_date: string; topic: string | null; study_attendance: Array<{ present: boolean }> }>
+  return rows.map(r => ({
+    id: r.id, date: r.session_date, topic: r.topic,
+    present: r.study_attendance.filter(a => a.present).length,
+    total: r.study_attendance.length,
+  }))
+}
+
 /** Registra la asistencia de una sesión: crea la sesión y las filas de presencia. */
 export async function saveGroupAttendance(
   groupId: string,
