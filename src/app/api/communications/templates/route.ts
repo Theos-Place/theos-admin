@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getTemplates, createTemplate, type TemplateWriteInput } from '@/lib/supabase/queries/communications'
 
 export async function GET() {
@@ -11,6 +12,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+    const auth = await requireRoles('comunicaciones', 'direccion')
+    if (auth.res) return auth.res
   try {
     const t = await createTemplate((await req.json()) as TemplateWriteInput)
     return NextResponse.json(t, { status: 201 })

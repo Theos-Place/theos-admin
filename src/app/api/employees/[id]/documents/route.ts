@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import {
   addEmployeeDocument, uploadEmployeeDocFile, type DocumentWriteInput,
 } from '@/lib/supabase/queries/employees'
@@ -10,6 +11,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('direccion', 'encargado_staff')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const contentType = req.headers.get('content-type') ?? ''

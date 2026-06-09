@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { updatePayment, type PaymentWriteInput } from '@/lib/supabase/queries/finance'
 
 // PUT: actualiza un pago (p. ej. confirmar SINPE → status paid + confirmación).
@@ -6,6 +7,8 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('finanzas', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await updatePayment(id, (await req.json()) as Partial<PaymentWriteInput>)

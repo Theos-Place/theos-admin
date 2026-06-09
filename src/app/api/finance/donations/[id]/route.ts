@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { linkDonation } from '@/lib/supabase/queries/finance'
 
 // PATCH: vincula una donación a un miembro. Body: { member_id }
@@ -6,6 +7,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('finanzas', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const { member_id } = await req.json()

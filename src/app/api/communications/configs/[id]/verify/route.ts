@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { verifyConfig } from '@/lib/supabase/queries/communications'
 
 // POST: marca la config como verificada.
@@ -6,6 +7,8 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('comunicaciones', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await verifyConfig(id)

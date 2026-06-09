@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { createVolunteer } from '@/lib/supabase/queries/events'
 
 // POST: asigna un servidor. Body: { member_id, role?, status? }
@@ -6,6 +7,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const body = await req.json()

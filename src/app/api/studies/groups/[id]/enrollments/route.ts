@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { enrollMember, withdrawMember, setEnrollmentGrade } from '@/lib/supabase/queries/studies'
 
 // POST: inscribe un miembro. Body: { member_id }
@@ -6,6 +7,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const { member_id } = await req.json()
@@ -22,6 +25,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const { member_id, grade } = await req.json()
@@ -38,6 +43,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const { member_id, reason } = await req.json()

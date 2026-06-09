@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { deleteArea } from '@/lib/supabase/queries/servers'
 
 // DELETE: elimina un área o comité. El cliente verifica antes que no haya
@@ -7,6 +8,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('encargado_staff', 'direccion', 'lider_comite')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await deleteArea(id)

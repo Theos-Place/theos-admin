@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { updateTemplate, deleteTemplate, type TemplateWriteInput } from '@/lib/supabase/queries/communications'
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('comunicaciones', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await updateTemplate(id, (await req.json()) as Partial<TemplateWriteInput>)
@@ -19,6 +22,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('comunicaciones', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await deleteTemplate(id)

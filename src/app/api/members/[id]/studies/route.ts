@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { addMemberStudy, getPlanIdByCode } from '@/lib/supabase/queries/studies'
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const body = (await req.json()) as { plan_code?: string; date?: string | null; status?: string }

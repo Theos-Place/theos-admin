@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getPayments, createPayment, type PaymentWriteInput } from '@/lib/supabase/queries/finance'
 
 export async function GET() {
@@ -11,6 +12,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+    const auth = await requireRoles('finanzas', 'direccion')
+    if (auth.res) return auth.res
   try {
     const payment = await createPayment((await req.json()) as PaymentWriteInput)
     return NextResponse.json(payment, { status: 201 })

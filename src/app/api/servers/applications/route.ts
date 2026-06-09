@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getApplications, createApplication } from '@/lib/supabase/queries/servers'
 
 export async function GET() {
@@ -11,6 +12,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+    const auth = await requireRoles('encargado_staff', 'direccion', 'lider_comite')
+    if (auth.res) return auth.res
   try {
     await createApplication(await req.json())
     return NextResponse.json({ ok: true }, { status: 201 })

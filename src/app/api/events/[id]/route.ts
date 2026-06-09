@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getEventById, updateEvent, deleteEvent } from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
 
@@ -23,6 +24,8 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const body = await req.json()
@@ -40,6 +43,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await deleteEvent(id)

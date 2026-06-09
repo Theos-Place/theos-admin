@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import {
   getStudyGroups, createGroup, getPlanIdByCode, type GroupWriteInput,
 } from '@/lib/supabase/queries/studies'
@@ -14,6 +15,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    if (auth.res) return auth.res
   try {
     const body = (await req.json()) as GroupWriteInput & { study_type_id?: string }
     // El frontend manda study_type_id (code); resolvemos a plan_id (UUID).

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { updateGroup, getGroupById, type GroupWriteInput } from '@/lib/supabase/queries/studies'
 
 export async function GET(
@@ -20,6 +21,8 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const patch = (await req.json()) as Partial<GroupWriteInput>

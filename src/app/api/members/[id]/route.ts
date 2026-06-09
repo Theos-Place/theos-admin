@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getMemberFullById, updateMember } from '@/lib/supabase/queries/members'
 
 export async function GET(
@@ -22,6 +23,8 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const updates = await req.json()

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getMemberListById, updateMemberList, deleteMemberList } from '@/lib/supabase/queries/member-lists'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +15,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await updateMemberList(id, await req.json())
@@ -25,6 +28,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     await deleteMemberList(id)

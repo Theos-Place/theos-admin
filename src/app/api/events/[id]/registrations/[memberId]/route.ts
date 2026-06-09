@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { updateRegistrationPayment, deleteRegistration } from '@/lib/supabase/queries/events'
 
 const VALID = ['pending', 'paid', 'exempted'] as const
@@ -8,6 +9,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
   try {
     const { id, memberId } = await params
     const body = await req.json()
@@ -27,6 +30,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
   try {
     const { id, memberId } = await params
     await deleteRegistration(id, memberId)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { createCheckin } from '@/lib/supabase/queries/events'
 
 // POST: registra un check-in. Body: { member_id?, guest_name?, sub_event_id?, method? }
@@ -7,6 +8,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
   try {
     const { id } = await params
     const body = await req.json()
