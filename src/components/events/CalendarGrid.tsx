@@ -20,6 +20,15 @@ const DOT_BG: Record<string, string> = {
   amber:  'bg-amber-500 text-white',
 }
 
+// Solo el color de fondo (para los puntos en mobile).
+const DOT_ONLY: Record<string, string> = {
+  navy:   'bg-navy',
+  teal:   'bg-teal-deep',
+  coral:  'bg-coral',
+  purple: 'bg-purple-700',
+  amber:  'bg-amber-500',
+}
+
 const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 const MONTH_NAMES = [
@@ -94,7 +103,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
             <div
               key={i}
               className={cn(
-                'min-h-[80px] p-1.5 border-b border-r border-[var(--outline-variant)]',
+                'min-h-[58px] p-1 sm:min-h-[80px] sm:p-1.5 border-b border-r border-[var(--outline-variant)]',
                 isWeekend && 'bg-surface-low/40',
                 !day && 'opacity-0 pointer-events-none'
               )}
@@ -109,7 +118,29 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                   >
                     {day}
                   </div>
-                  <div className="space-y-0.5">
+
+                  {/* Mobile: puntos de color (los nombres no caben) */}
+                  {dayEvents.length > 0 && (
+                    <div className="flex flex-wrap gap-1 px-0.5 sm:hidden">
+                      {dayEvents.slice(0, 4).map(ev => {
+                        const config = EVENT_TYPE_CONFIG[ev.event_type]
+                        return (
+                          <button
+                            key={ev.id}
+                            onClick={() => onEventClick?.(ev.id)}
+                            aria-label={ev.name}
+                            className={cn('h-1.5 w-1.5 rounded-full', DOT_ONLY[config.color] ?? 'bg-navy')}
+                          />
+                        )
+                      })}
+                      {dayEvents.length > 4 && (
+                        <span className="text-[8px] text-navy-light/40 leading-none font-body">+{dayEvents.length - 4}</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* sm+: etiquetas con nombre */}
+                  <div className="hidden sm:block space-y-0.5">
                     {dayEvents.slice(0, 3).map(ev => {
                       const config = EVENT_TYPE_CONFIG[ev.event_type]
                       const colorClass = DOT_BG[config.color] ?? 'bg-navy text-white'

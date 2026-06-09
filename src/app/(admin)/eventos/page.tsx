@@ -364,18 +364,14 @@ export default function EventosPage() {
 
       {/* Vista Calendario */}
       {view === 'calendar' && (
-        <div className="overflow-x-auto">
-          <div className="min-w-[640px] md:min-w-0">
-            <CalendarGrid
-              events={calendarMonthEvents}
-              month={currentMonth}
-              year={currentYear}
-              onEventClick={id => router.push(`/eventos/${id}`)}
-              onPrev={handlePrev}
-              onNext={handleNext}
-            />
-          </div>
-        </div>
+        <CalendarGrid
+          events={calendarMonthEvents}
+          month={currentMonth}
+          year={currentYear}
+          onEventClick={id => router.push(`/eventos/${id}`)}
+          onPrev={handlePrev}
+          onNext={handleNext}
+        />
       )}
     </div>
   )
