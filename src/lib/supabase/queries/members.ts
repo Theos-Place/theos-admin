@@ -653,9 +653,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     .filter(e => planOf(e)?.code && !ledByMember(e))
     .map(e => {
       const plan = planOf(e)!
-      // La fecha del grupo (starts_at) trae mes+año reales (del nombre del grupo);
-      // sin grupo, usamos la fecha registrada en la inscripción.
-      const d = e.study_groups?.starts_at ?? e.completed_at ?? e.enrolled_at ?? null
+      // completed_at trae la fecha precisa del histórico (PCO); si falta (ej.
+      // inscripción activa), caemos a la fecha de inicio del grupo o enrolled_at.
+      const d = e.completed_at ?? e.study_groups?.starts_at ?? e.enrolled_at ?? null
       return {
         group_id: e.study_groups?.id ?? null,
         code: plan.code as string,
