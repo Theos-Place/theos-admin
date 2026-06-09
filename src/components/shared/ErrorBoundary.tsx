@@ -34,31 +34,26 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div
-          className="flex flex-col items-center justify-center min-h-60 rounded-2xl p-8 text-center"
-          style={{ background: 'var(--surface-card)', border: '1px solid rgba(239,85,84,0.15)' }}
+          className="flex flex-col items-center justify-center min-h-60 rounded-2xl p-8 text-center bg-surface-card border border-[rgba(239,85,84,0.15)]"
         >
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-2xl mb-4"
-            style={{ background: 'rgba(239,85,84,0.08)' }}
+            className="flex h-12 w-12 items-center justify-center rounded-2xl mb-4 bg-[rgba(239,85,84,0.08)]"
           >
-            <AlertTriangle size={22} style={{ color: '#EF5554' }} />
+            <AlertTriangle size={22} className="text-coral" />
           </div>
           <p
-            className="text-base font-semibold text-navy mb-1"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-base font-semibold text-navy mb-1 font-display"
           >
             Algo salió mal
           </p>
           <p
-            className="text-sm text-navy-light/50 mb-5 max-w-xs"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="text-sm text-navy-light/50 mb-5 max-w-xs font-body"
           >
             {this.state.error?.message ?? 'Ocurrió un error inesperado.'}
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors"
-            style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors bg-coral font-body"
           >
             <RotateCcw size={14} />
             Intentar de nuevo

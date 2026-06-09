@@ -56,23 +56,11 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }
       {label && (
         <label className="form-label">{label}</label>
       )}
-      <div style={{ display: 'flex' }}>
+      <div className="flex">
         <select
           value={countryCode}
           onChange={e => handleCodeChange(e.target.value)}
-          style={{
-            padding: '9px 10px',
-            border: '1px solid rgba(22,20,64,0.15)',
-            borderRight: 'none',
-            borderRadius: '0.75rem 0 0 0.75rem',
-            background: 'rgba(22,20,64,0.03)',
-            fontSize: 13,
-            color: 'var(--fg, #161440)',
-            cursor: 'pointer',
-            outline: 'none',
-            flexShrink: 0,
-            fontFamily: 'var(--font-body)',
-          }}
+          className="py-[9px] px-[10px] border border-[rgba(22,20,64,0.15)] border-r-0 rounded-l-xl rounded-r-none bg-[rgba(22,20,64,0.03)] text-[13px] text-[var(--fg,#161440)] cursor-pointer outline-none shrink-0 font-body"
         >
           {COUNTRY_CODES.map(c => (
             <option key={c.code} value={c.code}>
@@ -86,21 +74,7 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }
           value={number}
           onChange={e => handleNumberChange(e.target.value)}
           placeholder={placeholder}
-          style={{
-            flex: 1,
-            padding: '9px 14px',
-            border: '1px solid rgba(22,20,64,0.15)',
-            borderRadius: '0 0.75rem 0.75rem 0',
-            fontSize: 14,
-            color: '#161440',
-            background: 'white',
-            outline: 'none',
-            minWidth: 0,
-            fontFamily: 'var(--font-body)',
-            transition: 'border-color 0.15s',
-          }}
-          onFocus={e => (e.target.style.borderColor = 'rgba(22,20,64,0.30)')}
-          onBlur={e  => (e.target.style.borderColor = 'rgba(22,20,64,0.15)')}
+          className="flex-1 py-[9px] px-[14px] border border-[rgba(22,20,64,0.15)] focus:border-[rgba(22,20,64,0.30)] rounded-r-xl rounded-l-none text-sm text-navy bg-white outline-none min-w-0 font-body transition-colors"
         />
       </div>
     </div>

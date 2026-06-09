@@ -69,7 +69,7 @@ export function Modal({
   return (
     <div
       role="presentation"
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center p-5"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
@@ -77,12 +77,13 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        style={{ background: 'var(--surface-card)', borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', position: 'relative', maxHeight: '90vh', overflowY: 'auto', width: '100%', maxWidth: width }}
+        className="bg-surface-card rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] relative max-h-[90vh] overflow-y-auto w-full"
+        style={{ maxWidth: width }}
       >
         <button
           onClick={onClose}
           aria-label="Cerrar modal"
-          style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(41,54,92,0.4)', zIndex: 1 }}
+          className="absolute top-[14px] right-[14px] bg-transparent border-none cursor-pointer text-[rgba(41,54,92,0.4)] z-[1]"
         >
           <X size={18} />
         </button>

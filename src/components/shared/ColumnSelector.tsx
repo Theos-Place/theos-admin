@@ -69,8 +69,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+        className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
       >
         <Columns2 size={14} strokeWidth={1.75} />
         Columnas
@@ -79,15 +78,10 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
 
       {open && (
         <div
-          className="absolute right-0 top-[calc(100%+6px)] z-40 w-56 rounded-2xl overflow-hidden"
-          style={{
-            background: 'var(--surface-card)',
-            boxShadow: '0 20px 48px rgba(22,20,64,0.14)',
-            border: '1px solid var(--outline-variant)',
-          }}
+          className="absolute right-0 top-[calc(100%+6px)] z-40 w-56 rounded-2xl overflow-hidden bg-surface-card shadow-[0_20px_48px_rgba(22,20,64,0.14)] border border-[var(--outline-variant)]"
         >
-          <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="px-4 py-3 border-b border-[var(--outline-variant)]">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
               Columnas visibles
             </p>
           </div>
@@ -99,10 +93,9 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
               return (
                 <label
                   key={key}
-                  className={`flex items-center gap-2.5 px-4 py-2 text-sm cursor-pointer transition-colors ${
+                  className={`font-body flex items-center gap-2.5 px-4 py-2 text-sm cursor-pointer transition-colors ${
                     col.alwaysVisible ? 'opacity-60 cursor-not-allowed' : 'hover:bg-surface-low'
                   }`}
-                  style={{ fontFamily: 'var(--font-body)' }}
                 >
                   <input
                     type="checkbox"
@@ -113,7 +106,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
                   />
                   <span className="flex-1 text-navy">{col.label}</span>
                   {col.alwaysVisible && (
-                    <span className="text-[10px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>
+                    <span className="text-[10px] text-navy-light/30 font-body">
                       fijo
                     </span>
                   )}
@@ -122,11 +115,10 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
             })}
           </div>
 
-          <div className="border-t px-4 py-2.5" style={{ borderColor: 'var(--outline-variant)' }}>
+          <div className="border-t px-4 py-2.5 border-[var(--outline-variant)]">
             <button
               onClick={reset}
-              className="flex items-center gap-1.5 text-[12px] text-navy-light/50 hover:text-navy transition-colors w-full"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-1.5 text-[12px] text-navy-light/50 hover:text-navy transition-colors w-full font-body"
             >
               <RotateCcw size={12} />
               Restaurar por defecto

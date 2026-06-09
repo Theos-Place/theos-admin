@@ -109,8 +109,7 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
-        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+        className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
       >
         <Download size={14} strokeWidth={1.75} />
         {busy ? 'Preparando export…' : (label ?? 'Exportar')}
@@ -119,15 +118,10 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
 
       {open && (
         <div
-          className="absolute right-0 top-[calc(100%+6px)] z-40 w-64 rounded-2xl overflow-hidden"
-          style={{
-            background: 'var(--surface-card)',
-            boxShadow: '0 20px 48px rgba(22,20,64,0.14)',
-            border: '1px solid var(--outline-variant)',
-          }}
+          className="absolute right-0 top-[calc(100%+6px)] z-40 w-64 rounded-2xl overflow-hidden bg-surface-card shadow-[0_20px_48px_rgba(22,20,64,0.14)] border border-[var(--outline-variant)]"
         >
-          <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="px-4 py-3 border-b border-[var(--outline-variant)]">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
               Exportar resultados
             </p>
           </div>
@@ -136,16 +130,14 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
           <div className="py-1.5">
             <button
               onClick={handleExcel}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <FileSpreadsheet size={15} className="text-[#1D6F42] shrink-0" />
               Excel (.xlsx)
             </button>
             <button
               onClick={handleCSV}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <FileText size={15} className="text-navy-light/50 shrink-0" />
               CSV (.csv)
@@ -153,11 +145,10 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
           </div>
 
           {/* Column scope toggle */}
-          <div className="border-t py-1.5" style={{ borderColor: 'var(--outline-variant)' }}>
+          <div className="border-t py-1.5 border-[var(--outline-variant)]">
             <button
               onClick={() => setOnlyVisible(true)}
-              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm transition-colors hover:bg-surface-low"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm transition-colors hover:bg-surface-low font-body"
             >
               <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${onlyVisible ? 'border-coral bg-coral' : 'border-navy-light/30'}`}>
                 {onlyVisible && <Check size={10} className="text-white" strokeWidth={3} />}
@@ -166,8 +157,7 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
             </button>
             <button
               onClick={() => setOnlyVisible(false)}
-              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm transition-colors hover:bg-surface-low"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm transition-colors hover:bg-surface-low font-body"
             >
               <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${!onlyVisible ? 'border-coral bg-coral' : 'border-navy-light/30'}`}>
                 {!onlyVisible && <Check size={10} className="text-white" strokeWidth={3} />}
@@ -177,8 +167,8 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
           </div>
 
           {/* Record count */}
-          <div className="border-t px-4 py-3" style={{ borderColor: 'var(--outline-variant)' }}>
-            <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="border-t px-4 py-3 border-[var(--outline-variant)]">
+            <p className="text-[11px] text-navy-light/50 font-body">
               <span className="font-semibold text-navy">{data.length.toLocaleString('es-CR')}</span> registros a exportar
             </p>
           </div>
@@ -188,14 +178,14 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
       {/* Modal de confirmación (export sin filtros / volumen alto) */}
       {pendingFormat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(233,185,73,0.15)' }}>
+              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-[rgba(233,185,73,0.15)]">
                 <AlertTriangle size={18} className="text-amber-500" />
               </div>
               <div>
-                <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>Confirmar exportación</p>
-                <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-base font-bold text-navy font-display">Confirmar exportación</p>
+                <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed font-body">
                   {confirmMessage}
                 </p>
               </div>
@@ -203,15 +193,13 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
             <div className="flex gap-2">
               <button
                 onClick={() => setPendingFormat(null)}
-                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => { const f = pendingFormat; setPendingFormat(null); runExport(f) }}
-                className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
               >
                 Exportar {pendingFormat === 'excel' ? 'Excel' : 'CSV'}
               </button>

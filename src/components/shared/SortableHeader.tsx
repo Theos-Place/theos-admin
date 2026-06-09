@@ -20,10 +20,9 @@ export function SortableHeader({ label, sortKey, currentSortKey, currentSortDir,
       <div className="flex items-center gap-1.5 px-4 py-3.5">
         <span
           className={cn(
-            'text-[10px] tracking-widest uppercase transition-colors duration-120',
+            'font-display text-[10px] tracking-widest uppercase transition-colors duration-120',
             isActive ? 'font-bold text-navy' : 'font-semibold text-navy-light/50'
           )}
-          style={{ fontFamily: 'var(--font-display)' }}
         >
           {label}
         </span>
