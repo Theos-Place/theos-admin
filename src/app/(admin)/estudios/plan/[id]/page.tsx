@@ -315,7 +315,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       <div className="card">
         <div className="card-hd" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="card-title">
-            Grupos activos
+            Listado de grupos
             <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--fg-muted)', marginLeft: 8, fontFamily: 'var(--font-body)' }}>
               ({filteredGroups.length}{filteredGroups.length !== studyGroups.length ? ` de ${studyGroups.length}` : ''})
             </span>
