@@ -7,17 +7,16 @@ interface FieldPreviewProps {
 }
 
 export function FieldPreview({ field, compact }: FieldPreviewProps) {
-  const inputBase = 'w-full rounded-xl bg-white/60 border px-3 py-2 text-sm text-navy-light/50 cursor-not-allowed'
-  const borderStyle = { borderColor: 'var(--outline-variant)' }
+  const inputBase = 'w-full rounded-xl bg-white/60 border px-3 py-2 text-sm text-navy-light/50 cursor-not-allowed border-[var(--outline-variant)]'
 
   if (field.type === 'section') {
     return (
       <div className="flex items-center gap-3 py-1">
-        <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
-        <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+        <div className="flex-1 h-px bg-[var(--outline-variant)]" />
+        <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/40 font-display">
           {field.label || 'Sección'}
         </span>
-        <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
+        <div className="flex-1 h-px bg-[var(--outline-variant)]" />
       </div>
     )
   }
@@ -25,13 +24,13 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
   if (field.type === 'page_break') {
     return (
       <div className="flex items-center gap-3 py-1">
-        <div className="flex-1 h-px border-dashed border-t-2" style={{ borderColor: 'var(--outline-variant)' }} />
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border" style={{ borderColor: 'var(--outline-variant)' }}>
-          <span className="text-[10px] uppercase tracking-widest font-semibold text-blue-500" style={{ fontFamily: 'var(--font-display)' }}>
+        <div className="flex-1 h-px border-dashed border-t-2 border-[var(--outline-variant)]" />
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[var(--outline-variant)]">
+          <span className="text-[10px] uppercase tracking-widest font-semibold text-blue-500 font-display">
             📄 {field.label || 'Nueva página'}
           </span>
         </div>
-        <div className="flex-1 h-px border-dashed border-t-2" style={{ borderColor: 'var(--outline-variant)' }} />
+        <div className="flex-1 h-px border-dashed border-t-2 border-[var(--outline-variant)]" />
       </div>
     )
   }
@@ -43,7 +42,6 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         type={field.type === 'number' ? 'number' : 'text'}
         placeholder={field.placeholder || field.label}
         className={inputBase}
-        style={borderStyle}
       />
     )
   }
@@ -54,7 +52,6 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         disabled
         type="date"
         className={inputBase}
-        style={borderStyle}
       />
     )
   }
@@ -66,14 +63,13 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         rows={compact ? 2 : 3}
         placeholder={field.placeholder || field.label}
         className={cn(inputBase, 'resize-none')}
-        style={borderStyle}
       />
     )
   }
 
   if (field.type === 'select') {
     return (
-      <select disabled className={inputBase} style={borderStyle}>
+      <select disabled className={inputBase}>
         <option>Seleccionar...</option>
         {field.options?.map(o => <option key={o}>{o}</option>)}
       </select>
@@ -87,11 +83,11 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         {opts.slice(0, compact ? 3 : opts.length).map(o => (
           <label key={o} className="flex items-center gap-2 cursor-not-allowed opacity-60">
             <input type="radio" disabled className="accent-coral" />
-            <span className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{o}</span>
+            <span className="text-sm text-navy-light/60 font-body">{o}</span>
           </label>
         ))}
         {compact && opts.length > 3 && (
-          <span className="text-[11px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="text-[11px] text-navy-light/30 font-body">
             +{opts.length - 3} más...
           </span>
         )}
@@ -106,11 +102,11 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         {opts.slice(0, compact ? 3 : opts.length).map(o => (
           <label key={o} className="flex items-center gap-2 cursor-not-allowed opacity-60">
             <input type="checkbox" disabled className="accent-coral" />
-            <span className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{o}</span>
+            <span className="text-sm text-navy-light/60 font-body">{o}</span>
           </label>
         ))}
         {compact && opts.length > 3 && (
-          <span className="text-[11px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="text-[11px] text-navy-light/30 font-body">
             +{opts.length - 3} más...
           </span>
         )}
@@ -128,8 +124,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
           {nums.map(n => (
             <div
               key={n}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-[13px] font-medium text-navy-light/40 border cursor-not-allowed"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-mono)' }}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-[13px] font-medium text-navy-light/40 border cursor-not-allowed border-[var(--outline-variant)] font-mono"
             >
               {n}
             </div>
@@ -137,8 +132,8 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         </div>
         {(field.scale_min_label || field.scale_max_label) && (
           <div className="flex justify-between">
-            <span className="text-[10px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>{field.scale_min_label}</span>
-            <span className="text-[10px] text-navy-light/30" style={{ fontFamily: 'var(--font-body)' }}>{field.scale_max_label}</span>
+            <span className="text-[10px] text-navy-light/30 font-body">{field.scale_min_label}</span>
+            <span className="text-[10px] text-navy-light/30 font-body">{field.scale_max_label}</span>
           </div>
         )}
       </div>
@@ -151,8 +146,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         {['Sí', 'No'].map(v => (
           <div
             key={v}
-            className="flex-1 rounded-xl border py-2 text-center text-sm text-navy-light/40 cursor-not-allowed"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-xl border py-2 text-center text-sm text-navy-light/40 cursor-not-allowed border-[var(--outline-variant)] font-body"
           >
             {v}
           </div>

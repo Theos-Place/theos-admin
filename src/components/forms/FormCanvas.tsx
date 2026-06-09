@@ -52,11 +52,11 @@ export function FormCanvas({
 
   if (fields.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-80 rounded-2xl border-2 border-dashed gap-3" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="flex flex-col items-center justify-center min-h-80 rounded-2xl border-2 border-dashed gap-3 border-[var(--outline-variant)]">
         <div className="h-12 w-12 rounded-xl bg-navy/5 flex items-center justify-center">
           <GripVertical size={22} className="text-navy-light/30" />
         </div>
-        <p className="text-sm text-navy-light/40 text-center max-w-xs" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/40 text-center max-w-xs font-body">
           Hacé clic en un tipo de campo para agregarlo, o arrastrálo aquí
         </p>
       </div>
@@ -105,11 +105,11 @@ export function FormCanvas({
                 <GripVertical size={15} className="text-navy-light/20 cursor-grab shrink-0" />
                 <FileText size={14} className="text-blue-400 shrink-0" />
                 <div className="flex-1">
-                  <span className="text-[11px] font-bold text-blue-500 uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)' }}>
+                  <span className="text-[11px] font-bold text-blue-500 uppercase tracking-widest font-display">
                     INICIO DE PÁGINA {pgNum}
                   </span>
                   {field.label && (
-                    <span className="ml-2 text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>· {field.label}</span>
+                    <span className="ml-2 text-[12px] text-navy-light/60 font-body">· {field.label}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -140,29 +140,25 @@ export function FormCanvas({
               onDrop={() => handleDrop(index)}
               onDragEnd={handleDragEnd}
               onClick={() => onSelectField(field.id)}
-              className={cn('group relative cursor-pointer transition-all', isDragging ? 'opacity-30' : '', isOver ? 'ring-2 ring-teal-deep/40 rounded-xl' : '')}
+              className={cn('group relative cursor-pointer transition-all bg-[rgba(112,189,194,.06)] rounded-xl py-3 px-[14px]', isDragging ? 'opacity-30' : '', isOver ? 'ring-2 ring-teal-deep/40 rounded-xl' : '')}
               style={{
-                background: 'rgba(112,189,194,.06)',
                 border: isActive ? '1.5px solid var(--brand-teal-deep)' : '1.5px dashed rgba(112,189,194,.5)',
-                borderRadius: 12,
-                padding: '12px 14px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
                   <GripVertical size={14} className="text-teal-deep/30 cursor-grab shrink-0" />
                   <User size={14} color="var(--brand-teal-deep, #2a8b8f)" />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-teal-deep, #2a8b8f)', fontFamily: 'var(--font-display)' }}>
+                  <span className="text-[12px] font-bold text-[var(--brand-teal-deep,#2a8b8f)] font-display">
                     Datos personales del miembro
                   </span>
-                  <span style={{ fontSize: 10, color: 'rgba(42,139,143,.6)', fontFamily: 'var(--font-display)' }}>#{index + 1}</span>
+                  <span className="text-[10px] text-[rgba(42,139,143,.6)] font-display">#{index + 1}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 4 }} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     type="button"
                     onClick={e => { e.stopPropagation(); onSelectField(field.id) }}
-                    className="h-6 rounded-lg px-2 text-[11px] hover:bg-teal-deep/10 transition-colors"
-                    style={{ color: 'var(--brand-teal-deep, #2a8b8f)', fontFamily: 'var(--font-body)' }}
+                    className="h-6 rounded-lg px-2 text-[11px] hover:bg-teal-deep/10 transition-colors text-[var(--brand-teal-deep,#2a8b8f)] font-body"
                   >
                     Editar
                   </button>
@@ -175,24 +171,20 @@ export function FormCanvas({
                   </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              <div className="flex flex-wrap gap-1">
                 {selectedLabels.length > 0
                   ? selectedLabels.map(label => (
                     <span
                       key={label}
-                      style={{
-                        fontSize: 10, padding: '2px 8px', borderRadius: 999,
-                        background: 'rgba(112,189,194,.18)', color: 'var(--brand-teal-deep, #2a8b8f)',
-                        fontWeight: 500, fontFamily: 'var(--font-body)',
-                      }}
+                      className="text-[10px] py-0.5 px-2 rounded-full bg-[rgba(112,189,194,.18)] text-[var(--brand-teal-deep,#2a8b8f)] font-medium font-body"
                     >
                       {label}
                     </span>
                   ))
-                  : <span style={{ fontSize: 11, color: 'var(--fg-muted, #8c8fb0)', fontFamily: 'var(--font-body)' }}>Sin campos seleccionados — hacé clic en Editar</span>
+                  : <span className="text-[11px] text-[var(--fg-muted,#8c8fb0)] font-body">Sin campos seleccionados — hacé clic en Editar</span>
                 }
               </div>
-              {isActive && <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full" style={{ background: 'var(--brand-teal-deep, #2a8b8f)' }} />}
+              {isActive && <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[var(--brand-teal-deep,#2a8b8f)]" />}
             </div>
           )
         }
@@ -211,10 +203,10 @@ export function FormCanvas({
               isActive ? 'border-coral shadow-sm' : 'hover:border-navy/20',
               isDragging ? 'opacity-30' : 'opacity-100',
               isOver ? 'ring-2 ring-coral/40' : '',
-              field.type === 'section' ? 'py-3 px-4' : 'p-4'
+              field.type === 'section' ? 'py-3 px-4' : 'p-4',
+              'bg-surface-card'
             )}
             style={{
-              background: 'var(--surface-card)',
               borderColor: isActive ? undefined : 'var(--outline-variant)',
               boxShadow: isActive ? undefined : 'var(--shadow-md)',
             }}
@@ -255,11 +247,11 @@ export function FormCanvas({
               ) : (
                 <div className="flex-1 space-y-2 min-w-0">
                   <div className="flex items-start gap-2">
-                    <div className="shrink-0 h-5 w-5 rounded flex items-center justify-center mt-0.5" style={{ background: 'var(--surface-low)' }}>
+                    <div className="shrink-0 h-5 w-5 rounded flex items-center justify-center mt-0.5 bg-surface-low">
                       <FieldTypeIcon type={field.type} size={11} className="text-navy-light/50" />
                     </div>
                     <div className="flex-1 min-w-0 flex items-start gap-2">
-                      <p className="text-[13px] font-semibold text-navy leading-snug flex-1" style={{ fontFamily: 'var(--font-display)' }}>
+                      <p className="text-[13px] font-semibold text-navy leading-snug flex-1 font-display">
                         {field.label || <span className="text-navy-light/30 italic">Sin etiqueta</span>}
                         {field.is_required && <span className="ml-1 text-coral text-[11px]">*</span>}
                       </p>
@@ -276,7 +268,7 @@ export function FormCanvas({
                     </div>
                   </div>
                   {field.helper_text && (
-                    <p className="text-[11px] text-navy-light/40 ml-7" style={{ fontFamily: 'var(--font-body)' }}>{field.helper_text}</p>
+                    <p className="text-[11px] text-navy-light/40 ml-7 font-body">{field.helper_text}</p>
                   )}
                   <div className="pointer-events-none">
                     <FieldPreview field={field} compact />

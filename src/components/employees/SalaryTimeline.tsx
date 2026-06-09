@@ -45,15 +45,15 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
                 )}
               />
               {idx < items.length - 1 && (
-                <div className="flex-1 w-px bg-outline-variant mt-1" style={{ background: 'var(--outline-variant)' }} />
+                <div className="flex-1 w-px mt-1 bg-[var(--outline-variant)]" />
               )}
             </div>
             {/* Content */}
             <div className={cn('pb-5', idx === items.length - 1 && 'pb-0')}>
-              <p className="text-[11px] text-navy-light/40 mb-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+              <p className="text-[11px] text-navy-light/40 mb-0.5 font-mono">
                 {new Date(item.date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
               </p>
-              <p className="text-sm font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-sm font-semibold text-navy font-display">
                 ₡{item.salary.toLocaleString('es-CR')}
                 {pct && (
                   <span className="ml-2 text-[11px] font-medium text-teal-deep">
@@ -61,11 +61,11 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
                   </span>
                 )}
               </p>
-              <p className="text-[12px] text-navy-light/60 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
                 {item.reason}
               </p>
               {item.approvedBy && (
-                <p className="text-[11px] text-navy-light/40 mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[11px] text-navy-light/40 mt-0.5 font-body">
                   Aprobado por {item.approvedBy}
                 </p>
               )}

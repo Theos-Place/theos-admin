@@ -56,8 +56,8 @@ function OpToggle({ op, onToggle }: { op: 'AND' | 'OR'; onToggle: () => void }) 
         op === 'AND'
           ? 'bg-navy text-white hover:bg-navy/80'
           : 'bg-coral text-white hover:bg-coral/80',
+        'font-display',
       )}
-      style={{ fontFamily: 'var(--font-display)' }}
       title={`Cambiar a ${op === 'AND' ? 'OR' : 'AND'}`}
     >
       {op}
@@ -87,8 +87,8 @@ function ConditionPill({
                 : 'bg-surface-low text-navy-light/70 hover:bg-navy/8 hover:text-navy',
             )
           : 'bg-navy/8 text-navy-light',
+        'font-body',
       )}
-      style={{ fontFamily: 'var(--font-body)' }}
     >
       <span>{conditionLabel(condition)}</span>
       {!groupMode && (
@@ -115,8 +115,7 @@ function GroupBracket({
 }) {
   return (
     <span
-      className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs"
-      style={{ border: '1.5px dashed var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+      className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs border-[1.5px] border-dashed border-[var(--outline-variant)] font-body"
     >
       <span className="text-[9px] text-navy-light/30 mr-0.5">(</span>
       {conditions.map((c, i) => (
@@ -129,8 +128,8 @@ function GroupBracket({
                 group.op === 'AND'
                   ? 'bg-navy/10 text-navy hover:bg-navy/20'
                   : 'bg-coral/10 text-coral hover:bg-coral/20',
+                'font-display',
               )}
-              style={{ fontFamily: 'var(--font-display)' }}
             >
               {group.op}
             </button>
@@ -211,8 +210,7 @@ export function QueryBar({
         {!groupMode && standaloneCount >= 2 && (
           <button
             onClick={toggleGroupMode}
-            className="flex items-center gap-1 rounded-full bg-surface-low px-3 py-1 text-xs text-navy-light/50 hover:bg-navy/8 hover:text-navy transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex items-center gap-1 rounded-full bg-surface-low px-3 py-1 text-xs text-navy-light/50 hover:bg-navy/8 hover:text-navy transition-colors font-body"
           >
             <Parentheses size={12} strokeWidth={1.75} />
             Agrupar
@@ -223,23 +221,22 @@ export function QueryBar({
       {/* Group mode panel */}
       {groupMode && (
         <div
-          className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2.5 text-sm"
-          style={{ background: 'var(--surface-low)', border: '1px solid var(--outline-variant)' }}
+          className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2.5 text-sm bg-surface-low border border-[var(--outline-variant)]"
         >
-          <span className="text-xs text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="text-xs text-navy-light/60 font-body">
             Seleccioná 2 o más filtros para agrupar
           </span>
 
-          <div className="flex items-center gap-1.5 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="flex items-center gap-1.5 text-xs font-body">
             <span className="text-navy-light/50">Operador:</span>
-            <span className="flex overflow-hidden rounded" style={{ border: '1px solid var(--outline-variant)' }}>
+            <span className="flex overflow-hidden rounded border border-[var(--outline-variant)]">
               <button
                 onClick={() => setNewGroupOp('AND')}
                 className={cn(
                   'px-2 py-0.5 text-[9px] font-semibold tracking-wide transition-colors',
                   newGroupOp === 'AND' ? 'bg-navy text-white' : 'text-navy-light/50 hover:bg-surface-card',
+                  'font-display',
                 )}
-                style={{ fontFamily: 'var(--font-display)' }}
               >
                 AND
               </button>
@@ -248,8 +245,8 @@ export function QueryBar({
                 className={cn(
                   'px-2 py-0.5 text-[9px] font-semibold tracking-wide transition-colors',
                   newGroupOp === 'OR' ? 'bg-coral text-white' : 'text-navy-light/50 hover:bg-surface-card',
+                  'font-display',
                 )}
-                style={{ fontFamily: 'var(--font-display)' }}
               >
                 OR
               </button>
@@ -259,16 +256,14 @@ export function QueryBar({
           <button
             onClick={confirmGroup}
             disabled={picked.size < 2}
-            className="rounded-lg bg-navy px-3 py-1 text-xs text-white transition-all hover:bg-navy/80 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-lg bg-navy px-3 py-1 text-xs text-white transition-all hover:bg-navy/80 disabled:opacity-40 disabled:cursor-not-allowed font-body"
           >
             Crear grupo ({picked.size})
           </button>
 
           <button
             onClick={cancelGroup}
-            className="text-xs text-navy-light/50 hover:text-coral transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="text-xs text-navy-light/50 hover:text-coral transition-colors font-body"
           >
             Cancelar
           </button>

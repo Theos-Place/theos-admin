@@ -40,8 +40,8 @@ function TooltipIcon({
       />
       {show && (
         <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[10px] text-white z-50"
-          style={{ background: 'var(--navy, #1e2a45)', boxShadow: 'var(--shadow-md)' }}
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[10px] text-white z-50 shadow-[var(--shadow-md)]"
+          style={{ background: 'var(--navy, #1e2a45)' }}
         >
           {tooltip}
         </div>

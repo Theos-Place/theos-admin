@@ -12,7 +12,7 @@ export function VacationTracker({ total, used, className }: VacationTrackerProps
 
   if (total === 0) {
     return (
-      <p className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+      <p className="text-[12px] text-navy-light/40 font-body">
         No aplica (servicios profesionales)
       </p>
     )
@@ -20,7 +20,7 @@ export function VacationTracker({ total, used, className }: VacationTrackerProps
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: 'var(--surface-low)' }}>
+      <div className="h-2 w-full rounded-full overflow-hidden bg-surface-low">
         <div
           className={cn(
             'h-full rounded-full transition-all duration-300',
@@ -29,7 +29,7 @@ export function VacationTracker({ total, used, className }: VacationTrackerProps
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="flex justify-between text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="flex justify-between text-[11px] text-navy-light/50 font-body">
         <span>{used} usados</span>
         <span>{available} disponibles de {total}</span>
       </div>

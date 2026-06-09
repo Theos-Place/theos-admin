@@ -27,17 +27,16 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
   const Icon = ICON_MAP[doc.type]
   return (
     <div
-      className="flex items-center gap-3 rounded-2xl p-4"
-      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+      className="flex items-center gap-3 rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]"
     >
       <div className="h-10 w-10 rounded-xl bg-navy/10 flex items-center justify-center shrink-0">
         <Icon size={18} className="text-navy" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm font-medium text-navy truncate font-body">
           {doc.name}
         </p>
-        <p className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-[11px] text-navy-light/40 font-body">
           {TYPE_LABELS[doc.type]} · {new Date(doc.uploaded_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
       </div>

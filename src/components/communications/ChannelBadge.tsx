@@ -15,7 +15,7 @@ export function ChannelBadge({ channel, size = 'md' }: Props) {
 
   if (channel === 'whatsapp') {
     return (
-      <span className={cn(base, 'bg-emerald-50 text-emerald-700')} style={{ fontFamily: 'var(--font-display)' }}>
+      <span className={cn(base, 'bg-emerald-50 text-emerald-700', 'font-display')}>
         <MessageCircle size={iconSize} />
         WhatsApp
       </span>
@@ -23,14 +23,14 @@ export function ChannelBadge({ channel, size = 'md' }: Props) {
   }
   if (channel === 'email') {
     return (
-      <span className={cn(base, 'bg-blue-50 text-blue-700')} style={{ fontFamily: 'var(--font-display)' }}>
+      <span className={cn(base, 'bg-blue-50 text-blue-700', 'font-display')}>
         <Mail size={iconSize} />
         Email
       </span>
     )
   }
   return (
-    <span className={cn(base, 'bg-violet-50 text-violet-700')} style={{ fontFamily: 'var(--font-display)' }}>
+    <span className={cn(base, 'bg-violet-50 text-violet-700', 'font-display')}>
       <MessageCircle size={iconSize} />
       <Mail size={iconSize} />
       Ambos

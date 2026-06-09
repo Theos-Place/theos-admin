@@ -33,12 +33,11 @@ export function StudyTypeBadge({ code, name, size = 'md', className }: StudyType
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-md font-semibold tracking-wide',
+        'inline-flex items-center gap-1 rounded-md font-semibold tracking-wide font-display',
         colorClass,
         sizeClass,
         className
       )}
-      style={{ fontFamily: 'var(--font-display)' }}
     >
       {code}
       {name && (

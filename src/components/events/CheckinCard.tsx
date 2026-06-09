@@ -36,27 +36,24 @@ export function CheckinCard({ member, onConfirm, onCancel }: CheckinCardProps) {
 
   return (
     <div
-      className="rounded-2xl p-6 space-y-5 w-full max-w-sm"
-      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}
+      className="rounded-2xl p-6 space-y-5 w-full max-w-sm bg-surface-card shadow-[var(--shadow-lg)]"
     >
       <div className="flex flex-col items-center gap-3">
         <div
           className={cn(
-            'h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold',
+            'h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold font-display',
             avatarColor
           )}
-          style={{ fontFamily: 'var(--font-display)' }}
         >
           {initials}
         </div>
         <div className="text-center">
           <p
-            className="text-lg font-bold text-navy"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="text-lg font-bold text-navy font-display"
           >
             {member.name}
           </p>
-          <p className="text-xs text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-xs text-navy-light/50 font-body">
             ID {member.id}
           </p>
         </div>
@@ -65,24 +62,21 @@ export function CheckinCard({ member, onConfirm, onCancel }: CheckinCardProps) {
       <div className="space-y-2">
         <button
           onClick={() => onConfirm('participant')}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-teal-deep px-5 py-3 text-sm font-medium text-white hover:opacity-90 transition-all duration-150"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-teal-deep px-5 py-3 text-sm font-medium text-white hover:opacity-90 transition-all duration-150 font-body"
         >
           <span>✓</span>
           Participante
         </button>
         <button
           onClick={() => onConfirm('server')}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-3 text-sm font-medium text-white hover:bg-coral-deep transition-all duration-150"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-3 text-sm font-medium text-white hover:bg-coral-deep transition-all duration-150 font-body"
         >
           <span>⚡</span>
           Servidor
         </button>
         <button
           onClick={onCancel}
-          className="w-full rounded-full border px-5 py-2.5 text-sm text-navy-light/60 hover:bg-surface-low transition-all duration-150"
-          style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          className="w-full rounded-full border px-5 py-2.5 text-sm text-navy-light/60 hover:bg-surface-low transition-all duration-150 border-[var(--outline-variant)] font-body"
         >
           Cancelar
         </button>

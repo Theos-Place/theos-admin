@@ -25,12 +25,11 @@ export function EventStatusBadge({ status, size = 'sm' }: EventStatusBadgeProps)
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md font-medium',
+        'inline-flex items-center gap-1.5 rounded-md font-medium font-display',
         textSize,
         padding,
         badgeStyle
       )}
-      style={{ fontFamily: 'var(--font-display)' }}
     >
       {status === 'in_progress' && (
         <span className="relative flex h-1.5 w-1.5">

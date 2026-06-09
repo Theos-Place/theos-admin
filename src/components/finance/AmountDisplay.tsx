@@ -11,7 +11,7 @@ export function AmountDisplay({ amount, defaultHidden = true, revealed: external
   const isRevealed = externalRevealed !== undefined ? externalRevealed : localRevealed
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    <span className="inline-flex items-center gap-1">
       {isRevealed
         ? `₡${amount.toLocaleString('es-CR')}`
         : '₡ •••,•••'

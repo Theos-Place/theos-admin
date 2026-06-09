@@ -21,11 +21,11 @@ export function ResponseSummaryChart({ title, items, average, type = 'bar' }: Re
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-[13px] font-semibold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+        <p className="text-[13px] font-semibold text-navy font-display">
           {title}
         </p>
         {average !== undefined && (
-          <span className="text-[12px] text-teal-deep font-semibold" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span className="text-[12px] text-teal-deep font-semibold font-mono">
             Promedio: {average.toFixed(1)} ★
           </span>
         )}
@@ -37,12 +37,11 @@ export function ResponseSummaryChart({ title, items, average, type = 'bar' }: Re
           return (
             <div key={item.label} className="flex items-center gap-2">
               <span
-                className="text-[11px] text-navy-light/60 w-24 shrink-0 truncate"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="text-[11px] text-navy-light/60 w-24 shrink-0 truncate font-body"
               >
                 {item.label}
               </span>
-              <div className="flex-1 h-5 rounded-full overflow-hidden" style={{ background: 'var(--surface-low)' }}>
+              <div className="flex-1 h-5 rounded-full overflow-hidden bg-surface-low">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-300',
@@ -51,7 +50,7 @@ export function ResponseSummaryChart({ title, items, average, type = 'bar' }: Re
                   style={{ width: `${barWidth}%` }}
                 />
               </div>
-              <span className="text-[11px] text-navy-light/50 w-20 text-right shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>
+              <span className="text-[11px] text-navy-light/50 w-20 text-right shrink-0 font-mono">
                 {item.count} ({pct}%)
               </span>
             </div>

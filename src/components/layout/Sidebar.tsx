@@ -209,7 +209,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   )}
                 >
                   <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', miembrosActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  <span className="flex-1 truncate font-body font-light">{label}</span>
                   {canViewListas && (
                     <ChevronDown size={14} className={cn('transition-transform duration-200', miembrosActive ? 'text-white rotate-180' : 'text-white/40')} />
                   )}
@@ -229,7 +229,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           )}
                         >
                           <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
+                          <span className="font-body font-light">{subLabel}</span>
                         </Link>
                       )
                     })}
@@ -253,7 +253,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   )}
                 >
                   <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', finanzasActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  <span className="flex-1 truncate font-body font-light">{label}</span>
                   <ChevronDown size={14} className={cn('transition-transform duration-200', finanzasActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
                 </Link>
                 {finanzasActive && (
@@ -271,7 +271,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           )}
                         >
                           <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
+                          <span className="font-body font-light">{subLabel}</span>
                         </Link>
                       )
                     })}
@@ -303,8 +303,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     )}
                   />
                   <span
-                    className="flex-1 truncate"
-                    style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                    className="flex-1 truncate font-body font-light"
                   >
                     {label}
                   </span>
@@ -340,7 +339,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                               subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
                             )}
                           />
-                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                          <span className="font-body font-light">
                             {subLabel}
                           </span>
                         </Link>
@@ -374,8 +373,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     )}
                   />
                   <span
-                    className="flex-1 truncate"
-                    style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                    className="flex-1 truncate font-body font-light"
                   >
                     {label}
                   </span>
@@ -411,7 +409,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                               subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
                             )}
                           />
-                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                          <span className="font-body font-light">
                             {subLabel}
                           </span>
                         </Link>
@@ -436,7 +434,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                             pathname === '/servidores/admin' ? 'text-white' : 'text-white/40 group-hover:text-white'
                           )}
                         />
-                        <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                        <span className="font-body font-light">
                           Áreas y comités
                         </span>
                       </Link>
@@ -461,7 +459,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   )}
                 >
                   <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', comunicacionesActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  <span className="flex-1 truncate font-body font-light">{label}</span>
                   <ChevronDown size={14} className={cn('transition-transform duration-200', comunicacionesActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
                 </Link>
                 {comunicacionesActive && (
@@ -479,7 +477,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           )}
                         >
                           <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
+                          <span className="font-body font-light">{subLabel}</span>
                         </Link>
                       )
                     })}
@@ -503,7 +501,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   )}
                 >
                   <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', formulariosActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{label}</span>
+                  <span className="flex-1 truncate font-body font-light">{label}</span>
                   <ChevronDown size={14} className={cn('transition-transform duration-200', formulariosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
                 </Link>
                 {formulariosActive && (
@@ -521,7 +519,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           )}
                         >
                           <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>{subLabel}</span>
+                          <span className="font-body font-light">{subLabel}</span>
                         </Link>
                       )
                     })}
@@ -553,8 +551,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       )}
                     />
                     <span
-                      className="flex-1 truncate"
-                      style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                      className="flex-1 truncate font-body font-light"
                     >
                       {label}
                     </span>
@@ -590,7 +587,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                                 subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
                               )}
                             />
-                            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                            <span className="font-body font-light">
                               {subLabel}
                             </span>
                           </Link>
@@ -624,8 +621,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       )}
                     />
                     <span
-                      className="flex-1 truncate"
-                      style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                      className="flex-1 truncate font-body font-light"
                     >
                       {label}
                     </span>
@@ -663,7 +659,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                                 subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
                               )}
                             />
-                            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>
+                            <span className="font-body font-light">
                               {subLabel}
                             </span>
                           </Link>
@@ -696,8 +692,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   )}
                 />
                 <span
-                  className="flex-1 truncate"
-                  style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                  className="flex-1 truncate font-body font-light"
                 >
                   {label}
                 </span>
@@ -730,7 +725,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     : 'text-white/50 group-hover:text-white'
                 )}
               />
-              <span style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}>Accesos</span>
+              <span className="font-body font-light">Accesos</span>
             </Link>
           </div>
         )}
@@ -740,16 +735,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           {userName && (
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
               <div
-                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold text-white"
-                style={{ background: 'rgba(255,255,255,0.15)', fontFamily: 'var(--font-display)' }}
+                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold text-white bg-[rgba(255,255,255,0.15)] font-display"
               >
                 {userName.slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] text-white truncate" style={{ fontFamily: 'var(--font-body)', fontWeight: 400 }}>
+                <p className="text-[13px] text-white truncate font-body font-normal">
                   {userName}
                 </p>
-                <p className="text-[11px] text-white/40 truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[11px] text-white/40 truncate font-body">
                   {ROLE_LABELS[userRole] ?? userRole}
                 </p>
               </div>
@@ -757,8 +751,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] text-white/50 hover:bg-white/10 hover:text-white transition-all"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] text-white/50 hover:bg-white/10 hover:text-white transition-all font-body"
           >
             <LogOut size={14} className="shrink-0" />
             Cerrar sesión

@@ -41,38 +41,38 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
   const maxVal = Math.max(...data.flatMap(d => [d.payments, d.donations]), 1)
 
   return (
-    <div className="rounded-2xl p-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+    <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
       <div className="flex items-center justify-between mb-5">
-        <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+        <p className="text-sm font-bold font-display text-navy">
           Ingresos últimos 6 meses
         </p>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm" style={{ background: '#161440' }} />
-            <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.55)' }}>Pagos</span>
+            <div className="h-2.5 w-2.5 rounded-sm bg-navy" />
+            <span className="text-[11px] font-body text-[rgba(22,20,64,0.55)]">Pagos</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm" style={{ background: '#519DA2' }} />
-            <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.55)' }}>Donaciones</span>
+            <div className="h-2.5 w-2.5 rounded-sm bg-teal-deep" />
+            <span className="text-[11px] font-body text-[rgba(22,20,64,0.55)]">Donaciones</span>
           </div>
         </div>
       </div>
 
       <div className="relative">
         {/* Y-axis guides */}
-        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none" style={{ paddingBottom: 24 }}>
+        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
           {[1, 0.75, 0.5, 0.25, 0].map(frac => (
             <div key={frac} className="flex items-center gap-2">
-              <span className="text-[10px] w-12 text-right shrink-0" style={{ color: 'rgba(22,20,64,0.30)', fontFamily: 'var(--font-body)' }}>
+              <span className="text-[10px] w-12 text-right shrink-0 text-[rgba(22,20,64,0.30)] font-body">
                 {frac === 0 ? '0' : `₡${Math.round(maxVal * frac / 1000)}k`}
               </span>
-              <div className="flex-1 border-t" style={{ borderColor: 'rgba(22,20,64,0.06)' }} />
+              <div className="flex-1 border-t border-[rgba(22,20,64,0.06)]" />
             </div>
           ))}
         </div>
 
         {/* Bars */}
-        <div className="flex items-end gap-3 ml-14" style={{ height: 180 }}>
+        <div className="flex items-end gap-3 ml-14 h-[180px]">
           {data.map(({ label, payments: pv, donations: dv }) => {
             const pH = pv > 0 ? Math.max((pv / maxVal) * 156, 4) : 0
             const dH = dv > 0 ? Math.max((dv / maxVal) * 156, 4) : 0
@@ -86,19 +86,19 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
                 }}
                 onMouseLeave={() => setTooltip(null)}
               >
-                <div className="w-full flex items-end justify-center gap-1" style={{ height: 156 }}>
+                <div className="w-full flex items-end justify-center gap-1 h-[156px]">
                   <div
-                    className="rounded-t-md transition-all duration-300 cursor-pointer"
-                    style={{ width: '44%', height: pH, background: '#161440', opacity: 0.85 }}
+                    className="rounded-t-md transition-all duration-300 cursor-pointer w-[44%] bg-navy opacity-[0.85]"
+                    style={{ height: pH }}
                     title={`Pagos: ₡${pv.toLocaleString('es-CR')}`}
                   />
                   <div
-                    className="rounded-t-md transition-all duration-300 cursor-pointer"
-                    style={{ width: '44%', height: dH, background: '#519DA2', opacity: 0.85 }}
+                    className="rounded-t-md transition-all duration-300 cursor-pointer w-[44%] bg-teal-deep opacity-[0.85]"
+                    style={{ height: dH }}
                     title={`Donaciones: ₡${dv.toLocaleString('es-CR')}`}
                   />
                 </div>
-                <span className="text-[11px] mt-2 text-center" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.50)' }}>
+                <span className="text-[11px] mt-2 text-center font-body text-[rgba(22,20,64,0.50)]">
                   {label}
                 </span>
               </div>
@@ -110,20 +110,15 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 rounded-xl px-3 py-2 text-[12px] pointer-events-none"
+          className="fixed z-50 rounded-xl px-3 py-2 text-[12px] pointer-events-none -translate-x-1/2 bg-navy text-white shadow-[0_8px_24px_rgba(22,20,64,0.25)] font-body"
           style={{
             left: tooltip.x,
             top: tooltip.y - 80,
-            transform: 'translateX(-50%)',
-            background: '#161440',
-            color: 'white',
-            boxShadow: '0 8px 24px rgba(22,20,64,0.25)',
-            fontFamily: 'var(--font-body)',
           }}
         >
           <p className="font-semibold mb-1">{tooltip.label}</p>
-          <p style={{ color: 'rgba(255,255,255,0.75)' }}>Pagos: ₡{tooltip.payments.toLocaleString('es-CR')}</p>
-          <p style={{ color: 'rgba(255,255,255,0.75)' }}>Donaciones: ₡{tooltip.donations.toLocaleString('es-CR')}</p>
+          <p className="text-[rgba(255,255,255,0.75)]">Pagos: ₡{tooltip.payments.toLocaleString('es-CR')}</p>
+          <p className="text-[rgba(255,255,255,0.75)]">Donaciones: ₡{tooltip.donations.toLocaleString('es-CR')}</p>
         </div>
       )}
     </div>

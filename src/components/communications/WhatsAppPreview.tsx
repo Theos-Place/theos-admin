@@ -25,27 +25,26 @@ export function WhatsAppPreview({ fromName, body, previewName = 'María' }: Prop
   const lines = hydrated.split('\n')
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: '#e5ddd5' }}>
+    <div className="rounded-2xl overflow-hidden bg-[#e5ddd5]">
       {/* WA Header */}
-      <div className="flex items-center gap-3 px-4 py-3" style={{ background: '#075e54' }}>
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#075e54]">
         <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-          <span className="text-[11px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+          <span className="text-[11px] font-bold text-white font-display">
             {fromName.slice(0, 2).toUpperCase()}
           </span>
         </div>
         <div>
-          <p className="text-[13px] font-semibold text-white" style={{ fontFamily: 'var(--font-body)' }}>{fromName}</p>
-          <p className="text-[11px] text-white/60" style={{ fontFamily: 'var(--font-body)' }}>En línea</p>
+          <p className="text-[13px] font-semibold text-white font-body">{fromName}</p>
+          <p className="text-[11px] text-white/60 font-body">En línea</p>
         </div>
       </div>
 
       {/* Chat area */}
       <div className="px-4 py-5 min-h-32">
         <div
-          className="inline-block max-w-[85%] rounded-2xl rounded-tl-none px-3.5 py-2.5 shadow-sm"
-          style={{ background: 'white' }}
+          className="inline-block max-w-[85%] rounded-2xl rounded-tl-none px-3.5 py-2.5 shadow-sm bg-white"
         >
-          <p className="text-[12px] leading-relaxed text-gray-800 whitespace-pre-line" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[12px] leading-relaxed text-gray-800 whitespace-pre-line font-body">
             {lines.map((line, i) => (
               <span key={i}>
                 {formatWAText(line)}
@@ -53,7 +52,7 @@ export function WhatsAppPreview({ fromName, body, previewName = 'María' }: Prop
               </span>
             ))}
           </p>
-          <p className="text-[10px] text-gray-400 text-right mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[10px] text-gray-400 text-right mt-1 font-body">
             {new Date().toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })} ✓✓
           </p>
         </div>

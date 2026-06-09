@@ -58,7 +58,7 @@ export function LeaderCard({ leader, onSelect, selected, compact }: LeaderCardPr
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm font-medium text-navy truncate font-body">
             {leader.member_name}
           </p>
           <p className="text-[11px] text-navy-light/50">{leader.zone_preference.map(id => sedeLabel(id)).join(' · ')}</p>
@@ -73,11 +73,10 @@ export function LeaderCard({ leader, onSelect, selected, compact }: LeaderCardPr
   return (
     <div
       className={cn(
-        'rounded-2xl p-4 flex flex-col gap-3 transition-all',
+        'rounded-2xl p-4 flex flex-col gap-3 transition-all bg-surface-card shadow-[var(--shadow-md)]',
         selected ? 'ring-2 ring-coral' : '',
         onSelect ? 'cursor-pointer hover:shadow-lg' : ''
       )}
-      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
       onClick={() => onSelect?.(leader.id)}
     >
       {/* Header */}
@@ -87,8 +86,7 @@ export function LeaderCard({ leader, onSelect, selected, compact }: LeaderCardPr
         </div>
         <div className="flex-1 min-w-0">
           <p
-            className="font-semibold text-navy leading-tight truncate"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="font-semibold text-navy leading-tight truncate font-display"
           >
             {leader.member_name}
           </p>
@@ -108,8 +106,7 @@ export function LeaderCard({ leader, onSelect, selected, compact }: LeaderCardPr
 
       {/* Stats */}
       <div
-        className="flex items-center gap-4 text-[11px] text-navy-light/60 border-t pt-3"
-        style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+        className="flex items-center gap-4 text-[11px] text-navy-light/60 border-t pt-3 border-[var(--outline-variant)] font-body"
       >
         <span><strong className="text-navy">{leader.stats.groups_led}</strong> grupos</span>
         <span><strong className="text-navy">{leader.stats.avg_rating.toFixed(1)}</strong> ⭐</span>

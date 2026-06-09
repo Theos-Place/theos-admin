@@ -25,7 +25,7 @@ export function VariableChips({ onInsert, available }: Props) {
 
   return (
     <div className="space-y-2">
-      <p className="text-[10px] uppercase tracking-widests text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+      <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
         Variables disponibles
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -39,7 +39,7 @@ export function VariableChips({ onInsert, available }: Props) {
               'rounded-full border px-2.5 py-1 text-[11px] font-mono text-navy-light transition-all',
               'hover:bg-navy hover:text-white hover:border-navy active:scale-95'
             )}
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-mono)' }}
+            style={{ borderColor: 'var(--outline-variant)' }}
           >
             {v.key}
           </button>

@@ -22,8 +22,7 @@ export function SalaryBadge({ amount, className, size = 'md' }: SalaryBadgeProps
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <span
-        className={cn(textSize, 'font-semibold tabular-nums', visible ? 'text-navy' : 'text-navy-light/40')}
-        style={{ fontFamily: 'var(--font-mono)' }}
+        className={cn(textSize, 'font-semibold tabular-nums font-mono', visible ? 'text-navy' : 'text-navy-light/40')}
       >
         {visible ? formatted : hidden}
       </span>

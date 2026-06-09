@@ -97,12 +97,11 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-md rounded-2xl bg-surface-card p-5 space-y-4"
-        style={{ boxShadow: 'var(--shadow-lg)' }}
+        className="relative w-full max-w-md rounded-2xl bg-surface-card p-5 space-y-4 shadow-[var(--shadow-lg)]"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <h3 className="text-base font-bold text-navy font-display">
             Agregar integrante
           </h3>
           <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors"><X size={18} /></button>
@@ -115,10 +114,10 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               key={m}
               onClick={() => { setMode(m); setError(null) }}
               className={cn(
-                'flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-medium border transition-all',
+                'flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-medium border transition-all font-body',
                 mode === m ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:bg-surface-low',
               )}
-              style={{ borderColor: mode === m ? undefined : 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              style={{ borderColor: mode === m ? undefined : 'var(--outline-variant)' }}
             >
               <Icon size={13} /> {label}
             </button>
@@ -133,30 +132,29 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               value={cedula}
               onChange={e => { setCedula(e.target.value); setError(null) }}
               placeholder="Cédula del integrante…"
-              className={inputCls}
-              style={{ fontFamily: 'var(--font-mono)' }}
+              className={cn(inputCls, 'font-mono')}
             />
-            {searching && <p className="text-[12px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>Buscando…</p>}
+            {searching && <p className="text-[12px] text-navy-light/40 font-body">Buscando…</p>}
 
             {found && (
               <div className="rounded-xl bg-teal-soft/15 p-3 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-teal-deep flex items-center justify-center text-[11px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                  <div className="h-9 w-9 rounded-full bg-teal-deep flex items-center justify-center text-[11px] font-bold text-white font-display">
                     {(found.first_name[0] + found.last_name[0]).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-navy flex items-center gap-1" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-sm text-navy flex items-center gap-1 font-body">
                       <UserCheck size={13} className="text-teal-deep" /> {found.first_name} {found.last_name}
                     </p>
                     <p className="text-[11px] text-navy-light/50">{found.cedula}</p>
                   </div>
                 </div>
-                <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={inputCls} style={{ fontFamily: 'var(--font-body)' }}>
+                <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
                   <option value="">Relación…</option>
                   {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
-                {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
-                <button onClick={addLinked} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
+                {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+                <button onClick={addLinked} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
                   Vincular integrante
                 </button>
               </div>
@@ -164,10 +162,10 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
 
             {searched && !found && !searching && cedula.trim().length >= 4 && (
               <div className="rounded-xl bg-surface-low p-3 text-center space-y-2">
-                <p className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-navy-light/60 font-body">
                   No se encontró a nadie con esa cédula.
                 </p>
-                <button onClick={() => { setMode('new'); setError(null) }} className="text-[12px] font-medium text-coral hover:underline" style={{ fontFamily: 'var(--font-body)' }}>
+                <button onClick={() => { setMode('new'); setError(null) }} className="text-[12px] font-medium text-coral hover:underline font-body">
                   Crear integrante nuevo →
                 </button>
               </div>
@@ -179,30 +177,30 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
         {mode === 'new' && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Nombre" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} />
-              <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder={defaultLastName || 'Apellidos'} className={inputCls} style={{ fontFamily: 'var(--font-body)' }} />
+              <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Nombre" className={cn(inputCls, 'font-body')} />
+              <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder={defaultLastName || 'Apellidos'} className={cn(inputCls, 'font-body')} />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <input value={cedula} onChange={e => setCedula(e.target.value)} placeholder="Cédula (opcional)" className={inputCls} style={{ fontFamily: 'var(--font-mono)' }} />
+              <input value={cedula} onChange={e => setCedula(e.target.value)} placeholder="Cédula (opcional)" className={cn(inputCls, 'font-mono')} />
               <div className="relative">
-                <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className={inputCls} style={{ fontFamily: 'var(--font-body)' }} />
+                <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className={cn(inputCls, 'font-body')} />
                 {isMinor && (
-                  <span className="absolute -top-2 right-2 rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>Menor</span>
+                  <span className="absolute -top-2 right-2 rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white font-display">Menor</span>
                 )}
               </div>
             </div>
             {!isMinor && (
               <div className="grid grid-cols-2 gap-3">
-                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Teléfono" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Correo" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} />
+                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Teléfono" className={cn(inputCls, 'font-body')} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Correo" className={cn(inputCls, 'font-body')} />
               </div>
             )}
-            <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={inputCls} style={{ fontFamily: 'var(--font-body)' }}>
+            <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
               <option value="">Relación…</option>
               {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
-            {error && <p className="text-[12px] text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
-            <button onClick={addNew} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
+            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+            <button onClick={addNew} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
               Agregar integrante
             </button>
           </div>

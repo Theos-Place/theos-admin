@@ -46,38 +46,34 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+    <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
         <button
           onClick={onPrev}
-          className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display"
         >
           ‹
         </button>
         <h3
-          className="text-sm font-semibold text-navy"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="text-sm font-semibold text-navy font-display"
         >
           {MONTH_NAMES[month]} {year}
         </h3>
         <button
           onClick={onNext}
-          className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display"
         >
           ›
         </button>
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+      <div className="grid grid-cols-7 border-b border-[var(--outline-variant)]">
         {DAY_LABELS.map(d => (
           <div
             key={d}
-            className="py-2 text-center text-[10px] tracking-widest uppercase text-navy-light/40"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="py-2 text-center text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
           >
             {d}
           </div>
@@ -98,20 +94,18 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
             <div
               key={i}
               className={cn(
-                'min-h-[80px] p-1.5 border-b border-r',
+                'min-h-[80px] p-1.5 border-b border-r border-[var(--outline-variant)]',
                 isWeekend && 'bg-surface-low/40',
                 !day && 'opacity-0 pointer-events-none'
               )}
-              style={{ borderColor: 'var(--outline-variant)' }}
             >
               {day && (
                 <>
                   <div
                     className={cn(
-                      'h-6 w-6 flex items-center justify-center rounded-full mb-1 text-[12px] font-medium',
+                      'h-6 w-6 flex items-center justify-center rounded-full mb-1 text-[12px] font-medium font-display',
                       isToday ? 'bg-coral text-white' : 'text-navy-light/60'
                     )}
-                    style={{ fontFamily: 'var(--font-display)' }}
                   >
                     {day}
                   </div>
@@ -124,17 +118,16 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                           key={ev.id}
                           onClick={() => onEventClick?.(ev.id)}
                           className={cn(
-                            'w-full text-left rounded px-1.5 py-0.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80',
+                            'w-full text-left rounded px-1.5 py-0.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80 font-body',
                             colorClass
                           )}
-                          style={{ fontFamily: 'var(--font-body)' }}
                         >
                           {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                         </button>
                       )
                     })}
                     {dayEvents.length > 3 && (
-                      <p className="text-[9px] text-navy-light/40 px-1" style={{ fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[9px] text-navy-light/40 px-1 font-body">
                         +{dayEvents.length - 3} más
                       </p>
                     )}

@@ -45,8 +45,7 @@ export function NotificationsBell() {
         <Bell size={20} strokeWidth={1.75} />
         {count > 0 && (
           <span
-            className="absolute top-0.5 right-0.5 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1"
-            style={{ background: '#EF5554', fontFamily: 'var(--font-display)' }}
+            className="absolute top-0.5 right-0.5 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1 bg-coral font-display"
           >
             {count}
           </span>
@@ -55,23 +54,17 @@ export function NotificationsBell() {
 
       {open && (
         <div
-          className="absolute right-0 top-[calc(100%+8px)] w-80 rounded-2xl overflow-hidden z-50"
-          style={{
-            background: 'var(--surface-card)',
-            boxShadow: '0 20px 48px rgba(22,20,64,0.14)',
-            border: '1px solid var(--outline-variant)',
-          }}
+          className="absolute right-0 top-[calc(100%+8px)] w-80 rounded-2xl overflow-hidden z-50 bg-surface-card shadow-[0_20px_48px_rgba(22,20,64,0.14)] border border-[var(--outline-variant)]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--outline-variant)]">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="text-sm font-bold text-navy font-display">
                 Alertas
               </span>
               {count > 0 && (
                 <span
-                  className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full text-[10px] font-bold text-white px-1.5"
-                  style={{ background: '#EF5554', fontFamily: 'var(--font-display)' }}
+                  className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full text-[10px] font-bold text-white px-1.5 bg-coral font-display"
                 >
                   {count}
                 </span>
@@ -82,7 +75,7 @@ export function NotificationsBell() {
           {/* Alerts list */}
           <div className="max-h-[340px] overflow-y-auto">
             {count === 0 && (
-              <p className="px-4 py-8 text-center text-[13px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="px-4 py-8 text-center text-[13px] text-navy-light/40 font-body">
                 Todo al día. No hay alertas pendientes.
               </p>
             )}
@@ -93,13 +86,12 @@ export function NotificationsBell() {
                   key={a.id}
                   href={a.url}
                   onClick={() => setOpen(false)}
-                  className="flex items-start gap-3 px-4 py-3.5 hover:bg-surface-low transition-colors border-b last:border-b-0"
-                  style={{ borderColor: 'var(--outline-variant)' }}
+                  className="flex items-start gap-3 px-4 py-3.5 hover:bg-surface-low transition-colors border-b last:border-b-0 border-[var(--outline-variant)]"
                 >
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: cfg.bg }}>
                     <cfg.Icon size={14} style={{ color: cfg.color }} />
                   </div>
-                  <p className="flex-1 text-[13px] leading-snug text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="flex-1 text-[13px] leading-snug text-navy font-body">
                     {a.message}
                   </p>
                 </Link>
@@ -108,12 +100,11 @@ export function NotificationsBell() {
           </div>
 
           {/* Footer */}
-          <div className="border-t px-4 py-3" style={{ borderColor: 'var(--outline-variant)' }}>
+          <div className="border-t px-4 py-3 border-[var(--outline-variant)]">
             <Link
               href="/notificaciones"
               onClick={() => setOpen(false)}
-              className="text-[12px] text-navy-light/50 hover:text-navy transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="text-[12px] text-navy-light/50 hover:text-navy transition-colors font-body"
             >
               Ver todas las alertas →
             </Link>

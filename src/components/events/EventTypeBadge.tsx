@@ -32,7 +32,7 @@ export function EventTypeBadge({ type, size = 'sm' }: EventTypeBadgeProps) {
   const textSize = size === 'md' ? 'text-sm' : 'text-[11px]'
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5', textSize, textColor)} style={{ fontFamily: 'var(--font-body)' }}>
+    <span className={cn('inline-flex items-center gap-1.5 font-body', textSize, textColor)}>
       <span className={cn('rounded-full shrink-0', dotColor, dotSize)} />
       {config.label}
     </span>

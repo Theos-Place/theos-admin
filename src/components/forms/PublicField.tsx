@@ -10,18 +10,17 @@ interface PublicFieldProps {
 }
 
 export function PublicField({ field, value, onChange }: PublicFieldProps) {
-  const inputBase = 'w-full rounded-xl border px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 transition-colors'
-  const borderStyle = { borderColor: 'var(--outline-variant)', background: 'var(--surface-low)' }
+  const inputBase = 'w-full rounded-xl border px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 transition-colors border-[var(--outline-variant)] bg-surface-low'
 
   if (field.type === 'section') {
     return (
       <div className="pt-4">
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
-          <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="flex-1 h-px bg-[var(--outline-variant)]" />
+          <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/40 font-display">
             {field.label}
           </span>
-          <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
+          <div className="flex-1 h-px bg-[var(--outline-variant)]" />
         </div>
       </div>
     )
@@ -39,7 +38,6 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         value={field.type === 'number' ? (numVal ?? '') : stringVal}
         onChange={e => onChange(field.type === 'number' ? Number(e.target.value) : e.target.value)}
         className={inputBase}
-        style={borderStyle}
       />
     )
   }
@@ -51,7 +49,6 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         value={stringVal}
         onChange={e => onChange(e.target.value)}
         className={inputBase}
-        style={borderStyle}
       />
     )
   }
@@ -64,7 +61,6 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         value={stringVal}
         onChange={e => onChange(e.target.value)}
         className={cn(inputBase, 'resize-none')}
-        style={borderStyle}
       />
     )
   }
@@ -75,7 +71,6 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         value={stringVal}
         onChange={e => onChange(e.target.value)}
         className={inputBase}
-        style={borderStyle}
       >
         <option value="">Seleccionar...</option>
         {field.options?.map(o => <option key={o} value={o}>{o}</option>)}
@@ -103,7 +98,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
               checked={stringVal === o}
               onChange={() => onChange(o)}
             />
-            <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{o}</span>
+            <span className="text-sm text-navy font-body">{o}</span>
           </label>
         ))}
       </div>
@@ -132,7 +127,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
                   onChange(checked ? arrayVal.filter(v => v !== o) : [...arrayVal, o])
                 }}
               />
-              <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{o}</span>
+              <span className="text-sm text-navy font-body">{o}</span>
             </label>
           )
         })}
@@ -153,14 +148,13 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
               type="button"
               onClick={() => onChange(n)}
               className={cn(
-                'h-10 w-10 rounded-xl text-sm font-semibold border transition-all',
+                'h-10 w-10 rounded-xl text-sm font-semibold border transition-all font-mono',
                 numVal === n
                   ? 'bg-coral text-white border-coral'
                   : 'hover:bg-surface-low text-navy-light/60 border-outline-variant'
               )}
               style={{
                 borderColor: numVal === n ? undefined : 'var(--outline-variant)',
-                fontFamily: 'var(--font-mono)',
               }}
             >
               {n}
@@ -169,8 +163,8 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         </div>
         {(field.scale_min_label || field.scale_max_label) && (
           <div className="flex justify-between px-1">
-            <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>{field.scale_min_label}</span>
-            <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>{field.scale_max_label}</span>
+            <span className="text-[11px] text-navy-light/40 font-body">{field.scale_min_label}</span>
+            <span className="text-[11px] text-navy-light/40 font-body">{field.scale_max_label}</span>
           </div>
         )}
       </div>
@@ -186,14 +180,13 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
             type="button"
             onClick={() => onChange(v)}
             className={cn(
-              'flex-1 rounded-xl border py-3 text-sm font-semibold transition-all',
+              'flex-1 rounded-xl border py-3 text-sm font-semibold transition-all font-body',
               stringVal === v
                 ? v === 'Sí' ? 'bg-teal-deep text-white border-teal-deep' : 'bg-coral text-white border-coral'
                 : 'text-navy-light/60 hover:bg-surface-low'
             )}
             style={{
               borderColor: stringVal === v ? undefined : 'var(--outline-variant)',
-              fontFamily: 'var(--font-body)',
             }}
           >
             {v}

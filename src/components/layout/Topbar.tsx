@@ -56,12 +56,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
 
   return (
     <header
-      className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b px-4 lg:px-6"
-      style={{
-        background: 'var(--glass-bg)',
-        backdropFilter: 'var(--glass-blur)',
-        borderColor: 'var(--outline-variant)',
-      }}
+      className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b px-4 lg:px-6 bg-[var(--glass-bg)] [backdrop-filter:var(--glass-blur)] border-[var(--outline-variant)]"
     >
       {/* Hamburger — mobile only */}
       <button
@@ -74,8 +69,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
 
       {/* Page title */}
       <h1
-        className="text-lg text-navy shrink-0"
-        style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.01em' }}
+        className="text-lg text-navy shrink-0 font-display font-extrabold tracking-[-0.01em]"
       >
         {title}
       </h1>
@@ -89,8 +83,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
         <input
           type="search"
           placeholder="Buscar…"
-          className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none"
-          style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+          className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body font-light"
         />
       </div>
 
@@ -104,8 +97,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
           className="flex items-center gap-1.5 rounded-full hover:bg-surface-low transition-colors pl-1 pr-1 py-1"
         >
           <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy text-white text-xs font-bold tracking-wide"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy text-white text-xs font-bold tracking-wide font-display"
           >
             {userInitials}
           </div>
@@ -117,35 +109,27 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
 
         {menuOpen && (
           <div
-            className="absolute right-0 top-[calc(100%+8px)] w-64 rounded-2xl overflow-hidden"
-            style={{
-              background: 'var(--surface-card)',
-              boxShadow: '0 20px 48px rgba(22,20,64,0.14)',
-              border: '1px solid var(--outline-variant)',
-              zIndex: 50,
-            }}
+            className="absolute right-0 top-[calc(100%+8px)] w-64 rounded-2xl overflow-hidden bg-surface-card shadow-[0_20px_48px_rgba(22,20,64,0.14)] border border-[var(--outline-variant)] z-50"
           >
             {/* User info */}
             <div
-              className="px-4 py-3.5 border-b"
-              style={{ borderColor: 'var(--outline-variant)' }}
+              className="px-4 py-3.5 border-b border-[var(--outline-variant)]"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white"
-                  style={{ background: '#161440', fontFamily: 'var(--font-display)' }}
+                  className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white bg-navy font-display"
                 >
                   {userInitials}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-sm font-semibold text-navy truncate font-body">
                     {user?.name ?? 'Usuario'}
                   </p>
-                  <p className="text-[11px] text-navy-light/50 truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[11px] text-navy-light/50 truncate font-body">
                     {user?.email ?? ''}
                   </p>
                   {roleLabel && (
-                    <p className="text-[11px] text-teal-deep mt-0.5 truncate" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[11px] text-teal-deep mt-0.5 truncate font-body">
                       {roleLabel}
                     </p>
                   )}
@@ -158,8 +142,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
               <Link
                 href={user?.member_id ? `/miembros/${user.member_id}` : '#'}
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 <User size={15} className="text-navy-light/50 shrink-0" />
                 Mi perfil
@@ -167,19 +150,17 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
               <Link
                 href="/configuracion"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 <Settings size={15} className="text-navy-light/50 shrink-0" />
                 Configuración
               </Link>
             </div>
 
-            <div className="border-t py-1.5" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="border-t py-1.5 border-[var(--outline-variant)]">
               <button
                 onClick={() => { setMenuOpen(false); handleLogout() }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body"
               >
                 <LogOut size={15} className="shrink-0" />
                 Cerrar sesión

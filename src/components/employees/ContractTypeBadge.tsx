@@ -11,13 +11,12 @@ export function ContractTypeBadge({ type, size = 'md' }: ContractTypeBadgeProps)
   return (
     <span
       className={cn(
-        'rounded-full px-2.5 py-0.5 font-semibold',
+        'rounded-full px-2.5 py-0.5 font-semibold font-display',
         textSize,
         type === 'planilla'
           ? 'bg-navy/10 text-navy'
           : 'bg-teal-deep/10 text-teal-deep'
       )}
-      style={{ fontFamily: 'var(--font-display)' }}
     >
       {type === 'planilla' ? 'Planilla' : 'Servicios prof.'}
     </span>

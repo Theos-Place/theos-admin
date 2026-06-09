@@ -10,16 +10,12 @@ export function ExpandableDescription({ text, maxLength = 120 }: { text?: string
   const displayed = expanded || !isLong ? text : text.slice(0, maxLength) + '...'
 
   return (
-    <div style={{ fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.5, fontFamily: 'var(--font-body)' }}>
+    <div className="text-[12px] text-[var(--fg-muted)] leading-[1.5] font-body">
       {displayed}
       {isLong && (
         <button
           onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--brand-coral)', fontSize: 11, fontWeight: 600,
-            padding: '0 0 0 4px',
-          }}
+          className="bg-transparent border-none cursor-pointer text-coral text-[11px] font-semibold py-0 pr-0 pl-1"
         >
           {expanded ? 'Ver menos' : 'Ver más'}
         </button>

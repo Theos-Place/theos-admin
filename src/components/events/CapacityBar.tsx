@@ -22,8 +22,7 @@ export function CapacityBar({ current, max, showLabel = true }: CapacityBarProps
       </div>
       {showLabel && (
         <span
-          className="text-[11px] text-navy-light/60 whitespace-nowrap"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="text-[11px] text-navy-light/60 whitespace-nowrap font-body"
         >
           {current}/{max}
         </span>

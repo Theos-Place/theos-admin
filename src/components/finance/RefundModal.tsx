@@ -43,26 +43,26 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(22,20,64,0.40)', backdropFilter: 'blur(4px)' }}>
-      <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] [backdrop-filter:blur(4px)]">
+      <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: 'var(--outline-variant)' }}>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--outline-variant)]">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(239,85,84,0.10)' }}>
-              <AlertTriangle size={17} style={{ color: '#EF5554' }} />
+            <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-[rgba(239,85,84,0.10)]">
+              <AlertTriangle size={17} className="text-coral" />
             </div>
             <div>
-              <p className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: '#161440' }}>
+              <p className="text-sm font-bold font-display text-navy">
                 Solicitar devolución
               </p>
-              <p className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.45)' }}>
+              <p className="text-[11px] font-body text-[rgba(22,20,64,0.45)]">
                 {payment.member_name}
               </p>
             </div>
           </div>
           <button onClick={onClose}>
-            <X size={18} style={{ color: 'rgba(22,20,64,0.40)' }} />
+            <X size={18} className="text-[rgba(22,20,64,0.40)]" />
           </button>
         </div>
 
@@ -70,14 +70,14 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
         <div className="px-6 py-5 space-y-5">
 
           {/* Summary */}
-          <div className="rounded-xl p-4 space-y-2" style={{ background: 'rgba(22,20,64,0.03)', border: '1px solid rgba(22,20,64,0.08)' }}>
-            <div className="flex justify-between text-[13px]" style={{ fontFamily: 'var(--font-body)' }}>
-              <span style={{ color: 'rgba(22,20,64,0.55)' }}>Concepto</span>
-              <span style={{ color: '#161440' }} className="font-medium">{payment.entity_name}</span>
+          <div className="rounded-xl p-4 space-y-2 bg-[rgba(22,20,64,0.03)] border border-[rgba(22,20,64,0.08)]">
+            <div className="flex justify-between text-[13px] font-body">
+              <span className="text-[rgba(22,20,64,0.55)]">Concepto</span>
+              <span className="text-navy font-medium">{payment.entity_name}</span>
             </div>
-            <div className="flex justify-between text-[13px]" style={{ fontFamily: 'var(--font-body)' }}>
-              <span style={{ color: 'rgba(22,20,64,0.55)' }}>Monto pagado</span>
-              <span style={{ color: '#161440' }} className="font-medium">
+            <div className="flex justify-between text-[13px] font-body">
+              <span className="text-[rgba(22,20,64,0.55)]">Monto pagado</span>
+              <span className="text-navy font-medium">
                 <AmountDisplay amount={payment.amount} defaultHidden={false} />
               </span>
             </div>
@@ -85,7 +85,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Type */}
           <div>
-            <p className="text-[11px] uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.40)]">
               Tipo de devolución
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -93,12 +93,11 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
                 <button
                   key={t}
                   onClick={() => setType(t)}
-                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left"
+                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left font-body"
                   style={{
                     borderColor: type === t ? '#EF5554' : 'var(--outline-variant)',
                     background: type === t ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)',
                     color: type === t ? '#EF5554' : 'rgba(22,20,64,0.70)',
-                    fontFamily: 'var(--font-body)',
                   }}
                 >
                   {t === 'full' ? 'Devolución completa' : 'Devolución parcial'}
@@ -110,7 +109,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
           {/* Partial amount input */}
           {type === 'partial' && (
             <div>
-              <label className="text-[11px] uppercase tracking-widest mb-1.5 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+              <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">
                 Monto a devolver (₡)
               </label>
               <input
@@ -120,26 +119,20 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
                 value={partialAmount}
                 onChange={e => setPartialAmount(e.target.value)}
                 placeholder={`Máx. ₡${payment.amount.toLocaleString('es-CR')}`}
-                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none"
-                style={{
-                  borderColor: 'var(--outline-variant)',
-                  fontFamily: 'var(--font-body)',
-                  color: '#161440',
-                }}
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
               />
             </div>
           )}
 
           {/* Reason */}
           <div>
-            <label className="text-[11px] uppercase tracking-widest mb-1.5 block" style={{ fontFamily: 'var(--font-display)', color: 'rgba(22,20,64,0.40)' }}>
+            <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">
               Motivo
             </label>
             <select
               value={reason}
               onChange={e => setReason(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
             >
               {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
@@ -151,8 +144,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
               onChange={e => setReasonDetail(e.target.value)}
               placeholder="Describí el motivo..."
               rows={3}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none"
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: '#161440' }}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy"
             />
           )}
 
@@ -164,8 +156,8 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
               border: `1px solid ${isSinpe ? 'rgba(233,185,73,0.25)' : 'rgba(61,185,122,0.20)'}`,
             }}
           >
-            <Info size={15} style={{ color: isSinpe ? '#E9B949' : '#3DB97A', marginTop: 1, flexShrink: 0 }} />
-            <p className="text-[12px] leading-relaxed" style={{ fontFamily: 'var(--font-body)', color: isSinpe ? '#9B7200' : '#1E6B42' }}>
+            <Info size={15} className="mt-px shrink-0" style={{ color: isSinpe ? '#E9B949' : '#3DB97A' }} />
+            <p className="text-[12px] leading-relaxed font-body" style={{ color: isSinpe ? '#9B7200' : '#1E6B42' }}>
               {isSinpe
                 ? 'Este pago fue por SINPE. La devolución requiere procesamiento manual — el equipo de finanzas coordinará la transferencia.'
                 : 'Este pago fue por tarjeta y se procesará automáticamente a través de la pasarela de pago.'}
@@ -174,18 +166,16 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t flex gap-3" style={{ borderColor: 'var(--outline-variant)' }}>
+        <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
           <button
             onClick={onClose}
-            className="flex-1 rounded-full border py-2.5 text-sm transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)', color: 'rgba(22,20,64,0.70)' }}
+            className="flex-1 rounded-full border py-2.5 text-sm transition-colors border-[var(--outline-variant)] font-body text-[rgba(22,20,64,0.70)]"
           >
             Cancelar
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 rounded-full py-2.5 text-sm text-white transition-colors"
-            style={{ background: '#EF5554', fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-full py-2.5 text-sm text-white transition-colors bg-coral font-body"
           >
             {isSinpe ? 'Crear solicitud' : 'Procesar automáticamente'}
           </button>

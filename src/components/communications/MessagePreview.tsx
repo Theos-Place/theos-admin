@@ -16,15 +16,12 @@ export function MessagePreview({ channel, subject, waBody, emailBody }: Props) {
       )}
 
       {channel === 'both' && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          margin: '16px 0', color: 'var(--fg-muted)', fontSize: 11,
-        }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--outline)' }} />
-          <span style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', color: 'var(--navy-light)', opacity: 0.4 }}>
+        <div className="flex items-center gap-2 my-4 text-[var(--fg-muted)] text-[11px]">
+          <div className="flex-1 h-px bg-[var(--outline)]" />
+          <span className="font-display tracking-[0.08em] text-[var(--navy-light)] opacity-40">
             Y TAMBIÉN
           </span>
-          <div style={{ flex: 1, height: 1, background: 'var(--outline)' }} />
+          <div className="flex-1 h-px bg-[var(--outline)]" />
         </div>
       )}
 

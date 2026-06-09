@@ -49,7 +49,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
     if (active) onChange(`${freq}:${d}`)
   }
 
-  const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+  const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
   return (
     <div className="space-y-3">
@@ -68,7 +68,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
             )}
           />
         </div>
-        <span className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+        <span className="text-sm text-navy font-body">
           {active ? 'Evento recurrente' : 'Sin recurrencia'}
         </span>
       </label>
@@ -77,7 +77,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
         <div className="space-y-3 pl-2 border-l-2 border-coral/20 ml-1">
           {/* Frecuencia */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
               Frecuencia
             </p>
             <div className="flex gap-2">
@@ -87,10 +87,10 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
                   type="button"
                   onClick={() => handleFreqChange(f)}
                   className={cn(
-                    'rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all',
+                    'rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all font-display',
                     freq === f ? 'bg-navy text-white border-navy' : 'text-navy-light hover:bg-surface-low'
                   )}
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
+                  style={{ borderColor: 'var(--outline-variant)' }}
                 >
                   {f === 'WEEKLY' ? 'Semanal' : 'Mensual'}
                 </button>
@@ -100,7 +100,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
 
           {/* Día */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
               Día de la semana
             </p>
             <div className="flex gap-1.5">
@@ -110,10 +110,10 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
                   type="button"
                   onClick={() => handleDayChange(d.key)}
                   className={cn(
-                    'h-8 w-8 rounded-lg text-[12px] font-medium border transition-all',
+                    'h-8 w-8 rounded-lg text-[12px] font-medium border transition-all font-display',
                     selectedDay === d.key ? 'bg-coral text-white border-coral' : 'text-navy-light hover:bg-surface-low'
                   )}
-                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
+                  style={{ borderColor: 'var(--outline-variant)' }}
                 >
                   {d.label}
                 </button>
@@ -123,13 +123,12 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
 
           {/* Fin de recurrencia */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
               Fecha de fin (opcional)
             </p>
             <input
               type="date"
               className={inputCls}
-              style={{ fontFamily: 'var(--font-body)' }}
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
             />

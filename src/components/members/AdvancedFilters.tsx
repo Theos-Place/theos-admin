@@ -39,8 +39,7 @@ const QTY_OPS: { value: QtyOperator; label: string }[] = [
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-1.5 text-[10px] tracking-widest uppercase text-navy-light/40"
-      style={{ fontFamily: 'var(--font-display)' }}>
+    <p className="mb-1.5 text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
       {children}
     </p>
   )
@@ -55,10 +54,9 @@ function Sel({ value, onChange, children, className }: {
       value={value}
       onChange={e => onChange(e.target.value)}
       className={cn(
-        'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30',
+        'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body',
         className,
       )}
-      style={{ fontFamily: 'var(--font-body)' }}
     >
       {children}
     </select>
@@ -71,11 +69,9 @@ function DateRange({ from, to, onFrom, onTo }: {
   return (
     <div className="flex gap-2">
       <input type="date" value={from} onChange={e => onFrom(e.target.value)}
-        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30"
-        style={{ fontFamily: 'var(--font-body)' }} />
+        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
       <input type="date" value={to} onChange={e => onTo(e.target.value)}
-        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30"
-        style={{ fontFamily: 'var(--font-body)' }} />
+        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
     </div>
   )
 }
@@ -95,7 +91,7 @@ function RadioGroup<T extends string>({ options, value, onChange }: {
             onChange={() => onChange(opt.value)}
             className="accent-coral h-3 w-3"
           />
-          <span className="text-xs text-navy-light/70 select-none" style={{ fontFamily: 'var(--font-body)' }}>
+          <span className="text-xs text-navy-light/70 select-none font-body">
             {opt.label}
           </span>
         </label>
@@ -109,8 +105,7 @@ function AddBtn({ onClick, disabled }: { onClick: () => void; disabled?: boolean
     <button
       onClick={onClick}
       disabled={disabled}
-      className="mt-3 w-full rounded-xl bg-navy px-3 py-2 text-sm text-white transition-all hover:bg-navy/80 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed"
-      style={{ fontFamily: 'var(--font-body)' }}
+      className="mt-3 w-full rounded-xl bg-navy px-3 py-2 text-sm text-white transition-all hover:bg-navy/80 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed font-body"
     >
       Agregar filtro
     </button>
@@ -129,22 +124,20 @@ function ConditionsList({
   const filtered = conditions.filter(c => types.includes(c.type))
   return (
     <div
-      className="rounded-xl p-3 h-full"
-      style={{ background: 'var(--surface-low)', minHeight: 120 }}
+      className="rounded-xl p-3 h-full bg-surface-low min-h-[120px]"
     >
-      <p className="mb-2 text-[10px] tracking-widest uppercase text-navy-light/30"
-        style={{ fontFamily: 'var(--font-display)' }}>
+      <p className="mb-2 text-[10px] tracking-widest uppercase text-navy-light/30 font-display">
         Filtros activos
       </p>
       {filtered.length === 0 ? (
-        <p className="text-xs text-navy-light/30 italic" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-xs text-navy-light/30 italic font-body">
           Ninguno
         </p>
       ) : (
         <div className="space-y-1.5">
           {filtered.map(c => (
             <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg bg-surface-card px-2.5 py-1.5">
-              <span className="text-xs text-navy truncate" style={{ fontFamily: 'var(--font-body)' }}>
+              <span className="text-xs text-navy truncate font-body">
                 {conditionLabel(c)}
               </span>
               <button
@@ -255,19 +248,19 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
               <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={sedes.includes(s.id)} onChange={() => toggleSede(s.id)}
                   className="accent-coral h-3.5 w-3.5 cursor-pointer" />
-                <span className="text-xs text-navy-light/70 select-none" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-xs text-navy-light/70 select-none font-body">
                   {s.name}
                 </span>
               </label>
             ))}
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/30 pt-1" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/30 pt-1 font-display">
               Sedes históricas
             </p>
             {HISTORICAL_SEDES.map(s => (
               <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={sedes.includes(s.id)} onChange={() => toggleSede(s.id)}
                   className="accent-coral h-3.5 w-3.5 cursor-pointer" />
-                <span className="text-xs text-navy-light/40 select-none" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-xs text-navy-light/40 select-none font-body">
                   {s.name}
                 </span>
               </label>
@@ -284,8 +277,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             value={camp}
             onChange={e => setCamp(e.target.value)}
             placeholder="Ej: Campamento Verano 2025"
-            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
         </div>
       )}
@@ -313,8 +305,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             <input
               type="number" min={1} value={qty} onChange={e => setQty(e.target.value)}
               placeholder="Nº"
-              className="w-20 rounded-xl bg-surface-low px-2 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-20 rounded-xl bg-surface-low px-2 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             />
           )}
         </div>
@@ -496,8 +487,7 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
                 value={fieldVal}
                 onChange={e => setFieldVal(e.target.value)}
                 placeholder="Ej: San José o San*"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
           )}
@@ -590,8 +580,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
             onChange={e => setAgeMin(e.target.value)}
             onBlur={syncAge}
             placeholder="Mín"
-            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
           <span className="text-navy-light/40 shrink-0 text-sm">–</span>
           <input
@@ -599,8 +588,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
             onChange={e => setAgeMax(e.target.value)}
             onBlur={syncAge}
             placeholder="Máx"
-            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
         </div>
       </div>
@@ -623,13 +611,11 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
 
   return (
     <div
-      className="rounded-2xl overflow-hidden"
-      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+      className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
     >
       {/* Tab bar */}
       <div
-        className="flex gap-0 border-b overflow-x-auto"
-        style={{ borderColor: 'var(--outline-variant)' }}
+        className="flex gap-0 border-b overflow-x-auto border-[var(--outline-variant)]"
       >
         {TABS.map(tab => (
           <button
@@ -640,8 +626,8 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
               activeTab === tab.key
                 ? 'text-navy border-b-2 border-navy -mb-px'
                 : 'text-navy-light/50 hover:text-navy-light',
+              'font-body',
             )}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             {tab.label}
             {conditionTypes[tab.key].some(t => conditions.some(c => c.type === t)) && (
@@ -654,9 +640,9 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
       </div>
 
       {/* Two-column body */}
-      <div className="grid gap-0" style={{ gridTemplateColumns: '1fr 260px' }}>
+      <div className="grid gap-0 grid-cols-[1fr_260px]">
         {/* Left: inputs */}
-        <div className="p-5" style={{ borderRight: '1px solid var(--outline-variant)' }}>
+        <div className="p-5 border-r border-[var(--outline-variant)]">
           {activeTab === 'study'   && <StudyPanel  addCondition={addCondition} />}
           {activeTab === 'attend'  && <AttendPanel addCondition={addCondition} />}
           {activeTab === 'service' && <ServicePanel addCondition={addCondition} />}

@@ -21,11 +21,10 @@ export function GroupStatusBadge({ status, className }: GroupStatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium font-display',
         config.className,
         className
       )}
-      style={{ fontFamily: 'var(--font-display)' }}
     >
       {config.label}
     </span>

@@ -32,12 +32,11 @@ interface Props {
 export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }: Props) {
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col gap-3"
-      style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+      className="rounded-2xl p-5 flex flex-col gap-3 bg-surface-card shadow-[var(--shadow-md)]"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-navy leading-snug" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm font-semibold text-navy leading-snug font-body">
           {template.name}
         </p>
         <ChannelBadge channel={template.channel} size="sm" />
@@ -45,16 +44,14 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
 
       {/* Category */}
       <span
-        className={cn('self-start rounded-full px-2.5 py-0.5 text-[10px] font-semibold', CATEGORY_COLORS[template.category])}
-        style={{ fontFamily: 'var(--font-display)' }}
+        className={cn('self-start rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', CATEGORY_COLORS[template.category])}
       >
         {CATEGORY_LABELS[template.category]}
       </span>
 
       {/* Body preview */}
       <p
-        className="text-[12px] text-navy-light/60 leading-relaxed line-clamp-2"
-        style={{ fontFamily: 'var(--font-body)' }}
+        className="text-[12px] text-navy-light/60 leading-relaxed line-clamp-2 font-body"
       >
         {template.body.replace(/\*/g, '').replace(/_/g, '')}
       </p>
@@ -65,8 +62,7 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
           {template.variables.map(v => (
             <span
               key={v}
-              className="rounded-full bg-navy/5 px-2 py-0.5 text-[10px] text-navy-light/60"
-              style={{ fontFamily: 'var(--font-mono)' }}
+              className="rounded-full bg-navy/5 px-2 py-0.5 text-[10px] text-navy-light/60 font-mono"
             >
               {v}
             </span>
@@ -75,8 +71,8 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'var(--outline-variant)' }}>
-        <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="flex items-center justify-between pt-1 border-t border-[var(--outline-variant)]">
+        <span className="text-[11px] text-navy-light/40 font-body">
           Usado {template.used_count} veces
         </span>
         <div className="flex items-center gap-1">
@@ -84,8 +80,7 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
             <button
               type="button"
               onClick={() => onUse(template)}
-              className="inline-flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[11px] text-white hover:bg-coral-deep transition-colors"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="inline-flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[11px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               <Send size={10} />
               Usar

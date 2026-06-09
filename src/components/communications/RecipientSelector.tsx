@@ -152,7 +152,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
             style={{ borderColor: value.mode === opt.key ? undefined : 'var(--outline-variant)' }}
           >
             <opt.icon size={16} />
-            <span className="text-[11px] font-medium leading-tight" style={{ fontFamily: 'var(--font-body)' }}>
+            <span className="text-[11px] font-medium leading-tight font-body">
               {opt.label}
             </span>
           </button>
@@ -165,19 +165,18 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
           <button
             type="button"
             onClick={onOpenFilters}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-sm text-navy-light/50 hover:border-navy/30 hover:text-navy transition-all"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-sm text-navy-light/50 hover:border-navy/30 hover:text-navy transition-all border-[var(--outline-variant)] font-body"
           >
             <Filter size={15} />
             Abrir filtros de miembros
           </button>
           {filtersLabel && (
-            <div className="rounded-xl p-3 flex items-center justify-between gap-2" style={{ background: 'var(--surface-low)' }}>
+            <div className="rounded-xl p-3 flex items-center justify-between gap-2 bg-surface-low">
               <div>
-                <p className="text-[12px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>{filtersLabel}</p>
-                <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>~{filtersCount} miembros</p>
+                <p className="text-[12px] font-medium text-navy font-body">{filtersLabel}</p>
+                <p className="text-[11px] text-navy-light/50 font-body">~{filtersCount} miembros</p>
               </div>
-              <span className="text-[11px] text-teal-deep font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="text-[11px] text-teal-deep font-semibold font-display">
                 ✓ Aplicado
               </span>
             </div>
@@ -190,8 +189,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
             <input
-              className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar miembro..."
               value={memberSearch}
               onChange={e => setMemberSearch(e.target.value)}
@@ -199,23 +197,22 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
           </div>
 
           {memberResults.length > 0 && (
-            <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--outline-variant)' }}>
+            <div className="rounded-xl border overflow-hidden border-[var(--outline-variant)]">
               {memberResults.map(m => (
                 <button
                   key={m.id}
                   type="button"
                   onClick={() => addMember(m)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-low transition-colors border-b last:border-b-0"
-                  style={{ borderColor: 'var(--outline-variant)' }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-low transition-colors border-b last:border-b-0 border-[var(--outline-variant)]"
                 >
                   <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
                     <span className="text-[9px] font-bold text-white">{m.first_name[0]}{m.last_name[0]}</span>
                   </div>
                   <div>
-                    <p className="text-[12px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[12px] font-medium text-navy font-body">
                       {m.first_name} {m.last_name}
                     </p>
-                    <p className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>{m.email}</p>
+                    <p className="text-[11px] text-navy-light/50 font-body">{m.email}</p>
                   </div>
                 </button>
               ))}
@@ -227,8 +224,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
               {selectedMembers.map(m => (
                 <span
                   key={m.id}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1 text-[12px] text-navy"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1 text-[12px] text-navy font-body"
                 >
                   {m.first_name} {m.last_name}
                   <button type="button" onClick={() => removeMember(m.id)}>
@@ -248,12 +244,12 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
               type="button"
               onClick={() => onChange({ ...value, groupEntity: 'event', groupId: '', count: 0, label: '' })}
               className={cn(
-                'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all',
+                'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all font-body',
                 value.groupEntity === 'event'
                   ? 'bg-navy/10 border-navy/30 text-navy font-medium'
                   : 'text-navy-light/60 hover:text-navy'
               )}
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              style={{ borderColor: 'var(--outline-variant)' }}
             >
               <BookOpen size={14} />
               Evento
@@ -262,12 +258,12 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
               type="button"
               onClick={() => onChange({ ...value, groupEntity: 'study_group', groupId: '', count: 0, label: '' })}
               className={cn(
-                'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all',
+                'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all font-body',
                 value.groupEntity === 'study_group'
                   ? 'bg-navy/10 border-navy/30 text-navy font-medium'
                   : 'text-navy-light/60 hover:text-navy'
               )}
-              style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+              style={{ borderColor: 'var(--outline-variant)' }}
             >
               <UsersRound size={14} />
               Grupo de estudio
@@ -276,8 +272,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
 
           {value.groupEntity === 'event' && (
             <select
-              className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={value.groupId}
               onChange={e => setGroupEvent(e.target.value)}
             >
@@ -292,8 +287,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
 
           {value.groupEntity === 'study_group' && (
             <select
-              className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={value.groupId}
               onChange={e => setGroupStudy(e.target.value)}
             >
@@ -307,9 +301,9 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
           )}
 
           {value.label && (
-            <div className="rounded-xl px-3 py-2" style={{ background: 'var(--surface-low)' }}>
-              <p className="text-[12px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>{value.label}</p>
-              <p className="text-[11px] text-teal-deep font-semibold mt-0.5" style={{ fontFamily: 'var(--font-display)' }}>
+            <div className="rounded-xl px-3 py-2 bg-surface-low">
+              <p className="text-[12px] text-navy font-body">{value.label}</p>
+              <p className="text-[11px] text-teal-deep font-semibold mt-0.5 font-display">
                 {value.count} destinatario{value.count !== 1 ? 's' : ''}
               </p>
             </div>
