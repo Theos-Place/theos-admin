@@ -273,7 +273,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <span>Zona: <strong className="text-navy">{sedeLabel(group.zone)}</strong></span>
               <span>Horario: <strong className="text-navy">{group.schedule_days.join('/')} {group.schedule_time}</strong></span>
             </div>
-            {studyType && group.current_week > 0 && (
+            {studyType && group.current_week > 0 && group.status !== 'finished' && (
               <WeekProgressBar current={group.current_week} total={studyType.weeks} className="w-48" />
             )}
           </div>
@@ -554,7 +554,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               { label: 'Capacidad máxima', value: `${group.max_capacity} personas` },
               { label: 'Fecha de inicio', value: group.start_date },
               { label: 'Fecha de cierre', value: group.end_date ?? '—' },
-              { label: 'Semana actual', value: `${group.current_week} de ${studyType?.weeks ?? '?'}` },
+              { label: 'Semana actual', value: group.status === 'finished' ? 'N/A' : `${group.current_week} de ${studyType?.weeks ?? '?'}` },
               { label: 'Dirigente', value: group.leader_name ?? 'Sin asignar' },
             ].map(({ label, value }) => (
               <div key={label} className="space-y-0.5">
