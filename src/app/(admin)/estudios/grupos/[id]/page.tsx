@@ -11,12 +11,6 @@ import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
 
-const FAKE_MESSAGES = [
-  { date: '2025-04-12', channel: 'WhatsApp', content: 'Recordatorio: sesión de esta semana el miércoles a las 7:30pm. ¡No falten! 📖' },
-  { date: '2025-04-05', channel: 'WhatsApp', content: 'Hola grupo! Les comparto el material de la próxima sesión. Léanlo con anticipación.' },
-  { date: '2025-03-29', channel: 'Correo', content: 'Resumen del primer mes del grupo: asistencia promedio 78%, excelente participación.' },
-]
-
 function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
@@ -526,29 +520,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
 
-          <div className="space-y-3">
-            {FAKE_MESSAGES.map((msg, i) => (
-              <div
-                key={i}
-                className="rounded-2xl p-4"
-                style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={cn(
-                    'rounded-md px-2 py-0.5 text-[10px] font-medium',
-                    msg.channel === 'WhatsApp' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy'
-                  )}>
-                    {msg.channel}
-                  </span>
-                  <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
-                    {msg.date}
-                  </span>
-                </div>
-                <p className="text-sm text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
-                  {msg.content}
-                </p>
-              </div>
-            ))}
+          <div className="rounded-2xl p-10 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+            <MessageCircle size={28} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.25} />
+            <p className="text-sm text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+              No hay comunicaciones registradas para este grupo.
+            </p>
           </div>
         </div>
       )}
