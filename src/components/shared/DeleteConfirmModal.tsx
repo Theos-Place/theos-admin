@@ -10,14 +10,20 @@ type DeleteConfirmModalProps = {
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  /** Palabra a escribir para confirmar (default "eliminar"). */
+  keyword?: string
+  /** Texto del botón de confirmar (default "Confirmar"). */
+  confirmLabel?: string
 }
 
 /**
- * Modal estándar para eliminar en todo el sistema. El usuario debe escribir
- * exactamente "eliminar" (case-insensitive) para habilitar el botón Confirmar.
+ * Modal estándar de confirmación destructiva. El usuario debe escribir
+ * exactamente la palabra clave (default "eliminar", case-insensitive) para
+ * habilitar el botón de confirmar.
  */
 export function DeleteConfirmModal({
   open, title, description, onConfirm, onCancel, loading = false,
+  keyword = 'eliminar', confirmLabel,
 }: DeleteConfirmModalProps) {
   const [text, setText] = useState('')
 
@@ -26,7 +32,7 @@ export function DeleteConfirmModal({
 
   if (!open) return null
 
-  const enabled = text.trim().toLowerCase() === 'eliminar' && !loading
+  const enabled = text.trim().toLowerCase() === keyword.toLowerCase() && !loading
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
@@ -45,12 +51,12 @@ export function DeleteConfirmModal({
 
         <div className="space-y-1.5">
           <label className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
-            Escribí <span className="text-coral font-semibold">eliminar</span> para confirmar
+            Escribí <span className="text-coral font-semibold">{keyword}</span> para confirmar
           </label>
           <input
             autoFocus
             className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-            placeholder="eliminar"
+            placeholder={keyword}
             value={text}
             onChange={e => setText(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && enabled) onConfirm() }}
@@ -69,7 +75,7 @@ export function DeleteConfirmModal({
             disabled={!enabled}
             className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
           >
-            {loading ? 'Eliminando…' : 'Confirmar'}
+            {loading ? 'Procesando…' : (confirmLabel ?? 'Confirmar')}
           </button>
         </div>
       </div>

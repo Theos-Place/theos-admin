@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import {
-  Users, BookOpen, Calendar, UsersRound, DollarSign,
+  Users, BookOpen, Calendar, DollarSign,
+  Heart, Hammer,
   MessageCircle, AlertTriangle, CheckCircle2, Clock,
   ChevronRight, TrendingUp, ArrowUpRight, Eye, EyeOff,
   LayoutDashboard, GraduationCap,
@@ -171,44 +172,53 @@ function AlertRow({
 }
 
 function ModuleCard({
-  icon, title, subtitle, rows, href, hrefLabel,
+  icon: Icon, title, subtitle, rows, href, hrefLabel,
 }: {
-  icon: string; title: string; subtitle: string
-  rows: { label: string; value: string | number; badge?: 'coral' | 'yellow' }[]
+  icon: React.ElementType; title: string; subtitle: string
+  rows: { label: string; value: string | number; badge?: 'coral' | 'yellow'; href?: string }[]
   href: string; hrefLabel: string
 }) {
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
       <div className="flex items-start justify-between mb-3">
-        <div>
-          <div className="text-lg mb-0.5 font-display font-extrabold text-navy">
-            {icon} {title}
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-low text-navy">
+            <Icon size={18} strokeWidth={1.75} />
+          </span>
+          <div>
+            <div className="text-lg mb-0.5 font-display font-extrabold text-navy">{title}</div>
+            <div className="text-[12px] text-navy/50 font-body">{subtitle}</div>
           </div>
-          <div className="text-[12px] text-navy/50 font-body">{subtitle}</div>
         </div>
       </div>
       <div className="h-px bg-[rgba(22,20,64,0.07)] mb-3" />
       <div className="space-y-2 mb-4">
-        {rows.map((row, i) => (
-          <div key={i} className="flex items-center justify-between">
-            <span className="text-[13px] text-navy/60 font-body">{row.label}</span>
-            <div className="flex items-center gap-2">
-              {row.badge ? (
-                <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full font-body"
-                  style={{
-                    color: row.badge === 'coral' ? '#EF5554' : '#C08A00',
-                    background: row.badge === 'coral' ? 'rgba(239,85,84,0.10)' : 'rgba(233,185,73,0.15)',
-                  }}>
-                  {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
-                </span>
-              ) : (
-                <span className="text-[13px] font-semibold text-navy font-body">
-                  {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
-                </span>
-              )}
+        {rows.map((row, i) => {
+          const valueEl = row.badge ? (
+            <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full font-body"
+              style={{
+                color: row.badge === 'coral' ? '#EF5554' : '#C08A00',
+                background: row.badge === 'coral' ? 'rgba(239,85,84,0.10)' : 'rgba(233,185,73,0.15)',
+              }}>
+              {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
+            </span>
+          ) : (
+            <span className="text-[13px] font-semibold text-navy font-body">
+              {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
+            </span>
+          )
+          return row.href ? (
+            <Link key={i} href={row.href} className="flex items-center justify-between rounded-lg -mx-1 px-1 py-0.5 hover:bg-surface-low transition-colors">
+              <span className="text-[13px] text-coral font-body">{row.label} →</span>
+              <div className="flex items-center gap-2">{valueEl}</div>
+            </Link>
+          ) : (
+            <div key={i} className="flex items-center justify-between">
+              <span className="text-[13px] text-navy/60 font-body">{row.label}</span>
+              <div className="flex items-center gap-2">{valueEl}</div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <Link href={href}
         className="flex items-center gap-1 text-[12px] font-medium transition-colors hover:opacity-80 text-coral font-body">
@@ -385,8 +395,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={Users}     value={DASHBOARD_STATS.members.total}  label="Miembros"       delta={`+${DASHBOARD_STATS.members.new_this_month}/mes`} color="#161440" href="/miembros" />
           <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_groups} label="Grupos activos" color="#519DA2" href="/estudios/grupos" />
-          <StatCard icon={TrendingUp} value={DASHBOARD_STATS.finance.donors_active} label="Donadores activos" color="#3DB97A" href="/finanzas/donaciones" />
-          <StatCard icon={UsersRound} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#EF5554" href="/servidores" />
+          <StatCard icon={Heart} value={DASHBOARD_STATS.finance.donors_active} label="Donadores activos" color="#3DB97A" href="/finanzas/donaciones" />
+          <StatCard icon={Hammer} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#EF5554" href="/servidores" />
         </div>
       )}
 
@@ -481,12 +491,12 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {can('miembros', 'view') && (
           <ModuleCard
-            icon="👥" title="Miembros"
+            icon={Users} title="Miembros"
             subtitle={`${DASHBOARD_STATS.members.total.toLocaleString('es-CR')} total · ${DASHBOARD_STATS.members.active.toLocaleString('es-CR')} activos`}
             rows={[
               { label: 'Nuevos este mes',         value: `+${DASHBOARD_STATS.members.new_this_month}` },
               { label: 'Sin cédula',               value: DASHBOARD_STATS.members.without_cedula,  badge: 'yellow' },
-              { label: 'Duplicados sugeridos',     value: DASHBOARD_STATS.members.duplicates_suggested, badge: 'coral' },
+              { label: 'Duplicados sugeridos',     value: DASHBOARD_STATS.members.duplicates_suggested, badge: 'coral', href: '/miembros/duplicados' },
             ]}
             href="/miembros" hrefLabel="Ver miembros →"
           />
@@ -494,7 +504,7 @@ export default function DashboardPage() {
 
         {can('estudios', 'view') && (
           <ModuleCard
-            icon="📚" title="Estudios Bíblicos"
+            icon={BookOpen} title="Estudios Bíblicos"
             subtitle={`${DASHBOARD_STATS.studies.active_groups} grupos · ${DASHBOARD_STATS.studies.students} estudiantes`}
             rows={[
               { label: 'En inscripción',          value: DASHBOARD_STATS.studies.open_registration },
@@ -508,7 +518,7 @@ export default function DashboardPage() {
 
         {can('eventos', 'view') && (
           <ModuleCard
-            icon="📅" title="Eventos"
+            icon={Calendar} title="Eventos"
             subtitle={`${DASHBOARD_STATS.events.upcoming_this_month} próximos este mes`}
             rows={[
               { label: 'Esta semana',             value: DASHBOARD_STATS.events.this_week },
@@ -521,7 +531,7 @@ export default function DashboardPage() {
 
         {can('servidores', 'view') && (
           <ModuleCard
-            icon="🙌" title="Servidores"
+            icon={Hammer} title="Servidores"
             subtitle={`${DASHBOARD_STATS.servers.active} activos en ${DASHBOARD_STATS.servers.committees} comités`}
             rows={[
               { label: 'Vacantes abiertas',       value: DASHBOARD_STATS.servers.open_vacancies },
@@ -534,9 +544,14 @@ export default function DashboardPage() {
         {isFinance && (
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
             <div className="flex items-start justify-between mb-3">
-              <div>
-                <div className="text-lg mb-0.5 font-display font-extrabold text-navy">₡ Finanzas</div>
-                <div className="text-[12px] text-navy/50 font-body">Ingresos este mes</div>
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-low text-navy">
+                  <DollarSign size={18} strokeWidth={1.75} />
+                </span>
+                <div>
+                  <div className="text-lg mb-0.5 font-display font-extrabold text-navy">Finanzas</div>
+                  <div className="text-[12px] text-navy/50 font-body">Ingresos este mes</div>
+                </div>
               </div>
             </div>
             <div className="h-px bg-[rgba(22,20,64,0.07)] mb-3" />
@@ -571,7 +586,7 @@ export default function DashboardPage() {
 
         {can('comunicaciones', 'view') && (
           <ModuleCard
-            icon="💬" title="Comunicaciones"
+            icon={MessageCircle} title="Comunicaciones"
             subtitle="Mensajes enviados"
             rows={[
               { label: 'Enviados este mes',       value: DASHBOARD_STATS.communications.sent_this_month },
@@ -596,7 +611,7 @@ export default function DashboardPage() {
             <AlertRow level="red" text={`${DASHBOARD_STATS.finance.pending_refunds} devoluciones SINPE pendientes de procesar`} href="/finanzas/devoluciones" />
           )}
           {isAdminOrDir && DASHBOARD_STATS.members.duplicates_suggested > 0 && (
-            <AlertRow level="red" text={`${DASHBOARD_STATS.members.duplicates_suggested} perfiles duplicados sugeridos por el sistema`} href="/miembros" />
+            <AlertRow level="red" text={`${DASHBOARD_STATS.members.duplicates_suggested} perfiles duplicados sugeridos por el sistema`} href="/miembros/duplicados" />
           )}
           {can('estudios', 'view') && DASHBOARD_STATS.studies.without_leader > 0 && (
             <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.without_leader} grupos de estudio sin dirigente asignado`} href="/estudios/grupos" />
@@ -611,64 +626,6 @@ export default function DashboardPage() {
             <AlertRow level="green" text="Todo al día en comunicaciones" />
           )}
         </div>
-      </div>
-
-      {/* Módulo 5 — Próximos eventos */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-bold text-navy uppercase text-[11px] font-display tracking-[0.08em]">
-            Próximos eventos
-          </span>
-          <Link href="/eventos" className="text-[12px] text-coral font-medium font-body">
-            Ver calendario →
-          </Link>
-        </div>
-
-        <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
-
-        {upcomingEvents.length === 0 ? (
-          <div className="text-[13px] text-navy/40 py-4 text-center font-body">
-            No hay eventos próximos este mes
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {upcomingEvents.map(ev => {
-              const pct = ev.registrations.length / ev.max_capacity
-              const barColor = capacityColor(pct)
-              const isNearFull = pct >= 0.9
-              return (
-                <div key={ev.id} className="flex items-center gap-2.5 sm:gap-4">
-                  <div className="text-[11px] text-navy/50 w-14 sm:w-20 shrink-0 font-body">
-                    {formatShortDate(ev.start_at)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-medium text-navy truncate font-body">
-                        {ev.name}
-                      </span>
-                      {isNearFull && (
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 bg-[rgba(239,85,84,0.10)] text-coral font-body">
-                          casi lleno
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 mt-1">
-                      <div className="flex-1 h-1.5 rounded-full bg-[rgba(22,20,64,0.07)] overflow-hidden max-w-[120px]">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
-                      </div>
-                      <span className="text-[11px] text-navy/50 shrink-0 font-body">
-                        {ev.registrations.length}/{ev.max_capacity}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-[12px] text-navy/50 shrink-0 font-body">
-                    {formatEventTime(ev.start_at)}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
 
       {/* Módulo 6 — Vista específica por rol */}

@@ -794,6 +794,37 @@ export async function mergeMembers(keepId: string, dupId: string): Promise<void>
   if (error) throw error
 }
 
+export type DuplicateMember = {
+  id: string; first_name: string; last_name: string
+  cedula: string | null; email: string | null; phone: string | null; created_at: string
+}
+export type DuplicatePair = { a: DuplicateMember; b: DuplicateMember; reasons: string[] }
+
+/** Pares de miembros probablemente duplicados (función find_duplicate_pairs). */
+export async function getDuplicatePairs(): Promise<DuplicatePair[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('find_duplicate_pairs')
+  if (error) throw error
+  const pairs = (data ?? []) as Array<{ member_a: string; member_b: string; reasons: string[] }>
+  const ids = [...new Set(pairs.flatMap(p => [p.member_a, p.member_b]))]
+  if (ids.length === 0) return []
+  const { data: members, error: mErr } = await supabase
+    .from('members').select('id, first_name, last_name, cedula, email, phone, created_at').in('id', ids)
+  if (mErr) throw mErr
+  const byId = new Map((members ?? []).map(m => [m.id, m as DuplicateMember]))
+  return pairs
+    .map(p => ({ a: byId.get(p.member_a), b: byId.get(p.member_b), reasons: p.reasons }))
+    .filter((p): p is DuplicatePair => !!p.a && !!p.b)
+}
+
+/** Marca un par como "no es duplicado" (no vuelve a sugerirse). */
+export async function dismissDuplicatePair(idA: string, idB: string): Promise<void> {
+  const supabase = createAdminClient()
+  const [a, b] = idA < idB ? [idA, idB] : [idB, idA]
+  const { error } = await supabase.from('duplicate_dismissals').upsert({ member_a: a, member_b: b }, { onConflict: 'member_a,member_b' })
+  if (error) throw error
+}
+
 export async function createMember(member: Omit<DbMember, 'id' | 'created_at' | 'updated_at' | 'sede_id'>) {
   const supabase = createAdminClient()
 
