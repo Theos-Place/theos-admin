@@ -224,7 +224,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
 
   const studyType = studyTypes.find(s => s.id === group.study_type_id) ?? null
   const enrolled = group.participants.filter(p => p.status !== 'withdrawn')
-  const tabs = ['participantes', 'asistencia', 'comunicaciones', 'información']
+  const tabs = ['información', 'participantes', 'asistencia', 'comunicaciones']
   const tabLabels: Record<string, string> = {
     participantes: 'Participantes',
     asistencia: 'Asistencia',
