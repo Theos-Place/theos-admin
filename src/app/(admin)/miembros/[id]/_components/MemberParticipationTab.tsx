@@ -73,7 +73,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; duration: string; status: string }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number }
@@ -181,14 +181,14 @@ export function MemberParticipationTab({
                       </div>
                     </td>
                     <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
-                      Ene {row.startYear}
+                      {row.startLabel}
                     </td>
                     <td className="px-4 py-2.5 text-navy-light/50 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
                       {row.duration}
                     </td>
                     <td className="px-4 py-2.5">
                       <span
-                        className={cn('rounded-full px-2.5 py-0.5 text-xs', row.status === 'Completado' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral-soft/20 text-coral')}
+                        className={cn('rounded-full px-2.5 py-0.5 text-xs', (row.status === 'Completado' || row.status === 'Aprobado') ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral-soft/20 text-coral')}
                         style={{ fontFamily: 'var(--font-body)' }}
                       >
                         {row.status}

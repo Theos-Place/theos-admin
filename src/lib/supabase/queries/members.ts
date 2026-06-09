@@ -499,7 +499,7 @@ export type DbFamilyMember = {
 }
 
 export type DbMemberFull = DbMemberEnriched & {
-  study_history: Array<{ code: string; name: string; year: number | null; weeks: number | null; status: string }>
+  study_history: Array<{ code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
   attendance: DbAttendance[]
   service_history: DbService[]
   donations: DbDonation[]
@@ -636,16 +636,19 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       && e.study_groups.leader_id !== id
       && e.study_groups.co_leader_id !== id)
     .map(e => {
-      const d = e.completed_at ?? e.enrolled_at ?? e.study_groups!.starts_at ?? null
+      // La fecha del grupo (starts_at) trae mes+año reales (del nombre del grupo);
+      // completed_at/enrolled_at quedaron en enero por defecto en la importación.
+      const d = e.study_groups!.starts_at ?? e.completed_at ?? e.enrolled_at ?? null
       return {
         code: e.study_groups!.plan!.code as string,
         name: e.study_groups!.plan!.name ?? '',
+        date: d ? d.slice(0, 10) : null,
         year: d ? Number(d.slice(0, 4)) : null,
         weeks: e.study_groups!.plan!.duration_weeks ?? null,
         status: e.status,
       }
     })
-    .sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
+    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
   const currentEnrollment = enrollments
     .find(e => e.status === 'enrolled' && e.study_groups?.plan?.name)
   const currentStudy = currentEnrollment?.study_groups?.plan?.name ?? null

@@ -91,10 +91,16 @@ export default function MiembroDetailPage() {
   const estudiosRows: StudyRow[] = useMemo(() => {
     if (!member?.study_history) return []
     const STATUS: Record<string, string> = { completed: 'Aprobado', dropped: 'Reprobó', enrolled: 'En curso', waitlist: 'En espera', transferred: 'Transferido' }
+    const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
+    const fmt = (date: string | null, year: number | null) => {
+      if (date) { const [y, m] = date.split('-'); return `${MESES[Number(m) - 1] ?? ''} ${y}`.trim() }
+      return year ? String(year) : '—'
+    }
     return member.study_history.map(s => ({
       code: s.code,
       name: s.name || STUDY_CATALOG.find(x => x.code === s.code)?.name || s.code,
       startYear: s.year ?? 0,
+      startLabel: fmt(s.date, s.year),
       duration: s.weeks ? `${s.weeks} sem.` : '—',
       status: STATUS[s.status] ?? s.status,
     }))
