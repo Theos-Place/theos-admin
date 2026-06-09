@@ -78,6 +78,7 @@ const SERVIDORES_SUB = [
 const ESTUDIOS_SUB = [
   { href: '/estudios/grupos',          label: 'Grupos',           icon: LayoutList },
   { href: '/estudios/plan',            label: 'Plan de Estudios', icon: BookText },
+  { href: '/estudios/analisis',        label: 'Análisis de estudios', icon: BarChart2 },
   { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
   { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock },
   { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight },
