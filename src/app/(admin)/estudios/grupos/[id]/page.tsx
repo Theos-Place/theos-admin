@@ -287,12 +287,13 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 Cerrar grupo
               </Link>
             )}
-            <button
-              className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+            <Link
+              href={`/estudios/grupos/${id}/editar`}
+              className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors flex items-center"
               style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
             >
               <Edit2 size={14} />
-            </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,0 +1,240 @@
+'use client'
+
+import { use, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useStudies } from '@/hooks/useStudies'
+import { sedeLabel, useSedes } from '@/lib/sedes'
+import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
+import { cn } from '@/lib/utils'
+import { ChevronLeft } from 'lucide-react'
+
+const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const DAY_LABELS: Record<string, string> = {
+  L: 'Lunes', M: 'Martes', X: 'Miércoles', J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo',
+}
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+const labelCls = 'text-[11px] text-navy-light/60'
+
+export default function EditarGrupoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+  const router = useRouter()
+  const { activeSedes: SEDES } = useSedes()
+  const { groups, studyTypes, leaders, refetch } = useStudies()
+  const group = groups.find(g => g.id === id)
+  const studyType = studyTypes.find(s => s.id === group?.study_type_id) ?? null
+
+  // Prefill — match dirigente por id, co-dirigente por nombre
+  const initialLeader = useMemo(
+    () => leaders.find(l => l.member_id === group?.leader_id)?.id ?? '',
+    [leaders, group?.leader_id],
+  )
+  const initialCoLeader = useMemo(
+    () => (group?.co_leader_name ? leaders.find(l => l.member_name === group.co_leader_name)?.id ?? '' : ''),
+    [leaders, group?.co_leader_name],
+  )
+
+  const [zone, setZone] = useState(group?.zone ?? '')
+  const [days, setDays] = useState<string[]>(group?.schedule_days ?? [])
+  const [time, setTime] = useState(group?.schedule_time ?? '')
+  const [location, setLocation] = useState(group?.location ?? '')
+  const [capacity, setCapacity] = useState(String(group?.max_capacity ?? '10'))
+  const [startDate, setStartDate] = useState(group?.start_date?.slice(0, 10) ?? '')
+  const [endDate, setEndDate] = useState(group?.end_date?.slice(0, 10) ?? '')
+  const [leaderId, setLeaderId] = useState('')
+  const [coLeaderId, setCoLeaderId] = useState('')
+  const [waUrl, setWaUrl] = useState(group?.whatsapp_group_url ?? '')
+  const [hydrated, setHydrated] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Hidrata selectores de dirigente una vez que cargan los leaders
+  if (!hydrated && group && leaders.length > 0) {
+    setLeaderId(initialLeader)
+    setCoLeaderId(initialCoLeader)
+    setHydrated(true)
+  }
+
+  function toggleDay(d: string) {
+    setDays(prev => (prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]))
+  }
+
+  if (!group) {
+    return (
+      <div className="space-y-4">
+        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
+          <ChevronLeft size={16} /> Grupos
+        </Link>
+        <p className="text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>Grupo no encontrado.</p>
+      </div>
+    )
+  }
+
+  const leaderMemberId = leaders.find(l => l.id === leaderId)?.member_id ?? null
+  const coLeaderMemberId = leaders.find(l => l.id === coLeaderId)?.member_id ?? null
+
+  async function handleSave() {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/studies/groups/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leader_id: leaderMemberId,
+          co_leader_id: coLeaderMemberId,
+          zone: zone || null,
+          schedule_days: days,
+          schedule_time: time || null,
+          location: location || null,
+          max_students: capacity ? Number(capacity) : null,
+          starts_at: startDate || null,
+          ends_at: endDate || null,
+          whatsapp_group_url: waUrl || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Error guardando el grupo')
+      await refetch()
+      router.push(`/estudios/grupos/${id}`)
+    } catch (e) {
+      console.error(e)
+      setError('No se pudo guardar. Revisá los datos e intentá de nuevo.')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <Link
+        href={`/estudios/grupos/${id}`}
+        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors"
+        style={{ fontFamily: 'var(--font-body)' }}
+      >
+        <ChevronLeft size={16} /> Volver al grupo
+      </Link>
+
+      <div className="flex items-center gap-3">
+        <StudyTypeBadge code={group.study_type_id} name={studyType?.name} size="md" />
+        <div>
+          <h1 className="text-2xl text-navy" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+            Editar grupo
+          </h1>
+          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+            {studyType?.name ?? group.study_type_id} · {sedeLabel(group.zone)}
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="grid grid-cols-2 gap-4">
+          {/* Dirigente */}
+          <div className="space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Dirigente</label>
+            <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={leaderId} onChange={e => setLeaderId(e.target.value)}>
+              <option value="">Sin asignar</option>
+              {leaders.map(l => <option key={l.id} value={l.id}>{l.member_name}</option>)}
+            </select>
+          </div>
+
+          {/* Co-dirigente */}
+          <div className="space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Co-dirigente</label>
+            <select
+              className={inputCls}
+              style={{ fontFamily: 'var(--font-body)' }}
+              value={coLeaderId}
+              onChange={e => setCoLeaderId(e.target.value)}
+            >
+              <option value="">Sin co-dirigente</option>
+              {leaders.filter(l => l.id !== leaderId).map(l => <option key={l.id} value={l.id}>{l.member_name}</option>)}
+            </select>
+          </div>
+
+          {/* Zona */}
+          <div className="col-span-2 space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Zona</label>
+            <select className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={zone} onChange={e => setZone(e.target.value)}>
+              <option value="">Sin zona</option>
+              {SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+
+          {/* Días */}
+          <div className="col-span-2 space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Días</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {DAYS.map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDay(d)}
+                  className={cn(
+                    'rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all',
+                    days.includes(d) ? 'bg-navy text-white border-navy' : 'text-navy-light hover:bg-surface-low',
+                  )}
+                  style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-display)' }}
+                >
+                  {DAY_LABELS[d]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Horario */}
+          <div className="space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Horario</label>
+            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="7:30pm" value={time} onChange={e => setTime(e.target.value)} />
+          </div>
+
+          {/* Capacidad */}
+          <div className="space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Capacidad máxima</label>
+            <input type="number" min={1} className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={capacity} onChange={e => setCapacity(e.target.value)} />
+          </div>
+
+          {/* Ubicación */}
+          <div className="col-span-2 space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Ubicación</label>
+            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="Edificio Meridiano, Escazú" value={location} onChange={e => setLocation(e.target.value)} />
+          </div>
+
+          {/* Fechas */}
+          <div className="space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Fecha de inicio</label>
+            <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={startDate} onChange={e => setStartDate(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Fecha de cierre</label>
+            <input type="date" className={inputCls} style={{ fontFamily: 'var(--font-body)' }} value={endDate} onChange={e => setEndDate(e.target.value)} />
+          </div>
+
+          {/* WhatsApp */}
+          <div className="col-span-2 space-y-1">
+            <label className={labelCls} style={{ fontFamily: 'var(--font-display)' }}>Enlace de grupo de WhatsApp</label>
+            <input className={inputCls} style={{ fontFamily: 'var(--font-body)' }} placeholder="https://chat.whatsapp.com/..." value={waUrl} onChange={e => setWaUrl(e.target.value)} />
+          </div>
+        </div>
+
+        {error && <p className="text-sm text-coral" style={{ fontFamily: 'var(--font-body)' }}>{error}</p>}
+
+        <div className="flex justify-between pt-2">
+          <Link
+            href={`/estudios/grupos/${id}`}
+            className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors"
+            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+          >
+            Cancelar
+          </Link>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            {saving ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
