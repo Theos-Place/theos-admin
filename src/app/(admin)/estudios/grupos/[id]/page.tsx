@@ -262,6 +262,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </div>
             <div className="flex flex-wrap gap-4 text-sm text-navy-light/60 font-body">
               <span>Dirigente: <strong className="text-navy">{group.leader_name ?? 'Sin asignar'}</strong></span>
+              {group.co_leader_name && (
+                <span>Co-dirigente: <strong className="text-navy">{group.co_leader_name}</strong></span>
+              )}
               <span>Zona: <strong className="text-navy">{sedeLabel(group.zone)}</strong></span>
               <span>Horario: <strong className="text-navy">{group.schedule_days.join('/')} {group.schedule_time}</strong></span>
             </div>
