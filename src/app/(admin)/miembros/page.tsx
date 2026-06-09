@@ -605,7 +605,7 @@ export default function MiembrosPage() {
       <div
         className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-[var(--outline-variant)]">
@@ -763,6 +763,64 @@ export default function MiembrosPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* ── Mobile: tarjetas ── */}
+        <div className="md:hidden">
+          {!shouldFetch ? (
+            <div className="px-4 py-14 text-center font-body">
+              <Search size={26} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.75} />
+              <p className="text-sm font-semibold text-navy-light/50">Usá el buscador o aplicá un filtro</p>
+              <p className="text-[13px] text-navy-light/40 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
+            </div>
+          ) : loading && visibleMembers.length === 0 ? (
+            <div className="px-4 py-14 text-center font-body">
+              <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+              <p className="text-sm text-navy-light/50">Buscando miembros…</p>
+            </div>
+          ) : visibleMembers.length === 0 ? (
+            <div className="px-4 py-12 text-center text-sm text-navy-light/40 font-body">
+              Sin resultados para los filtros aplicados
+            </div>
+          ) : (
+            <ul>
+              {visibleMembers.map((member, i) => (
+                <li
+                  key={member.id}
+                  onClick={() => router.push(`/miembros/${member.id}`)}
+                  className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+                  style={i < visibleMembers.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(member.id)}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => {
+                      const next = new Set(selectedIds)
+                      if (e.target.checked) next.add(member.id); else next.delete(member.id)
+                      setSelectedIds(next)
+                    }}
+                    className="accent-coral h-4 w-4 shrink-0 cursor-pointer rounded"
+                  />
+                  <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-display font-extrabold', avatarColor(member.id))}>
+                    {initials(member)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
+                    <p className="truncate text-xs text-navy-light/50 font-body">
+                      {member.cedula ?? 'Sin cédula'}{member.email ? ` · ${member.email}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] text-coral font-body">Donador</span>}
+                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
+                      {member.is_active ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* ── Load more (server-side) ── */}
