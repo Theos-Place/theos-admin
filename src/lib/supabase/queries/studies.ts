@@ -109,22 +109,20 @@ export type DbRelocation = {
 /** Grupos de estudio con líder y participantes (enrollments + nombre del miembro). */
 export async function getStudyGroups(): Promise<DbGroupEnriched[]> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('study_groups')
-    .select(`
-      id, name, leader_id, zone, schedule_days, schedule_time, location,
-      max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
-      plan:study_plans(code),
-      leader:members!study_groups_leader_id_fkey(first_name, last_name),
-      co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
-      enrollments:study_enrollments!study_enrollments_group_id_fkey(
-        member_id, status, grade,
-        member:members(first_name, last_name)
-      )
-    `)
-    .order('starts_at', { ascending: false })
-  if (error) throw error
-  return (data ?? []) as unknown as DbGroupEnriched[]
+  // PostgREST corta en 1000 filas; hay >1000 grupos → paginar con range().
+  const all: DbGroupEnriched[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('study_groups')
+      .select(GROUP_SELECT)
+      .order('starts_at', { ascending: false })
+      .range(from, from + 999)
+    if (error) throw error
+    const batch = (data ?? []) as unknown as DbGroupEnriched[]
+    all.push(...batch)
+    if (batch.length < 1000) break
+  }
+  return all
 }
 
 const GROUP_SELECT = `
