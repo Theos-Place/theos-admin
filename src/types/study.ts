@@ -43,6 +43,7 @@ export type StudyGroup = {
   study_type_id: string
   leader_id: string | null
   leader_name: string | null
+  co_leader_name?: string | null
   zone: string
   schedule_days: string[]
   schedule_time: string

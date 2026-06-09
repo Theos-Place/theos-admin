@@ -35,6 +35,7 @@ export type DbGroupEnriched = {
   name: string
   leader_id: string | null
   leader: { first_name: string; last_name: string } | null
+  co_leader: { first_name: string; last_name: string } | null
   zone: string | null
   schedule_days: string[] | null
   schedule_time: string | null
@@ -115,6 +116,7 @@ export async function getStudyGroups(): Promise<DbGroupEnriched[]> {
       max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
       plan:study_plans(code),
       leader:members!study_groups_leader_id_fkey(first_name, last_name),
+      co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
       enrollments:study_enrollments!study_enrollments_group_id_fkey(
         member_id, status, grade,
         member:members(first_name, last_name)
@@ -130,6 +132,7 @@ const GROUP_SELECT = `
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
+  co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(
     member_id, status, grade,
     member:members(first_name, last_name)
@@ -372,6 +375,7 @@ export type GroupWriteInput = {
   plan_id?: string
   name: string
   leader_id?: string | null
+  co_leader_id?: string | null
   zone?: string | null
   schedule_days?: string[] | null
   schedule_time?: string | null

@@ -28,6 +28,7 @@ const RULES: Array<[RegExp, string]> = [
   [/hermen|interpretar la b/i, 'HER'], [/religiones/i, 'RDM'], [/defendiendo|apolog/i, 'DLF'],
   [/dinero/i, 'AED'], [/amor sin front/i, 'ASF'],
   [/liderazgo/i, 'SCJ'], // "Liderazgo" era el nombre viejo de Sirviendo como Jesús
+  [/\bcdeb\b|c[oó]mo\s+dar\s+estudios/i, 'CDEB'],
   [/buenas decis|bienestar integral/i, 'CTBD'],
   [/este bus|ad[oó]nde va/i, 'BUS'],
   [/una fe audaz/i, 'UFA'], [/transformad/i, 'TRANS'], [/tiempo para so/i, 'TPS'], [/para qu[eé] estoy/i, 'PQET'],

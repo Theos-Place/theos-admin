@@ -62,6 +62,7 @@ function mapParticipantStatus(
 
 export function toDomainStudyGroup(db: DbGroupEnriched): StudyGroup {
   const leaderName = db.leader ? `${db.leader.first_name} ${db.leader.last_name}`.trim() : null
+  const coLeaderName = db.co_leader ? `${db.co_leader.first_name} ${db.co_leader.last_name}`.trim() : null
 
   const participants: GroupParticipant[] = db.enrollments.map((e) => ({
     member_id: e.member_id,
@@ -77,6 +78,7 @@ export function toDomainStudyGroup(db: DbGroupEnriched): StudyGroup {
     study_type_id: db.plan?.code ?? '',
     leader_id: db.leader_id,
     leader_name: leaderName,
+    co_leader_name: coLeaderName,
     zone: db.zone ?? '',
     schedule_days: db.schedule_days ?? [],
     schedule_time: db.schedule_time ?? '',

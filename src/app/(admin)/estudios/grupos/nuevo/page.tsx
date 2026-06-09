@@ -42,11 +42,12 @@ export default function NuevoGrupoPage() {
     days: [],
     time: '',
     location: '',
-    capacity: '15',
+    capacity: '10',
     start_date: '',
     signup_deadline: '',
   })
   const [selectedLeader, setSelectedLeader] = useState('')
+  const [selectedCoLeader, setSelectedCoLeader] = useState('')
   const [confirmed, setConfirmed] = useState(false)
   const [created, setCreated] = useState(false)
 
@@ -69,6 +70,7 @@ export default function NuevoGrupoPage() {
   )
 
   const leaderData = leaders.find(l => l.id === selectedLeader)
+  const coLeaderData = leaders.find(l => l.id === selectedCoLeader)
 
   async function handleCreate() {
     if (!studyType) return
@@ -81,6 +83,7 @@ export default function NuevoGrupoPage() {
           study_type_id: studyType.code,
           name: `${studyType.code} — ${step1.zone ? sedeLabel(step1.zone) : 'Sin zona'}`,
           leader_id: leaderData?.member_id ?? null,
+          co_leader_id: coLeaderData?.member_id ?? null,
           zone: step1.zone || null,
           schedule_days: step1.days,
           schedule_time: step1.time || null,
@@ -440,6 +443,25 @@ export default function NuevoGrupoPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {selectedLeader && (
+            <div className="mt-3 space-y-1">
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+                Co-dirigente (opcional)
+              </label>
+              <select
+                value={selectedCoLeader}
+                onChange={e => setSelectedCoLeader(e.target.value)}
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                <option value="">Sin co-dirigente</option>
+                {leaders.filter(l => l.id !== selectedLeader).map(l => (
+                  <option key={l.id} value={l.id}>{l.member_name}</option>
+                ))}
+              </select>
             </div>
           )}
 

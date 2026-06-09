@@ -556,6 +556,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               { label: 'Fecha de cierre', value: group.end_date ?? '—' },
               { label: 'Semana actual', value: group.status === 'finished' ? 'N/A' : `${group.current_week} de ${studyType?.weeks ?? '?'}` },
               { label: 'Dirigente', value: group.leader_name ?? 'Sin asignar' },
+              { label: 'Co-dirigente', value: group.co_leader_name ?? '—' },
             ].map(({ label, value }) => (
               <div key={label} className="space-y-0.5">
                 <p
