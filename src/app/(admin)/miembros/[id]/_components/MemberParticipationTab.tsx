@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Lock, ChevronDown, ChevronUp } from 'lucide-react'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { cn } from '@/lib/utils'
@@ -73,7 +74,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number }
@@ -158,6 +159,7 @@ export function MemberParticipationTab({
                     </span>
                   </th>
                 ))}
+                <th className="px-4 py-2.5" />
               </tr>
             </thead>
             <tbody>
@@ -193,6 +195,15 @@ export function MemberParticipationTab({
                       >
                         {row.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      <Link
+                        href={`/estudios/grupos/${row.groupId}`}
+                        className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap"
+                        style={{ fontFamily: 'var(--font-body)' }}
+                      >
+                        Ver grupo →
+                      </Link>
                     </td>
                   </tr>
                 )

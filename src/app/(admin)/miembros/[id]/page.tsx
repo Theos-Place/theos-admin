@@ -103,6 +103,7 @@ export default function MiembroDetailPage() {
       startLabel: fmt(s.date, s.year),
       duration: s.weeks ? `${s.weeks} sem.` : '—',
       status: STATUS[s.status] ?? s.status,
+      groupId: s.group_id,
     }))
   }, [member])
 

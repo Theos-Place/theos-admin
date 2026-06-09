@@ -499,7 +499,7 @@ export type DbFamilyMember = {
 }
 
 export type DbMemberFull = DbMemberEnriched & {
-  study_history: Array<{ code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
+  study_history: Array<{ group_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
   attendance: DbAttendance[]
   service_history: DbService[]
   donations: DbDonation[]
@@ -530,7 +530,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       ),
       study_enrollments(
         status, completed_at, enrolled_at,
-        study_groups!study_enrollments_group_id_fkey(current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks))
+        study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks))
       )
     `)
     .eq('id', id)
@@ -617,7 +617,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     status: string
     completed_at: string | null
     enrolled_at: string | null
-    study_groups: { current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: { code: string | null; name: string | null; duration_weeks: number | null } | null } | null
+    study_groups: { id: string; current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: { code: string | null; name: string | null; duration_weeks: number | null } | null } | null
   }>
 
   const activeRoles = memberRoles.filter(r => r.is_active).map(r => r.role)
@@ -640,6 +640,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       // completed_at/enrolled_at quedaron en enero por defecto en la importación.
       const d = e.study_groups!.starts_at ?? e.completed_at ?? e.enrolled_at ?? null
       return {
+        group_id: e.study_groups!.id,
         code: e.study_groups!.plan!.code as string,
         name: e.study_groups!.plan!.name ?? '',
         date: d ? d.slice(0, 10) : null,
