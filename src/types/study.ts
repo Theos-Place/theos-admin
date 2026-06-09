@@ -41,6 +41,7 @@ export type GroupParticipant = {
 
 export type StudyGroup = {
   id: string
+  name?: string
   study_type_id: string
   leader_id: string | null
   leader_name: string | null

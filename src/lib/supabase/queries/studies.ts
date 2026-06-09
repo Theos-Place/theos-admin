@@ -316,6 +316,35 @@ export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
   return (data ?? []) as unknown as DbLeaderEnriched[]
 }
 
+/** Dirigentes ACTIVOS = servidores activos del comité "Comité de Dirigentes".
+ *  Fuente de verdad para el estado "activo" de un dirigente. */
+export async function getActiveDirigentes(): Promise<Array<{ member_id: string; member_name: string }>> {
+  const supabase = createAdminClient()
+  const { data: area, error: aErr } = await supabase
+    .from('areas')
+    .select('id')
+    .eq('area_type', 'committee')
+    .ilike('name', 'Comité de Dirigentes')
+    .maybeSingle()
+  if (aErr) throw aErr
+  if (!area) return []
+
+  const { data, error } = await supabase
+    .from('volunteers')
+    .select('member_id, member:members(first_name, last_name), service_positions!inner(area_id)')
+    .eq('status', 'active')
+    .eq('service_positions.area_id', (area as { id: string }).id)
+  if (error) throw error
+
+  const seen = new Map<string, string>()
+  for (const v of (data ?? []) as unknown as Array<{ member_id: string; member: { first_name: string; last_name: string } | null }>) {
+    if (!seen.has(v.member_id)) {
+      seen.set(v.member_id, v.member ? `${v.member.first_name} ${v.member.last_name}`.trim() : '')
+    }
+  }
+  return [...seen].map(([member_id, member_name]) => ({ member_id, member_name }))
+}
+
 /** Lista de espera de estudios. */
 export async function getWaitlist(): Promise<DbWaitlistEntry[]> {
   const supabase = createAdminClient()

@@ -1,362 +1,176 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudies } from '@/hooks/useStudies'
-import { useSedes } from '@/lib/sedes'
-import { LeaderCard } from '@/components/studies/LeaderCard'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
+import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
-import { Plus, X, ChevronRight, Search } from 'lucide-react'
+import { Search, ChevronRight, Users } from 'lucide-react'
 
-type ModalStep = 'search' | 'studies'
-
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
+function initials(name: string) {
+  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
 }
 
-type MemberLite = { id: string; first_name: string; last_name: string; cedula: string | null }
+const ESTADO_FILTERS = [
+  { key: 'todos', label: 'Todos' },
+  { key: 'activo', label: 'Activos' },
+  { key: 'inactivo', label: 'Inactivos' },
+] as const
 
-function NewLeaderModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const { studyTypes: STUDY_TYPES } = useStudies()
-  const [modalStep, setModalStep] = useState<ModalStep>('search')
-  const [query, setQuery] = useState('')
-  const [memberResults, setMemberResults] = useState<MemberLite[]>([])
-  const [selectedMember, setSelectedMember] = useState('')
-  const [chosenMember, setChosenMember] = useState<MemberLite | null>(null)
-  const [selectedStudies, setSelectedStudies] = useState<string[]>([])
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
-
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setMemberResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setMemberResults(d.members ?? []) })
-        .catch(() => { if (alive) setMemberResults([]) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query])
-
-  function toggleStudy(code: string) {
-    setSelectedStudies(prev =>
-      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
-    )
-  }
-
-  async function saveLeader() {
-    if (!selectedMember || saving) return
-    setSaving(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/studies/leaders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          member_id: selectedMember,
-          qualified_study_codes: selectedStudies,
-          availability_status: 'available',
-          is_active: true,
-        }),
-      })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      onCreated()
-      setDone(true)
-    } catch (err) {
-      console.error('No se pudo crear el dirigente:', err)
-      setError('No se pudo crear el dirigente. Puede que ya exista.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (done) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
-        <div
-          className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3 bg-surface-card shadow-[var(--shadow-lg)]"
-        >
-          <p className="text-lg font-bold text-navy font-display">
-            Dirigente registrado
-          </p>
-          <p className="text-sm text-navy-light/60 font-body">
-            {chosenMember?.first_name} fue agregado como dirigente con {selectedStudies.length} estudios cualificados.
-          </p>
-          <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    )
-  }
-
+function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative rounded-2xl p-5 max-w-md w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-navy font-display">
-            {modalStep === 'search' ? 'Nuevo dirigente' : 'Cualificaciones'}
-          </h3>
-          <button onClick={onClose} className="text-navy-light/50 hover:text-navy transition-colors">
-            <X size={18} />
-          </button>
+    <button
+      onClick={onClick}
+      className="w-full text-left rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-4 hover:shadow-[var(--shadow-lg)] transition-shadow"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-xs font-display font-extrabold">
+          {initials(d.member_name) || '—'}
         </div>
-
-        {modalStep === 'search' && (
-          <>
-            <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2">
-              <Search size={14} className="text-navy-light/40" />
-              <input
-                autoFocus
-                className="flex-1 bg-transparent text-sm text-navy outline-none font-body"
-                placeholder="Buscar miembro..."
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1 max-h-52 overflow-y-auto">
-              {memberResults.map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => { setSelectedMember(m.id); setChosenMember(m) }}
-                  className={cn(
-                    'w-full flex items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors',
-                    selectedMember === m.id ? 'bg-coral/10 ring-1 ring-coral/30' : 'hover:bg-surface-low'
-                  )}
-                >
-                  <div className="h-8 w-8 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
-                    {getInitials(`${m.first_name} ${m.last_name}`)}
-                  </div>
-                  <div>
-                    <p className="text-sm text-navy font-body">
-                      {m.first_name} {m.last_name}
-                    </p>
-                    <p className="text-[11px] text-navy-light/50">{m.cedula ?? 'Sin cédula'}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={onClose} className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
-                Cancelar
-              </button>
-              <button
-                disabled={!selectedMember}
-                onClick={() => setModalStep('studies')}
-                className="inline-flex items-center gap-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-              >
-                Siguiente <ChevronRight size={14} />
-              </button>
-            </div>
-          </>
-        )}
-
-        {modalStep === 'studies' && (
-          <>
-            <p className="text-sm text-navy-light/60 font-body">
-              Selecciona los estudios que <strong className="text-navy">{chosenMember?.first_name}</strong> puede impartir:
-            </p>
-            <div className="space-y-3">
-              {['niveles', 'inicial', 'intermedia'].map(stage => (
-                <div key={stage}>
-                  <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-1.5 font-display">
-                    {stage === 'niveles' ? 'Niveles' : stage === 'inicial' ? 'Etapa Inicial' : 'Etapa Intermedia'}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {STUDY_TYPES.filter(s => s.stage === stage).map(s => (
-                      <button
-                        key={s.id}
-                        onClick={() => toggleStudy(s.code)}
-                        className={cn(
-                          'rounded-lg px-2.5 py-1 text-[11px] font-medium border transition-all',
-                          selectedStudies.includes(s.code)
-                            ? 'bg-navy text-white border-navy'
-                            : 'text-navy-light hover:bg-surface-low',
-                          'border-[var(--outline-variant)] font-display',
-                        )}
-                      >
-                        {s.code}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
-            <div className="flex justify-between gap-2">
-              <button onClick={() => setModalStep('search')} className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
-                ← Atrás
-              </button>
-              <button
-                disabled={selectedStudies.length === 0 || saving}
-                onClick={saveLeader}
-                className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
-              >
-                {saving ? 'Guardando…' : 'Guardar dirigente'}
-              </button>
-            </div>
-          </>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-navy font-body font-medium truncate">{d.member_name || 'Sin nombre'}</p>
+            <span className={cn(
+              'rounded-full px-2 py-0.5 text-[10px] font-medium font-body',
+              d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/50',
+            )}>
+              {d.status === 'activo' ? 'Activo' : 'Inactivo'}
+            </span>
+          </div>
+          <p className="text-xs text-navy-light/50 font-body mt-0.5">
+            {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} liderado{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
+          </p>
+        </div>
+        <ChevronRight size={16} className="text-navy-light/30 shrink-0" />
       </div>
-    </div>
+
+      {/* Estudios activos */}
+      {d.estudios_activos.length > 0 && (
+        <div className="mt-3 space-y-1.5">
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">Dando ahora</p>
+          {d.estudios_activos.slice(0, 3).map(g => (
+            <div key={g.group_id} className="flex items-center gap-2 text-xs">
+              <StudyTypeBadge code={g.plan_code} size="sm" />
+              <span className="text-navy-light/60 font-body truncate flex-1">{g.group_name}</span>
+              <span className="flex items-center gap-0.5 text-navy-light/40 font-body shrink-0">
+                <Users size={11} /> {g.students_count}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Historial */}
+      {d.estudios_completados.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-1 items-center">
+          {[...new Set(d.estudios_completados.map(g => g.plan_code))].slice(0, 6).map(code => (
+            <StudyTypeBadge key={code} code={code} size="sm" />
+          ))}
+          <span className="text-[11px] text-navy-light/40 font-body">
+            · {d.estudios_completados.length} completado{d.estudios_completados.length === 1 ? '' : 's'}
+          </span>
+        </div>
+      ) : d.estudios_activos.length === 0 ? (
+        <p className="mt-3 text-[11px] text-navy-light/40 font-body">Sin estudios registrados</p>
+      ) : null}
+    </button>
   )
 }
 
 export default function DirigentesPage() {
-  const { leaders: MOCK_LEADERS, studyTypes: STUDY_TYPES, refetch } = useStudies()
-  const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterZone, setFilterZone] = useState('')
-  const [filterStudy, setFilterStudy] = useState('')
-  const [search, setSearch] = useState('')
-  const [showNewLeader, setShowNewLeader] = useState(false)
+  const router = useRouter()
+  const { dirigentes, loading } = useDirigentes()
+  const { studyTypes } = useStudies()
+  const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
+  const [tipo, setTipo] = useState('')
+  const [query, setQuery] = useState('')
+
+  // Tipos de estudio que algún dirigente ha dado (para el filtro).
+  const tiposDados = useMemo(() => {
+    const set = new Set<string>()
+    dirigentes.forEach(d => d.estudios_habilitados.forEach(c => set.add(c)))
+    return studyTypes.filter(t => set.has(t.code))
+  }, [dirigentes, studyTypes])
 
   const filtered = useMemo(() => {
-    return MOCK_LEADERS.filter(l => {
-      if (filterStatus && l.availability_status !== filterStatus) return false
-      if (filterZone && !l.zone_preference.includes(filterZone)) return false
-      if (filterStudy && !l.qualified_studies.includes(filterStudy)) return false
+    const q = query.trim().toLowerCase()
+    return dirigentes.filter(d => {
+      if (estado !== 'todos' && d.status !== estado) return false
+      if (tipo && !d.estudios_habilitados.includes(tipo)) return false
+      if (q && !d.member_name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [filterStatus, filterZone, filterStudy])
+  }, [dirigentes, estado, tipo, query])
 
-  const filteredLeaders = useMemo(() => {
-    if (!search.trim()) return filtered
-    const q = search.toLowerCase().trim()
-    const searchNorm = q.replace(/[-\s]/g, '')
-    return filtered.filter(leader => {
-      const fullName = leader.member_name.toLowerCase()
-      const cedula = ((leader as Record<string, unknown>).cedula as string ?? '').replace(/[-\s]/g, '')
-      return fullName.includes(q) || cedula.includes(searchNorm)
-    })
-  }, [filtered, search])
-
-  const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full sm:w-auto'
+  const counts = useMemo(() => ({
+    activos: dirigentes.filter(d => d.status === 'activo').length,
+    inactivos: dirigentes.filter(d => d.status === 'inactivo').length,
+  }), [dirigentes])
 
   return (
     <div className="space-y-5">
-      {showNewLeader && <NewLeaderModal onClose={() => setShowNewLeader(false)} onCreated={refetch} />}
-
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1
-            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
-          >
-            Dirigentes
-          </h1>
-          <p className="mt-1 text-sm text-navy-light/60 font-body">
-            {MOCK_LEADERS.length} dirigentes registrados
-          </p>
-        </div>
-        <button
-          onClick={() => setShowNewLeader(true)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-        >
-          <Plus size={14} /> Nuevo dirigente
-        </button>
-      </div>
-
-      {/* Filter bar */}
-      <div className="flex flex-wrap gap-3 font-body">
-        {/* Search input */}
-        <div className="relative flex items-center w-full sm:w-auto">
-          <Search size={13} className="absolute left-3 text-navy-light/40 pointer-events-none" />
-          <input
-            className={`${inputCls} pl-8 pr-8 w-full sm:min-w-[220px]`}
-            placeholder="Buscar por nombre o cédula..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 text-navy-light/40 hover:text-navy transition-colors"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-
-        <select
-          className={inputCls}
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-        >
-          <option value="">Todos los estados</option>
-          <option value="available">Disponible</option>
-          <option value="assigned">Asignado</option>
-          <option value="resting">Descansando</option>
-        </select>
-
-        <select
-          className={inputCls}
-          value={filterZone}
-          onChange={e => setFilterZone(e.target.value)}
-        >
-          <option value="">Todas las zonas</option>
-          <optgroup label="── Sedes activas ──">
-            {ACTIVE_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </optgroup>
-          <optgroup label="── Sedes históricas ──">
-            {HISTORICAL_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </optgroup>
-        </select>
-
-        <select
-          className={inputCls}
-          value={filterStudy}
-          onChange={e => setFilterStudy(e.target.value)}
-        >
-          <option value="">Cualquier estudio</option>
-          {STUDY_TYPES.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
-        </select>
-      </div>
-
-      {/* Result count */}
-      {search.trim() && (
-        <p className="text-[12px] text-navy-light/50 font-body">
-          {filteredLeaders.length} resultado{filteredLeaders.length !== 1 ? 's' : ''} para &ldquo;{search}&rdquo;
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Dirigentes</h1>
+        <p className="text-sm text-navy-light/60 font-body">
+          {counts.activos} activos · {counts.inactivos} inactivos (con historial)
         </p>
-      )}
-
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredLeaders.map(leader => (
-          <Link key={leader.id} href={`/estudios/dirigentes/${leader.id}`} className="block">
-            <LeaderCard leader={leader} />
-          </Link>
-        ))}
-        {filteredLeaders.length === 0 && (
-          <div className="col-span-full rounded-2xl p-12 text-center bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-sm font-semibold text-navy font-display">
-              No se encontraron dirigentes
-            </p>
-            <p className="mt-1 text-sm text-navy-light/40 font-body">
-              {search.trim()
-                ? `No hay resultados para "${search}"`
-                : 'No hay dirigentes con esos filtros.'
-              }
-            </p>
-            {search.trim() && (
-              <button
-                onClick={() => setSearch('')}
-                className="mt-3 rounded-full border px-3 py-1.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-              >
-                Limpiar búsqueda
-              </button>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Filtros */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-1.5">
+          {ESTADO_FILTERS.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setEstado(f.key)}
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-sm transition-colors font-body',
+                estado === f.key ? 'bg-navy text-white' : 'bg-surface-low text-navy-light hover:bg-surface-container',
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <select
+            value={tipo}
+            onChange={e => setTipo(e.target.value)}
+            className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body w-full sm:w-auto"
+          >
+            <option value="">Todos los estudios</option>
+            {tiposDados.map(t => <option key={t.code} value={t.code}>{t.code} — {t.name}</option>)}
+          </select>
+          <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
+            <Search size={15} className="text-navy-light/40 shrink-0" />
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Buscar dirigente…"
+              className="bg-transparent text-sm text-navy outline-none w-full font-body"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Lista */}
+      {loading ? (
+        <div className="py-16 text-center font-body">
+          <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+          <p className="text-sm text-navy-light/50">Cargando dirigentes…</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="py-12 text-center text-sm text-navy-light/40 font-body">Sin dirigentes para los filtros aplicados</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map(d => (
+            <DirigenteCard key={d.member_id} d={d} onClick={() => router.push(`/estudios/dirigentes/${d.member_id}`)} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

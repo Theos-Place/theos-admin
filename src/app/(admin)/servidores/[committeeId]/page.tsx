@@ -2,8 +2,10 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { CommitteeServer, CommitteeGoal, CommitteeData } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
+import { useDirigentes } from '@/hooks/useDirigentes'
 import { cn } from '@/lib/utils'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
@@ -21,7 +23,7 @@ import {
   type CommitteeFormState,
 } from './_components/CommitteeModals'
 
-type Tab = 'miembros' | 'vacantes' | 'metas'
+type Tab = 'miembros' | 'vacantes' | 'metas' | 'estudios'
 type StatusFilter = 'active' | 'inactive' | 'all'
 type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
 
@@ -34,6 +36,9 @@ export default function CommitteeDetailPage() {
     () => MOCK_COMMITTEES.find(c => c.id === committeeId),
     [MOCK_COMMITTEES, committeeId]
   )
+  // El comité de Dirigentes (de estudios) muestra una pestaña extra con el
+  // resumen de estudios de cada servidor.
+  const isDirigentes = !!committee && /dirigentes/i.test(committee.name) && !/administrativo/i.test(committee.name)
 
   const [tab, setTab] = useState<Tab>('miembros')
   const [search, setSearch] = useState('')
@@ -307,7 +312,7 @@ export default function CommitteeDetailPage() {
       {/* ── Tabs card ── */}
       <div className="card w-full min-w-0">
         <div className="flex overflow-x-auto border-b border-[rgba(22,20,64,0.09)] py-0 px-1">
-          {(['miembros', 'vacantes', 'metas'] as Tab[]).map(t => (
+          {((['miembros', 'vacantes', 'metas', ...(isDirigentes ? ['estudios'] : [])]) as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -318,7 +323,7 @@ export default function CommitteeDetailPage() {
                   : 'border-transparent text-navy-light/50 hover:text-navy'
               )}
             >
-              {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Puestos de Servicio (${committeeVacancies.length})` : 'Metas'}
+              {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Puestos de Servicio (${committeeVacancies.length})` : t === 'metas' ? 'Metas' : 'Estudios'}
             </button>
           ))}
         </div>
@@ -381,6 +386,11 @@ export default function CommitteeDetailPage() {
           />
         )}
 
+        {/* Tab: Estudios (solo comité de Dirigentes) */}
+        {tab === 'estudios' && (
+          <DirigentesEstudiosTab members={committee.members ?? []} />
+        )}
+
         {/* Disconnect modal — rendered inside card to preserve original structure */}
         {disconnectTarget && (
           <DisconnectModal
@@ -434,6 +444,54 @@ export default function CommitteeDetailPage() {
         />
       )}
 
+    </div>
+  )
+}
+
+// ─── Tab Estudios (solo comité de Dirigentes) ───────────────────────────────────
+function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
+  const { dirigentes, loading } = useDirigentes()
+  const byId = useMemo(() => new Map(dirigentes.map(d => [d.member_id, d])), [dirigentes])
+
+  if (loading) {
+    return (
+      <div className="py-12 text-center font-body">
+        <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+        <p className="text-sm text-navy-light/50">Cargando estudios…</p>
+      </div>
+    )
+  }
+
+  const rows = members.map(m => ({
+    member_id: m.member_id,
+    name: m.name,
+    total: byId.get(m.member_id)?.total_grupos ?? 0,
+    activos: byId.get(m.member_id)?.total_activos ?? 0,
+  }))
+
+  return (
+    <div className="p-4 sm:p-5">
+      <p className="text-sm text-navy-light/60 font-body mb-3">
+        Resumen de estudios liderados por cada servidor del comité.
+      </p>
+      <div className="space-y-1">
+        {rows.map(r => (
+          <Link
+            key={r.member_id}
+            href={`/estudios/dirigentes/${r.member_id}`}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors"
+          >
+            <span className="min-w-0 flex-1 text-sm text-navy font-body truncate">{r.name}</span>
+            <span className="shrink-0 text-xs text-navy-light/60 font-body">
+              {r.total} grupo{r.total === 1 ? '' : 's'} · {r.activos} activo{r.activos === 1 ? '' : 's'}
+            </span>
+            <span className="shrink-0 inline-flex items-center gap-1 text-xs text-coral font-body">Ver dirigente →</span>
+          </Link>
+        ))}
+        {rows.length === 0 && (
+          <p className="py-8 text-center text-sm text-navy-light/40 font-body">Sin servidores en el comité.</p>
+        )}
+      </div>
     </div>
   )
 }
