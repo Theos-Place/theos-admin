@@ -93,7 +93,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
     setVisibleCount(PAGE_SIZE)
   }, [search, statusFilter, zoneFilter])
 
-  if (!studyType || !catalog) {
+  if (!studyType) {
     return (
       <div className="page">
         <div className="ph">
@@ -108,7 +108,25 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
     )
   }
 
-  const stageInfo = STUDY_STAGES[catalog.stage as keyof typeof STUDY_STAGES]
+  // Vista del plan: datos reales (studyType) + extras opcionales del catálogo (descripción, mentor…).
+  const view = {
+    code: studyType.code,
+    name: studyType.name,
+    stage: studyType.stage,
+    weeks: studyType.weeks,
+    requires_payment: studyType.requires_payment,
+    cost: studyType.cost,
+    prerequisite: studyType.prerequisite,
+    req_donor: studyType.req_donor,
+    req_server: studyType.req_server,
+    req_attendee: studyType.req_attendee,
+    level: catalog?.level,
+    description: catalog?.description,
+    mentor: catalog?.mentor,
+    commitments: catalog?.commitments,
+  }
+
+  const stageInfo = STUDY_STAGES[view.stage as keyof typeof STUDY_STAGES]
 
   return (
     <div className="page">
@@ -131,7 +149,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         </button>
         <div className="ph-row">
           <div>
-            <div className="ptitle">{catalog.name}</div>
+            <div className="ptitle">{view.name}</div>
             <div className="psub">
               {stageInfo?.label}
               {archived && <span style={{ marginLeft: 8, color: 'var(--brand-coral)', fontWeight: 600 }}>[Archivado]</span>}
@@ -157,12 +175,12 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       <div className="card">
         <div className="card-hd" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <StudyTypeBadge code={catalog.code} />
+            <StudyTypeBadge code={view.code} />
             <div>
-              <div className="card-title">{catalog.name}</div>
+              <div className="card-title">{view.name}</div>
               <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 2, fontFamily: 'var(--font-body)' }}>
-                {stageInfo?.label} · {catalog.weeks} semanas
-                {catalog.level && ` · Nivel ${catalog.level}`}
+                {stageInfo?.label} · {view.weeks} semanas
+                {view.level && ` · Nivel ${view.level}`}
               </div>
             </div>
           </div>
@@ -171,11 +189,11 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
 
           {/* Descripción */}
-          {catalog.description && (
+          {view.description && (
             <div>
               <div className="st">Descripción</div>
               <p style={{ fontSize: 13, color: 'var(--brand-navy)', lineHeight: 1.6, marginTop: 4, fontFamily: 'var(--font-body)' }}>
-                {catalog.description}
+                {view.description}
               </p>
             </div>
           )}
@@ -184,14 +202,14 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           <div>
             <div className="st">Mentor</div>
             <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4, fontFamily: 'var(--font-body)' }}>
-              {catalog.mentor
-                ? catalog.mentor
+              {view.mentor
+                ? view.mentor
                 : <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>Sin mentor asignado</span>}
             </div>
           </div>
 
           {/* Compromisos (texto) */}
-          {catalog.commitments && (
+          {view.commitments && (
             <div>
               <div className="st">Compromisos</div>
               <div style={{
@@ -200,7 +218,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                 borderRadius: 8, marginTop: 4, display: 'inline-block',
                 fontFamily: 'var(--font-body)',
               }}>
-                📋 {catalog.commitments}
+                📋 {view.commitments}
               </div>
             </div>
           )}
@@ -209,46 +227,48 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
             <div>
               <div className="st">Duración</div>
-              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>{catalog.weeks} semanas</div>
+              <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>{view.weeks} semanas</div>
             </div>
-            {catalog.level && (
+            {view.level && (
               <div>
                 <div className="st">Nivel</div>
                 <span style={{
                   fontSize: 12, padding: '2px 8px', borderRadius: 999,
-                  background: getLevelColor(catalog.level), fontWeight: 600,
+                  background: getLevelColor(view.level), fontWeight: 600,
                   fontFamily: 'var(--font-body)',
                 }}>
-                  {catalog.level}
+                  {view.level}
                 </span>
               </div>
             )}
             <div>
               <div className="st">Costo</div>
               <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>
-                {catalog.requires_payment
-                  ? `₡${(catalog.cost ?? 0).toLocaleString('es-CR')}`
+                {view.requires_payment
+                  ? `₡${(view.cost ?? 0).toLocaleString('es-CR')}`
                   : 'Gratuito'}
               </div>
             </div>
             <div>
               <div className="st">Prerequisito</div>
               <div style={{ fontWeight: 600, fontSize: 13, fontFamily: 'var(--font-body)' }}>
-                {catalog.prerequisite
-                  ? STUDY_CATALOG.find(s => s.code === catalog.prerequisite)?.name || catalog.prerequisite
+                {view.prerequisite
+                  ? studyTypes.find(s => s.code === view.prerequisite)?.name
+                    || STUDY_CATALOG.find(s => s.code === view.prerequisite)?.name
+                    || view.prerequisite
                   : 'Ninguno'}
               </div>
             </div>
           </div>
 
           {/* Requisitos de compromiso */}
-          {(catalog.req_donor || catalog.req_server || catalog.req_attendee) && (
+          {(view.req_donor || view.req_server || view.req_attendee) && (
             <div>
               <div className="st">Compromisos requeridos para matricular</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-                {catalog.req_donor    && <span className="badge b-donor">Ser donador activo</span>}
-                {catalog.req_server   && <span className="badge b-server">Servir en un comité</span>}
-                {catalog.req_attendee && <span className="badge b-study">Asistencia regular a charlas</span>}
+                {view.req_donor    && <span className="badge b-donor">Ser donador activo</span>}
+                {view.req_server   && <span className="badge b-server">Servir en un comité</span>}
+                {view.req_attendee && <span className="badge b-study">Asistencia regular a charlas</span>}
               </div>
             </div>
           )}
