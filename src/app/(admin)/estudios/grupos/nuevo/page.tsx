@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
+import { useDirigentes } from '@/hooks/useDirigentes'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, CheckCircle, MessageCircle } from 'lucide-react'
+import { ChevronLeft, CheckCircle } from 'lucide-react'
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const DAY_LABELS: Record<string, string> = {
@@ -31,7 +31,8 @@ type Step1 = {
 
 export default function NuevoGrupoPage() {
   const { activeSedes: SEDES } = useSedes()
-  const { studyTypes, leaders } = useStudies()
+  const { studyTypes } = useStudies()
+  const { dirigentes } = useDirigentes()
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [step1, setStep1] = useState<Step1>({
@@ -64,16 +65,13 @@ export default function NuevoGrupoPage() {
 
   const studyType = studyTypes.find(s => s.id === step1.study_type_id)
 
-  const compatibleLeaders = leaders.filter(l =>
-    (step1.zone === '' || step1.zone === 'all' || l.zone_preference.includes(step1.zone)) &&
-    (!studyType || l.qualified_studies.includes(studyType.code)) &&
-    l.availability_status !== 'resting'
-  )
-  // Búsqueda expandida: todos los dirigentes, sin filtrar por zona/estudio.
-  const displayLeaders = showAllLeaders ? leaders : compatibleLeaders
+  // Lista unificada de dirigentes. Compatibles = los que han impartido este estudio.
+  const compatibleLeaders = dirigentes.filter(d => !studyType || d.estudios_habilitados.includes(studyType.code))
+  // Búsqueda expandida: todos los dirigentes.
+  const displayLeaders = showAllLeaders ? dirigentes : compatibleLeaders
 
-  const leaderData = leaders.find(l => l.id === selectedLeader)
-  const coLeaderData = leaders.find(l => l.id === selectedCoLeader)
+  const leaderData = dirigentes.find(d => d.member_id === selectedLeader)
+  const coLeaderData = dirigentes.find(d => d.member_id === selectedCoLeader)
 
   async function handleCreate() {
     if (!studyType) return
@@ -378,65 +376,46 @@ export default function NuevoGrupoPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-[420px] overflow-y-auto">
               {displayLeaders.map(leader => (
                 <div
-                  key={leader.id}
-                  onClick={() => setSelectedLeader(leader.id)}
+                  key={leader.member_id}
+                  onClick={() => setSelectedLeader(leader.member_id)}
                   className={cn(
                     'rounded-xl border p-3 cursor-pointer transition-all',
-                    selectedLeader === leader.id
+                    selectedLeader === leader.member_id
                       ? 'border-coral bg-coral/5'
                       : 'hover:bg-surface-low'
                   )}
-                  style={{ borderColor: selectedLeader === leader.id ? undefined : 'var(--outline-variant)' }}
+                  style={{ borderColor: selectedLeader === leader.member_id ? undefined : 'var(--outline-variant)' }}
                 >
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"
                       className="accent-coral"
-                      checked={selectedLeader === leader.id}
-                      onChange={() => setSelectedLeader(leader.id)}
+                      checked={selectedLeader === leader.member_id}
+                      onChange={() => setSelectedLeader(leader.member_id)}
                     />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="text-sm font-medium text-navy font-body">
                           {leader.member_name}
                         </p>
-                        <span className="text-[10px] text-navy-light/50">{leader.zone_preference.map(id => sedeLabel(id)).join(' · ')}</span>
                         <span className={cn(
                           'rounded-md px-1.5 py-0.5 text-[10px] font-medium',
-                          leader.availability_status === 'available' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy'
+                          leader.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-navy/10 text-navy-light/60'
                         )}>
-                          {leader.availability_status === 'available' ? 'Disponible' : 'Asignado'}
+                          {leader.status === 'activo' ? 'Activo' : 'Inactivo'}
                         </span>
+                        <span className="text-[11px] text-navy-light/50 font-body">{leader.total_grupos} grupos · {leader.total_activos} activos</span>
                       </div>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {leader.qualified_studies.map(c => (
-                          <StudyTypeBadge key={c} code={c} size="sm" />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-[11px] text-navy-light/50">
-                          {leader.stats.groups_led} grupos · {leader.stats.avg_rating.toFixed(1)} ⭐
-                        </span>
-                        <CommitmentIcons
-                          donor={leader.commitments.is_donor}
-                          server={leader.commitments.is_server}
-                          charlas={leader.commitments.attends_charlas}
-                          size={12}
-                        />
-                        <a
-                          href={`https://wa.me/50688123456`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()}
-                          className="ml-auto flex items-center gap-1 text-[11px] text-teal-deep hover:underline"
-                        >
-                          <MessageCircle size={12} />
-                          WhatsApp
-                        </a>
-                      </div>
+                      {leader.estudios_habilitados.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {leader.estudios_habilitados.slice(0, 8).map(c => (
+                            <StudyTypeBadge key={c} code={c} size="sm" />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -455,8 +434,8 @@ export default function NuevoGrupoPage() {
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               >
                 <option value="">Sin co-dirigente</option>
-                {leaders.filter(l => l.id !== selectedLeader).map(l => (
-                  <option key={l.id} value={l.id}>{l.member_name}</option>
+                {dirigentes.filter(d => d.member_id !== selectedLeader).map(d => (
+                  <option key={d.member_id} value={d.member_id}>{d.member_name}</option>
                 ))}
               </select>
             </div>

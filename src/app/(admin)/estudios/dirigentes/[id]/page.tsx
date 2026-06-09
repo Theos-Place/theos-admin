@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ExternalLink, Users, X, Plus } from 'lucide-react'
+import { ChevronLeft, ExternalLink, Users, X, Pencil } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 
 function initials(name: string) {
@@ -145,6 +145,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
   const [studies, setStudies] = useState<string[]>([])
   const [zones, setZones] = useState<string[]>([])
   const [init, setInit] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -172,15 +173,29 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
       })
       if (!res.ok) throw new Error()
       setSaved(true)
+      setEditing(false)
     } catch { /* noop */ }
     finally { setSaving(false) }
+  }
+
+  function cancel() {
+    setStudies(leader?.qualified_studies ?? [])
+    setZones(leader?.zone_preference ?? [])
+    setEditing(false)
   }
 
   const sedeName = (id: string) => SEDES.find(s => s.id === id)?.name ?? id
 
   return (
     <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5 space-y-4">
-      <h2 className="text-sm text-navy font-display font-extrabold">Configuración del dirigente</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm text-navy font-display font-extrabold">Configuración del dirigente</h2>
+        {canEdit && !editing && (
+          <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
+            <Pencil size={12} /> Editar perfil de dirigente
+          </button>
+        )}
+      </div>
 
       {/* Estudios que imparte */}
       <div className="space-y-2">
@@ -190,11 +205,11 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
           {studies.map(code => (
             <span key={code} className="inline-flex items-center gap-1">
               <StudyTypeBadge code={code} size="sm" />
-              {canEdit && <button onClick={() => removeStudy(code)} className="text-navy-light/40 hover:text-coral"><X size={12} /></button>}
+              {editing && <button onClick={() => removeStudy(code)} className="text-navy-light/40 hover:text-coral"><X size={12} /></button>}
             </span>
           ))}
         </div>
-        {canEdit && (
+        {editing && (
           <select
             value=""
             onChange={e => addStudy(e.target.value)}
@@ -216,11 +231,11 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
           {zones.map(id => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-0.5 text-xs text-navy font-body">
               {sedeName(id)}
-              {canEdit && <button onClick={() => removeZone(id)} className="text-navy-light/40 hover:text-coral"><X size={11} /></button>}
+              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/40 hover:text-coral"><X size={11} /></button>}
             </span>
           ))}
         </div>
-        {canEdit && (
+        {editing && (
           <select
             value=""
             onChange={e => addZone(e.target.value)}
@@ -232,14 +247,17 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
         )}
       </div>
 
-      {canEdit && (
-        <div className="flex items-center gap-3 pt-1">
+      {editing && (
+        <div className="flex items-center gap-2 pt-1">
           <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
-            <Plus size={14} /> {saving ? 'Guardando…' : 'Guardar configuración'}
+            {saving ? 'Guardando…' : 'Guardar'}
           </button>
-          {saved && <span className="text-xs text-[#3DB97A] font-body">Guardado ✓</span>}
+          <button onClick={cancel} disabled={saving} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
+            Cancelar
+          </button>
         </div>
       )}
+      {saved && !editing && <span className="text-xs text-[#3DB97A] font-body">Guardado ✓</span>}
     </div>
   )
 }
