@@ -85,8 +85,8 @@ function StudyCardFull({ study }: { study: StudyType }) {
 
   return (
     <div
-      className="rounded-xl bg-surface-low flex flex-col gap-0"
-      style={{ padding: '14px 16px', opacity: study.is_archived ? 0.6 : 1 }}
+      className="rounded-xl flex flex-col gap-0"
+      style={{ padding: '14px 16px', background: study.is_archived ? 'rgba(120,120,130,0.10)' : 'var(--surface-low)', opacity: study.is_archived ? 0.7 : 1, filter: study.is_archived ? 'grayscale(0.8)' : 'none' }}
       onClick={() => router.push(`/estudios/plan/${study.id}`)}
       role="button"
       tabIndex={0}
@@ -103,8 +103,8 @@ function StudyCardFull({ study }: { study: StudyType }) {
               {study.code}
             </span>
             {study.is_archived && (
-              <span className="rounded-full bg-navy/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-navy/50" style={{ fontFamily: 'var(--font-display)' }}>
-                Archivado
+              <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase" style={{ fontFamily: 'var(--font-display)', background: 'rgba(120,120,130,0.18)', color: '#6b7280' }}>
+                Descontinuado
               </span>
             )}
           </div>
@@ -177,10 +177,13 @@ function StageDivider({ label }: { label: string }) {
 
 export default function PlanDeEstudiosPage() {
   const { studyTypes } = useStudies()
-  const niveles    = useMemo(() => studyTypes.filter(s => s.stage === 'niveles'), [studyTypes])
-  const inicial    = useMemo(() => studyTypes.filter(s => s.stage === 'inicial'), [studyTypes])
-  const intermedia = useMemo(() => studyTypes.filter(s => s.stage === 'intermedia'), [studyTypes])
-  const campana    = useMemo(() => studyTypes.filter(s => s.stage === 'campaña'), [studyTypes])
+  // Archivados (descontinuados) al final de su categoría.
+  const archLast = (a: { is_archived: boolean }, b: { is_archived: boolean }) => Number(a.is_archived) - Number(b.is_archived)
+  const byStage = (stage: string) => [...studyTypes.filter(s => s.stage === stage)].sort(archLast)
+  const niveles    = useMemo(() => byStage('niveles'), [studyTypes])
+  const inicial    = useMemo(() => byStage('inicial'), [studyTypes])
+  const intermedia = useMemo(() => byStage('intermedia'), [studyTypes])
+  const campana    = useMemo(() => byStage('campaña'), [studyTypes])
   // Listado final ordenado por etapa.
   const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, 'campaña': 3 }
   // Clave de orden dentro de la etapa: por código, con ajustes manuales puntuales
@@ -188,7 +191,7 @@ export default function PlanDeEstudiosPage() {
   const sortKey = (code: string) => (code === 'CTBD' ? 'DIS3~' : code)
   const sortedStudyTypes = useMemo(
     () => [...studyTypes].sort((a, b) =>
-      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || sortKey(a.code).localeCompare(sortKey(b.code)),
+      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || archLast(a, b) || sortKey(a.code).localeCompare(sortKey(b.code)),
     ),
     [studyTypes],
   )
@@ -329,13 +332,18 @@ export default function PlanDeEstudiosPage() {
                 <tr
                   key={s.id}
                   className="hover:bg-surface-low transition-colors group"
-                  style={i < sortedStudyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                  style={{ ...(i < sortedStudyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}), ...(s.is_archived ? { opacity: 0.55 } : {}) }}
                 >
                   <td className="px-4 py-3">
                     <StudyTypeBadge code={s.code} size="sm" />
                   </td>
                   <td className="px-4 py-3 text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>
                     {s.name}
+                    {s.is_archived && (
+                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase align-middle" style={{ fontFamily: 'var(--font-display)', background: 'rgba(120,120,130,0.18)', color: '#6b7280' }}>
+                        Descontinuado
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
                     {s.stage === 'niveles' ? 'Niveles' : s.stage === 'inicial' ? 'Inicial' : s.stage === 'campaña' ? 'Campaña' : 'Intermedia'}

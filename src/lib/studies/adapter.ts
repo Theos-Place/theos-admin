@@ -41,6 +41,7 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
     weeks: db.duration_weeks ?? 0,
     prerequisite: db.prerequisite_code,
     requires_payment: db.requires_payment,
+    requires_invitation: (db as { requires_invitation?: boolean }).requires_invitation ?? false,
     cost: db.cost,
     requires_grade: db.requires_grade,
     auto_promote: db.auto_promote,

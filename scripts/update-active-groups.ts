@@ -25,6 +25,7 @@ const RULES: Array<[RegExp, string]> = [
   [/pre.?matri/i, 'PREMAT'], [/matrimonio/i, 'MAT'],
   [/disc[ií]pulo?s?\s*3/i, 'DIS3'], [/disc[ií]pulo?s?\s*2/i, 'DIS2'], [/disc[ií]pulo?s?\s*1/i, 'DIS1'],
   [/sirviendo como jes/i, 'SCJ'], [/liderazgo/i, 'SCJ'],
+  [/c[oó]mo\s+dar\s+charlas/i, 'CDC'],
   [/\bcdeb\b|c[oó]mo\s+dar\s+estudios/i, 'CDEB'],
   [/panorama/i, 'PAN'], [/evangelismo/i, 'EVM'], [/evangelios/i, 'EVA'], [/hechos/i, 'HCH'],
   [/romanos/i, 'ROM'], [/hebreos/i, 'HEB'], [/efesios/i, 'EFE'], [/g[aá]latas/i, 'GAL'], [/apocalipsis/i, 'APO'],

@@ -120,6 +120,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
     req_donor: studyType.req_donor,
     req_server: studyType.req_server,
     req_attendee: studyType.req_attendee,
+    requires_invitation: studyType.requires_invitation ?? false,
     level: catalog?.level,
     description: catalog?.description,
     mentor: catalog?.mentor,
@@ -285,6 +286,15 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
           </div>
+
+          {view.requires_invitation && (
+            <div>
+              <div className="st">Acceso</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+                <span className="badge" style={{ background: 'rgba(155,127,212,0.15)', color: '#7C5EC2' }}>Solo por invitación</span>
+              </div>
+            </div>
+          )}
 
           {/* Requisitos de compromiso */}
           {(view.req_donor || view.req_server || view.req_attendee) && (

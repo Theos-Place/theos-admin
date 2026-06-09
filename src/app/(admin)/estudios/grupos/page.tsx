@@ -102,7 +102,8 @@ export default function GruposPage() {
   const { groups: MOCK_GROUPS, studyTypes: STUDY_TYPES } = useStudies()
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
-  const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>([])
+  // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
+  const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>(['open', 'in_progress', 'pending_leader', 'pending_opening'])
   const [selectedType, setSelectedType] = useState('')
   const [selectedZone, setSelectedZone] = useState('')
   const [selectedDay, setSelectedDay] = useState('')

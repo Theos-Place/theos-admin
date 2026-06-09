@@ -13,6 +13,7 @@ export type StudyType = {
   weeks: number
   prerequisite: string | null
   requires_payment: boolean
+  requires_invitation?: boolean
   cost: number
   requires_grade: boolean
   auto_promote: boolean
