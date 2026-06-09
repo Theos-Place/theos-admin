@@ -75,6 +75,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
     req_server:       studyType.req_server,
     req_attendee:     studyType.req_attendee,
     requires_grade:   studyType.requires_grade,
+    requires_invitation: studyType.requires_invitation ?? false,
     auto_promote:     studyType.auto_promote,
     is_archived:      studyType.is_archived,
   })
@@ -101,6 +102,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
           requires_server: form.req_server,
           requires_attendance: form.req_attendee,
           requires_grade: form.requires_grade,
+          requires_invitation: form.requires_invitation,
           auto_promote: form.auto_promote,
           is_active: !form.is_archived,
         }),
@@ -213,6 +215,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
           <Toggle checked={form.req_server}     onChange={v => set('req_server', v)}     label="Requiere servir en un comité" />
           <Toggle checked={form.req_attendee}   onChange={v => set('req_attendee', v)}   label="Requiere asistencia regular a charlas" />
           <Toggle checked={form.requires_grade} onChange={v => set('requires_grade', v)} label="Requiere calificación numérica" />
+          <Toggle checked={form.requires_invitation} onChange={v => set('requires_invitation', v)} label="Requiere invitación" sublabel="Solo se puede ingresar por invitación (no abierto a inscripción libre)" />
           <Toggle checked={form.auto_promote}   onChange={v => set('auto_promote', v)}   label="Transición automática al siguiente nivel" sublabel="Al cerrar el grupo, pasar automáticamente al siguiente estudio" />
           <Toggle checked={form.is_archived}    onChange={v => set('is_archived', v)}    label="Archivar estudio" sublabel="No estará disponible para nuevos grupos" />
         </div>
