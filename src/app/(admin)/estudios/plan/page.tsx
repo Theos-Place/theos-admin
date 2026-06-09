@@ -202,9 +202,15 @@ export default function PlanDeEstudiosPage() {
   const campana    = useMemo(() => byStage('campaña'), [studyTypes])
   // Listado final ordenado por etapa.
   const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, 'campaña': 3 }
+  // CDEB y CDC ("cómo dar...") van al final de toda la lista, justo antes de los
+  // descontinuados (que siempre quedan de últimos).
+  const isInvTail = (code: string) => (code === 'CDEB' || code === 'CDC' ? 1 : 0)
   const sortedStudyTypes = useMemo(
     () => [...studyTypes].sort((a, b) =>
-      (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99) || withinStage(a.stage)(a, b),
+      archLast(a, b)
+      || isInvTail(a.code) - isInvTail(b.code)
+      || (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99)
+      || withinStage(a.stage)(a, b),
     ),
     [studyTypes],
   )
