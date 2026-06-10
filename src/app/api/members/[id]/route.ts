@@ -7,6 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     const { id } = await params
     const member = await getMemberFullById(id)
     if (!member) {

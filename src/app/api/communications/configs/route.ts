@@ -4,6 +4,8 @@ import { getChannelConfigs, createConfig, type ConfigWriteInput } from '@/lib/su
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getChannelConfigs())
   } catch (error) {
     console.error('GET /api/communications/configs:', error)

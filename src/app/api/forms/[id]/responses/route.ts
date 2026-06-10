@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getFormResponses, submitResponse } from '@/lib/supabase/queries/forms'
 
 export async function GET(
@@ -6,6 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     const { id } = await params
     return NextResponse.json(await getFormResponses(id))
   } catch (error) {

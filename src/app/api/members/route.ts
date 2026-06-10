@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getMembers } from '@/lib/supabase/queries/members'
 
 export async function GET(req: NextRequest) {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
     const search    = searchParams.get('search')   ?? undefined
     const is_active = searchParams.get('is_active')

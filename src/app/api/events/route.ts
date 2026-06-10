@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getEvents, createEvent } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
 import type { EventType, EventStatus } from '@/types/event'
 
 export async function GET(req: NextRequest) {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
     const search     = searchParams.get('search')     ?? undefined
     const event_type = searchParams.get('event_type') ?? undefined

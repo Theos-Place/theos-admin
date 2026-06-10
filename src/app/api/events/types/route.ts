@@ -4,6 +4,8 @@ import { getEventTypes, createEventType } from '@/lib/supabase/queries/events'
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getEventTypes())
   } catch (error) {
     console.error('GET /api/events/types:', error)

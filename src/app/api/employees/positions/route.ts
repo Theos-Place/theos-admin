@@ -4,6 +4,8 @@ import { getPaidPositions, createPosition, type PositionWriteInput } from '@/lib
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getPaidPositions())
   } catch (error) {
     console.error('GET /api/employees/positions:', error)

@@ -4,6 +4,8 @@ import { getVacancies, createVacancy, type VacancyWriteInput } from '@/lib/supab
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getVacancies())
   } catch (error) {
     console.error('GET /api/servers/vacancies:', error)

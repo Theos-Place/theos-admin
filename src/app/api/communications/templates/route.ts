@@ -4,6 +4,8 @@ import { getTemplates, createTemplate, type TemplateWriteInput } from '@/lib/sup
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getTemplates())
   } catch (error) {
     console.error('GET /api/communications/templates:', error)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getEmployeeDocSignedUrl } from '@/lib/supabase/queries/employees'
 
 // GET: redirige a una URL firmada temporal del documento privado.
@@ -7,6 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     const { id } = await params
     const url = await getEmployeeDocSignedUrl(id)
     if (!url) return NextResponse.json({ error: 'Documento sin archivo' }, { status: 404 })

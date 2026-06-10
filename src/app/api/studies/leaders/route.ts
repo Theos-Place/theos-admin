@@ -4,6 +4,8 @@ import { getStudyLeaders, createLeader, type LeaderWriteInput } from '@/lib/supa
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getStudyLeaders())
   } catch (error) {
     console.error('GET /api/studies/leaders:', error)

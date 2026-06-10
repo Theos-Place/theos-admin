@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { getForms, createForm } from '@/lib/supabase/queries/forms'
 import { formToWriteInput, formToFields } from '@/lib/forms/form-mapper'
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getForms())
   } catch (error) {
     console.error('GET /api/forms:', error)

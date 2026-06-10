@@ -4,6 +4,8 @@ import { getApplications, createApplication } from '@/lib/supabase/queries/serve
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getApplications())
   } catch (error) {
     console.error('GET /api/servers/applications:', error)

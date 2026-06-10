@@ -4,6 +4,8 @@ import { getMessages, createBroadcast, type BroadcastWriteInput } from '@/lib/su
 
 export async function GET() {
   try {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
     return NextResponse.json(await getMessages())
   } catch (error) {
     console.error('GET /api/communications/messages:', error)
