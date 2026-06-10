@@ -49,11 +49,17 @@ export function useStudies() {
 
   const studyTypes: StudyType[] = useMemo(() => dbPlans.map(toDomainStudyType), [dbPlans])
   const groups: StudyGroup[]    = useMemo(() => dbGroups.map(toDomainStudyGroup), [dbGroups])
-  // Los stats del líder dependen de los grupos ya convertidos.
-  const leaders: StudyLeader[]  = useMemo(
-    () => dbLeaders.map((l) => toDomainStudyLeader(l, groups)),
-    [dbLeaders, groups],
-  )
+  // Los stats del líder dependen de los grupos. Precalculamos un Map por
+  // dirigente para no filtrar los ~1680 grupos por cada líder (O(n²) → O(n)).
+  const leaders: StudyLeader[]  = useMemo(() => {
+    const byLeader = new Map<string, StudyGroup[]>()
+    for (const g of groups) {
+      if (!g.leader_id) continue
+      const arr = byLeader.get(g.leader_id)
+      if (arr) arr.push(g); else byLeader.set(g.leader_id, [g])
+    }
+    return dbLeaders.map((l) => toDomainStudyLeader(l, byLeader.get(l.member_id) ?? []))
+  }, [dbLeaders, groups])
   const waitlist: WaitListEntry[]     = useMemo(() => dbWait.map(toDomainWaitlistEntry), [dbWait])
   const relocations: RelocationRequest[] = useMemo(() => dbReloc.map(toDomainRelocation), [dbReloc])
 

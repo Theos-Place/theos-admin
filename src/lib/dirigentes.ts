@@ -47,7 +47,8 @@ export function buildDirigentes(
    *  liderado grupos. Quedan INACTIVO salvo que estén en el comité activo. */
   designated: ActiveDirigente[] = [],
 ): Dirigente[] {
-  const planName = (code: string) => plans.find(p => p.code === code)?.name ?? code
+  const planNames = new Map(plans.map(p => [p.code, p.name]))
+  const planName = (code: string) => planNames.get(code) ?? code
   const activeMap = new Map(activeDirigentes.map(a => [a.member_id, a.member_name]))
   const designatedMap = new Map(designated.map(a => [a.member_id, a.member_name]))
 

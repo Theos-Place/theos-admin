@@ -107,9 +107,10 @@ const AVAIL_MAP: Record<DbLeaderEnriched['availability_status'], StudyLeader['av
 
 /** Convierte un dirigente. Los `stats` se derivan de `groups` (los grupos ya
  *  cargados en dominio), y los `commitments` del miembro. */
-export function toDomainStudyLeader(db: DbLeaderEnriched, groups: StudyGroup[]): StudyLeader {
+// `ledGroups` ya viene pre-filtrado (los grupos que lidera este miembro) para
+// evitar O(leaders × groups) — ver useStudies.
+export function toDomainStudyLeader(db: DbLeaderEnriched, ledGroups: StudyGroup[]): StudyLeader {
   const memberName = db.member ? `${db.member.first_name} ${db.member.last_name}`.trim() : ''
-  const ledGroups = groups.filter((g) => g.leader_id === db.member_id)
   const activeGroups = ledGroups.filter((g) => g.status === 'open' || g.status === 'in_progress')
   const currentParticipants = activeGroups.reduce(
     (sum, g) => sum + g.participants.filter((p) => p.status === 'enrolled').length, 0,
