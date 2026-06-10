@@ -79,9 +79,15 @@ export async function getServerMemberIds(): Promise<string[]> {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('volunteers').select('member_id').eq('status', 'active')
-    if (error) return []
+    if (error) {
+      console.warn('getServerMemberIds:', error.message)
+      return []
+    }
     return Array.from(new Set((data ?? []).map((r) => (r as { member_id: string }).member_id)))
-  } catch { return [] }
+  } catch (e) {
+    console.warn('getServerMemberIds:', e)
+    return []
+  }
 }
 
 /** Últimos 6 meses calendario (YYYY-MM), incluyendo el mes actual. */
@@ -104,7 +110,10 @@ export async function getActiveAttendanceMemberIds(): Promise<string[]> {
     const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo
     const { data, error } = await supabase
       .from('event_checkins').select('member_id, checked_in_at').gte('checked_in_at', oldest)
-    if (error || !data) return []
+    if (error || !data) {
+      if (error) console.warn('getActiveAttendanceMemberIds:', error.message)
+      return []
+    }
     const byMember = new Map<string, Set<string>>()
     for (const r of data as Array<{ member_id: string | null; checked_in_at: string | null }>) {
       if (!r?.member_id || !r?.checked_in_at) continue
@@ -118,7 +127,10 @@ export async function getActiveAttendanceMemberIds(): Promise<string[]> {
       if ([...need].every((m) => set.has(m))) out.push(id)
     }
     return out
-  } catch { return [] }
+  } catch (e) {
+    console.warn('getActiveAttendanceMemberIds:', e)
+    return []
+  }
 }
 
 export type MemberCounts = {
@@ -135,13 +147,19 @@ export async function getMemberCounts(): Promise<MemberCounts> {
     try {
       const { count } = await supabase.from('members').select('id', { count: 'exact', head: true }).eq(col, val)
       return count ?? 0
-    } catch { return 0 }
+    } catch (e) {
+      console.warn(`getMemberCounts(${col}):`, e)
+      return 0
+    }
   }
   const totalP = (async () => {
     try {
       const { count } = await supabase.from('members').select('id', { count: 'exact', head: true }).eq('is_active', true)
       return count ?? 0
-    } catch { return 0 }
+    } catch (e) {
+      console.warn('getMemberCounts(total):', e)
+      return 0
+    }
   })()
   const [total, donadores, serverIds, attendanceIds] = await Promise.all([
     totalP,

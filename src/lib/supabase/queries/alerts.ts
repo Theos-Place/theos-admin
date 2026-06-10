@@ -66,9 +66,14 @@ export async function getAlerts(): Promise<ActiveAlert[]> {
         let q = supabase.from(def.table).select('*', { count: 'exact', head: true })
         if (def.filter) q = q.eq(def.filter.column, def.filter.value)
         const { count, error } = await q
-        if (error || !count) return null
+        if (error) {
+          console.warn(`getAlerts(${def.id}):`, error.message)
+          return null
+        }
+        if (!count) return null
         return { id: def.id, type: def.type, message: def.message(count), url: def.url, count }
-      } catch {
+      } catch (e) {
+        console.warn(`getAlerts(${def.id}):`, e)
         return null
       }
     }),
