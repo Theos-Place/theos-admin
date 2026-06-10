@@ -276,7 +276,7 @@ export default function EventosPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {event.flyer_url && (
-                            <img src={event.flyer_url} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
+                            <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-9 w-9 rounded-lg object-cover shrink-0" />
                           )}
                           <span className={cn('h-2 w-2 rounded-full shrink-0', dotColor)} />
                           <span className="text-sm font-medium text-navy truncate max-w-[200px] font-body">
@@ -332,7 +332,7 @@ export default function EventosPage() {
                   style={idx < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   {event.flyer_url ? (
-                    <img src={event.flyer_url} alt="" className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                    <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-10 w-10 rounded-lg object-cover shrink-0" />
                   ) : (
                     <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', dotColor)} />
                   )}

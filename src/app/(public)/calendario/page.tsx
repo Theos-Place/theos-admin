@@ -180,7 +180,7 @@ function CalendarioWidget() {
         <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center p-5 z-[100]"
           onClick={() => setSelectedEvent(null)}>
           <div className="bg-white rounded-2xl p-6 max-w-[400px] w-full" onClick={e => e.stopPropagation()}>
-            {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt="" className="w-full h-[140px] object-cover rounded-lg mb-3" />}
+            {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt={`Flyer de ${selectedEvent.name}`} className="w-full h-[140px] object-cover rounded-lg mb-3" />}
             <h3 className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
             {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.55)] mb-2">{selectedEvent.description}</p>}
             {showLoc && <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📍 {selectedEvent.location}</p>}
