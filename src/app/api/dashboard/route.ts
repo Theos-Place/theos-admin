@@ -4,8 +4,8 @@ import { getDashboardStats } from '@/lib/supabase/queries/dashboard'
 
 export async function GET() {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     return NextResponse.json(await getDashboardStats())
   } catch (error) {
     console.error('GET /api/dashboard:', error)

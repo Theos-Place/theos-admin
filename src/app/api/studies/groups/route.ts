@@ -6,8 +6,8 @@ import {
 
 export async function GET() {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const groups = await getStudyGroups()
     return NextResponse.json(groups)
   } catch (error) {

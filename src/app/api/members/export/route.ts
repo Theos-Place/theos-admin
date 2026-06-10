@@ -6,8 +6,8 @@ import { getMembers } from '@/lib/supabase/queries/members'
 // para exportar. Mismos params que /api/members. Usa createAdminClient (en getMembers).
 export async function GET(req: NextRequest) {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
     const search    = searchParams.get('search')   ?? undefined
     const is_active = searchParams.get('is_active')

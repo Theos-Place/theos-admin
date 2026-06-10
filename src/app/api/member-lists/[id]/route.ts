@@ -4,8 +4,8 @@ import { getMemberListById, updateMemberList, deleteMemberList } from '@/lib/sup
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const { id } = await params
     const list = await getMemberListById(id)
     if (!list) return NextResponse.json({ error: 'Lista no encontrada' }, { status: 404 })

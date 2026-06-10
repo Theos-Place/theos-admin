@@ -4,8 +4,8 @@ import { getPayments, createPayment, type PaymentWriteInput } from '@/lib/supaba
 
 export async function GET() {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     return NextResponse.json(await getPayments())
   } catch (error) {
     console.error('GET /api/finance/payments:', error)

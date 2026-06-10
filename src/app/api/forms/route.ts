@@ -5,8 +5,8 @@ import { formToWriteInput, formToFields } from '@/lib/forms/form-mapper'
 
 export async function GET() {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     return NextResponse.json(await getForms())
   } catch (error) {
     console.error('GET /api/forms:', error)

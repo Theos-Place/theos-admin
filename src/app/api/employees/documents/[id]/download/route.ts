@@ -8,8 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const { id } = await params
     const url = await getEmployeeDocSignedUrl(id)
     if (!url) return NextResponse.json({ error: 'Documento sin archivo' }, { status: 404 })

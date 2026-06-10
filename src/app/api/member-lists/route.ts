@@ -4,8 +4,8 @@ import { getMemberLists, createMemberList } from '@/lib/supabase/queries/member-
 
 export async function GET() {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     return NextResponse.json(await getMemberLists())
   } catch (error) {
     console.error('GET /api/member-lists:', error)

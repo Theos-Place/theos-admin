@@ -7,8 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const { id } = await params
     return NextResponse.json(await getFormResponses(id))
   } catch (error) {

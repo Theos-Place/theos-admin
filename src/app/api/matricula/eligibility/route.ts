@@ -8,8 +8,8 @@ import { computeEligibility } from '@/lib/studies/eligibility'
 // Devuelve { eligibility: EligibilityResult[], profile } calculado con datos reales.
 export async function GET(req: NextRequest) {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const memberId = req.nextUrl.searchParams.get('member_id')
     if (!memberId) {
       return NextResponse.json({ error: 'Se requiere member_id' }, { status: 400 })

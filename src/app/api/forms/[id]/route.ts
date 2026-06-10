@@ -8,8 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-  const auth = await requireRoles()
-  if (auth.res) return auth.res
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const { id } = await params
     const form = await getFormById(id)
     if (!form) return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
