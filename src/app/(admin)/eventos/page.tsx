@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { EVENT_TYPE_CONFIG, EVENT_TYPES, type EventType, type MockEvent } from '@/data/mock-events'
 import { useEvents } from '@/hooks/useEvents'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
@@ -56,11 +57,14 @@ function downloadAllEventsICS(events: MockEvent[]) {
   URL.revokeObjectURL(url)
 }
 
-export default function EventosPage() {
+function EventosContent() {
   const router = useRouter()
   const { events, loading } = useEvents()
-  const [view, setView] = useState<'list' | 'calendar'>('list')
-  const [typeFilter, setTypeFilter] = useState<EventType | 'all'>('all')
+  // Vista y tipo en la URL: sobreviven recargas y se comparten por link.
+  const [viewRaw, setView] = useUrlFilter('vista', 'list')
+  const view = (viewRaw === 'calendar' ? 'calendar' : 'list') as 'list' | 'calendar'
+  const [typeRaw, setTypeFilter] = useUrlFilter('tipo', 'all')
+  const typeFilter = typeRaw as EventType | 'all'
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState(now.getMonth())
   const [currentYear, setCurrentYear] = useState(now.getFullYear())
@@ -371,5 +375,17 @@ export default function EventosPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function EventosPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+      </div>
+    }>
+      <EventosContent />
+    </Suspense>
   )
 }

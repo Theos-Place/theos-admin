@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { CreditCard, Eye, EyeOff, Search, Check, X } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -17,12 +18,16 @@ function formatDate(d: string | null) {
   return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function PagosPage() {
+function PagosContent() {
   const { payments: allPayments, refetch } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
-  const [entityFilter, setEntityFilter] = useState<'all' | 'event' | 'study_group'>('all')
-  const [methodFilter, setMethodFilter] = useState<'all' | PaymentMethod>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | PaymentStatus>('all')
+  // Filtros en la URL: sobreviven recargas y se comparten por link.
+  const [entityRaw, setEntityFilter] = useUrlFilter('entidad', 'all')
+  const entityFilter = entityRaw as 'all' | 'event' | 'study_group'
+  const [methodRaw, setMethodFilter] = useUrlFilter('metodo', 'all')
+  const methodFilter = methodRaw as 'all' | PaymentMethod
+  const [statusRaw, setStatusFilter] = useUrlFilter('estado', 'all')
+  const statusFilter = statusRaw as 'all' | PaymentStatus
   const [search, setSearch] = useState('')
   const [payments, setPayments] = useState<Payment[]>([])
   useEffect(() => { setPayments(allPayments) }, [allPayments])
@@ -390,5 +395,17 @@ export default function PagosPage() {
         </div>
       )}
     </FinanceGuard>
+  )
+}
+
+export default function PagosPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+      </div>
+    }>
+      <PagosContent />
+    </Suspense>
   )
 }

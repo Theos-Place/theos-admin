@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useUrlFilter, useUrlFlag } from '@/hooks/useUrlFilter'
 import {
   MessageCircle,
   UserPlus,
@@ -204,7 +205,7 @@ function buildSegmentLabel(conditions: FilterCondition[], showDonors: boolean, s
   return parts.length === 0 ? 'Todos los miembros' : parts.join(' · ')
 }
 
-export default function MiembrosPage() {
+function MiembrosContent() {
   const router = useRouter()
   const { can } = usePermissions()
   // Conteos para chips/header — una sola vez al cargar, independiente de la búsqueda.
@@ -216,12 +217,18 @@ export default function MiembrosPage() {
       .catch(() => {})
   }, [])
 
-  const [showDonors,     setShowDonors]     = useState(false)
-  const [showServers,    setShowServers]    = useState(false)
-  const [showActive,     setShowActive]     = useState(false)
-  const [search,         setSearch]         = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  useEffect(() => { const t = setTimeout(() => setDebouncedSearch(search), 300); return () => clearTimeout(t) }, [search])
+  // Filtros en la URL: sobreviven recargas y se pueden compartir por link.
+  const [showDonors,  setShowDonors]  = useUrlFlag('donadores')
+  const [showServers, setShowServers] = useUrlFlag('servidores')
+  const [showActive,  setShowActive]  = useUrlFlag('activos')
+  const [urlQ, setUrlQ] = useUrlFilter('q')
+  const [search,         setSearch]         = useState(urlQ)
+  const [debouncedSearch, setDebouncedSearch] = useState(urlQ)
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setUrlQ(search.trim()) }, 300)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
   const [filtersOpen,    setFiltersOpen]    = useState(false)
   const [selectedIds,    setSelectedIds]    = useState<Set<string>>(new Set())
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<Member>[]>(
@@ -441,9 +448,9 @@ export default function MiembrosPage() {
                 key={key}
                 onClick={() => {
                   if (key === 'todos') { setShowDonors(false); setShowServers(false); setShowActive(false) }
-                  else if (key === 'donadores') setShowDonors(v => !v)
-                  else if (key === 'servidores') setShowServers(v => !v)
-                  else setShowActive(v => !v)
+                  else if (key === 'donadores') setShowDonors(!showDonors)
+                  else if (key === 'servidores') setShowServers(!showServers)
+                  else setShowActive(!showActive)
                 }}
                 className={cn(
                   'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150 font-body',
@@ -961,5 +968,17 @@ export default function MiembrosPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function MiembrosPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+      </div>
+    }>
+      <MiembrosContent />
+    </Suspense>
   )
 }
