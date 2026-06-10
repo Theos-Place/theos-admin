@@ -68,6 +68,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: { email: '2024-03-15T10:00:00Z', phone: '2025-11-02T09:30:00Z', birth_date: '2023-01-20T14:00:00Z' },
     emergency_contact_name: 'Carmen Ruiz',
     emergency_contact_phone: '8812-3456',
   },
@@ -128,6 +129,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: { cedula: '2026-01-10T08:00:00Z', email: '2026-05-01T16:45:00Z' },
     emergency_contact_name: 'Ana Rodríguez',
     emergency_contact_phone: '7721-8890',
   },
@@ -188,6 +190,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: { first_name: '2022-08-01T11:00:00Z', occupation: '2025-09-12T13:20:00Z' },
     emergency_contact_name: 'Andrea García',
     emergency_contact_phone: '8834-5567',
   },
@@ -243,6 +246,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0005',
@@ -306,6 +310,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0006',
@@ -365,6 +370,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0007',
@@ -414,6 +420,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0008',
@@ -484,6 +491,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0009',
@@ -536,6 +544,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0010',
@@ -595,6 +604,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0011',
@@ -655,6 +665,7 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
   {
     id: 'uuid-0012',
@@ -703,5 +714,6 @@ export const mockMembers: Member[] = [
     deactivated_at: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
+    field_updated_at: null,
   },
 ]

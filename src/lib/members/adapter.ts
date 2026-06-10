@@ -51,6 +51,7 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
     deactivated_at: db.deactivated_at,
     created_at: db.created_at,
     updated_at: db.updated_at,
+    field_updated_at: ('field_updated_at' in db ? db.field_updated_at : null) ?? null,
 
     // ── Derivados (Fase 2a) ──
     is_server: enriched?.is_server ?? false,

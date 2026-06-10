@@ -36,6 +36,7 @@ export type DbMember = {
   deactivation_reason: string | null
   deactivated_at: string | null
   sede_id: string | null
+  field_updated_at: Record<string, string> | null
   created_at: string
   updated_at: string
 }
@@ -788,15 +789,36 @@ export async function findMemberByCedulaOrEmail(cedula: string | null, email: st
 
 /** Fusiona dos miembros duplicados: reasigna todo lo de `dupId` a `keepId` y
  *  borra el duplicado. Corre la función transaccional `merge_members` en la BD. */
-export async function mergeMembers(keepId: string, dupId: string): Promise<void> {
+export async function mergeMembers(
+  keepId: string,
+  dupId: string,
+  opts?: { fields?: Record<string, unknown>; soft?: boolean },
+): Promise<void> {
   const supabase = createAdminClient()
-  const { error } = await supabase.rpc('merge_members', { keep_id: keepId, dup_id: dupId })
+
+  // Merge campo-por-campo: actualizar el perfil principal con los valores elegidos
+  // y sellar field_updated_at de los campos modificados con la fecha actual.
+  if (opts?.fields && Object.keys(opts.fields).length > 0) {
+    const { data: cur } = await supabase
+      .from('members').select('field_updated_at').eq('id', keepId).maybeSingle()
+    const now = new Date().toISOString()
+    const stamp = { ...((cur as { field_updated_at?: Record<string, string> } | null)?.field_updated_at ?? {}) }
+    for (const k of Object.keys(opts.fields)) stamp[k] = now
+    const { error: uErr } = await supabase
+      .from('members').update({ ...opts.fields, field_updated_at: stamp }).eq('id', keepId)
+    if (uErr) throw uErr
+  }
+
+  const { error } = await supabase.rpc('merge_members', { keep_id: keepId, dup_id: dupId, soft: opts?.soft ?? false })
   if (error) throw error
 }
 
 export type DuplicateMember = {
   id: string; first_name: string; last_name: string
   cedula: string | null; email: string | null; phone: string | null; created_at: string
+  birth_date: string | null; province: string | null; canton: string | null
+  occupation: string | null; photo_url: string | null
+  field_updated_at: Record<string, string> | null
 }
 export type DuplicatePair = { a: DuplicateMember; b: DuplicateMember; reasons: string[] }
 
@@ -809,7 +831,7 @@ export async function getDuplicatePairs(): Promise<DuplicatePair[]> {
   const ids = [...new Set(pairs.flatMap(p => [p.member_a, p.member_b]))]
   if (ids.length === 0) return []
   const { data: members, error: mErr } = await supabase
-    .from('members').select('id, first_name, last_name, cedula, email, phone, created_at').in('id', ids)
+    .from('members').select('id, first_name, last_name, cedula, email, phone, created_at, birth_date, province, canton, occupation, photo_url, field_updated_at').in('id', ids)
   if (mErr) throw mErr
   const byId = new Map((members ?? []).map(m => [m.id, m as DuplicateMember]))
   return pairs

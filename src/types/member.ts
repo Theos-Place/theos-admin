@@ -55,6 +55,21 @@ export type Member = {
   deactivated_at: string | null
   created_at: string
   updated_at: string
+  /** Última edición por campo (ISO date string), p.ej. { email: '2026-05-01T…' }. */
+  field_updated_at: {
+    email?: string
+    phone?: string
+    phone_whatsapp?: string
+    birth_date?: string
+    cedula?: string
+    first_name?: string
+    last_name?: string
+    province?: string
+    canton?: string
+    occupation?: string
+    photo_url?: string
+    [key: string]: string | undefined
+  } | null
 
   // ── Campos derivados / pendientes de migrar a tablas relacionadas (Fase 2) ──
   is_server: boolean
@@ -111,3 +126,7 @@ export type DonationRecord = {
   amount: number
   description: string
 }
+
+// ─── SQL para ejecutar manualmente en Supabase (Cambio: field_updated_at) ──────
+// ALTER TABLE members ADD COLUMN IF NOT EXISTS field_updated_at JSONB DEFAULT '{}';
+// (Ya aplicado vía supabase/migrations/038_merge_fields_and_field_updated_at.sql)
