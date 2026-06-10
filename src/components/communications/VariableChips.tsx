@@ -38,8 +38,7 @@ export function VariableChips({ onInsert, available }: Props) {
             className={cn(
               'rounded-full border px-2.5 py-1 text-[11px] font-mono text-navy-light transition-all',
               'hover:bg-navy hover:text-white hover:border-navy active:scale-95'
-            )}
-            style={{ borderColor: 'var(--outline-variant)' }}
+            , 'border-outline')}
           >
             {v.key}
           </button>

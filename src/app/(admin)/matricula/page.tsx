@@ -131,7 +131,7 @@ export default function MatriculaPage() {
   if (!effectiveMemberId) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-sm text-navy-light/50 font-body">
           No hay un miembro asociado a tu cuenta.
         </p>
       </div>
@@ -143,24 +143,22 @@ export default function MatriculaPage() {
 
       {/* Header strip */}
       <div
-        className="rounded-2xl px-6 py-5"
-        style={{ background: 'var(--color-navy)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl px-6 py-5 bg-navy shadow-card"
       >
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <GraduationCap size={18} className="text-white/60" />
-              <span className="text-xs uppercase tracking-widest text-white/40" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="text-xs uppercase tracking-widest text-white/40 font-display">
                 Portal de Matrícula
               </span>
             </div>
             <h1
-              className="text-2xl text-white"
-              style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+              className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
             >
               Matrícula de Estudios
             </h1>
-            <p className="mt-0.5 text-sm text-white/60" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="mt-0.5 text-sm text-white/60 font-body">
               Hola, <span className="text-white font-medium">{effectiveName}</span>
               {' · '}{availableCount} estudio{availableCount !== 1 ? 's' : ''} disponible{availableCount !== 1 ? 's' : ''}
             </p>
@@ -178,17 +176,16 @@ export default function MatriculaPage() {
 
       {/* Perfil académico */}
       <div
-        className="rounded-2xl px-5 py-4"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl px-5 py-4 bg-surface-card shadow-card"
       >
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-3 font-display">
           Perfil académico
         </p>
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           <div className="flex-1 space-y-2.5">
             {/* Estudios completados */}
             <div>
-              <p className="text-[11px] text-navy-light/50 mb-1.5" style={{ fontFamily: 'var(--font-body)' }}>
+              <p className="text-[11px] text-navy-light/50 mb-1.5 font-body">
                 Estudios completados ({completedStudies.length})
               </p>
               {completedStudies.length > 0 ? (
@@ -196,15 +193,14 @@ export default function MatriculaPage() {
                   {completedStudies.map(s => (
                     <span
                       key={s.code}
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-teal-soft/30 text-teal-deep"
-                      style={{ fontFamily: 'var(--font-display)' }}
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-teal-soft/30 text-teal-deep font-display"
                     >
                       {s.code} ✓
                     </span>
                   ))}
                 </div>
               ) : (
-                <span className="text-[12px] text-navy-light/40 italic" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-[12px] text-navy-light/40 italic font-body">
                   Ninguno aún
                 </span>
               )}
@@ -213,12 +209,11 @@ export default function MatriculaPage() {
             {/* En curso */}
             {currentStudyInfo && (
               <div>
-                <p className="text-[11px] text-navy-light/50 mb-1.5" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[11px] text-navy-light/50 mb-1.5 font-body">
                   En curso
                 </p>
                 <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-coral/15 text-coral"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-coral/15 text-coral font-display"
                 >
                   {currentStudyInfo.code} — {currentStudyInfo.name}
                 </span>
@@ -228,10 +223,9 @@ export default function MatriculaPage() {
 
           {/* Compromisos */}
           <div
-            className="rounded-xl px-4 py-3 shrink-0"
-            style={{ background: 'var(--surface-low)' }}
+            className="rounded-xl px-4 py-3 shrink-0 bg-surface-low"
           >
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-2 font-display">
               Compromisos
             </p>
             <div className="space-y-1.5">
@@ -255,8 +249,7 @@ export default function MatriculaPage() {
                 activeFilter === tab.id
                   ? 'bg-navy text-white border-navy'
                   : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20'
-              )}
-              style={{ fontFamily: 'var(--font-display)' }}
+              , 'font-display')}
             >
               {tab.label}
             </button>
@@ -271,8 +264,7 @@ export default function MatriculaPage() {
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar estudio..."
             aria-label="Buscar estudio"
-            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body"
           />
         </div>
       </div>
@@ -284,14 +276,13 @@ export default function MatriculaPage() {
         </div>
       ) : grouped.length === 0 ? (
         <div
-          className="rounded-2xl p-12 text-center"
-          style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+          className="rounded-2xl p-12 text-center bg-surface-card shadow-card"
         >
           <GraduationCap size={28} className="text-navy-light/40 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm font-semibold text-navy-light/50 font-body">
             No hay estudios que coincidan
           </p>
-          <p className="text-[13px] text-navy-light/40 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[13px] text-navy-light/40 mt-1 font-body">
             Probá cambiando el filtro o la búsqueda
           </p>
         </div>
@@ -309,8 +300,8 @@ export default function MatriculaPage() {
                   >
                     {meta.label}
                   </span>
-                  <div className="flex-1 h-px" style={{ background: 'var(--outline-variant)' }} />
-                  <span className="text-[11px] text-navy-light/40" style={{ fontFamily: 'var(--font-body)' }}>
+                  <div className="flex-1 h-px bg-outline" />
+                  <span className="text-[11px] text-navy-light/40 font-body">
                     {items.length} estudio{items.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -379,12 +370,12 @@ function MemberPicker({ selected, onSelect }: {
 
   return (
     <div className="flex flex-col gap-1 relative w-64">
-      <label className="text-[10px] uppercase tracking-widest text-white/40" style={{ fontFamily: 'var(--font-display)' }}>
+      <label className="text-[10px] uppercase tracking-widest text-white/40 font-display">
         Ver disponibilidad como:
       </label>
       {selected ? (
         <div className="flex items-center justify-between gap-2 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white">
-          <span className="truncate" style={{ fontFamily: 'var(--font-body)' }}>{selected.name}</span>
+          <span className="truncate font-body">{selected.name}</span>
           <button onClick={() => { onSelect(null); setQuery('') }} className="text-white/60 hover:text-white shrink-0"><X size={14} /></button>
         </div>
       ) : (
@@ -395,17 +386,15 @@ function MemberPicker({ selected, onSelect }: {
             onFocus={() => setOpen(true)}
             placeholder="Buscar miembro…"
             aria-label="Buscar miembro"
-            className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-coral/50"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-coral/50 font-body"
           />
           {open && results.length > 0 && (
-            <div className="absolute top-full mt-1 w-full rounded-xl bg-white overflow-hidden z-20" style={{ boxShadow: 'var(--shadow-lg)' }}>
+            <div className="absolute top-full mt-1 w-full rounded-xl bg-white overflow-hidden z-20 shadow-card-lg">
               {results.map(m => (
                 <button
                   key={m.id}
                   onClick={() => { onSelect({ id: m.id, name: `${m.first_name} ${m.last_name}` }); setOpen(false) }}
-                  className="w-full text-left px-3 py-2 text-sm text-navy hover:bg-surface-low transition-colors"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  className="w-full text-left px-3 py-2 text-sm text-navy hover:bg-surface-low transition-colors font-body"
                 >
                   {m.first_name} {m.last_name}
                 </button>
@@ -426,8 +415,7 @@ function CommitmentRow({ met, label }: { met: boolean; label: string }) {
         : <XCircle size={13} className="text-navy-light/60 shrink-0" />
       }
       <span
-        className={cn('text-[12px]', met ? 'text-navy' : 'text-navy-light/40')}
-        style={{ fontFamily: 'var(--font-body)' }}
+        className={cn('text-[12px]', met ? 'text-navy' : 'text-navy-light/40', 'font-body')}
       >
         {label}
       </span>
@@ -464,14 +452,13 @@ function StudyCard({
               </span>
               {!result.is_eligible && (
                 <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-red-100 text-red-600"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-red-100 text-red-600 font-display"
                 >
                   Bloqueado
                 </span>
               )}
             </div>
-            <p className="mt-1 text-base font-bold text-navy leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="mt-1 text-base font-bold text-navy leading-snug font-display">
               {result.study_name}
             </p>
           </div>
@@ -484,7 +471,7 @@ function StudyCard({
         </div>
 
         {/* Meta: semanas + costo */}
-        <div className="flex items-center gap-3 text-[12px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="flex items-center gap-3 text-[12px] text-navy-light/50 font-body">
           <span className="flex items-center gap-1">
             <Calendar size={12} />
             {result.weeks} semanas
@@ -519,12 +506,12 @@ function StudyCard({
               )}
               <div className="flex flex-wrap gap-x-4 gap-y-0.5">
                 {cat.mentor && (
-                  <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}>
+                  <span className="text-[11px] font-body text-[color:var(--fg-muted)]">
                     <span className="font-semibold">Mentor:</span> {cat.mentor}
                   </span>
                 )}
                 {cat.commitments && (
-                  <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}>
+                  <span className="text-[11px] font-body text-[color:var(--fg-muted)]">
                     <span className="font-semibold">Compromisos:</span> {cat.commitments}
                   </span>
                 )}
@@ -537,25 +524,25 @@ function StudyCard({
         <div className="space-y-1">
           {result.is_eligible ? (
             <>
-              <p className="text-[11px] text-navy-light/50 font-medium" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-[11px] text-navy-light/50 font-medium font-display">
                 Prerequisitos cumplidos:
               </p>
               {result.reasons_met.map((r, i) => (
                 <div key={i} className="flex items-start gap-1.5">
                   <CheckCircle2 size={12} className="text-teal-deep shrink-0 mt-0.5" />
-                  <span className="text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>{r}</span>
+                  <span className="text-[12px] text-navy-light/70 font-body">{r}</span>
                 </div>
               ))}
             </>
           ) : (
             <>
-              <p className="text-[11px] text-navy-light/50 font-medium" style={{ fontFamily: 'var(--font-display)' }}>
+              <p className="text-[11px] text-navy-light/50 font-medium font-display">
                 Para poder matricular necesitás:
               </p>
               {result.reasons_blocked.map((r, i) => (
                 <div key={i} className="flex items-start gap-1.5">
                   <XCircle size={12} className="text-red-400 shrink-0 mt-0.5" />
-                  <span className="text-[12px] text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>{r}</span>
+                  <span className="text-[12px] text-navy-light/60 font-body">{r}</span>
                 </div>
               ))}
             </>
@@ -566,8 +553,7 @@ function StudyCard({
         {result.is_eligible && (
           <button
             onClick={onToggleExpand}
-            className="w-full flex items-center justify-between gap-2 rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2.5 text-[13px] font-medium text-coral transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="w-full flex items-center justify-between gap-2 rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2.5 text-[13px] font-medium text-coral transition-colors font-body"
           >
             <span>
               {result.available_groups.length} grupo{result.available_groups.length !== 1 ? 's' : ''} disponible{result.available_groups.length !== 1 ? 's' : ''}
@@ -584,11 +570,10 @@ function StudyCard({
       {/* Panel expandido de grupos */}
       {expanded && result.available_groups.length > 0 && (
         <div
-          className="border-t"
-          style={{ borderColor: 'var(--outline-variant)' }}
+          className="border-t border-outline"
         >
           <div className="px-5 py-3">
-            <p className="text-[11px] font-semibold text-navy-light/40 uppercase tracking-widest mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[11px] font-semibold text-navy-light/40 uppercase tracking-widest mb-3 font-display">
               Grupos disponibles — {result.study_name}
             </p>
             <div className="space-y-2">
@@ -608,26 +593,25 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
 
   return (
     <div
-      className="rounded-xl px-3 py-3 flex items-center gap-3 flex-wrap"
-      style={{ background: 'var(--surface-low)' }}
+      className="rounded-xl px-3 py-3 flex items-center gap-3 flex-wrap bg-surface-low"
     >
       <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1.5">
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Zona</p>
-          <p className="text-[13px] font-medium text-navy capitalize" style={{ fontFamily: 'var(--font-body)' }}>{group.zone}</p>
+          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Zona</p>
+          <p className="text-[13px] font-medium text-navy capitalize font-body">{group.zone}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Horario</p>
-          <p className="text-[13px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>{group.schedule_days} {group.schedule_time}</p>
+          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Horario</p>
+          <p className="text-[13px] text-navy font-body">{group.schedule_days} {group.schedule_time}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Dirigente</p>
-          <p className="text-[13px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>{group.leader_name}</p>
+          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Dirigente</p>
+          <p className="text-[13px] text-navy font-body">{group.leader_name}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5" style={{ fontFamily: 'var(--font-display)' }}>Cupos</p>
+          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Cupos</p>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+            <span className="text-[13px] text-navy font-body">
               {group.spots_available}/{group.max_capacity}
             </span>
             <div className="flex-1 h-1.5 rounded-full bg-navy-light/10 overflow-hidden min-w-[40px]">
@@ -641,22 +625,21 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className="text-[11px] text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <span className="text-[11px] text-navy-light/50 font-body">
           Inicio: {formatDate(group.start_date)}
         </span>
         {group.requires_payment && group.cost ? (
-          <span className="text-[11px] font-semibold text-coral" style={{ fontFamily: 'var(--font-display)' }}>
+          <span className="text-[11px] font-semibold text-coral font-display">
             {formatCRC(group.cost)}
           </span>
         ) : (
-          <span className="text-[11px] font-semibold text-teal-deep" style={{ fontFamily: 'var(--font-display)' }}>
+          <span className="text-[11px] font-semibold text-teal-deep font-display">
             Gratuito
           </span>
         )}
         <button
           onClick={onEnroll}
-          className="mt-1 rounded-lg bg-coral px-3 py-1.5 text-[12px] font-medium text-white hover:bg-coral-deep transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="mt-1 rounded-lg bg-coral px-3 py-1.5 text-[12px] font-medium text-white hover:bg-coral-deep transition-colors font-body"
         >
           Matricular
         </button>
@@ -678,12 +661,11 @@ function ConfirmModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
       <div
-        className="w-full max-w-md rounded-2xl p-6 space-y-5"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="w-full max-w-md rounded-2xl p-6 space-y-5 bg-surface-card shadow-card"
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-navy" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-base font-bold text-navy font-display">
             Confirmar matrícula
           </p>
           <button onClick={onCancel}>
@@ -692,7 +674,7 @@ function ConfirmModal({
         </div>
 
         {/* Detalle */}
-        <div className="rounded-xl space-y-0 overflow-hidden" style={{ border: '1px solid var(--outline-variant)' }}>
+        <div className="rounded-xl space-y-0 overflow-hidden border border-outline">
           {[
             { label: 'Estudio',   value: study.study_name },
             { label: 'Grupo',     value: `${group.zone.charAt(0).toUpperCase() + group.zone.slice(1)} — ${group.schedule_days} ${group.schedule_time}` },
@@ -703,13 +685,12 @@ function ConfirmModal({
           ].map(({ label, value }, i) => (
             <div
               key={label}
-              className={cn('flex items-center gap-3 px-4 py-2.5', i > 0 && 'border-t')}
-              style={{ borderColor: 'var(--outline-variant)' }}
+              className={cn('flex items-center gap-3 px-4 py-2.5', i > 0 && 'border-t', 'border-outline')}
             >
-              <span className="w-24 text-[11px] text-navy-light/40 uppercase tracking-wider shrink-0" style={{ fontFamily: 'var(--font-display)' }}>
+              <span className="w-24 text-[11px] text-navy-light/40 uppercase tracking-wider shrink-0 font-display">
                 {label}
               </span>
-              <span className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+              <span className="text-[13px] font-medium text-navy font-body">
                 {value}
               </span>
             </div>
@@ -718,11 +699,10 @@ function ConfirmModal({
 
         {/* Aviso */}
         <div
-          className="flex items-start gap-2.5 rounded-xl px-3 py-3"
-          style={{ background: 'rgba(239,85,84,0.07)', border: '1px solid rgba(239,85,84,0.2)' }}
+          className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-coral/7 border border-coral/20"
         >
           <AlertCircle size={14} className="text-coral shrink-0 mt-0.5" />
-          <p className="text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[12px] text-navy-light/70 font-body">
             Al confirmar tu matrícula, un administrador procesará tu inscripción y recibirás un mensaje de confirmación.
           </p>
         </div>
@@ -730,7 +710,7 @@ function ConfirmModal({
         {/* Método de pago */}
         {group.requires_payment && group.cost && (
           <div className="space-y-2">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/40" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
               Método de pago
             </p>
             <div className="space-y-2">
@@ -756,7 +736,7 @@ function ConfirmModal({
                     className="sr-only"
                   />
                   <opt.icon size={15} />
-                  <span className="text-[13px]" style={{ fontFamily: 'var(--font-body)' }}>{opt.label}</span>
+                  <span className="text-[13px] font-body">{opt.label}</span>
                   <div className={cn(
                     'ml-auto h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all',
                     paymentMethod === opt.value ? 'border-white' : 'border-navy-light/30'
@@ -773,15 +753,13 @@ function ConfirmModal({
         <div className="flex gap-2 pt-1">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body"
           >
             Confirmar matrícula
           </button>

@@ -164,8 +164,7 @@ export default function PagosPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['event', 'Eventos'], ['study_group', 'Grupos']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setEntityFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
-                style={{ background: entityFilter === v ? '#161440' : 'transparent', color: entityFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: entityFilter === v ? '#161440' : 'transparent' }}>
+                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${entityFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
                 {l}
               </button>
             ))}
@@ -174,8 +173,7 @@ export default function PagosPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['card', 'Tarjeta'], ['sinpe', 'SINPE'], ['scholarship', 'Beca'], ['cash', 'Efectivo']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setMethodFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
-                style={{ background: methodFilter === v ? '#161440' : 'transparent', color: methodFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: methodFilter === v ? '#161440' : 'transparent' }}>
+                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${methodFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
                 {l}
               </button>
             ))}
@@ -184,8 +182,7 @@ export default function PagosPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['paid', 'Pagado'], ['pending', 'Pendiente'], ['refunded', 'Devuelto']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setStatusFilter(v as 'all' | PaymentStatus)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
-                style={{ background: statusFilter === v ? '#161440' : 'transparent', color: statusFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: statusFilter === v ? '#161440' : 'transparent' }}>
+                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${statusFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
                 {l}
               </button>
             ))}
@@ -207,8 +204,7 @@ export default function PagosPage() {
               </thead>
               <tbody>
                 {filtered.map((p, i) => (
-                  <tr key={p.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p>
                       <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>

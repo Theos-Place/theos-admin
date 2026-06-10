@@ -62,7 +62,7 @@ function CalendarioWidget() {
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-sm mb-1" style={{ color: primary }}>{ev.name}</div>
                   {showDesc && ev.description && (
-                    <div className="text-xs text-[rgba(0,0,0,0.55)] mb-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as React.CSSProperties['WebkitBoxOrient'] }}>
+                    <div className="text-xs text-[rgba(0,0,0,0.55)] mb-1 overflow-hidden line-clamp-2">
                       {ev.description}
                     </div>
                   )}

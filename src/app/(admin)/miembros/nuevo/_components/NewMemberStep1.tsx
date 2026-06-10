@@ -126,12 +126,11 @@ export function NewMemberStep1({
           <input
             id="member-cedula"
             type="text"
-            className={cn(inputCls, tseLoading ? 'pr-9' : '')}
+            className={cn(inputCls, tseLoading ? 'pr-9' : '', 'font-mono')}
             placeholder="Ej: 108470291"
             value={data.cedula}
             onChange={e => onData('cedula', e.target.value)}
             onBlur={onCedulaBlur}
-            style={{ fontFamily: 'var(--font-mono)' }}
           />
           {tseLoading && (
             <Loader2
@@ -288,12 +287,11 @@ export function NewMemberStep1({
       <Field label="Señas" htmlFor="member-senas">
         <textarea
           id="member-senas"
-          className={inputCls}
+          className={`${inputCls} resize-none`}
           placeholder="Ej: Casa amarilla con portón negro, 100m norte del parque"
           rows={2}
           value={data.señas}
           onChange={e => onData('señas', e.target.value)}
-          style={{ resize: 'none' }}
         />
       </Field>
 
@@ -323,24 +321,22 @@ export function NewMemberStep1({
       <Field label="Alergias" htmlFor="member-alergias">
         <textarea
           id="member-alergias"
-          className={inputCls}
+          className={`${inputCls} resize-none`}
           placeholder="Ej: Polen, mariscos, penicilina…"
           rows={2}
           value={data.alergias}
           onChange={e => onData('alergias', e.target.value)}
-          style={{ resize: 'none' }}
         />
       </Field>
 
       <Field label="Medicamentos" htmlFor="member-medicamentos">
         <textarea
           id="member-medicamentos"
-          className={inputCls}
+          className={`${inputCls} resize-none`}
           placeholder="Ej: Atorvastatina 20mg, Metformina…"
           rows={2}
           value={data.medicamentos}
           onChange={e => onData('medicamentos', e.target.value)}
-          style={{ resize: 'none' }}
         />
       </Field>
 

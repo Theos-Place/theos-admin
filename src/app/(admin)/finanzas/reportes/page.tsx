@@ -182,15 +182,13 @@ export default function ReportesPage() {
                   </thead>
                   <tbody>
                     {filteredDonations.slice(0, 15).map((d, i) => (
-                      <tr key={d.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                        style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                      <tr key={d.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{d.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{d.member_cedula}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{new Date(d.donation_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5">
-                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-                            style={{ color: d.is_identified ? '#3DB97A' : '#EF5554', background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)' }}>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>
                             {d.is_identified ? 'Identificado' : 'Sin identificar'}
                           </span>
                         </td>
@@ -246,8 +244,7 @@ export default function ReportesPage() {
                   </thead>
                   <tbody>
                     {filteredPayments.slice(0, 15).map((p, i) => (
-                      <tr key={p.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                        style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                      <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} defaultHidden={false} /></td>
@@ -289,7 +286,7 @@ export default function ReportesPage() {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {topMonths.map((m, i) => (
-                    <div key={m.name} className="rounded-xl p-3.5" style={{ background: i === 0 ? 'rgba(22,20,64,0.06)' : 'rgba(22,20,64,0.03)' }}>
+                    <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-[rgba(22,20,64,0.03)]'}`}>
                       <p className="text-[12px] font-medium font-body text-navy">{m.name}</p>
                       <p className="text-[11px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
                         ₡{m.total.toLocaleString('es-CR')}
@@ -313,13 +310,12 @@ export default function ReportesPage() {
                   </thead>
                   <tbody>
                     {monthlyData.map((m, i) => (
-                      <tr key={m.name} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                        style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                      <tr key={m.name} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3.5">
                           <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="text-[13px] font-body" style={{ color: m.total > 0 ? '#161440' : 'rgba(22,20,64,0.30)' }}>
+                          <p className={`text-[13px] font-body ${m.total > 0 ? 'text-navy' : 'text-navy/60'}`}>
                             {m.total > 0 ? `₡${m.total.toLocaleString('es-CR')}` : '—'}
                           </p>
                         </td>

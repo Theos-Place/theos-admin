@@ -157,8 +157,7 @@ export default function DevolucionesPage() {
               </thead>
               <tbody>
                 {cardRefunds.map((r, i) => (
-                  <tr key={r.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={r.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-3.5">
                       <p className="text-[13px] font-medium font-body text-navy">{r.member_name}</p>
                     </td>
@@ -236,8 +235,7 @@ export default function DevolucionesPage() {
               </thead>
               <tbody>
                 {sinpeRefunds.map((r, i) => (
-                  <tr key={r.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={r.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-3.5">
                       <p className="text-[13px] font-medium font-body text-navy">{r.member_name}</p>
                     </td>

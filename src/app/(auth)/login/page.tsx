@@ -191,8 +191,8 @@ export default function LoginPage() {
     return (
       <div className="w-full max-w-[400px]">
         <div className="mb-8">
-          <div className="h-12 w-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(112,189,194,0.12)' }}>
-            <ShieldCheck size={22} style={{ color: '#519DA2' }} />
+          <div className="h-12 w-12 rounded-2xl flex items-center justify-center mb-4 bg-teal/12">
+            <ShieldCheck size={22} className="text-teal-deep" />
           </div>
           <h1 className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]">
             Verificación en dos pasos

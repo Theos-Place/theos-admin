@@ -104,8 +104,7 @@ export default function BecasPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setTypeFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
-                style={{ background: typeFilter === v ? '#161440' : 'transparent', color: typeFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: typeFilter === v ? '#161440' : 'transparent' }}>
+                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${typeFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
                 {l}
               </button>
             ))}
@@ -113,8 +112,7 @@ export default function BecasPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['event', 'Eventos'], ['study_group', 'Grupos']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setEntityFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
-                style={{ background: entityFilter === v ? '#161440' : 'transparent', color: entityFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: entityFilter === v ? '#161440' : 'transparent' }}>
+                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${entityFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
                 {l}
               </button>
             ))}
@@ -122,8 +120,7 @@ export default function BecasPage() {
           <div className="flex gap-1">
             {([['all', 'Todos'], ['unused', 'Sin usar'], ['used', 'Usada']] as const).map(([v, l]) => (
               <button key={v} onClick={() => setStatusFilter(v)}
-                className="rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display"
-                style={{ background: statusFilter === v ? '#161440' : 'transparent', color: statusFilter === v ? 'white' : 'rgba(22,20,64,0.60)', borderColor: statusFilter === v ? '#161440' : 'transparent' }}>
+                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${statusFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
                 {l}
               </button>
             ))}
@@ -145,8 +142,7 @@ export default function BecasPage() {
               </thead>
               <tbody>
                 {filtered.map((s, i) => (
-                  <tr key={s.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={s.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-medium font-body text-navy">{s.member_name}</p>
                     </td>

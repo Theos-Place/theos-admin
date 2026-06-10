@@ -435,8 +435,7 @@ export function MemberParticipationTab({
                             {row.description}
                           </td>
                           <td
-                            className="px-4 py-2.5 text-right tabular-nums text-[13px]"
-                            style={{ fontFamily: revealDonations ? 'var(--font-mono)' : 'var(--font-body)' }}
+                            className={`px-4 py-2.5 text-right tabular-nums text-[13px] ${revealDonations ? 'font-mono' : 'font-body'}`}
                           >
                             {revealDonations ? (
                               <span className="text-navy">{formatAmount(row.amount)}</span>

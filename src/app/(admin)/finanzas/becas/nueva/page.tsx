@@ -190,8 +190,7 @@ export default function NuevaBecaPage() {
             <div className="grid grid-cols-2 gap-2">
               {([['event', 'Evento'], ['study_group', 'Grupo de estudio']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => { setEntityType(v); setSelectedEntity(null); setEntityQuery('') }}
-                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left font-body"
-                  style={{ borderColor: entityType === v ? '#EF5554' : 'var(--outline-variant)', background: entityType === v ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)', color: entityType === v ? '#EF5554' : 'rgba(22,20,64,0.70)' }}>
+                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${entityType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/70'}`}>
                   {l}
                 </button>
               ))}
@@ -266,8 +265,7 @@ export default function NuevaBecaPage() {
             <div className="grid grid-cols-2 gap-2 mb-4">
               {([['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => setDiscountType(v)}
-                  className="rounded-xl p-3 text-sm font-medium border transition-all text-left font-body"
-                  style={{ borderColor: discountType === v ? '#EF5554' : 'var(--outline-variant)', background: discountType === v ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)', color: discountType === v ? '#EF5554' : 'rgba(22,20,64,0.70)' }}>
+                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${discountType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/70'}`}>
                   {l}
                 </button>
               ))}

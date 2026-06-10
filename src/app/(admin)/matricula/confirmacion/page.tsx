@@ -62,13 +62,12 @@ function ConfirmacionContent() {
   if (!group || !study) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <p className="text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="text-navy-light/50 font-body">
           No se encontró la información de la matrícula.
         </p>
         <Link
           href="/matricula"
-          className="rounded-xl bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="rounded-xl bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
         >
           Volver al portal
         </Link>
@@ -82,14 +81,12 @@ function ConfirmacionContent() {
   return (
     <div className="max-w-md mx-auto py-12 px-4">
       <div
-        className="rounded-2xl p-8 text-center space-y-6"
-        style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+        className="rounded-2xl p-8 text-center space-y-6 bg-surface-card shadow-card"
       >
         {/* Ícono de éxito */}
         <div className="flex justify-center">
           <div
-            className="h-16 w-16 rounded-2xl flex items-center justify-center"
-            style={{ background: 'rgba(112,189,194,0.15)' }}
+            className="h-16 w-16 rounded-2xl flex items-center justify-center bg-teal/15"
           >
             <CheckCircle2 size={32} className="text-teal-deep" />
           </div>
@@ -98,30 +95,27 @@ function ConfirmacionContent() {
         {/* Título */}
         <div className="space-y-1">
           <h1
-            className="text-2xl text-navy"
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
           >
             ¡Matrícula confirmada!
           </h1>
-          <p className="text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-sm text-navy-light/60 font-body">
             Tu solicitud fue recibida y está siendo procesada
           </p>
         </div>
 
         {/* Detalle de la inscripción */}
         <div
-          className="rounded-xl text-left overflow-hidden"
-          style={{ border: '1px solid var(--outline-variant)' }}
+          className="rounded-xl text-left overflow-hidden border border-outline"
         >
           <div
-            className="px-4 py-2.5 border-b"
-            style={{ background: 'var(--surface-low)', borderColor: 'var(--outline-variant)' }}
+            className="px-4 py-2.5 border-b bg-surface-low border-outline"
           >
-            <p className="text-[11px] font-semibold text-navy-light/50 uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-[11px] font-semibold text-navy-light/50 uppercase tracking-widest font-display">
               Quedaste inscrito/a en
             </p>
           </div>
-          <div className="divide-y" style={{ borderColor: 'var(--outline-variant)' }}>
+          <div className="divide-y border-outline">
             {[
               { label: 'Estudio',   value: `${study.code} — ${study.name}` },
               { label: 'Grupo',     value: `${zoneName} — ${schedule}` },
@@ -132,11 +126,11 @@ function ConfirmacionContent() {
                 ? [{ label: 'Costo', value: `₡${studyType.cost.toLocaleString('es-CR')}` }]
                 : []),
             ].map(({ label, value }) => (
-              <div key={label} className="flex items-center gap-3 px-4 py-2.5" style={{ borderColor: 'var(--outline-variant)' }}>
-                <span className="w-20 text-[11px] text-navy-light/40 uppercase tracking-wider shrink-0" style={{ fontFamily: 'var(--font-display)' }}>
+              <div key={label} className="flex items-center gap-3 px-4 py-2.5 border-outline">
+                <span className="w-20 text-[11px] text-navy-light/40 uppercase tracking-wider shrink-0 font-display">
                   {label}
                 </span>
-                <span className="text-[13px] font-medium text-navy" style={{ fontFamily: 'var(--font-body)' }}>
+                <span className="text-[13px] font-medium text-navy font-body">
                   {value}
                 </span>
               </div>
@@ -146,11 +140,10 @@ function ConfirmacionContent() {
 
         {/* Mensaje de seguimiento */}
         <div
-          className="flex items-start gap-2.5 rounded-xl px-3 py-3 text-left"
-          style={{ background: 'rgba(112,189,194,0.1)', border: '1px solid rgba(81,157,162,0.2)' }}
+          className="flex items-start gap-2.5 rounded-xl px-3 py-3 text-left bg-teal/10 border border-teal-deep/20"
         >
           <MessageCircle size={14} className="text-teal-deep shrink-0 mt-0.5" />
-          <p className="text-[12px] text-navy-light/70" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[12px] text-navy-light/70 font-body">
             Recibirás un mensaje de WhatsApp con los detalles del grupo y el próximo paso del proceso.
           </p>
         </div>
@@ -159,16 +152,14 @@ function ConfirmacionContent() {
         <div className="flex gap-2 pt-1">
           <Link
             href="/matricula"
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors"
-            style={{ borderColor: 'var(--outline-variant)', fontFamily: 'var(--font-body)' }}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body"
           >
             <GraduationCap size={14} />
             Matricular otro
           </Link>
           <Link
             href="/miembros"
-            className="flex-1 inline-flex items-center justify-center rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors"
-            style={{ fontFamily: 'var(--font-body)' }}
+            className="flex-1 inline-flex items-center justify-center rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors font-body"
           >
             Ver mi perfil
           </Link>
@@ -182,7 +173,7 @@ export default function ConfirmacionPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>Cargando...</div>
+        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
       </div>
     }>
       <ConfirmacionContent />

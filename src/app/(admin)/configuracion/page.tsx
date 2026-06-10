@@ -32,7 +32,7 @@ export default function ConfiguracionPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl text-navy font-display" style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Configuración de mi cuenta
         </h1>
         <p className="mt-1 text-sm text-navy-light/50 font-body">
@@ -45,8 +45,7 @@ export default function ConfiguracionPage() {
       {/* Toast */}
       {toast && (
         <div
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white font-body"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)' }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white font-body bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)]"
         >
           <Check size={15} className="text-teal shrink-0" />
           {toast}
@@ -90,7 +89,7 @@ function NotificacionesTab({ onSave }: { onSave: () => void }) {
     <form onSubmit={handleSave} className="space-y-5">
 
       {/* Toggles */}
-      <div className="rounded-2xl p-6 space-y-5" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-card">
         <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
           Preferencias de notificación
         </p>
@@ -106,7 +105,7 @@ function NotificacionesTab({ onSave }: { onSave: () => void }) {
       </div>
 
       {/* Canal preferido */}
-      <div className="rounded-2xl p-6 space-y-4" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+      <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-card">
         <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
           Canal preferido
         </p>

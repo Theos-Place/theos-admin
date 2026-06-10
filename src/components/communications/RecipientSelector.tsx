@@ -249,8 +249,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
                 value.groupEntity === 'event'
                   ? 'bg-navy/10 border-navy/30 text-navy font-medium'
                   : 'text-navy-light/60 hover:text-navy'
-              )}
-              style={{ borderColor: 'var(--outline-variant)' }}
+              , 'border-outline')}
             >
               <BookOpen size={14} />
               Evento
@@ -263,8 +262,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
                 value.groupEntity === 'study_group'
                   ? 'bg-navy/10 border-navy/30 text-navy font-medium'
                   : 'text-navy-light/60 hover:text-navy'
-              )}
-              style={{ borderColor: 'var(--outline-variant)' }}
+              , 'border-outline')}
             >
               <UsersRound size={14} />
               Grupo de estudio

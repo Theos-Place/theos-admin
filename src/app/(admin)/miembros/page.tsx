@@ -569,8 +569,7 @@ export default function MiembrosPage() {
           {!allFilteredSelected && (
             <button
               onClick={() => setSelectedIds(new Set(displayMembers.map(m => m.id)))}
-              className="text-[12px] font-semibold underline transition-colors text-[var(--coral,#EF5554)] cursor-pointer font-body"
-              style={{ background: 'none', border: 'none' }}
+              className="text-[12px] font-semibold underline transition-colors text-[var(--coral,#EF5554)] cursor-pointer font-body bg-transparent border-0"
             >
               Seleccionar los {displayMembers.length.toLocaleString('es-CR')} resultados filtrados
             </button>
@@ -905,8 +904,7 @@ export default function MiembrosPage() {
                     key={String(opt.val)}
                     type="button"
                     onClick={() => setSaveListDynamic(opt.val)}
-                    className="flex items-start gap-3 w-full text-left rounded-xl border p-3 transition-all"
-                    style={{ borderColor: saveListDynamic === opt.val ? '#161440' : 'var(--outline-variant)', background: saveListDynamic === opt.val ? 'rgba(22,20,64,0.04)' : undefined }}
+                    className={`flex items-start gap-3 w-full text-left rounded-xl border p-3 transition-all ${saveListDynamic === opt.val ? 'border-navy bg-navy/4' : 'border-outline'}`}
                   >
                     <div className={cn('mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0', saveListDynamic === opt.val ? 'border-coral bg-coral' : 'border-navy-light/30')}>
                       {saveListDynamic === opt.val && <Check size={9} className="text-white" strokeWidth={3} />}
@@ -956,8 +954,7 @@ export default function MiembrosPage() {
           <span className="text-white/20 mx-1">·</span>
           <button
             onClick={() => { setToast(''); router.push('/miembros/listas') }}
-            className="text-[13px] text-coral hover:underline cursor-pointer font-body"
-            style={{ background: 'none', border: 'none' }}
+            className="text-[13px] text-coral hover:underline cursor-pointer font-body bg-transparent border-0"
           >
             Ver mis listas →
           </button>

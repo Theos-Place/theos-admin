@@ -32,12 +32,14 @@ const securityHeaders = [
     value: 'camera=(), microphone=(), geolocation=()',
   },
   {
-    // App uses inline styles (~200 style={{}} props) so 'unsafe-inline' is required for style-src.
-    // TODO: migrate to CSS classes and remove 'unsafe-inline' before go-live.
+    // style-src mantiene 'unsafe-inline': Radix posiciona popovers/menus con
+    // atributos style, y quedan ~145 estilos inline legítimos (colores que
+    // vienen de datos, tamaños/posiciones runtime). Los estáticos ya migraron
+    // a clases con tokens. 'unsafe-eval' solo en dev (HMR); producción no lo usa.
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",

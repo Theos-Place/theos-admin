@@ -51,7 +51,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
       <div className="w-full max-w-sm rounded-2xl p-6 text-center bg-surface-card shadow-[var(--shadow-lg)]">
 
-        <div className="mx-auto h-14 w-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(239,85,84,0.10)' }}>
+        <div className="mx-auto h-14 w-14 rounded-2xl flex items-center justify-center mb-4 bg-coral/10">
           {phase === 'success'
             ? <Check size={28} className="text-coral" />
             : <Fingerprint size={28} className="text-coral" />}

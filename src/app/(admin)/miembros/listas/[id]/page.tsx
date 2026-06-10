@@ -239,8 +239,7 @@ export default function ListaDetailPage() {
             Esta lista contiene un snapshot de <strong className="text-navy">{list.member_count.toLocaleString('es-CR')}</strong> miembros del {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             <span className="mx-2">·</span>
             <button
-              className="text-coral hover:underline cursor-pointer font-body"
-              style={{ background: 'none', border: 'none' }}
+              className="text-coral hover:underline cursor-pointer font-body bg-transparent border-0"
               onClick={() => {
                 fetch(`/api/member-lists/${list.id}`, {
                   method: 'PATCH',

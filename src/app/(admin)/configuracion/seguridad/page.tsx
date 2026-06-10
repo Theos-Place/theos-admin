@@ -47,7 +47,7 @@ export default function SeguridadPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl text-navy font-display" style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Seguridad
         </h1>
         <p className="mt-1 text-sm text-navy-light/50 font-body">
@@ -63,8 +63,7 @@ export default function SeguridadPage() {
       {/* Toast */}
       {toast && (
         <div
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white font-body"
-          style={{ background: '#161440', boxShadow: '0 12px 32px rgba(22,20,64,0.20)' }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white font-body bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)]"
         >
           <Check size={15} className="text-teal shrink-0" />
           {toast}
@@ -146,7 +145,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               >
                 {req.met && newPass.length > 0
                   ? <Check size={12} className="shrink-0" />
-                  : <span className="h-3 w-3 rounded-full border shrink-0" style={{ borderColor: 'currentColor', display: 'inline-block' }} />}
+                  : <span className="h-3 w-3 rounded-full border shrink-0 border-current inline-block" />}
                 {req.label}
               </div>
             ))}
@@ -265,7 +264,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
         <div className="flex items-center gap-2.5">
           <p className={SECTION_TITLE}>Passkeys · huella / Face ID</p>
           {!loading && passkeys.length > 0 && (
-            <span className="flex items-center gap-1 text-[11px] rounded-full px-2.5 py-0.5 font-medium font-body" style={{ background: 'rgba(61,185,122,0.10)', color: '#3DB97A' }}>
+            <span className="flex items-center gap-1 text-[11px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
               <Check size={11} /> Activado
             </span>
           )}
@@ -298,9 +297,9 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
           <Loader2 size={14} className="animate-spin" /> Cargando...
         </div>
       ) : passkeys.length === 0 ? (
-        <div className="flex items-start gap-3 rounded-xl px-4 py-4" style={{ background: 'var(--surface-low)' }}>
-          <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(112,189,194,0.12)' }}>
-            <Fingerprint size={16} style={{ color: '#519DA2' }} />
+        <div className="flex items-start gap-3 rounded-xl px-4 py-4 bg-surface-low">
+          <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-teal/12">
+            <Fingerprint size={16} className="text-teal-deep" />
           </div>
           <p className="text-[13px] text-navy-light/60 leading-relaxed font-body">
             No tenés passkeys configuradas. Agregá una para ingresar más fácil la próxima vez.
@@ -309,9 +308,9 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
       ) : (
         <div className="space-y-2">
           {passkeys.map(pk => (
-            <div key={pk.id} className="flex items-center justify-between gap-3 rounded-xl px-4 py-3" style={{ background: 'var(--surface-low)' }}>
+            <div key={pk.id} className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-surface-low">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(22,20,64,0.06)' }}>
+                <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-navy/6">
                   <Fingerprint size={15} className="text-navy-light/50" />
                 </div>
                 <div className="min-w-0">
@@ -480,15 +479,15 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(61,185,122,0.12)' }}>
-                <ShieldCheck size={16} style={{ color: '#3DB97A' }} />
+              <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-success/12">
+                <ShieldCheck size={16} className="text-success" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-navy font-body">
                     {factor.friendly_name?.trim() || 'App de autenticación'}
                   </p>
-                  <span className="text-[11px] rounded-full px-2.5 py-0.5 font-medium font-body" style={{ background: 'rgba(61,185,122,0.10)', color: '#3DB97A' }}>
+                  <span className="text-[11px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
                     Activa
                   </span>
                 </div>
@@ -512,7 +511,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
             Escaneá este código QR con Google Authenticator, Authy, 1Password o Apple Keychain.
           </p>
           <div className="flex flex-col sm:flex-row gap-5 items-start">
-            <div className="rounded-2xl bg-white p-3 shrink-0" style={{ border: '1px solid var(--outline-variant)' }}>
+            <div className="rounded-2xl bg-white p-3 shrink-0 border border-outline">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={qrSrc(enroll.qr)} alt="Código QR para configurar la autenticación en dos pasos" width={160} height={160} />
             </div>
@@ -548,8 +547,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
                 <button
                   onClick={handleCancelEnroll}
                   disabled={verifying}
-                  className="rounded-xl border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-all disabled:opacity-50 font-body"
-                  style={{ borderColor: 'var(--outline-variant)' }}
+                  className="rounded-xl border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-all disabled:opacity-50 font-body border-outline"
                 >
                   Cancelar
                 </button>
@@ -560,8 +558,8 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
       ) : (
         /* ── No configurado ── */
         <div className="space-y-4">
-          <div className="flex items-start gap-3 rounded-xl px-4 py-4" style={{ background: 'var(--surface-low)' }}>
-            <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(22,20,64,0.06)' }}>
+          <div className="flex items-start gap-3 rounded-xl px-4 py-4 bg-surface-low">
+            <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-navy/6">
               <Shield size={16} className="text-navy-light/50" />
             </div>
             <p className="text-[13px] text-navy-light/60 leading-relaxed font-body">
@@ -614,9 +612,9 @@ function SessionsCard({ onSave }: { onSave: (msg: string) => void }) {
     <div className={CARD} style={CARD_STYLE}>
       <p className={SECTION_TITLE}>Sesiones activas</p>
 
-      <div className="flex items-center justify-between gap-3 rounded-xl px-4 py-3" style={{ background: 'var(--surface-low)' }}>
+      <div className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-surface-low">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(22,20,64,0.06)' }}>
+          <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-navy/6">
             <Monitor size={15} className="text-navy-light/50" />
           </div>
           <div>
@@ -624,7 +622,7 @@ function SessionsCard({ onSave }: { onSave: (msg: string) => void }) {
             <p className="text-[11px] text-navy-light/40 font-body">Sesión actual</p>
           </div>
         </div>
-        <span className="text-[11px] rounded-full px-2.5 py-1 font-medium font-body" style={{ background: 'rgba(61,185,122,0.10)', color: '#3DB97A' }}>
+        <span className="text-[11px] rounded-full px-2.5 py-1 font-medium font-body bg-success/10 text-success">
           Esta sesión
         </span>
       </div>
@@ -637,8 +635,7 @@ function SessionsCard({ onSave }: { onSave: (msg: string) => void }) {
       <button
         onClick={handleCloseOthers}
         disabled={closing}
-        className="flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] text-navy-light hover:bg-surface-low transition-all disabled:opacity-50 font-body"
-        style={{ borderColor: 'var(--outline-variant)' }}
+        className="flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] text-navy-light hover:bg-surface-low transition-all disabled:opacity-50 font-body border-outline"
       >
         {closing ? <><Loader2 size={13} className="animate-spin" /> Cerrando...</> : 'Cerrar todas las otras sesiones'}
       </button>

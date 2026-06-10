@@ -154,7 +154,7 @@ export default function DonacionesPage() {
                 ? <p className="text-2xl font-extrabold font-display text-teal-deep">
                     <AmountDisplay amount={value as number} defaultHidden={false} revealed={revealAll} />
                   </p>
-                : <p className="text-4xl font-extrabold font-display" style={{ color: alert ? '#EF5554' : '#161440' }}>
+                : <p className={`text-4xl font-extrabold font-display ${alert ? 'text-coral' : 'text-navy'}`}>
                     {value}
                   </p>
               }
@@ -243,10 +243,9 @@ export default function DonacionesPage() {
               </thead>
               <tbody>
                 {filtered.map((d, i) => (
-                  <tr key={d.id} className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                    style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}>
+                  <tr key={d.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-4">
-                      <p className="text-[13px] font-medium font-body" style={{ color: d.is_identified ? '#161440' : '#EF5554' }}>
+                      <p className={`text-[13px] font-medium font-body ${d.is_identified ? 'text-navy' : 'text-coral'}`}>
                         {d.member_name}
                       </p>
                     </td>
@@ -303,7 +302,7 @@ export default function DonacionesPage() {
                 style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium font-body truncate" style={{ color: d.is_identified ? '#161440' : '#EF5554' }}>
+                  <p className={`text-[13px] font-medium font-body truncate ${d.is_identified ? 'text-navy' : 'text-coral'}`}>
                     {d.member_name}
                   </p>
                   <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">

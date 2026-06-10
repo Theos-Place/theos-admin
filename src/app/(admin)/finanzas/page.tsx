@@ -159,11 +159,11 @@ export default function FinanzasPage() {
           {/* Pagos pendientes */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
-              <CreditCard size={16} style={{ color: pendingPayments > 0 ? '#EF5554' : '#161440' }} />
+              <CreditCard size={16} className={`${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`} />
               <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">Pagos pendientes</p>
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-4xl font-extrabold font-display" style={{ color: pendingPayments > 0 ? '#EF5554' : '#161440' }}>
+              <p className={`text-4xl font-extrabold font-display ${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`}>
                 {pendingPayments}
               </p>
               {pendingPayments > 0 && (
@@ -177,11 +177,11 @@ export default function FinanzasPage() {
           {/* Devoluciones pendientes */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
-              <ArrowLeftRight size={16} style={{ color: pendingRefunds > 0 ? '#EF5554' : '#161440' }} />
+              <ArrowLeftRight size={16} className={`${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`} />
               <p className="text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">Devoluciones pend.</p>
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-4xl font-extrabold font-display" style={{ color: pendingRefunds > 0 ? '#EF5554' : '#161440' }}>
+              <p className={`text-4xl font-extrabold font-display ${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`}>
                 {pendingRefunds}
               </p>
               {pendingRefunds > 0 && (
@@ -225,8 +225,7 @@ export default function FinanzasPage() {
                   {recentPayments.map((p, i) => (
                     <tr
                       key={p.id}
-                      className="border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors"
-                      style={{ background: i % 2 === 0 ? 'white' : 'rgba(22,20,64,0.01)' }}
+                      className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}
                     >
                       <td className="px-4 py-3">
                         <p className="text-[13px] font-medium font-body text-navy">

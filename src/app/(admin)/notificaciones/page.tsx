@@ -28,10 +28,10 @@ export default function NotificacionesPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl text-navy" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Alertas
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60" style={{ fontFamily: 'var(--font-body)' }}>
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           Pendientes derivados de la operación, calculados en vivo.
         </p>
       </div>
@@ -41,7 +41,7 @@ export default function NotificacionesPage() {
           <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
         </div>
       ) : alerts.length === 0 ? (
-        <div className="rounded-2xl" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl bg-surface-card shadow-card">
           <EmptyState
             icon={Bell}
             title="Todo al día"
@@ -56,14 +56,13 @@ export default function NotificacionesPage() {
               <Link
                 key={a.id}
                 href={a.url}
-                className="flex items-center gap-4 rounded-2xl px-5 py-4 hover:bg-surface-low transition-colors"
-                style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
+                className="flex items-center gap-4 rounded-2xl px-5 py-4 hover:bg-surface-low transition-colors bg-surface-card shadow-card"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: cfg.bg }}>
                   <cfg.Icon size={18} style={{ color: cfg.color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-navy" style={{ fontFamily: 'var(--font-body)' }}>{a.message}</p>
+                  <p className="text-sm text-navy font-body">{a.message}</p>
                   <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: cfg.color, fontFamily: 'var(--font-display)' }}>
                     {cfg.label}
                   </span>

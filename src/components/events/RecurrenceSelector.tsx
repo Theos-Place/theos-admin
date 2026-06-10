@@ -89,8 +89,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
                   className={cn(
                     'rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all font-display',
                     freq === f ? 'bg-navy text-white border-navy' : 'text-navy-light hover:bg-surface-low'
-                  )}
-                  style={{ borderColor: 'var(--outline-variant)' }}
+                  , 'border-outline')}
                 >
                   {f === 'WEEKLY' ? 'Semanal' : 'Mensual'}
                 </button>
@@ -112,8 +111,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
                   className={cn(
                     'h-8 w-8 rounded-lg text-[12px] font-medium border transition-all font-display',
                     selectedDay === d.key ? 'bg-coral text-white border-coral' : 'text-navy-light hover:bg-surface-low'
-                  )}
-                  style={{ borderColor: 'var(--outline-variant)' }}
+                  , 'border-outline')}
                 >
                   {d.label}
                 </button>
