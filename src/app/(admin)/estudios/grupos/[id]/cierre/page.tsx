@@ -3,7 +3,7 @@
 import { use, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useStudies } from '@/hooks/useStudies'
+import { useGroup } from '@/hooks/useGroup'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star } from 'lucide-react'
@@ -18,7 +18,7 @@ type ParticipantResult = {
 
 export default function CierrePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { groups, studyTypes, loading } = useStudies()
+  const { group, studyTypes, loading } = useGroup(id)
 
   if (loading) {
     return (
@@ -28,7 +28,6 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
     )
   }
 
-  const group = groups.find(g => g.id === id)
   if (!group) {
     return (
       <div className="space-y-4">

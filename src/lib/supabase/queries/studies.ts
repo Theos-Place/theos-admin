@@ -115,7 +115,7 @@ export async function getStudyGroups(): Promise<DbGroupEnriched[]> {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('study_groups')
-      .select(GROUP_SELECT)
+      .select(LIST_GROUP_SELECT)
       .order('starts_at', { ascending: false })
       .range(from, from + 999)
     if (error) throw error
@@ -136,6 +136,17 @@ const GROUP_SELECT = `
     member_id, status, grade,
     member:members(first_name, last_name)
   )
+`
+
+// Versión liviana para el LISTADO de grupos: participantes sin nombre ni nota
+// (solo lo necesario para CONTAR). Los nombres se cargan en el detalle (getGroupById).
+const LIST_GROUP_SELECT = `
+  id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
+  max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  plan:study_plans(code),
+  leader:members!study_groups_leader_id_fkey(first_name, last_name),
+  co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
+  enrollments:study_enrollments!study_enrollments_group_id_fkey(member_id, status)
 `
 
 export async function getGroupById(id: string): Promise<DbGroupEnriched | null> {

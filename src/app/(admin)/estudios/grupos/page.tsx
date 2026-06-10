@@ -91,10 +91,6 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
     key: 'whatsapp_group_url', label: 'Grupo WhatsApp', defaultVisible: false,
     exportValue: g => g.whatsapp_group_url ?? 'Sin crear',
   },
-  {
-    key: 'participants_names', label: 'Lista de participantes', defaultVisible: false, exportable: true,
-    exportValue: g => g.participants.filter(p => p.status !== 'withdrawn').map(p => p.member_name).join(' | '),
-  },
   ]
 }
 

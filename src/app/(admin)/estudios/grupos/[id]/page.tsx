@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useStudies } from '@/hooks/useStudies'
+import { useGroup } from '@/hooks/useGroup'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
@@ -192,8 +192,7 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
 
 export default function GrupoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { groups, studyTypes, refetch } = useStudies()
-  const group = groups.find(g => g.id === id)
+  const { group, studyTypes, refetch, loading } = useGroup(id)
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
@@ -210,6 +209,15 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       .catch(() => { if (alive) setSessions([]) })
     return () => { alive = false }
   }, [id])
+
+  if (loading) {
+    return (
+      <div className="py-16 text-center font-body">
+        <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+        <p className="text-sm text-navy-light/50">Cargando…</p>
+      </div>
+    )
+  }
 
   if (!group) {
     return (
