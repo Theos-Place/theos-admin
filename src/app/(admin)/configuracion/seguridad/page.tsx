@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { TOAST_SHORT_MS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { setPasskeySuggestion, clearPasskeySuggestion } from '@/lib/auth/passkey-suggestion'
 import type { PasskeyListItem, Factor } from '@supabase/supabase-js'
 
 const INPUT = [
@@ -228,6 +229,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
       const supabase = createClient()
       const { error } = await supabase.auth.registerPasskey()
       if (error) { setError('No se pudo registrar la passkey. Intentá de nuevo.'); return }
+      setPasskeySuggestion('registered') // ya tiene passkey: no sugerir en el login
       await load()
       onSave('Passkey registrada exitosamente. La próxima vez podés ingresar con tu huella.')
     } catch {
@@ -244,7 +246,10 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
       const supabase = createClient()
       const { error } = await supabase.auth.passkey.delete({ passkeyId: toDelete.id })
       if (error) { setError('No se pudo eliminar la passkey. Intentá de nuevo.'); return }
-      setPasskeys(prev => prev.filter(p => p.id !== toDelete.id))
+      const remaining = passkeys.filter(p => p.id !== toDelete.id)
+      setPasskeys(remaining)
+      // Si quedó sin passkeys, permitimos que el login vuelva a sugerirla.
+      if (remaining.length === 0) clearPasskeySuggestion()
       setToDelete(null)
       onSave('Passkey eliminada')
     } catch {
@@ -257,7 +262,14 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
   return (
     <div className={CARD} style={CARD_STYLE}>
       <div className="flex items-center justify-between gap-3">
-        <p className={SECTION_TITLE}>Passkeys · huella / Face ID</p>
+        <div className="flex items-center gap-2.5">
+          <p className={SECTION_TITLE}>Passkeys · huella / Face ID</p>
+          {!loading && passkeys.length > 0 && (
+            <span className="flex items-center gap-1 text-[11px] rounded-full px-2.5 py-0.5 font-medium font-body" style={{ background: 'rgba(61,185,122,0.10)', color: '#3DB97A' }}>
+              <Check size={11} /> Activado
+            </span>
+          )}
+        </div>
         <button
           onClick={handleRegister}
           disabled={registering || !supported}
@@ -265,7 +277,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
         >
           {registering
             ? <><Loader2 size={13} className="animate-spin" /> Registrando...</>
-            : <><Plus size={13} /> Agregar passkey</>}
+            : <><Plus size={13} /> {passkeys.length > 0 ? 'Agregar passkey' : 'Activar huella / Face ID'}</>}
         </button>
       </div>
 

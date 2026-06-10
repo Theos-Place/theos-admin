@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, AlertCircle, Loader2, Fingerprint, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { shouldSuggestPasskey } from '@/lib/auth/passkey-suggestion'
+import { PasskeySuggestionModal } from '@/components/auth/PasskeySuggestionModal'
 
 function isEmail(value: string): boolean {
   return value.includes('@')
@@ -44,6 +46,14 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode]         = useState('')
   const [mfaLoading, setMfaLoading]   = useState(false)
   const [mfaError, setMfaError]       = useState('')
+
+  // Sugerencia de passkey tras el primer login (solo si aplica).
+  const [showPasskeyModal, setShowPasskeyModal] = useState(false)
+
+  function goToDashboard() {
+    router.push('/dashboard')
+    router.refresh()
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.PublicKeyCredential) return
@@ -119,8 +129,13 @@ export default function LoginPage() {
         }
       }
 
-      router.push('/dashboard')
-      router.refresh()
+      // Sin MFA pendiente: ofrecemos configurar passkey si corresponde.
+      if (await shouldSuggestPasskey()) {
+        setShowPasskeyModal(true)
+        return
+      }
+
+      goToDashboard()
     } catch {
       setAuthError('No se pudo conectar. Revisá tu conexión e intentá de nuevo.')
     } finally {
@@ -236,6 +251,8 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-[400px]">
+
+      {showPasskeyModal && <PasskeySuggestionModal onDone={goToDashboard} />}
 
       {/* Header */}
       <div className="mb-8">
