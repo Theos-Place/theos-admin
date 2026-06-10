@@ -4,6 +4,7 @@ import { useMemo, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { type VacationRecordType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
+import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import {
   FileText,
@@ -63,6 +64,7 @@ function calcularDiasHabiles(desde: string, hasta: string): number {
 
 export default function EmpleadoDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const toast = useToast()
   const { employees, refetch } = useEmployees()
   const employee = useMemo(() => employees.find(e => e.id === id), [employees, id])
 
@@ -157,9 +159,16 @@ export default function EmpleadoDetailPage() {
       form.append('doc_type', 'otro')
       form.append('title', file.name)
       const res = await fetch(`/api/employees/${id}/documents`, { method: 'POST', body: form })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        // El API valida tipo/tamaño y devuelve el motivo en error.
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error ?? 'No se pudo subir el documento')
+      }
       await refetch()
-    } catch { /* sin cambios si falla */ }
+      toast('Documento subido', 'success')
+    } catch (e) {
+      toast(e instanceof Error && e.message ? e.message : 'No se pudo subir el documento', 'error')
+    }
   }
 
   if (!employee) {
