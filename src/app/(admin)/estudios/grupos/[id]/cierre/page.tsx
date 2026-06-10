@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
@@ -45,6 +46,7 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
 
 function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyType | null }) {
   const router = useRouter()
+  const toast = useToast()
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [results, setResults] = useState<ParticipantResult[]>(() =>
@@ -94,7 +96,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       router.refresh()
     } catch (e) {
       console.error(e)
-      alert('No se pudo cerrar el grupo. Intentá de nuevo.')
+      toast('No se pudo cerrar el grupo. Intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }

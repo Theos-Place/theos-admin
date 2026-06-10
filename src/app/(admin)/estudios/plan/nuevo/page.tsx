@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
@@ -72,6 +73,7 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 
 export default function NuevoTipoPage() {
   const router = useRouter()
+  const toast = useToast()
   const { studyTypes } = useStudies()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [saved, setSaved] = useState(false)
@@ -90,7 +92,7 @@ export default function NuevoTipoPage() {
 
   async function handleSave(active: boolean) {
     if (!form.nombre.trim() || !form.codigo.trim()) {
-      alert('Nombre y código son obligatorios.')
+      toast('Nombre y código son obligatorios.', 'error')
       return
     }
     setSubmitting(true)
@@ -121,7 +123,7 @@ export default function NuevoTipoPage() {
       setTimeout(() => { router.push('/estudios/plan') }, REDIRECT_AFTER_SAVE_MS)
     } catch (e) {
       console.error(e)
-      alert('No se pudo guardar. Revisá los datos e intentá de nuevo.')
+      toast('No se pudo guardar. Revisá los datos e intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, use, useEffect } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
 import { sedeLabel } from '@/lib/sedes'
@@ -11,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const notify = useToast()
   const { user } = useAuth()
   const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('direccion')
 
@@ -122,7 +124,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       }, 1500)
     } catch (e) {
       console.error(e)
-      alert('No se pudieron guardar los cambios. Intentá de nuevo.')
+      notify('No se pudieron guardar los cambios. Intentá de nuevo.', 'error')
       setSaving(false)
     }
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { EVENT_TYPES, type EventType } from '@/data/mock-events'
@@ -44,6 +45,7 @@ const STEPS_COUNT = 4
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NuevoEventoPage() {
+  const toast = useToast()
   const [step, setStep]                         = useState(1)
   const [published, setPublished]               = useState(false)
   const [showSubEventForm, setShowSubEventForm] = useState(false)
@@ -139,7 +141,7 @@ export default function NuevoEventoPage() {
       setPublished(true)
     } catch (e) {
       console.error(e)
-      alert('No se pudo crear el evento. Revisá los datos e intentá de nuevo.')
+      toast('No se pudo crear el evento. Revisá los datos e intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }

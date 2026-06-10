@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { EVENT_TYPES, type EventType } from '@/data/mock-events'
 import { useEvent } from '@/hooks/useEvents'
@@ -136,6 +137,7 @@ function RecurringSaveModal({
 }
 
 export default function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
+  const toast = useToast()
   const { allCommittees: ALL_COMMITTEES } = useOrg()
   const { id } = use(params)
   const { event, loading } = useEvent(id)
@@ -248,7 +250,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       setSaved(true)
     } catch (e) {
       console.error(e)
-      alert('No se pudieron guardar los cambios. Intentá de nuevo.')
+      toast('No se pudieron guardar los cambios. Intentá de nuevo.', 'error')
       setSaving(false)
     }
   }

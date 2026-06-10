@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -116,6 +117,7 @@ function getPageBreakForPage(fields: FormFieldNew[], pageIndex: number): FormFie
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PreviewPage() {
+  const toast = useToast()
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const [form, setForm] = useState<FormTemplate | null>(null)
@@ -361,7 +363,7 @@ export default function PreviewPage() {
                       <button
                         type="button"
                         className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-                        onClick={() => alert('Redirigir al perfil del miembro para editar datos')}
+                        onClick={() => toast('Redirigir al perfil del miembro para editar datos', 'info')}
                       >
                         <Pencil size={11} />
                         Editar mis datos

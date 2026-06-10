@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
 import { useDirigentes } from '@/hooks/useDirigentes'
@@ -31,6 +32,7 @@ type Step1 = {
 }
 
 export default function NuevoGrupoPage() {
+  const toast = useToast()
   const { activeSedes: SEDES } = useSedes()
   const { studyTypes } = useStudies()
   const { dirigentes } = useDirigentes()
@@ -94,7 +96,7 @@ export default function NuevoGrupoPage() {
       setCreated(true)
     } catch (e) {
       console.error(e)
-      alert('No se pudo crear el grupo. Revisá los datos e intentá de nuevo.')
+      toast('No se pudo crear el grupo. Revisá los datos e intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }

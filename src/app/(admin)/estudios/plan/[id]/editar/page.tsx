@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState } from 'react'
+import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
 import type { StudyType, StudyLeader } from '@/types/study'
@@ -60,6 +61,7 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
 
 function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: StudyLeader[] }) {
   const router = useRouter()
+  const toast = useToast()
   const [submitting, setSubmitting] = useState(false)
 
   const [form, setForm] = useState({
@@ -112,7 +114,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
       router.refresh()
     } catch (e) {
       console.error(e)
-      alert('No se pudieron guardar los cambios. Intentá de nuevo.')
+      toast('No se pudieron guardar los cambios. Intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }
