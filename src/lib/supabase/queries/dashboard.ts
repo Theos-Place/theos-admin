@@ -43,7 +43,7 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     upcomingMonth, thisWeek, pendingPayments,
     serversActive, committees, openVacancies, pendingApps,
     donorsActive, pendingRefunds,
-    sentThisMonth,
+    sentThisMonth, failedComms,
   ] = await Promise.all([
     count(supabase, 'members'),
     count(supabase, 'members', (q) => q.eq('is_active', true)),
@@ -70,25 +70,35 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     count(supabase, 'refunds', (q) => q.eq('status', 'pending')),
 
     count(supabase, 'message_broadcasts', (q) => q.eq('status', 'sent').gte('created_at', monthStart)),
+    count(supabase, 'message_logs', (q) => q.in('status', ['failed', 'bounced']).gte('created_at', monthStart)),
   ])
 
-  // Sumas que PostgREST no agrega directo: las traemos y reducimos.
-  const { data: incomeRows } = await supabase
-    .from('payments').select('amount').eq('status', 'paid').gte('payment_date', monthStartDate)
-  const incomeThisMonth = (incomeRows ?? []).reduce((s, r) => s + Number((r as { amount: number }).amount), 0)
-
-  const { data: brRows } = await supabase
-    .from('message_broadcasts').select('total_recipients').gte('created_at', monthStart)
-  const totalRecipients = (brRows ?? []).reduce((s, r) => s + Number((r as { total_recipients: number }).total_recipients), 0)
-
-  const failedComms = await count(supabase, 'message_logs', (q) =>
-    q.in('status', ['failed', 'bounced']).gte('created_at', monthStart))
-
-  // Personas únicas sirviendo (member_id distintos entre volunteers activos);
-  // serversActive cuenta filas = puestos ocupados (una persona puede tener varios).
-  const { data: volRows } = await supabase
-    .from('volunteers').select('member_id').eq('status', 'active')
-  const serversUnique = new Set((volRows ?? []).map(r => (r as { member_id: string }).member_id)).size
+  // Sumas y distinct agregados en SQL (RPC dashboard_sums, migración 040):
+  // income del mes, destinatarios del mes y personas únicas sirviendo
+  // (serversActive cuenta filas = puestos; una persona puede tener varios).
+  let incomeThisMonth = 0
+  let totalRecipients = 0
+  let serversUnique = 0
+  const { data: sums, error: sumsError } = await supabase
+    .rpc('dashboard_sums', { p_month_start: monthStart, p_month_start_date: monthStartDate })
+    .single()
+  if (!sumsError && sums) {
+    const s = sums as { income_this_month: number; total_recipients: number; servers_unique: number }
+    incomeThisMonth = Number(s.income_this_month)
+    totalRecipients = Number(s.total_recipients)
+    serversUnique = Number(s.servers_unique)
+  } else {
+    // Fallback mientras la migración 040 no esté aplicada: traer y reducir en JS.
+    console.warn('dashboard: rpc dashboard_sums no disponible, sumando en JS:', sumsError?.message)
+    const [incomeRes, brRes, volRes] = await Promise.all([
+      supabase.from('payments').select('amount').eq('status', 'paid').gte('payment_date', monthStartDate),
+      supabase.from('message_broadcasts').select('total_recipients').gte('created_at', monthStart),
+      supabase.from('volunteers').select('member_id').eq('status', 'active'),
+    ])
+    incomeThisMonth = (incomeRes.data ?? []).reduce((s, r) => s + Number((r as { amount: number }).amount), 0)
+    totalRecipients = (brRes.data ?? []).reduce((s, r) => s + Number((r as { total_recipients: number }).total_recipients), 0)
+    serversUnique = new Set((volRes.data ?? []).map(r => (r as { member_id: string }).member_id)).size
+  }
 
   return {
     members: {

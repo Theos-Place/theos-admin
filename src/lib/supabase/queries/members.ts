@@ -179,24 +179,34 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
     idFilter = ids
   }
 
-  let query = supabase
-    .from('members')
-    .select(is_server ? 'id, volunteers!inner(status)' : 'id', { count: 'exact' })
-    .eq('is_active', is_active)
-    .range(0, 199999)
+  // PostgREST corta cada respuesta en ~1000 filas (db-max-rows), así que un
+  // range gigante trunca silenciosamente: paginamos hasta agotar, con orden
+  // estable para que las páginas no se solapen. El Set dedup ids repetidos
+  // por el inner join con volunteers.
+  const pageSize = 1000
+  const ids = new Set<string>()
+  for (let from = 0; ; from += pageSize) {
+    let query = supabase
+      .from('members')
+      .select(is_server ? 'id, volunteers!inner(status)' : 'id')
+      .eq('is_active', is_active)
+      .order('id')
+      .range(from, from + pageSize - 1)
 
-  if (search) {
-    query = applyMemberSearch(query, search)
+    if (search) {
+      query = applyMemberSearch(query, search)
+    }
+    if (is_donor !== undefined) query = query.eq('is_donor', is_donor)
+    if (is_server) query = query.eq('volunteers.status', 'active')
+    if (idFilter) query = query.in('id', idFilter)
+
+    const { data, error } = await query
+    if (error) throw error
+    const rows = (data ?? []) as unknown as Array<{ id: string }>
+    rows.forEach((r) => ids.add(r.id))
+    if (rows.length < pageSize) break
   }
-  if (is_donor !== undefined) query = query.eq('is_donor', is_donor)
-  if (is_server) query = query.eq('volunteers.status', 'active')
-  if (idFilter) query = query.in('id', idFilter)
-
-  const { data, error, count } = await query
-  if (error) throw error
-  const rows = (data ?? []) as unknown as Array<{ id: string }>
-  const ids = Array.from(new Set(rows.map((r) => r.id)))
-  return { ids, total: count ?? ids.length }
+  return { ids: Array.from(ids), total: ids.size }
 }
 
 export type UserAccessRow = {
