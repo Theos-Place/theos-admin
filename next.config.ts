@@ -1,5 +1,15 @@
 import type { NextConfig } from "next";
 
+// Origen de Supabase para permitirlo en connect-src. Passkeys y MFA corren en el
+// browser (auth.passkey.*, auth.mfa.*), que llama directo a *.supabase.co.
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin
+  } catch {
+    return 'https://*.supabase.co'
+  }
+})()
+
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -31,7 +41,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self'",
+      `connect-src 'self' ${supabaseOrigin}`,
       "frame-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
