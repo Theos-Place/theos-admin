@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, Search, User, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/data/mock-auth'
 import { NotificationsBell } from './NotificationsDropdown'
@@ -157,6 +157,14 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
               >
                 <Settings size={15} className="text-navy-light/50 shrink-0" />
                 Configuración
+              </Link>
+              <Link
+                href="/configuracion/seguridad"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                <Shield size={15} className="text-navy-light/50 shrink-0" />
+                Seguridad
               </Link>
             </div>
 

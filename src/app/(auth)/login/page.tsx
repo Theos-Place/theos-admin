@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle, Loader2, Fingerprint, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 function isEmail(value: string): boolean {
   return value.includes('@')
@@ -30,6 +31,47 @@ export default function LoginPage() {
   const [authError, setAuthError]     = useState('')
   const [emailErr, setEmailErr]       = useState('')
   const [passErr, setPassErr]         = useState('')
+
+  // Passkeys: solo mostramos el botón si el dispositivo soporta WebAuthn con
+  // autenticador de plataforma (huella / Face ID). Si no, queda oculto en
+  // silencio y el usuario sigue con email/password normal.
+  const [passkeySupported, setPasskeySupported] = useState(false)
+  const [passkeyLoading, setPasskeyLoading]     = useState(false)
+
+  // MFA (TOTP): cuando el usuario tiene segundo factor, mostramos esta pantalla
+  // inline en vez de redirigir. factorId se resuelve tras el login con password.
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
+  const [mfaCode, setMfaCode]         = useState('')
+  const [mfaLoading, setMfaLoading]   = useState(false)
+  const [mfaError, setMfaError]       = useState('')
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.PublicKeyCredential) return
+    window.PublicKeyCredential
+      .isUserVerifyingPlatformAuthenticatorAvailable()
+      .then(setPasskeySupported)
+      .catch(() => setPasskeySupported(false))
+  }, [])
+
+  async function handlePasskey() {
+    setAuthError('')
+    setPasskeyLoading(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPasskey()
+      if (error) {
+        setAuthError('No se pudo autenticar con huella. Intentá con tu contraseña.')
+        return
+      }
+      router.push('/dashboard')
+      router.refresh()
+    } catch {
+      setAuthError('No se pudo autenticar con huella. Intentá con tu contraseña.')
+    } finally {
+      setPasskeyLoading(false)
+    }
+  }
+
   function validate() {
     let ok = true
     if (!email.trim()) {
@@ -63,6 +105,20 @@ export default function LoginPage() {
         setAuthError('Correo o cédula o contraseña incorrectos. Verificá tus datos e intentá de nuevo.')
         return
       }
+
+      // Login con password OK. Verificamos si el usuario tiene un segundo factor
+      // (TOTP) pendiente: la sesión queda en aal1 con nextLevel aal2.
+      const supabase = createClient()
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      if (aal?.currentLevel === 'aal1' && aal?.nextLevel === 'aal2') {
+        const { data: factors } = await supabase.auth.mfa.listFactors()
+        const totp = factors?.totp?.[0] ?? factors?.all?.find(f => f.factor_type === 'totp' && f.status === 'verified')
+        if (totp) {
+          setMfaFactorId(totp.id)
+          return // mostramos la pantalla de verificación inline
+        }
+      }
+
       router.push('/dashboard')
       router.refresh()
     } catch {
@@ -70,6 +126,112 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleVerifyMfa(e: React.FormEvent) {
+    e.preventDefault()
+    if (!mfaFactorId || mfaCode.length !== 6) return
+    setMfaError('')
+    setMfaLoading(true)
+    try {
+      const supabase = createClient()
+      const challenge = await supabase.auth.mfa.challenge({ factorId: mfaFactorId })
+      if (challenge.error || !challenge.data) {
+        setMfaError('Código incorrecto. Intentá de nuevo.')
+        return
+      }
+      const { error } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: challenge.data.id,
+        code: mfaCode,
+      })
+      if (error) {
+        setMfaError('Código incorrecto. Intentá de nuevo.')
+        return
+      }
+      router.push('/dashboard')
+      router.refresh()
+    } catch {
+      setMfaError('Código incorrecto. Intentá de nuevo.')
+    } finally {
+      setMfaLoading(false)
+    }
+  }
+
+  // Volver al login con email/password: cerramos la sesión aal1 a medio camino.
+  async function handleMfaBack() {
+    setMfaError('')
+    setMfaCode('')
+    setMfaFactorId(null)
+    setPassword('')
+    try {
+      await createClient().auth.signOut()
+    } catch { /* sin sesión que cerrar */ }
+  }
+
+  // ── Pantalla de verificación MFA (segundo factor TOTP) ──
+  if (mfaFactorId) {
+    return (
+      <div className="w-full max-w-[400px]">
+        <div className="mb-8">
+          <div className="h-12 w-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(112,189,194,0.12)' }}>
+            <ShieldCheck size={22} style={{ color: '#519DA2' }} />
+          </div>
+          <h1 className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]">
+            Verificación en dos pasos
+          </h1>
+          <p className="text-sm text-navy-light/50 leading-relaxed font-body">
+            Ingresá el código de tu app de autenticación
+          </p>
+        </div>
+
+        {mfaError && (
+          <div className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body">
+            <AlertCircle size={15} className="shrink-0 mt-0.5" />
+            {mfaError}
+          </div>
+        )}
+
+        <form onSubmit={handleVerifyMfa} className="space-y-4">
+          <div>
+            <label htmlFor="mfa-code" className={`${LABEL} font-body`}>
+              Código de 6 dígitos
+            </label>
+            <input
+              id="mfa-code"
+              value={mfaCode}
+              onChange={e => { setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6)); if (mfaError) setMfaError('') }}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="000000"
+              autoFocus
+              className={`${INPUT} ${INPUT_NORMAL} font-mono text-center tracking-[0.4em]`}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={mfaLoading || mfaCode.length !== 6}
+            className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body disabled:opacity-50"
+            style={{
+              background: '#EF5554',
+              boxShadow: mfaLoading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
+              cursor: mfaLoading || mfaCode.length !== 6 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {mfaLoading ? <><Loader2 size={16} className="animate-spin" /> Verificando...</> : 'Verificar'}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={handleMfaBack}
+          className="mt-5 mx-auto flex items-center gap-1.5 text-[13px] text-navy-light/50 hover:text-navy transition-colors font-body"
+        >
+          <ArrowLeft size={14} /> Volver al inicio de sesión
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -206,6 +368,38 @@ export default function LoginPage() {
           ) : 'Iniciar sesión'}
         </button>
       </form>
+
+      {/* Passkey: opción secundaria, solo si el dispositivo la soporta */}
+      {passkeySupported && (
+        <>
+          {/* Separador ── o ── */}
+          <div className="flex items-center gap-3 my-5">
+            <span className="h-px flex-1 bg-[rgba(22,20,64,0.12)]" />
+            <span className="text-[12px] text-navy-light/40 font-body select-none">o</span>
+            <span className="h-px flex-1 bg-[rgba(22,20,64,0.12)]" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handlePasskey}
+            disabled={passkeyLoading || loading}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white py-3.5 text-sm font-semibold text-navy transition-all hover:bg-navy/[0.03] font-body"
+            style={{ cursor: passkeyLoading || loading ? 'not-allowed' : 'pointer' }}
+          >
+            {passkeyLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Autenticando...
+              </>
+            ) : (
+              <>
+                <Fingerprint size={18} />
+                Ingresar con huella / Face ID
+              </>
+            )}
+          </button>
+        </>
+      )}
 
       {/* Recuperar */}
       <p className="mt-5 text-center text-[13px] text-navy-light/50 font-body">

@@ -30,5 +30,14 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  return { response, user }
+  // ¿El usuario tiene un segundo factor (TOTP) pendiente de verificar?
+  // getAuthenticatorAssuranceLevel lee currentLevel del JWT y nextLevel de los
+  // factores ya presentes en la sesión local — no hace round-trip de red.
+  let needsMfa = false
+  if (user) {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    needsMfa = aal?.currentLevel === 'aal1' && aal?.nextLevel === 'aal2'
+  }
+
+  return { response, user, needsMfa }
 }
