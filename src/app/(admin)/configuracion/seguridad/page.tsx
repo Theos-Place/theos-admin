@@ -227,21 +227,13 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
     setRegistering(true)
     try {
       const supabase = createClient()
-      const { data, error } = await supabase.auth.registerPasskey()
-      if (error) {
-        console.error('registerPasskey error:', error)
-        const e = error as { code?: string; message?: string }
-        setError(`No se pudo registrar la passkey: ${e.code ?? ''} ${e.message ?? ''}`.trim())
-        return
-      }
-      void data
+      const { error } = await supabase.auth.registerPasskey()
+      if (error) { setError('No se pudo registrar la passkey. Intentá de nuevo.'); return }
       setPasskeySuggestion('registered') // ya tiene passkey: no sugerir en el login
       await load()
       onSave('Passkey registrada exitosamente. La próxima vez podés ingresar con tu huella.')
-    } catch (err) {
-      console.error('registerPasskey threw:', err)
-      const e = err as { name?: string; message?: string }
-      setError(`No se pudo registrar la passkey: ${e.name ?? ''} ${e.message ?? ''}`.trim())
+    } catch {
+      setError('No se pudo registrar la passkey. Intentá de nuevo.')
     } finally {
       setRegistering(false)
     }
