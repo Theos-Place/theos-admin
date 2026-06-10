@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid, Trash2 } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
@@ -655,18 +656,19 @@ export default function ServidoresAdminPage() {
             </div>
 
             {areaComm.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-12 text-center">
-                <LayoutGrid size={28} className="text-navy-light/20" />
-                <p className="text-sm text-navy-light/40 font-body">
-                  No hay comités en esta área
-                </p>
-                <button
-                  onClick={() => setCommModal({ open: true, editing: null })}
-                  className="text-[12px] text-coral hover:underline font-body"
-                >
-                  Crear el primero
-                </button>
-              </div>
+              <EmptyState
+                className="flex-1"
+                icon={LayoutGrid}
+                title="No hay comités en esta área"
+                action={
+                  <button
+                    onClick={() => setCommModal({ open: true, editing: null })}
+                    className="text-[12px] text-coral hover:underline font-body"
+                  >
+                    Crear el primero
+                  </button>
+                }
+              />
             ) : (
               <div className="flex-1 overflow-y-auto">
                 <div className="overflow-x-auto">

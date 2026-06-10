@@ -11,8 +11,9 @@ import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
 import {
-  ChevronLeft, MessageCircle, ArrowRight, RefreshCw, ExternalLink,
+  ChevronLeft, MessageCircle, ArrowRight, RefreshCw, ExternalLink, Users,
 } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 function calcularEdad(fechaNacimiento: string): number {
   const hoy = new Date()
@@ -309,9 +310,7 @@ export default function ListaDetailPage() {
         {/* Tarjetas mobile */}
         <div className="md:hidden divide-y divide-[var(--outline-variant)]">
           {sorted.length === 0 ? (
-            <p className="px-4 py-12 text-center text-sm text-navy-light/40 font-body">
-              No hay miembros en esta lista
-            </p>
+            <EmptyState icon={Users} title="No hay miembros en esta lista" />
           ) : (
             sorted.map(member => (
               <button
@@ -358,11 +357,8 @@ export default function ListaDetailPage() {
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={visibleColumns.length + 1}
-                    className="px-4 py-12 text-center text-sm text-navy-light/40 font-body"
-                  >
-                    No hay miembros en esta lista
+                  <td colSpan={visibleColumns.length + 1}>
+                    <EmptyState icon={Users} title="No hay miembros en esta lista" />
                   </td>
                 </tr>
               ) : (

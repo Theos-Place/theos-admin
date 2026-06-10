@@ -12,7 +12,9 @@ import {
   X,
   Bookmark,
   Check,
+  Users,
 } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { useMembers } from '@/hooks/useMembers'
 import { toDomainMember } from '@/lib/members/adapter'
@@ -652,11 +654,8 @@ export default function MiembrosPage() {
                 </tr>
               ) : visibleMembers.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={visibleColumns.length + 2}
-                    className="px-4 py-12 text-center text-sm text-navy-light/40 font-body"
-                  >
-                    Sin resultados para los filtros aplicados
+                  <td colSpan={visibleColumns.length + 2}>
+                    <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" />
                   </td>
                 </tr>
               ) : (
@@ -779,9 +778,7 @@ export default function MiembrosPage() {
               <p className="text-sm text-navy-light/50">Buscando miembros…</p>
             </div>
           ) : visibleMembers.length === 0 ? (
-            <div className="px-4 py-12 text-center text-sm text-navy-light/40 font-body">
-              Sin resultados para los filtros aplicados
-            </div>
+            <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" />
           ) : (
             <ul>
               {visibleMembers.map((member, i) => (

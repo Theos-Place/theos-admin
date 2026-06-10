@@ -1,6 +1,7 @@
 'use client'
 
-import { Plus, Check } from 'lucide-react'
+import { Plus, Check, Target } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { type CommitteeGoal } from '@/data/mock-servers'
 import { cn } from '@/lib/utils'
 
@@ -124,9 +125,7 @@ export function GoalsTab({
       )}
 
       {goals.length === 0 && !showGoalForm && (
-        <p className="text-[12px] text-navy-light/40 text-center py-6 font-body">
-          No hay metas definidas aún.
-        </p>
+        <EmptyState icon={Target} title="No hay metas definidas aún" />
       )}
     </div>
   )

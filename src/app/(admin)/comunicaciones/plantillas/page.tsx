@@ -9,6 +9,7 @@ import { TemplateCard } from '@/components/communications/TemplateCard'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import { Plus, FileText } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 type CategoryFilter = 'all' | MessageTemplate['category']
 
@@ -131,15 +132,19 @@ export default function PlantillasPage() {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl py-16 flex flex-col items-center gap-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <FileText size={28} className="text-navy-light/20" />
-          <p className="text-sm text-navy-light/40 font-body">No hay plantillas con ese filtro.</p>
-          <Link
-            href="/comunicaciones/plantillas/nueva"
-            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-          >
-            Crear primera plantilla
-          </Link>
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+          <EmptyState
+            icon={FileText}
+            title="No hay plantillas con ese filtro"
+            action={
+              <Link
+                href="/comunicaciones/plantillas/nueva"
+                className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+              >
+                Crear primera plantilla
+              </Link>
+            }
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

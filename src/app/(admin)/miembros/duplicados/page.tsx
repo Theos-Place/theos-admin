@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ChevronLeft, Users } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 type DupMember = {
   id: string; first_name: string; last_name: string
@@ -146,9 +147,8 @@ export default function DuplicadosPage() {
           <p className="text-sm text-navy-light/50">Buscando duplicados…</p>
         </div>
       ) : pairs.length === 0 ? (
-        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] py-16 text-center">
-          <Users size={28} className="text-navy-light/20 mx-auto mb-3" />
-          <p className="text-sm text-navy-light/50 font-body">No se encontraron duplicados sugeridos</p>
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+          <EmptyState icon={Users} title="No se encontraron duplicados sugeridos" />
         </div>
       ) : (
         <div className="space-y-3">

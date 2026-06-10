@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { type ApplicationStatus } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
-import { Search, ChevronRight } from 'lucide-react'
+import { Search, ChevronRight, ClipboardList } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 const APP_STATUS_COLORS: Record<ApplicationStatus, string> = {
   pending:   'bg-amber-500/10 text-amber-600',
@@ -219,11 +220,7 @@ export default function AplicacionesPage() {
         </ul>
 
         {filtered.length === 0 && (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-navy-light/40 font-body">
-              No hay aplicaciones con ese filtro.
-            </p>
-          </div>
+          <EmptyState icon={ClipboardList} title="No hay aplicaciones con ese filtro" />
         )}
       </div>
     </div>

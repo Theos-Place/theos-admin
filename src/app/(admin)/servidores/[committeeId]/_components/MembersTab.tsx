@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, Search, MoreVertical, ExternalLink } from 'lucide-react'
+import { Plus, Search, MoreVertical, ExternalLink, Users } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import type { CommitteeServer } from '@/types/server'
 import { cn } from '@/lib/utils'
 import { SortableHeader } from '@/components/shared/SortableHeader'
@@ -256,11 +257,7 @@ export function MembersTab({
         </ul>
 
         {sortedMembers.length === 0 && (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-navy-light/40 font-body">
-              No hay servidores con ese filtro.
-            </p>
-          </div>
+          <EmptyState icon={Users} title="No hay servidores con ese filtro" />
         )}
       </div>
     </div>

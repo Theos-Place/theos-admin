@@ -12,7 +12,8 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
-import { Plus } from 'lucide-react'
+import { Plus, BookOpen } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 const ALL_STATUSES: GroupStatus[] = ['pending_leader', 'pending_opening', 'open', 'in_progress', 'finished']
 const STATUS_LABELS: Record<GroupStatus, string> = {
@@ -388,11 +389,7 @@ export default function GruposPage() {
         </ul>
 
         {filtered.length === 0 && (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-navy-light/40 font-body">
-              No se encontraron grupos con esos filtros.
-            </p>
-          </div>
+          <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" />
         )}
       </div>
     </div>

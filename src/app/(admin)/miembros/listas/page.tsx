@@ -10,6 +10,7 @@ import {
   Bookmark, MessageCircle, MoreHorizontal, Users, Plus, Search, ChevronLeft,
   Edit2, RefreshCw, Trash2, X,
 } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return 'Nunca'
@@ -177,16 +178,12 @@ export default function ListasGuardadasPage() {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div
-          className="rounded-2xl p-12 text-center bg-surface-card shadow-[var(--shadow-md)]"
-        >
-          <Bookmark size={28} className="text-navy-light/20 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-navy-light/50 font-body">
-            No hay listas guardadas aún
-          </p>
-          <p className="text-[13px] text-navy-light/40 mt-1 font-body">
-            Creá tu primera lista desde la página de miembros aplicando filtros.
-          </p>
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+          <EmptyState
+            icon={Bookmark}
+            title="No hay listas guardadas aún"
+            description="Creá tu primera lista desde la página de miembros aplicando filtros."
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

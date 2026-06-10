@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Users } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { type Vacancy } from '@/data/mock-servers'
 import { cn } from '@/lib/utils'
 
@@ -40,12 +41,8 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
       </div>
 
       {vacancies.length === 0 && (
-        <div
-          className="rounded-xl px-5 py-10 text-center bg-surface-low"
-        >
-          <p className="text-sm text-navy-light/40 font-body">
-            No hay puestos de servicio para este comité.
-          </p>
+        <div className="rounded-xl bg-surface-low">
+          <EmptyState icon={Users} title="No hay puestos de servicio para este comité" />
         </div>
       )}
 

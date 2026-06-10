@@ -10,6 +10,7 @@ import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
@@ -526,11 +527,8 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
 
-          <div className="rounded-2xl p-10 text-center bg-surface-card shadow-[var(--shadow-md)]">
-            <MessageCircle size={28} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.25} />
-            <p className="text-sm text-navy-light/40 font-body">
-              No hay comunicaciones registradas para este grupo.
-            </p>
+          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+            <EmptyState icon={MessageCircle} title="No hay comunicaciones registradas para este grupo" />
           </div>
         </div>
       )}

@@ -1,4 +1,6 @@
+import { QrCode } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/data/mock-events'
 
@@ -53,9 +55,7 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
           <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">Últimos check-ins</p>
         </div>
         {event.checkins.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm text-navy-light/40 font-body">Aún no hay check-ins registrados.</p>
-          </div>
+          <EmptyState icon={QrCode} title="Aún no hay check-ins registrados" />
         ) : (
           <div>
             {event.checkins.slice(0, 10).map((ci, idx) => (

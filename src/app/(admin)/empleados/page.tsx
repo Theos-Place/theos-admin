@@ -9,7 +9,8 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { cn } from '@/lib/utils'
-import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Users } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 function calcularAntiguedad(startDate: string): string {
   const inicio = new Date(startDate)
@@ -246,11 +247,7 @@ export default function EmpleadosPage() {
         </ul>
 
         {displayed.length === 0 && (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-navy-light/40 font-body">
-              No hay empleados con ese filtro.
-            </p>
-          </div>
+          <EmptyState icon={Users} title="No hay empleados con ese filtro" />
         )}
       </div>
 

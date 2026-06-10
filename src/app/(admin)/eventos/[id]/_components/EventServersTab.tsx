@@ -1,4 +1,5 @@
 import { Check, Clock, X as XIcon, UserPlus, Search, Link2, MoreVertical, Send } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
 
@@ -138,9 +139,8 @@ export function EventServersTab({
 
       {/* Bookings grouped by role */}
       {Object.keys(groupedBookings).length === 0 ? (
-        <div className="rounded-2xl p-10 text-center bg-surface-card shadow-[var(--shadow-md)]">
-          <UserPlus size={28} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.25} />
-          <p className="text-sm text-navy-light/40 font-body">No hay servidores asignados aún.</p>
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+          <EmptyState icon={UserPlus} title="No hay servidores asignados aún" />
         </div>
       ) : (
         <div className="space-y-3">

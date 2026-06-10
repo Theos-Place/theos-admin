@@ -7,6 +7,7 @@ import { useServers } from '@/hooks/useServers'
 import { useOrg } from '@/lib/org'
 import { cn } from '@/lib/utils'
 import { Plus, Users, ChevronRight } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 const STATUS_FILTERS: { key: VacancyStatus | 'all'; label: string }[] = [
   { key: 'all',       label: 'Todas' },
@@ -208,12 +209,8 @@ export default function VacantesPage() {
         })}
 
         {filtered.length === 0 && (
-          <div
-            className="rounded-2xl px-5 py-12 text-center bg-surface-card shadow-[var(--shadow-md)]"
-          >
-            <p className="text-sm text-navy-light/40 font-body">
-              No hay vacantes con ese filtro.
-            </p>
+          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+            <EmptyState icon={Users} title="No hay vacantes con ese filtro" />
           </div>
         )}
       </div>

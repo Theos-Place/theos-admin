@@ -82,6 +82,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
         <Search size={16} className="text-navy-light/50 shrink-0" strokeWidth={1.75} />
         <input
           type="search"
+          aria-label="Buscar"
           placeholder="Buscar…"
           className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body font-light"
         />
@@ -94,6 +95,8 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setMenuOpen(v => !v)}
+          aria-label="Menú de usuario"
+          aria-expanded={menuOpen}
           className="flex items-center gap-1.5 rounded-full hover:bg-surface-low transition-colors pl-1 pr-1 py-1"
         >
           <div

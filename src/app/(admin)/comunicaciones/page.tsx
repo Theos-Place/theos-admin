@@ -15,7 +15,9 @@ import {
   ChevronRight,
   FileEdit,
   Calendar,
+  MessageSquare,
 } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 type MainTab = 'historial' | 'borradores'
 type ChannelFilter = 'all' | CommunicationChannel
@@ -222,9 +224,8 @@ export default function ComunicacionesPage() {
             {/* Message list */}
             <div className="space-y-3">
               {filtered.length === 0 ? (
-                <div className="rounded-2xl py-12 flex flex-col items-center gap-3 bg-surface-card">
-                  <CheckCircle2 size={24} className="text-navy-light/20" />
-                  <p className="text-sm text-navy-light/40 font-body">No hay mensajes con ese filtro.</p>
+                <div className="rounded-2xl bg-surface-card">
+                  <EmptyState icon={MessageSquare} title="No hay mensajes con ese filtro" />
                 </div>
               ) : (
                 filtered.map(msg => (
@@ -292,9 +293,8 @@ export default function ComunicacionesPage() {
         {tab === 'borradores' && (
           <div className="space-y-3">
             {drafts.length === 0 ? (
-              <div className="rounded-2xl py-12 flex flex-col items-center gap-3 bg-surface-card">
-                <FileEdit size={24} className="text-navy-light/20" />
-                <p className="text-sm text-navy-light/40 font-body">No hay borradores guardados.</p>
+              <div className="rounded-2xl bg-surface-card">
+                <EmptyState icon={FileEdit} title="No hay borradores guardados" />
               </div>
             ) : (
               drafts.map(msg => (

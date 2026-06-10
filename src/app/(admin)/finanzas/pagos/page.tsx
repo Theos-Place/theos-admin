@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { CreditCard, Eye, EyeOff, Search, Check, X } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
@@ -259,8 +260,8 @@ export default function PagosPage() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-5 py-12 text-center text-sm font-body text-[rgba(22,20,64,0.40)]">
-                      No hay pagos que coincidan con los filtros
+                    <td colSpan={7}>
+                      <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />
                     </td>
                   </tr>
                 )}
@@ -312,8 +313,8 @@ export default function PagosPage() {
               </li>
             ))}
             {filtered.length === 0 && (
-              <li className="px-5 py-12 text-center text-sm font-body text-[rgba(22,20,64,0.40)]">
-                No hay pagos que coincidan con los filtros
+              <li>
+                <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />
               </li>
             )}
           </ul>

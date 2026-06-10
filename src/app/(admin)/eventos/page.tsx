@@ -11,6 +11,7 @@ import { CapacityBar } from '@/components/events/CapacityBar'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
 import { cn } from '@/lib/utils'
 import { Plus, LayoutList, Calendar, Download, Code, ExternalLink } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
   { key: 'all', label: 'Todos' },
@@ -353,11 +354,7 @@ export default function EventosPage() {
           </ul>
 
           {filtered.length === 0 && (
-            <div className="px-5 py-10 text-center">
-              <p className="text-sm text-navy-light/40 font-body">
-                No hay eventos con ese filtro.
-              </p>
-            </div>
+            <EmptyState icon={Calendar} title="No hay eventos con ese filtro" />
           )}
         </div>
       )}

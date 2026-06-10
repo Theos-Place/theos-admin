@@ -21,6 +21,7 @@ import {
   Calendar,
   MessageSquare,
 } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
 
@@ -198,10 +199,7 @@ export default function FormulariosPage() {
       {/* List */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {filtered.length === 0 ? (
-          <div className="py-16 flex flex-col items-center gap-3">
-            <FileText size={28} className="text-navy-light/20" />
-            <p className="text-sm text-navy-light/40 font-body">No hay formularios con ese filtro.</p>
-          </div>
+          <EmptyState icon={FileText} title="No hay formularios con ese filtro" />
         ) : (
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">

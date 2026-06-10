@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Plus, Check, AlertTriangle } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { type Scholarship } from '@/data/mock-finance'
@@ -200,8 +201,8 @@ export default function BecasPage() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-5 py-12 text-center text-sm text-[rgba(22,20,64,0.40)] font-body">
-                      No hay becas que coincidan con los filtros
+                    <td colSpan={9}>
+                      <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />
                     </td>
                   </tr>
                 )}
@@ -249,8 +250,8 @@ export default function BecasPage() {
               </li>
             ))}
             {filtered.length === 0 && (
-              <li className="px-5 py-12 text-center text-sm text-[rgba(22,20,64,0.40)] font-body">
-                No hay becas que coincidan con los filtros
+              <li>
+                <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />
               </li>
             )}
           </ul>

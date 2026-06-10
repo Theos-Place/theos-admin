@@ -8,6 +8,7 @@ import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { TOAST_LONG_MS } from '@/lib/constants'
 import { ChevronLeft, X, Check, Users } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 type Tab = 'descripcion' | 'aplicaciones'
 
@@ -339,12 +340,7 @@ export default function VacanteDetailPage() {
                 </table>
               </div>
               {apps.length === 0 && (
-                <div className="px-5 py-10 text-center">
-                  <Users size={24} className="mx-auto text-navy-light/20 mb-2" />
-                  <p className="text-sm text-navy-light/40 font-body">
-                    No hay aplicaciones todavía.
-                  </p>
-                </div>
+                <EmptyState icon={Users} title="No hay aplicaciones todavía" />
               )}
             </div>
 

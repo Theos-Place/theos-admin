@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Bell, AlertCircle, Info, AlertTriangle, ChevronRight } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import type { ActiveAlert, AlertType } from '@/lib/supabase/queries/alerts'
 
 const TYPE_CONFIG: Record<AlertType, { Icon: React.ElementType; color: string; bg: string; label: string }> = {
@@ -40,14 +41,12 @@ export default function NotificacionesPage() {
           <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
         </div>
       ) : alerts.length === 0 ? (
-        <div className="rounded-2xl p-12 text-center" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
-          <Bell size={28} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.25} />
-          <p className="text-sm font-semibold text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
-            Todo al día
-          </p>
-          <p className="text-[13px] text-navy-light/40 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
-            No hay alertas pendientes en este momento.
-          </p>
+        <div className="rounded-2xl" style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}>
+          <EmptyState
+            icon={Bell}
+            title="Todo al día"
+            description="No hay alertas pendientes en este momento."
+          />
         </div>
       ) : (
         <div className="space-y-3">

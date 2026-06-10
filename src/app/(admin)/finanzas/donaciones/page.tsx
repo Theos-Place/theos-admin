@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Heart, Upload, Search, AlertTriangle, X, Check, Eye, EyeOff } from 'lucide-react'
+import { EmptyState } from '@/components/shared/EmptyState'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
@@ -283,8 +284,8 @@ export default function DonacionesPage() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-5 py-12 text-center text-sm font-body text-[rgba(22,20,64,0.40)]">
-                      No hay donaciones que coincidan con los filtros
+                    <td colSpan={6}>
+                      <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />
                     </td>
                   </tr>
                 )}
@@ -325,8 +326,8 @@ export default function DonacionesPage() {
               </li>
             ))}
             {filtered.length === 0 && (
-              <li className="px-5 py-12 text-center text-sm font-body text-[rgba(22,20,64,0.40)]">
-                No hay donaciones que coincidan con los filtros
+              <li>
+                <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />
               </li>
             )}
           </ul>
