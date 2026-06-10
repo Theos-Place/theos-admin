@@ -112,7 +112,9 @@ export default function LoginPage() {
         body: JSON.stringify({ identifier: email.trim(), password }),
       })
       if (!res.ok) {
-        setAuthError('Correo o cédula o contraseña incorrectos. Verificá tus datos e intentá de nuevo.')
+        setAuthError(res.status === 429
+          ? 'Demasiados intentos. Esperá un momento y volvé a intentar.'
+          : 'Correo o cédula o contraseña incorrectos. Verificá tus datos e intentá de nuevo.')
         return
       }
 
