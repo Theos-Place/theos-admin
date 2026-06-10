@@ -25,6 +25,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    // Cualquier usuario con sesión puede responder un formulario; los de rol
+    // siguen pudiendo hacerlo. Si algún día hay formularios públicos (invitados
+    // sin sesión), este guard hay que repensarlo con rate limiting.
+    const auth = await requireRoles()
+    if (auth.res) return auth.res
     const { id } = await params
     const body = await req.json()
 

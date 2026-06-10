@@ -15,6 +15,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles')
+    if (auth.res) return auth.res
     const body = await req.json()
     if (!body?.name) return NextResponse.json({ error: 'Se requiere name' }, { status: 400 })
     const list = await createMemberList(body)

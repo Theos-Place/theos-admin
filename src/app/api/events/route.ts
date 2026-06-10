@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
     const body = await req.json()
     const event = await createEvent(formToWriteInput(body), formToSubEvents(body))
     return NextResponse.json(event, { status: 201 })

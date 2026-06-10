@@ -16,6 +16,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRoles('comunicaciones', 'direccion', 'encargado_staff')
+    if (auth.res) return auth.res
     const body = await req.json()
     const form = await createForm(formToWriteInput(body), formToFields(body))
     return NextResponse.json(form, { status: 201 })

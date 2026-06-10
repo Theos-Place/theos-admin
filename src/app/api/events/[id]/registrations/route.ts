@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireRoles } from '@/lib/auth/guard'
 import { createRegistration } from '@/lib/supabase/queries/events'
 
 // POST: inscribe un miembro. Body: { member_id, payment_status? }
@@ -7,6 +8,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
     const { id } = await params
     const body = await req.json()
     if (!body?.member_id) {

@@ -15,6 +15,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRoles('direccion', 'encargado_staff')
+    if (auth.res) return auth.res
     const e = await createEmployee((await req.json()) as EmployeeWriteInput)
     return NextResponse.json(e, { status: 201 })
   } catch (error) {

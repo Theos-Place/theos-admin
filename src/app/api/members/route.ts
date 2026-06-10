@@ -43,6 +43,8 @@ const MEMBER_FIELDS = [
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
+    if (auth.res) return auth.res
     const body = await req.json()
     const sendInvite = Boolean(body?.send_invite)
 
