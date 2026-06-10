@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, Search, User, Settings, LogOut, ChevronDown } from 'lucide-react'
@@ -49,10 +49,10 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
 
   const userInitials = user ? initials(user.name) : 'TP'
 
-  const roleLabel = user?.roles
-    ?.map(rid => ROLES.find(r => r.id === rid)?.name)
-    .filter(Boolean)
-    .join(' · ') ?? ''
+  const roleLabel = useMemo(
+    () => user?.roles?.map(rid => ROLES.find(r => r.id === rid)?.name).filter(Boolean).join(' · ') ?? '',
+    [user?.roles],
+  )
 
   return (
     <header
