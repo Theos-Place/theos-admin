@@ -798,21 +798,22 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   }
 }
 
-/** Busca un miembro existente por cédula o correo (para evitar duplicados al crear). */
+/** Busca un miembro existente por cédula o correo (para evitar duplicados al crear).
+ *  Dos .eq() separados en vez de .or(): .or() interpola el valor en la sintaxis
+ *  de PostgREST, así que comas/paréntesis del input alteran el filtro. */
 export async function findMemberByCedulaOrEmail(cedula: string | null, email: string | null) {
   if (!cedula && !email) return null
   const supabase = createAdminClient()
-  const ors: string[] = []
-  if (cedula) ors.push(`cedula.eq.${cedula}`)
-  if (email) ors.push(`email.eq.${email}`)
-  const { data, error } = await supabase
-    .from('members')
-    .select('id')
-    .or(ors.join(','))
-    .limit(1)
-    .maybeSingle()
-  if (error) throw error
-  return data as { id: string } | null
+  const lookup = (col: 'cedula' | 'email', val: string) =>
+    supabase.from('members').select('id').eq(col, val).limit(1).maybeSingle()
+
+  const [byCedula, byEmail] = await Promise.all([
+    cedula ? lookup('cedula', cedula) : null,
+    email ? lookup('email', email) : null,
+  ])
+  if (byCedula?.error) throw byCedula.error
+  if (byEmail?.error) throw byEmail.error
+  return (byCedula?.data ?? byEmail?.data ?? null) as { id: string } | null
 }
 
 /** Fusiona dos miembros duplicados: reasigna todo lo de `dupId` a `keepId` y
