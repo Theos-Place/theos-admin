@@ -146,7 +146,7 @@ export default function ComunicacionesPage() {
               <div className="w-full relative flex items-end justify-center h-[56px]">
                 <div
                   className="w-full rounded-t-md bg-coral/70 transition-all duration-300"
-                  style={{ height: `${(d.count / maxActivity) * 56}px`, minHeight: d.count > 0 ? 4 : 0 }}
+                  style={{ height: `${maxActivity > 0 ? (d.count / maxActivity) * 56 : 0}px`, minHeight: d.count > 0 ? 4 : 0 }}
                 />
                 {d.count > 0 && (
                   <span className="absolute -top-5 text-[10px] font-bold text-coral font-mono">

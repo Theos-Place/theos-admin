@@ -602,7 +602,7 @@ function StudyCard({
 }
 
 function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => void }) {
-  const fillPct = Math.round((group.filled / group.max_capacity) * 100)
+  const fillPct = group.max_capacity > 0 ? Math.round((group.filled / group.max_capacity) * 100) : 0
 
   return (
     <div

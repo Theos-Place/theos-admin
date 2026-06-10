@@ -428,7 +428,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                             <div
                               className="h-full rounded-full bg-coral"
                               style={{
-                                width: `${(group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length / group.max_capacity) * 100}%`,
+                                width: `${group.max_capacity > 0 ? (group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length / group.max_capacity) * 100 : 0}%`,
                               }}
                             />
                           </div>

@@ -143,7 +143,7 @@ export function MemberSummaryTab({
             <div className="h-2 w-full rounded-full bg-surface-low overflow-hidden">
               <div
                 className="h-full rounded-full bg-coral transition-all"
-                style={{ width: `${Math.min(100, (currentWeek / currentStudyEntry.weeks) * 100)}%` }}
+                style={{ width: `${currentStudyEntry.weeks > 0 ? Math.min(100, (currentWeek / currentStudyEntry.weeks) * 100) : 0}%` }}
               />
             </div>
           )}
