@@ -114,7 +114,7 @@ export function EventInfoTab({
                 flyerDragOver ? 'border-coral bg-coral/5' : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low'
               )}
             >
-              <ImageIcon size={24} className="text-navy-light/30" />
+              <ImageIcon size={24} className="text-navy-light/60" />
               <p className="text-[12px] font-medium text-navy-light/60 font-body">
                 Subir flyer
               </p>

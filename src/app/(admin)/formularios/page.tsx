@@ -190,6 +190,7 @@ export default function FormulariosPage() {
           <input
             className="rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full sm:w-56 font-body"
             placeholder="Buscar formulario..."
+            aria-label="Buscar formulario"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
@@ -256,7 +257,7 @@ export default function FormulariosPage() {
                       {/* Respuestas */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <MessageSquare size={12} className="text-navy-light/30" />
+                          <MessageSquare size={12} className="text-navy-light/60" />
                           <span className="text-sm text-navy tabular-nums font-mono">
                             {form.responses_count}
                           </span>

@@ -162,7 +162,7 @@ export default function VacanteDetailPage() {
                 {vacancyClosed ? 'Cerrada' : VACANCY_STATUS_LABELS[vacancy.status]}
               </span>
               {vacancy.published_at && (
-                <span className="text-[11px] text-navy-light/30 font-body">
+                <span className="text-[11px] text-navy-light/60 font-body">
                   Publicada {new Date(vacancy.published_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               )}

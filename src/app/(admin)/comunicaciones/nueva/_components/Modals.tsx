@@ -28,6 +28,7 @@ export function ListModal({ filteredLists, listSearch, setListSearch, onApplyLis
             <input
               className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar lista..."
+              aria-label="Buscar lista"
               value={listSearch}
               onChange={e => setListSearch(e.target.value)}
               autoFocus
@@ -97,7 +98,7 @@ export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: T
                 <p className="text-[12px] text-navy-light/50 line-clamp-1 font-body">
                   {tpl.body.split('\n')[0]}
                 </p>
-                <p className="text-[11px] text-navy-light/30 font-body">Usado {tpl.used_count} veces</p>
+                <p className="text-[11px] text-navy-light/60 font-body">Usado {tpl.used_count} veces</p>
               </button>
             ))
           )}

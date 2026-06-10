@@ -16,7 +16,7 @@ const LABEL = 'block text-[12px] font-medium text-navy-light/60 mb-1.5'
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
   'outline-none transition-all',
-  'placeholder:text-navy-light/25',
+  'placeholder:text-navy-light/50',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
 ].join(' ')
 const INPUT_ERROR = 'border-coral/50 focus:border-coral/60 focus:ring-coral/10'
@@ -323,7 +323,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => setShowPass(v => !v)}
               aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/30 hover:text-navy-light/60 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80 transition-colors"
               tabIndex={-1}
             >
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}

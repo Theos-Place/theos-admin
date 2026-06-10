@@ -81,6 +81,7 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
           autoFocus
           className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
           placeholder="Buscar por nombre o cédula..."
+          aria-label="Buscar por nombre o cédula"
           value={query}
           onChange={e => setQuery(e.target.value)}
         />

@@ -190,11 +190,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           <ChevronLeft size={16} />
           Formularios
         </Link>
-        <span className="text-navy-light/20">|</span>
+        <span className="text-navy-light/40">|</span>
 
         {/* Editable name */}
         <input
-          className="flex-1 basis-full md:basis-auto bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/30 font-display tracking-[-0.01em]"
+          className="flex-1 basis-full md:basis-auto bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/50 font-display tracking-[-0.01em]"
           placeholder="Nombre del formulario"
           value={name}
           onChange={e => setName(e.target.value)}
@@ -301,7 +301,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           {/* Description input */}
           <div className="max-w-2xl mx-auto mb-4">
             <input
-              className="w-full bg-transparent text-sm text-navy-light/60 outline-none placeholder-navy-light/30 font-body"
+              className="w-full bg-transparent text-sm text-navy-light/60 outline-none placeholder-navy-light/50 font-body"
               placeholder="Descripción del formulario (opcional)"
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -321,7 +321,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           </div>
           {fields.length > 0 && (
             <div className="max-w-2xl mx-auto mt-4">
-              <p className="text-center text-[11px] text-navy-light/30 font-body">
+              <p className="text-center text-[11px] text-navy-light/60 font-body">
                 {fields.length} campo{fields.length !== 1 ? 's' : ''}
                 {' · '}
                 {fields.filter(f => f.is_required).length} obligatorio{fields.filter(f => f.is_required).length !== 1 ? 's' : ''}
@@ -358,7 +358,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 <button
                   type="button"
                   onClick={() => setActiveFieldId(null)}
-                  className="ml-auto text-navy-light/30 hover:text-navy transition-colors"
+                  className="ml-auto text-navy-light/60 hover:text-navy transition-colors"
                 >
                   ×
                 </button>
@@ -375,7 +375,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
               <div className="h-12 w-12 rounded-xl bg-navy/5 flex items-center justify-center">
-                <FieldTypeIcon type="text" size={20} className="text-navy-light/20" />
+                <FieldTypeIcon type="text" size={20} className="text-navy-light/40" />
               </div>
               <p className="text-[12px] text-navy-light/40 font-body">
                 Seleccioná un campo para editarlo
@@ -429,7 +429,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                             className="w-full flex items-center justify-between gap-2 py-1.5 text-left hover:text-coral transition-colors group"
                           >
                             <span className="text-[12px] text-navy-light/60 group-hover:text-navy truncate font-body">
-                              {f.label || <span className="italic text-navy-light/30">Sin etiqueta</span>}
+                              {f.label || <span className="italic text-navy-light/60">Sin etiqueta</span>}
                             </span>
                             {rc > 0 && (
                               <span className="shrink-0 flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5">
@@ -441,7 +441,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                         )
                       })}
                       {section.fields.length === 0 && (
-                        <p className="text-[11px] text-navy-light/30 italic py-1 font-body">Sin campos</p>
+                        <p className="text-[11px] text-navy-light/60 italic py-1 font-body">Sin campos</p>
                       )}
                     </div>
                   </div>

@@ -48,7 +48,7 @@ export function Step1Informacion({
       {/* Nombre */}
       <div className="mb-5">
         <input
-          className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 transition-colors font-display"
+          className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/50 transition-colors font-display"
           placeholder="Nombre del evento..."
           value={name}
           onChange={e => onNameChange(e.target.value)}
@@ -152,7 +152,7 @@ export function Step1Informacion({
                 : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low',
             )}
           >
-            <ImageIcon size={28} className="text-navy-light/30" />
+            <ImageIcon size={28} className="text-navy-light/60" />
             <p
               className="text-[13px] font-medium text-navy-light/60 font-body"
             >

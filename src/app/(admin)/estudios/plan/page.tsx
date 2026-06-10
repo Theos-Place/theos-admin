@@ -378,13 +378,13 @@ export default function PlanDeEstudiosPage() {
                   </td>
                   <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
                     {mentorName(s) ?? STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
-                      <span className="text-navy-light/30">—</span>
+                      <span className="text-navy-light/60">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {s.prerequisite
                       ? <StudyTypeBadge code={s.prerequisite} size="sm" />
-                      : <span className="text-xs text-navy-light/30 font-body">—</span>
+                      : <span className="text-xs text-navy-light/60 font-body">—</span>
                     }
                   </td>
                   <td className="px-4 py-3">

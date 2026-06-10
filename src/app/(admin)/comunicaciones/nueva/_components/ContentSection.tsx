@@ -69,9 +69,9 @@ export function ContentSection({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <p className="text-[11px] text-navy-light/50 font-body">
-              Mensaje de WhatsApp <span className="text-navy-light/30">(soporta *negrita*, _itálica_, ~tachado~)</span>
+              Mensaje de WhatsApp <span className="text-navy-light/60">(soporta *negrita*, _itálica_, ~tachado~)</span>
             </p>
-            <span className="text-[11px] text-navy-light/30 tabular-nums font-mono">
+            <span className="text-[11px] text-navy-light/60 tabular-nums font-mono">
               {waBody.length}/1000
             </span>
           </div>

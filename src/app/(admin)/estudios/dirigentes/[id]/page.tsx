@@ -34,7 +34,7 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
       <span className="flex items-center gap-1 text-xs text-navy-light/50 font-body shrink-0">
         <Users size={12} /> {g.students_count}
       </span>
-      <ExternalLink size={13} className="text-navy-light/30 shrink-0" />
+      <ExternalLink size={13} className="text-navy-light/60 shrink-0" />
     </Link>
   )
 }

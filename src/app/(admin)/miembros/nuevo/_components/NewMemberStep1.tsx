@@ -29,7 +29,7 @@ type Step1Data = {
 }
 
 const inputCls =
-  'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/40 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0 font-body'
+  'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0 font-body'
 
 const selectCls =
   'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0 appearance-none font-body'

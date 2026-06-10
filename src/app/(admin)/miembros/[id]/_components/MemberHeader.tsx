@@ -30,14 +30,14 @@ function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
       >
-        <Icon size={18} strokeWidth={1.75} className={cn('transition-colors', active ? activeColor : 'text-navy-light/20')} />
+        <Icon size={18} strokeWidth={1.75} className={cn('transition-colors', active ? activeColor : 'text-navy-light/40')} />
         {show && active && (
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-navy px-2 py-1 text-[10px] text-white z-50 shadow-[var(--shadow-md)]">
             {tooltip}
           </div>
         )}
       </div>
-      <span className={cn('text-[9px] font-body', active ? 'text-navy-light/60' : 'text-navy-light/30')}>{label}</span>
+      <span className={cn('text-[9px] font-body', active ? 'text-navy-light/60' : 'text-navy-light/60')}>{label}</span>
     </div>
   )
 }

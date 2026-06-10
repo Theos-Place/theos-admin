@@ -154,6 +154,7 @@ export default function PagosPage() {
             <input
               type="search"
               placeholder="Buscar por miembro, concepto..."
+              aria-label="Buscar por miembro, concepto"
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="flex-1 bg-transparent text-sm outline-none font-body text-navy"

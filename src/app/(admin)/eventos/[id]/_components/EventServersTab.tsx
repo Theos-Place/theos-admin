@@ -174,7 +174,7 @@ export function EventServersTab({
                     <div className="relative shrink-0">
                       <button
                         onClick={() => onServerMenuToggle(b.id)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/30 hover:bg-surface-card hover:text-navy transition-all"
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:bg-surface-card hover:text-navy transition-all"
                       >
                         <MoreVertical size={14} />
                       </button>
@@ -239,7 +239,7 @@ export function EventServersTab({
                       placeholder="Nombre o cédula..."
                       value={searchQuery}
                       onChange={e => onSearchQueryChange(e.target.value)}
-                      className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy-light/40 font-body"
+                      className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy-light/50 font-body"
                     />
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">

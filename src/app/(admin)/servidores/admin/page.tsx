@@ -705,7 +705,7 @@ export default function ServidoresAdminPage() {
                               <span
                                 className={cn(
                                   'text-[12px] font-body',
-                                  memberCount > 0 ? 'text-navy-light/70' : 'text-navy-light/30 italic'
+                                  memberCount > 0 ? 'text-navy-light/70' : 'text-navy-light/60 italic'
                                 )}
                               >
                                 {memberCount > 0 ? `${memberCount} miembro${memberCount !== 1 ? 's' : ''}` : '—'}
@@ -792,7 +792,7 @@ export default function ServidoresAdminPage() {
 
             {selectedCommPositions.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 p-10 text-center">
-                <LayoutGrid size={26} className="text-navy-light/20" />
+                <LayoutGrid size={26} className="text-navy-light/40" />
                 <p className="text-sm text-navy-light/40 font-body">
                   Este comité no tiene puestos
                 </p>

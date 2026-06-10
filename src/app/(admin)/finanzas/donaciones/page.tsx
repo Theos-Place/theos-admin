@@ -192,6 +192,7 @@ export default function DonacionesPage() {
             <input
               type="search"
               placeholder="Buscar por nombre o cédula..."
+              aria-label="Buscar por nombre o cédula"
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
@@ -373,6 +374,7 @@ export default function DonacionesPage() {
                           autoFocus
                           type="text"
                           placeholder="Buscar miembro por nombre o cédula..."
+                          aria-label="Buscar miembro por nombre o cédula"
                           value={linkSearch}
                           onChange={e => setLinkSearch(e.target.value)}
                           className="flex-1 bg-transparent text-sm outline-none font-body text-navy"

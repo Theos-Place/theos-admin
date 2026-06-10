@@ -171,7 +171,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                   </div>
                   <button
                     onClick={() => handleRevoke(rid)}
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/30 hover:text-coral hover:bg-coral/10 transition-all shrink-0"
+                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-all shrink-0"
                   >
                     <X size={14} />
                   </button>

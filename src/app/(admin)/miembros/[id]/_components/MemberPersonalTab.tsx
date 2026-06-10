@@ -46,13 +46,13 @@ function InfoRow({
       </div>
       {editable ? (
         <button
-          className="rounded-lg p-1.5 text-navy-light/20 hover:text-coral hover:bg-surface-low transition-all"
+          className="rounded-lg p-1.5 text-navy-light/40 hover:text-coral hover:bg-surface-low transition-all"
           aria-label="Editar"
         >
           <Edit2 size={13} strokeWidth={1.75} />
         </button>
       ) : (
-        <div className="rounded-lg p-1.5 text-navy-light/20">
+        <div className="rounded-lg p-1.5 text-navy-light/40">
           <Lock size={13} strokeWidth={1.75} />
         </div>
       )}

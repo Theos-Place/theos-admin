@@ -150,7 +150,8 @@ export default function ListasGuardadasPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar lista..."
-            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body"
+            aria-label="Buscar lista"
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body"
           />
         </div>
         <button

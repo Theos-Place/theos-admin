@@ -214,6 +214,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <input
               className="w-full rounded-2xl px-5 py-4 text-base text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-coral/40 transition-all bg-[rgba(255,255,255,0.08)] font-body"
               placeholder="Buscar por nombre..."
+              aria-label="Buscar por nombre"
               value={query}
               onChange={e => { setQuery(e.target.value); setSelectedMember(null) }}
             />

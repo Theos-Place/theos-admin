@@ -191,6 +191,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
             <input
               className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar miembro..."
+              aria-label="Buscar miembro"
               value={memberSearch}
               onChange={e => setMemberSearch(e.target.value)}
             />

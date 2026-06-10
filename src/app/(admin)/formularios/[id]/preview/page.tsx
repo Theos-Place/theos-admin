@@ -501,7 +501,7 @@ export default function PreviewPage() {
               </button>
             )}
 
-            <p className="text-center text-[11px] text-navy-light/30 mt-3 font-body">
+            <p className="text-center text-[11px] text-navy-light/60 mt-3 font-body">
               Theos Place · {form.name}
             </p>
           </div>

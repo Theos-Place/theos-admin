@@ -87,7 +87,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
           </label>
         ))}
         {compact && opts.length > 3 && (
-          <span className="text-[11px] text-navy-light/30 font-body">
+          <span className="text-[11px] text-navy-light/60 font-body">
             +{opts.length - 3} más...
           </span>
         )}
@@ -106,7 +106,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
           </label>
         ))}
         {compact && opts.length > 3 && (
-          <span className="text-[11px] text-navy-light/30 font-body">
+          <span className="text-[11px] text-navy-light/60 font-body">
             +{opts.length - 3} más...
           </span>
         )}
@@ -132,8 +132,8 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         </div>
         {(field.scale_min_label || field.scale_max_label) && (
           <div className="flex justify-between">
-            <span className="text-[10px] text-navy-light/30 font-body">{field.scale_min_label}</span>
-            <span className="text-[10px] text-navy-light/30 font-body">{field.scale_max_label}</span>
+            <span className="text-[10px] text-navy-light/60 font-body">{field.scale_min_label}</span>
+            <span className="text-[10px] text-navy-light/60 font-body">{field.scale_max_label}</span>
           </div>
         )}
       </div>

@@ -74,7 +74,7 @@ export function StepContractForm({
               Rango aprobado:
             </span>
             <SalaryBadge amount={selectedPosition.salary_min} size="sm" />
-            <span className="text-[11px] text-navy-light/30">—</span>
+            <span className="text-[11px] text-navy-light/60">—</span>
             <SalaryBadge amount={selectedPosition.salary_max} size="sm" />
           </div>
         )}

@@ -339,6 +339,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <input
               className={`${inputCls} font-body pl-[30px] min-w-[200px]`}
               placeholder="Buscar por dirigente o zona..."
+              aria-label="Buscar por dirigente o zona"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -551,6 +552,7 @@ function DirigenteReferenteSelect({ value, onChange }: {
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="Buscar dirigente…"
+              aria-label="Buscar dirigente"
               className="w-full bg-transparent text-sm text-navy outline-none font-body"
             />
           </div>

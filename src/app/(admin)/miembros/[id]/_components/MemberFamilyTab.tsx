@@ -39,11 +39,11 @@ export function MemberFamilyTab({ member }: Props) {
 
       {member.family_members.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <UserPlus size={32} className="text-navy-light/20 mb-3" strokeWidth={1.25} />
+          <UserPlus size={32} className="text-navy-light/40 mb-3" strokeWidth={1.25} />
           <p className="text-sm text-navy-light/40 font-body">
             No hay familiares vinculados
           </p>
-          <p className="text-xs text-navy-light/30 mt-1 font-body">
+          <p className="text-xs text-navy-light/60 mt-1 font-body">
             Usá el botón de arriba para vincular un familiar.
           </p>
         </div>
@@ -69,7 +69,7 @@ export function MemberFamilyTab({ member }: Props) {
                     {fm.relation}
                   </span>
                 </div>
-                <ArrowRight size={15} className={cn('shrink-0', hasProfile ? 'text-navy-light/30' : 'text-navy-light/15')} strokeWidth={1.75} />
+                <ArrowRight size={15} className={cn('shrink-0', hasProfile ? 'text-navy-light/60' : 'text-navy-light/15')} strokeWidth={1.75} />
               </>
             )
             return hasProfile ? (

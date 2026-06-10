@@ -66,6 +66,7 @@ export function MembersTab({
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
+            aria-label="Buscar por nombre"
             value={search}
             onChange={e => onSearchChange(e.target.value)}
           />

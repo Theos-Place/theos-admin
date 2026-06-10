@@ -126,11 +126,11 @@ function ConditionsList({
     <div
       className="rounded-xl p-3 h-full bg-surface-low min-h-[120px]"
     >
-      <p className="mb-2 text-[10px] tracking-widest uppercase text-navy-light/30 font-display">
+      <p className="mb-2 text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
         Filtros activos
       </p>
       {filtered.length === 0 ? (
-        <p className="text-xs text-navy-light/30 italic font-body">
+        <p className="text-xs text-navy-light/60 italic font-body">
           Ninguno
         </p>
       ) : (
@@ -142,7 +142,7 @@ function ConditionsList({
               </span>
               <button
                 onClick={() => removeCondition(c.id)}
-                className="shrink-0 text-navy-light/30 hover:text-coral transition-colors"
+                className="shrink-0 text-navy-light/60 hover:text-coral transition-colors"
                 aria-label="Quitar"
               >
                 <X size={12} strokeWidth={2} />
@@ -253,7 +253,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
                 </span>
               </label>
             ))}
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/30 pt-1 font-display">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 pt-1 font-display">
               Sedes históricas
             </p>
             {HISTORICAL_SEDES.map(s => (
@@ -277,7 +277,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             value={camp}
             onChange={e => setCamp(e.target.value)}
             placeholder="Ej: Campamento Verano 2025"
-            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
         </div>
       )}
@@ -487,7 +487,7 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
                 value={fieldVal}
                 onChange={e => setFieldVal(e.target.value)}
                 placeholder="Ej: San José o San*"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
           )}
@@ -580,7 +580,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
             onChange={e => setAgeMin(e.target.value)}
             onBlur={syncAge}
             placeholder="Mín"
-            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
           <span className="text-navy-light/40 shrink-0 text-sm">–</span>
           <input
@@ -588,7 +588,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
             onChange={e => setAgeMax(e.target.value)}
             onBlur={syncAge}
             placeholder="Máx"
-            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/30 outline-none focus:ring-1 focus:ring-coral/30 font-body"
+            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
         </div>
       </div>

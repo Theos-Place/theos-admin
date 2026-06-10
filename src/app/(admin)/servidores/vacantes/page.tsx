@@ -177,7 +177,7 @@ export default function VacantesPage() {
                     {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}
                   </span>
                   {v.published_at && (
-                    <span className="text-[11px] text-navy-light/30 font-body">
+                    <span className="text-[11px] text-navy-light/60 font-body">
                       Publicada {new Date(v.published_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })}
                     </span>
                   )}

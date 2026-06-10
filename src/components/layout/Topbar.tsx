@@ -84,7 +84,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
           type="search"
           aria-label="Buscar"
           placeholder="Buscar…"
-          className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body font-light"
+          className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body font-light"
         />
       </div>
 

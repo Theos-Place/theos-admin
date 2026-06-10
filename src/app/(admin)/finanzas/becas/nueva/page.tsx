@@ -156,6 +156,7 @@ export default function NuevaBecaPage() {
                   <input
                     type="text"
                     placeholder="Buscar por nombre o cédula..."
+                    aria-label="Buscar por nombre o cédula"
                     value={memberQuery}
                     onChange={e => setMemberQuery(e.target.value)}
                     className="flex-1 bg-transparent text-sm outline-none font-body text-navy"

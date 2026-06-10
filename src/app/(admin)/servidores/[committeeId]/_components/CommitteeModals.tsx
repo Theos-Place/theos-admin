@@ -230,6 +230,7 @@ export function AddServerModal({
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
+            aria-label="Buscar por nombre"
             value={serverSearch}
             onChange={e => onServerSearchChange(e.target.value)}
             autoFocus
@@ -258,7 +259,7 @@ export function AddServerModal({
         ) : serverSearch.trim() ? (
           <p className="text-center text-sm text-navy-light/40 py-4 font-body">No se encontraron miembros.</p>
         ) : (
-          <p className="text-center text-[12px] text-navy-light/30 py-4 font-body">Escribí un nombre para buscar</p>
+          <p className="text-center text-[12px] text-navy-light/60 py-4 font-body">Escribí un nombre para buscar</p>
         )}
       </div>
     </div>

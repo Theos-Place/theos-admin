@@ -135,7 +135,7 @@ export default function PuestosPage() {
                       </p>
                       <div className="flex items-center gap-2">
                         <SalaryBadge amount={pos.salary_min} size="sm" />
-                        <span className="text-[11px] text-navy-light/30">—</span>
+                        <span className="text-[11px] text-navy-light/60">—</span>
                         <SalaryBadge amount={pos.salary_max} size="sm" />
                       </div>
                     </div>

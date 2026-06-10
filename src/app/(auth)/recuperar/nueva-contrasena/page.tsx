@@ -8,7 +8,7 @@ import { MOCK_PASSWORD_RESET_DELAY_MS } from '@/lib/constants'
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
   'outline-none transition-all',
-  'placeholder:text-navy-light/25',
+  'placeholder:text-navy-light/50',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
 ].join(' ')
 
@@ -129,7 +129,7 @@ export default function NuevaContrasenaPage() {
             <button
               type="button"
               onClick={() => setShowPass(v => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/30 hover:text-navy-light/60 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80 transition-colors"
               tabIndex={-1}
             >
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -176,7 +176,7 @@ export default function NuevaContrasenaPage() {
             <button
               type="button"
               onClick={() => setShowConfirm(v => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/30 hover:text-navy-light/60 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80 transition-colors"
               tabIndex={-1}
             >
               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}

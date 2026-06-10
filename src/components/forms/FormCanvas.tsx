@@ -54,7 +54,7 @@ export function FormCanvas({
     return (
       <div className="flex flex-col items-center justify-center min-h-80 rounded-2xl border-2 border-dashed gap-3 border-[var(--outline-variant)]">
         <div className="h-12 w-12 rounded-xl bg-navy/5 flex items-center justify-center">
-          <GripVertical size={22} className="text-navy-light/30" />
+          <GripVertical size={22} className="text-navy-light/60" />
         </div>
         <p className="text-sm text-navy-light/40 text-center max-w-xs font-body">
           Hacé clic en un tipo de campo para agregarlo, o arrastrálo aquí
@@ -102,7 +102,7 @@ export function FormCanvas({
               style={{ borderColor: isActive ? undefined : 'var(--outline-variant)' }}
             >
               <div className="flex items-center gap-3">
-                <GripVertical size={15} className="text-navy-light/20 cursor-grab shrink-0" />
+                <GripVertical size={15} className="text-navy-light/40 cursor-grab shrink-0" />
                 <FileText size={14} className="text-blue-400 shrink-0" />
                 <div className="flex-1">
                   <span className="text-[11px] font-bold text-blue-500 uppercase tracking-widest font-display">
@@ -237,7 +237,7 @@ export function FormCanvas({
 
             <div className="flex items-start gap-3">
               <div className="mt-0.5 cursor-grab active:cursor-grabbing shrink-0">
-                <GripVertical size={16} className="text-navy-light/20 hover:text-navy-light/50 transition-colors" />
+                <GripVertical size={16} className="text-navy-light/40 hover:text-navy-light/50 transition-colors" />
               </div>
 
               {field.type === 'section' ? (
@@ -252,7 +252,7 @@ export function FormCanvas({
                     </div>
                     <div className="flex-1 min-w-0 flex items-start gap-2">
                       <p className="text-[13px] font-semibold text-navy leading-snug flex-1 font-display">
-                        {field.label || <span className="text-navy-light/30 italic">Sin etiqueta</span>}
+                        {field.label || <span className="text-navy-light/60 italic">Sin etiqueta</span>}
                         {field.is_required && <span className="ml-1 text-coral text-[11px]">*</span>}
                       </p>
                       {logicCount > 0 && (

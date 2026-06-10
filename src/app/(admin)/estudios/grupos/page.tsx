@@ -272,9 +272,9 @@ export default function GruposPage() {
         className="flex items-center gap-1 text-[12px] text-navy-light/60 px-1 font-body"
       >
         <span><strong className="text-navy">{filtered.length}</strong> grupos filtrados</span>
-        <span className="mx-2 text-navy-light/30">·</span>
+        <span className="mx-2 text-navy-light/60">·</span>
         <span>Capacidad total: <strong className="text-navy">{totalCapacity}</strong></span>
-        <span className="mx-2 text-navy-light/30">·</span>
+        <span className="mx-2 text-navy-light/60">·</span>
         <span>Ocupación: <strong className="text-navy">{occupancy}%</strong></span>
       </div>
 

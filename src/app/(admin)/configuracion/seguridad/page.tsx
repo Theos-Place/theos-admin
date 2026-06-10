@@ -14,7 +14,7 @@ import type { PasskeyListItem, Factor } from '@supabase/supabase-js'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
-  'outline-none transition-all placeholder:text-navy-light/25',
+  'outline-none transition-all placeholder:text-navy-light/50',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
   'border-[rgba(22,20,64,0.15)]',
 ].join(' ')
@@ -133,7 +133,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={`${INPUT} pr-11 font-body`}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/30 hover:text-navy-light/60" tabIndex={-1}>
+            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80" tabIndex={-1}>
               {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -166,7 +166,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={cn(`${INPUT} pr-11 font-body`, confirmErr ? 'border-coral/50 focus:ring-coral/10' : '')}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/30 hover:text-navy-light/60" tabIndex={-1}>
+            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80" tabIndex={-1}>
               {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>

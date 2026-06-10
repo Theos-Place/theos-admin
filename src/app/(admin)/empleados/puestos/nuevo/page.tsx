@@ -90,7 +90,7 @@ export default function NuevoPuestoPage() {
             <ChevronLeft size={16} />
             Puestos
           </Link>
-          <span className="text-navy-light/20 hidden sm:inline">|</span>
+          <span className="text-navy-light/40 hidden sm:inline">|</span>
           <span className="text-sm font-semibold text-navy font-display truncate hidden sm:inline">
             Nuevo puesto
           </span>

@@ -388,6 +388,7 @@ export default function NuevoGrupoPage() {
                 onChange={id => setSelectedCoLeader(id ?? '')}
                 excludeId={selectedLeader || undefined}
                 placeholder="Buscar co-dirigente…"
+                aria-label="Buscar co-dirigente"
               />
             </div>
           )}

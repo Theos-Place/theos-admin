@@ -146,7 +146,7 @@ export default function NuevaPlantillaPage() {
           {(channel === 'whatsapp' || channel === 'both') && (
             <div>
               <label className={labelCls}>
-                Cuerpo del mensaje WhatsApp <span className="text-navy-light/30">(soporta *negrita*, _itálica_, ~tachado~)</span>
+                Cuerpo del mensaje WhatsApp <span className="text-navy-light/60">(soporta *negrita*, _itálica_, ~tachado~)</span>
               </label>
               <textarea
                 ref={waRef}

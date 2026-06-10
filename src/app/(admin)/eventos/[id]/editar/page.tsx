@@ -314,7 +314,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             <ChevronLeft size={16} />
             Volver
           </Link>
-          <span className="text-navy-light/20">|</span>
+          <span className="text-navy-light/40">|</span>
           <span className="text-sm font-semibold text-navy font-display">
             Editar evento
           </span>
@@ -346,7 +346,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <div className="space-y-4">
           <div>
             <input
-              className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/30 transition-colors font-display"
+              className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/50 transition-colors font-display"
               value={name}
               onChange={e => setName(e.target.value)}
             />

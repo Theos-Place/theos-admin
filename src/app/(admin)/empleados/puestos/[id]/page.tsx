@@ -85,14 +85,14 @@ export default function PuestoDetailPage() {
           <p className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
             Rango salarial aprobado
           </p>
-          <Lock size={11} className="text-navy-light/30" />
+          <Lock size={11} className="text-navy-light/60" />
         </div>
         <div className="flex items-center gap-3">
           <div className="space-y-0.5">
             <p className="text-[10px] text-navy-light/40 font-display">Mínimo</p>
             <SalaryBadge amount={position.salary_min} size="md" />
           </div>
-          <span className="text-navy-light/20 text-lg">—</span>
+          <span className="text-navy-light/40 text-lg">—</span>
           <div className="space-y-0.5">
             <p className="text-[10px] text-navy-light/40 font-display">Máximo</p>
             <SalaryBadge amount={position.salary_max} size="md" />

@@ -125,6 +125,7 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
               onChange={id => setLeaderId(id ?? '')}
               excludeId={coLeaderId || undefined}
               placeholder="Buscar dirigente…"
+              aria-label="Buscar dirigente"
             />
           </div>
 
@@ -136,6 +137,7 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
               onChange={id => setCoLeaderId(id ?? '')}
               excludeId={leaderId || undefined}
               placeholder="Buscar co-dirigente…"
+              aria-label="Buscar co-dirigente"
             />
           </div>
 

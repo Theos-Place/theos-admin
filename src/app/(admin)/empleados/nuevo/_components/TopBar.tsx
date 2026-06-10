@@ -23,7 +23,7 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
           <ChevronLeft size={16} />
           Empleados
         </Link>
-        <span className="text-navy-light/20 hidden sm:inline">|</span>
+        <span className="text-navy-light/40 hidden sm:inline">|</span>
         <span className="text-sm font-semibold text-navy font-display truncate hidden sm:inline">
           Contratar empleado
         </span>

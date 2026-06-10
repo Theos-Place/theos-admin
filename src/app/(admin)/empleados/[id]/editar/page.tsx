@@ -119,7 +119,7 @@ export default function EditarEmpleadoPage() {
             <ChevronLeft size={16} className="shrink-0" />
             <span className="truncate">{employee.member_name}</span>
           </Link>
-          <span className="text-navy-light/20 hidden sm:inline">|</span>
+          <span className="text-navy-light/40 hidden sm:inline">|</span>
           <span className="text-sm font-semibold text-navy font-display shrink-0">
             Editar
           </span>

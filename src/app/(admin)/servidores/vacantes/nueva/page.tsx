@@ -121,7 +121,7 @@ function NuevaVacanteContent() {
               <ChevronLeft size={16} />
               Puestos de Servicio
             </Link>
-            <span className="text-navy-light/20">|</span>
+            <span className="text-navy-light/40">|</span>
             <span className="text-sm font-semibold text-navy font-display">
               Preparar publicación
             </span>
@@ -184,7 +184,7 @@ function NuevaVacanteContent() {
             </label>
             {functions.map((f, idx) => (
               <div key={idx} className="flex gap-2 items-center">
-                <span className="text-[11px] text-navy-light/30 shrink-0 w-4 font-mono">
+                <span className="text-[11px] text-navy-light/60 shrink-0 w-4 font-mono">
                   {idx + 1}.
                 </span>
                 <input
@@ -298,7 +298,7 @@ function NuevaVacanteContent() {
             <ChevronLeft size={16} />
             Puestos de Servicio
           </Link>
-          <span className="text-navy-light/20">|</span>
+          <span className="text-navy-light/40">|</span>
           <span className="text-sm font-semibold text-navy font-display">
             Solicitar puesto
           </span>

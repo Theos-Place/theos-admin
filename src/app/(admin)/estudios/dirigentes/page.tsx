@@ -44,7 +44,7 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
             {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} liderado{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
           </p>
         </div>
-        <ChevronRight size={16} className="text-navy-light/30 shrink-0" />
+        <ChevronRight size={16} className="text-navy-light/60 shrink-0" />
       </div>
 
       {/* Estudios activos */}
@@ -164,6 +164,7 @@ export default function DirigentesPage() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Buscar dirigente…"
+              aria-label="Buscar dirigente"
               className="bg-transparent text-sm text-navy outline-none w-full font-body"
             />
           </div>
@@ -247,6 +248,7 @@ function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved:
               autoFocus
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar miembro por nombre, cédula…"
+              aria-label="Buscar miembro por nombre, cédula"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />

@@ -73,7 +73,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.position}</span>
-        : <span className="text-navy-light/30 text-[12px]">—</span>
+        : <span className="text-navy-light/60 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.position ?? '',
   },
@@ -83,7 +83,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.committee}</span>
-        : <span className="text-navy-light/30 text-[12px]">—</span>
+        : <span className="text-navy-light/60 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.committee ?? '',
   },
@@ -289,7 +289,7 @@ export default function ListaDetailPage() {
           <p className="text-[12px] text-navy-light/50 font-body">
             <strong className="text-navy">{listMembers.length}</strong> miembros en esta lista
             {list.member_count > listMembers.length && (
-              <span className="ml-1 text-navy-light/30">(mock: mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
+              <span className="ml-1 text-navy-light/60">(mock: mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
             )}
           </p>
           <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function ListaDetailPage() {
                 <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
                   {member.is_active ? 'Activo' : 'Inactivo'}
                 </span>
-                <ArrowRight size={15} className="shrink-0 text-navy-light/30" strokeWidth={1.75} />
+                <ArrowRight size={15} className="shrink-0 text-navy-light/60" strokeWidth={1.75} />
               </button>
             ))
           )}
@@ -388,7 +388,7 @@ export default function ListaDetailPage() {
                         case 'cedula':
                           return (
                             <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums font-mono text-[12px]">
-                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/30">Sin cédula</span>}
+                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/60">Sin cédula</span>}
                             </td>
                           )
                         case 'age':
@@ -410,7 +410,7 @@ export default function ListaDetailPage() {
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
                                 ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
-                                : <span className="text-sm text-navy-light/30">—</span>
+                                : <span className="text-sm text-navy-light/60">—</span>
                               }
                             </td>
                           )
@@ -435,7 +435,7 @@ export default function ListaDetailPage() {
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={e => { e.stopPropagation(); router.push(`/miembros/${member.id}`) }}
-                        className="rounded-lg p-1.5 text-navy-light/30 transition-all hover:bg-surface-low hover:text-coral"
+                        className="rounded-lg p-1.5 text-navy-light/60 transition-all hover:bg-surface-low hover:text-coral"
                       >
                         <ArrowRight size={16} strokeWidth={1.75} />
                       </button>

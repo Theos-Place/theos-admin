@@ -82,7 +82,7 @@ export function NewMemberStep2({
               <button
                 type="button"
                 onClick={() => onRemoveFamilyMember(idx)}
-                className="rounded-lg p-1.5 text-navy-light/30 hover:text-coral hover:bg-surface-card transition-all"
+                className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-surface-card transition-all"
                 aria-label="Eliminar familiar"
               >
                 <X size={14} strokeWidth={2} />

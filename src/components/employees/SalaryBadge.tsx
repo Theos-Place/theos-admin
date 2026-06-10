@@ -29,7 +29,7 @@ export function SalaryBadge({ amount, className, size = 'md' }: SalaryBadgeProps
       <button
         type="button"
         onClick={() => setVisible(v => !v)}
-        className="text-navy-light/30 hover:text-navy transition-colors"
+        className="text-navy-light/60 hover:text-navy transition-colors"
         title={visible ? 'Ocultar salario' : 'Mostrar salario'}
       >
         {visible

@@ -136,7 +136,7 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.position}</span>
-        : <span className="text-navy-light/30 text-[12px]">—</span>
+        : <span className="text-navy-light/60 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.position ?? '',
   },
@@ -146,7 +146,7 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.committee}</span>
-        : <span className="text-navy-light/30 text-[12px]">—</span>
+        : <span className="text-navy-light/60 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.committee ?? '',
   },
@@ -156,7 +156,7 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.area}</span>
-        : <span className="text-navy-light/30 text-[12px]">—</span>
+        : <span className="text-navy-light/60 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.area ?? '',
   },
@@ -486,7 +486,8 @@ export default function MiembrosPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email…"
-            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body"
+            aria-label="Buscar por nombre, email"
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body"
           />
         </div>
       </div>
@@ -640,7 +641,7 @@ export default function MiembrosPage() {
               {!shouldFetch ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
-                    <Search size={26} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.75} />
+                    <Search size={26} className="text-navy-light/40 mx-auto mb-3" strokeWidth={1.75} />
                     <p className="text-sm font-semibold text-navy-light/50">Usá el buscador o aplicá un filtro para ver miembros</p>
                     <p className="text-[13px] text-navy-light/40 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
                   </td>
@@ -699,7 +700,7 @@ export default function MiembrosPage() {
                         case 'cedula':
                           return (
                             <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums font-mono text-[12px]">
-                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/30 font-sans">Sin cédula</span>}
+                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/60 font-sans">Sin cédula</span>}
                             </td>
                           )
                         case 'age':
@@ -721,7 +722,7 @@ export default function MiembrosPage() {
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
                                 ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
-                                : <span className="text-sm text-navy-light/30 font-body">—</span>
+                                : <span className="text-sm text-navy-light/60 font-body">—</span>
                               }
                             </td>
                           )
@@ -751,7 +752,7 @@ export default function MiembrosPage() {
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={() => router.push(`/miembros/${member.id}`)}
-                        className="rounded-lg p-1.5 text-navy-light/30 transition-all hover:bg-surface-low hover:text-coral group-hover:text-navy-light/60"
+                        className="rounded-lg p-1.5 text-navy-light/60 transition-all hover:bg-surface-low hover:text-coral group-hover:text-navy-light/60"
                         aria-label={`Ver perfil de ${member.first_name}`}
                       >
                         <ArrowRight size={16} strokeWidth={1.75} />
@@ -768,7 +769,7 @@ export default function MiembrosPage() {
         <div className="md:hidden">
           {!shouldFetch ? (
             <div className="px-4 py-14 text-center font-body">
-              <Search size={26} className="text-navy-light/20 mx-auto mb-3" strokeWidth={1.75} />
+              <Search size={26} className="text-navy-light/40 mx-auto mb-3" strokeWidth={1.75} />
               <p className="text-sm font-semibold text-navy-light/50">Usá el buscador o aplicá un filtro</p>
               <p className="text-[13px] text-navy-light/40 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
             </div>

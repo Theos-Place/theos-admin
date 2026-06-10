@@ -117,7 +117,7 @@ function GroupBracket({
     <span
       className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs border-[1.5px] border-dashed border-[var(--outline-variant)] font-body"
     >
-      <span className="text-[9px] text-navy-light/30 mr-0.5">(</span>
+      <span className="text-[9px] text-navy-light/60 mr-0.5">(</span>
       {conditions.map((c, i) => (
         <Fragment key={c.id}>
           {i > 0 && (
@@ -137,17 +137,17 @@ function GroupBracket({
           <span className="text-navy-light/70">{conditionLabel(c)}</span>
         </Fragment>
       ))}
-      <span className="text-[9px] text-navy-light/30 ml-0.5">)</span>
+      <span className="text-[9px] text-navy-light/60 ml-0.5">)</span>
       <button
         onClick={onUngroup}
-        className="ml-0.5 rounded px-1 py-0.5 text-[9px] text-navy-light/30 hover:text-navy-light transition-colors"
+        className="ml-0.5 rounded px-1 py-0.5 text-[9px] text-navy-light/60 hover:text-navy-light transition-colors"
         title="Disolver grupo"
       >
         [ ]
       </button>
       <button
         onClick={onRemove}
-        className="rounded-full p-0.5 text-navy-light/30 hover:text-coral transition-colors"
+        className="rounded-full p-0.5 text-navy-light/60 hover:text-coral transition-colors"
         aria-label="Eliminar grupo"
       >
         <X size={10} strokeWidth={2.5} />

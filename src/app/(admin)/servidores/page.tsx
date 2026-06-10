@@ -176,7 +176,7 @@ export default function ServidoresPage() {
               <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
                 {label}
               </p>
-              <Icon size={14} className="text-navy-light/30" />
+              <Icon size={14} className="text-navy-light/60" />
             </div>
             <p className={cn('text-4xl font-extrabold tabular-nums font-display', color)}>
               {value}
@@ -227,7 +227,7 @@ export default function ServidoresPage() {
                 {area.name}
               </p>
               <div className="flex-1 h-px bg-[var(--outline-variant)]" />
-              <span className="text-[11px] text-navy-light/30 font-mono">
+              <span className="text-[11px] text-navy-light/60 font-mono">
                 {area.committees.length}
               </span>
             </div>

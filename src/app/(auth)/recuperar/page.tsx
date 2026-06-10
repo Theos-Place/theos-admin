@@ -8,7 +8,7 @@ import { MOCK_RECOVERY_DELAY_MS } from '@/lib/constants'
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
   'outline-none transition-all',
-  'placeholder:text-navy-light/25',
+  'placeholder:text-navy-light/50',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
 ].join(' ')
 

@@ -11,7 +11,7 @@ export type FamilyDraft =
 
 const RELATIONS = ['Cónyuge', 'Hijo/a', 'Padre', 'Madre', 'Hermano/a', 'Otro']
 
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/40 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0'
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0'
 
 function calcAge(dateStr: string): number {
   const birth = new Date(dateStr)

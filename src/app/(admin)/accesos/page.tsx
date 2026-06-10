@@ -148,7 +148,8 @@ export default function AccesosPage() {
           <input
             type="search"
             placeholder="Buscar por nombre o correo..."
-            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/30 outline-none"
+            aria-label="Buscar por nombre o correo"
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none"
             style={{ fontFamily: 'var(--font-body)' }}
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -263,7 +264,7 @@ export default function AccesosPage() {
                   </td>
                   {/* Último login */}
                   <td className="px-5 py-4">
-                    <p className={cn('text-[13px] whitespace-nowrap', u.last_login ? 'text-navy-light/60' : 'text-navy-light/30')} style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className={cn('text-[13px] whitespace-nowrap', u.last_login ? 'text-navy-light/60' : 'text-navy-light/60')} style={{ fontFamily: 'var(--font-body)' }}>
                       {formatDate(u.last_login)}
                     </p>
                   </td>
@@ -526,9 +527,10 @@ function DarAccesoModal({
                 autoFocus
                 type="text"
                 placeholder="Buscar por nombre o cédula..."
+                aria-label="Buscar por nombre o cédula"
                 value={query}
                 onChange={e => { setQuery(e.target.value); setSelected(null) }}
-                className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/30 outline-none"
+                className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none"
                 style={{ fontFamily: 'var(--font-body)' }}
               />
             </div>

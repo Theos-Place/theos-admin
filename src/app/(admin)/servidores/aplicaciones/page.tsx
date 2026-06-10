@@ -74,6 +74,7 @@ export default function AplicacionesPage() {
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre o puesto..."
+            aria-label="Buscar por nombre o puesto"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />

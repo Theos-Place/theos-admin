@@ -164,7 +164,7 @@ function AlertRow({
         <div className="w-2 h-2 rounded-full shrink-0" style={{ background: c.dot }} />
         <span className="text-[13px] text-navy/80 font-body">{text}</span>
       </div>
-      {href && <ChevronRight size={14} className="shrink-0 text-navy/30" />}
+      {href && <ChevronRight size={14} className="shrink-0 text-navy/60" />}
     </div>
   )
   if (href) return <Link href={href}>{inner}</Link>
@@ -412,7 +412,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-[12px] text-navy/40 font-body">Eventos programados</div>
             </div>
-            <Calendar size={18} className="text-navy/30" />
+            <Calendar size={18} className="text-navy/60" />
           </div>
 
           {todayEvents.length === 0 ? (
@@ -644,7 +644,7 @@ export default function DashboardPage() {
                 Actividad reciente
               </span>
             </div>
-            <ChevronRight size={16} className={cn('text-navy/30 transition-transform', activityCollapsed ? '' : 'rotate-90')} />
+            <ChevronRight size={16} className={cn('text-navy/60 transition-transform', activityCollapsed ? '' : 'rotate-90')} />
           </button>
 
           {!activityCollapsed && (

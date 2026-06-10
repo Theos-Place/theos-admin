@@ -68,7 +68,7 @@ export default function NotificacionesPage() {
                     {cfg.label}
                   </span>
                 </div>
-                <ChevronRight size={18} className="text-navy-light/30 shrink-0" />
+                <ChevronRight size={18} className="text-navy-light/60 shrink-0" />
               </Link>
             )
           })}

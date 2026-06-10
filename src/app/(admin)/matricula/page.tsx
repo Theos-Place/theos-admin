@@ -270,7 +270,8 @@ export default function MatriculaPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar estudio..."
-            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none"
+            aria-label="Buscar estudio"
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none"
             style={{ fontFamily: 'var(--font-body)' }}
           />
         </div>
@@ -286,7 +287,7 @@ export default function MatriculaPage() {
           className="rounded-2xl p-12 text-center"
           style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' }}
         >
-          <GraduationCap size={28} className="text-navy-light/20 mx-auto mb-3" />
+          <GraduationCap size={28} className="text-navy-light/40 mx-auto mb-3" />
           <p className="text-sm font-semibold text-navy-light/50" style={{ fontFamily: 'var(--font-body)' }}>
             No hay estudios que coincidan
           </p>
@@ -393,6 +394,7 @@ function MemberPicker({ selected, onSelect }: {
             onChange={e => { setQuery(e.target.value); setOpen(true) }}
             onFocus={() => setOpen(true)}
             placeholder="Buscar miembro…"
+            aria-label="Buscar miembro"
             className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-coral/50"
             style={{ fontFamily: 'var(--font-body)' }}
           />
@@ -421,7 +423,7 @@ function CommitmentRow({ met, label }: { met: boolean; label: string }) {
     <div className="flex items-center gap-2">
       {met
         ? <CheckCircle2 size={13} className="text-teal-deep shrink-0" />
-        : <XCircle size={13} className="text-navy-light/30 shrink-0" />
+        : <XCircle size={13} className="text-navy-light/60 shrink-0" />
       }
       <span
         className={cn('text-[12px]', met ? 'text-navy' : 'text-navy-light/40')}

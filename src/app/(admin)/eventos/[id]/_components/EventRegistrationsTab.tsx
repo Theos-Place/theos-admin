@@ -307,6 +307,7 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Buscar por nombre o cédula…"
+            aria-label="Buscar por nombre o cédula"
             className="w-full rounded-2xl border border-[var(--outline-variant)] pl-9 pr-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 font-body"
           />
         </div>

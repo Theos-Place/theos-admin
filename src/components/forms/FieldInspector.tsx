@@ -149,7 +149,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* Fields grouped */}
         {GROUPS.map(group => (
           <div key={group}>
-            <p className="text-[10px] font-bold uppercase tracking-widests text-navy-light/30 mb-2 font-display">
+            <p className="text-[10px] font-bold uppercase tracking-widests text-navy-light/60 mb-2 font-display">
               {group}
             </p>
             <div className="space-y-0.5">
@@ -329,7 +329,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             <div className="space-y-2">
               {(field.options ?? []).map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <GripVertical size={14} className="text-navy-light/30 shrink-0 cursor-grab" />
+                  <GripVertical size={14} className="text-navy-light/60 shrink-0 cursor-grab" />
                   <input
                     className={cn(inputCls, 'flex-1')}
                     value={opt}
@@ -518,7 +518,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             </button>
 
             {priorFields.length === 0 && (
-              <p className="text-[11px] text-navy-light/30 text-center font-body">
+              <p className="text-[11px] text-navy-light/60 text-center font-body">
                 No hay campos anteriores para referenciar.
               </p>
             )}

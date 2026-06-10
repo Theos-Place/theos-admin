@@ -426,6 +426,7 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
               autoFocus
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar por nombre, cédula, teléfono o correo…"
+              aria-label="Buscar por nombre, cédula, teléfono o correo"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />

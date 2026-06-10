@@ -106,7 +106,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
                   />
                   <span className="flex-1 text-navy">{col.label}</span>
                   {col.alwaysVisible && (
-                    <span className="text-[10px] text-navy-light/30 font-body">
+                    <span className="text-[10px] text-navy-light/60 font-body">
                       fijo
                     </span>
                   )}

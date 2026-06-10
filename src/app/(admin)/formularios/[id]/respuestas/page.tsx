@@ -277,7 +277,7 @@ export default function RespuestasPage() {
                       {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <ChevronRight size={16} className="text-navy-light/30 shrink-0" />
+                  <ChevronRight size={16} className="text-navy-light/60 shrink-0" />
                 </li>
               ))}
             </ul>
@@ -309,7 +309,7 @@ export default function RespuestasPage() {
               {dataFields.map(f => {
                 const ans = detailResponse.answers[f.id]
                 const displayAns = ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)
-                  ? <span className="italic text-navy-light/30">Sin respuesta</span>
+                  ? <span className="italic text-navy-light/60">Sin respuesta</span>
                   : Array.isArray(ans)
                   ? ans.join(', ')
                   : String(ans)

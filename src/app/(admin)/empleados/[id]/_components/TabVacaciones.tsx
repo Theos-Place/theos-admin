@@ -43,7 +43,7 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
     return (
       <div className="space-y-5">
         <div className="rounded-xl py-10 flex flex-col items-center gap-3 bg-surface-low">
-          <Clock size={24} className="text-navy-light/30" />
+          <Clock size={24} className="text-navy-light/60" />
           <p className="text-sm text-navy-light/40 font-body">
             Servicios profesionales no aplica para control de vacaciones.
           </p>

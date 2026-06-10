@@ -78,6 +78,7 @@ export function StepPersonSearch({
               autoFocus
               className={cn(inputCls, 'pl-9 font-body')}
               placeholder="Buscar por nombre, email o cédula..."
+              aria-label="Buscar por nombre, email o cédula"
               value={query}
               onChange={e => onQueryChange(e.target.value)}
             />
@@ -125,7 +126,7 @@ export function StepPersonSearch({
                       </p>
                     </div>
                     <span
-                      className="text-[11px] text-navy-light/30 shrink-0 font-body"
+                      className="text-[11px] text-navy-light/60 shrink-0 font-body"
                     >
                       {m.occupation}
                     </span>
@@ -138,7 +139,7 @@ export function StepPersonSearch({
           {query.trim() === '' && (
             <div className="flex flex-col items-center gap-2 py-8">
               <div className="h-12 w-12 rounded-full bg-navy/5 flex items-center justify-center">
-                <User size={20} className="text-navy-light/30" />
+                <User size={20} className="text-navy-light/60" />
               </div>
               <p className="text-sm text-navy-light/40 font-body">
                 Escribí el nombre o cédula del miembro

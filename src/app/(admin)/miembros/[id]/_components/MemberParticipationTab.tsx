@@ -211,7 +211,7 @@ export function MemberParticipationTab({
                           Ver grupo →
                         </Link>
                       ) : (
-                        <span className="text-xs text-navy-light/30 whitespace-nowrap font-body">Sin grupo</span>
+                        <span className="text-xs text-navy-light/60 whitespace-nowrap font-body">Sin grupo</span>
                       )}
                     </td>
                   </tr>
@@ -441,7 +441,7 @@ export function MemberParticipationTab({
                             {revealDonations ? (
                               <span className="text-navy">{formatAmount(row.amount)}</span>
                             ) : (
-                              <span className="text-navy-light/30 tracking-widest">••••••</span>
+                              <span className="text-navy-light/60 tracking-widest">••••••</span>
                             )}
                           </td>
                         </tr>
@@ -464,7 +464,7 @@ export function MemberParticipationTab({
           </div>
         ) : (
           <div className="flex items-center gap-3 px-4 py-6">
-            <Lock size={16} className="text-navy-light/30" strokeWidth={1.75} />
+            <Lock size={16} className="text-navy-light/60" strokeWidth={1.75} />
             <p className="text-sm text-navy-light/50 font-body">
               No tenés permisos para ver esta información.
             </p>
