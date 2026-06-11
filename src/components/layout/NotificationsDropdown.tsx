@@ -57,7 +57,12 @@ export function NotificationsBell() {
   function openNotification(n: InternalNotification) {
     setOpen(false)
     setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: true } : x)))
-    fetch(`/api/notifications/internal/${n.id}`, { method: 'PATCH' }).catch(() => {})
+    fetch(`/api/notifications/internal/${n.id}`, { method: 'PATCH' })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
+      .catch(() => {
+        // Rollback del optimista si falló el PATCH.
+        setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: false } : x)))
+      })
     router.push(n.link || '/estudios/solicitudes')
   }
 

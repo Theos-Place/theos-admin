@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export type OrgArea = { id: string; name: string; committees: string[] }
 export type OrgCommittee = { id: string; name: string; area_id: string | null; area_name: string }
 
-export async function getOrgCatalog(): Promise<{ areas: OrgArea[]; committees: OrgCommittee[] }> {
+export async function getOrgCatalog(): Promise<{ areas: OrgArea[]; committees: OrgCommittee[]; positions: string[] }> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('areas')
@@ -31,5 +31,17 @@ export async function getOrgCatalog(): Promise<{ areas: OrgArea[]; committees: O
     area_id: c.parent_id,
     area_name: c.parent_id ? (areaName.get(c.parent_id) ?? '') : '',
   }))
-  return { areas, committees }
+  // Catálogo de posiciones de servicio (títulos únicos, ordenados). Es la
+  // misma columna contra la que filtra el padrón (service_positions.title),
+  // reemplaza el SERVICE_POSITIONS estático de mock-committees (auditoría C3).
+  const { data: posData, error: posError } = await supabase
+    .from('service_positions')
+    .select('title')
+    .order('title', { ascending: true })
+  if (posError) throw posError
+  const positions = Array.from(
+    new Set(((posData ?? []) as Array<{ title: string | null }>).map((p) => p.title).filter((t): t is string => !!t)),
+  )
+
+  return { areas, committees, positions }
 }

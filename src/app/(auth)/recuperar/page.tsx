@@ -132,9 +132,8 @@ export default function RecuperarPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body"
+          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body bg-coral hover:bg-coral-deep disabled:opacity-50"
           style={{
-            background: loading ? '#c0453a' : '#EF5554',
             boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.28)',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}

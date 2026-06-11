@@ -135,9 +135,8 @@ export default function VerificacionPage() {
         <button
           type="submit"
           disabled={loading || code.length !== 6}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body disabled:opacity-50 bg-coral hover:bg-coral-deep"
           style={{
-            background: '#EF5554',
             boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
             cursor: loading || code.length !== 6 ? 'not-allowed' : 'pointer',
           }}

@@ -14,6 +14,7 @@ import {
   ChevronLeft, MessageCircle, ArrowRight, RefreshCw, ExternalLink, Users,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useToast } from '@/components/shared/Toast'
 
 function calcularEdad(fechaNacimiento: string): number {
   const hoy = new Date()
@@ -96,6 +97,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
 export default function ListaDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const toast = useToast()
 
   const [list, setList] = useState<MemberList | null>(null)
   const [listMembers, setListMembers] = useState<Member[]>([])
@@ -245,7 +247,9 @@ export default function ListaDetailPage() {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ last_used_at: new Date().toISOString() }),
-                }).catch(() => {})
+                })
+                  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
+                  .catch(() => toast('No se pudo actualizar el snapshot', 'error'))
                 router.refresh()
               }}
             >

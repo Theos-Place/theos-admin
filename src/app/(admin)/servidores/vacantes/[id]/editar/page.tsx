@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useServers } from '@/hooks/useServers'
+import { useToast } from '@/components/shared/Toast'
 import { Check } from 'lucide-react'
 
 export default function EditarVacantePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { vacancies, loading } = useServers()
+  const toast = useToast()
   const vacancy = useMemo(() => vacancies.find(v => v.id === id), [vacancies, id])
 
   const [title, setTitle]           = useState('')
@@ -53,9 +55,12 @@ export default function EditarVacantePage() {
         }),
       })
       if (!res.ok) throw new Error('No se pudieron guardar los cambios')
+      toast('Cambios guardados', 'success')
       setSaved(true)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setError(msg)
+      toast(msg, 'error')
     } finally {
       setSaving(false)
     }

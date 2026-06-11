@@ -22,6 +22,7 @@ import {
   MessageSquare,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useToast } from '@/components/shared/Toast'
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
 
@@ -59,6 +60,7 @@ function thisMonth(dateStr: string | null) {
 
 export default function FormulariosPage() {
   const { forms, refetch } = useForms()
+  const toast = useToast()
   const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>([])
   useEffect(() => { setLocalTemplates(forms) }, [forms])
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
@@ -85,7 +87,9 @@ export default function FormulariosPage() {
       })
       if (!res.ok) throw new Error()
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo duplicar el formulario', 'error')
+    }
   }
 
   async function handleArchive(formId: string) {
@@ -98,7 +102,9 @@ export default function FormulariosPage() {
       })
       if (!res.ok) throw new Error()
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo archivar el formulario', 'error')
+    }
   }
 
   const stats = useMemo(() => {

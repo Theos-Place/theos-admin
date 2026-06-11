@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
 import { ChevronLeft, Users } from 'lucide-react'
 
@@ -271,6 +272,7 @@ const FILTERS = [
 ] as const
 
 export default function DuplicadosPage() {
+  const toast = useToast()
   const [pairs, setPairs] = useState<DupPair[]>([])
   const [loading, setLoading] = useState(true)
   const [merging, setMerging] = useState<DupPair | null>(null)
@@ -293,7 +295,9 @@ export default function DuplicadosPage() {
     await fetch('/api/members/duplicates', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ a: p.a.id, b: p.b.id }),
-    }).catch(() => {})
+    })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
+      .catch(() => toast('No se pudo descartar el par de duplicados', 'error'))
   }
 
   const sorted = useMemo(() =>

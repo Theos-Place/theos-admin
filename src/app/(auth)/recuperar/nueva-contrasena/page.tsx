@@ -80,7 +80,7 @@ export default function NuevaContrasenaPage() {
 
         <Link
           href="/login"
-          className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
+          className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral hover:bg-coral-deep font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
         >
           Ir al login
         </Link>
@@ -194,7 +194,7 @@ export default function NuevaContrasenaPage() {
         <button
           type="submit"
           disabled={loading || !allReqsMet || !confirm}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-coral font-body"
+          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-coral hover:bg-coral-deep font-body"
           style={{
             boxShadow: (!loading && allReqsMet && confirm) ? '0 8px 24px rgba(239,85,84,0.28)' : 'none',
           }}

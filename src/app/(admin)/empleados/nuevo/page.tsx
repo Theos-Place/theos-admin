@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { type Member } from '@/data/mock-members'
 import { type ContractType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
+import { useToast } from '@/components/shared/Toast'
 import { ChevronLeft } from 'lucide-react'
 
 import { TopBar } from './_components/TopBar'
@@ -30,6 +31,7 @@ const REQUIRED_DOCS: { key: DocKey }[] = [
 export default function NuevoEmpleadoPage() {
   const router = useRouter()
   const { employees, positions } = useEmployees()
+  const toast = useToast()
 
   const [step, setStep]                 = useState(1)
   const [query, setQuery]               = useState('')
@@ -132,9 +134,12 @@ export default function NuevoEmpleadoPage() {
         }),
       })
       if (!res.ok) throw new Error('No se pudo crear el empleado')
+      toast('Empleado creado', 'success')
       setDone(true)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setError(msg)
+      toast(msg, 'error')
     } finally {
       setSaving(false)
     }

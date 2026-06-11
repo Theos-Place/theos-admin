@@ -23,6 +23,8 @@ export function committeeInArea(committee: string, areaCode: string): boolean {
 type OrgCtx = {
   areas: AreaCatalog[]
   allCommittees: string[]
+  /** Catálogo de posiciones de servicio (service_positions.title, únicos). */
+  positions: string[]
   adminAreas: Area[]
   adminCommittees: Committee[]
   loading: boolean
@@ -33,16 +35,18 @@ const Ctx = createContext<OrgCtx | null>(null)
 export function OrgProvider({ children }: { children: React.ReactNode }) {
   const [areas, setAreas] = useState<OrgArea[]>([])
   const [committees, setCommittees] = useState<OrgCommittee[]>([])
+  const [positions, setPositions] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let alive = true
     fetch('/api/org')
-      .then((r) => (r.ok ? r.json() : { areas: [], committees: [] }))
-      .then((d: { areas: OrgArea[]; committees: OrgCommittee[] }) => {
+      .then((r) => (r.ok ? r.json() : { areas: [], committees: [], positions: [] }))
+      .then((d: { areas: OrgArea[]; committees: OrgCommittee[]; positions?: string[] }) => {
         if (!alive) return
         setAreas(d.areas ?? [])
         setCommittees(d.committees ?? [])
+        setPositions(d.positions ?? [])
         _commToArea = Object.fromEntries((d.committees ?? []).map((c) => [c.name, c.area_id ?? '']))
       })
       .catch(() => {})
@@ -53,14 +57,15 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<OrgCtx>(() => ({
     areas: areas.map((a) => ({ code: a.id, name: a.name, committees: a.committees })),
     allCommittees: committees.map((c) => c.name),
+    positions,
     adminAreas: areas.map((a) => ({ id: a.id, code: a.id, name: a.name, is_active: true })),
     adminCommittees: committees.map((c) => ({ id: c.id, area_code: c.area_id ?? '', name: c.name, is_active: true })),
     loading,
-  }), [areas, committees, loading])
+  }), [areas, committees, positions, loading])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
 export function useOrg(): OrgCtx {
-  return useContext(Ctx) ?? { areas: [], allCommittees: [], adminAreas: [], adminCommittees: [], loading: false }
+  return useContext(Ctx) ?? { areas: [], allCommittees: [], positions: [], adminAreas: [], adminCommittees: [], loading: false }
 }

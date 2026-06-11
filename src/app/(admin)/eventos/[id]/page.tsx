@@ -2,7 +2,8 @@
 
 import { use, useState, useMemo, useEffect } from 'react'
 import { useEvent } from '@/hooks/useEvents'
-import { mockMembers } from '@/data/mock-members'
+import type { Member } from '@/types/member'
+import { toDomainMember } from '@/lib/members/adapter'
 import { CancellationModal } from '@/components/events/CancellationModal'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
@@ -86,7 +87,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
   // Servidores tab state
   const [localBookings] = useState<VolunteerBooking[]>([])
-  const [memberResults, setMemberResults] = useState<typeof mockMembers>([])
+  const [memberResults, setMemberResults] = useState<Member[]>([])
   const [assigning, setAssigning] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [modalStep, setModalStep] = useState<1 | 2>(1)
@@ -126,7 +127,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     const t = setTimeout(() => {
       fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=10`)
         .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setMemberResults((d.members ?? []) as typeof mockMembers) })
+        .then(d => { if (alive) setMemberResults(((d.members ?? []) as Parameters<typeof toDomainMember>[0][]).map(toDomainMember)) })
         .catch(() => { if (alive) setMemberResults([]) })
     }, 300)
     return () => { alive = false; clearTimeout(t) }

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { type ContractType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
+import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
 
@@ -13,6 +14,7 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 export default function EditarEmpleadoPage() {
   const { id } = useParams<{ id: string }>()
   const { employees, positions, loading } = useEmployees()
+  const toast = useToast()
   const employee = useMemo(() => employees.find(e => e.id === id), [employees, id])
   const activePositions = useMemo(() => positions.filter(p => p.is_active), [positions])
 
@@ -58,9 +60,12 @@ export default function EditarEmpleadoPage() {
           body: JSON.stringify({ email: email.trim() || null }),
         }).catch(() => {})
       }
+      toast('Cambios guardados', 'success')
       setSaved(true)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setError(msg)
+      toast(msg, 'error')
     } finally {
       setSaving(false)
     }

@@ -104,7 +104,7 @@ export const ATTENDANCE_MONTHS = 6
 
 /** Últimos N meses calendario COMPLETOS (YYYY-MM), excluyendo el mes en curso:
  *  incluirlo dejaría a todo el mundo afuera los primeros días de cada mes. */
-function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS, now = new Date()): string[] {
+export function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS, now = new Date()): string[] {
   const out: string[] = []
   const d = new Date(now.getFullYear(), now.getMonth() - 1, 1) // mes anterior
   for (let i = 0; i < n; i++) {

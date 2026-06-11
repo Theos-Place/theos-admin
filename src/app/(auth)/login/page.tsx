@@ -229,9 +229,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={mfaLoading || mfaCode.length !== 6}
-            className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body disabled:opacity-50 bg-coral hover:bg-coral-deep"
             style={{
-              background: '#EF5554',
               boxShadow: mfaLoading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
               cursor: mfaLoading || mfaCode.length !== 6 ? 'not-allowed' : 'pointer',
             }}
@@ -350,10 +349,9 @@ export default function LoginPage() {
               className="sr-only"
             />
             <div
-              className="h-4 w-4 rounded flex items-center justify-center transition-all"
+              className={`h-4 w-4 rounded flex items-center justify-center transition-all ${rememberMe ? 'bg-coral' : 'bg-white'}`}
               style={{
                 border: rememberMe ? 'none' : '1.5px solid rgba(22,20,64,0.25)',
-                background: rememberMe ? '#EF5554' : 'white',
               }}
             >
               {rememberMe && (
@@ -372,9 +370,8 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body"
+          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body bg-coral hover:bg-coral-deep disabled:opacity-50"
           style={{
-            background: loading ? '#c0453a' : '#EF5554',
             boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}

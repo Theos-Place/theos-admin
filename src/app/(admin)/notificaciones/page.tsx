@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Bell, AlertCircle, Info, AlertTriangle, ChevronRight, Inbox, CheckCheck } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import type { ActiveAlert, AlertType } from '@/lib/supabase/queries/alerts'
 import type { InternalNotification } from '@/types/notification'
@@ -23,6 +24,7 @@ function formatDateTime(iso: string) {
 
 export default function NotificacionesPage() {
   const router = useRouter()
+  const toast = useToast()
   const [notifications, setNotifications] = useState<InternalNotification[]>([])
   const [alerts, setAlerts] = useState<ActiveAlert[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,7 +52,13 @@ export default function NotificacionesPage() {
   function openNotification(n: InternalNotification) {
     if (!n.read) {
       setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: true } : x)))
-      fetch(`/api/notifications/internal/${n.id}`, { method: 'PATCH' }).catch(() => {})
+      fetch(`/api/notifications/internal/${n.id}`, { method: 'PATCH' })
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
+        .catch(() => {
+          // Rollback del optimista si falló el PATCH.
+          setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: false } : x)))
+          toast('No se pudo marcar la notificación como leída', 'error')
+        })
     }
     router.push(n.link || '/notificaciones')
   }

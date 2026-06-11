@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useServers } from '@/hooks/useServers'
+import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-react'
 
@@ -13,6 +14,7 @@ function NuevaVacanteContent() {
   const params = useSearchParams()
   const preselectedCommittee = params.get('comite') ?? ''
   const { committees } = useServers()
+  const toast = useToast()
 
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
@@ -58,9 +60,12 @@ function NuevaVacanteContent() {
         }),
       })
       if (!res.ok) throw new Error('No se pudo guardar la vacante')
+      toast(status === 'published' ? 'Puesto publicado' : 'Borrador guardado', 'success')
       setPublished(true)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setError(msg)
+      toast(msg, 'error')
     } finally {
       setSaving(false)
     }

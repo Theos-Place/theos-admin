@@ -64,23 +64,26 @@ export default function MatriculaPage() {
   const [eligibilityResults, setEligibilityResults] = useState<EligibilityResult[]>([])
   const [profile, setProfile] = useState<MemberStudyProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
 
   // Elegibilidad + perfil académico desde datos reales.
   useEffect(() => {
     if (!effectiveMemberId) { setLoading(false); return }
     let alive = true
     setLoading(true)
+    setLoadError(false)
     fetch(`/api/matricula/eligibility?member_id=${effectiveMemberId}`)
-      .then(r => (r.ok ? r.json() : null))
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(d => {
         if (!alive) return
         setEligibilityResults(d?.eligibility ?? [])
         setProfile(d?.profile ?? null)
         setLoading(false)
       })
-      .catch(() => { if (alive) setLoading(false) })
+      .catch(() => { if (alive) { setLoadError(true); setLoading(false) } })
     return () => { alive = false }
-  }, [effectiveMemberId])
+  }, [effectiveMemberId, retryKey])
 
   // Solo se ofrecen los estudios con grupos abiertos y matriculables para el
   // miembro. El plan completo (con descripciones) vive en /estudios/plan.
@@ -303,6 +306,21 @@ export default function MatriculaPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+        </div>
+      ) : loadError ? (
+        <div
+          className="rounded-2xl p-12 text-center bg-surface-card shadow-card border border-coral/30"
+        >
+          <AlertCircle size={28} className="text-coral mx-auto mb-3" />
+          <p className="text-sm font-semibold text-navy font-body">
+            No se pudo cargar la matrícula. Probá de nuevo.
+          </p>
+          <button
+            onClick={() => setRetryKey(k => k + 1)}
+            className="mt-4 inline-flex items-center rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+          >
+            Reintentar
+          </button>
         </div>
       ) : grouped.length === 0 ? (
         <div

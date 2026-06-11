@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useCallback } from 'react'
-import { mockMembers, type Member } from '@/data/mock-members'
+import type { Member } from '@/types/member'
 import { committeeInArea } from '@/lib/org'
 import type { FilterCondition, ConditionGroup, AddableCondition } from '@/types/filters'
 
@@ -142,7 +142,7 @@ function applyFilters(
 
 // ─── hook ───────────────────────────────────────────────────────────────────
 
-export function useMemberFilters(members: Member[] = mockMembers) {
+export function useMemberFilters(members: Member[]) {
   const [conditions, setConditions] = useState<FilterCondition[]>([])
   const [groups, setGroups] = useState<ConditionGroup[]>([])
   const [topLevelOps, setTopLevelOps] = useState<Record<string, 'AND' | 'OR'>>({})

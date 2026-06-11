@@ -6,10 +6,18 @@ import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { useSedes } from '@/lib/sedes'
-import { SERVICE_POSITIONS } from '@/data/mock-committees'
 import { useOrg } from '@/lib/org'
-import { MOCK_FORMS, FORM_CATEGORY_LABEL } from '@/data/mock-forms'
+import { useForms } from '@/hooks/useForms'
+import type { FormTemplate } from '@/types/forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
+
+const FORM_CATEGORY_LABEL: Record<FormTemplate['category'], string> = {
+  event_registration: 'Inscripción eventos',
+  study_registration: 'Inscripción estudios',
+  survey: 'Encuestas',
+  registration: 'Registro',
+  other: 'Otros',
+}
 
 type Props = {
   conditions: FilterCondition[]
@@ -334,7 +342,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 }
 
 function ServicePanel({ addCondition }: Pick<Props, 'addCondition'>) {
-  const { areas: AREAS } = useOrg()
+  const { areas: AREAS, positions: POSITIONS } = useOrg()
   const [area, setArea]         = useState('')
   const [committee, setComm]    = useState('')
   const [position, setPosition] = useState('')
@@ -376,7 +384,7 @@ function ServicePanel({ addCondition }: Pick<Props, 'addCondition'>) {
         <Label>Posición</Label>
         <Sel value={position} onChange={setPosition}>
           <option value="">Cualquier posición</option>
-          {(SERVICE_POSITIONS as readonly string[]).map(p => (
+          {POSITIONS.map(p => (
             <option key={p} value={p}>{p}</option>
           ))}
         </Sel>
@@ -412,6 +420,7 @@ function ServicePanel({ addCondition }: Pick<Props, 'addCondition'>) {
 }
 
 function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const { forms } = useForms()
   const [formId, setFormId]         = useState('')
   const [status, setStatus]         = useState<FormResponseStatus>('any')
   const [from, setFrom]             = useState('')
@@ -419,7 +428,11 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   const [field, setField]           = useState('')
   const [fieldVal, setFieldVal]     = useState('')
 
-  const selectedForm = MOCK_FORMS.find(f => f.id === formId)
+  const selectedForm = forms.find(f => f.id === formId)
+  // Solo campos que reciben respuesta (excluye separadores de página/sección).
+  const answerableFields = (selectedForm?.fields ?? []).filter(
+    f => f.type !== 'section' && f.type !== 'page_break',
+  )
 
   function handleFormChange(v: string) {
     setFormId(v)
@@ -428,7 +441,7 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   }
 
   const groupedForms = Object.entries(
-    MOCK_FORMS.reduce<Record<string, typeof MOCK_FORMS>>((acc, f) => {
+    forms.reduce<Record<string, FormTemplate[]>>((acc, f) => {
       ;(acc[f.category] ??= []).push(f)
       return acc
     }, {})
@@ -474,8 +487,8 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             <Label>Campo del formulario</Label>
             <Sel value={field} onChange={setField}>
               <option value="">Cualquier campo</option>
-              {selectedForm.fields.map(f => (
-                <option key={f.key} value={f.key}>{f.label}</option>
+              {answerableFields.map(f => (
+                <option key={f.id} value={f.id}>{f.label}</option>
               ))}
             </Sel>
           </div>
@@ -498,7 +511,7 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
         disabled={!formId}
         onClick={() => {
           if (!formId) return
-          const form = MOCK_FORMS.find(f => f.id === formId)
+          const form = forms.find(f => f.id === formId)
           addCondition({
             group: 'form', type: 'form',
             formId, formName: form?.name ?? formId,

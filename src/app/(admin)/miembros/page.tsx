@@ -211,11 +211,12 @@ function MiembrosContent() {
   const { can } = usePermissions()
   // Conteos para chips/header — una sola vez al cargar, independiente de la búsqueda.
   const [counts, setCounts] = useState<MemberCounts | null>(null)
+  const [countsFailed, setCountsFailed] = useState(false)
   useEffect(() => {
     fetch('/api/members/counts')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setCounts(d) })
-      .catch(() => {})
+      .then(d => { if (d) setCounts(d); else setCountsFailed(true) })
+      .catch(() => setCountsFailed(true))
   }, [])
 
   // Filtros en la URL: sobreviven recargas y se pueden compartir por link.
@@ -389,7 +390,7 @@ function MiembrosContent() {
             Miembros
           </h1>
           <p className="mt-1 text-sm text-navy-light/60 font-body">
-            {counts ? `${counts.total.toLocaleString('es-CR')} registrados` : 'Cargando…'}
+            {counts ? `${counts.total.toLocaleString('es-CR')} registrados` : countsFailed ? '— registrados' : 'Cargando…'}
             {error && <span className="text-coral"> · {error}</span>}
           </p>
         </div>

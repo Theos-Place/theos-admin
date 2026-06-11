@@ -513,15 +513,10 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const supabase = createAdminClient()
 
   // Criterio único de asistencia: ≥1 check-in de charla en cada uno de los
-  // últimos ATTENDANCE_MONTHS meses completos (igual que el análisis).
-  const { ATTENDANCE_MONTHS } = await import('./members')
-  const now = new Date()
-  const oldest = new Date(now.getFullYear(), now.getMonth() - ATTENDANCE_MONTHS, 1)
-  const monthsNeeded: string[] = []
-  for (let i = 1; i <= ATTENDANCE_MONTHS; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    monthsNeeded.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-  }
+  // últimos ATTENDANCE_MONTHS meses completos — helpers centrales de members.ts.
+  const { attendanceMonthsSatisfyCriteria, lastCompleteMonthsKeys } = await import('./members')
+  const months = lastCompleteMonthsKeys()
+  const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo (fecha local)
 
   const [memberRes, enrRes, volRes, chkRes, plansRes] = await Promise.all([
     supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
@@ -535,7 +530,7 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
       .select('checked_in_at, events!inner(event_type)')
       .eq('member_id', memberId)
       .eq('events.event_type', 'charla')
-      .gte('checked_in_at', oldest.toISOString()),
+      .gte('checked_in_at', oldest),
     supabase
       .from('study_plans')
       .select('id, code, name, level, prerequisite_code')
@@ -560,12 +555,11 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     .filter(e => e.status === 'enrolled' && e.group)
     .map(e => ({ group_id: e.group!.id, group_name: e.group!.name, plan_code: e.group!.plan?.code ?? null }))
 
-  // Asistencia activa: al menos 1 check-in en cada uno de los últimos 6 meses.
-  // Cobertura mensual de charlas (mismo criterio que getStudyDemand).
+  // Asistencia activa: criterio único vía helper central (members.ts).
   const monthsWithCharla = new Set(
     ((chkRes.data ?? []) as unknown as Array<{ checked_in_at: string }>).map(c => c.checked_in_at.slice(0, 7)),
   )
-  const attendance_active = monthsNeeded.every(m => monthsWithCharla.has(m))
+  const attendance_active = attendanceMonthsSatisfyCriteria(monthsWithCharla)
 
   const is_donor = Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor)
   const is_server = (volRes.data ?? []).length > 0

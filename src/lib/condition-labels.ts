@@ -1,6 +1,5 @@
 import type { FilterCondition } from '@/types/filters'
 import { studyLabel } from '@/data/study-catalog'
-import { MOCK_FORMS } from '@/data/mock-forms'
 
 export function conditionLabel(c: FilterCondition): string {
   switch (c.type) {
@@ -22,8 +21,8 @@ export function conditionLabel(c: FilterCondition): string {
       return 'Servicio'
     }
     case 'form': {
-      const form = MOCK_FORMS.find(f => f.id === c.formId)
-      const name = (form?.name ?? c.formName) || c.formId
+      // El nombre viaja en la condición (se setea al agregarla desde el catálogo real).
+      const name = c.formName || c.formId
       if (c.status === 'filled') return `Llenó: ${name}`
       if (c.status === 'not_filled') return `No llenó: ${name}`
       return name

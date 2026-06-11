@@ -1,7 +1,7 @@
 import { Check, Clock, X as XIcon, UserPlus, Search, Link2, MoreVertical, Send } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { mockMembers } from '@/data/mock-members'
+import type { Member } from '@/types/member'
 import { cn } from '@/lib/utils'
 
 export type VolunteerBooking = {
@@ -51,10 +51,10 @@ type Props = {
   onSearchQueryChange: (val: string) => void
   filterCommittee: boolean
   onFilterCommitteeChange: (val: boolean) => void
-  filteredMembers: typeof mockMembers
+  filteredMembers: Member[]
   selectedMemberId: string | null
   onSelectMemberId: (id: string) => void
-  selectedMember: (typeof mockMembers)[number] | null | undefined
+  selectedMember: Member | null | undefined
   assignRole: string
   onAssignRoleChange: (val: string) => void
   customRole: string
