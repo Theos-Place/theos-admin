@@ -46,3 +46,6 @@ data-import/
 supabase/.temp/
 scripts/data/
 scripts/output/
+
+# Snapshots de pruebas en navegador (Playwright MCP)
+.playwright-mcp/
