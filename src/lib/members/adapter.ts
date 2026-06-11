@@ -161,5 +161,7 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
     comites,
     es_dirigente: comites.some(c => /dirigente/i.test(c)),
     wallet_pass_status: db.wallet_pass_id ? 'active' : 'not_generated',
+    attendance_active: db.attendance_active,
+    last_charla_checkin: db.last_charla_checkin,
   }
 }

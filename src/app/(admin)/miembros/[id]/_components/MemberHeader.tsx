@@ -3,18 +3,6 @@ import { Star, Heart, Hammer, CalendarCheck, BookOpen, UserCheck } from 'lucide-
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
 
-/** Asistente activo: al menos una asistencia en cada uno de los últimos 6 meses. */
-function isAttendanceActive(months: string[] = []): boolean {
-  const set = new Set(months)
-  const now = new Date()
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    if (!set.has(key)) return false
-  }
-  return true
-}
-
 function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
   active: boolean
   icon: React.ElementType
@@ -43,14 +31,19 @@ function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
 }
 
 function MemberActivityIcons({ member }: { member: Member }) {
-  const attendanceActive = isAttendanceActive(member.attendance_months)
+  // Flag calculado en el servidor con el criterio único del sistema
+  // (≥1 check-in de charla por mes, últimos 6 meses completos).
+  const attendanceActive = member.attendance_active ?? false
   const studyingActive = !!member.current_study
   const committee = member.comites?.[0]
+  const attendanceTooltip = member.last_charla_checkin
+    ? `Asistencia activa · último check-in ${formatDate(member.last_charla_checkin)}`
+    : 'Asistencia activa (últimos 6 meses)'
   return (
     <div className="mt-3 flex items-center gap-5">
       <ActivityIcon active={member.is_donor} icon={Heart} label="Donador" activeColor="text-coral" tooltip="Donador" />
       <ActivityIcon active={member.is_server} icon={Hammer} label="Servidor" activeColor="text-teal-deep" tooltip={committee ? `Servidor en ${committee}` : 'Servidor activo'} />
-      <ActivityIcon active={attendanceActive} icon={CalendarCheck} label="Asistente" activeColor="text-navy" tooltip="Asistente activo (últimos 6 meses)" />
+      <ActivityIcon active={attendanceActive} icon={CalendarCheck} label="Asistente" activeColor="text-navy" tooltip={attendanceTooltip} />
       <ActivityIcon active={studyingActive} icon={BookOpen} label="Estudiante" activeColor="text-coral" tooltip={member.current_study ? `Estudiando ${member.current_study}` : 'Estudiante activo'} />
       {/* A diferencia de los otros 4, este solo aparece si es dirigente activo
           (servidor activo en el comité Dirigentes). */}

@@ -89,6 +89,11 @@ export type Member = {
   attendance_history: AttendanceRecord[]
   /** Meses (YYYY-MM) con al menos una asistencia. Liviano, viene del listado. */
   attendance_months?: string[]
+  /** Asistencia activa según el criterio único (charlas, últimos 6 meses completos).
+   *  Solo viene del detalle (getMemberFullById). */
+  attendance_active?: boolean
+  /** Fecha del último check-in de charla. Solo viene del detalle. */
+  last_charla_checkin?: string | null
   service_history: ServiceRecord[]
   family_members: FamilyEntry[]
   donations: DonationRecord[]

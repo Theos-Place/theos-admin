@@ -110,6 +110,15 @@ function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS, now = new Date()): string
   return out
 }
 
+/** Criterio único de asistencia activa: dado el set de meses (YYYY-MM) con al
+ *  menos un check-in de CHARLA, exige cobertura de los últimos ATTENDANCE_MONTHS
+ *  meses completos. Lo usan el chip "Activo (asistencia)", el análisis de
+ *  demanda, la elegibilidad de solicitudes y el icono Asistente del perfil. */
+export function attendanceMonthsSatisfyCriteria(months: Iterable<string>, now = new Date()): boolean {
+  const set = months instanceof Set ? months : new Set(months)
+  return lastCompleteMonthsKeys(ATTENDANCE_MONTHS, now).every((m) => set.has(m))
+}
+
 /** Asistencia activa: ≥1 check-in de CHARLA en cada uno de los últimos
  *  ATTENDANCE_MONTHS meses completos. Criterio único del sistema — lo usan el
  *  chip "Activo (asistencia)" de miembros, el análisis de demanda de estudios
@@ -140,10 +149,9 @@ export async function getActiveAttendanceMemberIds(): Promise<string[]> {
       }
       if ((data ?? []).length < 1000) break
     }
-    const need = months
     const out: string[] = []
     for (const [id, set] of byMember) {
-      if (need.every((m) => set.has(m))) out.push(id)
+      if (attendanceMonthsSatisfyCriteria(set)) out.push(id)
     }
     return out
   } catch (e) {
@@ -739,6 +747,8 @@ export type DbMemberFull = DbMemberEnriched & {
   form_responses: DbFormResponse[]
   family: DbFamilyMember[]
   wallet_pass_id: string | null
+  attendance_active: boolean
+  last_charla_checkin: string | null
 }
 
 /** Devuelve un miembro con TODO su histórico relacionado. Para el detail view. */
@@ -986,6 +996,17 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     }
   })
 
+  // Asistencia activa (criterio único, solo CHARLAS). checkinsRes viene
+  // ordenado desc por checked_in_at, así que el primero es el más reciente.
+  const charlaCheckins = (checkinsRes.data ?? []).filter((c) => {
+    const ev = (c as Record<string, unknown>).events as { event_type: string } | null
+    return ev?.event_type === 'charla'
+  }) as Array<{ checked_in_at: string | null }>
+  const charlaMonths = Array.from(new Set(
+    charlaCheckins.map(c => (c.checked_in_at ?? '').slice(0, 7)).filter(Boolean),
+  ))
+  const lastCharlaCheckin = charlaCheckins.find(c => c.checked_in_at)?.checked_in_at ?? null
+
   // Familia: dos queries — primero los family_unit_id del miembro, después
   // los OTROS miembros de esos units.
   const family: DbFamilyMember[] = await loadFamily(supabase, id)
@@ -1016,6 +1037,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     form_responses,
     family,
     wallet_pass_id: (memberRow.wallet_pass_id as string | null) ?? null,
+    attendance_months: charlaMonths,
+    attendance_active: attendanceMonthsSatisfyCriteria(charlaMonths),
+    last_charla_checkin: lastCharlaCheckin,
   }
 }
 
