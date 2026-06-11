@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import type { GroupStatus, StudyGroup, StudyType } from '@/data/mock-studies'
 import { useStudies } from '@/hooks/useStudies'
@@ -31,6 +31,11 @@ const STATUS_EXPORT: Record<GroupStatus, string> = {
   open: 'Abierto',
   in_progress: 'En curso',
   finished: 'Finalizado',
+}
+
+/** Normaliza para búsqueda insensible a mayúsculas y tildes. */
+function normalize(s: string) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 }
 
 function getInitials(name: string) {
@@ -104,6 +109,14 @@ export default function GruposPage() {
   const [selectedType, setSelectedType] = useState('')
   const [selectedZone, setSelectedZone] = useState('')
   const [selectedDay, setSelectedDay] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+
+  // Debounce de 300ms para no re-filtrar la tabla en cada tecla.
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300)
+    return () => clearTimeout(t)
+  }, [searchInput])
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<StudyGroup>[]>(
     STUDY_GROUP_COLUMNS.filter(c => c.defaultVisible)
   )
@@ -120,6 +133,10 @@ export default function GruposPage() {
       if (selectedType && g.study_type_id !== selectedType) return false
       if (selectedZone && g.zone !== selectedZone) return false
       if (selectedDay && !g.schedule_days.includes(selectedDay)) return false
+      if (search) {
+        const haystack = normalize(`${g.name} ${g.leader_name ?? ''} ${g.co_leader_name ?? ''}`)
+        if (!haystack.includes(normalize(search))) return false
+      }
       return true
     }).sort((a, b) => {
       // Orden por defecto: fecha de finalización más reciente primero; sin fecha al final.
@@ -128,7 +145,7 @@ export default function GruposPage() {
       if (!b.end_date) return -1
       return b.end_date.localeCompare(a.end_date)
     })
-  }, [MOCK_GROUPS, selectedStatuses, selectedType, selectedZone, selectedDay])
+  }, [MOCK_GROUPS, selectedStatuses, selectedType, selectedZone, selectedDay, search])
 
   const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(filtered)
 
@@ -178,6 +195,20 @@ export default function GruposPage() {
       {/* Filter bar */}
       <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex flex-wrap gap-3 items-end">
+          {/* Búsqueda */}
+          <div className="space-y-1.5">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+              Buscar
+            </p>
+            <input
+              className={cn(inputCls, 'font-body min-w-[230px]')}
+              placeholder="Buscar por grupo o dirigente..."
+              aria-label="Buscar por grupo o dirigente"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+            />
+          </div>
+
           {/* Status */}
           <div className="space-y-1.5">
             <p

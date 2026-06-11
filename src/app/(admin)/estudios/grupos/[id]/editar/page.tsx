@@ -4,11 +4,13 @@ import { use, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
+import { useToast } from '@/components/shared/Toast'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { cn } from '@/lib/utils'
 import { ChevronLeft } from 'lucide-react'
+import type { StudyType, StudyGroup } from '@/types/study'
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const DAY_LABELS: Record<string, string> = {
@@ -19,37 +21,20 @@ const labelCls = 'text-[11px] text-navy-light/60 font-display'
 
 export default function EditarGrupoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const router = useRouter()
-  const { activeSedes: SEDES } = useSedes()
-  const { groups, studyTypes, refetch } = useStudies()
+  const { groups, studyTypes, loading, refetch } = useStudies()
+
+  // El form se monta solo cuando el grupo ya cargó: los useState del form se
+  // inicializan una única vez, así que montar antes dejaría los campos vacíos
+  // y al guardar se pisarían los datos reales del grupo.
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+      </div>
+    )
+  }
+
   const group = groups.find(g => g.id === id)
-  const studyType = studyTypes.find(s => s.id === group?.study_type_id) ?? null
-
-  const [zone, setZone] = useState(group?.zone ?? '')
-  const [days, setDays] = useState<string[]>(group?.schedule_days ?? [])
-  const [time, setTime] = useState(group?.schedule_time ?? '')
-  const [location, setLocation] = useState(group?.location ?? '')
-  const [capacity, setCapacity] = useState(String(group?.max_capacity ?? '10'))
-  const [startDate, setStartDate] = useState(group?.start_date?.slice(0, 10) ?? '')
-  const [endDate, setEndDate] = useState(group?.end_date?.slice(0, 10) ?? '')
-  const [leaderId, setLeaderId] = useState('')
-  const [coLeaderId, setCoLeaderId] = useState('')
-  const [waUrl, setWaUrl] = useState(group?.whatsapp_group_url ?? '')
-  const [hydrated, setHydrated] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Hidrata los selectores con el dirigente/co-dirigente actuales (member_id).
-  if (!hydrated && group) {
-    setLeaderId(group.leader_id ?? '')
-    setCoLeaderId(group.co_leader_id ?? '')
-    setHydrated(true)
-  }
-
-  function toggleDay(d: string) {
-    setDays(prev => (prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]))
-  }
-
   if (!group) {
     return (
       <div className="space-y-4">
@@ -61,19 +46,46 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  const leaderMemberId = leaderId || null
-  const coLeaderMemberId = coLeaderId || null
+  const studyType = studyTypes.find(s => s.id === group.study_type_id) ?? null
+  return <EditarForm group={group} studyType={studyType} refetch={refetch} />
+}
+
+function EditarForm({ group, studyType, refetch }: {
+  group: StudyGroup
+  studyType: StudyType | null
+  refetch: () => Promise<void>
+}) {
+  const router = useRouter()
+  const toast = useToast()
+  const { activeSedes: SEDES } = useSedes()
+
+  const [zone, setZone] = useState(group.zone ?? '')
+  const [days, setDays] = useState<string[]>(group.schedule_days ?? [])
+  const [time, setTime] = useState(group.schedule_time ?? '')
+  const [location, setLocation] = useState(group.location ?? '')
+  const [capacity, setCapacity] = useState(group.max_capacity ? String(group.max_capacity) : '')
+  const [startDate, setStartDate] = useState(group.start_date?.slice(0, 10) ?? '')
+  const [endDate, setEndDate] = useState(group.end_date?.slice(0, 10) ?? '')
+  const [leaderId, setLeaderId] = useState(group.leader_id ?? '')
+  const [coLeaderId, setCoLeaderId] = useState(group.co_leader_id ?? '')
+  const [waUrl, setWaUrl] = useState(group.whatsapp_group_url ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function toggleDay(d: string) {
+    setDays(prev => (prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]))
+  }
 
   async function handleSave() {
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch(`/api/studies/groups/${id}`, {
+      const res = await fetch(`/api/studies/groups/${group.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          leader_id: leaderMemberId,
-          co_leader_id: coLeaderMemberId,
+          leader_id: leaderId || null,
+          co_leader_id: coLeaderId || null,
           zone: zone || null,
           schedule_days: days,
           schedule_time: time || null,
@@ -84,12 +96,16 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
           whatsapp_group_url: waUrl || null,
         }),
       })
-      if (!res.ok) throw new Error('Error guardando el grupo')
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error ?? `Error guardando el grupo (${res.status})`)
+      }
       await refetch()
-      router.push(`/estudios/grupos/${id}`)
+      toast('Cambios guardados', 'success')
+      router.push(`/estudios/grupos/${group.id}`)
     } catch (e) {
       console.error(e)
-      setError('No se pudo guardar. Revisá los datos e intentá de nuevo.')
+      setError(e instanceof Error ? e.message : 'No se pudo guardar. Revisá los datos e intentá de nuevo.')
       setSaving(false)
     }
   }
@@ -97,7 +113,7 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="max-w-2xl space-y-6">
       <Link
-        href={`/estudios/grupos/${id}`}
+        href={`/estudios/grupos/${group.id}`}
         className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver al grupo
@@ -210,7 +226,7 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
 
         <div className="flex justify-between pt-2">
           <Link
-            href={`/estudios/grupos/${id}`}
+            href={`/estudios/grupos/${group.id}`}
             className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
           >
             Cancelar
