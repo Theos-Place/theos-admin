@@ -10,6 +10,14 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
+import type { GroupStatus } from '@/types/study'
+
+const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
+  { value: 'pending_leader',  label: 'Sin dirigente' },
+  { value: 'pending_opening', label: 'Pendiente apertura' },
+  { value: 'open',            label: 'Abierto (matriculable)' },
+  { value: 'in_progress',     label: 'En curso' },
+]
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const DAY_LABELS: Record<string, string> = {
@@ -54,6 +62,7 @@ export default function NuevoGrupoPage() {
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
   const [pendingLeader, setPendingLeader] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
+  const [statusOverride, setStatusOverride] = useState<GroupStatus | ''>('')
   const [created, setCreated] = useState(false)
 
   function setS1<K extends keyof Step1>(key: K, value: Step1[K]) {
@@ -70,6 +79,10 @@ export default function NuevoGrupoPage() {
 
   const leaderData = dirigentes.find(d => d.member_id === selectedLeader)
   const coLeaderData = dirigentes.find(d => d.member_id === selectedCoLeader)
+
+  // Estado inicial: el usuario puede elegirlo; si no toca el selector se deriva
+  // del dirigente (con dirigente → pendiente apertura, sin él → sin dirigente).
+  const initialStatus: GroupStatus = statusOverride || (leaderData ? 'pending_opening' : 'pending_leader')
 
   async function handleCreate() {
     if (!studyType) return
@@ -89,7 +102,7 @@ export default function NuevoGrupoPage() {
           location: step1.location || null,
           max_students: step1.capacity ? Number(step1.capacity) : null,
           starts_at: step1.start_date || null,
-          status: leaderData ? 'pending_opening' : 'pending_leader',
+          status: initialStatus,
         }),
       })
       if (!res.ok) throw new Error('Error creando el grupo')
@@ -110,9 +123,8 @@ export default function NuevoGrupoPage() {
             ¡Grupo creado!
           </p>
           <p className="text-sm text-navy-light/60 font-body">
-            {pendingLeader
-              ? 'El grupo quedó pendiente de dirigente. Se notificó al equipo de estudios.'
-              : 'El grupo quedó en estado "Pendiente de apertura".'}
+            El grupo quedó en estado «{STATUS_OPTIONS.find(o => o.value === initialStatus)?.label}».
+            {pendingLeader && ' Se notificó al equipo de estudios para asignar dirigente.'}
           </p>
           <Link
             href="/estudios/grupos"
@@ -465,10 +477,17 @@ export default function NuevoGrupoPage() {
                 <p className="text-navy font-body">{step1.capacity} personas</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Estado inicial</p>
-                <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium', pendingLeader ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700')}>
-                  {pendingLeader ? 'Pendiente de dirigente' : 'Pendiente de apertura'}
-                </span>
+                <label className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display block" htmlFor="nuevo-grupo-estado">Estado inicial</label>
+                <select
+                  id="nuevo-grupo-estado"
+                  className={inputCls}
+                  value={initialStatus}
+                  onChange={e => setStatusOverride(e.target.value as GroupStatus)}
+                >
+                  {STATUS_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

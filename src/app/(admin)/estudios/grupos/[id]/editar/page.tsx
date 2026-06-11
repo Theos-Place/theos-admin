@@ -10,7 +10,15 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { cn } from '@/lib/utils'
 import { ChevronLeft } from 'lucide-react'
-import type { StudyType, StudyGroup } from '@/types/study'
+import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
+
+const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
+  { value: 'pending_leader',  label: 'Sin dirigente' },
+  { value: 'pending_opening', label: 'Pendiente apertura' },
+  { value: 'open',            label: 'Abierto (matriculable)' },
+  { value: 'in_progress',     label: 'En curso' },
+  { value: 'finished',        label: 'Finalizado' },
+]
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const DAY_LABELS: Record<string, string> = {
@@ -69,6 +77,7 @@ function EditarForm({ group, studyType, refetch }: {
   const [leaderId, setLeaderId] = useState(group.leader_id ?? '')
   const [coLeaderId, setCoLeaderId] = useState(group.co_leader_id ?? '')
   const [waUrl, setWaUrl] = useState(group.whatsapp_group_url ?? '')
+  const [status, setStatus] = useState<GroupStatus>(group.status)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -94,6 +103,7 @@ function EditarForm({ group, studyType, refetch }: {
           starts_at: startDate || null,
           ends_at: endDate || null,
           whatsapp_group_url: waUrl || null,
+          status,
         }),
       })
       if (!res.ok) {
@@ -155,6 +165,24 @@ function EditarForm({ group, studyType, refetch }: {
               placeholder="Buscar co-dirigente…"
               aria-label="Buscar co-dirigente"
             />
+          </div>
+
+          {/* Estado */}
+          <div className="col-span-2 space-y-1">
+            <label className={labelCls} htmlFor="editar-grupo-estado">Estado</label>
+            <select
+              id="editar-grupo-estado"
+              className={inputCls}
+              value={status}
+              onChange={e => setStatus(e.target.value as GroupStatus)}
+            >
+              {STATUS_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <p className="text-[11px] text-navy-light/60 font-body">
+              Para el cierre formal (calificaciones y promoción) usá la página de cierre del grupo.
+            </p>
           </div>
 
           {/* Zona */}
