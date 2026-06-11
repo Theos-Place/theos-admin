@@ -99,8 +99,8 @@ export type Member = {
 export type AttendanceRecord = {
   name: string
   date: string
-  /** Tipo del evento. Schema usa 'culto'|'estudio'|'actividad'|'campana'|'retiro'|'conferencia'|'otro'.
-   *  El mock usa labels en español. Relajado a string hasta alinear vocabularios. */
+  /** Tipo del evento. FK al catálogo event_types: 'charla'|'campamento'|'social'|'capacitacion'.
+   *  Relajado a string porque el catálogo es editable desde /eventos/tipos. */
   type: string
   attendance_type: 'participante' | 'servidor'
 }

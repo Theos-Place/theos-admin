@@ -5,7 +5,7 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. Catálogo de tipos de evento (editable desde /eventos/tipos)
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE TABLE event_types (
+CREATE TABLE IF NOT EXISTS event_types (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,
   color       TEXT NOT NULL DEFAULT '#161440',
@@ -20,7 +20,8 @@ INSERT INTO event_types (id, name, color, icon, description) VALUES
   ('charla',       'Charla',          '#161440', 'mic',       'Servicio semanal en sede'),
   ('campamento',   'Campamento',      '#70BDC2', 'tent',      'Retiro de varios días'),
   ('social',       'Actividad Social','#EF5554', 'users',     'Actividades comunitarias'),
-  ('capacitacion', 'Capacitación',    '#519DA2', 'book-open', 'Formación de líderes');
+  ('capacitacion', 'Capacitación',    '#519DA2', 'book-open', 'Formación de líderes')
+ON CONFLICT (id) DO NOTHING;
 
 ALTER TABLE event_types ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Autenticados ven tipos de evento"
@@ -46,9 +47,17 @@ CREATE TRIGGER set_updated_at_event_types
 ALTER TABLE events DROP CONSTRAINT IF EXISTS events_event_type_check;
 UPDATE events SET event_type = 'charla'
   WHERE event_type NOT IN (SELECT id FROM event_types);
-ALTER TABLE events
-  ADD CONSTRAINT events_event_type_fkey
-  FOREIGN KEY (event_type) REFERENCES event_types(id);
+DO $mig$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'events_event_type_fkey'
+  ) THEN
+    ALTER TABLE events
+      ADD CONSTRAINT events_event_type_fkey
+      FOREIGN KEY (event_type) REFERENCES event_types(id);
+  END IF;
+END;
+$mig$;
 
 ALTER TABLE events
   ADD COLUMN committee_id          TEXT,

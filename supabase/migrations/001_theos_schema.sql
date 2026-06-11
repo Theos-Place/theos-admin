@@ -341,14 +341,30 @@ CREATE TRIGGER set_updated_at_volunteers
 -- BLOQUE 3: EVENTOS
 -- ============================================================
 
+-- Catálogo editable de tipos de evento (la 006 lo amplió; acá queda el
+-- esquema real: events.event_type es FK a este catálogo, no un CHECK).
+CREATE TABLE event_types (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  color       TEXT NOT NULL DEFAULT '#161440',
+  icon        TEXT NOT NULL DEFAULT 'calendar',
+  description TEXT,
+  is_active   BOOLEAN DEFAULT TRUE,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO event_types (id, name, color, icon, description) VALUES
+  ('charla',       'Charla',          '#161440', 'mic',       'Servicio semanal en sede'),
+  ('campamento',   'Campamento',      '#70BDC2', 'tent',      'Retiro de varios días'),
+  ('social',       'Actividad Social','#EF5554', 'users',     'Actividades comunitarias'),
+  ('capacitacion', 'Capacitación',    '#519DA2', 'book-open', 'Formación de líderes');
+
 CREATE TABLE events (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title           TEXT NOT NULL,
   description     TEXT,
-  event_type      TEXT NOT NULL CHECK (event_type IN (
-                    'culto', 'estudio', 'actividad', 'campana',
-                    'retiro', 'conferencia', 'otro'
-                  )),
+  event_type      TEXT NOT NULL REFERENCES event_types(id),
   location        TEXT,
   location_url    TEXT,
   starts_at       TIMESTAMPTZ NOT NULL,

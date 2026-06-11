@@ -1,21 +1,31 @@
 /**
- * Importa el histórico de asistencia a eventos esporádicos desde
- * scripts/data/asistencia-eventos-mensuales.csv (una columna por evento,
- * celda 1 = asistió). Crea los eventos (idempotente) y los check-ins.
+ * Importa históricos de asistencia a eventos desde un CSV (una columna por
+ * evento con encabezado "[Nombre] [dd/mm/yyyy] [HH:MM|All Day]", celda 1 =
+ * asistió). Crea los eventos (idempotente) y los check-ins.
+ *
+ * Uso:
+ *   npx tsx scripts/seed-event-attendance.ts <ruta.csv> [--apply]
+ *   (sin ruta usa scripts/data/asistencia-eventos-mensuales.csv)
  *
  * - Match del miembro por members.external_id (= "Ind ID" de PCO).
- * - event_type 'social': event_type es FK a event_types y 'actividad' no
- *   existe; 'social' (Actividad Social) es el tipo que corresponde.
- * - Eventos históricos: is_active=false y status='finished'.
- * - Sin match → scripts/output/attendance-no-match.csv (NO se insertan como guest).
+ * - event_type por nombre del evento (ids del catálogo event_types):
+ *     · empieza con "Campa" → campamento; "Kids"/"Kids&Teens" → social
+ *     · contiene una sede (Pro Oeste, Heredia, …) → charla
+ *     · todo lo demás → social
+ * - Idempotencia: solo dedup contra eventos con description de importación
+ *   (NO reúsa charlas recurrentes del sistema) por título + starts_at; los
+ *   check-ins dedup por (event_id, member_id). Correr abril y mayo no duplica.
+ * - Sin match → scripts/output/attendance-no-match-<archivo>.csv.
  *
- * Dry-run por defecto. Aplicar: npx tsx scripts/seed-event-attendance.ts --apply
+ * Dry-run por defecto. Aplicar: agregar --apply.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { basename } from 'node:path'
 import { parse } from 'csv-parse/sync'
 import { createClient } from '@supabase/supabase-js'
 
 const APPLY = process.argv.includes('--apply')
+const csvArg = process.argv.slice(2).find(a => !a.startsWith('--')) ?? 'scripts/data/asistencia-eventos-mensuales.csv'
 
 for (const f of ['../.env.local', '../.env']) {
   try {
@@ -30,6 +40,7 @@ const supabase = createClient(
 )
 
 const IMPORT_DESC = 'Importado de histórico de asistencia'
+const FIXED_COLS = new Set(['Attendee', 'Campus', 'Last Attended', 'TODAY', 'Total Attendance', 'Ind ID'])
 
 // "Mujeres de Fe 04/09/2015 19:00" | "Campa Hombres 24/07/2021 All Day" (+ sufijo .1 de pandas)
 const COL_RE = /^(.*?)\s+(\d{2})\/(\d{2})\/(\d{4})\s+(All Day|\d{2}:\d{2})(?:\.\d+)?$/
@@ -46,17 +57,37 @@ function parseEventColumn(col: string): ParsedEvent | null {
   return { title: title.trim(), startsAt, key: `${title.trim()}|${yyyy}-${mm}-${dd}|${hhmm}` }
 }
 
+// ── Clasificación de event_type por nombre ────────────────────────────────────
+const SEDES = [
+  'pro oeste', 'pro este', 'perez zeledon', 'liberia', 'cartago', 'guapiles',
+  'heredia', 'alajuela', 'potrero', 'theos home', 'united', 'madrid',
+]
+
+function stripAccents(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
+function classifyEventType(title: string): 'charla' | 'campamento' | 'social' {
+  const t = stripAccents(title).toLowerCase().trim()
+  // Excepciones primero: Campa/Kids nunca son charla aunque mencionen una sede
+  // (ej. "Campa Madrid", "Kids Heredia").
+  if (t.startsWith('campa')) return 'campamento'
+  if (t.startsWith('kids') || t.includes('kids&teens')) return 'social'
+  if (SEDES.some(s => t.includes(s))) return 'charla'
+  return 'social'
+}
+
 async function main() {
-  const raw = readFileSync(new URL('./data/asistencia-eventos-mensuales.csv', import.meta.url), 'utf8')
+  const raw = readFileSync(csvArg, 'utf8')
   const records: Record<string, string>[] = parse(raw, { columns: true, bom: true, skip_empty_lines: true, trim: true })
   const header = Object.keys(records[0] ?? {})
-  console.log(`CSV: ${records.length.toLocaleString()} filas · ${header.length} columnas`)
+  console.log(`CSV ${csvArg}: ${records.length.toLocaleString()} filas · ${header.length} columnas`)
 
   // ── Columnas de evento (deduplicadas por title+fecha+hora; sufijos .N unidos) ──
   const eventCols = new Map<string, { event: ParsedEvent; cols: string[] }>()
   const unparsed: string[] = []
   for (const col of header) {
-    if (['Attendee', 'Campus', 'Last Attended', 'TODAY', 'Total Attendance', 'Ind ID'].includes(col)) continue
+    if (FIXED_COLS.has(col)) continue
     const ev = parseEventColumn(col)
     if (!ev) { unparsed.push(col); continue }
     const entry = eventCols.get(ev.key)
@@ -68,7 +99,14 @@ async function main() {
     for (const c of unparsed) console.error('  ·', c)
     process.exit(1)
   }
-  console.log(`Eventos únicos: ${eventCols.size} (columnas de evento: ${header.length - 6})`)
+  console.log(`Eventos únicos: ${eventCols.size}`)
+  // resumen de clasificación
+  const byType: Record<string, number> = {}
+  for (const { event } of eventCols.values()) {
+    const ty = classifyEventType(event.title)
+    byType[ty] = (byType[ty] ?? 0) + 1
+  }
+  console.log('Clasificación:', JSON.stringify(byType))
 
   // ── Filas válidas: Ind ID numérico ──
   const validRows = records.filter(r => /^\d+$/.test((r['Ind ID'] ?? '').trim()))
@@ -88,8 +126,8 @@ async function main() {
   }
   console.log(`Miembros con external_id: ${extToId.size.toLocaleString()}`)
 
-  // ── Eventos ya importados (idempotencia): title + starts_at + descripción ──
-  const existingEvents = new Map<string, string>() // `${title}|${starts_at}` → id
+  // ── Eventos ya importados (idempotencia, SOLO los de la descripción de import) ──
+  const existingEvents = new Map<string, string>()
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('events').select('id, title, starts_at')
@@ -102,11 +140,11 @@ async function main() {
     }
     if (data.length < 1000) break
   }
-  console.log(`Eventos de import previos: ${existingEvents.size}`)
+  console.log(`Eventos de imports previos: ${existingEvents.size}`)
 
   // ── Crear/reusar eventos ──
   let created = 0, reused = 0
-  const eventIds = new Map<string, string>() // key → event uuid
+  const eventIds = new Map<string, string>()
   for (const { event } of eventCols.values()) {
     const isoKey = `${event.title}|${new Date(event.startsAt).toISOString()}`
     const existing = existingEvents.get(isoKey)
@@ -114,7 +152,7 @@ async function main() {
     if (!APPLY) { eventIds.set(event.key, `dry-${event.key}`); created++; continue }
     const { data, error } = await supabase.from('events').insert({
       title: event.title,
-      event_type: 'social',
+      event_type: classifyEventType(event.title),
       starts_at: event.startsAt,
       ends_at: null,
       is_recurring: false,
@@ -133,7 +171,7 @@ async function main() {
   console.log(`Eventos → creados: ${created} · reusados: ${reused}`)
 
   // ── Check-ins existentes de estos eventos (dedup) ──
-  const existingCheckins = new Set<string>() // `${event_id}|${member_id}`
+  const existingCheckins = new Set<string>()
   const realEventIds = Array.from(eventIds.values()).filter(id => !id.startsWith('dry-'))
   for (let i = 0; i < realEventIds.length; i += 100) {
     const slice = realEventIds.slice(i, i + 100)
@@ -163,10 +201,9 @@ async function main() {
     const eventId = eventIds.get(event.key)
     if (!eventId) continue
     for (const row of validRows) {
-      // columnas duplicadas (.1) unidas: asistió si CUALQUIERA marca 1
       const val = cols.map(c => (row[c] ?? '').trim())
       if (!val.includes('1')) continue
-      if (val.some(v => v !== '0' && v !== '1' && v !== '')) continue // datos corruptos
+      if (val.some(v => v !== '0' && v !== '1' && v !== '')) continue
       const indId = (row['Ind ID'] ?? '').trim()
       const memberId = extToId.get(indId)
       if (!memberId) {
@@ -195,9 +232,10 @@ async function main() {
 
   if (noMatch.size) {
     mkdirSync(new URL('./output/', import.meta.url), { recursive: true })
+    const outName = `attendance-no-match-${basename(csvArg, '.csv')}.csv`
     const csv = ['ind_id,name,eventos_afectados', ...Array.from(noMatch.values()).map(n => `${n.ind_id},"${n.name.replace(/"/g, '""')}",${n.events}`)].join('\n')
-    writeFileSync(new URL('./output/attendance-no-match.csv', import.meta.url), csv)
-    console.log('Sin match guardados en scripts/output/attendance-no-match.csv')
+    writeFileSync(new URL(`./output/${outName}`, import.meta.url), csv)
+    console.log(`Sin match guardados en scripts/output/${outName}`)
   }
 
   if (!APPLY) {
@@ -226,7 +264,7 @@ async function main() {
   console.log(`Eventos reusados:    ${reused}`)
   console.log(`Checkins insertados: ${inserted.toLocaleString()}`)
   console.log(`Duplicados saltados: ${dupes.toLocaleString()}`)
-  console.log(`Sin match:           ${noMatch.size} personas (scripts/output/attendance-no-match.csv)`)
+  console.log(`Sin match:           ${noMatch.size} personas`)
   if (failedBatches) console.log(`Batches fallidos:    ${failedBatches}`)
 }
 
