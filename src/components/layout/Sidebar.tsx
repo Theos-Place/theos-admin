@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useSyncExternalStore } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -94,25 +94,11 @@ const ROLE_LABELS: Record<string, string> = {
   staff_leader: 'Líder de Staff',
 }
 
-/** ¿Viewport desktop (lg+)? useSyncExternalStore evita el mismatch de
- *  hidratación (snapshot de servidor: true) y el setState-en-effect del
- *  patrón matchMedia clásico. */
-const DESKTOP_MQ = '(min-width: 1024px)'
-function mqSubscribe(cb: () => void) {
-  const mq = window.matchMedia(DESKTOP_MQ)
-  mq.addEventListener('change', cb)
-  return () => mq.removeEventListener('change', cb)
-}
-function useIsDesktop(): boolean {
-  return useSyncExternalStore(mqSubscribe, () => window.matchMedia(DESKTOP_MQ).matches, () => true)
-}
-
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAuth()
   const { can } = usePermissions()
-  const isDesktop = useIsDesktop()
 
   // Conteos de solicitudes abiertas para los badges. Los endpoints exigen rol:
   // con 403 simplemente no hay badge.
@@ -166,15 +152,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   ]
   const NAV = ALL_NAV.filter(m => !m.module || can(m.module, 'view'))
 
-  // ── Acordeón exclusivo en mobile/tablet ──
+  // ── Acordeón exclusivo (mobile y desktop) ──
   const moduleOfPath = NAV.find(m => m.subs.length > 0 && (pathname === m.href || pathname.startsWith(m.href + '/')))?.href ?? null
   const [expandedModule, setExpandedModule] = useState<string | null>(moduleOfPath)
-  // Al abrir el menú arranca expandido el módulo de la ruta actual (ajuste de
-  // estado durante render — el patrón recomendado por React, sin effects).
+  // Al abrir el menú (mobile) o navegar arranca expandido el módulo de la ruta
+  // actual (ajuste de estado durante render — el patrón de React, sin effects).
   const [prevOpen, setPrevOpen] = useState(open)
   if (open !== prevOpen) {
     setPrevOpen(open)
     if (open) setExpandedModule(moduleOfPath)
+  }
+  const [prevPath, setPrevPath] = useState(pathname)
+  if (pathname !== prevPath) {
+    setPrevPath(pathname)
+    setExpandedModule(moduleOfPath)
   }
 
   async function handleLogout() {
@@ -237,26 +228,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </>
     )
 
-    if (isDesktop) {
-      // Desktop: el módulo navega y los sub-items aparecen cuando la ruta está
-      // dentro del módulo (comportamiento original, sin cambios).
-      return (
-        <div>
-          <Link href={mod.href} onClick={onClose} className={headerCls}>
-            {headerContent(moduleActive)}
-          </Link>
-          {moduleActive && mod.subs.length > 0 && (
-            <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-              {mod.subs.map(sub => <SubLink key={sub.href} sub={sub} />)}
-            </div>
-          )}
-        </div>
-      )
-    }
-
-    // Mobile/tablet: el módulo NO navega — expande/colapsa su submenú (acordeón
-    // exclusivo); el menú queda abierto. El primer sub-item es el acceso a la
-    // página principal del módulo ("Ver miembros", "Ver estudios", …).
+    // El módulo NO navega — expande/colapsa su submenú (acordeón exclusivo,
+    // mismo comportamiento en mobile y desktop). El primer sub-item ("Resumen")
+    // es el acceso a la página principal del módulo.
     return (
       <div>
         <button
@@ -276,7 +250,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <div className="overflow-hidden min-h-0">
             <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3 pb-1">
               <SubLink
-                sub={{ href: mod.href, label: `Ver ${mod.label.toLowerCase()}`, icon: Icon }}
+                sub={{ href: mod.href, label: 'Resumen', icon: Icon }}
                 exactActive={pathname === mod.href}
               />
               {mod.subs.map(sub => <SubLink key={sub.href} sub={sub} />)}
