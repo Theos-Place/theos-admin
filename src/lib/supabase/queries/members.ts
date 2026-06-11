@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
+import type { FilterCondition } from '@/types/filters'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -69,6 +70,10 @@ export type MemberFilters = {
   active_attendance?: boolean
   gender?: string
   ids?: string[]
+  /** Condiciones de los filtros avanzados (se resuelven server-side). */
+  conditions?: FilterCondition[]
+  /** Interno: no aplicar el filtro de is_active (los ids ya vienen filtrados). */
+  any_active?: boolean
   page?: number
   pageSize?: number
 }
@@ -198,11 +203,143 @@ function applyMemberSearch<T extends { or: (f: string) => any }>(query: T, searc
   return q
 }
 
+
+// ── Filtros avanzados server-side ─────────────────────────────────────────────
+// Cada condición se traduce a un set de member_ids y se intersecan en AND.
+// TODO: grupos OR del QueryBar (hoy se aplica AND entre todas las condiciones,
+// el mínimo viable); condiciones 'form' y los refinamientos de 'attendance'
+// (cantidad, rango de fechas, tipo de evento) quedan pendientes.
+
+type ConditionResolution = {
+  include: Array<Set<string>>
+  exclude: Array<Set<string>>
+  isActiveOverride?: boolean
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function pagedIds(build: (q: any) => any, table: string, select: string): Promise<Set<string>> {
+  const supabase = createAdminClient()
+  const out = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    let q = supabase.from(table).select(select).order('member_id').range(from, from + 999)
+    q = build(q)
+    const { data, error } = await q
+    if (error) throw error
+    for (const r of (data ?? []) as unknown as Array<{ member_id: string | null }>) {
+      if (r.member_id) out.add(r.member_id)
+    }
+    if ((data ?? []).length < 1000) break
+  }
+  return out
+}
+
+/** member_ids con inscripción en un plan (por code) con esos estados. */
+async function idsByEnrollment(planCode: string, statuses: string[]): Promise<Set<string>> {
+  return pagedIds(
+    q => q.in('status', statuses).eq('grp.plan.code', planCode),
+    'study_enrollments',
+    'member_id, grp:study_groups!study_enrollments_group_id_fkey!inner(plan:study_plans!inner(code))',
+  )
+}
+
+/** Resuelve las condiciones avanzadas a sets de inclusión/exclusión. */
+export async function resolveAdvancedConditions(conditions: FilterCondition[]): Promise<ConditionResolution> {
+  const supabase = createAdminClient()
+  const res: ConditionResolution = { include: [], exclude: [] }
+
+  for (const c of conditions) {
+    switch (c.type) {
+      case 'study': {
+        const statuses = c.status === 'completed' ? ['completed']
+          : c.status === 'in_progress' ? ['enrolled']
+          : ['completed', 'enrolled']
+        res.include.push(await idsByEnrollment(c.study, statuses))
+        break
+      }
+      case 'service': {
+        let select = 'member_id, position:service_positions!inner(title, area:areas!inner(name))'
+        if (c.area) select = 'member_id, position:service_positions!inner(title, area:areas!inner(name, parent:areas!parent_id!inner(name)))'
+        res.include.push(await pagedIds(q => {
+          if (c.status === 'active') q = q.eq('status', 'active')
+          else if (c.status === 'historical') q = q.neq('status', 'active')
+          if (c.committee) q = q.eq('position.area.name', c.committee)
+          if (c.position) q = q.eq('position.title', c.position)
+          if (c.area) q = q.eq('position.area.parent.name', c.area)
+          return q
+        }, 'volunteers', select))
+        break
+      }
+      case 'donor': {
+        // is_donor es el flag derivado de donador activo (criterio por trimestres).
+        const set = await pagedIds(q => q.eq('is_donor', true), 'members', 'member_id:id')
+        if (c.value === 'yes') res.include.push(set)
+        else res.exclude.push(set)
+        break
+      }
+      case 'attendance': {
+        // Criterio vigente de asistencia activa (charlas mensuales).
+        res.include.push(new Set(await getActiveAttendanceMemberIds()))
+        break
+      }
+      case 'status': {
+        res.isActiveOverride = c.value === 'active'
+        break
+      }
+      case 'age': {
+        const now = new Date()
+        const set = await pagedIds(q => {
+          if (c.min) q = q.lte('birth_date', new Date(now.getFullYear() - parseInt(c.min), now.getMonth(), now.getDate()).toISOString().slice(0, 10))
+          if (c.max) q = q.gte('birth_date', new Date(now.getFullYear() - parseInt(c.max) - 1, now.getMonth(), now.getDate() + 1).toISOString().slice(0, 10))
+          return q.not('birth_date', 'is', null)
+        }, 'members', 'member_id:id')
+        res.include.push(set)
+        break
+      }
+      case 'leader': {
+        // Dirigente activo = servidor activo en el comité Dirigentes.
+        const set = await pagedIds(
+          q => q.eq('status', 'active').ilike('position.area.name', '%dirigente%'),
+          'volunteers',
+          'member_id, position:service_positions!inner(area:areas!inner(name))',
+        )
+        if (c.value === 'yes') res.include.push(set)
+        else res.exclude.push(set)
+        break
+      }
+      case 'form':
+        // TODO: traducir condiciones de formulario a form_responses.
+        console.warn('resolveAdvancedConditions: condición form ignorada (pendiente)')
+        break
+    }
+  }
+  void supabase
+  return res
+}
+
+/** Trae miembros enriquecidos por ids en chunks (evita URLs gigantes en .in). */
+export async function getMembersByIds(allIds: string[], chunk = 100): Promise<DbMemberEnriched[]> {
+  const out: DbMemberEnriched[] = []
+  for (let i = 0; i < allIds.length; i += chunk) {
+    const slice = allIds.slice(i, i + chunk)
+    const { members } = await getMembers({ ids: slice, any_active: true, pageSize: slice.length })
+    out.push(...members)
+  }
+  return out
+}
+
 /** Solo los IDs (y total) que coinciden con los filtros, sin paginar. Liviano:
  *  select('id'). Sirve para guardar listas / acciones sobre "todos los resultados". */
 export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: string[]; total: number }> {
   const supabase = createAdminClient()
-  const { search, is_active = true, is_donor, is_server, active_attendance } = filters
+  const { search, is_donor, is_server, active_attendance, conditions } = filters
+  let { is_active = true } = filters
+
+  // Filtros avanzados → sets de inclusión/exclusión (AND entre condiciones).
+  let resolution: Awaited<ReturnType<typeof resolveAdvancedConditions>> | null = null
+  if (conditions?.length) {
+    resolution = await resolveAdvancedConditions(conditions)
+    if (resolution.isActiveOverride !== undefined) is_active = resolution.isActiveOverride
+  }
 
   let idFilter: string[] | null = null
   if (active_attendance) {
@@ -238,7 +375,13 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
     rows.forEach((r) => ids.add(r.id))
     if (rows.length < pageSize) break
   }
-  return { ids: Array.from(ids), total: ids.size }
+
+  let finalIds = Array.from(ids)
+  if (resolution) {
+    for (const inc of resolution.include) finalIds = finalIds.filter(id => inc.has(id))
+    for (const exc of resolution.exclude) finalIds = finalIds.filter(id => !exc.has(id))
+  }
+  return { ids: finalIds, total: finalIds.length }
 }
 
 export type UserAccessRow = {
@@ -329,6 +472,19 @@ export async function revokeMemberRole(memberId: string, role: string): Promise<
 /** Lista paginada de miembros con datos relacionados ligeros para el list view.
  *  Incluye: sede, roles activos, flag is_server, estudio actual/completados, servicio activo. */
 export async function getMembers(filters: MemberFilters = {}): Promise<{ members: DbMemberEnriched[]; total: number }> {
+  // Con filtros avanzados: resolver primero los ids (server-side) y traer solo
+  // la página pedida por ids — así el conteo y la paginación reflejan las
+  // condiciones y nunca pasamos miles de uuids en una URL.
+  if (filters.conditions?.length) {
+    const { ids: allIds, total } = await getMemberIds(filters)
+    const page = filters.page ?? 1
+    const pageSize = filters.pageSize ?? 50
+    const pageIds = allIds.slice((page - 1) * pageSize, page * pageSize)
+    if (pageIds.length === 0) return { members: [], total }
+    const members = await getMembersByIds(pageIds)
+    return { members, total }
+  }
+
   const supabase = createAdminClient()
   const {
     search,
@@ -377,9 +533,10 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     `,
       { count: 'exact' },
     )
-    .eq('is_active', is_active)
     .order('last_name', { ascending: true })
     .range((page - 1) * pageSize, page * pageSize - 1)
+
+  if (!filters.any_active) query = query.eq('is_active', is_active)
 
   if (is_server) query = query.eq('volunteers.status', 'active')
 

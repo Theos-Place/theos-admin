@@ -15,8 +15,19 @@ export async function GET(req: NextRequest) {
     const is_server = searchParams.get('is_server')
     const active_attendance = searchParams.get('active_attendance')
 
+    // Filtros avanzados serializados como JSON (validados como array).
+    let conditions
+    const rawConditions = searchParams.get('conditions')
+    if (rawConditions) {
+      try {
+        const parsed = JSON.parse(rawConditions)
+        if (Array.isArray(parsed)) conditions = parsed
+      } catch { /* condiciones malformadas → se ignoran */ }
+    }
+
     const result = await getMembers({
       search,
+      conditions,
       is_active: is_active !== null ? is_active === 'true' : true,
       is_donor:  is_donor  !== null ? is_donor  === 'true' : undefined,
       is_server: is_server === 'true' ? true : undefined,

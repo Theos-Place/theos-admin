@@ -235,19 +235,23 @@ function MiembrosContent() {
     MEMBER_COLUMNS.filter(c => c.defaultVisible)
   )
 
-  // Trigger de carga: búsqueda (≥2) o algún chip rápido. Los filtros avanzados se
-  // aplican client-side sobre lo cargado (refinan la búsqueda/chips).
+  // Los filtros avanzados también viajan al servidor (junto con búsqueda y chips,
+  // combinados en AND): el filtrado client-side sobre campos del mock daba 0
+  // con miembros reales de Supabase.
+  const filters = useMemberFilters([])
   const searchActive = debouncedSearch.trim().length >= 2
-  const shouldFetch  = searchActive || showDonors || showServers || showActive
+  const shouldFetch  = searchActive || showDonors || showServers || showActive || filters.conditions.length > 0
+  const conditionsKey = JSON.stringify(filters.conditions)
   const searchParams = useMemo(() => ({
     search: searchActive ? debouncedSearch.trim() : undefined,
     is_donor: showDonors || undefined,
     is_server: showServers || undefined,
     active_attendance: showActive || undefined,
-  }), [searchActive, debouncedSearch, showDonors, showServers, showActive])
+    conditions: filters.conditions.length ? filters.conditions : undefined,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [searchActive, debouncedSearch, showDonors, showServers, showActive, conditionsKey])
 
   const { members: loadedMembers, total: resultTotal, loading, error, hasMore, loadMore } = useMembers(searchParams, shouldFetch)
-  const filters = useMemberFilters(loadedMembers)
 
   // Guardar lista modal
   const [saveListOpen,    setSaveListOpen]    = useState(false)
@@ -265,6 +269,7 @@ function MiembrosContent() {
     if (showDonors)  u.set('is_donor', 'true')
     if (showServers) u.set('is_server', 'true')
     if (showActive)  u.set('active_attendance', 'true')
+    if (filters.conditions.length) u.set('conditions', JSON.stringify(filters.conditions))
     return u.toString()
   }
 
@@ -276,10 +281,17 @@ function MiembrosContent() {
   const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || showActive || searchActive
   const quickActiveCount = (showDonors ? 1 : 0) + (showServers ? 1 : 0) + (showActive ? 1 : 0)
 
-  function handleComunicarLista() {
-    const ids = displayMembers.map(m => m.id).join(',')
+  async function handleComunicarLista() {
+    // Todos los ids que cumplen el filtro (no solo la página cargada).
+    let ids = displayMembers.map(m => m.id)
+    if (hasAnyFilter && resultTotal > ids.length) {
+      try {
+        const res = await fetch(`/api/members/ids?${filterQS()}`)
+        if (res.ok) { const d = await res.json(); ids = d.ids ?? ids }
+      } catch { /* fallback a lo cargado */ }
+    }
     const label = encodeURIComponent(buildSegmentLabel(filters.conditions, showDonors, showServers))
-    router.push(`/comunicaciones/nueva?mode=manual&members=${ids}&segment_label=${label}`)
+    router.push(`/comunicaciones/nueva?mode=manual&members=${ids.join(',')}&segment_label=${label}`)
   }
 
   function handleComunicarSeleccion() {
@@ -328,8 +340,8 @@ function MiembrosContent() {
     }
   }
 
-  // Búsqueda y chips se resuelven server-side; los filtros avanzados refinan lo cargado.
-  const displayMembers = filters.filteredMembers
+  // Todo el filtrado (búsqueda, chips y condiciones avanzadas) es server-side.
+  const displayMembers = loadedMembers
 
   // Limpiar selección cuando cambia el set mostrado
   useEffect(() => {
@@ -354,6 +366,7 @@ function MiembrosContent() {
     if (showDonors)  u.set('is_donor', 'true')
     if (showServers) u.set('is_server', 'true')
     if (showActive)  u.set('active_attendance', 'true')
+    if (filters.conditions.length) u.set('conditions', JSON.stringify(filters.conditions))
     const res = await fetch(`/api/members/export?${u.toString()}`)
     if (!res.ok) throw new Error('Error exportando')
     const d = await res.json()
@@ -395,6 +408,7 @@ function MiembrosContent() {
                 filename="miembros-theos"
                 fetchData={fetchAllForExport}
                 confirmMessage={exportConfirm}
+                label={hasAnyFilter && resultTotal > 0 ? `Exportar ${resultTotal.toLocaleString('es-CR')}` : undefined}
               />
               <button
                 onClick={() => hasAnyFilter ? setSaveListOpen(true) : undefined}
@@ -413,7 +427,7 @@ function MiembrosContent() {
               className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <MessageCircle size={15} strokeWidth={1.75} />
-              Comunicar
+              Comunicar{hasAnyFilter && resultTotal > 0 ? ` (${resultTotal.toLocaleString('es-CR')})` : ''}
             </button>
           )}
           {can('miembros', 'create') && (
@@ -499,14 +513,16 @@ function MiembrosContent() {
         </div>
       </div>
 
-      {/* ── Conteo de filtros rápidos activos ── */}
+      {/* ── Conteo de filtros activos · total real del servidor ── */}
       {quickActiveCount > 0 && (
         <p className="text-sm text-navy-light/60 font-body">
           <span className="font-medium text-navy">
             {quickActiveCount} {quickActiveCount === 1 ? 'filtro activo' : 'filtros activos'}
           </span>
           {' · '}
-          {displayMembers.length.toLocaleString('es-CR')} resultados
+          {resultTotal > displayMembers.length
+            ? `${displayMembers.length.toLocaleString('es-CR')} de ${resultTotal.toLocaleString('es-CR')} resultados`
+            : `${resultTotal.toLocaleString('es-CR')} resultados`}
         </p>
       )}
 
@@ -549,7 +565,9 @@ function MiembrosContent() {
               {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
             </span>
             {' · '}
-            {displayMembers.length.toLocaleString('es-CR')} resultados
+            {resultTotal > displayMembers.length
+              ? `${displayMembers.length.toLocaleString('es-CR')} de ${resultTotal.toLocaleString('es-CR')} resultados`
+              : `${resultTotal.toLocaleString('es-CR')} resultados`}
           </p>
           <button
             onClick={() => filters.clearAll()}
