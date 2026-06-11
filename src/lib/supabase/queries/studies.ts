@@ -229,6 +229,8 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     member_id: string
     status: string
     group: { starts_at: string | null; plan: { code: string | null } | null } | null
+    // Inscripciones sin grupo (histórico): el plan viene directo (migración 032).
+    plan_direct: { code: string | null } | null
     member: { is_donor: boolean; province: string | null; is_active: boolean; sede: { code: string } | null } | null
   }
   const enrollments: EnrollRow[] = []
@@ -238,6 +240,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
       .select(`
         member_id, status,
         group:study_groups!study_enrollments_group_id_fkey(starts_at, plan:study_plans(code)),
+        plan_direct:study_plans!study_enrollments_plan_id_fkey(code),
         member:members(is_donor, province, is_active, sede:sedes(code))
       `)
       .in('status', ['enrolled', 'completed'])
@@ -270,7 +273,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   }
   const byMember = new Map<string, MemberState>()
   for (const r of enrollments) {
-    const code = r.group?.plan?.code
+    const code = r.group?.plan?.code ?? r.plan_direct?.code
     if (!code) continue
     const entry = byMember.get(r.member_id) ?? {
       zone: r.member?.sede?.code ?? r.member?.province ?? 'Sin zona',
@@ -423,7 +426,7 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
     supabase
       .from('study_enrollments')
-      .select('status, group:study_groups!study_enrollments_group_id_fkey(id, name, plan:study_plans(code))')
+      .select('status, group:study_groups!study_enrollments_group_id_fkey(id, name, plan:study_plans(code)), plan_direct:study_plans!study_enrollments_plan_id_fkey(code)')
       .eq('member_id', memberId),
     supabase.from('volunteers').select('id').eq('member_id', memberId).eq('status', 'active').limit(1),
     supabase
@@ -442,12 +445,14 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const enrollments = (enrRes.data ?? []) as unknown as Array<{
     status: string
     group: { id: string; name: string; plan: { code: string | null } | null } | null
+    plan_direct: { code: string | null } | null
   }>
+  const codeOf = (e: typeof enrollments[number]) => e.group?.plan?.code ?? e.plan_direct?.code ?? null
   const completed = new Set(
-    enrollments.filter(e => e.status === 'completed' && e.group?.plan?.code).map(e => e.group!.plan!.code!),
+    enrollments.filter(e => e.status === 'completed' && codeOf(e)).map(e => codeOf(e)!),
   )
   const enrolledCodes = new Set(
-    enrollments.filter(e => e.status === 'enrolled' && e.group?.plan?.code).map(e => e.group!.plan!.code!),
+    enrollments.filter(e => e.status === 'enrolled' && codeOf(e)).map(e => codeOf(e)!),
   )
   const active_enrollments = enrollments
     .filter(e => e.status === 'enrolled' && e.group)

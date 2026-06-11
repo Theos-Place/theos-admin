@@ -233,13 +233,32 @@ async function pagedIds(build: (q: any) => any, table: string, select: string): 
   return out
 }
 
-/** member_ids con inscripción en un plan (por code) con esos estados. */
+/** member_ids con inscripción en un plan (por code) con esos estados.
+ *  Dos fuentes: inscripciones CON grupo (plan vía study_groups) e
+ *  inscripciones SIN grupo (plan_id directo, migración 032 — así vino el
+ *  histórico: ~19k completados sin grupo que el join !inner descartaba). */
 async function idsByEnrollment(planCode: string, statuses: string[]): Promise<Set<string>> {
-  return pagedIds(
-    q => q.in('status', statuses).eq('grp.plan.code', planCode),
-    'study_enrollments',
-    'member_id, grp:study_groups!study_enrollments_group_id_fkey!inner(plan:study_plans!inner(code))',
-  )
+  const supabase = createAdminClient()
+  const { data: plan } = await supabase
+    .from('study_plans').select('id').eq('code', planCode).maybeSingle()
+  const planId = (plan as { id: string } | null)?.id
+
+  const [viaGroup, direct] = await Promise.all([
+    pagedIds(
+      q => q.in('status', statuses).eq('grp.plan.code', planCode),
+      'study_enrollments',
+      'member_id, grp:study_groups!study_enrollments_group_id_fkey!inner(plan:study_plans!inner(code))',
+    ),
+    planId
+      ? pagedIds(
+          q => q.in('status', statuses).eq('plan_id', planId).is('group_id', null),
+          'study_enrollments',
+          'member_id',
+        )
+      : Promise.resolve(new Set<string>()),
+  ])
+  for (const id of direct) viaGroup.add(id)
+  return viaGroup
 }
 
 /** Resuelve las condiciones avanzadas a sets de inclusión/exclusión. */
@@ -257,16 +276,18 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         break
       }
       case 'service': {
-        let select = 'member_id, position:service_positions!inner(title, area:areas!inner(name))'
-        if (c.area) select = 'member_id, position:service_positions!inner(title, area:areas!inner(name, parent:areas!parent_id!inner(name)))'
+        // El dropdown de áreas manda el UUID real del área (catálogo /api/org).
+        // La jerarquía es área → comités hijos → puestos: el puesto puede colgar
+        // del área directamente (area_id = área) o de un comité (parent_id = área).
         res.include.push(await pagedIds(q => {
-          if (c.status === 'active') q = q.eq('status', 'active')
-          else if (c.status === 'historical') q = q.neq('status', 'active')
+          // 'active' y 'on_leave' cuentan como servicio activo.
+          if (c.status === 'active') q = q.in('status', ['active', 'on_leave'])
+          else if (c.status === 'historical') q = q.not('status', 'in', '(active,on_leave)')
           if (c.committee) q = q.eq('position.area.name', c.committee)
           if (c.position) q = q.eq('position.title', c.position)
-          if (c.area) q = q.eq('position.area.parent.name', c.area)
+          if (c.area) q = q.or(`id.eq.${c.area},parent_id.eq.${c.area}`, { referencedTable: 'position.area' })
           return q
-        }, 'volunteers', select))
+        }, 'volunteers', 'member_id, position:service_positions!inner(title, area:areas!inner(id, name, parent_id))'))
         break
       }
       case 'donor': {
