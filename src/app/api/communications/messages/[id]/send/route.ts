@@ -15,6 +15,12 @@ export async function POST(
     await sendBroadcast(id, recipients ?? [])
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'BREVO_NOT_CONFIGURED') {
+      return NextResponse.json(
+        { error: 'Configurá Brevo primero en Configuración → Comunicaciones' },
+        { status: 400 },
+      )
+    }
     console.error('POST /api/communications/messages/[id]/send:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

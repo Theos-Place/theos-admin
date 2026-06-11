@@ -8,8 +8,18 @@ import { useCommunications } from '@/hooks/useCommunications'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { DeliveryStats } from '@/components/communications/DeliveryStats'
 import { cn } from '@/lib/utils'
-import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
-import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, RefreshCw, Send } from 'lucide-react'
+import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, RefreshCw, Send, Clock, Zap } from 'lucide-react'
+
+type QueueStats = {
+  total: number
+  sent: number
+  pending: number
+  failed: number
+  lastScheduledDate: string | null
+  brevoConfigured: boolean
+  dailyLimit: number
+  sentToday: number
+}
 
 type RecipientFilter = 'all' | 'sent' | 'failed'
 
@@ -39,9 +49,13 @@ export default function ComunicacionDetallePage() {
   const message = useMemo(() => messages.find(m => m.id === id), [messages, id])
   const [recipientFilter, setRecipientFilter] = useState<RecipientFilter>('all')
   const [retrying, setRetrying] = useState(false)
+  const [processing, setProcessing] = useState(false)
   const [recipients, setRecipients] = useState<RecipientRow[]>([])
+  const [queue, setQueue] = useState<QueueStats | null>(null)
+  const [actionMsg, setActionMsg] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
 
-  // Destinatarios reales del broadcast (message_logs).
+  // Destinatarios reales + estado de la cola de email (message_logs).
   useEffect(() => {
     if (!id) return
     let alive = true
@@ -49,8 +63,33 @@ export default function ComunicacionDetallePage() {
       .then(r => (r.ok ? r.json() : []))
       .then(d => { if (alive) setRecipients(Array.isArray(d) ? d : []) })
       .catch(() => { if (alive) setRecipients([]) })
+    fetch(`/api/communications/messages/${id}/process`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive) setQueue(d) })
+      .catch(() => {})
     return () => { alive = false }
-  }, [id])
+  }, [id, reloadKey])
+
+  async function runQueueAction(retryFailed: boolean) {
+    const setBusy = retryFailed ? setRetrying : setProcessing
+    setBusy(true)
+    setActionMsg('')
+    try {
+      const res = await fetch(`/api/communications/messages/${id}/process`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(retryFailed ? { retry_failed: true } : {}),
+      })
+      const d = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(d?.error ?? 'No se pudo procesar la cola')
+      setActionMsg(`Procesado: ${d.sent} enviados, ${d.failed} fallidos${d.retried ? `, ${d.retried} reencolados` : ''}`)
+      setReloadKey(k => k + 1)
+    } catch (e) {
+      setActionMsg(e instanceof Error ? e.message : 'No se pudo procesar la cola')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   if (!message) {
     return (
@@ -66,10 +105,10 @@ export default function ComunicacionDetallePage() {
     return true
   })
 
-  function handleRetry() {
-    setRetrying(true)
-    setTimeout(() => setRetrying(false), MOCK_SAVE_DELAY_MS)
-  }
+  const queueFailed = queue?.failed ?? message.stats.failed
+  const lastBatchLabel = queue?.lastScheduledDate
+    ? new Date(queue.lastScheduledDate + 'T12:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
+    : null
 
   return (
     <div className="space-y-6">
@@ -110,15 +149,15 @@ export default function ComunicacionDetallePage() {
             <Send size={13} />
             Reenviar este mensaje
           </button>
-          {message.stats.failed > 0 && (
+          {queueFailed > 0 && (
             <button
               type="button"
-              onClick={handleRetry}
+              onClick={() => runQueueAction(true)}
               disabled={retrying}
               className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-60 font-body"
             >
               <RotateCcw size={14} className={retrying ? 'animate-spin' : ''} />
-              {retrying ? 'Reintentando...' : `Reintentar ${message.stats.failed} fallidos`}
+              {retrying ? 'Reintentando...' : `Reintentar ${queueFailed} fallidos`}
             </button>
           )}
         </div>
@@ -126,6 +165,73 @@ export default function ComunicacionDetallePage() {
 
       {/* Delivery stats */}
       <DeliveryStats message={message} />
+
+      {/* Progreso de la cola de email (envíos distribuidos por el límite diario) */}
+      {queue && queue.total > 0 && (queue.pending > 0 || queue.failed > 0) && (
+        <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+              Progreso del envío
+            </p>
+            <div className="flex items-center gap-2">
+              {queue.pending > 0 && (
+                <button
+                  type="button"
+                  onClick={() => runQueueAction(false)}
+                  disabled={processing || !queue.brevoConfigured}
+                  title={queue.brevoConfigured ? undefined : 'Configurá Brevo primero en Configuración → Comunicaciones'}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:bg-navy-ink transition-colors disabled:opacity-50 font-body"
+                >
+                  <Zap size={12} />
+                  {processing ? 'Procesando…' : 'Procesar ahora'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Barra de progreso */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-sm font-semibold text-navy font-display">
+                {queue.sent.toLocaleString('es-CR')} / {queue.total.toLocaleString('es-CR')} enviados
+              </p>
+              <p className="text-[12px] text-navy-light/60 font-body">
+                Hoy: {queue.sentToday} / {queue.dailyLimit} del cupo diario
+              </p>
+            </div>
+            <div className="h-2.5 rounded-full bg-surface-low overflow-hidden">
+              <div
+                className="h-full rounded-full bg-teal-deep transition-all"
+                style={{ width: `${queue.total ? Math.round((queue.sent / queue.total) * 100) : 0}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Desglose por estado */}
+          <div className="flex items-center gap-4 flex-wrap text-[13px] font-body">
+            <span className="inline-flex items-center gap-1.5 text-teal-deep">
+              <CheckCircle2 size={13} /> {queue.sent.toLocaleString('es-CR')} enviados
+            </span>
+            {queue.pending > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-navy-light/70">
+                <Clock size={13} /> {queue.pending.toLocaleString('es-CR')} en cola
+              </span>
+            )}
+            <span className={cn('inline-flex items-center gap-1.5', queue.failed > 0 ? 'text-coral font-medium' : 'text-navy-light/60')}>
+              <XCircle size={13} /> {queue.failed.toLocaleString('es-CR')} fallidos
+            </span>
+            {queue.pending > 0 && lastBatchLabel && (
+              <span className="text-navy-light/60 ml-auto">
+                Completado el {lastBatchLabel}
+              </span>
+            )}
+          </div>
+
+          {actionMsg && (
+            <p className="text-[12px] text-navy-light/70 font-body">{actionMsg}</p>
+          )}
+        </div>
+      )}
 
       {/* Message content */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { type ChannelConfig } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
+import { useAuth } from '@/hooks/useAuth'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import {
@@ -17,6 +18,7 @@ import {
   Info,
   Edit,
   X,
+  Send,
 } from 'lucide-react'
 
 type SmtpTab = 'smtp' | 'whatsapp'
@@ -321,6 +323,7 @@ export default function ConfiguracionPage() {
       {/* SMTP tab */}
       {tab === 'smtp' && (
         <div className="space-y-4">
+          <BrevoSection />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-navy-light/60 font-body">
               {smtpConfigs.length} cuenta{smtpConfigs.length !== 1 ? 's' : ''} configurada{smtpConfigs.length !== 1 ? 's' : ''}
@@ -586,5 +589,123 @@ export default function ConfiguracionPage() {
       onCancel={() => setDeleteTarget(null)}
     />
     </>
+  )
+}
+
+/* ── Brevo (envío real de email) ──
+   La API key vive en la variable de entorno BREVO_API_KEY del servidor —
+   nunca en la BD. Acá solo se muestra el estado, el uso del día y un
+   botón de email de prueba. */
+function BrevoSection() {
+  const { user } = useAuth()
+  const [status, setStatus] = useState<{ configured: boolean; dailyLimit: number; sentToday: number } | null>(null)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<'ok' | string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  useEffect(() => {
+    let alive = true
+    fetch('/api/communications/email-status')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive) setStatus(d) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [reloadKey])
+
+  async function sendTest() {
+    if (!user?.email) return
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const res = await fetch('/api/communications/email-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email }),
+      })
+      const d = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(d?.error ?? 'No se pudo enviar')
+      setTestResult('ok')
+      setReloadKey(k => k + 1)
+    } catch (e) {
+      setTestResult(e instanceof Error ? e.message : 'No se pudo enviar')
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  if (!status) return null
+
+  const pct = status.dailyLimit > 0 ? Math.min(100, Math.round((status.sentToday / status.dailyLimit) * 100)) : 0
+
+  return (
+    <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <p className="text-sm font-semibold text-navy font-body">Brevo — envío de email</p>
+          <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
+            Proveedor del envío real. La API key se configura en el servidor
+            (variable <code className="font-mono text-[11px]">BREVO_API_KEY</code>), nunca en la base de datos.
+          </p>
+        </div>
+        <span className={cn(
+          'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold shrink-0 font-display',
+          status.configured ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral/10 text-coral',
+        )}>
+          {status.configured ? <><CheckCircle2 size={10} /> Configurado</> : <><XCircle size={10} /> Sin configurar</>}
+        </span>
+      </div>
+
+      {status.configured ? (
+        <>
+          {/* Uso del día */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[12px] text-navy-light/70 font-body">
+                Hoy: <strong className="text-navy">{status.sentToday}</strong> / {status.dailyLimit} emails enviados
+              </p>
+              <p className="text-[11px] text-navy-light/60 font-body">
+                Límite diario: {status.dailyLimit} (env <code className="font-mono text-[10px]">BREVO_DAILY_LIMIT</code>)
+              </p>
+            </div>
+            <div className="h-2 rounded-full bg-surface-low overflow-hidden">
+              <div
+                className={cn('h-full rounded-full transition-all', pct >= 90 ? 'bg-coral' : 'bg-teal-deep')}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={sendTest}
+              disabled={testing || !user?.email}
+              className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-[12px] text-white hover:bg-navy-ink transition-colors disabled:opacity-50 font-body"
+            >
+              {testing ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+              {testing ? 'Enviando…' : `Enviar email de prueba a ${user?.email ?? 'tu cuenta'}`}
+            </button>
+            {testResult === 'ok' && (
+              <span className="inline-flex items-center gap-1 text-[12px] text-teal-deep font-body">
+                <CheckCircle2 size={13} /> Enviado — revisá tu bandeja
+              </span>
+            )}
+            {testResult && testResult !== 'ok' && (
+              <span className="inline-flex items-center gap-1 text-[12px] text-coral font-body">
+                <XCircle size={13} /> {testResult}
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
+          <p className="text-[13px] text-coral font-body">
+            Configurá la variable <code className="font-mono text-[11px]">BREVO_API_KEY</code> en el servidor
+            (Vercel → Settings → Environment Variables) para habilitar el envío de emails.
+            Los envíos están bloqueados hasta entonces.
+          </p>
+        </div>
+      )}
+    </div>
   )
 }
