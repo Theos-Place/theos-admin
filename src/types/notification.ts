@@ -11,6 +11,7 @@ export type InternalNotificationType =
   | 'finance_refund_request'
   | 'leader_absent_alert'
   | 'broadcast'
+  | 'finance_request_assigned'
 
 export type InternalNotification = {
   id: string

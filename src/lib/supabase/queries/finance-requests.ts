@@ -203,6 +203,92 @@ export async function updateFinanceRequestStatus(
   return result
 }
 
+/** Asigna la solicitud a un miembro con rol finanzas activo (espejo de
+ *  assignStudyRequest): pasa a in_review con reviewed_by = el asignado,
+ *  registra historial y le manda notificación interna. */
+export async function assignFinanceRequest(
+  id: string,
+  assigneeMemberId: string,
+  assignedByMemberId: string,
+): Promise<FinanceRequest> {
+  const supabase = createAdminClient()
+
+  // El asignado debe tener rol finanzas activo.
+  const { data: roleRow, error: roleErr } = await supabase
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(first_name, last_name)')
+    .eq('member_id', assigneeMemberId)
+    .eq('role', 'finanzas')
+    .eq('is_active', true)
+    .maybeSingle()
+  if (roleErr) throw roleErr
+  if (!roleRow) throw new Error('La persona asignada no tiene rol activo de finanzas')
+  const assigneeName = fullName((roleRow as unknown as { member: { first_name: string | null; last_name: string | null } | null }).member)
+
+  const { data: before } = await supabase
+    .from('finance_requests').select('status').eq('id', id).maybeSingle()
+  const fromStatus = (before as { status: FinanceRequestStatus } | null)?.status ?? null
+
+  const { data, error } = await supabase
+    .from('finance_requests')
+    .update({ status: 'in_review', reviewed_by: assigneeMemberId, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select(REQUEST_SELECT)
+    .single()
+  if (error) throw error
+
+  const { error: hErr } = await supabase.from('finance_request_status_history').insert({
+    request_id: id,
+    from_status: fromStatus,
+    to_status: 'in_review',
+    changed_by: assignedByMemberId,
+    notes: `Asignada a ${assigneeName}`,
+  })
+  if (hErr) console.warn('assignFinanceRequest: historial falló:', hErr.message)
+
+  const result = toDomain(data as unknown as DbRow)
+
+  // Notificación interna al asignado (best-effort).
+  const typeLabel = result.request_type === 'scholarship' ? 'beca' : 'devolución'
+  const { error: nErr } = await supabase.from('internal_notifications').insert({
+    recipient_member_id: assigneeMemberId,
+    type: 'finance_request_assigned',
+    title: 'Te asignaron una solicitud',
+    body: `Te asignaron una solicitud de ${typeLabel} de ${result.member_name}`,
+    link: '/finanzas/solicitudes',
+  })
+  if (nErr) console.warn('assignFinanceRequest: notificación falló:', nErr.message)
+
+  result.history = [...result.history, {
+    from_status: fromStatus,
+    to_status: 'in_review',
+    notes: `Asignada a ${assigneeName}`,
+    changed_by_name: null,
+    created_at: new Date().toISOString(),
+  }]
+  return result
+}
+
+/** Miembros asignables a solicitudes de finanzas: rol finanzas activo. */
+export async function getAssignableFinanceMembers(): Promise<Array<{ member_id: string; member_name: string }>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(first_name, last_name, is_active)')
+    .eq('role', 'finanzas')
+    .eq('is_active', true)
+  if (error) throw error
+  const byMember = new Map<string, { member_id: string; member_name: string }>()
+  for (const r of (data ?? []) as unknown as Array<{
+    member_id: string
+    member: { first_name: string | null; last_name: string | null; is_active: boolean } | null
+  }>) {
+    if (!r.member?.is_active) continue
+    if (!byMember.has(r.member_id)) byMember.set(r.member_id, { member_id: r.member_id, member_name: fullName(r.member) })
+  }
+  return Array.from(byMember.values()).sort((a, b) => a.member_name.localeCompare(b.member_name))
+}
+
 /** Notifica a todos los miembros con rol activo finanzas o admin. Best-effort. */
 export async function notifyFinanceRolesOfRequest(req: FinanceRequest): Promise<void> {
   const supabase = createAdminClient()

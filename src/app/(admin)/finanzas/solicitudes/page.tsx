@@ -67,7 +67,7 @@ export default function FinanzasSolicitudesPage() {
         <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
           Solicitudes financieras
         </h1>
-        <p className="mt-1 text-sm text-white/50 font-body">
+        <p className="mt-1 text-sm text-white/70 font-body">
           Becas y devoluciones solicitadas por los miembros
         </p>
       </div>
@@ -78,6 +78,7 @@ export default function FinanzasSolicitudesPage() {
         tabs={TABS}
         typeLabel={TYPE_LABEL}
         endpointBase="/api/finance/requests"
+        assigneesUrl="/api/finance/requests/assignees"
         onUpdated={updated => setRequests(prev => prev.map(r => (r.id === updated.id ? updated : r)))}
         renderDetails={r => (
           <>

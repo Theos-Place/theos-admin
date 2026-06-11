@@ -347,14 +347,28 @@ const NOTIF_META: Record<StudyRequestType, { type: InternalNotificationType; tit
   study_interest: { type: 'study_interest_request', title: 'Nuevo interés en estudio' },
 }
 
-/** Crea una notificación por cada destinatario configurado. Best-effort. */
+/** Crea una notificación por cada destinatario. Decisión 2026-06-11: las
+ *  solicitudes notifican a TODOS los coordinadores de estudios activos, además
+ *  de la lista configurable (study_notification_recipients). Best-effort. */
 export async function notifyRecipientsOfRequest(req: StudyRequest): Promise<void> {
   const supabase = createAdminClient()
-  const recipients = await getNotificationRecipients()
-  if (recipients.length === 0) return
+  const configured = await getNotificationRecipients()
+
+  const { data: coordRows, error: cErr } = await supabase
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
+    .eq('role', 'coordinador_estudios')
+    .eq('is_active', true)
+  if (cErr) console.warn('notifyRecipientsOfRequest (coordinadores):', cErr.message)
+  const coordinators = ((coordRows ?? []) as unknown as Array<{
+    member_id: string; member: { is_active: boolean } | null
+  }>).filter(r => r.member?.is_active).map(r => r.member_id)
+
+  const memberIds = Array.from(new Set([...configured.map(r => r.member_id), ...coordinators]))
+  if (memberIds.length === 0) return
   const meta = NOTIF_META[req.request_type]
-  const rows = recipients.map(r => ({
-    recipient_member_id: r.member_id,
+  const rows = memberIds.map(memberId => ({
+    recipient_member_id: memberId,
     type: meta.type,
     title: meta.title,
     body: `${req.member_name} envió una solicitud. Motivo: ${req.reason.slice(0, 140)}`,
