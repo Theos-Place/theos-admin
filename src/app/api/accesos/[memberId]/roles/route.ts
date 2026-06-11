@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assignMemberRole, revokeMemberRole } from '@/lib/supabase/queries/members'
 import { requireRoles } from '@/lib/auth/guard'
+import { isUuid } from '@/lib/validate'
 
 const VALID_ROLES = new Set([
   'admin', 'direccion', 'finanzas', 'encargado_staff', 'coordinador_estudios',
@@ -17,6 +18,7 @@ export async function POST(
     const auth = await requireRoles('admin')
     if (auth.res) return auth.res
     const { memberId } = await params
+    if (!isUuid(memberId)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
     const { role } = await req.json()
     if (!VALID_ROLES.has(role)) return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })
     await assignMemberRole(memberId, role)
@@ -36,6 +38,7 @@ export async function DELETE(
     const auth = await requireRoles('admin')
     if (auth.res) return auth.res
     const { memberId } = await params
+    if (!isUuid(memberId)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
     const { role } = await req.json()
     if (!VALID_ROLES.has(role)) return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })
     await revokeMemberRole(memberId, role)

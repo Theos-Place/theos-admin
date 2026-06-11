@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { canViewMemberProfile, requireModuleView, requireRoles } from '@/lib/auth/guard'
+import { isUuid } from '@/lib/validate'
 import { getMemberFamily } from '@/lib/supabase/queries/members'
 
 // GET: otros integrantes de la familia del miembro (para check-in en familia).
@@ -11,6 +12,7 @@ export async function GET(
     const auth = await requireRoles()
     if (auth.res) return auth.res
     const { id } = await params
+    if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
     // Sin permiso de padrón, solo la familia propia (id propio o de un familiar).
     if (!(await canViewMemberProfile(auth.ctx, id))) {
       const mod = await requireModuleView('miembros', { beyondOwn: true })

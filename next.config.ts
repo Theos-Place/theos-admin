@@ -31,6 +31,11 @@ const securityHeaders = [
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=()',
   },
+  // HSTS solo aplica sobre HTTPS (producción); el browser lo ignora en http://localhost.
+  ...(process.env.NODE_ENV === 'production' ? [{
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains',
+  }] : []),
   {
     // style-src mantiene 'unsafe-inline': Radix posiciona popovers/menus con
     // atributos style, y quedan ~145 estilos inline legítimos (colores que
@@ -42,7 +47,8 @@ const securityHeaders = [
       `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https:",
+      // Fotos/flyers viven en Supabase Storage; data:/blob: para previews locales.
+      `img-src 'self' data: blob: ${supabaseOrigin}`,
       `connect-src 'self' ${supabaseOrigin}`,
       "frame-src 'self'",
       "object-src 'none'",

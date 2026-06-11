@@ -2,7 +2,7 @@
 import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { MockEvent } from '@/data/mock-events'
-import { useEvents } from '@/hooks/useEvents'
+import { usePublicEvents } from '@/hooks/useEvents'
 import { Modal } from '@/components/shared/Modal'
 
 // Inner component that reads searchParams
@@ -18,7 +18,7 @@ function CalendarioWidget() {
   const showLoc = searchParams.get('showLoc') !== 'false'
   const showBtn = searchParams.get('showBtn') !== 'false'
 
-  const { events: allEvents } = useEvents()
+  const { events: allEvents } = usePublicEvents()
   const events = useMemo(() =>
     allEvents.filter(e =>
       e.status !== 'cancelled' && e.status !== 'archived' && types.includes(e.event_type)

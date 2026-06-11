@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { rateLimit } from '@/lib/rate-limit'
 import { getMembers } from '@/lib/supabase/queries/members'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
@@ -9,6 +10,10 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes')
     if (auth.res) return auth.res
+    // Exporta el padrón completo: 5 corridas por minuto por usuario es de sobra.
+    if (!rateLimit(`export:${auth.ctx.userId}`, 5, 60_000)) {
+      return NextResponse.json({ error: 'Demasiadas exportaciones, esperá un momento' }, { status: 429 })
+    }
     const { searchParams } = req.nextUrl
     const search    = searchParams.get('search')   ?? undefined
     const is_active = searchParams.get('is_active')

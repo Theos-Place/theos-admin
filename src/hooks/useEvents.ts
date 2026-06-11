@@ -49,6 +49,33 @@ export function useEvents(filters: Filters = {}) {
   return { events, total, loading, error, refetch: fetchEvents }
 }
 
+/** Eventos PUBLICADOS para el calendario público (/calendario, sin sesión).
+ *  Pega al endpoint público — /api/events exige sesión y dejaba el widget vacío. */
+export function usePublicEvents() {
+  const [dbEvents, setDbEvents] = useState<DbEventEnriched[]>([])
+  const [loading, setLoading]   = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/public/events')
+      .then(res => {
+        if (!res.ok) throw new Error('Error cargando eventos')
+        return res.json()
+      })
+      .then(data => { if (!cancelled) setDbEvents(data.events) })
+      .catch(e => { console.error('usePublicEvents:', e) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  const events: MockEvent[] = useMemo(
+    () => dbEvents.map(toDomainEvent),
+    [dbEvents],
+  )
+
+  return { events, loading }
+}
+
 /** TODOS los eventos (activos + históricos) en versión liviana — sin
  *  registrations/checkins/volunteers. Para el calendario y el filtro
  *  "Realizados", donde solo hacen falta título, fechas y recurrencia. */
