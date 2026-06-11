@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { ArrowLeftRight, Check, X } from 'lucide-react'
+import { ArrowLeftRight, Check } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
@@ -330,11 +331,9 @@ export default function DevolucionesPage() {
 
       {/* Complete modal */}
       {completeTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
-          <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
+        <Modal onClose={() => setCompleteTarget(null)} titleId="completar-devolucion" width={448}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--outline-variant)]">
-              <p className="text-sm font-bold font-display text-navy">Marcar devolución completada</p>
-              <button onClick={() => setCompleteTarget(null)}><X size={18} className="text-[rgba(22,20,64,0.40)]" /></button>
+              <p id="completar-devolucion" className="text-sm font-bold font-display text-navy">Marcar devolución completada</p>
             </div>
             <div className="px-6 py-5 space-y-4">
               <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
@@ -362,17 +361,14 @@ export default function DevolucionesPage() {
                 Confirmar
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Reject modal */}
       {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
-          <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
+        <Modal onClose={() => setRejectTarget(null)} titleId="rechazar-devolucion" width={448}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--outline-variant)]">
-              <p className="text-sm font-bold font-display text-navy">Rechazar devolución</p>
-              <button onClick={() => setRejectTarget(null)}><X size={18} className="text-[rgba(22,20,64,0.40)]" /></button>
+              <p id="rechazar-devolucion" className="text-sm font-bold font-display text-navy">Rechazar devolución</p>
             </div>
             <div className="px-6 py-5 space-y-4">
               <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
@@ -395,8 +391,7 @@ export default function DevolucionesPage() {
                 Rechazar
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {toast && (

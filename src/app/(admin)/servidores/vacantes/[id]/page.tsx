@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { TOAST_LONG_MS } from '@/lib/constants'
 import { ChevronLeft, X, Check, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
 
 type Tab = 'descripcion' | 'aplicaciones'
 
@@ -440,18 +441,11 @@ export default function VacanteDetailPage() {
 
       {/* Assign modal */}
       {assignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-          <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
-          >
-            <div className="flex items-start justify-between">
-              <p className="text-base font-bold text-navy font-display">
-                Confirmar asignación
-              </p>
-              <button onClick={() => setAssignModal(null)} className="text-navy-light/40 hover:text-navy">
-                <X size={18} />
-              </button>
-            </div>
+        <Modal onClose={() => setAssignModal(null)} titleId="assign-modal-title" width={384}>
+          <div className="p-6 space-y-4">
+            <p id="assign-modal-title" className="text-base font-bold text-navy font-display">
+              Confirmar asignación
+            </p>
             <p className="text-sm text-navy-light/70 font-body">
               Asignar a <strong>{assignModal.applicant_name}</strong> al puesto de{' '}
               <strong>{vacancy.position}</strong> en {vacancy.committee_name}.
@@ -482,19 +476,16 @@ export default function VacanteDetailPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       </div>{/* end .card */}
 
       {/* ── Modal: Cerrar puesto ── */}
       {closeVacancyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <div className="flex items-start justify-between">
-              <p className="text-base font-bold text-navy font-display">Cerrar puesto</p>
-              <button onClick={() => setCloseVacancyOpen(false)} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
-            </div>
+        <Modal onClose={() => setCloseVacancyOpen(false)} titleId="close-vacancy-title" width={384}>
+          <div className="p-6 space-y-4">
+            <p id="close-vacancy-title" className="text-base font-bold text-navy font-display">Cerrar puesto</p>
             <p className="text-sm text-navy-light/70 font-body">
               La vacante <strong>{vacancy.title}</strong> será marcada como cerrada y dejará de recibir aplicaciones.
             </p>
@@ -513,23 +504,16 @@ export default function VacanteDetailPage() {
               <button onClick={handleCloseVacancy} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar puesto</button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Reject modal */}
       {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-          <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
-          >
-            <div className="flex items-start justify-between">
-              <p className="text-base font-bold text-navy font-display">
-                No seleccionar aplicante
-              </p>
-              <button onClick={() => setRejectModal(null)} className="text-navy-light/40 hover:text-navy">
-                <X size={18} />
-              </button>
-            </div>
+        <Modal onClose={() => setRejectModal(null)} titleId="reject-modal-title" width={384}>
+          <div className="p-6 space-y-4">
+            <p id="reject-modal-title" className="text-base font-bold text-navy font-display">
+              No seleccionar aplicante
+            </p>
             <p className="text-sm text-navy-light/70 font-body">
               {rejectModal.applicant_name} será marcado como no seleccionado para este puesto.
             </p>
@@ -560,7 +544,7 @@ export default function VacanteDetailPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

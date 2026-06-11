@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
 import type { CommitteePosition } from '@/types/server'
+import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 
@@ -28,19 +29,11 @@ function AreaModal({
   const valid = name.trim().length > 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-navy font-display">
-            {initial ? 'Editar área' : 'Nueva área'}
-          </h2>
-          <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors">
-            <X size={18} />
-          </button>
-        </div>
+    <Modal onClose={onClose} titleId="area-modal-title" width={384}>
+      <div className="p-6 space-y-4">
+        <h2 id="area-modal-title" className="text-base font-bold text-navy font-display">
+          {initial ? 'Editar área' : 'Nueva área'}
+        </h2>
 
         <div className="space-y-1.5">
           <label className={labelCls}>Nombre *</label>
@@ -70,7 +63,7 @@ function AreaModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -95,19 +88,11 @@ function CommitteeModal({
   const activeAreas = areas.filter(a => a.is_active)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-navy font-display">
-            {initial ? 'Editar comité' : 'Nuevo comité'}
-          </h2>
-          <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors">
-            <X size={18} />
-          </button>
-        </div>
+    <Modal onClose={onClose} titleId="committee-modal-title" width={384}>
+      <div className="p-6 space-y-4">
+        <h2 id="committee-modal-title" className="text-base font-bold text-navy font-display">
+          {initial ? 'Editar comité' : 'Nuevo comité'}
+        </h2>
 
         <div className="space-y-1.5">
           <label className={labelCls}>Nombre *</label>
@@ -149,7 +134,7 @@ function CommitteeModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -167,17 +152,14 @@ function DeactivateConfirm({
   onCancel: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onCancel} />
-      <div
-        className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
+    <Modal onClose={onCancel} titleId="deactivate-confirm-title" width={384}>
+      <div className="p-6 space-y-4">
         <div className="flex items-start gap-3">
           <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
             <AlertTriangle size={18} className="text-amber-500" />
           </div>
           <div>
-            <p className="text-sm font-bold text-navy mb-1 font-display">
+            <p id="deactivate-confirm-title" className="text-sm font-bold text-navy mb-1 font-display">
               ¿Desactivar &ldquo;{name}&rdquo;?
             </p>
             <p className="text-[13px] text-navy-light/60 leading-relaxed font-body">
@@ -201,7 +183,7 @@ function DeactivateConfirm({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -219,13 +201,9 @@ function PositionModal({
   const valid = title.trim().length > 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative rounded-2xl p-6 w-full max-w-sm space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-navy font-display">Nuevo puesto</h2>
-          <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors"><X size={18} /></button>
-        </div>
+    <Modal onClose={onClose} titleId="position-modal-title" width={384}>
+      <div className="p-6 space-y-4">
+        <h2 id="position-modal-title" className="text-base font-bold text-navy font-display">Nuevo puesto</h2>
         <div className="space-y-1.5">
           <label className={labelCls}>Nombre *</label>
           <input autoFocus className={inputCls}
@@ -252,7 +230,7 @@ function PositionModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 

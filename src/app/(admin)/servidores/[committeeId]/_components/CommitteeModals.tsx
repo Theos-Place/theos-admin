@@ -1,6 +1,7 @@
 'use client'
 
-import { X, Search, Plus } from 'lucide-react'
+import { Search, Plus } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import type { CommitteeServer, CommitteePosition } from '@/types/server'
 
 type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
@@ -40,22 +41,15 @@ export function DisconnectModal({
   onCancel,
 }: DisconnectModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div
-        className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
-      >
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-base font-bold text-navy font-display">
-              Desvincular servidor
-            </p>
-            <p className="text-sm text-navy-light/60 mt-0.5 font-body">
-              {target.name}
-            </p>
-          </div>
-          <button onClick={onCancel} className="text-navy-light/40 hover:text-navy transition-colors">
-            <X size={18} />
-          </button>
+    <Modal onClose={onCancel} titleId="desvincular-servidor" width={384}>
+      <div className="p-6 space-y-4">
+        <div>
+          <p id="desvincular-servidor" className="text-base font-bold text-navy font-display">
+            Desvincular servidor
+          </p>
+          <p className="text-sm text-navy-light/60 mt-0.5 font-body">
+            {target.name}
+          </p>
         </div>
 
         <div className="space-y-3">
@@ -122,7 +116,7 @@ export function DisconnectModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -144,12 +138,9 @@ type EditCommitteeModalProps = {
 
 export function EditCommitteeModal({ form, onFormChange, onSave, onCancel }: EditCommitteeModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-navy font-display">Editar comité</p>
-          <button onClick={onCancel} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
-        </div>
+    <Modal onClose={onCancel} titleId="editar-comite" width={448}>
+      <div className="p-6 space-y-4">
+        <p id="editar-comite" className="text-base font-bold text-navy font-display">Editar comité</p>
         <div className="space-y-3">
           <div className="space-y-1">
             <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Nombre</label>
@@ -173,7 +164,7 @@ export function EditCommitteeModal({ form, onFormChange, onSave, onCancel }: Edi
           <button onClick={onSave} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -208,12 +199,9 @@ export function AddServerModal({
   onClose,
 }: AddServerModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-navy font-display">Añadir servidor</p>
-          <button onClick={onClose} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
-        </div>
+    <Modal onClose={onClose} titleId="anadir-servidor" width={448}>
+      <div className="p-6 space-y-4">
+        <p id="anadir-servidor" className="text-base font-bold text-navy font-display">Añadir servidor</p>
         <div className="space-y-1">
           <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Puesto</label>
           <select
@@ -262,7 +250,7 @@ export function AddServerModal({
           <p className="text-center text-[12px] text-navy-light/60 py-4 font-body">Escribí un nombre para buscar</p>
         )}
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -286,14 +274,11 @@ export function ChangePositionModal({
   onCancel,
 }: ChangePositionModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-base font-bold text-navy font-display">Cambiar puesto</p>
-            <p className="text-sm text-navy-light/60 mt-0.5 font-body">{target.name}</p>
-          </div>
-          <button onClick={onCancel} className="text-navy-light/40 hover:text-navy"><X size={18} /></button>
+    <Modal onClose={onCancel} titleId="cambiar-puesto" width={384}>
+      <div className="p-6 space-y-4">
+        <div>
+          <p id="cambiar-puesto" className="text-base font-bold text-navy font-display">Cambiar puesto</p>
+          <p className="text-sm text-navy-light/60 mt-0.5 font-body">{target.name}</p>
         </div>
         <div className="space-y-1">
           <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Nuevo puesto</label>
@@ -311,6 +296,6 @@ export function ChangePositionModal({
           <button onClick={onConfirm} disabled={!newPosition} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep disabled:opacity-40 transition-colors font-body">Confirmar</button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

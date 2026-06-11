@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { ChevronLeft, Scan, UserPlus, X } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
+import { Modal } from '@/components/shared/Modal'
 
 const AVATAR_COLORS: Record<string, string> = {
   A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',
@@ -390,10 +391,9 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-navy-ink/70 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md rounded-3xl bg-navy border border-white/10 p-6 space-y-4 shadow-[var(--shadow-lg)]" onClick={e => e.stopPropagation()}>
-        <h3 className="text-lg font-extrabold text-white font-display">
+    <Modal onClose={onClose} titleId="family-checkin-title" width={448}>
+      <div className="rounded-[20px] bg-navy border border-white/10 p-6 space-y-4">
+        <h3 id="family-checkin-title" className="text-lg font-extrabold text-white font-display">
           {member.name} viene con familia
         </h3>
         <p className="text-sm text-white/60 font-body">¿Quién más llegó?</p>
@@ -433,7 +433,7 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -538,16 +538,9 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
   const fieldStyle = { background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-body)' } as const
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-navy-ink/70 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-md rounded-3xl p-6 space-y-4 bg-navy border border-white/10 shadow-[var(--shadow-lg)]"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-extrabold text-white font-display">Persona nueva</h3>
-          <button onClick={onClose} className="text-white/40 hover:text-white"><X size={18} /></button>
-        </div>
+    <Modal onClose={onClose} titleId="new-person-title" width={448}>
+      <div className="rounded-[20px] p-6 space-y-4 bg-navy border border-white/10">
+        <h3 id="new-person-title" className="text-lg font-extrabold text-white font-display">Persona nueva</h3>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
@@ -621,6 +614,6 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
           onClose={() => setShowFamily(false)}
         />
       )}
-    </div>
+    </Modal>
   )
 }

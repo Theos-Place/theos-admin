@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Search, UserPlus, Check, X, AlertTriangle, ChevronDown } from 'lucide-react'
+import { Shield, Search, UserPlus, Check, AlertTriangle, ChevronDown } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { ROLES, type RoleId, type UserAccess } from '@/data/mock-auth'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
@@ -384,38 +385,36 @@ export default function AccesosPage() {
 
       {/* Confirm revoke modal */}
       {confirmRevoke && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-ink/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-surface-card shadow-card-lg">
-            <div className="px-6 py-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-coral/10">
-                  <AlertTriangle size={18} className="text-coral" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-navy font-display">¿Revocar todos los accesos?</p>
-                  <p className="text-[12px] text-navy-light/50 font-body">Esta acción es reversible</p>
-                </div>
+        <Modal onClose={() => setConfirmRevoke(null)} titleId="confirm-revoke-title" width={384}>
+          <div className="px-6 py-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-coral/10">
+                <AlertTriangle size={18} className="text-coral" />
               </div>
-              <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">
-                <strong>{confirmRevoke.member_name}</strong> perderá acceso al sistema de inmediato.
-              </p>
+              <div>
+                <p id="confirm-revoke-title" className="text-sm font-bold text-navy font-display">¿Revocar todos los accesos?</p>
+                <p className="text-[12px] text-navy-light/50 font-body">Esta acción es reversible</p>
+              </div>
             </div>
-            <div className="px-6 py-4 border-t flex gap-3 border-outline">
-              <button
-                onClick={() => setConfirmRevoke(null)}
-                className="flex-1 rounded-full border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleRevoke(confirmRevoke)}
-                className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-              >
-                Revocar accesos
-              </button>
-            </div>
+            <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">
+              <strong>{confirmRevoke.member_name}</strong> perderá acceso al sistema de inmediato.
+            </p>
           </div>
-        </div>
+          <div className="px-6 py-4 border-t flex gap-3 border-outline">
+            <button
+              onClick={() => setConfirmRevoke(null)}
+              className="flex-1 rounded-full border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => handleRevoke(confirmRevoke)}
+              className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            >
+              Revocar accesos
+            </button>
+          </div>
+        </Modal>
       )}
 
       {/* Dar acceso modal */}
@@ -489,20 +488,19 @@ function DarAccesoModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-ink/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl overflow-hidden flex flex-col max-h-[90vh] bg-surface-card shadow-card-lg">
+    <Modal onClose={onClose} titleId="dar-acceso-title" width={512}>
+      <div className="flex flex-col max-h-[90vh]">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-outline">
           <div>
-            <p className="text-sm font-bold text-navy font-display">
+            <p id="dar-acceso-title" className="text-sm font-bold text-navy font-display">
               Dar acceso al sistema
             </p>
             <p className="text-[11px] text-navy-light/40 mt-0.5 font-body">
               Paso {step} de 2 — {step === 1 ? 'Buscar miembro' : 'Asignar roles'}
             </p>
           </div>
-          <button onClick={onClose}><X size={18} className="text-navy-light/40" /></button>
         </div>
 
         {/* Step 1 */}
@@ -623,6 +621,6 @@ function DarAccesoModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

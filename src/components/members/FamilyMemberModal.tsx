@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Search, UserCheck, UserPlus } from 'lucide-react'
+import { Search, UserCheck, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Modal } from '@/components/shared/Modal'
 
 // Draft de un integrante de familia, reutilizable en alta de miembro y check-in.
 export type FamilyDraft =
@@ -94,18 +95,11 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-md rounded-2xl bg-surface-card p-5 space-y-4 shadow-[var(--shadow-lg)]"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-navy font-display">
-            Agregar integrante
-          </h3>
-          <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors"><X size={18} /></button>
-        </div>
+    <Modal onClose={onClose} titleId="family-member-title" width={448}>
+      <div className="p-5 space-y-4">
+        <h3 id="family-member-title" className="text-base font-bold text-navy font-display">
+          Agregar integrante
+        </h3>
 
         {/* Tabs flujo A / B */}
         <div className="flex gap-2">
@@ -206,6 +200,6 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
           </div>
         )}
       </div>
-    </div>
+    </Modal>
   )
 }

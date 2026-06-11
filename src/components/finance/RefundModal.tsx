@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { X, AlertTriangle, Info } from 'lucide-react'
+import { AlertTriangle, Info } from 'lucide-react'
 import type { PaymentMethod } from '@/data/mock-finance'
+import { Modal } from '@/components/shared/Modal'
 import { AmountDisplay } from './AmountDisplay'
 
 interface RefundModalProps {
@@ -43,8 +44,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] [backdrop-filter:blur(4px)]">
-      <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
+    <Modal onClose={onClose} titleId="solicitar-devolucion" width={448}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--outline-variant)]">
@@ -53,7 +53,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
               <AlertTriangle size={17} className="text-coral" />
             </div>
             <div>
-              <p className="text-sm font-bold font-display text-navy">
+              <p id="solicitar-devolucion" className="text-sm font-bold font-display text-navy">
                 Solicitar devolución
               </p>
               <p className="text-[11px] font-body text-[rgba(22,20,64,0.45)]">
@@ -61,9 +61,6 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
               </p>
             </div>
           </div>
-          <button onClick={onClose}>
-            <X size={18} className="text-[rgba(22,20,64,0.40)]" />
-          </button>
         </div>
 
         {/* Body */}
@@ -180,7 +177,6 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
             {isSinpe ? 'Crear solicitud' : 'Procesar automáticamente'}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

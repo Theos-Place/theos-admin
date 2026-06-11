@@ -2,7 +2,8 @@ import type { CommunicationChannel, MessageTemplate, CommunicationMessage } from
 import type { MemberList } from '@/data/mock-member-lists'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import type { RecipientState } from '@/components/communications/RecipientSelector'
-import { X, Search, Send, AlertTriangle } from 'lucide-react'
+import { Search, Send, AlertTriangle } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 // ─── List Modal ──────────────────────────────────────────────────────────────
 
@@ -16,11 +17,10 @@ type ListModalProps = {
 
 export function ListModal({ filteredLists, listSearch, setListSearch, onApplyList, onClose }: ListModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-ink/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
-          <p className="text-sm font-bold text-navy font-display">Seleccionar lista</p>
-          <button type="button" onClick={onClose}><X size={18} className="text-navy-light/40" /></button>
+    <Modal onClose={onClose} titleId="seleccionar-lista" width={448}>
+      <div>
+        <div className="px-5 py-4 border-b border-[var(--outline-variant)]">
+          <p id="seleccionar-lista" className="text-sm font-bold text-navy font-display">Seleccionar lista</p>
         </div>
         <div className="px-4 pt-3 pb-2">
           <div className="relative">
@@ -58,7 +58,7 @@ export function ListModal({ filteredLists, listSearch, setListSearch, onApplyLis
           ))}
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -72,11 +72,10 @@ type TemplateModalProps = {
 
 export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: TemplateModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-ink/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
-          <p className="text-sm font-bold text-navy font-display">Seleccionar plantilla</p>
-          <button type="button" onClick={onClose}><X size={18} className="text-navy-light/40" /></button>
+    <Modal onClose={onClose} titleId="seleccionar-plantilla" width={512}>
+      <div>
+        <div className="px-5 py-4 border-b border-[var(--outline-variant)]">
+          <p id="seleccionar-plantilla" className="text-sm font-bold text-navy font-display">Seleccionar plantilla</p>
         </div>
         <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
           {filteredTemplates.length === 0 ? (
@@ -104,7 +103,7 @@ export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: T
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -132,10 +131,10 @@ export function ConfirmModal({
   const previewBody = channel === 'whatsapp' ? waBody : emailBody
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-ink/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+    <Modal onClose={onClose} titleId="confirmar-envio" width={448}>
+      <div>
         <div className="px-6 py-5 border-b border-[var(--outline-variant)]">
-          <p className="text-base font-bold text-navy font-display">¿Confirmar envío?</p>
+          <p id="confirmar-envio" className="text-base font-bold text-navy font-display">¿Confirmar envío?</p>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div className="space-y-2">
@@ -187,7 +186,7 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
