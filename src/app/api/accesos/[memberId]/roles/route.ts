@@ -14,7 +14,7 @@ export async function POST(
   { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
-    const auth = await requireRoles('admin', 'direccion')
+    const auth = await requireRoles('admin')
     if (auth.res) return auth.res
     const { memberId } = await params
     const { role } = await req.json()
@@ -33,7 +33,7 @@ export async function DELETE(
   { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
-    const auth = await requireRoles('admin', 'direccion')
+    const auth = await requireRoles('admin')
     if (auth.res) return auth.res
     const { memberId } = await params
     const { role } = await req.json()

@@ -70,21 +70,49 @@ export function resolveTargetMemberId(
 
 /**
  * Guard por PERMISO de módulo (espejo server-side de can() del cliente):
- * pasa si alguno de los roles del usuario otorga 'view' sobre el módulo
+ * pasa si alguno de los roles del usuario otorga la acción sobre el módulo
  * (o sobre 'all', como admin/solo_lectura). A diferencia de requireRoles,
  * no hay que enumerar roles por ruta — la fuente de verdad es ROLES.
  * Multi-rol funciona solo: coordinador_estudios + comunicaciones ve comunicaciones.
+ *
+ * `beyondOwn: true` excluye permisos con scope 'own' (p. ej. el rol base
+ * 'miembro' tiene miembros:view scope 'own' — eso NO autoriza el padrón).
  */
 export async function requireModuleView(
   module: string,
+  opts: { action?: string; beyondOwn?: boolean } = {},
 ): Promise<{ ctx: AuthContext; res?: undefined } | { ctx?: undefined; res: NextResponse }> {
+  const action = opts.action ?? 'view'
   const ctx = await getAuthContext()
   if (!ctx) return { res: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
-  const { ROLES } = await import('@/data/mock-auth')
+  const { ROLES } = await import('@/lib/auth/roles')
   const allowed = ctx.roles.some(roleId => {
     const role = ROLES.find(r => r.id === roleId)
-    return role?.permissions.some(p => (p.module === 'all' || p.module === module) && p.actions.includes('view'))
+    return role?.permissions.some(p =>
+      (p.module === 'all' || p.module === module)
+      && p.actions.includes(action as never)
+      && (!opts.beyondOwn || p.scope !== 'own'))
   })
   if (!allowed) return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
   return { ctx }
+}
+
+/**
+ * ¿La sesión puede ver el perfil de `targetMemberId`? Sí cuando es su propio
+ * perfil o un integrante de su familia; cualquier otro perfil exige permiso
+ * de módulo miembros con alcance más allá de 'own' (decisión 2026-06-11:
+ * el padrón es solo para coordinaciones/dirección/admin).
+ */
+export async function canViewMemberProfile(ctx: AuthContext, targetMemberId: string): Promise<boolean> {
+  if (!ctx.memberId) return false
+  if (ctx.memberId === targetMemberId) return true
+  const admin = createAdminClient()
+  const { data: own } = await admin
+    .from('family_members').select('family_unit_id').eq('member_id', ctx.memberId)
+  const unitIds = (own ?? []).map(r => (r as { family_unit_id: string }).family_unit_id)
+  if (unitIds.length === 0) return false
+  const { data: shared } = await admin
+    .from('family_members').select('member_id')
+    .in('family_unit_id', unitIds).eq('member_id', targetMemberId).limit(1)
+  return (shared ?? []).length > 0
 }

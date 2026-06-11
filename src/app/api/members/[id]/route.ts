@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { canViewMemberProfile, requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { getMemberFullById, updateMember } from '@/lib/supabase/queries/members'
 
 export async function GET(
@@ -10,6 +10,12 @@ export async function GET(
     const auth = await requireRoles()
     if (auth.res) return auth.res
     const { id } = await params
+    // Sin permiso de padrón (módulo miembros más allá de 'own'), solo se
+    // permite el propio perfil o el de un integrante de la familia.
+    if (!(await canViewMemberProfile(auth.ctx, id))) {
+      const mod = await requireModuleView('miembros', { beyondOwn: true })
+      if (mod.res) return mod.res
+    }
     const member = await getMemberFullById(id)
     if (!member) {
       return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })

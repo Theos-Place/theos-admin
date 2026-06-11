@@ -5,7 +5,7 @@ import { getUserAccess } from '@/lib/supabase/queries/members'
 // GET: miembros con roles asignados (gestión de accesos).
 export async function GET() {
   try {
-    const auth = await requireRoles()
+    const auth = await requireRoles('admin')
     if (auth.res) return auth.res
     return NextResponse.json(await getUserAccess())
   } catch (error) {

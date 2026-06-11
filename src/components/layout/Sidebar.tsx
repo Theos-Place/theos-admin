@@ -99,7 +99,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAuth()
-  const { can } = usePermissions()
+  const { can, getScope } = usePermissions()
 
   // Conteos de solicitudes abiertas para los badges. Los endpoints exigen rol:
   // con 403 simplemente no hay badge.
@@ -127,7 +127,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const userRole  = user?.role ?? ''
   const userRoles = user?.roles ?? []
 
-  const canViewAccesos = userRoles.some(r => r === 'admin' || r === 'direccion')
+  const canViewAccesos = userRoles.includes('admin')
   const canViewListas = userRoles.some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
   const canViewDuplicados = userRoles.some(r => ['admin', 'editor_perfiles'].includes(r))
 
@@ -157,7 +157,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: COMUNICACIONES_SUB, module: 'comunicaciones' },
     { href: '/formularios',    label: 'Formularios',    icon: FileText,        subs: FORMULARIOS_SUB,    module: 'formularios' },
   ]
-  const NAV = ALL_NAV.filter(m => !m.module || can(m.module, 'view'))
+  // El padrón (listado de miembros) exige alcance más allá de 'own' — el rol
+  // base 'miembro' ve su perfil, no el listado (espejo del guard de la API).
+  const NAV = ALL_NAV.filter(m => !m.module || (can(m.module, 'view')
+    && (m.href !== '/miembros' || getScope('miembros') !== 'own')))
 
   // ── Acordeón exclusivo (mobile y desktop) ──
   const moduleOfPath = NAV.find(m => m.subs.length > 0 && (pathname === m.href || pathname.startsWith(m.href + '/')))?.href ?? null

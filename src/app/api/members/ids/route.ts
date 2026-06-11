@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireModuleView } from '@/lib/auth/guard'
 import { getMemberIds } from '@/lib/supabase/queries/members'
 
 // GET: solo los IDs (y total) que coinciden con los filtros, sin paginar.
 // Mismos params que /api/members. Para guardar listas / acciones sobre todo el filtro.
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('miembros', { beyondOwn: true })
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
     const search    = searchParams.get('search')   ?? undefined

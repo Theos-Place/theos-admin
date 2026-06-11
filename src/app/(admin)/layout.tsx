@@ -44,12 +44,13 @@ const MODULE_BY_PREFIX: Record<string, string> = {
   '/finanzas':       'finanzas',
   '/comunicaciones': 'comunicaciones',
   '/formularios':    'formularios',
+  '/accesos':        'accesos',
 }
 
 /** Bloquea el contenido del módulo si el rol no tiene 'view' sobre él. */
 function ModuleGuard({ pathname, children }: { pathname: string; children: React.ReactNode }) {
   const { user, loaded } = useAuth()
-  const { can } = usePermissions()
+  const { can, getScope } = usePermissions()
   const prefix = Object.keys(MODULE_BY_PREFIX)
     .sort((a, b) => b.length - a.length)
     .find(p => pathname === p || pathname.startsWith(p + '/'))
@@ -57,6 +58,9 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // Hasta que carguen los roles no se decide (evita denegar en falso).
   if (!loaded || !user) return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
+  // El padrón exige alcance más allá de 'own' (espejo del guard de la API);
+  // el rol base 'miembro' ve su perfil desde otras vistas, no el listado.
+  if (prefix === '/miembros' && getScope('miembros') === 'own') return <AccessDenied />
   return <>{children}</>
 }
 

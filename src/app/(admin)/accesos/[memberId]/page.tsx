@@ -4,7 +4,7 @@ import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
-import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/data/mock-auth'
+import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 

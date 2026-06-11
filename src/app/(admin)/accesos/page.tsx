@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Search, UserPlus, Check, AlertTriangle, ChevronDown } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
-import { ROLES, type RoleId, type UserAccess } from '@/data/mock-auth'
+import { ROLES, type RoleId, type UserAccess } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
 

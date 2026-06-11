@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { getMembers } from '@/lib/supabase/queries/members'
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles()
+    // Padrón completo: solo roles con módulo miembros más allá de 'own'.
+    const auth = await requireModuleView('miembros', { beyondOwn: true })
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
     const search    = searchParams.get('search')   ?? undefined
@@ -12,8 +13,10 @@ export async function GET(req: NextRequest) {
     const is_donor  = searchParams.get('is_donor')
     const is_server = searchParams.get('is_server')
     const active_attendance = searchParams.get('active_attendance')
-    const page      = Number(searchParams.get('page') ?? 1)
-    const pageSize  = Number(searchParams.get('pageSize') ?? 50)
+    const rawPage     = Number(searchParams.get('page') ?? 1)
+    const rawPageSize = Number(searchParams.get('pageSize') ?? 50)
+    const page     = Number.isFinite(rawPage)     ? Math.max(1, Math.trunc(rawPage)) : 1
+    const pageSize = Number.isFinite(rawPageSize) ? Math.min(200, Math.max(1, Math.trunc(rawPageSize))) : 50
 
     // Filtros avanzados serializados como JSON (validados como array).
     let conditions

@@ -1,4 +1,5 @@
-// Types live in @/types/auth — imported here for internal use, re-exported for consumers.
+// Fuente de verdad de los permisos por rol (cliente via usePermissions y
+// servidor via requireModuleView). Antes vivía en src/data/mock-auth.ts.
 import type { RoleId, Permission, Role, UserAccess, AccessHistoryEntry } from '@/types/auth'
 export type { RoleId, Permission, Role, UserAccess, AccessHistoryEntry }
 
@@ -117,7 +118,7 @@ export const ROLES: Role[] = [
       { module: 'finanzas',       actions: ['view', 'export'],                   scope: 'all' },
       { module: 'comunicaciones', actions: ['view', 'create'],                   scope: 'all' },
       { module: 'formularios',    actions: ['view', 'create', 'edit'],           scope: 'all' },
-      { module: 'accesos',        actions: ['view'],                             scope: 'all' },
+      // accesos: solo admin (decisión 2026-06-11; el mapa de privilegios no se expone a dirección)
     ],
   },
   {

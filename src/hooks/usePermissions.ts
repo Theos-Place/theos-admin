@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from './useAuth'
-import { ROLES } from '@/data/mock-auth'
+import { ROLES } from '@/lib/auth/roles'
 
 type Action = 'view' | 'create' | 'edit' | 'delete' | 'export'
 type Scope = 'own' | 'committee' | 'all'

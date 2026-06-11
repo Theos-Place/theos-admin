@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield, Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { ROLES } from '@/data/mock-auth'
+import { ROLES } from '@/lib/auth/roles'
 import { NotificationsBell } from './NotificationsDropdown'
 
 interface TopbarProps {
