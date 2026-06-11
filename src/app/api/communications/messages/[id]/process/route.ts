@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import {
   processPendingEmails, retryFailedEmails, getBroadcastQueueStats,
 } from '@/lib/supabase/queries/communications'
@@ -8,7 +8,7 @@ import { isBrevoConfigured } from '@/lib/email/brevo'
 /** Autorizado si trae el CRON_SECRET (cron de Supabase) o una sesión con rol. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
   const bearer = req.headers.get('authorization')?.replace('Bearer ', '')
-  if (process.env.CRON_SECRET && bearer === process.env.CRON_SECRET) return null
+  if (secretsMatch(bearer, process.env.CRON_SECRET)) return null
   const auth = await requireRoles('comunicaciones', 'direccion')
   return auth.res ?? null
 }

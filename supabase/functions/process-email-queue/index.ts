@@ -1,11 +1,21 @@
 // Procesa la cola diaria de emails. Programar en Supabase:
 // Dashboard → Edge Functions → process-email-queue → Cron: "0 14 * * *"
-// (14:00 UTC = 8:00 am Costa Rica). Requiere secrets:
+// (14:00 UTC = 8:00 am Costa Rica), configurando el header
+//   Authorization: Bearer <CRON_SECRET>
+// en la invocación del cron. Requiere secrets:
 //   NEXT_PUBLIC_SITE_URL (ej. https://admin.theosplace.org) y CRON_SECRET
 // (el mismo CRON_SECRET que en Vercel).
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  // Solo el cron (o quien tenga el CRON_SECRET) puede invocarla: sin esto,
+  // cualquiera con la URL podía forzar/adelantar el envío de la cola.
+  const bearer = req.headers.get('authorization')?.replace('Bearer ', '')
+  const secret = Deno.env.get('CRON_SECRET')
+  if (!secret || bearer !== secret) {
+    return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 })
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,

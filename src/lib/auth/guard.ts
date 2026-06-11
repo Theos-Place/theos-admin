@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -41,6 +42,30 @@ export async function requireRoles(
   const allowed = roles.length === 0 || ctx.roles.includes('admin') || roles.some(r => ctx.roles.includes(r))
   if (!allowed) return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
   return { ctx }
+}
+
+/** Comparación de secretos en tiempo constante (CRON_SECRET y similares). */
+export function secretsMatch(provided: string | null | undefined, expected: string | null | undefined): boolean {
+  if (!provided || !expected) return false
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
+/**
+ * member_id efectivo para escrituras "a nombre de otro" (anti-suplantación,
+ * auditoría 2026-06-11 S2): los roles privilegiados (y admin) pueden enviar
+ * cualquier member_id; el resto queda forzado a su propio perfil aunque el
+ * body diga otra cosa.
+ */
+export function resolveTargetMemberId(
+  ctx: AuthContext,
+  requested: unknown,
+  privilegedRoles: RoleId[],
+): string | null {
+  const isPrivileged = ctx.roles.includes('admin') || privilegedRoles.some(r => ctx.roles.includes(r))
+  if (isPrivileged && typeof requested === 'string' && requested) return requested
+  return ctx.memberId
 }
 
 /**

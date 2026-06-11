@@ -33,8 +33,14 @@ export type MemberStudyProfile = {
   current_code: string | null
   is_donor: boolean
   is_server: boolean
+  /** Check-ins de charla en los últimos 6 meses (ventana de matrícula). */
   charla_count: number
 }
+
+/** Asistencia mínima para MATRICULAR: 12 charlas en los últimos 6 meses.
+ *  Deliberadamente más estricto y separado del criterio general del sistema
+ *  (cobertura mensual) — decisión de producto 2026-06-11. */
+export const MATRICULA_MIN_CHARLAS = 12
 
 const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles',
@@ -114,8 +120,8 @@ export function computeEligibility(
       else reasons_blocked.push('Requiere servir activamente en un comité')
     }
     if (study.req_attendee) {
-      if (profile.charla_count >= 4) reasons_met.push('Asistís regularmente a las charlas ✓')
-      else reasons_blocked.push('Requiere asistencia regular a las charlas (con check-in)')
+      if (profile.charla_count >= MATRICULA_MIN_CHARLAS) reasons_met.push('Asistís regularmente a las charlas ✓')
+      else reasons_blocked.push(`Requiere asistencia regular: al menos ${MATRICULA_MIN_CHARLAS} charlas con check-in en los últimos 6 meses (llevás ${profile.charla_count})`)
     }
 
     const is_eligible = reasons_blocked.length === 0

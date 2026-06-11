@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView, resolveTargetMemberId } from '@/lib/auth/guard'
 import { getFormResponses, submitResponse } from '@/lib/supabase/queries/forms'
 
 export async function GET(
@@ -33,10 +33,17 @@ export async function POST(
     const { id } = await params
     const body = await req.json()
 
+    // Anti-suplantación (auditoría S2): solo comunicaciones/dirección (y admin)
+    // registran respuestas a nombre de OTRO miembro; el resto queda en su propio
+    // perfil (o invitado si su sesión no tiene miembro vinculado).
     // El constraint response_member_or_guest exige member_id O guest_email.
-    // Si es invitado (sin member_id), el correo es obligatorio y con formato válido.
-    // Lo validamos acá para nunca llegar a Supabase incumpliendo el constraint.
-    const memberId = body?.member_id ?? null
+    const memberId = resolveTargetMemberId(auth.ctx, body?.member_id, ['comunicaciones', 'direccion'])
+    if (typeof body?.member_id === 'string' && body.member_id && body.member_id !== memberId) {
+      return NextResponse.json(
+        { error: 'No podés registrar respuestas a nombre de otro miembro' },
+        { status: 403 },
+      )
+    }
     const guestEmail = typeof body?.guest_email === 'string' ? body.guest_email.trim() : ''
     if (!memberId && !EMAIL_RE.test(guestEmail)) {
       return NextResponse.json(
@@ -45,7 +52,7 @@ export async function POST(
       )
     }
 
-    const res = await submitResponse(id, { ...body, guest_email: memberId ? body.guest_email ?? null : guestEmail })
+    const res = await submitResponse(id, { ...body, member_id: memberId, guest_email: memberId ? body.guest_email ?? null : guestEmail })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
     console.error('POST /api/forms/[id]/responses:', error)

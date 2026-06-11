@@ -11,7 +11,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_CATALOG } from '@/data/study-catalog'
-import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
+import { MATRICULA_MIN_CHARLAS, type EligibilityResult, type EligibleGroup, type MemberStudyProfile } from '@/lib/studies/eligibility'
 
 type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'campaña'
 
@@ -241,7 +241,7 @@ export default function MatriculaPage() {
             <div className="space-y-1.5">
               <CommitmentRow met={isDonor}                    label="Donador/a activo/a" />
               <CommitmentRow met={!!isActiveServer}           label="Servidor/a en comité" />
-              <CommitmentRow met={charlaCount >= 4}           label={`Asistencia a charlas (${charlaCount}/4)`} />
+              <CommitmentRow met={charlaCount >= MATRICULA_MIN_CHARLAS} label={`Asistencia a charlas, últimos 6 meses (${charlaCount}/${MATRICULA_MIN_CHARLAS})`} />
             </div>
           </div>
         </div>

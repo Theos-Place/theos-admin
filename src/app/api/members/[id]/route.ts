@@ -14,7 +14,11 @@ export async function GET(
     if (!member) {
       return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
     }
-    return NextResponse.json(member)
+    // Las donaciones/pagos del perfil son datos financieros: solo finanzas,
+    // dirección y admin los ven (auditoría S3). El resto recibe la lista vacía
+    // (la UI ya oculta el tab con hasFinanceRole; esto lo hace cumplir el server).
+    const canSeeFinance = auth.ctx.roles.some(r => ['admin', 'finanzas', 'direccion'].includes(r))
+    return NextResponse.json(canSeeFinance ? member : { ...member, donations: [] })
   } catch (error) {
     console.error('GET /api/members/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

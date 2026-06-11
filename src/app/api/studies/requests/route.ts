@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
 import {
   getStudyRequests, countOpenStudyRequests, createStudyRequest, notifyRecipientsOfRequest,
 } from '@/lib/supabase/queries/study-requests'
@@ -33,7 +33,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: crea una solicitud. Cualquier usuario autenticado (incluso rol miembro).
+// POST: crea una solicitud. Cualquier autenticado (incluso rol miembro), pero
+// solo coordinadores (y admin) pueden crearla a nombre de OTRO miembro; el
+// resto queda forzado a su propio perfil (anti-suplantación, auditoría S2).
 export async function POST(req: NextRequest) {
   try {
     const auth = await requireRoles()
@@ -41,7 +43,14 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const reason = typeof body?.reason === 'string' ? body.reason.trim() : ''
-    if (!body?.member_id || !TYPES.has(body?.request_type)) {
+    const memberId = resolveTargetMemberId(auth.ctx, body?.member_id, ['coordinador_estudios', 'coordinador_dirigentes'])
+    if (typeof body?.member_id === 'string' && body.member_id && body.member_id !== memberId) {
+      return NextResponse.json(
+        { error: 'No podés crear solicitudes a nombre de otro miembro' },
+        { status: 403 },
+      )
+    }
+    if (!memberId || !TYPES.has(body?.request_type)) {
       return NextResponse.json({ error: 'Se requiere member_id y request_type válido' }, { status: 400 })
     }
     if (reason.length < 20) {
@@ -49,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     const request = await createStudyRequest({
-      member_id: body.member_id,
+      member_id: memberId,
       request_type: body.request_type,
       plan_id: body.plan_id ?? null,
       existing_group_id: body.existing_group_id ?? null,

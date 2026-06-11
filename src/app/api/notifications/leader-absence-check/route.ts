@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { notifyAbsentLeaders } from '@/lib/supabase/queries/study-requests'
 
 /** Autorizado si trae el CRON_SECRET (cron de Supabase) o sesión de coordinación. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
   const bearer = req.headers.get('authorization')?.replace('Bearer ', '')
-  if (process.env.CRON_SECRET && bearer === process.env.CRON_SECRET) return null
+  if (secretsMatch(bearer, process.env.CRON_SECRET)) return null
   const auth = await requireRoles('coordinador_dirigentes', 'coordinador_estudios', 'direccion')
   return auth.res ?? null
 }

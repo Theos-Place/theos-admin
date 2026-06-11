@@ -95,6 +95,10 @@ export async function getServerMemberIds(): Promise<string[]> {
   }
 }
 
+/** UUID v4 (o cualquier UUID): para validar input antes de interpolarlo en
+ *  sintaxis de filtro PostgREST (.or), donde comas/paréntesis inyectan. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /** Cantidad de meses del criterio de asistencia activa. */
 export const ATTENDANCE_MONTHS = 6
 
@@ -293,7 +297,9 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
           else if (c.status === 'historical') q = q.not('status', 'in', '(active,on_leave)')
           if (c.committee) q = q.eq('position.area.name', c.committee)
           if (c.position) q = q.eq('position.title', c.position)
-          if (c.area) q = q.or(`id.eq.${c.area},parent_id.eq.${c.area}`, { referencedTable: 'position.area' })
+          // c.area viene del input del usuario (filtros avanzados): solo se
+          // interpola si es un UUID válido (anti filter-injection, auditoría S4).
+          if (c.area && UUID_RE.test(c.area)) q = q.or(`id.eq.${c.area},parent_id.eq.${c.area}`, { referencedTable: 'position.area' })
           return q
         }, 'volunteers', 'member_id, position:service_positions!inner(title, area:areas!inner(id, name, parent_id))'))
         break

@@ -4,9 +4,10 @@ import { getMembers } from '@/lib/supabase/queries/members'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
 // para exportar. Mismos params que /api/members. Usa createAdminClient (en getMembers).
+// Solo coordinadores y admin: exporta el padrón completo con PII (auditoría S1).
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles()
+    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes')
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
     const search    = searchParams.get('search')   ?? undefined

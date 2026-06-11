@@ -449,6 +449,11 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   charla_count: number
 }> {
   const supabase = createAdminClient()
+  // charla_count: solo los últimos 6 meses — el criterio de matrícula es
+  // deliberadamente MÁS estricto que el criterio general de asistencia
+  // (decisión 2026-06-11: 12 charlas en 6 meses vs cobertura mensual).
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
   const [memberRes, enrRes, volRes, chkRes] = await Promise.all([
     supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
     supabase
@@ -460,7 +465,8 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
       .from('event_checkins')
       .select('id, events!inner(event_type)')
       .eq('member_id', memberId)
-      .eq('events.event_type', 'charla'),
+      .eq('events.event_type', 'charla')
+      .gte('checked_in_at', sixMonthsAgo.toISOString()),
   ])
 
   const enrollments = (enrRes.data ?? []) as unknown as Array<{ status: string; study_groups: { plan: { code: string } | null } | null }>

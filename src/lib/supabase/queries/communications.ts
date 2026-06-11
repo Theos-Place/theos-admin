@@ -363,6 +363,14 @@ export async function processPendingEmails(
     .order('created_at')
   if (recipientEmails?.length) query = query.in('recipient', recipientEmails)
 
+  // Recuperar claims huérfanos: filas que quedaron en 'sending' hace más de
+  // una hora (proceso muerto entre el claim y el envío) vuelven a 'pending'.
+  await supabase.from('message_logs')
+    .update({ status: 'pending', claimed_at: null })
+    .eq('broadcast_id', broadcastId)
+    .eq('status', 'sending')
+    .lt('claimed_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
+
   const { data: logsData, error: lErr } = await query
   if (lErr) throw lErr
   const logs = (logsData ?? []) as Array<{ id: string; recipient: string; member_id: string | null; attempts: number | null }>
@@ -374,7 +382,28 @@ export async function processPendingEmails(
   // Respetar el cupo del día aunque se procese manualmente varias veces.
   const dailyUsed = await getDailyEmailsSent()
   const available = Math.max(0, DAILY_LIMIT - dailyUsed)
-  const batch = logs.slice(0, available)
+
+  // CLAIM ATÓMICO (auditoría S6): reclamamos el lote pasándolo a 'sending'
+  // con un UPDATE condicionado a status='pending'. Si otra ejecución corre a
+  // la vez (cron + botón manual), cada fila la reclama solo una — adiós
+  // emails duplicados. Solo se procesa lo efectivamente reclamado.
+  const candidateIds = logs.slice(0, available).map(l => l.id)
+  if (candidateIds.length === 0) {
+    await refreshBroadcastCounters(broadcastId)
+    return { sent: 0, failed: 0 }
+  }
+  const { data: claimedData, error: clErr } = await supabase
+    .from('message_logs')
+    .update({ status: 'sending', claimed_at: new Date().toISOString() })
+    .in('id', candidateIds)
+    .eq('status', 'pending')
+    .select('id, recipient, member_id, attempts')
+  if (clErr) throw clErr
+  const batch = (claimedData ?? []) as Array<{ id: string; recipient: string; member_id: string | null; attempts: number | null }>
+  if (!batch.length) {
+    await refreshBroadcastCounters(broadcastId)
+    return { sent: 0, failed: 0 }
+  }
 
   // Nombres de los miembros en un solo query (no N+1).
   const memberIds = Array.from(new Set(batch.map(l => l.member_id).filter(Boolean))) as string[]
