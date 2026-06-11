@@ -7,6 +7,7 @@ import { useMember } from '@/hooks/useMember'
 import { useStudies } from '@/hooks/useStudies'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { cn } from '@/lib/utils'
+import { Modal } from '@/components/shared/Modal'
 import { MemberHeader } from './_components/MemberHeader'
 import { MemberSummaryTab } from './_components/MemberSummaryTab'
 import { MemberPersonalTab } from './_components/MemberPersonalTab'
@@ -315,9 +316,9 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
-        <p className="text-base font-bold text-navy font-display">Agregar estudio</p>
+    <Modal onClose={onClose} titleId="agregar-estudio-title" width={384}>
+      <div className="p-6 space-y-4">
+        <p id="agregar-estudio-title" className="text-base font-bold text-navy font-display">Agregar estudio</p>
         <p className="text-[13px] text-navy-light/60 font-body -mt-2">
           Para estudios que la persona llevó sin un grupo en el sistema.
         </p>
@@ -356,7 +357,7 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -412,10 +413,10 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
+    <Modal onClose={onClose} titleId="fusionar-duplicado-title" width={448}>
+      <div className="p-6 space-y-4">
         <div>
-          <p className="text-base font-bold text-navy font-display">Fusionar duplicado</p>
+          <p id="fusionar-duplicado-title" className="text-base font-bold text-navy font-display">Fusionar duplicado</p>
           <p className="text-[13px] text-navy-light/60 font-body mt-1">
             Buscá el registro duplicado. Toda su información (estudios, asistencias, servicio, pagos…) se moverá a <strong className="text-navy">{keepName}</strong> y el duplicado se <strong>eliminará</strong>. Esta acción no se puede deshacer.
           </p>
@@ -472,6 +473,6 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

@@ -1,4 +1,5 @@
 import { Check, Clock, X as XIcon, UserPlus, Search, Link2, MoreVertical, Send } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { mockMembers } from '@/data/mock-members'
 import { cn } from '@/lib/utils'
@@ -207,24 +208,15 @@ export function EventServersTab({
 
       {/* Assignment Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onResetModal} />
-          <div
-            className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]"
-          >
+        <Modal onClose={onResetModal} titleId="asignar-servidor-titulo" width={448}>
             {/* Modal header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-b-[var(--outline-variant)]">
-              <div className="flex items-center gap-3">
-                <span className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white', modalStep === 1 ? 'bg-coral' : 'bg-teal-deep')}>
-                  {modalStep}
-                </span>
-                <span className="text-sm font-semibold text-navy font-display">
-                  {modalStep === 1 ? 'Buscar miembro' : 'Definir rol'}
-                </span>
-              </div>
-              <button onClick={onResetModal} className="text-navy-light/40 hover:text-navy transition-colors">
-                <XIcon size={16} />
-              </button>
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-b-[var(--outline-variant)]">
+              <span className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white', modalStep === 1 ? 'bg-coral' : 'bg-teal-deep')}>
+                {modalStep}
+              </span>
+              <span id="asignar-servidor-titulo" className="text-sm font-semibold text-navy font-display">
+                {modalStep === 1 ? 'Buscar miembro' : 'Definir rol'}
+              </span>
             </div>
 
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
@@ -379,8 +371,7 @@ export function EventServersTab({
                 </button>
               )}
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Toast */}

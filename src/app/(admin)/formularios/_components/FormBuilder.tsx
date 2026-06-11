@@ -9,7 +9,8 @@ import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Eye, Save, Send, Check, GitBranch, X, Zap } from 'lucide-react'
+import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 type FormStatus = 'draft' | 'active'
 
@@ -387,16 +388,13 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
       {/* Logic overview modal */}
       {showLogicPanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-navy-ink/40 backdrop-blur-sm">
-          <div className="h-full w-full max-w-md overflow-y-auto flex flex-col bg-surface-card shadow-[var(--shadow-md)]">
+        <Modal onClose={() => setShowLogicPanel(false)} titleId="logica-formulario-title" width={448}>
+          <div className="flex flex-col">
             <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b shrink-0 border-[var(--outline-variant)] bg-surface-card">
               <div className="flex items-center gap-2">
                 <GitBranch size={16} className="text-navy-light/50" />
-                <p className="text-sm font-bold text-navy font-display">Lógica del formulario</p>
+                <p id="logica-formulario-title" className="text-sm font-bold text-navy font-display">Lógica del formulario</p>
               </div>
-              <button type="button" onClick={() => setShowLogicPanel(false)}>
-                <X size={18} className="text-navy-light/40" />
-              </button>
             </div>
 
             <div className="p-5 space-y-2 flex-1">
@@ -455,7 +453,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               </p>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

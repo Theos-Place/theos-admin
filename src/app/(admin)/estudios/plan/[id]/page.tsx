@@ -11,6 +11,7 @@ import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { Archive, Pencil, Search, X } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 const PAGE_SIZE = 10
 
@@ -27,14 +28,11 @@ function getLevelColor(level: string): string {
 
 function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onCancel} />
-      <div
-        className="relative rounded-2xl p-6 max-w-sm w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
+    <Modal onClose={onCancel} titleId="archivar-estudio-title" width={384}>
+      <div className="p-6 space-y-4">
         <div className="flex items-center gap-3">
           <Archive size={20} className="text-coral" />
-          <h3 className="font-semibold text-navy font-display">
+          <h3 id="archivar-estudio-title" className="font-semibold text-navy font-display">
             Archivar estudio
           </h3>
         </div>
@@ -56,7 +54,7 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 

@@ -9,6 +9,7 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 function initials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
@@ -238,9 +239,9 @@ function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved:
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
-        <p className="text-base font-bold text-navy font-display">Agregar dirigente</p>
+    <Modal onClose={onClose} titleId="agregar-dirigente-title" width={384}>
+      <div className="p-6 space-y-4">
+        <p id="agregar-dirigente-title" className="text-base font-bold text-navy font-display">Agregar dirigente</p>
 
         {!picked ? (
           <>
@@ -286,6 +287,6 @@ function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved:
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

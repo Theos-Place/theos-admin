@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect } from 'react'
 import { useToast } from '@/components/shared/Toast'
+import { Modal } from '@/components/shared/Modal'
 import Link from 'next/link'
 import { EVENT_TYPES, type EventType } from '@/data/mock-events'
 import { useEvent } from '@/hooks/useEvents'
@@ -63,13 +64,9 @@ function RecurringSaveModal({
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]"
-      >
+    <Modal onClose={onClose} titleId="guardar-cambios-recurrente-titulo" width={448}>
         <div className="px-5 py-4 border-b border-b-[var(--outline-variant)]">
-          <h3 className="text-sm font-semibold text-navy font-display">
+          <h3 id="guardar-cambios-recurrente-titulo" className="text-sm font-semibold text-navy font-display">
             Guardar cambios
           </h3>
           <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
@@ -131,8 +128,7 @@ function RecurringSaveModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }
 

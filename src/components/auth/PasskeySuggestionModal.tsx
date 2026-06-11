@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Fingerprint, Loader2, Check, AlertCircle } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { createClient } from '@/lib/supabase/client'
 import {
   setPasskeySuggestion,
@@ -48,8 +49,8 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl p-6 text-center bg-surface-card shadow-[var(--shadow-lg)]">
+    <Modal onClose={handleDismiss} titleId="passkey-suggestion-title" width={384}>
+      <div className="p-6 text-center">
 
         <div className="mx-auto h-14 w-14 rounded-2xl flex items-center justify-center mb-4 bg-coral/10">
           {phase === 'success'
@@ -59,7 +60,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
 
         {phase === 'success' ? (
           <>
-            <h2 className="text-lg font-bold text-navy font-display">Huella activada</h2>
+            <h2 id="passkey-suggestion-title" className="text-lg font-bold text-navy font-display">Huella activada</h2>
             <p className="mt-2 text-[13px] text-navy-light/60 leading-relaxed font-body">
               A partir de ahora podés ingresar sin contraseña.
             </p>
@@ -75,7 +76,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
             <div className="mx-auto -mt-1 mb-2 flex items-center justify-center text-coral">
               <AlertCircle size={18} />
             </div>
-            <h2 className="text-lg font-bold text-navy font-display">No se pudo activar</h2>
+            <h2 id="passkey-suggestion-title" className="text-lg font-bold text-navy font-display">No se pudo activar</h2>
             <p className="mt-2 text-[13px] text-navy-light/60 leading-relaxed font-body">
               Podés intentarlo más tarde desde Configuración → Seguridad.
             </p>
@@ -88,7 +89,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
           </>
         ) : (
           <>
-            <h2 className="text-lg font-bold text-navy font-display">Ingresá más rápido la próxima vez</h2>
+            <h2 id="passkey-suggestion-title" className="text-lg font-bold text-navy font-display">Ingresá más rápido la próxima vez</h2>
             <p className="mt-2 text-[13px] text-navy-light/60 leading-relaxed font-body">
               Podés configurar tu huella o Face ID para entrar al sistema sin escribir tu contraseña. Solo tarda unos segundos.
             </p>
@@ -121,6 +122,6 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
           </>
         )}
       </div>
-    </div>
+    </Modal>
   )
 }

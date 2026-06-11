@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Download, Send, UserPlus, X, Search, Trash2 } from 'lucide-react'
+import { Download, Send, UserPlus, Search, Trash2 } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/data/mock-events'
 
@@ -290,15 +291,9 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-3xl bg-white p-6 space-y-4 shadow-[var(--shadow-lg)]"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-extrabold text-navy font-display">Inscribir miembro</h3>
-          <button onClick={onClose} className="text-navy-light/50 hover:text-navy"><X size={18} /></button>
-        </div>
+    <Modal onClose={onClose} titleId="inscribir-miembro-titulo" width={448}>
+      <div className="p-6 space-y-4">
+        <h3 id="inscribir-miembro-titulo" className="text-lg font-extrabold text-navy font-display">Inscribir miembro</h3>
 
         <div className="relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
@@ -345,6 +340,6 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
           })}
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

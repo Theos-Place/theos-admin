@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Download, FileSpreadsheet, FileText, Check, AlertTriangle } from 'lucide-react'
 import { type ColumnDef } from './ColumnSelector'
 import { generateCSV } from '@/lib/export'
+import { Modal } from '@/components/shared/Modal'
 
 interface Props<T> {
   data: T[]
@@ -177,14 +178,14 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
 
       {/* Modal de confirmación (export sin filtros / volumen alto) */}
       {pendingFormat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+        <Modal onClose={() => setPendingFormat(null)} titleId="confirmar-exportacion-title" width={384}>
+          <div className="p-6 space-y-4">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-[rgba(233,185,73,0.15)]">
                 <AlertTriangle size={18} className="text-amber-500" />
               </div>
               <div>
-                <p className="text-base font-bold text-navy font-display">Confirmar exportación</p>
+                <p id="confirmar-exportacion-title" className="text-base font-bold text-navy font-display">Confirmar exportación</p>
                 <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed font-body">
                   {confirmMessage}
                 </p>
@@ -205,7 +206,7 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

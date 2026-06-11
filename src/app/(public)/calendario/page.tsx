@@ -3,6 +3,7 @@ import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { MockEvent } from '@/data/mock-events'
 import { useEvents } from '@/hooks/useEvents'
+import { Modal } from '@/components/shared/Modal'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
@@ -177,11 +178,10 @@ function CalendarioWidget() {
 
       {/* Event detail modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center p-5 z-[100]"
-          onClick={() => setSelectedEvent(null)}>
-          <div className="bg-white rounded-2xl p-6 max-w-[400px] w-full" onClick={e => e.stopPropagation()}>
+        <Modal onClose={() => setSelectedEvent(null)} titleId="evento-detalle-title" width={400}>
+          <div className="p-6">
             {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt={`Flyer de ${selectedEvent.name}`} className="w-full h-[140px] object-cover rounded-lg mb-3" />}
-            <h3 className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
+            <h3 id="evento-detalle-title" className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
             {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.55)] mb-2">{selectedEvent.description}</p>}
             {showLoc && <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📍 {selectedEvent.location}</p>}
             <p className="text-xs text-[rgba(0,0,0,0.4)] mb-3">🕐 {formatEventTime(selectedEvent.start_at)}</p>
@@ -190,7 +190,7 @@ function CalendarioWidget() {
               <div className="flex-1 border border-[rgba(0,0,0,0.15)] rounded-lg py-2.5 text-center text-[13px] cursor-pointer text-[rgba(0,0,0,0.5)]" onClick={() => setSelectedEvent(null)}>Cerrar</div>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

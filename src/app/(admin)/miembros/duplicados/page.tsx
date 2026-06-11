@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
 import { ChevronLeft, Users } from 'lucide-react'
 
 type DupMember = {
@@ -180,10 +181,10 @@ function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () =>
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm" role="presentation" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
+    <Modal onClose={onClose} titleId="fusionar-campos-title" width={768}>
+      <div className="p-6 space-y-4">
         <div>
-          <p className="text-base font-bold text-navy font-display">Fusionar campo por campo</p>
+          <p id="fusionar-campos-title" className="text-base font-bold text-navy font-display">Fusionar campo por campo</p>
           <p className="text-[13px] text-navy-light/60 font-body mt-1">Elegí qué dato conservar de cada perfil. El perfil principal sobrevive; el otro queda inactivo.</p>
         </div>
 
@@ -255,7 +256,7 @@ function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () =>
           <button onClick={() => setConfirming(true)} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Continuar</button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 

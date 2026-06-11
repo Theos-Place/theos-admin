@@ -3,8 +3,9 @@
 import { useState, useMemo, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
-import { CreditCard, Eye, EyeOff, Search, Check, X } from 'lucide-react'
+import { CreditCard, Eye, EyeOff, Search, Check } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
@@ -335,13 +336,11 @@ function PagosContent() {
 
       {/* SINPE confirm modal */}
       {sinpeTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
-          <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
+        <Modal onClose={() => setSinpeTarget(null)} titleId="confirmar-pago-sinpe" width={448}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--outline-variant)]">
-              <p className="text-sm font-bold font-display text-navy">
+              <p id="confirmar-pago-sinpe" className="text-sm font-bold font-display text-navy">
                 Confirmar pago SINPE
               </p>
-              <button onClick={() => setSinpeTarget(null)}><X size={18} className="text-[rgba(22,20,64,0.40)]" /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
               <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
@@ -383,8 +382,7 @@ function PagosContent() {
                 Confirmar pago
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Toast */}

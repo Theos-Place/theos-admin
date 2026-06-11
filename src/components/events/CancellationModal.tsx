@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Modal } from '@/components/shared/Modal'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 
 interface CancellationModalProps {
@@ -39,13 +40,9 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
     })
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={step === 1 ? onClose : undefined} />
-      <div
-        className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]"
-      >
-        {step === 1 ? (
+  if (step === 1) {
+    return (
+      <Modal onClose={onClose} titleId="cancelar-evento-titulo" width={448}>
           <>
             {/* Header rojo */}
             <div className="bg-coral/10 border-b px-5 py-4 flex items-center gap-3 border-[var(--outline-variant)]">
@@ -53,7 +50,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                 <AlertTriangle size={16} className="text-coral" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-navy font-display">
+                <h3 id="cancelar-evento-titulo" className="text-sm font-semibold text-navy font-display">
                   Cancelar evento
                 </h3>
                 <p className="text-[11px] text-navy-light/60 font-body">
@@ -115,7 +112,17 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
               </div>
             </div>
           </>
-        ) : (
+      </Modal>
+    )
+  }
+
+  // Paso 2: overlay de progreso NO cerrable — se queda fuera del Modal compartido a propósito.
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" />
+      <div
+        className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]"
+      >
           <div className="p-6 space-y-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-full bg-teal-soft/30 flex items-center justify-center">
@@ -158,7 +165,6 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
               ))}
             </div>
           </div>
-        )}
       </div>
     </div>
   )

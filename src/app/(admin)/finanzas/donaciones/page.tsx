@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Heart, Upload, Search, AlertTriangle, X, Check, Eye, EyeOff } from 'lucide-react'
+import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
@@ -337,15 +338,15 @@ export default function DonacionesPage() {
 
       {/* Unidentified Modal */}
       {showUnidentifiedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
-          <div className="w-full max-w-xl rounded-2xl overflow-hidden max-h-[80vh] flex flex-col bg-surface-card shadow-[var(--shadow-lg)]">
+        <Modal
+          onClose={() => { setShowUnidentifiedModal(false); setLinkingId(null); setLinkSearch('') }}
+          titleId="donaciones-sin-identificar"
+          width={576}
+        >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--outline-variant)]">
-              <p className="text-sm font-bold font-display text-navy">
+              <p id="donaciones-sin-identificar" className="text-sm font-bold font-display text-navy">
                 Donaciones sin identificar ({unidentified.length})
               </p>
-              <button onClick={() => { setShowUnidentifiedModal(false); setLinkingId(null); setLinkSearch('') }}>
-                <X size={18} className="text-[rgba(22,20,64,0.40)]" />
-              </button>
             </div>
             <div className="overflow-y-auto flex-1">
               {unidentified.map(d => (
@@ -406,8 +407,7 @@ export default function DonacionesPage() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Toast */}

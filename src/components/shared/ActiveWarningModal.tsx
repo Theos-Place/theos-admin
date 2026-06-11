@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 type ActiveWarningModalProps = {
   open: boolean
@@ -16,14 +17,14 @@ type ActiveWarningModalProps = {
 export function ActiveWarningModal({ open, title, message, onClose }: ActiveWarningModalProps) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]">
+    <Modal onClose={onClose} titleId="active-warning-title" width={384}>
+      <div className="p-6 space-y-4">
         <div className="flex items-start gap-3">
           <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-[rgba(233,185,73,0.15)]">
             <AlertTriangle size={18} className="text-amber-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-base font-bold text-navy font-display">{title}</p>
+            <p id="active-warning-title" className="text-base font-bold text-navy font-display">{title}</p>
             <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed font-body">
               {message}
             </p>
@@ -36,6 +37,6 @@ export function ActiveWarningModal({ open, title, message, onClose }: ActiveWarn
           Entendido
         </button>
       </div>
-    </div>
+    </Modal>
   )
 }

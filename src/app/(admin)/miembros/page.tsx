@@ -16,6 +16,7 @@ import {
   Users,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { useMembers } from '@/hooks/useMembers'
 import { toDomainMember } from '@/lib/members/adapter'
@@ -868,18 +869,11 @@ function MiembrosContent() {
       </div>
       {/* ── Guardar lista modal ── */}
       {saveListOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-          <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-base font-bold text-navy font-display">
-                Guardar lista de miembros
-              </p>
-              <button onClick={() => setSaveListOpen(false)}>
-                <X size={18} className="text-navy-light/40" />
-              </button>
-            </div>
+        <Modal onClose={() => setSaveListOpen(false)} titleId="guardar-lista-title" width={384}>
+          <div className="p-6 space-y-4">
+            <p id="guardar-lista-title" className="text-base font-bold text-navy font-display">
+              Guardar lista de miembros
+            </p>
 
             <div className="space-y-3">
               <div className="space-y-1.5">
@@ -966,7 +960,7 @@ function MiembrosContent() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* ── Toast ── */}

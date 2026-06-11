@@ -8,9 +8,10 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import {
   Bookmark, MessageCircle, MoreHorizontal, Users, Plus, Search, ChevronLeft,
-  Edit2, RefreshCw, Trash2, X,
+  Edit2, RefreshCw, Trash2,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return 'Nunca'
@@ -305,18 +306,11 @@ export default function ListasGuardadasPage() {
 
       {/* Edit modal */}
       {editTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-          <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-base font-bold text-navy font-display">
-                Editar lista
-              </p>
-              <button onClick={() => setEditTarget(null)}>
-                <X size={18} className="text-navy-light/40" />
-              </button>
-            </div>
+        <Modal onClose={() => setEditTarget(null)} titleId="editar-lista-title" width={384}>
+          <div className="p-6 space-y-4">
+            <p id="editar-lista-title" className="text-base font-bold text-navy font-display">
+              Editar lista
+            </p>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
@@ -357,7 +351,7 @@ export default function ListasGuardadasPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Overlay para cerrar menú */}

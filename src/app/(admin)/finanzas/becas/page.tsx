@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Plus, Check, AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { type Scholarship } from '@/data/mock-finance'
@@ -256,34 +257,32 @@ export default function BecasPage() {
 
       {/* Revoke confirm modal */}
       {confirmRevoke && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(22,20,64,0.40)] backdrop-blur-[4px]">
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]">
-            <div className="px-6 py-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(239,85,84,0.10)]">
-                  <AlertTriangle size={18} className="text-coral" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold font-display text-navy">¿Revocar esta beca?</p>
-                  <p className="text-[12px] font-body text-[rgba(22,20,64,0.50)]">Esta acción no se puede deshacer</p>
-                </div>
+        <Modal onClose={() => setConfirmRevoke(null)} titleId="revocar-beca" width={384}>
+          <div className="px-6 py-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(239,85,84,0.10)]">
+                <AlertTriangle size={18} className="text-coral" />
               </div>
-              <p className="text-[13px] leading-relaxed font-body text-[rgba(22,20,64,0.70)]">
-                La beca de <strong>{confirmRevoke.member_name}</strong> para <strong>{confirmRevoke.entity_name}</strong> será eliminada.
-              </p>
+              <div>
+                <p id="revocar-beca" className="text-sm font-bold font-display text-navy">¿Revocar esta beca?</p>
+                <p className="text-[12px] font-body text-[rgba(22,20,64,0.50)]">Esta acción no se puede deshacer</p>
+              </div>
             </div>
-            <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
-              <button onClick={() => setConfirmRevoke(null)}
-                className="flex-1 rounded-full border py-2.5 text-sm border-[var(--outline-variant)] font-body text-[rgba(22,20,64,0.70)]">
-                Cancelar
-              </button>
-              <button onClick={() => handleRevoke(confirmRevoke)}
-                className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body">
-                Revocar
-              </button>
-            </div>
+            <p className="text-[13px] leading-relaxed font-body text-[rgba(22,20,64,0.70)]">
+              La beca de <strong>{confirmRevoke.member_name}</strong> para <strong>{confirmRevoke.entity_name}</strong> será eliminada.
+            </p>
           </div>
-        </div>
+          <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
+            <button onClick={() => setConfirmRevoke(null)}
+              className="flex-1 rounded-full border py-2.5 text-sm border-[var(--outline-variant)] font-body text-[rgba(22,20,64,0.70)]">
+              Cancelar
+            </button>
+            <button onClick={() => handleRevoke(confirmRevoke)}
+              className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body">
+              Revocar
+            </button>
+          </div>
+        </Modal>
       )}
 
       {toast && (

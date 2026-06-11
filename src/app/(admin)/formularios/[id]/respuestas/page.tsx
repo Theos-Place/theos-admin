@@ -7,7 +7,8 @@ import { type FormResponse, type FormTemplate } from '@/types/forms'
 import { toDomainFormTemplate, toDomainFormResponse } from '@/lib/forms/adapter'
 import { ResponseSummaryChart } from '@/components/forms/ResponseSummaryChart'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Download, X, ChevronRight } from 'lucide-react'
+import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   if (!form) return
@@ -287,22 +288,17 @@ export default function RespuestasPage() {
 
       {/* Detail modal */}
       {detailResponse && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-navy-ink/40 backdrop-blur-sm">
-          <div
-            className="h-full w-full max-w-md overflow-y-auto bg-surface-card shadow-[var(--shadow-md)]"
-          >
+        <Modal onClose={() => setDetailResponse(null)} titleId="detalle-respuesta-title" width={448}>
+          <div>
             <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)] bg-surface-card">
               <div>
-                <p className="text-sm font-bold text-navy font-display">
+                <p id="detalle-respuesta-title" className="text-sm font-bold text-navy font-display">
                   {detailResponse.member_name}
                 </p>
                 <p className="text-[11px] text-navy-light/40 font-body">
                   {new Date(detailResponse.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
-              <button type="button" onClick={() => setDetailResponse(null)}>
-                <X size={18} className="text-navy-light/40" />
-              </button>
             </div>
 
             <div className="p-5 space-y-4">
@@ -327,7 +323,7 @@ export default function RespuestasPage() {
               })}
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

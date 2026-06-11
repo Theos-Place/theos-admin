@@ -1,7 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { X, AlertOctagon } from 'lucide-react'
+import { AlertOctagon } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -29,16 +30,11 @@ export function ModalDarDeBaja({
   onConfirm,
 }: ModalDarDeBajaProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertOctagon size={18} className="text-coral" />
-            <h2 className="text-base font-bold text-navy font-display">Dar de baja</h2>
-          </div>
-          <button type="button" onClick={onClose}>
-            <X size={18} className="text-navy-light/40" />
-          </button>
+    <Modal onClose={onClose} titleId="modal-dar-de-baja" width={448}>
+      <div className="p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <AlertOctagon size={18} className="text-coral" />
+          <h2 id="modal-dar-de-baja" className="text-base font-bold text-navy font-display">Dar de baja</h2>
         </div>
         <div className="rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
           <p className="text-[12px] text-coral font-body">
@@ -96,6 +92,6 @@ export function ModalDarDeBaja({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

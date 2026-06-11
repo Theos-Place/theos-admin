@@ -4,6 +4,7 @@ import { useState, use, useEffect } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { sedeLabel } from '@/lib/sedes'
 import { useMember } from '@/hooks/useMember'
 import { PhoneInput } from '@/components/shared/PhoneInput'
@@ -480,8 +481,12 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
       {/* ── Modal desactivar ── */}
       {deactivateModalOpen && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.45)] z-[1000] flex items-center justify-center p-5">
-          <div className="bg-surface-card rounded-[20px] p-7 max-w-[440px] w-full shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+        <Modal
+          onClose={() => { setDeactivateModalOpen(false); setDeactivateReason('') }}
+          titleId="desactivar-miembro-title"
+          width={440}
+        >
+          <div className="p-7">
             {/* Ícono de advertencia */}
             <div className="text-center mb-5">
               <div className="w-[52px] h-[52px] rounded-full bg-[rgba(239,85,84,.1)] flex items-center justify-center mx-auto mb-3">
@@ -491,7 +496,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </div>
-              <h3 className="text-[16px] font-bold text-navy-light font-display">
+              <h3 id="desactivar-miembro-title" className="text-[16px] font-bold text-navy-light font-display">
                 ¿Desactivar a {member.first_name} {member.last_name}?
               </h3>
               <p className="text-[13px] text-[var(--fg-muted)] mt-[6px] font-body">
@@ -539,7 +544,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

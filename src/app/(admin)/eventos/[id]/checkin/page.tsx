@@ -391,8 +391,8 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
   }
 
   return (
-    <Modal onClose={onClose} titleId="family-checkin-title" width={448}>
-      <div className="rounded-[20px] bg-navy border border-white/10 p-6 space-y-4">
+    <Modal onClose={onClose} titleId="family-checkin-title" width={448} tone="dark">
+      <div className="p-6 space-y-4">
         <h3 id="family-checkin-title" className="text-lg font-extrabold text-white font-display">
           {member.name} viene con familia
         </h3>
@@ -538,8 +538,8 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
   const fieldStyle = { background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-body)' } as const
 
   return (
-    <Modal onClose={onClose} titleId="new-person-title" width={448}>
-      <div className="rounded-[20px] p-6 space-y-4 bg-navy border border-white/10">
+    <Modal onClose={onClose} titleId="new-person-title" width={448} tone="dark">
+      <div className="p-6 space-y-4">
         <h3 id="new-person-title" className="text-lg font-extrabold text-white font-display">Persona nueva</h3>
 
         <div className="grid grid-cols-2 gap-3">

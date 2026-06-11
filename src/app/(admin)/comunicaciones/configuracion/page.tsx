@@ -5,6 +5,7 @@ import { type ChannelConfig } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
 import { useAuth } from '@/hooks/useAuth'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import {
   Plus,
@@ -17,7 +18,6 @@ import {
   AlertCircle,
   Info,
   Edit,
-  X,
   Send,
 } from 'lucide-react'
 
@@ -491,11 +491,9 @@ export default function ConfiguracionPage() {
 
     {/* ── Modal: Editar SMTP ── */}
     {editingConfig && editingConfig.type === 'smtp' && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-        <div className="w-full max-w-lg rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+      <Modal onClose={() => setEditingConfig(null)} titleId="editar-cuenta-smtp" width={512}>
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
-            <p className="text-sm font-bold text-navy font-display">Editar cuenta SMTP</p>
-            <button type="button" onClick={() => setEditingConfig(null)}><X size={18} className="text-navy-light/40" /></button>
+            <p id="editar-cuenta-smtp" className="text-sm font-bold text-navy font-display">Editar cuenta SMTP</p>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
@@ -538,17 +536,14 @@ export default function ConfiguracionPage() {
             <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
             <button type="button" onClick={handleSaveEditSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
           </div>
-        </div>
-      </div>
+      </Modal>
     )}
 
     {/* ── Modal: Editar WhatsApp ── */}
     {editingConfig && editingConfig.type === 'whatsapp' && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+      <Modal onClose={() => setEditingConfig(null)} titleId="editar-cuenta-whatsapp" width={448}>
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
-            <p className="text-sm font-bold text-navy font-display">Editar cuenta WhatsApp</p>
-            <button type="button" onClick={() => setEditingConfig(null)}><X size={18} className="text-navy-light/40" /></button>
+            <p id="editar-cuenta-whatsapp" className="text-sm font-bold text-navy font-display">Editar cuenta WhatsApp</p>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
@@ -577,8 +572,7 @@ export default function ConfiguracionPage() {
             <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
             <button type="button" onClick={handleSaveEditWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
           </div>
-        </div>
-      </div>
+      </Modal>
     )}
 
     <DeleteConfirmModal

@@ -544,27 +544,32 @@ export default function ServidoresAdminPage() {
             {areas.map((area, i) => {
               const isSelected = selectedAreaId === area.id
               return (
-                <button
+                // Fila = div con un botón interno para seleccionar: un <button>
+                // no puede contener los botones de acciones (HTML inválido,
+                // error de hidratación).
+                <div
                   key={area.id}
-                  onClick={() => setSelectedAreaId(area.id)}
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors group',
                     isSelected ? 'bg-navy text-white' : 'hover:bg-surface-low',
                     i < areas.length - 1 && 'border-b border-[var(--outline-variant)]',
                   )}
                 >
-                  <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => setSelectedAreaId(area.id)}
+                    className="flex-1 min-w-0 text-left"
+                  >
                     <p
                       className={cn('text-[13px] font-medium truncate font-body', isSelected ? 'text-white' : 'text-navy')}
                     >
                       {area.name}
                     </p>
-                    <p className={cn('text-[11px] mt-0.5 font-body', isSelected ? 'text-white/50' : 'text-navy-light/40')}>
+                    <p className={cn('text-[11px] mt-0.5 font-body', isSelected ? 'text-white/60' : 'text-navy-light/60')}>
                       {committees.filter(c => c.area_code === area.id && c.is_active).length} comité{committees.filter(c => c.area_code === area.id && c.is_active).length !== 1 ? 's' : ''} activo{committees.filter(c => c.area_code === area.id && c.is_active).length !== 1 ? 's' : ''}
                     </p>
-                  </div>
+                  </button>
 
-                  <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 shrink-0">
                     {/* Toggle */}
                     <label
                       className="toggle cursor-pointer"
@@ -602,7 +607,7 @@ export default function ServidoresAdminPage() {
                   </div>
 
                   {isSelected && <ChevronRight size={13} className="text-white/40 shrink-0 -mr-1" />}
-                </button>
+                </div>
               )
             })}
           </div>

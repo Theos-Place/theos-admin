@@ -1,7 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { X, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -33,8 +34,8 @@ export function ModalAjusteSalarial({
   const canRaise = raiseAmount !== '' && parseFloat(raiseAmount) > (currentSalary ?? 0) && raiseDate !== ''
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+    <Modal onClose={onClose} titleId="modal-ajuste-salarial" width={448}>
+      <div className="p-6 space-y-4">
         {raiseSaved ? (
           <div className="text-center space-y-3 py-4">
             <div className="h-12 w-12 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
@@ -51,12 +52,7 @@ export function ModalAjusteSalarial({
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-navy font-display">Registrar ajuste salarial</h2>
-              <button type="button" onClick={onClose}>
-                <X size={18} className="text-navy-light/40" />
-              </button>
-            </div>
+            <h2 id="modal-ajuste-salarial" className="text-base font-bold text-navy font-display">Registrar ajuste salarial</h2>
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Salario actual</label>
               <p className="text-sm text-navy font-mono">{currentSalary != null ? `₡${currentSalary.toLocaleString('es-CR')}` : '₡ ••••••'}</p>
@@ -118,6 +114,6 @@ export function ModalAjusteSalarial({
           </>
         )}
       </div>
-    </div>
+    </Modal>
   )
 }

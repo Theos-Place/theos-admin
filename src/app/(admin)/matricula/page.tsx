@@ -8,6 +8,7 @@ import {
   XCircle, Calendar, DollarSign, X, AlertCircle,
   CreditCard, Smartphone, BookOpen, ArrowRight,
 } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_CATALOG } from '@/data/study-catalog'
@@ -657,19 +658,12 @@ function ConfirmModal({
   onConfirm: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div
-        className="w-full max-w-md rounded-2xl p-6 space-y-5 bg-surface-card shadow-card"
-      >
+    <Modal onClose={onCancel} titleId="confirmar-matricula-title" width={448}>
+      <div className="p-6 space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-navy font-display">
-            Confirmar matrícula
-          </p>
-          <button onClick={onCancel}>
-            <X size={18} className="text-navy-light/40 hover:text-navy transition-colors" />
-          </button>
-        </div>
+        <p id="confirmar-matricula-title" className="text-base font-bold text-navy font-display">
+          Confirmar matrícula
+        </p>
 
         {/* Detalle */}
         <div className="rounded-xl space-y-0 overflow-hidden border border-outline">
@@ -763,6 +757,6 @@ function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

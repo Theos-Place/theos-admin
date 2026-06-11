@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
 import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/data/mock-auth'
 import { cn } from '@/lib/utils'
+import { Modal } from '@/components/shared/Modal'
 
 function RoleBadge({ roleId }: { roleId: RoleId }) {
   const role = ROLES.find(r => r.id === roleId)
@@ -275,35 +276,33 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
           return p.module === 'all' ? `Todo el sistema (${acts})` : `${p.module} (${acts})`
         }).join(' · ')
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-ink/40 backdrop-blur-sm p-4">
-            <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-surface-card shadow-card-lg">
-              <div className="px-6 py-5">
-                <p className="text-sm font-bold text-navy mb-1 font-display">
-                  ¿Agregar rol "{role.name}" a {user.member_name.split(' ')[0]}?
-                </p>
-                <p className="text-[12px] text-navy-light/55 leading-relaxed mb-3 font-body">
-                  Este rol le dará acceso a: {role.description}
-                </p>
-                <div className="rounded-lg px-3 py-2.5 text-[11px] text-navy-light/60 leading-relaxed bg-surface-low font-body">
-                  {perms}
-                </div>
-              </div>
-              <div className="px-6 py-4 border-t flex gap-3 border-outline">
-                <button
-                  onClick={() => setConfirmAdd(null)}
-                  className="flex-1 rounded-full border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => handleAddRole(confirmAdd)}
-                  className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-                >
-                  Confirmar
-                </button>
+          <Modal onClose={() => setConfirmAdd(null)} titleId="modal-confirmar-rol" width={384}>
+            <div className="px-6 py-5">
+              <p id="modal-confirmar-rol" className="text-sm font-bold text-navy mb-1 font-display">
+                ¿Agregar rol "{role.name}" a {user.member_name.split(' ')[0]}?
+              </p>
+              <p className="text-[12px] text-navy-light/55 leading-relaxed mb-3 font-body">
+                Este rol le dará acceso a: {role.description}
+              </p>
+              <div className="rounded-lg px-3 py-2.5 text-[11px] text-navy-light/60 leading-relaxed bg-surface-low font-body">
+                {perms}
               </div>
             </div>
-          </div>
+            <div className="px-6 py-4 border-t flex gap-3 border-outline">
+              <button
+                onClick={() => setConfirmAdd(null)}
+                className="flex-1 rounded-full border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleAddRole(confirmAdd)}
+                className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+              >
+                Confirmar
+              </button>
+            </div>
+          </Modal>
         )
       })()}
     </div>

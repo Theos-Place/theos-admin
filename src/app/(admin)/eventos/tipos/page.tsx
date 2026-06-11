@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { type EventTypeEntry } from '@/data/mock-events'
+import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import {
-  Plus, Edit2, X, Mic, Tent, Users, Star, BookOpen,
+  Plus, Edit2, Mic, Tent, Users, Star, BookOpen,
   Heart, MapPin, Music, Coffee, Zap, Calendar, Check, Globe,
 } from 'lucide-react'
 
@@ -61,19 +62,11 @@ function TypeModal({
   const valid = form.name.trim().length > 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative rounded-2xl p-6 max-w-md w-full mx-4 space-y-5 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-navy font-display">
-            {initial ? 'Editar tipo' : 'Nuevo tipo de evento'}
-          </h2>
-          <button onClick={onClose} className="text-navy-light/40 hover:text-navy transition-colors">
-            <X size={18} />
-          </button>
-        </div>
+    <Modal onClose={onClose} titleId="tipo-evento-titulo" width={448}>
+      <div className="p-6 space-y-5">
+        <h2 id="tipo-evento-titulo" className="text-base font-bold text-navy font-display">
+          {initial ? 'Editar tipo' : 'Nuevo tipo de evento'}
+        </h2>
 
         {/* Name */}
         <div className="space-y-1.5">
@@ -211,7 +204,7 @@ function TypeModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 

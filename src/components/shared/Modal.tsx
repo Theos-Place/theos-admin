@@ -16,12 +16,15 @@ export function Modal({
   children,
   width = 480,
   titleId,
+  tone = 'light',
 }: {
   onClose: () => void
   children: React.ReactNode
   width?: number | string
   /** id of the heading inside the modal — links aria-labelledby */
   titleId?: string
+  /** 'dark' para páginas con fondo navy (ej. check-in): panel y X claros. */
+  tone?: 'light' | 'dark'
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -77,13 +80,21 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="bg-surface-card rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] relative max-h-[90vh] overflow-y-auto w-full"
+        className={
+          tone === 'dark'
+            ? 'bg-navy border border-white/10 rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] relative max-h-[90vh] overflow-y-auto w-full'
+            : 'bg-surface-card rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] relative max-h-[90vh] overflow-y-auto w-full'
+        }
         style={{ maxWidth: width }}
       >
         <button
           onClick={onClose}
           aria-label="Cerrar modal"
-          className="absolute top-[14px] right-[14px] bg-transparent border-none cursor-pointer text-[rgba(41,54,92,0.4)] z-[1]"
+          className={
+            tone === 'dark'
+              ? 'absolute top-[14px] right-[14px] bg-transparent border-none cursor-pointer text-white/60 hover:text-white z-[1]'
+              : 'absolute top-[14px] right-[14px] bg-transparent border-none cursor-pointer text-[rgba(41,54,92,0.4)] hover:text-navy z-[1]'
+          }
         >
           <X size={18} />
         </button>

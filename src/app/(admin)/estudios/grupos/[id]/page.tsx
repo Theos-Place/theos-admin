@@ -10,6 +10,7 @@ import { GroupStatusBadge, NoLeaderBadge } from '@/components/studies/GroupStatu
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
 
 function getInitials(name: string) {
@@ -69,12 +70,9 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
-        <h3 className="font-semibold text-navy font-display">
+    <Modal onClose={onClose} titleId="anadir-miembro-title" width={384}>
+      <div className="p-5 space-y-4">
+        <h3 id="anadir-miembro-title" className="font-semibold text-navy font-display">
           Añadir miembro
         </h3>
         <input
@@ -117,7 +115,7 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
           Cancelar
         </button>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -128,28 +126,22 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
 
   if (sent) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
-        <div
-          className="relative rounded-2xl p-6 max-w-sm w-full mx-4 text-center space-y-3 bg-surface-card shadow-[var(--shadow-lg)]"
-        >
+      <Modal onClose={onClose} titleId="mensaje-enviado-title" width={384}>
+        <div className="p-6 text-center space-y-3">
           <Send size={32} className="text-teal-deep mx-auto" />
-          <p className="font-semibold text-navy font-display">Mensaje enviado</p>
+          <p id="mensaje-enviado-title" className="font-semibold text-navy font-display">Mensaje enviado</p>
           <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors">
             Cerrar
           </button>
         </div>
-      </div>
+      </Modal>
     )
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-ink/50 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative rounded-2xl p-5 max-w-sm w-full mx-4 space-y-4 bg-surface-card shadow-[var(--shadow-lg)]"
-      >
-        <h3 className="font-semibold text-navy font-display">Enviar mensaje al grupo</h3>
+    <Modal onClose={onClose} titleId="enviar-mensaje-grupo-title" width={384}>
+      <div className="p-5 space-y-4">
+        <h3 id="enviar-mensaje-grupo-title" className="font-semibold text-navy font-display">Enviar mensaje al grupo</h3>
         <div className="flex gap-2">
           {['whatsapp', 'email'].map(c => (
             <button
@@ -188,7 +180,7 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
