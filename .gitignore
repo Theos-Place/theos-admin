@@ -45,3 +45,4 @@ data-import/
 
 supabase/.temp/
 scripts/data/
+scripts/output/
