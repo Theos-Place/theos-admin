@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -20,6 +21,7 @@ import {
   UserCheck,
   Clock,
   ArrowLeftRight,
+  Inbox,
   BarChart2,
   Plus,
   Tag,
@@ -82,6 +84,7 @@ const ESTUDIOS_SUB = [
   { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
   { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock },
   { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight },
+  { href: '/estudios/solicitudes',     label: 'Solicitudes',      icon: Inbox },
 ]
 
 const navItems = [
@@ -112,6 +115,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAuth()
+
+  // Conteo de solicitudes de estudios abiertas para el badge del sub-item.
+  // El endpoint exige rol de coordinación: si responde 403 simplemente no hay badge.
+  const [openRequests, setOpenRequests] = useState(0)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/studies/requests?count=open')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [pathname])
   const userName  = user?.name ?? ''
   const userRole  = user?.role ?? ''
   const userRoles = user?.roles ?? []
@@ -665,9 +680,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                                 subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
                               )}
                             />
-                            <span className="font-body font-light">
+                            <span className="flex-1 font-body font-light">
                               {subLabel}
                             </span>
+                            {sub === '/estudios/solicitudes' && openRequests > 0 && (
+                              <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
+                                {openRequests}
+                              </span>
+                            )}
                           </Link>
                         )
                       })}

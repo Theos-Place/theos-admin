@@ -112,3 +112,49 @@ export type RelocationRequest = {
   status: 'pending' | 'resolved'
   requested_at: string
 }
+
+// ── Solicitudes de estudios (tabla study_requests, migración 041) ───────────
+
+export type StudyRequestType = 'new_group' | 'join_group' | 'relocation'
+export type StudyRequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
+
+export type StudyRequest = {
+  id: string
+  member_id: string
+  member_name: string
+  request_type: StudyRequestType
+  plan_id: string | null
+  plan_name: string | null
+  existing_group_id: string | null
+  existing_group_name: string | null
+  current_group_id: string | null
+  current_group_name: string | null
+  proposed_location: string | null
+  proposed_schedule: string | null
+  reason: string
+  status: StudyRequestStatus
+  reviewed_by: string | null
+  reviewed_by_name: string | null
+  reviewed_at: string | null
+  review_notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type StudyRequestWriteInput = {
+  member_id: string
+  request_type: StudyRequestType
+  plan_id?: string | null
+  existing_group_id?: string | null
+  current_group_id?: string | null
+  proposed_location?: string | null
+  proposed_schedule?: string | null
+  reason: string
+}
+
+export type NotificationRecipient = {
+  id: string
+  member_id: string
+  member_name: string
+  created_at: string
+}

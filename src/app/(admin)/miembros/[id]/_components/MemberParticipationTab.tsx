@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Lock, ChevronDown, ChevronUp } from 'lucide-react'
 import { STUDY_CATALOG } from '@/data/study-catalog'
+import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { cn } from '@/lib/utils'
 
 const LOAD_MORE = 10
@@ -93,6 +94,7 @@ type OpenSections = {
 }
 
 type Props = {
+  memberId: string
   openSections: OpenSections
   onToggleSection: (key: keyof OpenSections) => void
   estudiosTable: SortableTableResult<StudyRow>
@@ -115,6 +117,7 @@ type Props = {
 }
 
 export function MemberParticipationTab({
+  memberId,
   openSections,
   onToggleSection,
   estudiosTable,
@@ -137,6 +140,9 @@ export function MemberParticipationTab({
 }: Props) {
   return (
     <div className="space-y-3">
+      {/* Solicitudes de estudios — disponibles para cualquier rol */}
+      <StudyRequestActions memberId={memberId} />
+
       {/* Historial de estudios */}
       <SectionAccordion
         title="Historial de estudios"

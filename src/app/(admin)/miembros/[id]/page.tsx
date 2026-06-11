@@ -226,6 +226,7 @@ export default function MiembroDetailPage() {
       {/* TAB: Participación */}
       {activeTab === 'participacion' && (
         <MemberParticipationTab
+          memberId={member.id}
           openSections={openSections}
           onToggleSection={toggleSection}
           estudiosTable={estudiosTable}
