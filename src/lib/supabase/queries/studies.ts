@@ -138,6 +138,37 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
   return (data as unknown as DbGroupEnriched) ?? null
 }
 
+/**
+ * Asistencia activa = ≥1 check-in de CHARLA en los últimos N días.
+ * Criterio relajado a propósito: el histórico importado solo cubre eventos
+ * puntuales (con "1 check-in por mes en 6 meses" NADIE calificaba). Cuando
+ * haya varios meses de check-ins corrientes, endurecer subiendo la ventana
+ * o volviendo al criterio mensual.
+ */
+export const ATTENDANCE_WINDOW_DAYS = 60
+
+/** Ids de miembros con ≥1 check-in de charla en la ventana de asistencia. */
+export async function getRecentCharlaAttendeeIds(days = ATTENDANCE_WINDOW_DAYS): Promise<Set<string>> {
+  const supabase = createAdminClient()
+  const since = new Date(Date.now() - days * 86400000).toISOString()
+  const ids = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('event_checkins')
+      .select('member_id, events!inner(event_type)')
+      .gte('checked_in_at', since)
+      .eq('events.event_type', 'charla')
+      .order('id')
+      .range(from, from + 999)
+    if (error) throw error
+    for (const c of data as unknown as Array<{ member_id: string | null }>) {
+      if (c.member_id) ids.add(c.member_id)
+    }
+    if (data.length < 1000) break
+  }
+  return ids
+}
+
 export type StudyDemandRow = {
   zone: string
   graduating: number
@@ -198,6 +229,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   const requirements =
     stage === 'inicial' ? ['donador', 'asistencia']
     : stage === 'intermedia' ? ['donador', 'asistencia', 'servidor']
+    : stage === 'niveles' ? ['asistencia'] // niveles: solo asistencia
     : []
 
   const studyInfo = {
@@ -248,13 +280,12 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     if (batch.length < 1000) break
   }
 
-  // Compromisos: mismos criterios que el resto del sistema (helpers compartidos).
-  const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
-  const [attendanceIds, serverIds] = await Promise.all([
-    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
+  // Compromisos: asistencia = charla en los últimos ATTENDANCE_WINDOW_DAYS días.
+  const { getServerMemberIds } = await import('./members')
+  const [attendanceSet, serverIds] = await Promise.all([
+    requirements.includes('asistencia') ? getRecentCharlaAttendeeIds() : Promise.resolve(new Set<string>()),
     requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
   ])
-  const attendanceSet = new Set(attendanceIds)
   const serverSet = new Set(serverIds)
 
   type MemberState = {
@@ -406,9 +437,8 @@ const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
 export async function getEligibleStudiesForMember(memberId: string): Promise<MemberStudyEligibility> {
   const supabase = createAdminClient()
 
-  const sixMonthsAgo = new Date()
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
-  sixMonthsAgo.setDate(1)
+  // Misma ventana de asistencia que el análisis de demanda (criterio unificado).
+  const since = new Date(Date.now() - ATTENDANCE_WINDOW_DAYS * 86400000).toISOString()
 
   const [memberRes, enrRes, volRes, chkRes, plansRes] = await Promise.all([
     supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
@@ -419,9 +449,11 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     supabase.from('volunteers').select('id').eq('member_id', memberId).eq('status', 'active').limit(1),
     supabase
       .from('event_checkins')
-      .select('checked_in_at')
+      .select('id, events!inner(event_type)')
       .eq('member_id', memberId)
-      .gte('checked_in_at', sixMonthsAgo.toISOString()),
+      .eq('events.event_type', 'charla')
+      .gte('checked_in_at', since)
+      .limit(1),
     supabase
       .from('study_plans')
       .select('id, code, name, level, prerequisite_code')
@@ -444,10 +476,8 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     .map(e => ({ group_id: e.group!.id, group_name: e.group!.name, plan_code: e.group!.plan?.code ?? null }))
 
   // Asistencia activa: al menos 1 check-in en cada uno de los últimos 6 meses.
-  const monthsWithCheckin = new Set(
-    ((chkRes.data ?? []) as Array<{ checked_in_at: string }>).map(c => c.checked_in_at.slice(0, 7)),
-  )
-  const attendance_active = monthsWithCheckin.size >= 6
+  // ≥1 check-in de charla en la ventana (mismo criterio que getStudyDemand).
+  const attendance_active = (chkRes.data ?? []).length > 0
 
   const is_donor = Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor)
   const is_server = (volRes.data ?? []).length > 0
@@ -455,7 +485,8 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const meetsStage = (stage: string): boolean => {
     if (stage === 'inicial') return is_donor && attendance_active
     if (stage === 'intermedia') return is_donor && attendance_active && is_server
-    return true // niveles / campañas: sin compromisos
+    if (stage === 'niveles') return attendance_active // niveles: solo asistencia
+    return true // campañas: sin compromisos
   }
 
   const plans = (plansRes.data ?? []) as Array<{

@@ -17,6 +17,7 @@ import {
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { RequestTabs } from '@/components/shared/RequestTabs'
 import { cn } from '@/lib/utils'
 
 export type RequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
@@ -46,12 +47,13 @@ export const REQUEST_STATUS_BADGE: Record<RequestStatus, { label: string; cls: s
   rejected:  { label: 'Rechazada',   cls: 'bg-surface-low text-navy-light/60' },
 }
 
+// Orden: estados activos primero, "Todas" al final. Default al entrar: Abiertas.
 const STATUS_FILTERS: { key: RequestStatus | 'all'; label: string }[] = [
-  { key: 'all', label: 'Todas' },
   { key: 'open', label: 'Abiertas' },
   { key: 'in_review', label: 'En revisión' },
   { key: 'resolved', label: 'Resueltas' },
   { key: 'rejected', label: 'Rechazadas' },
+  { key: 'all', label: 'Todas' },
 ]
 
 function initials(name: string) {
@@ -89,7 +91,7 @@ export function RequestBoard<R extends BaseRequest>({
 }: Props<R>) {
   const toast = useToast()
   const [tab, setTab] = useState(tabs[0]?.key ?? '')
-  const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all'>('open')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [sortDesc, setSortDesc] = useState(true)
@@ -174,28 +176,7 @@ export function RequestBoard<R extends BaseRequest>({
   return (
     <div className="space-y-5">
       {/* Tabs por tipo */}
-      <div className="flex gap-2 flex-wrap">
-        {tabs.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={cn(
-              'rounded-full px-4 py-2 text-sm font-body transition-all',
-              tab === t.key ? 'bg-navy text-white' : 'bg-surface-low text-navy-light/70 hover:text-navy',
-            )}
-          >
-            {t.label}
-            {(countByTab[t.key] ?? 0) > 0 && (
-              <span className={cn(
-                'ml-2 inline-flex min-w-[20px] h-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold font-display',
-                tab === t.key ? 'bg-coral text-white' : 'bg-coral/10 text-coral',
-              )}>
-                {countByTab[t.key]}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <RequestTabs tabs={tabs} active={tab} counts={countByTab} onChange={setTab} />
 
       {/* Filtros: estado + rango de fechas + orden */}
       <div className="flex items-center gap-2 flex-wrap">
