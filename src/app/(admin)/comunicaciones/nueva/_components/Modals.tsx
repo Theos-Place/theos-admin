@@ -128,7 +128,7 @@ export function ConfirmModal({
   onConfirm,
   onClose,
 }: ConfirmModalProps) {
-  const previewBody = channel === 'whatsapp' ? waBody : emailBody
+  const previewBody = channel === 'email' ? emailBody : waBody
 
   return (
     <Modal onClose={onClose} titleId="confirmar-envio" width={448}>

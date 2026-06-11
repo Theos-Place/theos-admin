@@ -53,23 +53,27 @@ export function ContentSection({
         </button>
       </div>
 
-      {(channel === 'email' || channel === 'both') && (
+      {(channel === 'email' || channel === 'both' || channel === 'interna') && (
         <div className="space-y-1.5">
-          <p className="text-[11px] text-navy-light/50 font-body">Asunto del correo</p>
+          <p className="text-[11px] text-navy-light/50 font-body">
+            {channel === 'interna' ? 'Título de la alerta' : 'Asunto del correo'}
+          </p>
           <input
             className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-            placeholder="Asunto del correo..."
+            placeholder={channel === 'interna' ? 'Título de la alerta...' : 'Asunto del correo...'}
             value={subject}
             onChange={e => setSubject(e.target.value)}
           />
         </div>
       )}
 
-      {(channel === 'whatsapp' || channel === 'both') && (
+      {(channel === 'whatsapp' || channel === 'both' || channel === 'interna') && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <p className="text-[11px] text-navy-light/50 font-body">
-              Mensaje de WhatsApp <span className="text-navy-light/60">(soporta *negrita*, _itálica_, ~tachado~)</span>
+              {channel === 'interna'
+                ? 'Mensaje de la alerta'
+                : <>Mensaje de WhatsApp <span className="text-navy-light/60">(soporta *negrita*, _itálica_, ~tachado~)</span></>}
             </p>
             <span className="text-[11px] text-navy-light/60 tabular-nums font-mono">
               {waBody.length}/1000

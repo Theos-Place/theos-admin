@@ -9,6 +9,7 @@ import type { MemberList } from '@/data/mock-member-lists'
 import { MessagePreview } from '@/components/communications/MessagePreview'
 import { type RecipientState, type RecipientMode } from '@/components/communications/RecipientSelector'
 import { ChevronLeft, Send, Save, Check } from 'lucide-react'
+import { useToast } from '@/components/shared/Toast'
 
 import { RecipientsSection } from './_components/RecipientsSection'
 import { ChannelSection } from './_components/ChannelSection'
@@ -32,6 +33,7 @@ function insertAtCursor(ref: React.RefObject<HTMLTextAreaElement | null>, value:
 
 function NuevaComunicacionContent() {
   const searchParams = useSearchParams()
+  const toast = useToast()
   const { templates: MOCK_TEMPLATES, messages: MOCK_MESSAGES, configs: MOCK_CHANNEL_CONFIGS } = useCommunications()
 
   const initialMode = (searchParams.get('mode') as RecipientMode) || 'filters'
@@ -68,7 +70,9 @@ function NuevaComunicacionContent() {
   const [isImported, setIsImported] = useState(initialSegmentLabel !== '' && initialMemberIds.length > 0)
   const [showExpandedList, setShowExpandedList] = useState(false)
 
-  const [channel, setChannel] = useState<CommunicationChannel>(reenviarMsg?.channel ?? 'whatsapp')
+  // Mientras el correo (Brevo) no esté configurado, el canal por defecto es la
+  // alerta interna (decisión 2026-06-11).
+  const [channel, setChannel] = useState<CommunicationChannel>(reenviarMsg?.channel ?? 'interna')
   const [subject, setSubject] = useState(reenviarMsg?.subject ?? '')
   const [waBody, setWaBody] = useState(reenviarMsg?.channel !== 'email' ? (reenviarMsg?.body ?? '') : '')
   const [emailBody, setEmailBody] = useState(reenviarMsg?.channel !== 'whatsapp' ? (reenviarMsg?.body ?? '') : '')
@@ -133,7 +137,7 @@ function NuevaComunicacionContent() {
   async function handleSend() {
     setSending(true)
     try {
-      const channels: ('whatsapp' | 'email')[] = channel === 'both' ? ['whatsapp', 'email'] : [channel]
+      const channels: ('whatsapp' | 'email' | 'interna')[] = channel === 'both' ? ['whatsapp', 'email'] : [channel]
       const recips = recipients.manualMemberIds.flatMap(id =>
         channels.map(ch => ({ member_id: id, channel: ch, recipient: '' })),
       )
@@ -142,7 +146,7 @@ function NuevaComunicacionContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channel,
-          subject: (channel === 'email' || channel === 'both') ? (subject || null) : null,
+          subject: (channel === 'email' || channel === 'both' || channel === 'interna') ? (subject || null) : null,
           body: channel === 'email' ? emailBody : waBody,
           segment_label: recipients.label || null,
           total_recipients: recipients.count,
@@ -152,15 +156,20 @@ function NuevaComunicacionContent() {
       })
       if (!createRes.ok) throw new Error()
       const { id } = await createRes.json()
-      await fetch(`/api/communications/messages/${id}/send`, {
+      const sendRes = await fetch(`/api/communications/messages/${id}/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipients: recips }),
       })
+      if (!sendRes.ok) {
+        const data = await sendRes.json().catch(() => null)
+        throw new Error(data?.error)
+      }
       setSending(false)
       setSent(true)
-    } catch {
+    } catch (e) {
       setSending(false)
+      toast(e instanceof Error && e.message ? e.message : 'No se pudo enviar la comunicación', 'error')
     }
   }
 

@@ -1,6 +1,6 @@
 import type { CommunicationChannel, ChannelConfig } from '@/types/communication'
 import { cn } from '@/lib/utils'
-import { MessageCircle, Mail, Layers } from 'lucide-react'
+import { MessageCircle, Mail, Layers, Bell } from 'lucide-react'
 
 const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40 font-display'
 
@@ -19,9 +19,10 @@ export function ChannelSection({ channel, setChannel, waConfig, smtpConfig }: Pr
       </p>
       <div className="flex gap-2">
         {([
-          { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, color: 'text-emerald-600' },
-          { key: 'email',    label: 'Correo',   icon: Mail,          color: 'text-blue-600'    },
-          { key: 'both',     label: 'Ambos',    icon: Layers,        color: 'text-violet-600'  },
+          { key: 'interna',  label: 'Alerta interna', icon: Bell,          color: 'text-coral'       },
+          { key: 'whatsapp', label: 'WhatsApp',       icon: MessageCircle, color: 'text-emerald-600' },
+          { key: 'email',    label: 'Correo',         icon: Mail,          color: 'text-blue-600'    },
+          { key: 'both',     label: 'Ambos',          icon: Layers,        color: 'text-violet-600'  },
         ] as const).map(opt => (
           <button
             key={opt.key}
@@ -39,6 +40,14 @@ export function ChannelSection({ channel, setChannel, waConfig, smtpConfig }: Pr
         ))}
       </div>
       <div className="space-y-1.5">
+        {channel === 'interna' && (
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-surface-low">
+            <Bell size={13} className="text-coral shrink-0" />
+            <p className="text-[12px] text-navy-light/60 font-body">
+              Se entrega como notificación dentro del sistema (campana). El destinatario la ve al iniciar sesión; no requiere configurar correo ni WhatsApp.
+            </p>
+          </div>
+        )}
         {(channel === 'whatsapp' || channel === 'both') && (
           <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-surface-low">
             <MessageCircle size={13} className="text-emerald-600 shrink-0" />

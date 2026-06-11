@@ -10,6 +10,7 @@ export type InternalNotificationType =
   | 'finance_scholarship_request'
   | 'finance_refund_request'
   | 'leader_absent_alert'
+  | 'broadcast'
 
 export type InternalNotification = {
   id: string

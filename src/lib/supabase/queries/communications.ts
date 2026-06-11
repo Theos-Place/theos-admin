@@ -191,7 +191,7 @@ export async function createBroadcast(input: BroadcastWriteInput): Promise<{ id:
   return data as { id: string }
 }
 
-export type Recipient = { member_id?: string | null; channel: 'whatsapp' | 'email'; recipient: string }
+export type Recipient = { member_id?: string | null; channel: 'whatsapp' | 'email' | 'interna'; recipient: string }
 
 function todayStr(): string {
   return new Date().toISOString().split('T')[0]
@@ -240,11 +240,13 @@ export function distributeEmailSchedule(
 
 /**
  * Envía un broadcast real:
- * 1. Crea message_logs 'pending' con scheduled_date distribuida por días según
- *    el límite diario de Brevo (lo de hoy se procesa inmediatamente; el resto
- *    lo recoge el cron diario).
- * 2. WhatsApp queda en 'pending' sin procesar (se integra después).
- * Lanza error claro si Brevo no está configurado (antes de crear logs).
+ * 1. Canal 'interna': inserta internal_notifications (campana) por destinatario
+ *    y deja el log como 'sent' de una vez — sin correo ni configuración.
+ * 2. Email: crea message_logs 'pending' con scheduled_date distribuida por días
+ *    según el límite diario de Brevo (lo de hoy se procesa inmediatamente; el
+ *    resto lo recoge el cron diario).
+ * 3. WhatsApp queda en 'pending' sin procesar (se integra después).
+ * Lanza error claro si hay emails y Brevo no está configurado (antes de crear logs).
  */
 export async function sendBroadcast(id: string, recipients: Recipient[]): Promise<void> {
   const supabase = createAdminClient()
@@ -257,6 +259,33 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   await supabase.from('message_broadcasts')
     .update({ status: 'sending', started_at: new Date().toISOString() })
     .eq('id', id)
+
+  // Canal interna: notificación en el sistema para cada destinatario con member_id.
+  const internalRecipients = recipients.filter(r => r.channel === 'interna' && r.member_id)
+  if (internalRecipients.length > 0) {
+    const { data: b, error: bErr } = await supabase
+      .from('message_broadcasts').select('subject, body').eq('id', id).single()
+    if (bErr) throw bErr
+    const broadcast = b as { subject: string | null; body: string }
+    const { error: nErr } = await supabase.from('internal_notifications').insert(
+      internalRecipients.map(r => ({
+        recipient_member_id: r.member_id!,
+        type: 'broadcast',
+        title: broadcast.subject || 'Comunicado de Theos Place',
+        body: broadcast.body,
+        link: null,
+      })),
+    )
+    if (nErr) throw nErr
+  }
+  const internalLogs = internalRecipients.map(r => ({
+    broadcast_id: id,
+    member_id: r.member_id ?? null,
+    channel: r.channel,
+    recipient: r.recipient,
+    status: 'sent',
+    sent_at: new Date().toISOString(),
+  }))
 
   const waRecipients = recipients.filter(r => r.channel === 'whatsapp')
 
@@ -282,8 +311,8 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     status: 'pending',
   }))
 
-  if (emailLogs.length + waLogs.length > 0) {
-    const { error } = await supabase.from('message_logs').insert([...emailLogs, ...waLogs])
+  if (emailLogs.length + waLogs.length + internalLogs.length > 0) {
+    const { error } = await supabase.from('message_logs').insert([...emailLogs, ...waLogs, ...internalLogs])
     if (error) throw error
   }
 

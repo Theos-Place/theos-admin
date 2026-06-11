@@ -1,6 +1,7 @@
 // Communications module domain types.
 
-export type CommunicationChannel = 'whatsapp' | 'email' | 'both'
+// 'interna' = notificación interna en el sistema (campana), sin correo/WhatsApp.
+export type CommunicationChannel = 'interna' | 'whatsapp' | 'email' | 'both'
 export type CommunicationStatus = 'draft' | 'sending' | 'sent' | 'failed' | 'partial'
 
 export type CommunicationMessage = {

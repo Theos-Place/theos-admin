@@ -1,4 +1,4 @@
-import { MessageCircle, Mail } from 'lucide-react'
+import { MessageCircle, Mail, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { CommunicationChannel } from '@/data/mock-communications'
 
@@ -13,6 +13,14 @@ export function ChannelBadge({ channel, size = 'md' }: Props) {
     : 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold'
   const iconSize = size === 'sm' ? 10 : 12
 
+  if (channel === 'interna') {
+    return (
+      <span className={cn(base, 'bg-coral/10 text-coral-deep', 'font-display')}>
+        <Bell size={iconSize} />
+        Alerta interna
+      </span>
+    )
+  }
   if (channel === 'whatsapp') {
     return (
       <span className={cn(base, 'bg-emerald-50 text-emerald-700', 'font-display')}>
