@@ -2,9 +2,14 @@
 
 import { cn } from '@/lib/utils'
 import { type MockEvent, EVENT_TYPE_CONFIG } from '@/data/mock-events'
+import { isPastEvent } from '@/lib/events/expand-recurrence'
+
+// Las ocurrencias virtuales de recurrentes traen occurrence_key (mismo id que
+// el padre → el clic lleva al detalle del padre, pero la key de React es única).
+type CalendarEvent = MockEvent & { occurrence_key?: string }
 
 interface CalendarGridProps {
-  events: MockEvent[]
+  events: CalendarEvent[]
   month: number
   year: number
   onEventClick?: (id: string) => void
@@ -47,7 +52,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
   ]
   while (cells.length % 7 !== 0) cells.push(null)
 
-  function eventsOnDay(day: number): MockEvent[] {
+  function eventsOnDay(day: number): CalendarEvent[] {
     return events.filter(e => {
       const d = new Date(e.start_at)
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day
@@ -124,12 +129,17 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                     <div className="flex flex-wrap gap-1 px-0.5 sm:hidden">
                       {dayEvents.slice(0, 4).map(ev => {
                         const config = EVENT_TYPE_CONFIG[ev.event_type]
+                        const past = isPastEvent(ev)
                         return (
                           <button
-                            key={ev.id}
+                            key={ev.occurrence_key ?? ev.id}
                             onClick={() => onEventClick?.(ev.id)}
-                            aria-label={ev.name}
-                            className={cn('h-1.5 w-1.5 rounded-full', DOT_ONLY[config.color] ?? 'bg-navy')}
+                            aria-label={past ? `${ev.name} (realizado)` : ev.name}
+                            className={cn(
+                              'h-1.5 w-1.5 rounded-full',
+                              DOT_ONLY[config.color] ?? 'bg-navy',
+                              past && 'opacity-40'
+                            )}
                           />
                         )
                       })}
@@ -144,13 +154,16 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                     {dayEvents.slice(0, 3).map(ev => {
                       const config = EVENT_TYPE_CONFIG[ev.event_type]
                       const colorClass = DOT_BG[config.color] ?? 'bg-navy text-white'
+                      const past = isPastEvent(ev)
                       return (
                         <button
-                          key={ev.id}
+                          key={ev.occurrence_key ?? ev.id}
                           onClick={() => onEventClick?.(ev.id)}
+                          title={past ? `${ev.name} — Realizado` : ev.name}
                           className={cn(
                             'w-full text-left rounded px-1.5 py-0.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80 font-body',
-                            colorClass
+                            colorClass,
+                            past && 'opacity-45 hover:opacity-65'
                           )}
                         >
                           {ev.flyer_url ? '🖼 ' : ''}{ev.name}

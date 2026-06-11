@@ -33,6 +33,7 @@ export function toDomainEvent(db: DbEventEnriched): MockEvent {
     parent_event_id: db.parent_event_id,
     flyer_url: db.flyer_url,
     cancellation_reason: db.cancellation_reason,
+    is_active: db.is_active,
 
     sub_events: db.sub_events.map((s) => ({
       id: s.id,

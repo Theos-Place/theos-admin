@@ -66,6 +66,8 @@ export type MockEvent = {
   volunteer_bookings: VolunteerBooking[]
   cancellation_reason: string | null
   flyer_url: string | null
+  /** false = evento de import histórico; va al calendario y a "Realizados", no a "Próximos". */
+  is_active?: boolean
 }
 
 export type EventTypeEntry = {

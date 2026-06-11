@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getEvents, createEvent } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
 import type { EventType, EventStatus } from '@/types/event'
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('eventos')
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
     const search     = searchParams.get('search')     ?? undefined
@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
       search,
       event_type: event_type as EventType | undefined,
       status:     status as EventStatus | undefined,
-      is_active:  is_active !== null ? is_active === 'true' : true,
+      is_active:  is_active === 'all' ? 'all' : is_active !== null ? is_active === 'true' : true,
+      light:      searchParams.get('light') === '1',
       page,
       pageSize,
     })

@@ -32,6 +32,7 @@ export type DbEventEnriched = {
   requires_survey: boolean
   status: EventStatus
   cancellation_reason: string | null
+  is_active: boolean
   created_at: string
   updated_at: string
   sub_events: Array<{ id: string; name: string; max_capacity: number }>
@@ -60,7 +61,12 @@ export type EventFilters = {
   search?: string
   event_type?: EventType
   status?: EventStatus
-  is_active?: boolean
+  /** 'all' = activos e inactivos (históricos importados). */
+  is_active?: boolean | 'all'
+  /** Sin relaciones (registrations/checkins/volunteers): para calendario y
+   *  listados grandes — los ~840 históricos con 28k check-ins embebidos
+   *  serían megas de payload. */
+  light?: boolean
   page?: number
   pageSize?: number
 }
@@ -125,12 +131,15 @@ export async function getEvents(filters: EventFilters = {}): Promise<{ events: D
     pageSize = 100,
   } = filters
 
+  // select como string plano: el parser de tipos de supabase-js no soporta el ternario
+  const select: string = filters.light ? '*, sub_events(id, name, max_capacity)' : SELECT
   let query = supabase
     .from('events')
-    .select(SELECT, { count: 'exact' })
-    .eq('is_active', is_active)
+    .select(select, { count: 'exact' })
     .order('starts_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
+
+  if (is_active !== 'all') query = query.eq('is_active', is_active)
 
   if (search) query = query.ilike('title', `%${search}%`)
   if (event_type) query = query.eq('event_type', event_type)
@@ -140,7 +149,7 @@ export async function getEvents(filters: EventFilters = {}): Promise<{ events: D
   if (error) throw error
 
   return {
-    events: (data ?? []).map((row) => normalize(row as Record<string, unknown>)),
+    events: (data ?? []).map((row) => normalize(row as unknown as Record<string, unknown>)),
     total: count ?? 0,
   }
 }

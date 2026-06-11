@@ -5,13 +5,15 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { EVENT_TYPE_CONFIG, EVENT_TYPES, type EventType, type MockEvent } from '@/data/mock-events'
-import { useEvents } from '@/hooks/useEvents'
+import { useEvents, useAllEventsLight } from '@/hooks/useEvents'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
+import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
+import { expandRecurring, nextOccurrence, recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { cn } from '@/lib/utils'
-import { Plus, LayoutList, Calendar, Download, Code, ExternalLink } from 'lucide-react'
+import { Plus, LayoutList, Calendar, Download, Code, ExternalLink, Repeat } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 
 const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
@@ -21,6 +23,16 @@ const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
     label: t.name,
   })),
 ]
+
+type StatusFilter = 'proximos' | 'realizados' | 'todos'
+
+const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: 'proximos',   label: 'Próximos' },
+  { key: 'realizados', label: 'Realizados' },
+  { key: 'todos',      label: 'Todos' },
+]
+
+const PAGE_SIZE = 15
 
 function downloadAllEventsICS(events: MockEvent[]) {
   const formatDate = (dateStr: string) =>
@@ -59,15 +71,41 @@ function downloadAllEventsICS(events: MockEvent[]) {
 
 function EventosContent() {
   const router = useRouter()
+  // Dos fuentes: activos con relaciones (stats, próximos) + TODOS en liviano
+  // (históricos para calendario y "Realizados"). Se fusionan por id.
   const { events, loading } = useEvents()
-  // Vista y tipo en la URL: sobreviven recargas y se comparten por link.
+  const { events: allEventsLight } = useAllEventsLight()
+  // Vista, tipo y estado en la URL: sobreviven recargas y se comparten por link.
   const [viewRaw, setView] = useUrlFilter('vista', 'list')
   const view = (viewRaw === 'calendar' ? 'calendar' : 'list') as 'list' | 'calendar'
-  const [typeRaw, setTypeFilter] = useUrlFilter('tipo', 'all')
+  const [typeRaw, setTypeFilterRaw] = useUrlFilter('tipo', 'all')
   const typeFilter = typeRaw as EventType | 'all'
+  const [statusRaw, setStatusFilterRaw] = useUrlFilter('estado', 'proximos')
+  const statusFilter: StatusFilter =
+    statusRaw === 'realizados' || statusRaw === 'todos' ? statusRaw : 'proximos'
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const now = new Date()
   const [currentMonth, setCurrentMonth] = useState(now.getMonth())
   const [currentYear, setCurrentYear] = useState(now.getFullYear())
+
+  // Cambiar de filtro reinicia la paginación
+  function setTypeFilter(key: EventType | 'all') {
+    setTypeFilterRaw(key)
+    setVisibleCount(PAGE_SIZE)
+  }
+  function setStatusFilter(key: StatusFilter) {
+    setStatusFilterRaw(key)
+    setVisibleCount(PAGE_SIZE)
+  }
+
+  const merged = useMemo(() => {
+    const fullById = new Map(events.map(e => [e.id, e]))
+    const result = allEventsLight.map(e => fullById.get(e.id) ?? e)
+    if (result.length === 0) return events // el liviano aún no llega
+    const seen = new Set(result.map(e => e.id))
+    for (const e of events) if (!seen.has(e.id)) result.push(e)
+    return result
+  }, [events, allEventsLight])
 
   const thisMonthEvents = events.filter(e => {
     const d = new Date(e.start_at)
@@ -89,9 +127,45 @@ function EventosContent() {
     }).length
   }, 0)
 
-  const filtered = useMemo(() => {
-    return events.filter(e => typeFilter === 'all' || e.event_type === typeFilter)
-  }, [events, typeFilter])
+  // Filas de la lista según estado derivado (sin tocar la BD):
+  //  - Próximos: futuros activos, asc; un recurrente aparece UNA vez con su
+  //    próxima ocurrencia (virtual, fechas desplazadas).
+  //  - Realizados: puntuales ya pasados (incluye imports históricos), desc.
+  //    Las ocurrencias pasadas de recurrentes solo viven en el calendario.
+  const listRows = useMemo(() => {
+    const ref = new Date()
+    const byType = (e: MockEvent) => typeFilter === 'all' || e.event_type === typeFilter
+
+    const upcoming: MockEvent[] = []
+    for (const e of merged) {
+      if (!byType(e) || e.is_active === false) continue
+      if (e.is_recurring && e.recurrence_rule) {
+        const next = nextOccurrence(e, ref)
+        if (!next) continue
+        const dur = Math.max(0, new Date(e.end_at).getTime() - new Date(e.start_at).getTime())
+        upcoming.push({
+          ...e,
+          start_at: next.toISOString(),
+          end_at: new Date(next.getTime() + dur).toISOString(),
+        })
+      } else if (!isPastEvent(e, ref)) {
+        upcoming.push(e)
+      }
+    }
+    upcoming.sort((a, b) => a.start_at.localeCompare(b.start_at))
+
+    const done = merged
+      .filter(e => byType(e) && !e.is_recurring && isPastEvent(e, ref))
+      .sort((a, b) => b.start_at.localeCompare(a.start_at))
+
+    if (statusFilter === 'proximos') return upcoming
+    if (statusFilter === 'realizados') return done
+    return [...upcoming, ...done].sort((a, b) => a.start_at.localeCompare(b.start_at))
+  }, [merged, typeFilter, statusFilter])
+
+  const visibleRows = listRows.slice(0, visibleCount)
+  const counterNoun =
+    statusFilter === 'proximos' ? 'próximos' : statusFilter === 'realizados' ? 'realizados' : 'eventos'
 
   function handlePrev() {
     if (currentMonth === 0) {
@@ -111,10 +185,18 @@ function EventosContent() {
     }
   }
 
-  const calendarMonthEvents = events.filter(e => {
-    const d = new Date(e.start_at)
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear
-  })
+  // Calendario: todo el historial + ocurrencias virtuales de recurrentes
+  // dentro del mes visible (sin filas nuevas en la BD).
+  const calendarMonthEvents = useMemo(() => {
+    const from = new Date(currentYear, currentMonth, 1)
+    const to = new Date(currentYear, currentMonth + 1, 1)
+    const inMonth = merged.filter(e => {
+      const d = new Date(e.start_at)
+      return d >= from && d < to
+    })
+    const occurrences = merged.flatMap(e => expandRecurring(e, from, to))
+    return [...inMonth, ...occurrences]
+  }, [merged, currentMonth, currentYear])
 
   return (
     <div className="space-y-6">
@@ -132,7 +214,7 @@ function EventosContent() {
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
           <button
-            onClick={() => downloadAllEventsICS(filtered)}
+            onClick={() => downloadAllEventsICS(listRows)}
             className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
           >
             <Download size={13} />
@@ -223,7 +305,25 @@ function EventosContent() {
         </div>
 
         {view === 'list' && (
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Estado derivado: Próximos · Realizados · Todos */}
+            <div className="inline-flex rounded-full p-1 bg-surface-low">
+              {STATUS_FILTERS.map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setStatusFilter(f.key)}
+                  className={cn(
+                    'rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 font-display',
+                    statusFilter === f.key
+                      ? 'bg-navy text-white shadow-sm'
+                      : 'text-navy-light/60 hover:text-navy'
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
             {TYPE_FILTERS.map(f => (
               <button
                 key={f.key}
@@ -239,6 +339,7 @@ function EventosContent() {
                 {f.label}
               </button>
             ))}
+            </div>
           </div>
         )}
       </div>
@@ -261,7 +362,7 @@ function EventosContent() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((event, idx) => {
+                {visibleRows.map((event, idx) => {
                   const config = EVENT_TYPE_CONFIG[event.event_type]
                   const dotColors: Record<string, string> = {
                     navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
@@ -269,6 +370,8 @@ function EventosContent() {
                   }
                   const dotColor = dotColors[config.color] ?? 'bg-navy'
                   const startDate = new Date(event.start_at)
+                  const past = isPastEvent(event)
+                  const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
                   return (
                     <tr
                       key={event.id}
@@ -284,9 +387,17 @@ function EventosContent() {
                             <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-9 w-9 rounded-lg object-cover shrink-0" />
                           )}
                           <span className={cn('h-2 w-2 rounded-full shrink-0', dotColor)} />
-                          <span className="text-sm font-medium text-navy truncate max-w-[200px] font-body">
-                            {event.name}
-                          </span>
+                          <div className="min-w-0">
+                            <span className="block text-sm font-medium text-navy truncate max-w-[200px] font-body">
+                              {event.name}
+                            </span>
+                            {event.is_recurring && (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 font-body">
+                                <Repeat size={11} />
+                                {recurrence ?? 'Recurrente'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -302,7 +413,7 @@ function EventosContent() {
                         {event.registrations.length}
                       </td>
                       <td className="px-4 py-3">
-                        <EventStatusBadge status={event.status} />
+                        {past ? <RealizadoBadge /> : <EventStatusBadge status={event.status} />}
                       </td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                         <Link
@@ -321,7 +432,7 @@ function EventosContent() {
 
           {/* Mobile: tarjetas */}
           <ul className="md:hidden">
-            {filtered.map((event, idx) => {
+            {visibleRows.map((event, idx) => {
               const config = EVENT_TYPE_CONFIG[event.event_type]
               const dotColors: Record<string, string> = {
                 navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
@@ -329,12 +440,14 @@ function EventosContent() {
               }
               const dotColor = dotColors[config.color] ?? 'bg-navy'
               const startDate = new Date(event.start_at)
+              const past = isPastEvent(event)
+              const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
               return (
                 <li
                   key={event.id}
                   onClick={() => router.push(`/eventos/${event.id}`)}
                   className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
-                  style={idx < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                  style={idx < visibleRows.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   {event.flyer_url ? (
                     <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-10 w-10 rounded-lg object-cover shrink-0" />
@@ -347,18 +460,50 @@ function EventosContent() {
                       {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       {' · '}{event.registrations.length} inscritos
                     </p>
+                    {event.is_recurring && (
+                      <p className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 font-body">
+                        <Repeat size={11} />
+                        {recurrence ?? 'Recurrente'}
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <EventTypeBadge type={event.event_type} size="sm" />
-                    <EventStatusBadge status={event.status} size="sm" />
+                    {past ? <RealizadoBadge /> : <EventStatusBadge status={event.status} size="sm" />}
                   </div>
                 </li>
               )
             })}
           </ul>
 
-          {filtered.length === 0 && (
-            <EmptyState icon={Calendar} title="No hay eventos con ese filtro" />
+          {listRows.length === 0 && (
+            <EmptyState
+              icon={Calendar}
+              title={
+                statusFilter === 'proximos'
+                  ? 'No hay eventos próximos con ese filtro'
+                  : statusFilter === 'realizados'
+                    ? 'No hay eventos realizados con ese filtro'
+                    : 'No hay eventos con ese filtro'
+              }
+            />
+          )}
+
+          {/* Paginación: contador + cargar más */}
+          {listRows.length > 0 && (
+            <div className="flex flex-col items-center gap-2 px-4 py-4 border-t border-[var(--outline-variant)]">
+              <p className="text-[12px] text-navy-light/60 font-body">
+                Mostrando {Math.min(visibleCount, listRows.length)} de {listRows.length} {counterNoun}
+              </p>
+              {listRows.length > visibleCount && (
+                <button
+                  onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                  className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy hover:bg-surface-low transition-colors font-body"
+                >
+                  Cargar {PAGE_SIZE} más
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

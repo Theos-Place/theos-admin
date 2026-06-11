@@ -5,6 +5,9 @@ import {
 } from 'lucide-react'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
+import { RealizadoBadge } from '@/components/events/RealizadoBadge'
+import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
+import { Repeat } from 'lucide-react'
 import type { MockEvent } from '@/data/mock-events'
 
 type Event = MockEvent
@@ -97,7 +100,15 @@ export function EventHeader({
           <div className="space-y-3 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <EventTypeBadge type={cancelled ? 'charla' : event.event_type} size="sm" />
-              <EventStatusBadge status={cancelled ? 'cancelled' : event.status} size="sm" />
+              {!cancelled && !event.is_recurring && isPastEvent(event)
+                ? <RealizadoBadge />
+                : <EventStatusBadge status={cancelled ? 'cancelled' : event.status} size="sm" />}
+              {event.is_recurring && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-white/60 font-body">
+                  <Repeat size={11} />
+                  {recurrenceLabel(event.recurrence_rule) ?? 'Recurrente'}
+                </span>
+              )}
             </div>
             <h1
               className="text-2xl text-white font-bold leading-tight font-display font-extrabold tracking-[-0.02em]"

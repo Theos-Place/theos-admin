@@ -49,6 +49,34 @@ export function useEvents(filters: Filters = {}) {
   return { events, total, loading, error, refetch: fetchEvents }
 }
 
+/** TODOS los eventos (activos + históricos) en versión liviana — sin
+ *  registrations/checkins/volunteers. Para el calendario y el filtro
+ *  "Realizados", donde solo hacen falta título, fechas y recurrencia. */
+export function useAllEventsLight() {
+  const [dbEvents, setDbEvents] = useState<DbEventEnriched[]>([])
+  const [loading, setLoading]   = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/events?light=1&is_active=all&pageSize=2000')
+      .then(res => {
+        if (!res.ok) throw new Error('Error cargando eventos')
+        return res.json()
+      })
+      .then(data => { if (!cancelled) setDbEvents(data.events) })
+      .catch(e => { console.error('useAllEventsLight:', e) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  const events: MockEvent[] = useMemo(
+    () => dbEvents.map(toDomainEvent),
+    [dbEvents],
+  )
+
+  return { events, loading }
+}
+
 /** Carga un evento individual por id (detalle). */
 export function useEvent(id: string | null) {
   const [dbEvent, setDbEvent] = useState<DbEventEnriched | null>(null)
