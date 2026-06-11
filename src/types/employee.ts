@@ -8,8 +8,9 @@ export type EmployeeStatus = 'active' | 'inactive'
 
 export interface SalaryChange {
   date: string
-  previous_salary: number
-  new_salary: number
+  // null = monto restringido (solo rol finanzas lo recibe del API)
+  previous_salary: number | null
+  new_salary: number | null
   reason: string
   approved_by: string
 }
@@ -66,7 +67,8 @@ export interface Employee {
   contract_type: ContractType
   start_date: string
   end_date: string | null
-  current_salary: number
+  /** null = monto restringido (solo rol finanzas). */
+  current_salary: number | null
   status: EmployeeStatus
   salary_history: SalaryChange[]
   position_history: PositionRecord[]

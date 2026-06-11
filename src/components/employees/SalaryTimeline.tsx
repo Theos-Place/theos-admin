@@ -3,11 +3,14 @@ import type { SalaryChange } from '@/data/mock-employees'
 
 interface SalaryTimelineProps {
   history: SalaryChange[]
-  initialSalary: number
+  /** null = monto restringido (solo rol finanzas lo recibe del API). */
+  initialSalary: number | null
   startDate: string
 }
 
 export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTimelineProps) {
+  // Con montos restringidos (null) las filas se muestran sin cifras.
+  const restricted = initialSalary == null || history.some(h => h.new_salary == null || h.previous_salary == null)
   // Build full timeline: most recent first
   const items = [
     ...history.map(h => ({
@@ -20,7 +23,9 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
     })),
     {
       date: startDate,
-      salary: initialSalary - history.reduce((sum, h) => sum + (h.new_salary - h.previous_salary), 0),
+      salary: restricted
+        ? null
+        : initialSalary! - history.reduce((sum, h) => sum + (h.new_salary! - h.previous_salary!), 0),
       prevSalary: null as number | null,
       reason: 'Salario inicial de contratación',
       approvedBy: null as string | null,
@@ -31,7 +36,7 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
   return (
     <div className="space-y-0">
       {items.map((item, idx) => {
-        const pct = item.prevSalary
+        const pct = item.prevSalary != null && item.salary != null
           ? ((item.salary - item.prevSalary) / item.prevSalary * 100).toFixed(1)
           : null
         return (
@@ -54,7 +59,7 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
                 {new Date(item.date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
               </p>
               <p className="text-sm font-semibold text-navy font-display">
-                ₡{item.salary.toLocaleString('es-CR')}
+                {item.salary != null ? `₡${item.salary.toLocaleString('es-CR')}` : '₡ ••••••'}
                 {pct && (
                   <span className="ml-2 text-[11px] font-medium text-teal-deep">
                     +{pct}%

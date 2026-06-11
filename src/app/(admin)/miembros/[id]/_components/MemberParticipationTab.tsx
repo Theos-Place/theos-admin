@@ -28,7 +28,9 @@ function formatDate(iso: string) {
   })
 }
 
-function formatAmount(n: number) {
+function formatAmount(n: number | null) {
+  // null = monto restringido (solo rol finanzas lo recibe del API).
+  if (n == null) return '₡ •••,•••'
   return new Intl.NumberFormat('es-CR', {
     style: 'currency',
     currency: 'CRC',
@@ -145,7 +147,7 @@ function RecommendationsSection({ memberId }: { memberId: string }) {
 export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
-export type DonacionRow = { date: string; description: string; amount: number }
+export type DonacionRow = { date: string; description: string; amount: number | null }
 
 type SortableTableResult<T> = {
   sorted: T[]

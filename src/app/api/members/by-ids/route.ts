@@ -5,7 +5,7 @@ import { getMembers } from '@/lib/supabase/queries/members'
 // POST: trae los miembros de un conjunto de IDs (p. ej. integrantes de una lista guardada).
 // Body: { ids: string[] }
 export async function POST(req: NextRequest) {
-    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
+    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios', 'comunicaciones')
     if (auth.res) return auth.res
   try {
     const { ids } = await req.json()

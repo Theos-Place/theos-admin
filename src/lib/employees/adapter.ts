@@ -19,7 +19,7 @@ export function toDomainEmployee(db: DbEmployee): Employee {
 
   const salaryHistory: SalaryChange[] = db.salary_changes.map((s) => ({
     date: s.change_date,
-    previous_salary: s.previous_salary ?? 0,
+    previous_salary: s.previous_salary ?? null,
     new_salary: s.new_salary,
     reason: s.reason ?? '',
     approved_by: s.approved_by ?? '',
@@ -64,7 +64,7 @@ export function toDomainEmployee(db: DbEmployee): Employee {
     contract_type: db.contract_type ?? 'planilla',
     start_date: db.start_date,
     end_date: db.end_date,
-    current_salary: db.salary ?? 0,
+    current_salary: db.salary ?? null,
     status: (db.status === 'active' ? 'active' : 'inactive') as EmployeeStatus,
     salary_history: salaryHistory,
     position_history: positionHistory,

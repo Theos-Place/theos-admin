@@ -3,10 +3,20 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Search, X, Users, Filter, BookOpen, UsersRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { MOCK_GROUPS, type StudyGroup } from '@/data/mock-studies'
-
 type MemberLite = { id: string; first_name: string; last_name: string; email: string | null }
 type EventLite = { id: string; name: string; status: string; registrations: { member_id: string }[] }
+// Shape del GET /api/studies/groups (solo lo que se usa acá).
+type GroupLite = {
+  id: string
+  name: string | null
+  status: string
+  zone: string | null
+  leader: { first_name: string | null; last_name: string | null } | null
+  enrollments: Array<{ member_id: string; status: string }>
+}
+
+const groupEnrolledIds = (g: GroupLite) =>
+  Array.from(new Set(g.enrollments.filter(e => e.status === 'enrolled').map(e => e.member_id)))
 
 export type RecipientMode = 'filters' | 'manual' | 'group'
 
@@ -42,13 +52,19 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   const [selectedMembers, setSelectedMembers] = useState<MemberLite[]>([])
   const [events, setEvents] = useState<EventLite[]>([])
 
-  // Carga de eventos reales (para el modo "grupo → evento").
+  const [groups, setGroups] = useState<GroupLite[]>([])
+
+  // Carga de eventos y grupos de estudio reales (para el modo "grupo").
   useEffect(() => {
     let alive = true
     fetch('/api/events?pageSize=100')
       .then(r => (r.ok ? r.json() : { events: [] }))
       .then(d => { if (alive) setEvents((d.events ?? []) as EventLite[]) })
       .catch(() => { if (alive) setEvents([]) })
+    fetch('/api/studies/groups')
+      .then(r => (r.ok ? r.json() : []))
+      .then(d => { if (alive && Array.isArray(d)) setGroups(d as GroupLite[]) })
+      .catch(() => { if (alive) setGroups([]) })
     return () => { alive = false }
   }, [])
 
@@ -76,8 +92,8 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   )
 
   const activeGroups = useMemo(
-    () => MOCK_GROUPS.filter((g: StudyGroup) => g.status === 'en_matricula' || g.status === 'en_curso').slice(0, 10),
-    []
+    () => groups.filter(g => g.status === 'en_matricula' || g.status === 'en_curso'),
+    [groups]
   )
 
   function setMode(mode: RecipientMode) {
@@ -109,28 +125,35 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
     })
   }
 
+  // Al elegir evento/grupo se resuelven los member_id reales en
+  // manualMemberIds: el envío encola exactamente esa lista (antes el modo
+  // grupo mandaba el conteo pero cero destinatarios).
   function setGroupEvent(eventId: string) {
     const event = events.find(e => e.id === eventId)
     if (!event) return
+    const ids = Array.from(new Set(event.registrations.map(r => r.member_id).filter(Boolean)))
     onChange({
       ...value,
       groupEntity: 'event',
       groupId: eventId,
-      count: event.registrations.length,
+      manualMemberIds: ids,
+      count: ids.length,
       label: `Inscritos a "${event.name}"`,
     })
   }
 
   function setGroupStudy(groupId: string) {
-    const group = MOCK_GROUPS.find((g: StudyGroup) => g.id === groupId)
+    const group = groups.find(g => g.id === groupId)
     if (!group) return
-    const enrolled = group.participants.filter(p => p.status === 'enrolled').length
+    const ids = groupEnrolledIds(group)
+    const leaderName = group.leader ? `${group.leader.first_name ?? ''} ${group.leader.last_name ?? ''}`.trim() : null
     onChange({
       ...value,
       groupEntity: 'study_group',
       groupId,
-      count: enrolled,
-      label: `Participantes del grupo "${group.leader_name ?? 'Sin dirigente'}" (${group.zone})`,
+      manualMemberIds: ids,
+      count: ids.length,
+      label: `Participantes de "${group.name ?? leaderName ?? 'grupo de estudio'}"`,
     })
   }
 
@@ -291,9 +314,9 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
               onChange={e => setGroupStudy(e.target.value)}
             >
               <option value="">Seleccionar grupo...</option>
-              {activeGroups.map((g: StudyGroup) => (
+              {activeGroups.map(g => (
                 <option key={g.id} value={g.id}>
-                  {g.leader_name ?? 'Sin dirigente'} — {g.zone} ({g.participants.filter(p => p.status === 'enrolled').length} participantes)
+                  {g.name ?? 'Grupo sin nombre'} ({groupEnrolledIds(g).length} participantes)
                 </option>
               ))}
             </select>

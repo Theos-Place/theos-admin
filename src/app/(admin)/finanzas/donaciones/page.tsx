@@ -52,7 +52,8 @@ export default function DonacionesPage() {
   }
 
   const unidentified = donations.filter(d => !d.is_identified)
-  const unidentifiedTotal = unidentified.reduce((s, d) => s + d.amount, 0)
+  // Con montos restringidos (amount null para roles sin finanzas) el total queda oculto.
+  const unidentifiedTotal = unidentified.some(d => d.amount == null) ? null : unidentified.reduce((s, d) => s + (d.amount ?? 0), 0)
 
   const uniqueDonors = new Set(donations.filter(d => d.is_identified).map(d => d.member_id)).size
   const now = new Date()
@@ -60,7 +61,7 @@ export default function DonacionesPage() {
     const dt = new Date(d.donation_date)
     return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear()
   })
-  const totalThisMonth = thisMonth.reduce((s, d) => s + d.amount, 0)
+  const totalThisMonth = thisMonth.some(d => d.amount == null) ? null : thisMonth.reduce((s, d) => s + (d.amount ?? 0), 0)
 
   const filtered = useMemo(() => {
     return donations.filter(d => {

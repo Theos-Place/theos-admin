@@ -6,7 +6,7 @@ import { X, Check } from 'lucide-react'
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 interface ModalAjusteSalarialProps {
-  currentSalary: number
+  currentSalary: number | null
   raiseAmount: string
   raiseReason: string
   raiseDate: string
@@ -30,7 +30,7 @@ export function ModalAjusteSalarial({
   onRaiseDateChange,
   onSave,
 }: ModalAjusteSalarialProps) {
-  const canRaise = raiseAmount !== '' && parseFloat(raiseAmount) > currentSalary && raiseDate !== ''
+  const canRaise = raiseAmount !== '' && parseFloat(raiseAmount) > (currentSalary ?? 0) && raiseDate !== ''
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-ink/60 backdrop-blur-sm">
@@ -59,7 +59,7 @@ export function ModalAjusteSalarial({
             </div>
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Salario actual</label>
-              <p className="text-sm text-navy font-mono">₡{currentSalary.toLocaleString('es-CR')}</p>
+              <p className="text-sm text-navy font-mono">{currentSalary != null ? `₡${currentSalary.toLocaleString('es-CR')}` : '₡ ••••••'}</p>
             </div>
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Nuevo salario <span className="text-coral">*</span></label>
@@ -68,12 +68,12 @@ export function ModalAjusteSalarial({
                 <input
                   type="number"
                   className={cn(inputCls, 'pl-7 font-body')}
-                  placeholder={String(currentSalary)}
+                  placeholder={currentSalary != null ? String(currentSalary) : ''}
                   value={raiseAmount}
                   onChange={e => onRaiseAmountChange(e.target.value)}
                 />
               </div>
-              {raiseAmount && parseFloat(raiseAmount) <= currentSalary && (
+              {raiseAmount && parseFloat(raiseAmount) <= (currentSalary ?? 0) && (
                 <p className="text-[11px] text-coral font-body">El nuevo salario debe ser mayor al actual.</p>
               )}
             </div>

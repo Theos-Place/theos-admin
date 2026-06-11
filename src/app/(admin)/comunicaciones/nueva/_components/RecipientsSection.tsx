@@ -1,4 +1,4 @@
-import { mockMembers } from '@/data/mock-members'
+import { useState, useEffect } from 'react'
 import { RecipientSelector, type RecipientState } from '@/components/communications/RecipientSelector'
 import { cn } from '@/lib/utils'
 import { Check, X, List } from 'lucide-react'
@@ -32,9 +32,23 @@ export function RecipientsSection({
   reenviarMsg,
   onOpenListModal,
 }: Props) {
-  const previewMembers = mockMembers
-    .filter(m => initialMemberIds.includes(m.id))
-    .slice(0, PREVIEW_COUNT)
+  // Nombres reales para el preview de la lista importada (antes venían de
+  // mockMembers, que no coincide con los ids reales → preview vacío).
+  const [previewMembers, setPreviewMembers] = useState<Array<{ id: string; first_name: string; last_name: string }>>([])
+  useEffect(() => {
+    const ids = initialMemberIds.slice(0, PREVIEW_COUNT)
+    if (ids.length === 0) { setPreviewMembers([]); return }
+    let alive = true
+    fetch('/api/members/by-ids', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d?.members) setPreviewMembers(d.members) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [initialMemberIds])
 
   return (
     <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">

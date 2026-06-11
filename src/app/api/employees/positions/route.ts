@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getPaidPositions, createPosition, type PositionWriteInput } from '@/lib/supabase/queries/employees'
 
+// Rangos salariales SOLO para rol finanzas (decisión 2026-06-11).
 export async function GET() {
   try {
     const auth = await requireModuleView('empleados')
     if (auth.res) return auth.res
-    return NextResponse.json(await getPaidPositions())
+    const positions = await getPaidPositions()
+    if (auth.ctx.roles.includes('finanzas')) return NextResponse.json(positions)
+    return NextResponse.json(positions.map(p => ({ ...p, salary_min: null, salary_max: null })))
   } catch (error) {
     console.error('GET /api/employees/positions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

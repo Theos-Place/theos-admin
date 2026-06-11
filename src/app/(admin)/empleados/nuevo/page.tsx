@@ -63,8 +63,10 @@ export default function NuevoEmpleadoPage() {
   )
 
   const salaryNum = parseFloat(salary) || 0
+  // Sin montos (rangos restringidos a rol finanzas) no se puede validar el rango.
   const salaryOutOfRange =
     selectedPosition !== null &&
+    selectedPosition.salary_min != null && selectedPosition.salary_max != null &&
     salaryNum > 0 &&
     (salaryNum < selectedPosition.salary_min || salaryNum > selectedPosition.salary_max)
 

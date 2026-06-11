@@ -14,11 +14,15 @@ export async function GET(
     if (!member) {
       return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
     }
-    // Las donaciones/pagos del perfil son datos financieros: solo finanzas,
-    // dirección y admin los ven (auditoría S3). El resto recibe la lista vacía
-    // (la UI ya oculta el tab con hasFinanceRole; esto lo hace cumplir el server).
-    const canSeeFinance = auth.ctx.roles.some(r => ['admin', 'finanzas', 'direccion'].includes(r))
-    return NextResponse.json(canSeeFinance ? member : { ...member, donations: [] })
+    // Donaciones del perfil (decisión 2026-06-11): MONTOS solo para rol
+    // finanzas; admin/dirección ven las filas con amount null; el resto no
+    // recibe las filas.
+    if (auth.ctx.roles.includes('finanzas')) return NextResponse.json(member)
+    const seesRows = auth.ctx.roles.some(r => ['admin', 'direccion'].includes(r))
+    return NextResponse.json({
+      ...member,
+      donations: seesRows ? member.donations.map(d => ({ ...d, amount: null })) : [],
+    })
   } catch (error) {
     console.error('GET /api/members/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

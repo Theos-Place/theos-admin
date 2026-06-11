@@ -130,7 +130,8 @@ export type FamilyEntry = {
 
 export type DonationRecord = {
   date: string
-  amount: number
+  /** null = monto restringido (solo rol finanzas lo recibe del API). */
+  amount: number | null
   description: string
 }
 

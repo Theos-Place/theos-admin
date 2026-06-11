@@ -3,12 +3,17 @@ import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
 export function AmountDisplay({ amount, defaultHidden = true, revealed: externalRevealed }: {
-  amount: number
+  /** null = monto restringido (solo rol finanzas lo recibe): oculto sin toggle. */
+  amount: number | null
   defaultHidden?: boolean
   revealed?: boolean
 }) {
   const [localRevealed, setLocalRevealed] = useState(!defaultHidden)
   const isRevealed = externalRevealed !== undefined ? externalRevealed : localRevealed
+
+  if (amount == null) {
+    return <span className="inline-flex items-center gap-1">₡ •••,•••</span>
+  }
 
   return (
     <span className="inline-flex items-center gap-1">

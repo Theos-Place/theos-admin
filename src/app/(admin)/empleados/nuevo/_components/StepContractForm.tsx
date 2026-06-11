@@ -132,9 +132,9 @@ export function StepContractForm({
           <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-1">
             <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
             <p className="text-[12px] text-amber-700 font-body">
-              El salario está fuera del rango aprobado para este puesto (₡
-              {selectedPosition.salary_min.toLocaleString('es-CR')} — ₡
-              {selectedPosition.salary_max.toLocaleString('es-CR')}). Se requiere aprobación adicional.
+              El salario está fuera del rango aprobado para este puesto{selectedPosition.salary_min != null && selectedPosition.salary_max != null
+                ? ` (₡${selectedPosition.salary_min.toLocaleString('es-CR')} — ₡${selectedPosition.salary_max.toLocaleString('es-CR')})`
+                : ''}. Se requiere aprobación adicional.
             </p>
           </div>
         )}
