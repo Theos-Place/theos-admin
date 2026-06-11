@@ -37,9 +37,10 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { usePermissions } from '@/hooks/usePermissions'
 
 type SubItem = { href: string; label: string; icon: LucideIcon; badge?: number }
-type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[] }
+type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null }
 
 const EVENTOS_SUB: SubItem[] = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
@@ -110,6 +111,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAuth()
+  const { can } = usePermissions()
   const isDesktop = useIsDesktop()
 
   // Conteos de solicitudes abiertas para los badges. Los endpoints exigen rol:
@@ -148,18 +150,21 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const finanzasSub: SubItem[] = FINANZAS_SUB.map(s =>
     s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s)
 
-  const NAV: NavModule[] = [
-    { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, subs: [] },
-    { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub },
-    { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [] },
-    { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: EVENTOS_SUB },
-    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub },
-    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: SERVIDORES_SUB },
-    { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB },
-    { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub },
-    { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: COMUNICACIONES_SUB },
-    { href: '/formularios',    label: 'Formularios',    icon: FileText,        subs: FORMULARIOS_SUB },
+  // Cada módulo se muestra solo si el rol tiene 'view' sobre él (can combina
+  // múltiples roles: coordinador_estudios + comunicaciones ve comunicaciones).
+  const ALL_NAV: NavModule[] = [
+    { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, subs: [],                 module: null },
+    { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros' },
+    { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
+    { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: EVENTOS_SUB,        module: 'eventos' },
+    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
+    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: SERVIDORES_SUB,     module: 'servidores' },
+    { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
+    { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
+    { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: COMUNICACIONES_SUB, module: 'comunicaciones' },
+    { href: '/formularios',    label: 'Formularios',    icon: FileText,        subs: FORMULARIOS_SUB,    module: 'formularios' },
   ]
+  const NAV = ALL_NAV.filter(m => !m.module || can(m.module, 'view'))
 
   // ── Acordeón exclusivo en mobile/tablet ──
   const moduleOfPath = NAV.find(m => m.subs.length > 0 && (pathname === m.href || pathname.startsWith(m.href + '/')))?.href ?? null

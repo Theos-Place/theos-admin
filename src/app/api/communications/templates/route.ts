@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getTemplates, createTemplate, type TemplateWriteInput } from '@/lib/supabase/queries/communications'
 
 export async function GET() {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('comunicaciones')
     if (auth.res) return auth.res
     return NextResponse.json(await getTemplates())
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getEmployeeDocSignedUrl } from '@/lib/supabase/queries/employees'
 
 // GET: redirige a una URL firmada temporal del documento privado.
@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('empleados')
     if (auth.res) return auth.res
     const { id } = await params
     const url = await getEmployeeDocSignedUrl(id)

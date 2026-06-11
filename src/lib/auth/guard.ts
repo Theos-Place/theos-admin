@@ -42,3 +42,24 @@ export async function requireRoles(
   if (!allowed) return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
   return { ctx }
 }
+
+/**
+ * Guard por PERMISO de módulo (espejo server-side de can() del cliente):
+ * pasa si alguno de los roles del usuario otorga 'view' sobre el módulo
+ * (o sobre 'all', como admin/solo_lectura). A diferencia de requireRoles,
+ * no hay que enumerar roles por ruta — la fuente de verdad es ROLES.
+ * Multi-rol funciona solo: coordinador_estudios + comunicaciones ve comunicaciones.
+ */
+export async function requireModuleView(
+  module: string,
+): Promise<{ ctx: AuthContext; res?: undefined } | { ctx?: undefined; res: NextResponse }> {
+  const ctx = await getAuthContext()
+  if (!ctx) return { res: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
+  const { ROLES } = await import('@/data/mock-auth')
+  const allowed = ctx.roles.some(roleId => {
+    const role = ROLES.find(r => r.id === roleId)
+    return role?.permissions.some(p => (p.module === 'all' || p.module === module) && p.actions.includes('view'))
+  })
+  if (!allowed) return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
+  return { ctx }
+}

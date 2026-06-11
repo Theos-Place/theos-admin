@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getFormById, updateForm, deleteForm } from '@/lib/supabase/queries/forms'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
 
@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('formularios')
     if (auth.res) return auth.res
     const { id } = await params
     const form = await getFormById(id)

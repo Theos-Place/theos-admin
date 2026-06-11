@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getCommitteeGoals, createGoal } from '@/lib/supabase/queries/servers'
 
 export async function GET() {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('servidores')
     if (auth.res) return auth.res
     return NextResponse.json(await getCommitteeGoals())
   } catch (error) {

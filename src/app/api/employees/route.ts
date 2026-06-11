@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getEmployees, createEmployee, type EmployeeWriteInput } from '@/lib/supabase/queries/employees'
 
 export async function GET() {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('empleados')
     if (auth.res) return auth.res
     return NextResponse.json(await getEmployees())
   } catch (error) {

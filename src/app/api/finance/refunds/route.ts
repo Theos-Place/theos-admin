@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getRefunds, createRefund, type RefundWriteInput } from '@/lib/supabase/queries/finance'
 
 export async function GET() {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('finanzas')
     if (auth.res) return auth.res
     return NextResponse.json(await getRefunds())
   } catch (error) {
