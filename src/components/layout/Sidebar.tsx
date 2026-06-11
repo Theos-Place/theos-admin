@@ -60,6 +60,7 @@ const FINANZAS_SUB = [
   { href: '/finanzas/devoluciones',label: 'Devoluciones', icon: ArrowLeftRight  },
   { href: '/finanzas/becas',       label: 'Becas',        icon: GraduationCap   },
   { href: '/finanzas/reportes',    label: 'Reportes',     icon: BarChart2       },
+  { href: '/finanzas/solicitudes', label: 'Solicitudes',  icon: Inbox           },
 ]
 
 const COMUNICACIONES_SUB = [
@@ -117,11 +118,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // Conteo de solicitudes de estudios abiertas para el badge del sub-item.
   // El endpoint exige rol de coordinación: si responde 403 simplemente no hay badge.
   const [openRequests, setOpenRequests] = useState(0)
+  const [openFinanceRequests, setOpenFinanceRequests] = useState(0)
   useEffect(() => {
     let alive = true
     fetch('/api/studies/requests?count=open')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
+      .catch(() => {})
+    fetch('/api/finance/requests?count=open')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setOpenFinanceRequests(d.count ?? 0) })
       .catch(() => {})
     return () => { alive = false }
   }, [pathname])
@@ -290,7 +296,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           )}
                         >
                           <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span className="font-body font-light">{subLabel}</span>
+                          <span className="flex-1 font-body font-light">{subLabel}</span>
+                          {sub === '/finanzas/solicitudes' && openFinanceRequests > 0 && (
+                            <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
+                              {openFinanceRequests}
+                            </span>
+                          )}
                         </Link>
                       )
                     })}

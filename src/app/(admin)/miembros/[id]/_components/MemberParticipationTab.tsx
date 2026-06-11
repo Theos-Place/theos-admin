@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Lock, ChevronDown, ChevronUp } from 'lucide-react'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { cn } from '@/lib/utils'
 
 const LOAD_MORE = 10
@@ -140,8 +141,11 @@ export function MemberParticipationTab({
 }: Props) {
   return (
     <div className="space-y-3">
-      {/* Solicitudes de estudios — disponibles para cualquier rol */}
-      <StudyRequestActions memberId={memberId} />
+      {/* Solicitudes de estudios y finanzas — disponibles para cualquier rol */}
+      <div className="flex gap-2 flex-wrap">
+        <StudyRequestActions memberId={memberId} />
+        <FinanceRequestActions memberId={memberId} />
+      </div>
 
       {/* Historial de estudios */}
       <SectionAccordion
@@ -443,7 +447,10 @@ export function MemberParticipationTab({
                           <td
                             className={`px-4 py-2.5 text-right tabular-nums text-[13px] ${revealDonations ? 'font-mono' : 'font-body'}`}
                           >
-                            {revealDonations ? (
+                            {row.amount === 0 ? (
+                              // Histórico importado sin monto: el período va en la descripción.
+                              <span className="text-navy-light/60">—</span>
+                            ) : revealDonations ? (
                               <span className="text-navy">{formatAmount(row.amount)}</span>
                             ) : (
                               <span className="text-navy-light/60 tracking-widest">••••••</span>

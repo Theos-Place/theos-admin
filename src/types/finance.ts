@@ -82,3 +82,46 @@ export type ImportBatch = {
   duplicates: number
   status: 'completed' | 'partial' | 'failed'
 }
+
+// ── Solicitudes financieras (tabla finance_requests, migración 048) ─────────
+
+export type FinanceRequestType = 'scholarship' | 'refund'
+export type FinanceRequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
+
+export type FinanceRequestHistoryEntry = {
+  from_status: FinanceRequestStatus | null
+  to_status: FinanceRequestStatus
+  notes: string | null
+  changed_by_name: string | null
+  created_at: string
+}
+
+export type FinanceRequest = {
+  id: string
+  member_id: string
+  member_name: string
+  request_type: FinanceRequestType
+  study_group_id: string | null
+  study_group_name: string | null
+  payment_id: string | null
+  payment_label: string | null
+  amount: number | null
+  reason: string
+  status: FinanceRequestStatus
+  reviewed_by: string | null
+  reviewed_by_name: string | null
+  reviewed_at: string | null
+  review_notes: string | null
+  created_at: string
+  updated_at: string
+  history: FinanceRequestHistoryEntry[]
+}
+
+export type FinanceRequestWriteInput = {
+  member_id: string
+  request_type: FinanceRequestType
+  study_group_id?: string | null
+  payment_id?: string | null
+  amount?: number | null
+  reason: string
+}

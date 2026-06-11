@@ -1,0 +1,245 @@
+/**
+ * Solicitudes financieras (becas y devoluciones) — mismo patrón que
+ * study-requests. SQL en supabase/migrations/048_finance_requests.sql:
+ *
+ *   CREATE TABLE finance_requests (
+ *     id UUID PK, member_id UUID NOT NULL → members,
+ *     request_type TEXT CHECK ('scholarship','refund'),
+ *     study_group_id UUID → study_groups,   -- becas
+ *     payment_id UUID → payments,           -- devoluciones
+ *     amount NUMERIC(12,2), reason TEXT NOT NULL,
+ *     status TEXT CHECK ('open','in_review','resolved','rejected') DEFAULT 'open',
+ *     reviewed_by UUID → members, reviewed_at, review_notes,
+ *     created_at, updated_at
+ *   );
+ *   CREATE TABLE finance_request_status_history (
+ *     id UUID PK, request_id UUID → finance_requests,
+ *     from_status TEXT, to_status TEXT NOT NULL,
+ *     changed_by UUID → members, notes TEXT, created_at
+ *   );
+ *
+ * Notificaciones: a diferencia de estudios (lista configurable), acá se
+ * notifica directo a todos los miembros con rol activo finanzas o admin.
+ */
+import { createAdminClient } from '@/lib/supabase/admin'
+import type {
+  FinanceRequest, FinanceRequestWriteInput, FinanceRequestStatus, FinanceRequestType,
+} from '@/types/finance'
+
+const REQUEST_SELECT = `
+  id, member_id, request_type, study_group_id, payment_id, amount, reason, status,
+  reviewed_by, reviewed_at, review_notes, created_at, updated_at,
+  member:members!finance_requests_member_id_fkey(first_name, last_name),
+  reviewer:members!finance_requests_reviewed_by_fkey(first_name, last_name),
+  study_group:study_groups(name),
+  payment:payments(amount, paid_at, description, entity_type),
+  history:finance_request_status_history(from_status, to_status, notes, created_at, actor:members(first_name, last_name))
+`
+
+type DbRow = {
+  id: string
+  member_id: string
+  request_type: FinanceRequestType
+  study_group_id: string | null
+  payment_id: string | null
+  amount: number | null
+  reason: string
+  status: FinanceRequestStatus
+  reviewed_by: string | null
+  reviewed_at: string | null
+  review_notes: string | null
+  created_at: string
+  updated_at: string
+  member: { first_name: string | null; last_name: string | null } | null
+  reviewer: { first_name: string | null; last_name: string | null } | null
+  study_group: { name: string | null } | null
+  payment: { amount: number | null; paid_at: string | null; description: string | null; entity_type: string | null } | null
+  history: Array<{
+    from_status: string | null
+    to_status: string
+    notes: string | null
+    created_at: string
+    actor: { first_name: string | null; last_name: string | null } | null
+  }> | null
+}
+
+function fullName(p: { first_name: string | null; last_name: string | null } | null): string {
+  return [p?.first_name, p?.last_name].filter(Boolean).join(' ') || '—'
+}
+
+function paymentLabel(p: DbRow['payment']): string | null {
+  if (!p) return null
+  const amount = p.amount != null
+    ? new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 }).format(p.amount)
+    : ''
+  const date = p.paid_at ? new Date(p.paid_at).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
+  return [p.description, amount, date].filter(Boolean).join(' · ') || null
+}
+
+function toDomain(r: DbRow): FinanceRequest {
+  return {
+    id: r.id,
+    member_id: r.member_id,
+    member_name: fullName(r.member),
+    request_type: r.request_type,
+    study_group_id: r.study_group_id,
+    study_group_name: r.study_group?.name ?? null,
+    payment_id: r.payment_id,
+    payment_label: paymentLabel(r.payment),
+    amount: r.amount,
+    reason: r.reason,
+    status: r.status,
+    reviewed_by: r.reviewed_by,
+    reviewed_by_name: r.reviewer ? fullName(r.reviewer) : null,
+    reviewed_at: r.reviewed_at,
+    review_notes: r.review_notes,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+    history: (r.history ?? [])
+      .map(h => ({
+        from_status: h.from_status as FinanceRequestStatus | null,
+        to_status: h.to_status as FinanceRequestStatus,
+        notes: h.notes,
+        changed_by_name: h.actor ? fullName(h.actor) : null,
+        created_at: h.created_at,
+      }))
+      .sort((a, b) => a.created_at.localeCompare(b.created_at)),
+  }
+}
+
+export async function getFinanceRequests(filters?: {
+  status?: FinanceRequestStatus
+  type?: FinanceRequestType
+  member_id?: string
+}): Promise<FinanceRequest[]> {
+  const supabase = createAdminClient()
+  let q = supabase
+    .from('finance_requests')
+    .select(REQUEST_SELECT)
+    .order('created_at', { ascending: false })
+    .limit(500)
+  if (filters?.status) q = q.eq('status', filters.status)
+  if (filters?.type) q = q.eq('request_type', filters.type)
+  if (filters?.member_id) q = q.eq('member_id', filters.member_id)
+  const { data, error } = await q
+  if (error) throw error
+  return ((data ?? []) as unknown as DbRow[]).map(toDomain)
+}
+
+export async function countOpenFinanceRequests(): Promise<number> {
+  const supabase = createAdminClient()
+  const { count, error } = await supabase
+    .from('finance_requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'open')
+  if (error) throw error
+  return count ?? 0
+}
+
+export async function createFinanceRequest(input: FinanceRequestWriteInput): Promise<FinanceRequest> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('finance_requests')
+    .insert({
+      member_id: input.member_id,
+      request_type: input.request_type,
+      study_group_id: input.study_group_id ?? null,
+      payment_id: input.payment_id ?? null,
+      amount: input.amount ?? null,
+      reason: input.reason,
+    })
+    .select(REQUEST_SELECT)
+    .single()
+  if (error) throw error
+  return toDomain(data as unknown as DbRow)
+}
+
+export async function updateFinanceRequestStatus(
+  id: string,
+  status: FinanceRequestStatus,
+  reviewedBy: string,
+  reviewNotes?: string | null,
+): Promise<FinanceRequest> {
+  const supabase = createAdminClient()
+
+  const { data: before } = await supabase
+    .from('finance_requests').select('status').eq('id', id).maybeSingle()
+  const fromStatus = (before as { status: FinanceRequestStatus } | null)?.status ?? null
+
+  const patch: Record<string, unknown> = {
+    status,
+    reviewed_by: reviewedBy,
+    updated_at: new Date().toISOString(),
+  }
+  if (status === 'resolved' || status === 'rejected') {
+    patch.reviewed_at = new Date().toISOString()
+    patch.review_notes = reviewNotes ?? null
+  }
+  const { data, error } = await supabase
+    .from('finance_requests')
+    .update(patch)
+    .eq('id', id)
+    .select(REQUEST_SELECT)
+    .single()
+  if (error) throw error
+
+  const { error: hErr } = await supabase.from('finance_request_status_history').insert({
+    request_id: id,
+    from_status: fromStatus,
+    to_status: status,
+    changed_by: reviewedBy,
+    notes: reviewNotes ?? null,
+  })
+  if (hErr) console.warn('updateFinanceRequestStatus: historial falló:', hErr.message)
+
+  const result = toDomain(data as unknown as DbRow)
+  result.history = [...result.history, {
+    from_status: fromStatus,
+    to_status: status,
+    notes: reviewNotes ?? null,
+    changed_by_name: result.reviewed_by_name,
+    created_at: new Date().toISOString(),
+  }]
+  return result
+}
+
+/** Notifica a todos los miembros con rol activo finanzas o admin. Best-effort. */
+export async function notifyFinanceRolesOfRequest(req: FinanceRequest): Promise<void> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('member_roles')
+    .select('member_id')
+    .in('role', ['admin', 'finanzas'])
+    .eq('is_active', true)
+  if (error) { console.warn('notifyFinanceRolesOfRequest:', error.message); return }
+  const recipients = Array.from(new Set((data ?? []).map(r => (r as { member_id: string }).member_id)))
+  if (recipients.length === 0) return
+
+  const isScholarship = req.request_type === 'scholarship'
+  const rows = recipients.map(memberId => ({
+    recipient_member_id: memberId,
+    type: isScholarship ? 'finance_scholarship_request' : 'finance_refund_request',
+    title: isScholarship ? 'Nueva solicitud de beca' : 'Nueva solicitud de devolución',
+    body: `${req.member_name} envió una solicitud. Motivo: ${req.reason.slice(0, 140)}`,
+    link: '/finanzas/solicitudes',
+  }))
+  const { error: nErr } = await supabase.from('internal_notifications').insert(rows)
+  if (nErr) console.warn('notifyFinanceRolesOfRequest:', nErr.message)
+}
+
+/** Pagos pagados de un miembro, para el dropdown de "Solicitar devolución". */
+export async function getMemberPaidPayments(memberId: string): Promise<Array<{
+  id: string; label: string
+}>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, amount, paid_at, description, entity_type')
+    .eq('member_id', memberId)
+    .eq('status', 'paid')
+    .order('paid_at', { ascending: false })
+    .limit(50)
+  if (error) throw error
+  return ((data ?? []) as Array<{ id: string; amount: number | null; paid_at: string | null; description: string | null; entity_type: string | null }>)
+    .map(p => ({ id: p.id, label: paymentLabel(p) ?? p.id }))
+}

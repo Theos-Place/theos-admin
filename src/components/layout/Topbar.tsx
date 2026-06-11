@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield } from 'lucide-react'
+import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield, Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/data/mock-auth'
 import { NotificationsBell } from './NotificationsDropdown'
@@ -77,16 +77,8 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Search */}
-      <div className="hidden sm:flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-56 lg:w-72 transition-all focus-within:ring-1 focus-within:ring-coral/30">
-        <Search size={16} className="text-navy-light/50 shrink-0" strokeWidth={1.75} />
-        <input
-          type="search"
-          aria-label="Buscar"
-          placeholder="Buscar…"
-          className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body font-light"
-        />
-      </div>
+      {/* Search global de miembros */}
+      <GlobalMemberSearch />
 
       {/* Notifications */}
       <NotificationsBell />
@@ -181,5 +173,109 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
         )}
       </div>
     </header>
+  )
+}
+
+/* ── Search global de miembros (server-side: nombre, cédula, correo) ── */
+type SearchResult = { id: string; first_name: string; last_name: string; cedula: string | null }
+
+function resultInitials(m: SearchResult) {
+  return ((m.first_name[0] ?? '') + (m.last_name[0] ?? '')).toUpperCase() || '—'
+}
+
+function GlobalMemberSearch() {
+  const router = useRouter()
+  const [q, setQ] = useState('')
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [open, setOpen] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const boxRef = useRef<HTMLDivElement>(null)
+
+  // Debounce de 300ms; mínimo 2 caracteres.
+  useEffect(() => {
+    let alive = true
+    const t = setTimeout(() => {
+      const term = q.trim()
+      if (term.length < 2) { if (alive) { setResults([]); setOpen(false) } return }
+      setSearching(true)
+      setOpen(true)
+      fetch(`/api/members?search=${encodeURIComponent(term)}&pageSize=8`)
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => { if (alive) { setResults(d?.members ?? []); setSearching(false) } })
+        .catch(() => { if (alive) { setResults([]); setSearching(false) } })
+    }, 300)
+    return () => { alive = false; clearTimeout(t) }
+  }, [q])
+
+  // Cerrar con clic fuera.
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  function go(id: string) {
+    setOpen(false)
+    setQ('')
+    setResults([])
+    router.push(`/miembros/${id}`)
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') { setOpen(false); return }
+    if (e.key === 'Enter' && results[0]) { e.preventDefault(); go(results[0].id) }
+  }
+
+  return (
+    <div className="relative hidden sm:block" ref={boxRef}>
+      <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-56 lg:w-72 transition-all focus-within:ring-1 focus-within:ring-coral/30">
+        <Search size={16} className="text-navy-light/50 shrink-0" strokeWidth={1.75} />
+        <input
+          type="search"
+          aria-label="Buscar miembro por nombre, cédula o correo"
+          placeholder="Buscar miembro por nombre, cédula o correo..."
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          onFocus={() => { if (results.length || searching) setOpen(true) }}
+          onKeyDown={onKeyDown}
+          className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body font-light"
+        />
+      </div>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 rounded-2xl overflow-hidden bg-surface-card shadow-card-lg border border-outline">
+          {searching ? (
+            <div className="flex items-center justify-center gap-2 px-4 py-4 text-[13px] text-navy-light/60 font-body">
+              <Loader2 size={14} className="animate-spin" /> Buscando…
+            </div>
+          ) : results.length === 0 ? (
+            <p className="px-4 py-4 text-center text-[13px] text-navy-light/60 font-body">
+              No se encontraron miembros
+            </p>
+          ) : (
+            <ul className="max-h-80 overflow-y-auto py-1">
+              {results.map(m => (
+                <li key={m.id}>
+                  <button
+                    onClick={() => go(m.id)}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-surface-low transition-colors"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
+                      {resultInitials(m)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-navy font-body">{m.first_name} {m.last_name}</span>
+                      {m.cedula && <span className="text-[11px] text-navy-light/60 font-mono">{m.cedula}</span>}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

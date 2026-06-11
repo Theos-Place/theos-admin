@@ -4,6 +4,8 @@ export type InternalNotificationType =
   | 'study_relocation_request'
   | 'study_join_request'
   | 'study_new_group_request'
+  | 'finance_scholarship_request'
+  | 'finance_refund_request'
 
 export type InternalNotification = {
   id: string

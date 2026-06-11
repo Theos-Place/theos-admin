@@ -586,6 +586,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     checkinsRes,
     volunteersRes,
     paymentsRes,
+    donationsRes,
     formsRes,
   ] = await Promise.all([
     supabase
@@ -612,8 +613,14 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         category:payment_categories(name, is_donation)
       `)
       .eq('member_id', id)
-      .eq('status', 'completed')
+      .eq('status', 'paid') // estados reales de payments (014): paid/pending/refunded/…
       .order('payment_date', { ascending: false }),
+
+    supabase
+      .from('donations')
+      .select('donation_date, amount, source_file')
+      .eq('member_id', id)
+      .order('donation_date', { ascending: false }),
 
     supabase
       .from('form_responses')
@@ -633,6 +640,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   if (checkinsRes.error)   throw checkinsRes.error
   if (volunteersRes.error) throw volunteersRes.error
   if (paymentsRes.error)   throw paymentsRes.error
+  if (donationsRes.error)  throw donationsRes.error
   if (formsRes.error)      throw formsRes.error
 
   // Set de event_ids donde el miembro sirvió como voluntario
@@ -727,7 +735,26 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       status: v.status,
     }))
 
-  const donations: DbDonation[] = (paymentsRes.data ?? [])
+  // Donaciones: la tabla donations (incluye las históricas importadas con
+  // amount 0) + pagos con categoría de donación. Para las importadas sin
+  // monto, la descripción lleva el trimestre ("Donación registrada · Q3 2025").
+  // Parsear el string YYYY-MM-DD directo: new Date(date-only) es UTC y al
+  // leer con getters locales (UTC-6) retrocede un día → trimestre equivocado.
+  const quarterLabel = (iso: string) => {
+    const [y, m] = iso.split('-').map(Number)
+    return `Q${Math.floor((m - 1) / 3) + 1} ${y}`
+  }
+  const tableDonations: DbDonation[] = ((donationsRes.data ?? []) as Array<{
+    donation_date: string; amount: number | null; source_file: string | null
+  }>).map((d) => ({
+    date: d.donation_date,
+    amount: Number(d.amount ?? 0),
+    description: Number(d.amount ?? 0) === 0
+      ? `Donación registrada · ${quarterLabel(d.donation_date)}`
+      : 'Donación',
+    category: 'Donación',
+  }))
+  const paymentDonations: DbDonation[] = (paymentsRes.data ?? [])
     .filter((p) => {
       const cat = (p as Record<string, unknown>).category as { is_donation: boolean } | null
       return cat?.is_donation === true
@@ -742,6 +769,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         category: cat?.name ?? '',
       }
     })
+  const donations: DbDonation[] = [...tableDonations, ...paymentDonations]
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
 
   const form_responses: DbFormResponse[] = (formsRes.data ?? []).map((r) => {
     const row = r as Record<string, unknown>
