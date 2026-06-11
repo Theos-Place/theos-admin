@@ -20,7 +20,7 @@ import { useDashboard } from '@/hooks/useDashboard'
 // Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
 const EMPTY_STATS = {
   members: { total: 0, active: 0, new_this_month: 0, without_cedula: 0, duplicates_suggested: 0 },
-  studies: { active_groups: 0, students: 0, open_registration: 0, waitlist_n1: 0, closing_soon: 0, without_leader: 0 },
+  studies: { active_groups: 0, students: 0, open_registration: 0, open_requests: 0, closing_soon: 0, without_leader: 0 },
   events: { upcoming_this_month: 0, this_week: 0, pending_payments: 0, near_capacity: 0 },
   servers: { active: 0, positions: 0, committees: 0, open_vacancies: 0, pending_applications: 0 },
   finance: { donors_active: 0, pending_refunds: 0, income_this_month: 0 },
@@ -508,7 +508,7 @@ export default function DashboardPage() {
             subtitle={`${DASHBOARD_STATS.studies.active_groups} grupos · ${DASHBOARD_STATS.studies.students} estudiantes`}
             rows={[
               { label: 'En inscripción',          value: DASHBOARD_STATS.studies.open_registration },
-              { label: 'Lista de espera N1',       value: DASHBOARD_STATS.studies.waitlist_n1,      badge: 'yellow' },
+              { label: 'Solicitudes abiertas',       value: DASHBOARD_STATS.studies.open_requests,    badge: 'yellow' },
               { label: 'Por cerrar (30 días)',     value: DASHBOARD_STATS.studies.closing_soon },
               { label: 'Grupos sin dirigente',     value: DASHBOARD_STATS.studies.without_leader,   badge: 'coral' },
             ]}
@@ -619,8 +619,8 @@ export default function DashboardPage() {
           {can('servidores', 'view') && DASHBOARD_STATS.servers.pending_applications > 0 && (
             <AlertRow level="yellow" text={`${DASHBOARD_STATS.servers.pending_applications} aplicaciones de servicio sin revisar`} href="/servidores/aplicaciones" />
           )}
-          {can('estudios', 'view') && DASHBOARD_STATS.studies.waitlist_n1 > 0 && (
-            <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.waitlist_n1} personas en lista de espera Nivel 1`} href="/estudios/lista-de-espera" />
+          {can('estudios', 'view') && DASHBOARD_STATS.studies.open_requests > 0 && (
+            <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.open_requests} solicitud${DASHBOARD_STATS.studies.open_requests !== 1 ? 'es' : ''} de estudios abierta${DASHBOARD_STATS.studies.open_requests !== 1 ? 's' : ''}`} href="/estudios/solicitudes" />
           )}
           {can('comunicaciones', 'view') && DASHBOARD_STATS.communications.failed === 0 && (
             <AlertRow level="green" text="Todo al día en comunicaciones" />

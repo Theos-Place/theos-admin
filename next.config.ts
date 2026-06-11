@@ -53,6 +53,13 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    // Lista de espera y reubicaciones se unificaron en solicitudes (migración 042).
+    return [
+      { source: '/estudios/lista-de-espera', destination: '/estudios/solicitudes', permanent: true },
+      { source: '/estudios/reubicaciones', destination: '/estudios/solicitudes', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

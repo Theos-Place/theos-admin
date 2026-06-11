@@ -82,8 +82,6 @@ const ESTUDIOS_SUB = [
   { href: '/estudios/plan',            label: 'Plan de Estudios', icon: BookText },
   { href: '/estudios/analisis',        label: 'Análisis de estudios', icon: BarChart2 },
   { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
-  { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock },
-  { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight },
   { href: '/estudios/solicitudes',     label: 'Solicitudes',      icon: Inbox },
 ]
 

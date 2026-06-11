@@ -1,22 +1,11 @@
 // Adapta filas de Supabase a los tipos de dominio de estudios (StudyType, StudyGroup).
 
 import type {
-  DbStudyPlan, DbGroupEnriched, DbLeaderEnriched, DbWaitlistEntry, DbRelocation,
+  DbStudyPlan, DbGroupEnriched, DbLeaderEnriched,
 } from '@/lib/supabase/queries/studies'
 import type {
   StudyType, StudyGroup, GroupParticipant, StudyLeader, LeaderEvaluation,
-  WaitListEntry, RelocationRequest,
 } from '@/types/study'
-
-function ageFrom(birthDate: string | null): number {
-  if (!birthDate) return 0
-  const today = new Date()
-  const nac = new Date(birthDate)
-  let age = today.getFullYear() - nac.getFullYear()
-  const m = today.getMonth() - nac.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < nac.getDate())) age--
-  return age
-}
 
 const LEVEL_TO_STAGE: Record<DbStudyPlan['level'], StudyType['stage']> = {
   niveles: 'niveles',
@@ -151,31 +140,3 @@ export function toDomainStudyLeader(db: DbLeaderEnriched, ledGroups: StudyGroup[
   }
 }
 
-// ── Waitlist y reubicaciones ──────────────────────────────────────────────────
-
-export function toDomainWaitlistEntry(db: DbWaitlistEntry): WaitListEntry {
-  return {
-    id: db.id,
-    member_id: db.member_id,
-    member_name: db.member ? `${db.member.first_name} ${db.member.last_name}`.trim() : '',
-    age: ageFrom(db.member?.birth_date ?? null),
-    zone_preference: db.zone_preference ?? '',
-    horario_preference: db.schedule_preference ?? '',
-    requested_at: db.requested_at,
-    type: db.type,
-    campaign_code: db.campaign_code ?? undefined,
-  }
-}
-
-export function toDomainRelocation(db: DbRelocation): RelocationRequest {
-  return {
-    id: db.id,
-    member_id: db.member_id,
-    member_name: db.member ? `${db.member.first_name} ${db.member.last_name}`.trim() : '',
-    from_group_id: db.from_group_id ?? '',
-    study_type: db.study_plan_code ?? '',
-    reason: db.reason ?? '',
-    status: db.status,
-    requested_at: db.requested_at,
-  }
-}

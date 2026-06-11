@@ -1,21 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type {
-  DbStudyPlan, DbGroupEnriched, DbLeaderEnriched, DbWaitlistEntry, DbRelocation,
+  DbStudyPlan, DbGroupEnriched, DbLeaderEnriched,
 } from '@/lib/supabase/queries/studies'
 import {
   toDomainStudyType, toDomainStudyGroup, toDomainStudyLeader,
-  toDomainWaitlistEntry, toDomainRelocation,
 } from '@/lib/studies/adapter'
-import type {
-  StudyType, StudyGroup, StudyLeader, WaitListEntry, RelocationRequest,
-} from '@/types/study'
+import type { StudyType, StudyGroup, StudyLeader } from '@/types/study'
 
 export function useStudies() {
   const [dbPlans, setDbPlans]     = useState<DbStudyPlan[]>([])
   const [dbGroups, setDbGroups]   = useState<DbGroupEnriched[]>([])
   const [dbLeaders, setDbLeaders] = useState<DbLeaderEnriched[]>([])
-  const [dbWait, setDbWait]       = useState<DbWaitlistEntry[]>([])
-  const [dbReloc, setDbReloc]     = useState<DbRelocation[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
 
@@ -23,21 +18,17 @@ export function useStudies() {
     setLoading(true)
     setError(null)
     try {
-      const [plans, groups, leaders, wait, reloc] = await Promise.all([
+      const [plans, groups, leaders] = await Promise.all([
         fetch('/api/studies/plans'),
         fetch('/api/studies/groups'),
         fetch('/api/studies/leaders'),
-        fetch('/api/studies/waitlist'),
-        fetch('/api/studies/relocations'),
       ])
-      if (![plans, groups, leaders, wait, reloc].every((r) => r.ok)) {
+      if (![plans, groups, leaders].every((r) => r.ok)) {
         throw new Error('Error cargando estudios')
       }
       setDbPlans(await plans.json())
       setDbGroups(await groups.json())
       setDbLeaders(await leaders.json())
-      setDbWait(await wait.json())
-      setDbReloc(await reloc.json())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error desconocido')
     } finally {
@@ -60,8 +51,6 @@ export function useStudies() {
     }
     return dbLeaders.map((l) => toDomainStudyLeader(l, byLeader.get(l.member_id) ?? []))
   }, [dbLeaders, groups])
-  const waitlist: WaitListEntry[]     = useMemo(() => dbWait.map(toDomainWaitlistEntry), [dbWait])
-  const relocations: RelocationRequest[] = useMemo(() => dbReloc.map(toDomainRelocation), [dbReloc])
 
-  return { studyTypes, groups, leaders, waitlist, relocations, loading, error, refetch: fetchAll }
+  return { studyTypes, groups, leaders, loading, error, refetch: fetchAll }
 }

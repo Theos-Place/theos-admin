@@ -235,6 +235,19 @@ export default function SolicitudesPage() {
                         {r.plan_name ?? 'Plan por definir'}
                       </span>
                       {r.existing_group_name && <span className="font-medium text-navy">{r.existing_group_name}</span>}
+                      {/* Las migradas de la lista de espera traen zona/horario preferidos */}
+                      {r.proposed_location && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <MapPin size={13} className="text-navy-light/50" />
+                          {r.proposed_location}
+                        </span>
+                      )}
+                      {r.proposed_schedule && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock size={13} className="text-navy-light/50" />
+                          {r.proposed_schedule}
+                        </span>
+                      )}
                     </>
                   )}
                   {r.request_type === 'new_group' && (

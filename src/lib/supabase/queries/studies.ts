@@ -85,28 +85,6 @@ export type DbLeaderEnriched = {
   }>
 }
 
-export type DbWaitlistEntry = {
-  id: string
-  member_id: string
-  zone_preference: string | null
-  schedule_preference: string | null
-  type: 'N1' | 'campaign'
-  campaign_code: string | null
-  requested_at: string
-  member: { first_name: string; last_name: string; birth_date: string | null } | null
-}
-
-export type DbRelocation = {
-  id: string
-  member_id: string
-  from_group_id: string | null
-  study_plan_code: string | null
-  reason: string | null
-  status: 'pending' | 'resolved'
-  requested_at: string
-  member: { first_name: string; last_name: string } | null
-}
-
 /** Grupos de estudio con líder y participantes (enrollments + nombre del miembro). */
 export async function getStudyGroups(): Promise<DbGroupEnriched[]> {
   const supabase = createAdminClient()
@@ -391,34 +369,6 @@ export async function addDirigente(memberId: string, active: boolean): Promise<v
   }
 }
 
-/** Lista de espera de estudios. */
-export async function getWaitlist(): Promise<DbWaitlistEntry[]> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('study_waitlist')
-    .select(`
-      id, member_id, zone_preference, schedule_preference, type, campaign_code, requested_at,
-      member:members(first_name, last_name, birth_date)
-    `)
-    .order('requested_at', { ascending: true })
-  if (error) throw error
-  return (data ?? []) as unknown as DbWaitlistEntry[]
-}
-
-/** Solicitudes de reubicación de grupo. */
-export async function getRelocations(): Promise<DbRelocation[]> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('relocation_requests')
-    .select(`
-      id, member_id, from_group_id, study_plan_code, reason, status, requested_at,
-      member:members(first_name, last_name)
-    `)
-    .order('requested_at', { ascending: false })
-  if (error) throw error
-  return (data ?? []) as unknown as DbRelocation[]
-}
-
 // ── Mutaciones ─────────────────────────────────────────────
 
 export type PlanWriteInput = {
@@ -590,53 +540,6 @@ export async function setEnrollmentGrade(groupId: string, memberId: string, grad
     .update({ grade })
     .eq('group_id', groupId)
     .eq('member_id', memberId)
-  if (error) throw error
-}
-
-// Waitlist
-export async function addToWaitlist(input: {
-  member_id: string
-  zone_preference?: string | null
-  schedule_preference?: string | null
-  type?: 'N1' | 'campaign'
-  campaign_code?: string | null
-}): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase.from('study_waitlist').insert(input)
-  if (error) throw error
-}
-
-export async function removeFromWaitlist(id: string): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase.from('study_waitlist').delete().eq('id', id)
-  if (error) throw error
-}
-
-/** Promueve una entrada de waitlist a un grupo: inscribe al miembro y borra la entrada. */
-export async function promoteFromWaitlist(waitlistId: string, groupId: string): Promise<void> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('study_waitlist').select('member_id').eq('id', waitlistId).single()
-  if (error) throw error
-  await enrollMember(groupId, (data as { member_id: string }).member_id)
-  await removeFromWaitlist(waitlistId)
-}
-
-// Reubicaciones
-export async function createRelocation(input: {
-  member_id: string
-  from_group_id?: string | null
-  study_plan_code?: string | null
-  reason?: string | null
-}): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase.from('relocation_requests').insert(input)
-  if (error) throw error
-}
-
-export async function resolveRelocation(id: string): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase.from('relocation_requests').update({ status: 'resolved' }).eq('id', id)
   if (error) throw error
 }
 

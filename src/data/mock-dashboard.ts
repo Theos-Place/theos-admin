@@ -10,7 +10,7 @@ export const DASHBOARD_STATS = {
     active_groups: 184,
     students: 612,
     open_registration: 12,
-    waitlist_n1: 83,
+    open_requests: 83,
     closing_soon: 28,
     without_leader: 3,
   },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel } from '@/lib/sedes'
@@ -8,7 +8,7 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import {
   Users, Clock, AlertTriangle, TrendingUp,
-  BookOpen, UserCheck, ArrowLeftRight, BarChart2, ListChecks, LayoutList,
+  BookOpen, UserCheck, BarChart2, ListChecks, LayoutList, Inbox,
 } from 'lucide-react'
 
 function formatSchedule(days: string[], time: string) {
@@ -16,22 +16,31 @@ function formatSchedule(days: string[], time: string) {
 }
 
 const QUICK_ACCESS = [
-  { href: '/estudios/grupos',          label: 'Grupos',           icon: LayoutList,     desc: 'Ver y gestionar grupos' },
-  { href: '/estudios/plan',            label: 'Plan de Estudios', icon: BookOpen,       desc: 'Tipos de estudio' },
-  { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck,      desc: 'Perfil de líderes' },
-  { href: '/estudios/lista-de-espera', label: 'Lista de espera',  icon: Clock,          desc: 'Personas esperando N1' },
-  { href: '/estudios/reubicaciones',   label: 'Reubicaciones',    icon: ArrowLeftRight, desc: 'Solicitudes de cambio' },
-  { href: '/estudios/analisis',        label: 'Análisis',         icon: BarChart2,      desc: 'Demanda por bloque' },
+  { href: '/estudios/grupos',       label: 'Grupos',           icon: LayoutList, desc: 'Ver y gestionar grupos' },
+  { href: '/estudios/plan',         label: 'Plan de Estudios', icon: BookOpen,   desc: 'Tipos de estudio' },
+  { href: '/estudios/dirigentes',   label: 'Dirigentes',       icon: UserCheck,  desc: 'Perfil de líderes' },
+  { href: '/estudios/solicitudes',  label: 'Solicitudes',      icon: Inbox,      desc: 'Reubicaciones, grupos y espera' },
+  { href: '/estudios/analisis',     label: 'Análisis',         icon: BarChart2,  desc: 'Demanda por bloque' },
 ]
 
 export default function EstudiosPage() {
-  const { groups, waitlist, relocations } = useStudies()
+  const { groups } = useStudies()
+
+  // Solicitudes abiertas (reubicaciones + unirse a grupo + grupo nuevo).
+  // El endpoint exige rol de coordinación: con 403 el conteo queda en 0.
+  const [openRequests, setOpenRequests] = useState(0)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/studies/requests?count=open')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
 
   const activeGroups        = useMemo(() => groups.filter(g => g.status === 'open' || g.status === 'in_progress'), [groups])
   const openGroups          = useMemo(() => groups.filter(g => g.status === 'open'), [groups])
   const inProgressGroups    = useMemo(() => groups.filter(g => g.status === 'in_progress'), [groups])
-  const n1WaitList          = useMemo(() => waitlist.filter(w => w.type === 'N1'), [waitlist])
-  const pendingRelocations  = useMemo(() => relocations.filter(r => r.status === 'pending'), [relocations])
   const pendingLeaderGroups = useMemo(() => groups.filter(g => g.status === 'pending_leader'), [groups])
   const closingSoon = useMemo(() => {
     const now = new Date()
@@ -62,7 +71,7 @@ export default function EstudiosPage() {
         {[
           { label: 'Grupos en inscripción', value: openGroups.length,     icon: Users,        color: 'text-teal-deep' },
           { label: 'Grupos en curso',       value: inProgressGroups.length, icon: TrendingUp, color: 'text-navy' },
-          { label: 'Lista de espera N1',    value: n1WaitList.length,     icon: Clock,        color: 'text-amber-600' },
+          { label: 'Solicitudes abiertas',  value: openRequests,          icon: Inbox,        color: 'text-amber-600' },
           { label: 'Por cerrar (30 días)',  value: closingSoon.length,    icon: AlertTriangle, color: 'text-coral' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
@@ -227,15 +236,15 @@ export default function EstudiosPage() {
                   </p>
                 </div>
               )}
-              {pendingRelocations.length > 0 && (
+              {openRequests > 0 && (
                 <div className="flex items-start gap-2 rounded-xl bg-navy/5 px-3 py-2.5">
                   <ListChecks size={14} className="text-navy mt-0.5 shrink-0" />
                   <p className="text-[12px] text-navy font-body">
-                    <strong>{pendingRelocations.length}</strong> solicitud{pendingRelocations.length > 1 ? 'es' : ''} de reubicación pendiente{pendingRelocations.length > 1 ? 's' : ''}
+                    <strong>{openRequests}</strong> solicitud{openRequests > 1 ? 'es' : ''} de estudios abierta{openRequests > 1 ? 's' : ''}
                   </p>
                 </div>
               )}
-              {pendingLeaderGroups.length === 0 && closingSoon.length === 0 && pendingRelocations.length === 0 && (
+              {pendingLeaderGroups.length === 0 && closingSoon.length === 0 && openRequests === 0 && (
                 <p className="text-[12px] text-navy-light/40 text-center py-2 font-body">
                   Sin alertas activas
                 </p>

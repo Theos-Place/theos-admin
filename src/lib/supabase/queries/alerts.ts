@@ -26,13 +26,9 @@ const ALERT_DEFS: AlertDef[] = [
     message: n => `${n} grupo${n !== 1 ? 's' : ''} de estudio sin dirigente asignado`,
   },
   {
-    id: 'relocations', type: 'info', table: 'relocation_requests',
-    filter: { column: 'status', value: 'pending' }, url: '/estudios/reubicaciones',
-    message: n => `${n} solicitud${n !== 1 ? 'es' : ''} de reubicación pendiente${n !== 1 ? 's' : ''}`,
-  },
-  {
-    id: 'waitlist', type: 'info', table: 'study_waitlist', url: '/estudios/lista-de-espera',
-    message: n => `${n} persona${n !== 1 ? 's' : ''} en lista de espera de estudios`,
+    id: 'study-requests', type: 'info', table: 'study_requests',
+    filter: { column: 'status', value: 'open' }, url: '/estudios/solicitudes',
+    message: n => `${n} solicitud${n !== 1 ? 'es' : ''} de estudios abierta${n !== 1 ? 's' : ''}`,
   },
   {
     id: 'applications', type: 'info', table: 'applications',

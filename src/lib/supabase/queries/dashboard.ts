@@ -22,7 +22,7 @@ function startOfMonthISO(now: Date): string {
 
 export type DashboardStats = {
   members: { total: number; active: number; new_this_month: number; without_cedula: number; duplicates_suggested: number }
-  studies: { active_groups: number; students: number; open_registration: number; waitlist_n1: number; closing_soon: number; without_leader: number }
+  studies: { active_groups: number; students: number; open_registration: number; open_requests: number; closing_soon: number; without_leader: number }
   events: { upcoming_this_month: number; this_week: number; pending_payments: number; near_capacity: number }
   servers: { active: number; positions: number; committees: number; open_vacancies: number; pending_applications: number }
   finance: { donors_active: number; pending_refunds: number; income_this_month: number }
@@ -39,7 +39,7 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
 
   const [
     membersTotal, membersActive, membersNew, membersNoCedula,
-    activeGroups, students, openReg, waitlistN1, closingSoon, withoutLeader,
+    activeGroups, students, openReg, openRequests, closingSoon, withoutLeader,
     upcomingMonth, thisWeek, pendingPayments,
     serversActive, committees, openVacancies, pendingApps,
     donorsActive, pendingRefunds,
@@ -53,7 +53,7 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     count(supabase, 'study_groups', (q) => q.in('status', ['open', 'in_progress'])),
     count(supabase, 'study_enrollments', (q) => q.eq('status', 'enrolled')),
     count(supabase, 'study_groups', (q) => q.in('status', ['open', 'pending_opening'])),
-    count(supabase, 'study_waitlist', (q) => q.eq('type', 'N1')),
+    count(supabase, 'study_requests', (q) => q.eq('status', 'open')),
     count(supabase, 'study_groups', (q) => q.not('ends_at', 'is', null).lte('ends_at', in30).gte('ends_at', todayStr)),
     count(supabase, 'study_groups', (q) => q.is('leader_id', null)),
 
@@ -107,7 +107,7 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     },
     studies: {
       active_groups: activeGroups, students, open_registration: openReg,
-      waitlist_n1: waitlistN1, closing_soon: closingSoon, without_leader: withoutLeader,
+      open_requests: openRequests, closing_soon: closingSoon, without_leader: withoutLeader,
     },
     events: {
       upcoming_this_month: upcomingMonth, this_week: thisWeek,
