@@ -341,10 +341,38 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         else res.exclude.push(set)
         break
       }
-      case 'form':
-        // TODO: traducir condiciones de formulario a form_responses.
-        console.warn('resolveAdvancedConditions: condición form ignorada (pendiente)')
+      case 'form': {
+        // Mismo contrato que el filtro client-side (useMemberFilters):
+        // 'not_filled' excluye a quien tenga CUALQUIER respuesta al formulario
+        // (sin aplicar fechas/campo); 'filled'/'any' incluyen a quien tenga al
+        // menos una respuesta que pase fechas y campo=valor.
+        if (!c.formId || !UUID_RE.test(c.formId)) break
+        if (c.status === 'not_filled') {
+          res.exclude.push(await pagedIds(
+            q => q.eq('form_id', c.formId), 'form_responses', 'member_id',
+          ))
+          break
+        }
+        const byField = Boolean(c.field && c.fieldVal)
+        res.include.push(await pagedIds(q => {
+          q = q.eq('form_id', c.formId)
+          // Comparación de fechas con la misma semántica que el cliente
+          // (submitted_at >= from; to inclusivo hasta el fin del día).
+          if (c.from) q = q.gte('submitted_at', c.from)
+          if (c.to) q = q.lte('submitted_at', `${c.to}T23:59:59.999Z`)
+          if (byField) {
+            // Coincidencia completa case-insensitive con comodín '*' (como el
+            // cliente). Solo aplica a respuestas de texto (value_text); las
+            // compuestas (checkbox/escala) viven en value_json y no se filtran.
+            const pattern = c.fieldVal.replace(/([%_\\])/g, '\\$1').replace(/\*/g, '%')
+            q = q.eq('vals.field_id', c.field).ilike('vals.value_text', pattern)
+          }
+          return q
+        }, 'form_responses', byField
+          ? 'member_id, vals:form_response_values!inner(field_id, value_text)'
+          : 'member_id'))
         break
+      }
     }
   }
   void supabase
