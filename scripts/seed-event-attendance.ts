@@ -60,7 +60,7 @@ function parseEventColumn(col: string): ParsedEvent | null {
 // ── Clasificación de event_type por nombre ────────────────────────────────────
 const SEDES = [
   'pro oeste', 'pro este', 'perez zeledon', 'liberia', 'cartago', 'guapiles',
-  'heredia', 'alajuela', 'potrero', 'theos home', 'united', 'madrid',
+  'heredia', 'alajuela', 'potrero', 'theos home', 'united', 'madrid', 'life este',
 ]
 
 function stripAccents(s: string): string {

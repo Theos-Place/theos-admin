@@ -90,41 +90,55 @@ export async function getServerMemberIds(): Promise<string[]> {
   }
 }
 
-/** Últimos 6 meses calendario (YYYY-MM), incluyendo el mes actual. */
-function last6MonthsKeys(now = new Date()): string[] {
+/** Cantidad de meses del criterio de asistencia activa. */
+export const ATTENDANCE_MONTHS = 6
+
+/** Últimos N meses calendario COMPLETOS (YYYY-MM), excluyendo el mes en curso:
+ *  incluirlo dejaría a todo el mundo afuera los primeros días de cada mes. */
+function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS, now = new Date()): string[] {
   const out: string[] = []
-  const d = new Date(now)
-  for (let i = 0; i < 6; i++) {
+  const d = new Date(now.getFullYear(), now.getMonth() - 1, 1) // mes anterior
+  for (let i = 0; i < n; i++) {
     out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
     d.setMonth(d.getMonth() - 1)
   }
   return out
 }
 
-/** member_ids con al menos una asistencia en cada uno de los últimos 6 meses.
- *  Si no hay datos de asistencia (o la tabla falla), devuelve [] — nunca lanza. */
+/** Asistencia activa: ≥1 check-in de CHARLA en cada uno de los últimos
+ *  ATTENDANCE_MONTHS meses completos. Criterio único del sistema — lo usan el
+ *  chip "Activo (asistencia)" de miembros, el análisis de demanda de estudios
+ *  y la elegibilidad de solicitudes. Devuelve [] si falla — nunca lanza. */
 export async function getActiveAttendanceMemberIds(): Promise<string[]> {
   try {
     const supabase = createAdminClient()
-    const months = last6MonthsKeys()
+    const months = lastCompleteMonthsKeys()
     const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo
-    const { data, error } = await supabase
-      .from('event_checkins').select('member_id, checked_in_at').gte('checked_in_at', oldest)
-    if (error || !data) {
-      if (error) console.warn('getActiveAttendanceMemberIds:', error.message)
-      return []
-    }
     const byMember = new Map<string, Set<string>>()
-    for (const r of data as Array<{ member_id: string | null; checked_in_at: string | null }>) {
-      if (!r?.member_id || !r?.checked_in_at) continue
-      const mo = r.checked_in_at.slice(0, 7)
-      if (!byMember.has(r.member_id)) byMember.set(r.member_id, new Set())
-      byMember.get(r.member_id)!.add(mo)
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from('event_checkins')
+        .select('member_id, checked_in_at, events!inner(event_type)')
+        .eq('events.event_type', 'charla')
+        .gte('checked_in_at', oldest)
+        .order('id')
+        .range(from, from + 999)
+      if (error) {
+        console.warn('getActiveAttendanceMemberIds:', error.message)
+        return []
+      }
+      for (const r of (data ?? []) as unknown as Array<{ member_id: string | null; checked_in_at: string | null }>) {
+        if (!r?.member_id || !r?.checked_in_at) continue
+        const mo = r.checked_in_at.slice(0, 7)
+        if (!byMember.has(r.member_id)) byMember.set(r.member_id, new Set())
+        byMember.get(r.member_id)!.add(mo)
+      }
+      if ((data ?? []).length < 1000) break
     }
-    const need = new Set(months)
+    const need = months
     const out: string[] = []
     for (const [id, set] of byMember) {
-      if ([...need].every((m) => set.has(m))) out.push(id)
+      if (need.every((m) => set.has(m))) out.push(id)
     }
     return out
   } catch (e) {

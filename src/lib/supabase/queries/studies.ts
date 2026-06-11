@@ -138,37 +138,6 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
   return (data as unknown as DbGroupEnriched) ?? null
 }
 
-/**
- * Asistencia activa = ≥1 check-in de CHARLA en los últimos N días.
- * Criterio relajado a propósito: el histórico importado solo cubre eventos
- * puntuales (con "1 check-in por mes en 6 meses" NADIE calificaba). Cuando
- * haya varios meses de check-ins corrientes, endurecer subiendo la ventana
- * o volviendo al criterio mensual.
- */
-export const ATTENDANCE_WINDOW_DAYS = 60
-
-/** Ids de miembros con ≥1 check-in de charla en la ventana de asistencia. */
-export async function getRecentCharlaAttendeeIds(days = ATTENDANCE_WINDOW_DAYS): Promise<Set<string>> {
-  const supabase = createAdminClient()
-  const since = new Date(Date.now() - days * 86400000).toISOString()
-  const ids = new Set<string>()
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from('event_checkins')
-      .select('member_id, events!inner(event_type)')
-      .gte('checked_in_at', since)
-      .eq('events.event_type', 'charla')
-      .order('id')
-      .range(from, from + 999)
-    if (error) throw error
-    for (const c of data as unknown as Array<{ member_id: string | null }>) {
-      if (c.member_id) ids.add(c.member_id)
-    }
-    if (data.length < 1000) break
-  }
-  return ids
-}
-
 export type StudyDemandRow = {
   zone: string
   graduating: number
@@ -280,12 +249,14 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     if (batch.length < 1000) break
   }
 
-  // Compromisos: asistencia = charla en los últimos ATTENDANCE_WINDOW_DAYS días.
-  const { getServerMemberIds } = await import('./members')
-  const [attendanceSet, serverIds] = await Promise.all([
-    requirements.includes('asistencia') ? getRecentCharlaAttendeeIds() : Promise.resolve(new Set<string>()),
+  // Compromisos: criterio único del sistema — asistencia = ≥1 check-in de
+  // charla en cada uno de los últimos ATTENDANCE_MONTHS meses completos.
+  const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
+  const [attendanceIds, serverIds] = await Promise.all([
+    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
     requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
   ])
+  const attendanceSet = new Set(attendanceIds)
   const serverSet = new Set(serverIds)
 
   type MemberState = {
@@ -437,8 +408,16 @@ const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
 export async function getEligibleStudiesForMember(memberId: string): Promise<MemberStudyEligibility> {
   const supabase = createAdminClient()
 
-  // Misma ventana de asistencia que el análisis de demanda (criterio unificado).
-  const since = new Date(Date.now() - ATTENDANCE_WINDOW_DAYS * 86400000).toISOString()
+  // Criterio único de asistencia: ≥1 check-in de charla en cada uno de los
+  // últimos ATTENDANCE_MONTHS meses completos (igual que el análisis).
+  const { ATTENDANCE_MONTHS } = await import('./members')
+  const now = new Date()
+  const oldest = new Date(now.getFullYear(), now.getMonth() - ATTENDANCE_MONTHS, 1)
+  const monthsNeeded: string[] = []
+  for (let i = 1; i <= ATTENDANCE_MONTHS; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    monthsNeeded.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
 
   const [memberRes, enrRes, volRes, chkRes, plansRes] = await Promise.all([
     supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
@@ -449,11 +428,10 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     supabase.from('volunteers').select('id').eq('member_id', memberId).eq('status', 'active').limit(1),
     supabase
       .from('event_checkins')
-      .select('id, events!inner(event_type)')
+      .select('checked_in_at, events!inner(event_type)')
       .eq('member_id', memberId)
       .eq('events.event_type', 'charla')
-      .gte('checked_in_at', since)
-      .limit(1),
+      .gte('checked_in_at', oldest.toISOString()),
     supabase
       .from('study_plans')
       .select('id, code, name, level, prerequisite_code')
@@ -476,8 +454,11 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     .map(e => ({ group_id: e.group!.id, group_name: e.group!.name, plan_code: e.group!.plan?.code ?? null }))
 
   // Asistencia activa: al menos 1 check-in en cada uno de los últimos 6 meses.
-  // ≥1 check-in de charla en la ventana (mismo criterio que getStudyDemand).
-  const attendance_active = (chkRes.data ?? []).length > 0
+  // Cobertura mensual de charlas (mismo criterio que getStudyDemand).
+  const monthsWithCharla = new Set(
+    ((chkRes.data ?? []) as unknown as Array<{ checked_in_at: string }>).map(c => c.checked_in_at.slice(0, 7)),
+  )
+  const attendance_active = monthsNeeded.every(m => monthsWithCharla.has(m))
 
   const is_donor = Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor)
   const is_server = (volRes.data ?? []).length > 0
