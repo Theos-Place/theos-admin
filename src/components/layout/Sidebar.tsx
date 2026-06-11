@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -19,42 +19,42 @@ import {
   LayoutList,
   BookText,
   UserCheck,
-  Clock,
   ArrowLeftRight,
   Inbox,
   BarChart2,
   Plus,
   Tag,
-  LayoutGrid,
   Bookmark,
   ClipboardList,
-  LayoutDashboard as PanelIcon,
   Send,
   Settings,
   LogOut,
   Heart,
   CreditCard,
   GraduationCap,
+  Shield,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Shield } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
-const EVENTOS_SUB = [
+type SubItem = { href: string; label: string; icon: LucideIcon; badge?: number }
+type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[] }
+
+const EVENTOS_SUB: SubItem[] = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
   { href: '/eventos/tipos',  label: 'Tipos de evento',  icon: Tag  },
 ]
 
-const EMPLEADOS_SUB = [
-  { href: '/empleados/puestos', label: 'Puestos pagados',    icon: Tag       },
+const EMPLEADOS_SUB: SubItem[] = [
+  { href: '/empleados/puestos', label: 'Puestos pagados', icon: Tag },
 ]
 
-const FORMULARIOS_SUB = [
-  { href: '/formularios/nuevo', label: 'Nuevo formulario',      icon: Plus      },
+const FORMULARIOS_SUB: SubItem[] = [
+  { href: '/formularios/nuevo', label: 'Nuevo formulario', icon: Plus },
 ]
 
-const FINANZAS_SUB = [
-  { href: '/finanzas',             label: 'Dashboard',    icon: LayoutDashboard },
+const FINANZAS_SUB: SubItem[] = [
   { href: '/finanzas/donaciones',  label: 'Donaciones',   icon: Heart           },
   { href: '/finanzas/pagos',       label: 'Pagos',        icon: CreditCard      },
   { href: '/finanzas/devoluciones',label: 'Devoluciones', icon: ArrowLeftRight  },
@@ -63,40 +63,23 @@ const FINANZAS_SUB = [
   { href: '/finanzas/solicitudes', label: 'Solicitudes',  icon: Inbox           },
 ]
 
-const COMUNICACIONES_SUB = [
-  { href: '/comunicaciones/nueva',        label: 'Nueva comunicación', icon: Send        },
-  { href: '/comunicaciones/plantillas',   label: 'Plantillas',         icon: FileText    },
-  { href: '/comunicaciones/configuracion',label: 'Configuración',      icon: Settings    },
+const COMUNICACIONES_SUB: SubItem[] = [
+  { href: '/comunicaciones/nueva',        label: 'Nueva comunicación', icon: Send     },
+  { href: '/comunicaciones/plantillas',   label: 'Plantillas',         icon: FileText },
+  { href: '/comunicaciones/configuracion',label: 'Configuración',      icon: Settings },
 ]
 
-const MIEMBROS_SUB = [
-  { href: '/miembros/listas', label: 'Listas guardadas',   icon: Bookmark  },
+const SERVIDORES_SUB: SubItem[] = [
+  { href: '/servidores/vacantes',     label: 'Puestos de Servicio', icon: Bookmark      },
+  { href: '/servidores/aplicaciones', label: 'Aplicaciones',        icon: ClipboardList },
 ]
 
-const SERVIDORES_SUB = [
-  { href: '/servidores/vacantes',       label: 'Puestos de Servicio',  icon: Bookmark     },
-  { href: '/servidores/aplicaciones',   label: 'Aplicaciones',         icon: ClipboardList},
-]
-
-const ESTUDIOS_SUB = [
-  { href: '/estudios/grupos',          label: 'Grupos',           icon: LayoutList },
-  { href: '/estudios/plan',            label: 'Plan de Estudios', icon: BookText },
-  { href: '/estudios/analisis',        label: 'Análisis de estudios', icon: BarChart2 },
-  { href: '/estudios/dirigentes',      label: 'Dirigentes',       icon: UserCheck },
-  { href: '/estudios/solicitudes',     label: 'Solicitudes',      icon: Inbox },
-]
-
-const navItems = [
-  { href: '/dashboard',     label: 'Dashboard',            icon: LayoutDashboard },
-  { href: '/miembros',      label: 'Miembros',             icon: Users },
-  { href: '/matricula',     label: 'Matrícula',            icon: GraduationCap },
-  { href: '/eventos',       label: 'Eventos',              icon: Calendar },
-  { href: '/estudios',      label: 'Estudios',             icon: BookOpen },
-  { href: '/servidores',    label: 'Servidores',            icon: UsersRound },
-  { href: '/empleados',     label: 'Empleados',            icon: Briefcase },
-  { href: '/finanzas',      label: 'Finanzas',             icon: DollarSign },
-  { href: '/comunicaciones',label: 'Comunicaciones',       icon: MessageCircle },
-  { href: '/formularios',   label: 'Formularios',          icon: FileText },
+const ESTUDIOS_SUB: SubItem[] = [
+  { href: '/estudios/grupos',      label: 'Grupos',               icon: LayoutList },
+  { href: '/estudios/plan',        label: 'Plan de Estudios',     icon: BookText   },
+  { href: '/estudios/analisis',    label: 'Análisis de estudios', icon: BarChart2  },
+  { href: '/estudios/dirigentes',  label: 'Dirigentes',           icon: UserCheck  },
+  { href: '/estudios/solicitudes', label: 'Solicitudes',          icon: Inbox      },
 ]
 
 interface SidebarProps {
@@ -110,13 +93,27 @@ const ROLE_LABELS: Record<string, string> = {
   staff_leader: 'Líder de Staff',
 }
 
+/** ¿Viewport desktop (lg+)? useSyncExternalStore evita el mismatch de
+ *  hidratación (snapshot de servidor: true) y el setState-en-effect del
+ *  patrón matchMedia clásico. */
+const DESKTOP_MQ = '(min-width: 1024px)'
+function mqSubscribe(cb: () => void) {
+  const mq = window.matchMedia(DESKTOP_MQ)
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
+}
+function useIsDesktop(): boolean {
+  return useSyncExternalStore(mqSubscribe, () => window.matchMedia(DESKTOP_MQ).matches, () => true)
+}
+
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAuth()
+  const isDesktop = useIsDesktop()
 
-  // Conteo de solicitudes de estudios abiertas para el badge del sub-item.
-  // El endpoint exige rol de coordinación: si responde 403 simplemente no hay badge.
+  // Conteos de solicitudes abiertas para los badges. Los endpoints exigen rol:
+  // con 403 simplemente no hay badge.
   const [openRequests, setOpenRequests] = useState(0)
   const [openFinanceRequests, setOpenFinanceRequests] = useState(0)
   useEffect(() => {
@@ -131,11 +128,49 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       .catch(() => {})
     return () => { alive = false }
   }, [pathname])
+
   const userName  = user?.name ?? ''
   const userRole  = user?.role ?? ''
   const userRoles = user?.roles ?? []
 
   const canViewAccesos = userRoles.some(r => r === 'admin' || r === 'direccion')
+  const canViewListas = userRoles.some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
+  const canViewDuplicados = userRoles.some(r => ['admin', 'editor_perfiles'].includes(r))
+
+  // Submenú de Miembros según rol.
+  const miembrosSub: SubItem[] = [
+    ...(canViewListas ? [{ href: '/miembros/listas', label: 'Listas guardadas', icon: Bookmark }] : []),
+    ...(canViewDuplicados ? [{ href: '/miembros/duplicados', label: 'Duplicados', icon: Users }] : []),
+  ]
+
+  const estudiosSub: SubItem[] = ESTUDIOS_SUB.map(s =>
+    s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s)
+  const finanzasSub: SubItem[] = FINANZAS_SUB.map(s =>
+    s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s)
+
+  const NAV: NavModule[] = [
+    { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, subs: [] },
+    { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub },
+    { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [] },
+    { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: EVENTOS_SUB },
+    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub },
+    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: SERVIDORES_SUB },
+    { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB },
+    { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub },
+    { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: COMUNICACIONES_SUB },
+    { href: '/formularios',    label: 'Formularios',    icon: FileText,        subs: FORMULARIOS_SUB },
+  ]
+
+  // ── Acordeón exclusivo en mobile/tablet ──
+  const moduleOfPath = NAV.find(m => m.subs.length > 0 && (pathname === m.href || pathname.startsWith(m.href + '/')))?.href ?? null
+  const [expandedModule, setExpandedModule] = useState<string | null>(moduleOfPath)
+  // Al abrir el menú arranca expandido el módulo de la ruta actual (ajuste de
+  // estado durante render — el patrón recomendado por React, sin effects).
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) setExpandedModule(moduleOfPath)
+  }
 
   async function handleLogout() {
     try {
@@ -145,22 +180,107 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       router.refresh()
     }
   }
-  const miembrosActive        = pathname === '/miembros'        || pathname.startsWith('/miembros/')
-  const estudiosActive        = pathname === '/estudios'        || pathname.startsWith('/estudios/')
-  const eventosActive         = pathname === '/eventos'         || pathname.startsWith('/eventos/')
-  const servidoresActive      = pathname === '/servidores'      || pathname.startsWith('/servidores/')
-  const empleadosActive       = pathname === '/empleados'       || pathname.startsWith('/empleados/')
-  const formulariosActive     = pathname === '/formularios'     || pathname.startsWith('/formularios/')
-  const comunicacionesActive  = pathname === '/comunicaciones'  || pathname.startsWith('/comunicaciones/')
-  const finanzasActive        = pathname === '/finanzas'        || pathname.startsWith('/finanzas/')
 
-  const canViewListas = userRoles.some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
-  const canViewDuplicados = userRoles.some(r => ['admin', 'editor_perfiles'].includes(r))
-  // Submenú de Miembros según rol (Listas guardadas y/o Duplicados).
-  const miembrosSub = [
-    ...(canViewListas ? MIEMBROS_SUB : []),
-    ...(canViewDuplicados ? [{ href: '/miembros/duplicados', label: 'Duplicados', icon: Users }] : []),
-  ]
+  function SubLink({ sub, exactActive }: { sub: SubItem; exactActive?: boolean }) {
+    const subActive = exactActive ?? (pathname === sub.href)
+    const SubIcon = sub.icon
+    return (
+      <Link
+        href={sub.href}
+        onClick={onClose}
+        className={cn(
+          'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150 min-h-[44px] lg:min-h-0',
+          subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white',
+        )}
+      >
+        <SubIcon
+          size={14}
+          strokeWidth={1.75}
+          className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')}
+        />
+        <span className="flex-1 font-body font-light">{sub.label}</span>
+        {(sub.badge ?? 0) > 0 && (
+          <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
+            {sub.badge}
+          </span>
+        )}
+      </Link>
+    )
+  }
+
+  function ModuleSection({ mod }: { mod: NavModule }) {
+    const Icon = mod.icon
+    const moduleActive = pathname === mod.href || pathname.startsWith(mod.href + '/')
+    const expanded = expandedModule === mod.href
+
+    const headerCls = cn(
+      'group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-left transition-all duration-150 min-h-[44px] lg:min-h-0',
+      moduleActive ? 'bg-coral text-white' : 'text-white/70 hover:bg-white/10 hover:text-white',
+    )
+    const headerContent = (chevronOpen: boolean) => (
+      <>
+        <Icon
+          size={18}
+          strokeWidth={1.75}
+          className={cn('shrink-0 transition-colors', moduleActive ? 'text-white' : 'text-white/50 group-hover:text-white')}
+        />
+        <span className="flex-1 truncate font-body font-light">{mod.label}</span>
+        <ChevronDown
+          size={14}
+          className={cn('transition-transform duration-200', chevronOpen ? 'rotate-180' : 'rotate-0', moduleActive ? 'text-white' : 'text-white/40')}
+        />
+      </>
+    )
+
+    if (isDesktop) {
+      // Desktop: el módulo navega y los sub-items aparecen cuando la ruta está
+      // dentro del módulo (comportamiento original, sin cambios).
+      return (
+        <div>
+          <Link href={mod.href} onClick={onClose} className={headerCls}>
+            {headerContent(moduleActive)}
+          </Link>
+          {moduleActive && mod.subs.length > 0 && (
+            <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+              {mod.subs.map(sub => <SubLink key={sub.href} sub={sub} />)}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // Mobile/tablet: el módulo NO navega — expande/colapsa su submenú (acordeón
+    // exclusivo); el menú queda abierto. El primer sub-item es el acceso a la
+    // página principal del módulo ("Ver miembros", "Ver estudios", …).
+    return (
+      <div>
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpandedModule(prev => (prev === mod.href ? null : mod.href))}
+          className={headerCls}
+        >
+          {headerContent(expanded)}
+        </button>
+        <div
+          className={cn(
+            'grid transition-[grid-template-rows] duration-200 ease-out',
+            expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+          )}
+        >
+          <div className="overflow-hidden min-h-0">
+            <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3 pb-1">
+              <SubLink
+                sub={{ href: mod.href, label: `Ver ${mod.label.toLowerCase()}`, icon: Icon }}
+                exactActive={pathname === mod.href}
+              />
+              {mod.subs.map(sub => <SubLink key={sub.href} sub={sub} />)}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -206,533 +326,31 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const isEstudios = href === '/estudios'
-            const isEventos  = href === '/eventos'
-            const active = isEstudios
-              ? pathname === '/estudios'
-              : isEventos
-              ? pathname === '/eventos'
-              : pathname === href || pathname.startsWith(href + '/')
-
-            const isMiembros       = href === '/miembros'
-            const isEmpleados      = href === '/empleados'
-            const isServidores     = href === '/servidores'
-            const isFormularios    = href === '/formularios'
-            const isComunicaciones = href === '/comunicaciones'
-            const isFinanzas       = href === '/finanzas'
-
-          if (isMiembros) {
-            return (
-              <div key={href}>
+          {NAV.map(mod => {
+            if (mod.subs.length === 0) {
+              // Sin subpáginas: navega directo y cierra el menú (igual en mobile).
+              const active = pathname === mod.href || pathname.startsWith(mod.href + '/')
+              const Icon = mod.icon
+              return (
                 <Link
-                  href={href}
+                  key={mod.href}
+                  href={mod.href}
                   onClick={onClose}
                   className={cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                    miembrosActive ? 'bg-coral text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', miembrosActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate font-body font-light">{label}</span>
-                  {miembrosSub.length > 0 && (
-                    <ChevronDown size={14} className={cn('transition-transform duration-200', miembrosActive ? 'text-white rotate-180' : 'text-white/40')} />
-                  )}
-                </Link>
-                {miembrosActive && miembrosSub.length > 0 && (
-                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                    {miembrosSub.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                      const subActive = pathname === sub
-                      return (
-                        <Link
-                          key={sub}
-                          href={sub}
-                          onClick={onClose}
-                          className={cn(
-                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
-                          )}
-                        >
-                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span className="font-body font-light">{subLabel}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          }
-
-          if (isFinanzas) {
-            return (
-              <div key={href}>
-                <Link
-                  href={href}
-                  onClick={onClose}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                    finanzasActive
-                      ? 'bg-coral text-white'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', finanzasActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate font-body font-light">{label}</span>
-                  <ChevronDown size={14} className={cn('transition-transform duration-200', finanzasActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
-                </Link>
-                {finanzasActive && (
-                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                    {FINANZAS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                      const subActive = pathname === sub || (sub !== '/finanzas' && pathname.startsWith(sub + '/'))
-                      return (
-                        <Link
-                          key={sub}
-                          href={sub}
-                          onClick={onClose}
-                          className={cn(
-                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
-                          )}
-                        >
-                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span className="flex-1 font-body font-light">{subLabel}</span>
-                          {sub === '/finanzas/solicitudes' && openFinanceRequests > 0 && (
-                            <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
-                              {openFinanceRequests}
-                            </span>
-                          )}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          }
-
-          if (isEmpleados) {
-            return (
-              <div key={href}>
-                <Link
-                  href={href}
-                  onClick={onClose}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                    empleadosActive
-                      ? 'bg-coral text-white'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
+                    active ? 'bg-coral text-white' : 'text-white/70 hover:bg-white/10 hover:text-white',
                   )}
                 >
                   <Icon
                     size={18}
                     strokeWidth={1.75}
-                    className={cn(
-                      'shrink-0 transition-colors',
-                      empleadosActive ? 'text-white' : 'text-white/50 group-hover:text-white'
-                    )}
+                    className={cn('shrink-0 transition-colors', active ? 'text-white' : 'text-white/50 group-hover:text-white')}
                   />
-                  <span
-                    className="flex-1 truncate font-body font-light"
-                  >
-                    {label}
-                  </span>
-                  <ChevronDown
-                    size={14}
-                    className={cn(
-                      'transition-transform duration-200',
-                      empleadosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
-                    )}
-                  />
+                  <span className="flex-1 truncate font-body font-light">{mod.label}</span>
                 </Link>
-                {empleadosActive && (
-                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                    {EMPLEADOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                      const subActive = pathname === sub || (sub !== '/empleados' && pathname.startsWith(sub + '/'))
-                      return (
-                        <Link
-                          key={sub}
-                          href={sub}
-                          onClick={onClose}
-                          className={cn(
-                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                            subActive
-                              ? 'bg-white/15 text-white'
-                              : 'text-white/55 hover:bg-white/10 hover:text-white'
-                          )}
-                        >
-                          <SubIcon
-                            size={14}
-                            strokeWidth={1.75}
-                            className={cn(
-                              'shrink-0',
-                              subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
-                            )}
-                          />
-                          <span className="font-body font-light">
-                            {subLabel}
-                          </span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          }
-
-          if (isServidores) {
-            return (
-              <div key={href}>
-                <Link
-                  href={href}
-                  onClick={onClose}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                    servidoresActive
-                      ? 'bg-coral text-white'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  <Icon
-                    size={18}
-                    strokeWidth={1.75}
-                    className={cn(
-                      'shrink-0 transition-colors',
-                      servidoresActive ? 'text-white' : 'text-white/50 group-hover:text-white'
-                    )}
-                  />
-                  <span
-                    className="flex-1 truncate font-body font-light"
-                  >
-                    {label}
-                  </span>
-                  <ChevronDown
-                    size={14}
-                    className={cn(
-                      'transition-transform duration-200',
-                      servidoresActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
-                    )}
-                  />
-                </Link>
-                {servidoresActive && (
-                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                    {SERVIDORES_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                      const subActive = pathname === sub || (sub !== '/servidores' && pathname.startsWith(sub + '/'))
-                      return (
-                        <Link
-                          key={sub}
-                          href={sub}
-                          onClick={onClose}
-                          className={cn(
-                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                            subActive
-                              ? 'bg-white/15 text-white'
-                              : 'text-white/55 hover:bg-white/10 hover:text-white'
-                          )}
-                        >
-                          <SubIcon
-                            size={14}
-                            strokeWidth={1.75}
-                            className={cn(
-                              'shrink-0',
-                              subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
-                            )}
-                          />
-                          <span className="font-body font-light">
-                            {subLabel}
-                          </span>
-                        </Link>
-                      )
-                    })}
-                    {userRoles.some(r => ['admin', 'direccion', 'encargado_staff'].includes(r)) && (
-                      <Link
-                        href="/servidores/admin"
-                        onClick={onClose}
-                        className={cn(
-                          'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                          pathname === '/servidores/admin'
-                            ? 'bg-white/15 text-white'
-                            : 'text-white/55 hover:bg-white/10 hover:text-white'
-                        )}
-                      >
-                        <Settings
-                          size={14}
-                          strokeWidth={1.75}
-                          className={cn(
-                            'shrink-0',
-                            pathname === '/servidores/admin' ? 'text-white' : 'text-white/40 group-hover:text-white'
-                          )}
-                        />
-                        <span className="font-body font-light">
-                          Áreas y comités
-                        </span>
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          }
-
-          if (isComunicaciones) {
-            return (
-              <div key={href}>
-                <Link
-                  href={href}
-                  onClick={onClose}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                    comunicacionesActive
-                      ? 'bg-coral text-white'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', comunicacionesActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate font-body font-light">{label}</span>
-                  <ChevronDown size={14} className={cn('transition-transform duration-200', comunicacionesActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
-                </Link>
-                {comunicacionesActive && (
-                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                    {COMUNICACIONES_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                      const subActive = pathname === sub || (sub !== '/comunicaciones' && pathname.startsWith(sub + '/'))
-                      return (
-                        <Link
-                          key={sub}
-                          href={sub}
-                          onClick={onClose}
-                          className={cn(
-                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
-                          )}
-                        >
-                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span className="font-body font-light">{subLabel}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          }
-
-          if (isFormularios) {
-            return (
-              <div key={href}>
-                <Link
-                  href={href}
-                  onClick={onClose}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                    formulariosActive
-                      ? 'bg-coral text-white'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  )}
-                >
-                  <Icon size={18} strokeWidth={1.75} className={cn('shrink-0 transition-colors', formulariosActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
-                  <span className="flex-1 truncate font-body font-light">{label}</span>
-                  <ChevronDown size={14} className={cn('transition-transform duration-200', formulariosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0')} />
-                </Link>
-                {formulariosActive && (
-                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                    {FORMULARIOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                      const subActive = pathname === sub || (sub !== '/formularios' && pathname.startsWith(sub + '/'))
-                      return (
-                        <Link
-                          key={sub}
-                          href={sub}
-                          onClick={onClose}
-                          className={cn(
-                            'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                            subActive ? 'bg-white/15 text-white' : 'text-white/55 hover:bg-white/10 hover:text-white'
-                          )}
-                        >
-                          <SubIcon size={14} strokeWidth={1.75} className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')} />
-                          <span className="font-body font-light">{subLabel}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          }
-
-          if (isEventos) {
-              return (
-                <div key={href}>
-                  <Link
-                    href={href}
-                    onClick={onClose}
-                    className={cn(
-                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                      eventosActive
-                        ? 'bg-coral text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
-                    )}
-                  >
-                    <Icon
-                      size={18}
-                      strokeWidth={1.75}
-                      className={cn(
-                        'shrink-0 transition-colors',
-                        eventosActive ? 'text-white' : 'text-white/50 group-hover:text-white'
-                      )}
-                    />
-                    <span
-                      className="flex-1 truncate font-body font-light"
-                    >
-                      {label}
-                    </span>
-                    <ChevronDown
-                      size={14}
-                      className={cn(
-                        'transition-transform duration-200',
-                        eventosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
-                      )}
-                    />
-                  </Link>
-                  {eventosActive && (
-                    <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                      {EVENTOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                        const subActive = pathname === sub || pathname.startsWith(sub + '/')
-                        return (
-                          <Link
-                            key={sub}
-                            href={sub}
-                            onClick={onClose}
-                            className={cn(
-                              'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                              subActive
-                                ? 'bg-white/15 text-white'
-                                : 'text-white/55 hover:bg-white/10 hover:text-white'
-                            )}
-                          >
-                            <SubIcon
-                              size={14}
-                              strokeWidth={1.75}
-                              className={cn(
-                                'shrink-0',
-                                subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
-                              )}
-                            />
-                            <span className="font-body font-light">
-                              {subLabel}
-                            </span>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
               )
             }
-
-            if (isEstudios) {
-              return (
-                <div key={href}>
-                  <Link
-                    href={href}
-                    onClick={onClose}
-                    className={cn(
-                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                      estudiosActive
-                        ? 'bg-coral text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
-                    )}
-                  >
-                    <Icon
-                      size={18}
-                      strokeWidth={1.75}
-                      className={cn(
-                        'shrink-0 transition-colors',
-                        estudiosActive ? 'text-white' : 'text-white/50 group-hover:text-white'
-                      )}
-                    />
-                    <span
-                      className="flex-1 truncate font-body font-light"
-                    >
-                      {label}
-                    </span>
-                    <ChevronDown
-                      size={14}
-                      className={cn(
-                        'transition-transform duration-200',
-                        estudiosActive ? 'text-white rotate-180' : 'text-white/40 rotate-0'
-                      )}
-                    />
-                  </Link>
-
-                  {/* Sub-items */}
-                  {estudiosActive && (
-                    <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                      {ESTUDIOS_SUB.map(({ href: sub, label: subLabel, icon: SubIcon }) => {
-                        const subActive = pathname === sub || pathname.startsWith(sub + '/')
-                        return (
-                          <Link
-                            key={sub}
-                            href={sub}
-                            onClick={onClose}
-                            className={cn(
-                              'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] transition-all duration-150',
-                              subActive
-                                ? 'bg-white/15 text-white'
-                                : 'text-white/55 hover:bg-white/10 hover:text-white'
-                            )}
-                          >
-                            <SubIcon
-                              size={14}
-                              strokeWidth={1.75}
-                              className={cn(
-                                'shrink-0',
-                                subActive ? 'text-white' : 'text-white/40 group-hover:text-white'
-                              )}
-                            />
-                            <span className="flex-1 font-body font-light">
-                              {subLabel}
-                            </span>
-                            {sub === '/estudios/solicitudes' && openRequests > 0 && (
-                              <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
-                                {openRequests}
-                              </span>
-                            )}
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            }
-
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={onClose}
-                className={cn(
-                  'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
-                  active
-                    ? 'bg-coral text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                )}
-              >
-                <Icon
-                  size={18}
-                  strokeWidth={1.75}
-                  className={cn(
-                    'shrink-0 transition-colors',
-                    active ? 'text-white' : 'text-white/50 group-hover:text-white'
-                  )}
-                />
-                <span
-                  className="flex-1 truncate font-body font-light"
-                >
-                  {label}
-                </span>
-              </Link>
-            )
+            return <ModuleSection key={mod.href} mod={mod} />
           })}
         </nav>
 
@@ -744,7 +362,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               href="/accesos"
               onClick={onClose}
               className={cn(
-                'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150',
+                'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
                 pathname === '/accesos' || pathname.startsWith('/accesos/')
                   ? 'bg-coral text-white'
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
