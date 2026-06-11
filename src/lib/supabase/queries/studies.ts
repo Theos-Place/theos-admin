@@ -138,70 +138,196 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
   return (data as unknown as DbGroupEnriched) ?? null
 }
 
-/** Demanda de un estudio por zona: cuántos están por graduarse del prerequisito
- *  y cuántos ya son elegibles (completaron prereq y no lo han tomado).
- *  Agrega sobre study_enrollments (no recorre toda la membresía). */
-export async function getStudyDemand(studyCode: string): Promise<{
-  rows: Array<{ zone: string; graduating: number; eligible: number }>
+export type StudyDemandRow = {
+  zone: string
+  graduating: number
+  eligible: number
+  graduating_members: string[]
+  eligible_members: string[]
+}
+
+export type StudyDemandResult = {
+  rows: StudyDemandRow[]
   totalGraduating: number
   totalEligible: number
-}> {
+  studyInfo: {
+    code: string
+    name: string
+    weeks: number
+    stage: string
+    prerequisite: string | null
+    requirements: string[]
+  }
+}
+
+const LEVEL_TO_STAGE: Record<string, string> = {
+  niveles: 'niveles', etapa_inicial: 'inicial', etapa_intermedia: 'intermedia', campanas: 'campaña',
+}
+
+/**
+ * Demanda estimada de un estudio para el bloque siguiente.
+ *
+ * Categoría A "por graduarse": inscritos HOY en el prerequisito, con fecha de
+ * inicio conocida y ≥50% de las semanas cursadas (o ≤5 semanas restantes),
+ * sin inscripción activa en el objetivo y cumpliendo los compromisos de la etapa.
+ *
+ * Categoría B "elegibles": completaron el prerequisito, no están inscritos ni
+ * completaron el objetivo, no están en A, y cumplen los compromisos.
+ *
+ * Compromisos por etapa del estudio OBJETIVO:
+ *   inicial    → donador + asistencia activa (1 check-in/mes en los últimos 6 meses)
+ *   intermedia → donador + asistencia activa + servidor activo en comité
+ *
+ * Zona: sede del miembro; si no tiene, su provincia.
+ */
+export async function getStudyDemand(studyCode: string, now: Date = new Date()): Promise<StudyDemandResult> {
   const supabase = createAdminClient()
 
-  // Prerequisito del estudio objetivo.
-  const { data: plan, error: pErr } = await supabase
+  // Plan objetivo: etapa, semanas y prerequisito.
+  const { data: planRow, error: pErr } = await supabase
     .from('study_plans')
-    .select('prerequisite_code')
+    .select('code, name, level, duration_weeks, prerequisite_code')
     .eq('code', studyCode)
     .maybeSingle()
   if (pErr) throw pErr
-  const prereq = (plan as { prerequisite_code: string | null } | null)?.prerequisite_code ?? null
+  const plan = planRow as { code: string; name: string; level: string; duration_weeks: number | null; prerequisite_code: string | null } | null
+  if (!plan) throw new Error(`Plan ${studyCode} no encontrado`)
+  const prereq = plan.prerequisite_code
 
-  // Inscripciones activas/completadas con código de plan y sede del miembro.
-  const { data, error } = await supabase
-    .from('study_enrollments')
-    .select(`
-      member_id, status,
-      study_groups!study_enrollments_group_id_fkey(plan:study_plans(code)),
-      member:members(sede:sedes(code))
-    `)
-    .in('status', ['enrolled', 'completed'])
-  if (error) throw error
+  const stage = LEVEL_TO_STAGE[plan.level] ?? plan.level
+  const requirements =
+    stage === 'inicial' ? ['donador', 'asistencia']
+    : stage === 'intermedia' ? ['donador', 'asistencia', 'servidor']
+    : []
 
-  const rows = (data ?? []) as unknown as Array<{
-    member_id: string; status: string
-    study_groups: { plan: { code: string } | null } | null
-    member: { sede: { code: string } | null } | null
-  }>
+  const studyInfo = {
+    code: plan.code,
+    name: plan.name,
+    weeks: plan.duration_weeks ?? 0,
+    stage,
+    prerequisite: prereq,
+    requirements,
+  }
 
-  // Agrupar por miembro: set de completados, estudio actual, zona.
-  const byMember = new Map<string, { completed: Set<string>; current: string | null; zone: string | null }>()
-  for (const r of rows) {
-    const code = r.study_groups?.plan?.code
+  // Sin prerequisito (Niveles, campañas) este análisis no aplica.
+  if (!prereq) {
+    return { rows: [], totalGraduating: 0, totalEligible: 0, studyInfo }
+  }
+
+  // Semanas totales del prerequisito, para el umbral de avance de Categoría A.
+  const { data: prereqPlan } = await supabase
+    .from('study_plans')
+    .select('duration_weeks')
+    .eq('code', prereq)
+    .maybeSingle()
+  const prereqWeeks = (prereqPlan as { duration_weeks: number | null } | null)?.duration_weeks ?? null
+
+  // Inscripciones (activas + completadas) con inicio del grupo, código del plan
+  // y datos del miembro (compromisos + zona). Paginado: PostgREST corta en 1000.
+  type EnrollRow = {
+    member_id: string
+    status: string
+    group: { starts_at: string | null; plan: { code: string | null } | null } | null
+    member: { is_donor: boolean; province: string | null; is_active: boolean; sede: { code: string } | null } | null
+  }
+  const enrollments: EnrollRow[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('study_enrollments')
+      .select(`
+        member_id, status,
+        group:study_groups!study_enrollments_group_id_fkey(starts_at, plan:study_plans(code)),
+        member:members(is_donor, province, is_active, sede:sedes(code))
+      `)
+      .in('status', ['enrolled', 'completed'])
+      .order('id')
+      .range(from, from + 999)
+    if (error) throw error
+    const batch = (data ?? []) as unknown as EnrollRow[]
+    enrollments.push(...batch)
+    if (batch.length < 1000) break
+  }
+
+  // Compromisos: mismos criterios que el resto del sistema (helpers compartidos).
+  const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
+  const [attendanceIds, serverIds] = await Promise.all([
+    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
+    requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
+  ])
+  const attendanceSet = new Set(attendanceIds)
+  const serverSet = new Set(serverIds)
+
+  type MemberState = {
+    zone: string
+    isDonor: boolean
+    isActive: boolean
+    completedPrereq: boolean
+    enrolledTarget: boolean
+    completedTarget: boolean
+    prereqStartsAt: string | null // inicio del grupo de su inscripción ACTIVA en el prereq
+  }
+  const byMember = new Map<string, MemberState>()
+  for (const r of enrollments) {
+    const code = r.group?.plan?.code
     if (!code) continue
-    const entry = byMember.get(r.member_id) ?? { completed: new Set<string>(), current: null, zone: null }
-    entry.zone = r.member?.sede?.code ?? entry.zone
-    if (r.status === 'completed') entry.completed.add(code)
-    if (r.status === 'enrolled') entry.current = code
+    const entry = byMember.get(r.member_id) ?? {
+      zone: r.member?.sede?.code ?? r.member?.province ?? 'Sin zona',
+      isDonor: r.member?.is_donor ?? false,
+      isActive: r.member?.is_active ?? true,
+      completedPrereq: false,
+      enrolledTarget: false,
+      completedTarget: false,
+      prereqStartsAt: null,
+    }
+    if (code === prereq) {
+      if (r.status === 'completed') entry.completedPrereq = true
+      if (r.status === 'enrolled') entry.prereqStartsAt = r.group?.starts_at ?? entry.prereqStartsAt
+    }
+    if (code === studyCode) {
+      if (r.status === 'enrolled') entry.enrolledTarget = true
+      if (r.status === 'completed') entry.completedTarget = true
+    }
     byMember.set(r.member_id, entry)
   }
 
-  const zones: Record<string, { graduating: number; eligible: number }> = {}
-  for (const m of byMember.values()) {
-    if (!m.current || !m.zone) continue // solo miembros activos con sede conocida
-    const z = m.zone
-    zones[z] = zones[z] ?? { graduating: 0, eligible: 0 }
-    if (prereq && m.current === prereq) {
-      zones[z].graduating += 1
-      continue
-    }
-    const hasCompleted = prereq ? m.completed.has(prereq) : true
-    const hasntTaken = !m.completed.has(studyCode) && m.current !== studyCode
-    if (hasCompleted && hasntTaken) zones[z].eligible += 1
+  function meetsCommitments(memberId: string, m: MemberState): boolean {
+    if (requirements.includes('donador') && !m.isDonor) return false
+    if (requirements.includes('asistencia') && !attendanceSet.has(memberId)) return false
+    if (requirements.includes('servidor') && !serverSet.has(memberId)) return false
+    return true
   }
 
-  const rowsOut = Object.entries(zones)
-    .map(([zone, v]) => ({ zone, graduating: v.graduating, eligible: v.eligible }))
+  const zones = new Map<string, { graduating: string[]; eligible: string[] }>()
+  const nowMs = now.getTime()
+
+  for (const [memberId, m] of byMember) {
+    if (!m.isActive || m.enrolledTarget || m.completedTarget) continue
+    if (!meetsCommitments(memberId, m)) continue
+
+    // Categoría A: cursando el prereq con avance suficiente
+    // (≥50% de las semanas o ≤5 semanas restantes).
+    let isGraduating = false
+    if (m.prereqStartsAt && prereqWeeks && prereqWeeks > 0) {
+      const weeksElapsed = (nowMs - new Date(m.prereqStartsAt).getTime()) / (7 * 86400000)
+      isGraduating = weeksElapsed >= prereqWeeks / 2 || prereqWeeks - weeksElapsed <= 5
+    }
+
+    if (!isGraduating && !m.completedPrereq) continue
+
+    const zone = zones.get(m.zone) ?? { graduating: [], eligible: [] }
+    if (isGraduating) zone.graduating.push(memberId)
+    else zone.eligible.push(memberId) // Categoría B (excluye a los de A)
+    zones.set(m.zone, zone)
+  }
+
+  const rowsOut: StudyDemandRow[] = Array.from(zones.entries())
+    .map(([zone, v]) => ({
+      zone,
+      graduating: v.graduating.length,
+      eligible: v.eligible.length,
+      graduating_members: v.graduating,
+      eligible_members: v.eligible,
+    }))
     .filter(r => r.graduating + r.eligible > 0)
     .sort((a, b) => (b.graduating + b.eligible) - (a.graduating + a.eligible))
 
@@ -209,6 +335,7 @@ export async function getStudyDemand(studyCode: string): Promise<{
     rows: rowsOut,
     totalGraduating: rowsOut.reduce((s, r) => s + r.graduating, 0),
     totalEligible: rowsOut.reduce((s, r) => s + r.eligible, 0),
+    studyInfo,
   }
 }
 

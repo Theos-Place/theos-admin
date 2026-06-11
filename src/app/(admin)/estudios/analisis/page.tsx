@@ -1,60 +1,159 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
+import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
+import { getCurrentBlock, getNextBlock } from '@/lib/studies/blocks'
 import { cn } from '@/lib/utils'
-import { Send, CheckCircle } from 'lucide-react'
+import { HandCoins, CalendarCheck, HeartHandshake, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 
-const INITIAL_DATE = '2026-05-16'
-
-type DemandRow = { zone: string; graduating: number; eligible: number }
+type DemandRow = {
+  zone: string
+  graduating: number
+  eligible: number
+  graduating_members: string[]
+  eligible_members: string[]
+}
 type Analysis = {
   rows: DemandRow[]
   totalGraduating: number
   totalEligible: number
   totalDemand: number
   suggestedGroups: number
+  currentBlock: { block: number; label: string }
+  nextBlock: { block: number; label: string; startsAt: string; enrollmentOpens: string }
+  studyInfo: {
+    code: string
+    name: string
+    weeks: number
+    stage: string
+    prerequisite: string | null
+    requirements: string[]
+  }
+}
+
+const REQ_META: Record<string, { label: string; Icon: React.ElementType }> = {
+  donador:    { label: 'Donador',    Icon: HandCoins },
+  asistencia: { label: 'Asistencia', Icon: CalendarCheck },
+  servidor:   { label: 'Servidor',   Icon: HeartHandshake },
+}
+
+function formatDateLong(d: Date) {
+  return d.toLocaleDateString('es-CR', { day: 'numeric', month: 'long' })
+}
+
+/** Chips de requisitos: coloreados si aplican al estudio, apagados si no. */
+function RequirementChips({ requirements, size = 'md' }: { requirements: string[]; size?: 'sm' | 'md' }) {
+  return (
+    <div className="flex gap-1.5 flex-wrap">
+      {Object.entries(REQ_META).map(([key, { label, Icon }]) => {
+        const active = requirements.includes(key)
+        return (
+          <span
+            key={key}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full font-body',
+              size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px]',
+              active ? 'bg-teal/15 text-teal-deep font-medium' : 'bg-surface-low text-navy-light/60 line-through',
+            )}
+          >
+            <Icon size={size === 'sm' ? 10 : 12} />
+            {label}
+          </span>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function AnalisisPage() {
   const { studyTypes: STUDY_TYPES } = useStudies()
   const [selectedStudyId, setSelectedStudyId] = useState('')
-  const [groupInputs, setGroupInputs] = useState<Record<string, number>>({})
-  const [totalInput, setTotalInput] = useState<number | null>(null)
-  const [submitted, setSubmitted] = useState(false)
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(false)
+  // Celda expandida para el drill-down: zona + categoría.
+  const [expanded, setExpanded] = useState<{ zone: string; cat: 'graduating' | 'eligible' } | null>(null)
+  const [memberNames, setMemberNames] = useState<Record<string, string>>({})
 
   const study = selectedStudyId ? (STUDY_TYPES.find(s => s.id === selectedStudyId) ?? null) : null
 
-  // Demanda por zona desde el server (agregado sobre study_enrollments).
+  // Contexto de bloque (cliente: misma utilidad que usa el server).
+  const now = new Date()
+  const currentBlock = getCurrentBlock(now)
+  const nextBlock = getNextBlock(now)
+
+  // El reset de loading/expanded ocurre en el handler del select (no acá:
+  // la regla react-hooks/set-state-in-effect prohíbe setState síncrono en effects).
+  function selectStudy(id: string) {
+    setSelectedStudyId(id)
+    setAnalysis(null)
+    setExpanded(null)
+    setLoading(Boolean(id))
+  }
+
   useEffect(() => {
-    if (!study) { setAnalysis(null); return }
+    if (!study) return
     let alive = true
-    setLoading(true)
     fetch(`/api/studies/analysis?study_code=${encodeURIComponent(study.code)}`)
       .then(r => (r.ok ? r.json() : null))
-      .then((d: { rows: DemandRow[]; totalGraduating: number; totalEligible: number } | null) => {
+      .then((d: Analysis | null) => {
         if (!alive) return
-        if (!d) { setAnalysis(null); setLoading(false); return }
-        const totalDemand = d.totalGraduating + d.totalEligible
-        const suggestedGroups = Math.ceil(totalDemand / 12)
-        setAnalysis({ ...d, totalDemand, suggestedGroups })
-        const inputs: Record<string, number> = {}
-        d.rows.forEach(r => { inputs[r.zone] = Math.ceil((r.graduating + r.eligible) / 12) })
-        setGroupInputs(inputs)
-        setTotalInput(suggestedGroups)
-        setSubmitted(false)
+        setAnalysis(d)
         setLoading(false)
       })
       .catch(() => { if (alive) { setAnalysis(null); setLoading(false) } })
     return () => { alive = false }
-  }, [study])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [study?.code])
 
-  function handleSubmit() {
-    setSubmitted(true)
+  // Nombres para el drill-down: se cargan al expandir una celda (cache local).
+  function toggleExpand(zone: string, cat: 'graduating' | 'eligible', ids: string[]) {
+    if (expanded?.zone === zone && expanded.cat === cat) { setExpanded(null); return }
+    setExpanded({ zone, cat })
+    const missing = ids.filter(id => !memberNames[id])
+    if (missing.length === 0) return
+    fetch('/api/members/by-ids', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: missing }),
+    })
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { members?: Array<{ id: string; first_name: string; last_name: string }> } | null) => {
+        if (!d?.members) return
+        setMemberNames(prev => {
+          const next = { ...prev }
+          for (const m of d.members!) next[m.id] = `${m.first_name} ${m.last_name}`
+          return next
+        })
+      })
+      .catch(() => {})
+  }
+
+  const tooltipA = analysis
+    ? `Están cursando ${analysis.studyInfo.prerequisite ?? 'el prerequisito'} y les faltan ≤ 5 semanas o completaron ≥ 50%`
+    : ''
+  const tooltipB = analysis
+    ? `Completaron ${analysis.studyInfo.prerequisite ?? 'el prerequisito'} y cumplen todos los requisitos`
+    : ''
+
+  function MemberList({ ids }: { ids: string[] }) {
+    return (
+      <ul className="flex flex-wrap gap-2 py-1">
+        {ids.map(id => (
+          <li key={id}>
+            <Link
+              href={`/miembros/${id}`}
+              className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-1 text-[12px] text-navy font-body hover:bg-navy/10 transition-colors"
+            >
+              {memberNames[id] ?? 'Cargando…'}
+              <ExternalLink size={10} className="text-navy-light/50" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    )
   }
 
   const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
@@ -63,9 +162,7 @@ export default function AnalisisPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1
-          className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
-        >
+        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Análisis de bloque
         </h1>
         <p className="mt-1 text-sm text-navy-light/60 font-body">
@@ -73,30 +170,56 @@ export default function AnalisisPage() {
         </p>
       </div>
 
-      {/* Study selector */}
-      <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-        <p
-          className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-2 font-display"
-        >
+      {/* Banner de contexto de bloque */}
+      <div className="rounded-2xl bg-surface-card shadow-card px-5 py-4 flex items-center gap-3 flex-wrap">
+        <span className="rounded-full bg-navy px-3 py-1 text-[11px] font-medium text-white font-body">
+          Hoy: {currentBlock.label}
+        </span>
+        <span className="rounded-full bg-coral px-3 py-1 text-[11px] font-medium text-white font-body">
+          Analizando para {nextBlock.label}
+        </span>
+        <span className="text-[13px] text-navy-light/70 font-body">
+          Matrícula abre el {formatDateLong(nextBlock.enrollmentOpens)} · el bloque inicia el {formatDateLong(nextBlock.startsAt)}
+        </span>
+      </div>
+
+      {/* Selector de estudio (solo Inicial e Intermedia; Niveles no aplican) */}
+      <div className="rounded-2xl p-5 bg-surface-card shadow-card space-y-3">
+        <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
           Seleccionar estudio a analizar
         </p>
         <select
-          className={cn(inputCls, 'max-w-md')}
+          className={cn(inputCls, 'max-w-md w-full')}
           value={selectedStudyId}
-          onChange={e => setSelectedStudyId(e.target.value)}
+          onChange={e => selectStudy(e.target.value)}
+          aria-label="Estudio a analizar"
         >
           <option value="">Seleccionar estudio...</option>
-          <optgroup label="Etapa Inicial">
-            {STUDY_TYPES.filter(s => s.stage === 'inicial').map(s => (
-              <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+          <optgroup label="Etapa Inicial (requiere: donador + asistencia)">
+            {STUDY_TYPES.filter(s => s.stage === 'inicial' && !s.is_archived).map(s => (
+              <option key={s.id} value={s.id}>
+                {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
+              </option>
             ))}
           </optgroup>
-          <optgroup label="Etapa Intermedia">
-            {STUDY_TYPES.filter(s => s.stage === 'intermedia').map(s => (
-              <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+          <optgroup label="Etapa Intermedia (requiere: donador + asistencia + servidor)">
+            {STUDY_TYPES.filter(s => s.stage === 'intermedia' && !s.is_archived).map(s => (
+              <option key={s.id} value={s.id}>
+                {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
+              </option>
             ))}
           </optgroup>
         </select>
+
+        {analysis && !loading && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-[12px] text-navy-light/70 font-body">
+              {analysis.studyInfo.weeks > 0 ? `${analysis.studyInfo.weeks} semanas · ` : ''}
+              prereq: <strong className="text-navy">{analysis.studyInfo.prerequisite ?? '—'}</strong> · requisitos:
+            </span>
+            <RequirementChips requirements={analysis.studyInfo.requirements} />
+          </div>
+        )}
       </div>
 
       {selectedStudyId && loading && (
@@ -107,7 +230,7 @@ export default function AnalisisPage() {
 
       {study && analysis && !loading && (
         <>
-          {/* Summary cards */}
+          {/* Cards de resumen */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Demanda total estimada', value: analysis.totalDemand, color: 'text-navy' },
@@ -115,10 +238,8 @@ export default function AnalisisPage() {
               { label: 'Elegibles sin inscribir', value: analysis.totalEligible, color: 'text-teal-deep' },
               { label: 'Grupos sugeridos', value: analysis.suggestedGroups, color: 'text-navy' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p
-                  className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display"
-                >
+              <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-card">
+                <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
                   {label}
                 </p>
                 <p className={`mt-2 text-3xl font-bold font-display ${color}`}>
@@ -128,144 +249,120 @@ export default function AnalisisPage() {
             ))}
           </div>
 
-          {/* Zone breakdown table */}
-          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-            <div className="px-5 py-4 border-b flex items-center gap-2 border-[var(--outline-variant)]">
+          {/* Desglose por zona */}
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-card">
+            <div className="px-5 py-4 border-b flex items-center gap-2 border-outline">
               <h2 className="text-sm font-semibold text-navy font-display">
                 Desglose por zona
               </h2>
               <StudyTypeBadge code={study.code} size="sm" />
+              <span className="text-[11px] text-navy-light/60 font-body ml-auto">
+                Clic en un número para ver los miembros
+              </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    {['Zona', 'Por graduarse', 'Otros elegibles', 'Total demanda', 'Grupos sugeridos'].map(h => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50 font-display"
-                      >
-                        {h}
-                      </th>
-                    ))}
+                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display">Zona</th>
+                    <th
+                      title={tooltipA}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
+                    >
+                      Por graduarse (A)
+                    </th>
+                    <th
+                      title={tooltipB}
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
+                    >
+                      Elegibles (B)
+                    </th>
+                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display">Total demanda</th>
+                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display">Grupos sugeridos</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {analysis.rows.map(row => (
-                    <tr
-                      key={row.zone}
-                      className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
-                    >
-                      <td className="px-4 py-3 text-sm text-navy font-medium font-body">
-                        {sedeLabel(row.zone)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-coral font-body">
-                        {row.graduating}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-teal-deep font-body">
-                        {row.eligible}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-navy font-body">
-                        {row.graduating + row.eligible}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
-                        {Math.ceil((row.graduating + row.eligible) / 12)}
+                  {analysis.rows.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">
+                        Sin demanda detectada para este estudio.
                       </td>
                     </tr>
-                  ))}
-                  {/* Totals row */}
-                  <tr className="bg-surface-low">
-                    <td className="px-4 py-3 text-sm font-bold text-navy font-display">
-                      Total
-                    </td>
-                    <td className="px-4 py-3 text-sm font-bold text-coral font-body">
-                      {analysis.totalGraduating}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-bold text-teal-deep font-body">
-                      {analysis.totalEligible}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-bold text-navy font-body">
-                      {analysis.totalDemand}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-bold text-navy font-body">
-                      {analysis.suggestedGroups}
-                    </td>
-                  </tr>
+                  )}
+                  {analysis.rows.map(row => {
+                    const isExpA = expanded?.zone === row.zone && expanded.cat === 'graduating'
+                    const isExpB = expanded?.zone === row.zone && expanded.cat === 'eligible'
+                    return (
+                      <Fragment key={row.zone}>
+                        <tr className="hover:bg-surface-low transition-colors border-b border-outline">
+                          <td className="px-4 py-3 text-sm text-navy font-medium font-body">
+                            {sedeLabel(row.zone)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => toggleExpand(row.zone, 'graduating', row.graduating_members)}
+                              disabled={row.graduating === 0}
+                              className={cn(
+                                'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
+                                row.graduating > 0 ? 'text-coral hover:bg-coral/10' : 'text-navy-light/40 cursor-default',
+                              )}
+                            >
+                              {row.graduating}
+                              {row.graduating > 0 && (isExpA ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => toggleExpand(row.zone, 'eligible', row.eligible_members)}
+                              disabled={row.eligible === 0}
+                              className={cn(
+                                'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
+                                row.eligible > 0 ? 'text-teal-deep hover:bg-teal/15' : 'text-navy-light/40 cursor-default',
+                              )}
+                            >
+                              {row.eligible}
+                              {row.eligible > 0 && (isExpB ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium text-navy font-body">
+                            {row.graduating + row.eligible}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
+                            {Math.ceil((row.graduating + row.eligible) / 12)}
+                          </td>
+                        </tr>
+                        {(isExpA || isExpB) && (
+                          <tr className="border-b border-outline bg-surface-low/60">
+                            <td colSpan={5} className="px-4 py-2">
+                              <p className="text-[11px] text-navy-light/60 font-body mb-1">
+                                {isExpA ? `Por graduarse de ${analysis.studyInfo.prerequisite}` : 'Elegibles'} en {sedeLabel(row.zone)}:
+                              </p>
+                              <MemberList ids={isExpA ? row.graduating_members : row.eligible_members} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                  {analysis.rows.length > 0 && (
+                    <tr className="bg-surface-low">
+                      <td className="px-4 py-3 text-sm font-bold text-navy font-display">Total</td>
+                      <td className="px-4 py-3 text-sm font-bold text-coral font-body">{analysis.totalGraduating}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-teal-deep font-body">{analysis.totalEligible}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-navy font-body">{analysis.totalDemand}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-navy font-body">{analysis.suggestedGroups}</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Panel de apertura */}
-          <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <h2
-              className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display"
-            >
-              Panel de apertura
-            </h2>
-
-            {submitted ? (
-              <div className="flex items-center gap-3 rounded-xl bg-teal-soft/20 px-4 py-3">
-                <CheckCircle size={16} className="text-teal-deep" />
-                <p className="text-sm text-teal-deep font-body">
-                  Solicitudes enviadas al coordinador el {INITIAL_DATE}
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-3">
-                  <label className="text-sm text-navy-light/60 shrink-0 font-body">
-                    ¿Cuántos grupos querés abrir?
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    className={cn(inputCls, 'w-20')}
-                    value={totalInput ?? ''}
-                    onChange={e => setTotalInput(Number(e.target.value))}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
-                    Distribución por zona
-                  </p>
-                  {analysis.rows.map(row => (
-                    <div key={row.zone} className="flex items-center gap-3">
-                      <span className="text-sm text-navy-light/60 w-36 shrink-0 font-body">
-                        {sedeLabel(row.zone)}
-                      </span>
-                      <input
-                        type="number"
-                        min={0}
-                        className={cn(inputCls, 'w-16')}
-                        value={groupInputs[row.zone] ?? 0}
-                        onChange={e => setGroupInputs(prev => ({ ...prev, [row.zone]: Number(e.target.value) }))}
-                      />
-                      <span className="text-[11px] text-navy-light/40 font-body">
-                        grupos
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={handleSubmit}
-                  className="inline-flex items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-                >
-                  <Send size={14} /> Solicitar apertura
-                </button>
-              </>
-            )}
           </div>
         </>
       )}
 
       {!selectedStudyId && (
-        <div
-          className="rounded-2xl p-10 text-center bg-surface-card shadow-[var(--shadow-md)]"
-        >
-          <p className="text-sm text-navy-light/40 font-body">
+        <div className="rounded-2xl p-10 text-center bg-surface-card shadow-card">
+          <p className="text-sm text-navy-light/60 font-body">
             Seleccioná un estudio para ver el análisis de demanda.
           </p>
         </div>
