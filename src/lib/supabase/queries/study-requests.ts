@@ -1,7 +1,18 @@
 /**
  * Solicitudes de estudios + destinatarios de notificaciones + notificaciones
- * internas. SQL en supabase/migrations/041_study_requests.sql (correr con
- * `npx supabase db push` o en el SQL Editor).
+ * internas. SQL en supabase/migrations/041_study_requests.sql y el historial
+ * de estados en 047_request_status_history.sql (correr con
+ * `npx supabase db push` o en el SQL Editor):
+ *
+ *   CREATE TABLE study_request_status_history (
+ *     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ *     request_id  UUID NOT NULL REFERENCES study_requests(id) ON DELETE CASCADE,
+ *     from_status TEXT,
+ *     to_status   TEXT NOT NULL,
+ *     changed_by  UUID REFERENCES members(id) ON DELETE SET NULL,
+ *     notes       TEXT,
+ *     created_at  TIMESTAMPTZ DEFAULT NOW()
+ *   );
  *
  * Como el resto de queries, corre server-side con service role; la
  * autorización vive en requireRoles() de cada ruta API.
@@ -23,7 +34,8 @@ const REQUEST_SELECT = `
   reviewer:members!study_requests_reviewed_by_fkey(first_name, last_name),
   plan:study_plans(name),
   existing_group:study_groups!study_requests_existing_group_id_fkey(name),
-  current_group:study_groups!study_requests_current_group_id_fkey(name)
+  current_group:study_groups!study_requests_current_group_id_fkey(name),
+  history:study_request_status_history(from_status, to_status, notes, created_at, actor:members(first_name, last_name))
 `
 
 type DbRequestRow = {
@@ -47,6 +59,13 @@ type DbRequestRow = {
   plan: { name: string | null } | null
   existing_group: { name: string | null } | null
   current_group: { name: string | null } | null
+  history: Array<{
+    from_status: string | null
+    to_status: string
+    notes: string | null
+    created_at: string
+    actor: { first_name: string | null; last_name: string | null } | null
+  }> | null
 }
 
 function fullName(p: { first_name: string | null; last_name: string | null } | null): string {
@@ -75,6 +94,15 @@ function toDomain(r: DbRequestRow): StudyRequest {
     review_notes: r.review_notes,
     created_at: r.created_at,
     updated_at: r.updated_at,
+    history: (r.history ?? [])
+      .map(h => ({
+        from_status: h.from_status as StudyRequestStatus | null,
+        to_status: h.to_status as StudyRequestStatus,
+        notes: h.notes,
+        changed_by_name: h.actor ? fullName(h.actor) : null,
+        created_at: h.created_at,
+      }))
+      .sort((a, b) => a.created_at.localeCompare(b.created_at)),
   }
 }
 
@@ -134,6 +162,12 @@ export async function updateStudyRequestStatus(
   reviewNotes?: string | null,
 ): Promise<StudyRequest> {
   const supabase = createAdminClient()
+
+  // Estado anterior, para el historial.
+  const { data: before } = await supabase
+    .from('study_requests').select('status').eq('id', id).maybeSingle()
+  const fromStatus = (before as { status: StudyRequestStatus } | null)?.status ?? null
+
   const patch: Record<string, unknown> = {
     status,
     reviewed_by: reviewedBy,
@@ -151,7 +185,27 @@ export async function updateStudyRequestStatus(
     .select(REQUEST_SELECT)
     .single()
   if (error) throw error
-  return toDomain(data as unknown as DbRequestRow)
+
+  // Historial de cambios (best-effort: no bloquea la acción si falla).
+  const { error: hErr } = await supabase.from('study_request_status_history').insert({
+    request_id: id,
+    from_status: fromStatus,
+    to_status: status,
+    changed_by: reviewedBy,
+    notes: reviewNotes ?? null,
+  })
+  if (hErr) console.warn('updateStudyRequestStatus: historial falló:', hErr.message)
+
+  const result = toDomain(data as unknown as DbRequestRow)
+  // El select corrió antes del insert del historial: reflejarlo en la respuesta.
+  result.history = [...result.history, {
+    from_status: fromStatus,
+    to_status: status,
+    notes: reviewNotes ?? null,
+    changed_by_name: result.reviewed_by_name,
+    created_at: new Date().toISOString(),
+  }]
+  return result
 }
 
 // ── Destinatarios de notificaciones ─────────────────────────────────────────

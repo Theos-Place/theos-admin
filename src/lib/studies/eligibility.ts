@@ -132,3 +132,13 @@ export function computeEligibility(
     }
   })
 }
+
+// ── Solicitudes de estudios ───────────────────────────────────────────────────
+
+/** Estudios elegibles como DESTINO de una reubicación (niveles + cadena DIS + SCJ).
+ *  El resto de capacitaciones no admite reubicación. */
+export const RELOCATION_ELIGIBLE_CODES = ['N1', 'N2', 'N3', 'N4', 'DIS1', 'DIS2', 'DIS3', 'SCJ'] as const
+
+export function isRelocationEligibleCode(code: string | null | undefined): boolean {
+  return Boolean(code && (RELOCATION_ELIGIBLE_CODES as readonly string[]).includes(code))
+}

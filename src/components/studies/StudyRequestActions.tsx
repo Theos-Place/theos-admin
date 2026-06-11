@@ -4,41 +4,47 @@ import { useState } from 'react'
 import { ArrowLeftRight, Users, MapPin, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { isRelocationEligibleCode } from '@/lib/studies/eligibility'
 import { cn } from '@/lib/utils'
 import type { StudyRequestType } from '@/types/study'
 
 /**
  * Botones "Solicitar reubicación" / "Unirme a un grupo" / "Solicitar estudio
- * en mi zona" en el perfil del miembro. Visibles para cualquier rol: crear
- * solicitudes está abierto a todo usuario autenticado.
+ * en mi zona". Visibles para cualquier rol; la elegibilidad de estudios se
+ * calcula para el MIEMBRO del perfil (o el seleccionado por el coordinador)
+ * vía /api/studies/eligibility (getEligibleStudiesForMember, centralizada).
  */
 
-type Plan = { id: string; code: string | null; name: string; is_active: boolean }
+type EligiblePlan = { id: string; code: string; name: string; stage: string }
+type ActiveEnrollment = { group_id: string; group_name: string; plan_code: string | null }
+type Eligibility = {
+  active_enrollments: ActiveEnrollment[]
+  eligible_plans: EligiblePlan[]
+  commitments: { is_donor: boolean; attendance_active: boolean; is_server: boolean }
+}
 type Group = {
   id: string
   name: string
   status: string
   plan: { code: string | null } | null
-  enrollments: Array<{ member_id: string; status: string }>
 }
 
 const MIN_REASON = 20
 
-const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30'
+const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30 disabled:opacity-60'
 const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
 
 export function StudyRequestActions({ memberId }: { memberId: string }) {
   const toast = useToast()
   const [openModal, setOpenModal] = useState<StudyRequestType | null>(null)
-  const [plans, setPlans] = useState<Plan[]>([])
+  const [eligibility, setEligibility] = useState<Eligibility | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
   const [dataLoading, setDataLoading] = useState(false)
-  const [dataLoaded, setDataLoaded] = useState(false)
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
 
-  // Campos del formulario (se resetean al abrir)
   const [planId, setPlanId] = useState('')
   const [targetGroupId, setTargetGroupId] = useState('')
-  // null = sin tocar por el usuario → se autocompleta con el grupo del miembro.
+  // null = sin tocar por el usuario → se autocompleta con el primer grupo activo.
   const [currentGroupId, setCurrentGroupId] = useState<string | null>(null)
   const [location, setLocation] = useState('')
   const [schedule, setSchedule] = useState('')
@@ -46,19 +52,18 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const memberGroup = groups.find(g =>
-    g.enrollments?.some(e => e.member_id === memberId && e.status === 'enrolled'))
-
-  // Planes y grupos se cargan una vez, al abrir el primer modal (en el handler
-  // del click, no en un effect: evita setState síncrono dentro de effects).
+  // Carga por miembro (el coordinador puede cambiar de miembro entre aperturas).
   function loadData() {
-    if (dataLoaded || dataLoading) return
+    if (loadedFor === memberId || dataLoading) return
     setDataLoading(true)
-    Promise.all([fetch('/api/studies/plans'), fetch('/api/studies/groups')])
-      .then(async ([p, g]) => {
-        if (p.ok) setPlans(((await p.json()) as Plan[]).filter(pl => pl.is_active))
+    Promise.all([
+      fetch(`/api/studies/eligibility?member_id=${memberId}`),
+      fetch('/api/studies/groups'),
+    ])
+      .then(async ([e, g]) => {
+        if (e.ok) setEligibility(await e.json())
         if (g.ok) setGroups(((await g.json()) as Group[]).filter(gr => gr.status === 'open' || gr.status === 'in_progress'))
-        setDataLoaded(true)
+        setLoadedFor(memberId)
       })
       .catch(() => {})
       .finally(() => setDataLoading(false))
@@ -76,21 +81,28 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
     loadData()
   }
 
-  const planCode = plans.find(p => p.id === planId)?.code ?? null
+  const activeEnrollments = eligibility?.active_enrollments ?? []
+  const eligiblePlans = eligibility?.eligible_plans ?? []
+  // Grupo destino de reubicación: solo estudios elegibles (N1–N4, DIS1–3, SCJ).
+  const relocationTargets = groups.filter(g => isRelocationEligibleCode(g.plan?.code))
+  const effectiveCurrentGroup = currentGroupId ?? activeEnrollments[0]?.group_id ?? ''
+
+  const planCode = eligiblePlans.find(p => p.id === planId)?.code ?? null
   const groupsOfPlan = groups.filter(g => planCode && g.plan?.code === planCode)
-  const effectiveCurrentGroup = currentGroupId ?? memberGroup?.id ?? ''
+
+  // Bloqueos por elegibilidad (mensaje + submit deshabilitado).
+  const relocationBlocked = !dataLoading && eligibility !== null && activeEnrollments.length === 0
+  const plansBlocked = !dataLoading && eligibility !== null && eligiblePlans.length === 0
+  const blocked = openModal === 'relocation' ? relocationBlocked : plansBlocked
 
   async function submit() {
+    if (blocked) return
     if (reason.trim().length < MIN_REASON) {
       setError(`Contanos un poco más: la razón debe tener al menos ${MIN_REASON} caracteres.`)
       return
     }
-    if (openModal === 'join_group' && !planId) {
+    if ((openModal === 'join_group' || openModal === 'new_group') && !planId) {
       setError('Seleccioná el plan de estudio.')
-      return
-    }
-    if (openModal === 'new_group' && !planId) {
-      setError('Seleccioná el plan de estudio deseado.')
       return
     }
     setError('')
@@ -133,6 +145,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
         value={reason}
         onChange={e => setReason(e.target.value)}
         rows={3}
+        disabled={blocked}
         placeholder="Contanos por qué (mínimo 20 caracteres)…"
         className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')}
       />
@@ -177,39 +190,68 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
               {openModal === 'new_group' && 'Solicitar estudio en mi zona'}
             </h2>
 
-            {dataLoading ? (
+            {dataLoading || !eligibility ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 size={18} className="animate-spin text-navy-light/40" />
               </div>
             ) : (
               <>
-                {openModal === 'relocation' && (
+                {openModal === 'relocation' && relocationBlocked && (
+                  <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
+                    <p className="text-[13px] text-coral font-body">
+                      No tenés estudios activos elegibles para reubicación.
+                    </p>
+                  </div>
+                )}
+                {openModal !== 'relocation' && plansBlocked && (
+                  <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
+                    <p className="text-[13px] text-coral font-body">
+                      No hay estudios disponibles para solicitar: o ya los llevaste,
+                      o falta cumplir el prerequisito o los compromisos de la etapa
+                      (donador y asistencia; servidor para la etapa intermedia).
+                    </p>
+                  </div>
+                )}
+
+                {openModal === 'relocation' && !relocationBlocked && (
                   <>
                     <div>
                       <label htmlFor="current-group" className={LABEL_CLS}>Grupo actual</label>
                       <select id="current-group" value={effectiveCurrentGroup} onChange={e => setCurrentGroupId(e.target.value)} className={SELECT_CLS}>
-                        <option value="">Sin grupo actual</option>
-                        {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                        <option value="">Sin estudio seleccionado</option>
+                        {activeEnrollments.map(en => (
+                          <option key={en.group_id} value={en.group_id}>
+                            {en.group_name}{en.plan_code ? ` (${en.plan_code})` : ''}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>
                       <label htmlFor="target-group" className={LABEL_CLS}>Grupo al que quiere ir (opcional)</label>
                       <select id="target-group" value={targetGroupId} onChange={e => setTargetGroupId(e.target.value)} className={SELECT_CLS}>
                         <option value="">Que el coordinador decida</option>
-                        {groups.filter(g => g.id !== effectiveCurrentGroup).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                        {relocationTargets.filter(g => g.id !== effectiveCurrentGroup).map(g => (
+                          <option key={g.id} value={g.id}>{g.name}{g.plan?.code ? ` (${g.plan.code})` : ''}</option>
+                        ))}
                       </select>
+                      <p className="mt-1 text-[11px] text-navy-light/60 font-body">
+                        Solo niveles (N1–N4), discipulados (DIS1–DIS3) y SCJ admiten reubicación.
+                      </p>
                     </div>
                   </>
                 )}
 
-                {openModal === 'join_group' && (
+                {openModal === 'join_group' && !plansBlocked && (
                   <>
                     <div>
                       <label htmlFor="join-plan" className={LABEL_CLS}>Plan de estudio <span className="text-coral">*</span></label>
                       <select id="join-plan" value={planId} onChange={e => { setPlanId(e.target.value); setTargetGroupId('') }} className={SELECT_CLS}>
                         <option value="">Seleccionar plan…</option>
-                        {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        {eligiblePlans.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
                       </select>
+                      <p className="mt-1 text-[11px] text-navy-light/60 font-body">
+                        Solo se muestran los estudios que aún no has llevado y para los que cumplís los requisitos.
+                      </p>
                     </div>
                     <div>
                       <label htmlFor="join-group" className={LABEL_CLS}>Grupo específico (opcional)</label>
@@ -221,14 +263,17 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                   </>
                 )}
 
-                {openModal === 'new_group' && (
+                {openModal === 'new_group' && !plansBlocked && (
                   <>
                     <div>
                       <label htmlFor="new-plan" className={LABEL_CLS}>Plan de estudio deseado <span className="text-coral">*</span></label>
                       <select id="new-plan" value={planId} onChange={e => setPlanId(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar plan…</option>
-                        {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        {eligiblePlans.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
                       </select>
+                      <p className="mt-1 text-[11px] text-navy-light/60 font-body">
+                        Solo se muestran los estudios que aún no has llevado y para los que cumplís los requisitos.
+                      </p>
                     </div>
                     <div>
                       <label htmlFor="proposed-location" className={LABEL_CLS}>Ubicación propuesta</label>
@@ -253,7 +298,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                   </>
                 )}
 
-                {reasonField}
+                {!blocked && reasonField}
 
                 {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
@@ -262,15 +307,17 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                     onClick={() => setOpenModal(null)}
                     className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors"
                   >
-                    Cancelar
+                    {blocked ? 'Cerrar' : 'Cancelar'}
                   </button>
-                  <button
-                    onClick={submit}
-                    disabled={submitting}
-                    className="rounded-full bg-coral px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60"
-                  >
-                    {submitting ? 'Enviando…' : 'Enviar solicitud'}
-                  </button>
+                  {!blocked && (
+                    <button
+                      onClick={submit}
+                      disabled={submitting}
+                      className="rounded-full bg-coral px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60"
+                    >
+                      {submitting ? 'Enviando…' : 'Enviar solicitud'}
+                    </button>
+                  )}
                 </div>
               </>
             )}

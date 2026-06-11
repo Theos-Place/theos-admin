@@ -118,6 +118,14 @@ export type RelocationRequest = {
 export type StudyRequestType = 'new_group' | 'join_group' | 'relocation'
 export type StudyRequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
 
+export type StudyRequestHistoryEntry = {
+  from_status: StudyRequestStatus | null
+  to_status: StudyRequestStatus
+  notes: string | null
+  changed_by_name: string | null
+  created_at: string
+}
+
 export type StudyRequest = {
   id: string
   member_id: string
@@ -139,6 +147,7 @@ export type StudyRequest = {
   review_notes: string | null
   created_at: string
   updated_at: string
+  history: StudyRequestHistoryEntry[]
 }
 
 export type StudyRequestWriteInput = {

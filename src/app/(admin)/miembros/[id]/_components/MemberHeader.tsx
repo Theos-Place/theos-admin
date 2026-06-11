@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Star, Heart, Hammer, CalendarCheck, BookOpen } from 'lucide-react'
+import { Star, Heart, Hammer, CalendarCheck, BookOpen, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
 
@@ -52,6 +52,11 @@ function MemberActivityIcons({ member }: { member: Member }) {
       <ActivityIcon active={member.is_server} icon={Hammer} label="Servidor" activeColor="text-teal-deep" tooltip={committee ? `Servidor en ${committee}` : 'Servidor activo'} />
       <ActivityIcon active={attendanceActive} icon={CalendarCheck} label="Asistente" activeColor="text-navy" tooltip="Asistente activo (últimos 6 meses)" />
       <ActivityIcon active={studyingActive} icon={BookOpen} label="Estudiante" activeColor="text-coral" tooltip={member.current_study ? `Estudiando ${member.current_study}` : 'Estudiante activo'} />
+      {/* A diferencia de los otros 4, este solo aparece si es dirigente activo
+          (servidor activo en el comité Dirigentes). */}
+      {member.es_dirigente && (
+        <ActivityIcon active icon={UserCheck} label="Dirigente" activeColor="text-navy" tooltip="Dirigente activo" />
+      )}
     </div>
   )
 }

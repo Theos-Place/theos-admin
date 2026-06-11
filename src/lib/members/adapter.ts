@@ -22,7 +22,9 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
   const enriched = 'roles' in db ? db as DbMemberEnriched : null
 
   const activeService = enriched?.active_service ?? null
-  const esDirigente = enriched?.roles.includes('dirigente') ?? false
+  // Dirigente activo = servidor activo en el comité Dirigentes (misma fuente
+  // de verdad que lib/dirigentes), no el rol de acceso 'dirigente'.
+  const esDirigente = /dirigente/i.test(enriched?.active_service?.committee ?? '')
 
   return {
     // ── Pasamos directo desde Supabase ──
@@ -157,6 +159,7 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
     family_members: familyMembers,
     tipos_evento: tiposEvento,
     comites,
+    es_dirigente: comites.some(c => /dirigente/i.test(c)),
     wallet_pass_status: db.wallet_pass_id ? 'active' : 'not_generated',
   }
 }

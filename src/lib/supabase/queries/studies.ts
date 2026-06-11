@@ -380,6 +380,105 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   }
 }
 
+export type MemberStudyEligibility = {
+  /** Inscripciones activas (para el dropdown de "grupo actual" en reubicación). */
+  active_enrollments: Array<{ group_id: string; group_name: string; plan_code: string | null }>
+  /** Planes que el miembro puede solicitar: no llevados + prerequisito + compromisos. */
+  eligible_plans: Array<{ id: string; code: string; name: string; stage: string }>
+  /** Compromisos del miembro (para mensajes de la UI). */
+  commitments: { is_donor: boolean; attendance_active: boolean; is_server: boolean }
+}
+
+const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
+  niveles: 'niveles', etapa_inicial: 'inicial', etapa_intermedia: 'intermedia', campanas: 'campaña',
+}
+
+/**
+ * Elegibilidad de estudios de UN miembro, centralizada para los modales de
+ * solicitud (perfil del miembro y flujo del coordinador).
+ *
+ * Un plan es solicitable si:
+ *  - el miembro no lo llevó (sin inscripción completed ni enrolled), y
+ *  - cumple el prerequisito de la cadena (completed del prereq), y
+ *  - cumple los compromisos de la etapa: inicial = donador + asistencia activa
+ *    (1 check-in/mes, 6 meses); intermedia = + servidor activo.
+ */
+export async function getEligibleStudiesForMember(memberId: string): Promise<MemberStudyEligibility> {
+  const supabase = createAdminClient()
+
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+  sixMonthsAgo.setDate(1)
+
+  const [memberRes, enrRes, volRes, chkRes, plansRes] = await Promise.all([
+    supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
+    supabase
+      .from('study_enrollments')
+      .select('status, group:study_groups!study_enrollments_group_id_fkey(id, name, plan:study_plans(code))')
+      .eq('member_id', memberId),
+    supabase.from('volunteers').select('id').eq('member_id', memberId).eq('status', 'active').limit(1),
+    supabase
+      .from('event_checkins')
+      .select('checked_in_at')
+      .eq('member_id', memberId)
+      .gte('checked_in_at', sixMonthsAgo.toISOString()),
+    supabase
+      .from('study_plans')
+      .select('id, code, name, level, prerequisite_code')
+      .eq('is_active', true)
+      .order('code'),
+  ])
+
+  const enrollments = (enrRes.data ?? []) as unknown as Array<{
+    status: string
+    group: { id: string; name: string; plan: { code: string | null } | null } | null
+  }>
+  const completed = new Set(
+    enrollments.filter(e => e.status === 'completed' && e.group?.plan?.code).map(e => e.group!.plan!.code!),
+  )
+  const enrolledCodes = new Set(
+    enrollments.filter(e => e.status === 'enrolled' && e.group?.plan?.code).map(e => e.group!.plan!.code!),
+  )
+  const active_enrollments = enrollments
+    .filter(e => e.status === 'enrolled' && e.group)
+    .map(e => ({ group_id: e.group!.id, group_name: e.group!.name, plan_code: e.group!.plan?.code ?? null }))
+
+  // Asistencia activa: al menos 1 check-in en cada uno de los últimos 6 meses.
+  const monthsWithCheckin = new Set(
+    ((chkRes.data ?? []) as Array<{ checked_in_at: string }>).map(c => c.checked_in_at.slice(0, 7)),
+  )
+  const attendance_active = monthsWithCheckin.size >= 6
+
+  const is_donor = Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor)
+  const is_server = (volRes.data ?? []).length > 0
+
+  const meetsStage = (stage: string): boolean => {
+    if (stage === 'inicial') return is_donor && attendance_active
+    if (stage === 'intermedia') return is_donor && attendance_active && is_server
+    return true // niveles / campañas: sin compromisos
+  }
+
+  const plans = (plansRes.data ?? []) as Array<{
+    id: string; code: string | null; name: string; level: string; prerequisite_code: string | null
+  }>
+  const eligible_plans = plans
+    .filter(p => p.code)
+    .map(p => ({ ...p, stage: ELIG_LEVEL_TO_STAGE[p.level] ?? p.level }))
+    .filter(p =>
+      !completed.has(p.code!) &&
+      !enrolledCodes.has(p.code!) &&
+      (!p.prerequisite_code || completed.has(p.prerequisite_code)) &&
+      meetsStage(p.stage),
+    )
+    .map(p => ({ id: p.id, code: p.code!, name: p.name, stage: p.stage }))
+
+  return {
+    active_enrollments,
+    eligible_plans,
+    commitments: { is_donor, attendance_active, is_server },
+  }
+}
+
 /** Sesiones de asistencia de un grupo con conteo de presentes. */
 export async function getGroupSessions(groupId: string): Promise<Array<{ id: string; date: string; topic: string | null; present: number; total: number }>> {
   const supabase = createAdminClient()
