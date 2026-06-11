@@ -149,33 +149,33 @@ export default function EditarVacantePage() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Título del puesto</label>
-              <input className={inputCls} value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej. Colaborador de Alabanza" />
+              <input aria-label="Título del puesto" className={inputCls} value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej. Colaborador de Alabanza" />
             </div>
             <div className="form-group">
               <label className="form-label">Puesto</label>
-              <input className={inputCls} value={position} onChange={e => setPosition(e.target.value)} placeholder="Ej. Músico voluntario" />
+              <input aria-label="Puesto" className={inputCls} value={position} onChange={e => setPosition(e.target.value)} placeholder="Ej. Músico voluntario" />
             </div>
           </div>
 
           <div className="form-group">
             <label className="form-label">Descripción</label>
-            <textarea className="form-textarea" rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción del rol..." />
+            <textarea aria-label="Descripción" className="form-textarea" rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="Descripción del rol..." />
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Horario</label>
-              <input className={inputCls} value={schedule} onChange={e => setSchedule(e.target.value)} placeholder="Ej. Domingos 8am – 12pm" />
+              <input aria-label="Horario" className={inputCls} value={schedule} onChange={e => setSchedule(e.target.value)} placeholder="Ej. Domingos 8am – 12pm" />
             </div>
             <div className="form-group">
               <label className="form-label">Compromiso</label>
-              <input className={inputCls} value={commitment} onChange={e => setCommitment(e.target.value)} placeholder="Ej. 4 horas semanales" />
+              <input aria-label="Compromiso" className={inputCls} value={commitment} onChange={e => setCommitment(e.target.value)} placeholder="Ej. 4 horas semanales" />
             </div>
           </div>
 
           <div className="form-group max-w-40">
             <label className="form-label">Cupos disponibles</label>
-            <input type="number" min="1" max="50" className={inputCls} value={slotsTotal} onChange={e => setSlotsTotal(e.target.value)} />
+            <input type="number" min="1" max="50" aria-label="Cupos disponibles" className={inputCls} value={slotsTotal} onChange={e => setSlotsTotal(e.target.value)} />
           </div>
 
           <div className="form-group">
@@ -184,6 +184,7 @@ export default function EditarVacantePage() {
               {functions.map((fn, idx) => (
                 <div key={idx} className="flex gap-2">
                   <input
+                    aria-label={`Función ${idx + 1}`}
                     className={inputCls}
                     value={fn}
                     onChange={e => updateFunction(idx, e.target.value)}
@@ -193,6 +194,7 @@ export default function EditarVacantePage() {
                     <button
                       type="button"
                       onClick={() => removeFunction(idx)}
+                      aria-label={`Eliminar función ${idx + 1}`}
                       className="shrink-0 rounded-xl border border-[var(--outline-variant)] px-3 text-navy-light/50 hover:text-coral hover:border-coral/20 transition-colors"
                     >
                       ×

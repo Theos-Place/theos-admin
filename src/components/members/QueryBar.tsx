@@ -59,6 +59,7 @@ function OpToggle({ op, onToggle }: { op: 'AND' | 'OR'; onToggle: () => void }) 
         'font-display',
       )}
       title={`Cambiar a ${op === 'AND' ? 'OR' : 'AND'}`}
+      aria-label={`Operador ${op}: cambiar a ${op === 'AND' ? 'OR' : 'AND'}`}
     >
       {op}
     </button>
@@ -142,6 +143,7 @@ function GroupBracket({
         onClick={onUngroup}
         className="ml-0.5 rounded px-1 py-0.5 text-[9px] text-navy-light/60 hover:text-navy-light transition-colors"
         title="Disolver grupo"
+        aria-label="Disolver grupo"
       >
         [ ]
       </button>

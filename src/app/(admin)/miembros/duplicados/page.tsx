@@ -71,11 +71,11 @@ function MemberMini({ m }: { m: DupMember }) {
         </Link>
       </div>
       <dl className="space-y-0.5 text-[12px] font-body">
-        <div className="flex gap-1"><dt className="text-navy-light/40 w-16 shrink-0">Cédula</dt><dd className="text-navy-light/70 truncate">{m.cedula ?? '—'}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/40 w-16 shrink-0">Email</dt><dd className="text-navy-light/70 truncate">{m.email ?? '—'}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/40 w-16 shrink-0">Teléfono</dt><dd className="text-navy-light/70 truncate">{m.phone ?? '—'}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/40 w-16 shrink-0">Nacimiento</dt><dd className="text-navy-light/70 truncate">{birthLabel(m)}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/40 w-16 shrink-0">Creado</dt><dd className="text-navy-light/70 truncate">{fmtDate(m.created_at)}</dd></div>
+        <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Cédula</dt><dd className="text-navy-light/70 truncate">{m.cedula ?? '—'}</dd></div>
+        <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Email</dt><dd className="text-navy-light/70 truncate">{m.email ?? '—'}</dd></div>
+        <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Teléfono</dt><dd className="text-navy-light/70 truncate">{m.phone ?? '—'}</dd></div>
+        <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Nacimiento</dt><dd className="text-navy-light/70 truncate">{birthLabel(m)}</dd></div>
+        <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Creado</dt><dd className="text-navy-light/70 truncate">{fmtDate(m.created_at)}</dd></div>
       </dl>
     </div>
   )
@@ -208,7 +208,7 @@ function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () =>
 
         {/* Tabla comparativa */}
         <div className="rounded-xl border border-[var(--outline-variant)] divide-y divide-[var(--outline-variant)]">
-          <div className="grid grid-cols-[80px_1fr_1fr] gap-2 px-3 py-2 text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+          <div className="grid grid-cols-[80px_1fr_1fr] gap-2 px-3 py-2 text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
             <span>Campo</span>
             <span>A · {pair.a.first_name}</span>
             <span>B · {pair.b.first_name}</span>
@@ -239,7 +239,7 @@ function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () =>
         {/* Resumen */}
         {changedFields.length > 0 && (
           <div className="rounded-xl bg-surface-low px-3 py-2.5">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display mb-1">Cambios a aplicar al principal</p>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mb-1">Cambios a aplicar al principal</p>
             <ul className="text-[12px] text-navy-light/70 font-body space-y-0.5">
               {changedFields.map(c => (
                 <li key={c.key as string}>

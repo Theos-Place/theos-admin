@@ -113,10 +113,10 @@ export function FormCanvas({
                   )}
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button type="button" onClick={e => { e.stopPropagation(); onSelectField(field.id) }} className="h-7 w-7 rounded-lg hover:bg-navy/10 flex items-center justify-center transition-colors">
+                  <button type="button" onClick={e => { e.stopPropagation(); onSelectField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-navy/10 flex items-center justify-center transition-colors" aria-label="Editar campo">
                     <Pencil size={12} className="text-navy-light/60" />
                   </button>
-                  <button type="button" onClick={e => { e.stopPropagation(); onDeleteField(field.id) }} className="h-7 w-7 rounded-lg hover:bg-coral/10 flex items-center justify-center transition-colors">
+                  <button type="button" onClick={e => { e.stopPropagation(); onDeleteField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-coral/10 flex items-center justify-center transition-colors" aria-label="Eliminar campo">
                     <Trash2 size={12} className="text-coral" />
                   </button>
                 </div>
@@ -224,13 +224,13 @@ export function FormCanvas({
                   <span className="text-[10px] font-bold text-amber-600">{logicCount}</span>
                 </button>
               )}
-              <button type="button" onClick={e => { e.stopPropagation(); onSelectField(field.id) }} className="h-7 w-7 rounded-lg hover:bg-navy/10 flex items-center justify-center transition-colors" title="Editar" aria-label="Editar campo">
+              <button type="button" onClick={e => { e.stopPropagation(); onSelectField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-navy/10 flex items-center justify-center transition-colors" title="Editar" aria-label="Editar campo">
                 <Pencil size={12} className="text-navy-light/60" />
               </button>
-              <button type="button" onClick={e => { e.stopPropagation(); onDuplicateField(field.id) }} className="h-7 w-7 rounded-lg hover:bg-navy/10 flex items-center justify-center transition-colors" title="Duplicar" aria-label="Duplicar campo">
+              <button type="button" onClick={e => { e.stopPropagation(); onDuplicateField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-navy/10 flex items-center justify-center transition-colors" title="Duplicar" aria-label="Duplicar campo">
                 <Copy size={12} className="text-navy-light/60" />
               </button>
-              <button type="button" onClick={e => { e.stopPropagation(); onDeleteField(field.id) }} className="h-7 w-7 rounded-lg hover:bg-coral/10 flex items-center justify-center transition-colors" title="Eliminar" aria-label="Eliminar campo">
+              <button type="button" onClick={e => { e.stopPropagation(); onDeleteField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-coral/10 flex items-center justify-center transition-colors" title="Eliminar" aria-label="Eliminar campo">
                 <Trash2 size={12} className="text-coral" />
               </button>
             </div>

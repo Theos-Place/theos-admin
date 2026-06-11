@@ -339,7 +339,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                     }}
                     placeholder={`Opción ${i + 1}`}
                   />
-                  <button type="button" onClick={() => set('options', (field.options ?? []).filter((_, idx) => idx !== i))} className="shrink-0 h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors">
+                  <button type="button" onClick={() => set('options', (field.options ?? []).filter((_, idx) => idx !== i))} className="relative after:absolute after:content-[''] after:-inset-1.5 shrink-0 h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors" aria-label={`Eliminar opción ${i + 1}`}>
                     <X size={13} className="text-coral" />
                   </button>
                 </div>
@@ -405,7 +405,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                   <span className="text-[11px] font-semibold text-navy-light/50 font-display">
                     Regla {ruleIdx + 1}
                   </span>
-                  <button type="button" onClick={() => deleteRule(rule.id)} className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-coral/10 transition-colors">
+                  <button type="button" onClick={() => deleteRule(rule.id)} className="relative after:absolute after:content-[''] after:-inset-2 h-6 w-6 flex items-center justify-center rounded-full hover:bg-coral/10 transition-colors" aria-label={`Eliminar regla ${ruleIdx + 1}`}>
                     <X size={12} className="text-coral" />
                   </button>
                 </div>

@@ -388,7 +388,7 @@ export function RequestBoard<R extends BaseRequest>({
 
                               {/* Historial */}
                               <div className="space-y-1">
-                                <p className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
+                                <p className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                                   <History size={11} /> Historial
                                 </p>
                                 <p className="text-[12px] text-navy-light/70 font-body">

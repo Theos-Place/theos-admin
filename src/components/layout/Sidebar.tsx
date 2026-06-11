@@ -390,7 +390,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 <p className="text-[13px] text-white truncate font-body font-normal">
                   {userName}
                 </p>
-                <p className="text-[11px] text-white/40 truncate font-body">
+                <p className="text-[11px] text-white/60 truncate font-body">
                   {ROLE_LABELS[userRole] ?? userRole}
                 </p>
               </div>

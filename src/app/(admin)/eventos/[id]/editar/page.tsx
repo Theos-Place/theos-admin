@@ -446,7 +446,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                 <p className="text-sm font-medium text-navy font-body">{se.name}</p>
                 <p className="text-[11px] text-navy-light/50">Cap. {se.max_capacity}</p>
               </div>
-              <button type="button" onClick={() => removeSubEvent(se.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors">
+              <button type="button" onClick={() => removeSubEvent(se.id)} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors" aria-label={`Eliminar sub-evento ${se.name}`}>
                 <X size={14} />
               </button>
             </div>

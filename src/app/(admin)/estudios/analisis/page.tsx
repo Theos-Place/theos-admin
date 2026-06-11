@@ -185,7 +185,7 @@ export default function AnalisisPage() {
 
       {/* Selector de estudio (solo Inicial e Intermedia; Niveles no aplican) */}
       <div className="rounded-2xl p-5 bg-surface-card shadow-card space-y-3">
-        <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+        <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
           Seleccionar estudio a analizar
         </p>
         <select
@@ -239,7 +239,7 @@ export default function AnalisisPage() {
               { label: 'Grupos sugeridos', value: analysis.suggestedGroups, color: 'text-navy' },
             ].map(({ label, value, color }) => (
               <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-card">
-                <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                   {label}
                 </p>
                 <p className={`mt-2 text-3xl font-bold font-display ${color}`}>

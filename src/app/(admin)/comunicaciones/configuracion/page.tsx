@@ -186,7 +186,7 @@ export default function ConfiguracionPage() {
   }
 
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-  const labelCls = 'text-[11px] text-navy-light/50 mb-1 block font-body'
+  const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
 
   function SmtpCard({ config }: { config: ChannelConfig }) {
     const result = verifyResult[config.id]
@@ -198,7 +198,7 @@ export default function ConfiguracionPage() {
             <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
               {config.smtp_host}:{config.smtp_port} · {config.smtp_user}
             </p>
-            <p className="text-[12px] text-navy-light/40 mt-0.5 font-body">
+            <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
               De: {config.smtp_from_name} &lt;{config.smtp_from_email}&gt;
             </p>
           </div>
@@ -232,10 +232,10 @@ export default function ConfiguracionPage() {
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Verificar
           </button>
-          <button type="button" onClick={() => openEditSmtp(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => openEditSmtp(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -279,10 +279,10 @@ export default function ConfiguracionPage() {
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Reconectar
           </button>
-          <button type="button" onClick={() => openEditWa(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => openEditWa(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -344,15 +344,15 @@ export default function ConfiguracionPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className={labelCls}>Nombre de la configuración</label>
-                  <input className={inputCls} placeholder="ej. Gmail Diana" value={smtpForm.name} onChange={e => setSmtpForm(p => ({ ...p, name: e.target.value }))} />
+                  <input aria-label="Nombre de la configuración" className={inputCls} placeholder="ej. Gmail Diana" value={smtpForm.name} onChange={e => setSmtpForm(p => ({ ...p, name: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Servidor SMTP</label>
-                  <input className={inputCls} placeholder="smtp.gmail.com" value={smtpForm.host} onChange={e => setSmtpForm(p => ({ ...p, host: e.target.value }))} />
+                  <input aria-label="Servidor SMTP" className={inputCls} placeholder="smtp.gmail.com" value={smtpForm.host} onChange={e => setSmtpForm(p => ({ ...p, host: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Puerto</label>
-                  <select className={inputCls} value={smtpForm.port} onChange={e => setSmtpForm(p => ({ ...p, port: e.target.value }))}>
+                  <select aria-label="Puerto" className={inputCls} value={smtpForm.port} onChange={e => setSmtpForm(p => ({ ...p, port: e.target.value }))}>
                     <option value="587">587 (TLS)</option>
                     <option value="465">465 (SSL)</option>
                     <option value="25">25 (SMTP)</option>
@@ -360,37 +360,38 @@ export default function ConfiguracionPage() {
                 </div>
                 <div>
                   <label className={labelCls}>Usuario</label>
-                  <input className={inputCls} placeholder="usuario@dominio.com" value={smtpForm.user} onChange={e => setSmtpForm(p => ({ ...p, user: e.target.value }))} />
+                  <input aria-label="Usuario" className={inputCls} placeholder="usuario@dominio.com" value={smtpForm.user} onChange={e => setSmtpForm(p => ({ ...p, user: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Contraseña</label>
                   <div className="relative">
                     <input
+                      aria-label="Contraseña"
                       type={showPwd ? 'text' : 'password'}
                       className={cn(inputCls, 'pr-10')}
                       placeholder="••••••••"
                       value={smtpForm.password}
                       onChange={e => setSmtpForm(p => ({ ...p, password: e.target.value }))}
                     />
-                    <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                    <button type="button" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
                       {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
                 </div>
                 <div>
                   <label className={labelCls}>Nombre remitente</label>
-                  <input className={inputCls} placeholder="Theos Place" value={smtpForm.from_name} onChange={e => setSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
+                  <input aria-label="Nombre remitente" className={inputCls} placeholder="Theos Place" value={smtpForm.from_name} onChange={e => setSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Email remitente</label>
-                  <input className={inputCls} placeholder="noreply@theosplace.org" value={smtpForm.from_email} onChange={e => setSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
+                  <input aria-label="Email remitente" className={inputCls} placeholder="noreply@theosplace.org" value={smtpForm.from_email} onChange={e => setSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
                 </div>
                 <div className="sm:col-span-2 flex items-center justify-between p-3 rounded-xl bg-surface-low">
                   <div>
                     <p className="text-sm text-navy font-body">Usar SSL/TLS</p>
-                    <p className="text-[11px] text-navy-light/40 font-body">Recomendado para mayor seguridad</p>
+                    <p className="text-[11px] text-navy-light/60 font-body">Recomendado para mayor seguridad</p>
                   </div>
-                  <button type="button" onClick={() => setSmtpForm(p => ({ ...p, ssl: !p.ssl }))} className={cn('relative h-6 w-11 rounded-full transition-colors', smtpForm.ssl ? 'bg-coral' : 'bg-navy/20')}>
+                  <button type="button" onClick={() => setSmtpForm(p => ({ ...p, ssl: !p.ssl }))} role="switch" aria-checked={smtpForm.ssl} aria-label="Usar SSL/TLS" className={cn('relative h-6 w-11 rounded-full transition-colors', smtpForm.ssl ? 'bg-coral' : 'bg-navy/20')}>
                     <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', smtpForm.ssl ? 'translate-x-5' : 'translate-x-0')} />
                   </button>
                 </div>
@@ -449,27 +450,28 @@ export default function ConfiguracionPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className={labelCls}>Nombre de la configuración</label>
-                  <input className={inputCls} placeholder="ej. WhatsApp Theos Norte" value={waForm.name} onChange={e => setWaForm(p => ({ ...p, name: e.target.value }))} />
+                  <input aria-label="Nombre de la configuración" className={inputCls} placeholder="ej. WhatsApp Theos Norte" value={waForm.name} onChange={e => setWaForm(p => ({ ...p, name: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>ID de la cuenta / instancia</label>
-                  <input className={inputCls} placeholder="104521839021847" value={waForm.account_id} onChange={e => setWaForm(p => ({ ...p, account_id: e.target.value }))} />
+                  <input aria-label="ID de la cuenta o instancia" className={inputCls} placeholder="104521839021847" value={waForm.account_id} onChange={e => setWaForm(p => ({ ...p, account_id: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Número de WhatsApp</label>
-                  <input className={inputCls} placeholder="+506 8800-0000" value={waForm.phone} onChange={e => setWaForm(p => ({ ...p, phone: e.target.value }))} />
+                  <input aria-label="Número de WhatsApp" className={inputCls} placeholder="+506 8800-0000" value={waForm.phone} onChange={e => setWaForm(p => ({ ...p, phone: e.target.value }))} />
                 </div>
                 <div className="sm:col-span-2">
                   <label className={labelCls}>Token de acceso</label>
                   <div className="relative">
                     <input
+                      aria-label="Token de acceso"
                       type={showToken ? 'text' : 'password'}
                       className={cn(inputCls, 'pr-10')}
                       placeholder="EAABs..."
                       value={waForm.token}
                       onChange={e => setWaForm(p => ({ ...p, token: e.target.value }))}
                     />
-                    <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                    <button type="button" onClick={() => setShowToken(!showToken)} aria-label={showToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
                       {showToken ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -498,38 +500,38 @@ export default function ConfiguracionPage() {
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className={labelCls}>Nombre de la configuración</label>
-              <input className={inputCls} value={editSmtpForm.name} onChange={e => setEditSmtpForm(p => ({ ...p, name: e.target.value }))} />
+              <input aria-label="Nombre de la configuración" className={inputCls} value={editSmtpForm.name} onChange={e => setEditSmtpForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
               <label className={labelCls}>Servidor SMTP</label>
-              <input className={inputCls} value={editSmtpForm.host} onChange={e => setEditSmtpForm(p => ({ ...p, host: e.target.value }))} />
+              <input aria-label="Servidor SMTP" className={inputCls} value={editSmtpForm.host} onChange={e => setEditSmtpForm(p => ({ ...p, host: e.target.value }))} />
             </div>
             <div>
               <label className={labelCls}>Puerto</label>
-              <select className={inputCls} value={editSmtpForm.port} onChange={e => setEditSmtpForm(p => ({ ...p, port: e.target.value }))}>
+              <select aria-label="Puerto" className={inputCls} value={editSmtpForm.port} onChange={e => setEditSmtpForm(p => ({ ...p, port: e.target.value }))}>
                 <option value="587">587 (TLS)</option><option value="465">465 (SSL)</option><option value="25">25 (SMTP)</option>
               </select>
             </div>
             <div>
               <label className={labelCls}>Usuario</label>
-              <input className={inputCls} value={editSmtpForm.user} onChange={e => setEditSmtpForm(p => ({ ...p, user: e.target.value }))} />
+              <input aria-label="Usuario" className={inputCls} value={editSmtpForm.user} onChange={e => setEditSmtpForm(p => ({ ...p, user: e.target.value }))} />
             </div>
             <div>
               <label className={labelCls}>Contraseña (dejar en blanco para no cambiar)</label>
               <div className="relative">
-                <input type={showEditPwd ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="••••••••" value={editSmtpForm.password} onChange={e => setEditSmtpForm(p => ({ ...p, password: e.target.value }))} />
-                <button type="button" onClick={() => setShowEditPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                <input aria-label="Contraseña" type={showEditPwd ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="••••••••" value={editSmtpForm.password} onChange={e => setEditSmtpForm(p => ({ ...p, password: e.target.value }))} />
+                <button type="button" onClick={() => setShowEditPwd(v => !v)} aria-label={showEditPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
                   {showEditPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
             <div>
               <label className={labelCls}>Nombre remitente</label>
-              <input className={inputCls} value={editSmtpForm.from_name} onChange={e => setEditSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
+              <input aria-label="Nombre remitente" className={inputCls} value={editSmtpForm.from_name} onChange={e => setEditSmtpForm(p => ({ ...p, from_name: e.target.value }))} />
             </div>
             <div>
               <label className={labelCls}>Email remitente</label>
-              <input className={inputCls} value={editSmtpForm.from_email} onChange={e => setEditSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
+              <input aria-label="Email remitente" className={inputCls} value={editSmtpForm.from_email} onChange={e => setEditSmtpForm(p => ({ ...p, from_email: e.target.value }))} />
             </div>
           </div>
           <div className="flex items-center gap-3 px-6 py-4 border-t border-[var(--outline-variant)]">
@@ -548,21 +550,21 @@ export default function ConfiguracionPage() {
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className={labelCls}>Nombre de la configuración</label>
-              <input className={inputCls} value={editWaForm.name} onChange={e => setEditWaForm(p => ({ ...p, name: e.target.value }))} />
+              <input aria-label="Nombre de la configuración" className={inputCls} value={editWaForm.name} onChange={e => setEditWaForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
               <label className={labelCls}>ID de la cuenta</label>
-              <input className={inputCls} value={editWaForm.account_id} onChange={e => setEditWaForm(p => ({ ...p, account_id: e.target.value }))} />
+              <input aria-label="ID de la cuenta" className={inputCls} value={editWaForm.account_id} onChange={e => setEditWaForm(p => ({ ...p, account_id: e.target.value }))} />
             </div>
             <div>
               <label className={labelCls}>Número de WhatsApp</label>
-              <input className={inputCls} value={editWaForm.phone} onChange={e => setEditWaForm(p => ({ ...p, phone: e.target.value }))} />
+              <input aria-label="Número de WhatsApp" className={inputCls} value={editWaForm.phone} onChange={e => setEditWaForm(p => ({ ...p, phone: e.target.value }))} />
             </div>
             <div className="sm:col-span-2">
               <label className={labelCls}>Token (dejar en blanco para no cambiar)</label>
               <div className="relative">
-                <input type={showEditToken ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="EAABs..." value={editWaForm.token} onChange={e => setEditWaForm(p => ({ ...p, token: e.target.value }))} />
-                <button type="button" onClick={() => setShowEditToken(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                <input aria-label="Token de acceso" type={showEditToken ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="EAABs..." value={editWaForm.token} onChange={e => setEditWaForm(p => ({ ...p, token: e.target.value }))} />
+                <button type="button" onClick={() => setShowEditToken(v => !v)} aria-label={showEditToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
                   {showEditToken ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>

@@ -87,7 +87,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
         {DAY_LABELS.map(d => (
           <div
             key={d}
-            className="py-2 text-center text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+            className="py-2 text-center text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
           >
             {d}
           </div>
@@ -163,7 +163,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                           className={cn(
                             'w-full text-left rounded px-1.5 py-0.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80 font-body',
                             colorClass,
-                            past && 'opacity-45 hover:opacity-65'
+                            past && 'opacity-60 hover:opacity-80'
                           )}
                         >
                           {ev.flyer_url ? '🖼 ' : ''}{ev.name}

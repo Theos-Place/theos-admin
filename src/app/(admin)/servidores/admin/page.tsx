@@ -39,6 +39,7 @@ function AreaModal({
           <label className={labelCls}>Nombre *</label>
           <input
             autoFocus
+            aria-label="Nombre del área"
             className={inputCls}
             placeholder="Ej. Área Espiritual"
             value={name}
@@ -98,6 +99,7 @@ function CommitteeModal({
           <label className={labelCls}>Nombre *</label>
           <input
             autoFocus
+            aria-label="Nombre del comité"
             className={inputCls}
             placeholder="Ej. Comité de Anfitriones"
             value={name}
@@ -108,6 +110,7 @@ function CommitteeModal({
         <div className="space-y-1.5">
           <label className={labelCls}>Área *</label>
           <select
+            aria-label="Área del comité"
             className={inputCls}
             value={areaCode}
             onChange={e => setAreaCode(e.target.value)}
@@ -206,17 +209,17 @@ function PositionModal({
         <h2 id="position-modal-title" className="text-base font-bold text-navy font-display">Nuevo puesto</h2>
         <div className="space-y-1.5">
           <label className={labelCls}>Nombre *</label>
-          <input autoFocus className={inputCls}
+          <input autoFocus aria-label="Nombre del puesto" className={inputCls}
             placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <label className={labelCls}>Descripción</label>
-          <textarea className={cn(inputCls, 'resize-none')} rows={3}
+          <textarea aria-label="Descripción del puesto" className={cn(inputCls, 'resize-none')} rows={3}
             placeholder="Funciones del puesto..." value={description} onChange={e => setDescription(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <label className={labelCls}>Máximo de voluntarios</label>
-          <input type="number" min={1} className={inputCls}
+          <input type="number" min={1} aria-label="Máximo de voluntarios" className={inputCls}
             value={maxVol} onChange={e => setMaxVol(e.target.value)} />
         </div>
         <div className="flex gap-2 pt-1">
@@ -577,6 +580,7 @@ export default function ServidoresAdminPage() {
                     >
                       <input
                         type="checkbox"
+                        aria-label={area.is_active ? `Desactivar área ${area.name}` : `Activar área ${area.name}`}
                         checked={area.is_active}
                         onChange={() => requestToggleArea(area)}
                       />
@@ -590,6 +594,7 @@ export default function ServidoresAdminPage() {
                         isSelected ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-navy-light/40 hover:text-navy hover:bg-surface-low'
                       )}
                       title="Editar área"
+                      aria-label={`Editar área ${area.name}`}
                     >
                       <Edit2 size={12} />
                     </button>
@@ -601,6 +606,7 @@ export default function ServidoresAdminPage() {
                         isSelected ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-navy-light/40 hover:text-coral hover:bg-coral/10'
                       )}
                       title="Eliminar área"
+                      aria-label={`Eliminar área ${area.name}`}
                     >
                       <Trash2 size={12} />
                     </button>
@@ -701,6 +707,7 @@ export default function ServidoresAdminPage() {
                               >
                                 <input
                                   type="checkbox"
+                                  aria-label={c.is_active ? `Desactivar comité ${c.name}` : `Activar comité ${c.name}`}
                                   checked={c.is_active}
                                   onChange={() => requestToggleCommittee(c)}
                                 />
@@ -720,6 +727,7 @@ export default function ServidoresAdminPage() {
                                   onClick={() => requestDeleteCommittee(c)}
                                   className="inline-flex items-center justify-center rounded-full border border-[var(--outline-variant)] h-7 w-7 text-navy-light/50 hover:text-coral hover:border-coral/30 transition-colors"
                                   title="Eliminar comité"
+                                  aria-label={`Eliminar comité ${c.name}`}
                                 >
                                   <Trash2 size={11} />
                                 </button>
@@ -767,7 +775,7 @@ export default function ServidoresAdminPage() {
                   <Plus size={12} />
                   Nuevo
                 </button>
-                <button onClick={() => setSelectedCommId(null)} className="text-navy-light/40 hover:text-navy p-1" title="Cerrar">
+                <button onClick={() => setSelectedCommId(null)} className="text-navy-light/40 hover:text-navy p-1" title="Cerrar" aria-label="Cerrar panel de puestos">
                   <X size={16} />
                 </button>
               </div>
@@ -796,6 +804,7 @@ export default function ServidoresAdminPage() {
                       onClick={() => requestDeletePosition(p)}
                       className="rounded-lg p-1.5 text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
                       title="Eliminar puesto"
+                      aria-label={`Eliminar puesto ${p.title}`}
                     >
                       <Trash2 size={13} />
                     </button>

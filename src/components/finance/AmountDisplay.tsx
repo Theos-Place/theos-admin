@@ -25,6 +25,7 @@ export function AmountDisplay({ amount, defaultHidden = true, revealed: external
         <button
           onClick={() => setLocalRevealed(r => !r)}
           title={isRevealed ? 'Ocultar' : 'Revelar'}
+          aria-label={isRevealed ? 'Ocultar monto' : 'Revelar monto'}
           className="text-[#161440]/30 hover:text-[#161440]/60 transition-colors"
         >
           {isRevealed ? <EyeOff size={12} /> : <Eye size={12} />}
