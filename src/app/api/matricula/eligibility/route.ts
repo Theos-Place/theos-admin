@@ -20,8 +20,8 @@ export async function GET(req: NextRequest) {
       getMemberStudyProfile(memberId),
     ])
     const eligibility = computeEligibility(
-      // Los estudios archivados no se ofrecen en matrícula.
-      plans.map(toDomainStudyType).filter(p => !p.is_archived),
+      // Ni archivados ni charlas no curriculares (ej. BUS) se ofrecen en matrícula.
+      plans.map(toDomainStudyType).filter(p => !p.is_archived && p.is_curricular !== false),
       groups.map(toDomainStudyGroup),
       profile,
     )

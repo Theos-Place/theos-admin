@@ -5,6 +5,16 @@
  * La matrícula (~15 días) abre un mes antes de que arranque el bloque siguiente.
  */
 
+/** Tamaño objetivo de un grupo para estimar cuántos abrir. */
+export const GROUP_SIZE = 12
+/** Demanda mínima para sugerir abrir un grupo: con menos de esto, 0 grupos. */
+export const MIN_DEMAND_FOR_GROUP = 5
+
+/** Grupos sugeridos para una demanda dada (aplica el umbral mínimo). */
+export function suggestedGroups(demand: number): number {
+  return demand < MIN_DEMAND_FOR_GROUP ? 0 : Math.ceil(demand / GROUP_SIZE)
+}
+
 export type BlockInfo = { block: 1 | 2 | 3; label: string; endsAt: Date }
 export type NextBlockInfo = { block: 1 | 2 | 3; label: string; startsAt: Date; enrollmentOpens: Date }
 

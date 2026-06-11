@@ -15,14 +15,19 @@ type AlertDef = {
   type: AlertType
   table: string
   filter?: { column: string; value: string }
+  /** Filtro adicional no expresable como columna=valor (ej. IS NULL). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  refine?: (q: any) => any
   url: string
   message: (n: number) => string
 }
 
 const ALERT_DEFS: AlertDef[] = [
   {
+    // "Sin dirigente" es flag derivado (leader_id IS NULL), no un estado.
     id: 'groups-no-leader', type: 'warning', table: 'study_groups',
-    filter: { column: 'status', value: 'pending_leader' }, url: '/estudios/grupos',
+    refine: q => q.is('leader_id', null).neq('status', 'finalizado'),
+    url: '/estudios/grupos',
     message: n => `${n} grupo${n !== 1 ? 's' : ''} de estudio sin dirigente asignado`,
   },
   {
@@ -61,6 +66,7 @@ export async function getAlerts(): Promise<ActiveAlert[]> {
       try {
         let q = supabase.from(def.table).select('*', { count: 'exact', head: true })
         if (def.filter) q = q.eq(def.filter.column, def.filter.value)
+        if (def.refine) q = def.refine(q)
         const { count, error } = await q
         if (error) {
           console.warn(`getAlerts(${def.id}):`, error.message)

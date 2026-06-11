@@ -749,6 +749,8 @@ export type DbMemberFull = DbMemberEnriched & {
   wallet_pass_id: string | null
   attendance_active: boolean
   last_charla_checkin: string | null
+  /** Grupos activos (en_matricula/en_curso) donde el miembro es dirigente o co-dirigente. */
+  led_groups: Array<{ group_id: string; group_name: string; plan_code: string | null; plan_name: string | null }>
 }
 
 /** Devuelve un miembro con TODO su histórico relacionado. Para el detail view. */
@@ -783,6 +785,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   if (mErr) throw mErr
   if (!memberRow) return null
 
+  // Grupos activos que la persona dirige (dos .eq en vez de .or() para no
+  // interpolar el id de la URL en sintaxis PostgREST).
+  const ledGroupSelect = 'id, name, status, plan:study_plans(code, name)'
   // 2. Queries en paralelo para histórico pesado
   const [
     checkinsRes,
@@ -790,6 +795,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     paymentsRes,
     donationsRes,
     formsRes,
+    leadsRes,
+    coLeadsRes,
   ] = await Promise.all([
     supabase
       .from('event_checkins')
@@ -837,6 +844,18 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       `)
       .eq('member_id', id)
       .order('submitted_at', { ascending: false }),
+
+    supabase
+      .from('study_groups')
+      .select(ledGroupSelect)
+      .eq('leader_id', id)
+      .in('status', ['en_matricula', 'en_curso']),
+
+    supabase
+      .from('study_groups')
+      .select(ledGroupSelect)
+      .eq('co_leader_id', id)
+      .in('status', ['en_matricula', 'en_curso']),
   ])
 
   if (checkinsRes.error)   throw checkinsRes.error
@@ -844,6 +863,21 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   if (paymentsRes.error)   throw paymentsRes.error
   if (donationsRes.error)  throw donationsRes.error
   if (formsRes.error)      throw formsRes.error
+  if (leadsRes.error)      throw leadsRes.error
+  if (coLeadsRes.error)    throw coLeadsRes.error
+
+  type LedGroupRow = { id: string; name: string | null; plan: { code: string | null; name: string | null } | null }
+  const ledGroups = [
+    ...((leadsRes.data ?? []) as unknown as LedGroupRow[]),
+    ...((coLeadsRes.data ?? []) as unknown as LedGroupRow[]),
+  ]
+    .filter((g, i, arr) => arr.findIndex(x => x.id === g.id) === i)
+    .map(g => ({
+      group_id: g.id,
+      group_name: g.name ?? '',
+      plan_code: g.plan?.code ?? null,
+      plan_name: g.plan?.name ?? null,
+    }))
 
   // Set de event_ids donde el miembro sirvió como voluntario
   const volunteerEventIds = new Set(
@@ -1040,6 +1074,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     attendance_months: charlaMonths,
     attendance_active: attendanceMonthsSatisfyCriteria(charlaMonths),
     last_charla_checkin: lastCharlaCheckin,
+    led_groups: ledGroups,
   }
 }
 

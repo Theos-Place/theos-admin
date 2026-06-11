@@ -13,11 +13,9 @@ import { ChevronLeft } from 'lucide-react'
 import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
 
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
-  { value: 'pending_leader',  label: 'Sin dirigente' },
-  { value: 'pending_opening', label: 'Pendiente apertura' },
-  { value: 'open',            label: 'Abierto (matriculable)' },
-  { value: 'in_progress',     label: 'En curso' },
-  { value: 'finished',        label: 'Finalizado' },
+  { value: 'en_matricula', label: 'En matrícula' },
+  { value: 'en_curso',     label: 'En curso' },
+  { value: 'finalizado',   label: 'Finalizado' },
 ]
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']

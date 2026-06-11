@@ -5,7 +5,7 @@ import {
 } from '@/lib/supabase/queries/study-requests'
 import type { StudyRequestStatus, StudyRequestType } from '@/types/study'
 
-const TYPES = new Set(['new_group', 'join_group', 'relocation'])
+const TYPES = new Set(['relocation', 'study_interest'])
 const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
 
 // GET: lista (solo coordinadores/admin). ?count=open devuelve solo el conteo.

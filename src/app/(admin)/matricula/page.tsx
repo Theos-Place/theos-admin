@@ -2,10 +2,11 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
   XCircle, Calendar, DollarSign, X, AlertCircle,
-  CreditCard, Smartphone,
+  CreditCard, Smartphone, BookOpen, ArrowRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,13 +24,12 @@ const STAGE_META: Record<string, { label: string; bg: string; text: string }> = 
   'campaña':  { label: 'Campañas',         bg: 'rgba(155,127,212,0.15)',   text: '#7C5EC2' },
 }
 
-const FILTER_TABS: { id: FilterTab; label: string }[] = [
-  { id: 'available',   label: 'Disponibles para mí' },
+// Campañas se agrega dinámicamente solo si hay grupos de campaña abiertos.
+const FILTER_TABS_BASE: { id: FilterTab; label: string }[] = [
   { id: 'all',         label: 'Todos' },
   { id: 'niveles',     label: 'Niveles' },
   { id: 'inicial',     label: 'Etapa Inicial' },
   { id: 'intermedia',  label: 'Etapa Intermedia' },
-  { id: 'campaña',     label: 'Campañas' },
 ]
 
 function formatCRC(amount: number): string {
@@ -53,7 +53,7 @@ export default function MatriculaPage() {
   const effectiveMemberId = selectedMember?.id ?? user?.member_id ?? null
   const effectiveName = selectedMember?.name ?? user?.name ?? 'miembro'
 
-  const [activeFilter, setActiveFilter]   = useState<FilterTab>('available')
+  const [activeFilter, setActiveFilter]   = useState<FilterTab>('all')
   const [search, setSearch]               = useState('')
   const [expandedStudy, setExpandedStudy] = useState<string | null>(null)
   const [confirmModal, setConfirmModal]   = useState<ConfirmState | null>(null)
@@ -81,11 +81,21 @@ export default function MatriculaPage() {
     return () => { alive = false }
   }, [effectiveMemberId])
 
+  // Solo se ofrecen los estudios con grupos abiertos y matriculables para el
+  // miembro. El plan completo (con descripciones) vive en /estudios/plan.
+  const availableResults = useMemo(
+    () => eligibilityResults.filter(r => r.is_eligible && r.available_groups.length > 0),
+    [eligibilityResults],
+  )
+
+  const hasCampaignGroups = availableResults.some(r => r.stage === 'campaña')
+  const filterTabs = hasCampaignGroups
+    ? [...FILTER_TABS_BASE, { id: 'campaña' as FilterTab, label: 'Campañas' }]
+    : FILTER_TABS_BASE
+
   const filteredResults = useMemo(() => {
-    let res = eligibilityResults
-    if (activeFilter === 'available') {
-      res = res.filter(r => r.is_eligible && r.available_groups.length > 0)
-    } else if (activeFilter !== 'all') {
+    let res = availableResults
+    if (activeFilter !== 'all' && activeFilter !== 'available') {
       res = res.filter(r => r.stage === activeFilter)
     }
     if (search.trim()) {
@@ -96,7 +106,7 @@ export default function MatriculaPage() {
       )
     }
     return res
-  }, [eligibilityResults, activeFilter, search])
+  }, [availableResults, activeFilter, search])
 
   const grouped = STAGE_ORDER
     .map(stage => ({ stage, items: filteredResults.filter(r => r.stage === stage) }))
@@ -237,10 +247,29 @@ export default function MatriculaPage() {
         </div>
       </div>
 
+      {/* Acceso al plan de estudios completo */}
+      <Link
+        href="/estudios/plan"
+        className="group flex items-center gap-4 rounded-2xl bg-surface-card px-6 py-5 shadow-card hover:shadow-card-lg transition-shadow"
+      >
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy/8">
+          <BookOpen size={22} className="text-navy" strokeWidth={1.75} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em]">
+            Ver el plan de estudios completo
+          </p>
+          <p className="text-[13px] text-navy-light/60 font-body">
+            Conocé el camino de formación y qué estudio sigue
+          </p>
+        </div>
+        <ArrowRight size={18} className="shrink-0 text-coral transition-transform group-hover:translate-x-1" />
+      </Link>
+
       {/* Filtros */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
-          {FILTER_TABS.map(tab => (
+          {filterTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveFilter(tab.id)}
@@ -279,11 +308,11 @@ export default function MatriculaPage() {
           className="rounded-2xl p-12 text-center bg-surface-card shadow-card"
         >
           <GraduationCap size={28} className="text-navy-light/40 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-navy-light/50 font-body">
-            No hay estudios que coincidan
+          <p className="text-sm font-semibold text-navy-light/60 font-body">
+            Por ahora no hay grupos abiertos para matricular
           </p>
-          <p className="text-[13px] text-navy-light/40 mt-1 font-body">
-            Probá cambiando el filtro o la búsqueda
+          <p className="text-[13px] text-navy-light/60 mt-1 font-body">
+            Podés reportar tu interés desde tu perfil — el equipo de estudios analiza la demanda para abrir grupos
           </p>
         </div>
       ) : (
@@ -488,37 +517,6 @@ function StudyCard({
             </span>
           )}
         </div>
-
-        {/* Descripción, mentor y compromisos */}
-        {(() => {
-          const cat = STUDY_CATALOG.find(s => s.code === result.study_code)
-          if (!cat) return null
-          return (
-            <div className="space-y-1.5">
-              {cat.description && (
-                <p
-                  className="text-[12px] leading-relaxed"
-                  style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)',
-                    display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
-                >
-                  {cat.description}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-x-4 gap-y-0.5">
-                {cat.mentor && (
-                  <span className="text-[11px] font-body text-[color:var(--fg-muted)]">
-                    <span className="font-semibold">Mentor:</span> {cat.mentor}
-                  </span>
-                )}
-                {cat.commitments && (
-                  <span className="text-[11px] font-body text-[color:var(--fg-muted)]">
-                    <span className="font-semibold">Compromisos:</span> {cat.commitments}
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })()}
 
         {/* Requisitos */}
         <div className="space-y-1">

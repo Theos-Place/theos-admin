@@ -208,6 +208,79 @@ export async function updateStudyRequestStatus(
   return result
 }
 
+const TYPE_LABEL_NOTIF: Record<StudyRequestType, string> = {
+  relocation: 'reubicación',
+  study_interest: 'interés en estudio',
+}
+
+/** Asigna la solicitud a un coordinador de dirigentes: pasa a in_review con
+ *  reviewed_by = el ASIGNADO (no quien asigna); el historial registra quién
+ *  asignó, y el asignado recibe una notificación interna. */
+export async function assignStudyRequest(
+  id: string,
+  assigneeMemberId: string,
+  assignedByMemberId: string,
+): Promise<StudyRequest> {
+  const supabase = createAdminClient()
+
+  // El asignado debe tener rol coordinador_dirigentes activo.
+  const { data: roleRow, error: roleErr } = await supabase
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(first_name, last_name)')
+    .eq('member_id', assigneeMemberId)
+    .eq('role', 'coordinador_dirigentes')
+    .eq('is_active', true)
+    .maybeSingle()
+  if (roleErr) throw roleErr
+  if (!roleRow) throw new Error('La persona asignada no tiene rol activo de coordinador de dirigentes')
+  const assigneeName = fullName((roleRow as unknown as { member: { first_name: string | null; last_name: string | null } | null }).member)
+
+  // Estado anterior, para el historial.
+  const { data: before } = await supabase
+    .from('study_requests').select('status').eq('id', id).maybeSingle()
+  const fromStatus = (before as { status: StudyRequestStatus } | null)?.status ?? null
+
+  const { data, error } = await supabase
+    .from('study_requests')
+    .update({ status: 'in_review', reviewed_by: assigneeMemberId, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select(REQUEST_SELECT)
+    .single()
+  if (error) throw error
+
+  // Historial (best-effort): "Abierta → En revisión · por [asignador] — Asignada a [nombre]".
+  const { error: hErr } = await supabase.from('study_request_status_history').insert({
+    request_id: id,
+    from_status: fromStatus,
+    to_status: 'in_review',
+    changed_by: assignedByMemberId,
+    notes: `Asignada a ${assigneeName}`,
+  })
+  if (hErr) console.warn('assignStudyRequest: historial falló:', hErr.message)
+
+  const result = toDomain(data as unknown as DbRequestRow)
+
+  // Notificación interna al coordinador asignado (best-effort).
+  const { error: nErr } = await supabase.from('internal_notifications').insert({
+    recipient_member_id: assigneeMemberId,
+    type: 'study_request_assigned',
+    title: 'Te asignaron una solicitud',
+    body: `Te asignaron una solicitud de ${TYPE_LABEL_NOTIF[result.request_type]} de ${result.member_name}`,
+    link: '/estudios/solicitudes',
+  })
+  if (nErr) console.warn('assignStudyRequest: notificación falló:', nErr.message)
+
+  // El select corrió antes del insert del historial: reflejarlo en la respuesta.
+  result.history = [...result.history, {
+    from_status: fromStatus,
+    to_status: 'in_review',
+    notes: `Asignada a ${assigneeName}`,
+    changed_by_name: null,
+    created_at: new Date().toISOString(),
+  }]
+  return result
+}
+
 // ── Destinatarios de notificaciones ─────────────────────────────────────────
 
 export async function getNotificationRecipients(): Promise<NotificationRecipient[]> {
@@ -271,8 +344,7 @@ export async function getEligibleCoordinators(): Promise<Array<{ member_id: stri
 
 const NOTIF_META: Record<StudyRequestType, { type: InternalNotificationType; title: string }> = {
   relocation: { type: 'study_relocation_request', title: 'Nueva solicitud de reubicación' },
-  join_group: { type: 'study_join_request', title: 'Nueva solicitud para unirse a un grupo' },
-  new_group: { type: 'study_new_group_request', title: 'Nueva solicitud de grupo en zona' },
+  study_interest: { type: 'study_interest_request', title: 'Nuevo interés en estudio' },
 }
 
 /** Crea una notificación por cada destinatario configurado. Best-effort. */
@@ -313,4 +385,99 @@ export async function markNotificationRead(id: string, memberId: string): Promis
     .eq('id', id)
     .eq('recipient_member_id', memberId)
   if (error) throw error
+}
+
+/** Marca TODAS las notificaciones no leídas del miembro como leídas. */
+export async function markAllNotificationsRead(memberId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('internal_notifications')
+    .update({ read: true })
+    .eq('recipient_member_id', memberId)
+    .eq('read', false)
+  if (error) throw error
+}
+
+// ── Alerta: dirigente inasistente ────────────────────────────────────────────
+
+const ABSENCE_WEEKS = 4
+
+/** Dirigentes con grupo activo (en_matricula/en_curso) y más de ABSENCE_WEEKS
+ *  semanas sin check-in de charla → notificación interna a los coordinadores
+ *  de dirigentes. Anti-duplicado: máximo una notificación por dirigente por
+ *  semana (se identifica por el link, que lleva el member_id del dirigente).
+ *  Pensada para correrse a diario desde la edge function process-email-queue. */
+export async function notifyAbsentLeaders(): Promise<{ checked: number; notified: number }> {
+  const supabase = createAdminClient()
+
+  // 1. Dirigentes y co-dirigentes de grupos activos.
+  const { data: groups, error: gErr } = await supabase
+    .from('study_groups')
+    .select('leader_id, co_leader_id')
+    .in('status', ['en_matricula', 'en_curso'])
+  if (gErr) throw gErr
+  const leaderIds = Array.from(new Set(
+    (groups ?? []).flatMap(g => [g.leader_id, g.co_leader_id]).filter(Boolean) as string[],
+  ))
+  if (leaderIds.length === 0) return { checked: 0, notified: 0 }
+
+  // 2. Último check-in de CHARLA de cada dirigente en la ventana.
+  const cutoff = new Date(Date.now() - ABSENCE_WEEKS * 7 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: recent, error: cErr } = await supabase
+    .from('event_checkins')
+    .select('member_id, events!inner(event_type)')
+    .in('member_id', leaderIds)
+    .eq('events.event_type', 'charla')
+    .gte('checked_in_at', cutoff)
+  if (cErr) throw cErr
+  const activeSet = new Set((recent ?? []).map(r => (r as { member_id: string }).member_id))
+  const absentIds = leaderIds.filter(id => !activeSet.has(id))
+  if (absentIds.length === 0) return { checked: leaderIds.length, notified: 0 }
+
+  // 3. Destinatarios: coordinadores de dirigentes con rol activo.
+  const { data: coordRoles, error: rErr } = await supabase
+    .from('member_roles')
+    .select('member_id')
+    .eq('role', 'coordinador_dirigentes')
+    .eq('is_active', true)
+  if (rErr) throw rErr
+  const recipientIds = Array.from(new Set((coordRoles ?? []).map(r => r.member_id as string)))
+  if (recipientIds.length === 0) return { checked: leaderIds.length, notified: 0 }
+
+  // 4. Anti-duplicado: notificaciones de este tipo en los últimos 7 días.
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: recentNotifs, error: nErr } = await supabase
+    .from('internal_notifications')
+    .select('link')
+    .eq('type', 'leader_absent_alert')
+    .gte('created_at', weekAgo)
+  if (nErr) throw nErr
+  const alreadyNotified = new Set((recentNotifs ?? []).map(n => n.link as string | null))
+
+  // 5. Nombres de los dirigentes ausentes.
+  const { data: memberRows, error: mErr } = await supabase
+    .from('members')
+    .select('id, first_name, last_name')
+    .in('id', absentIds)
+  if (mErr) throw mErr
+  const nameOf = new Map((memberRows ?? []).map(m => [
+    m.id as string,
+    [m.first_name, m.last_name].filter(Boolean).join(' '),
+  ]))
+
+  const rows = absentIds
+    .map(id => ({ id, link: `/estudios/dirigentes?dirigente=${id}` }))
+    .filter(({ link }) => !alreadyNotified.has(link))
+    .flatMap(({ id, link }) => recipientIds.map(recipientId => ({
+      recipient_member_id: recipientId,
+      type: 'leader_absent_alert',
+      title: 'Dirigente sin asistencia a charlas',
+      body: `${nameOf.get(id) ?? 'Un dirigente'} tiene un grupo activo y lleva más de ${ABSENCE_WEEKS} semanas sin asistir a charla`,
+      link,
+    })))
+  if (rows.length === 0) return { checked: leaderIds.length, notified: 0 }
+
+  const { error: insErr } = await supabase.from('internal_notifications').insert(rows)
+  if (insErr) throw insErr
+  return { checked: leaderIds.length, notified: rows.length }
 }

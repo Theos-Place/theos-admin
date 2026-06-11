@@ -158,7 +158,7 @@ async function main() {
       is_recurring: false,
       is_public: true,
       is_active: false,
-      status: 'finished',
+      status: 'finalizado',
       description: IMPORT_DESC,
     }).select('id').single()
     if (error) {

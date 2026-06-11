@@ -94,6 +94,8 @@ export type Member = {
   attendance_active?: boolean
   /** Fecha del último check-in de charla. Solo viene del detalle. */
   last_charla_checkin?: string | null
+  /** Grupos activos donde es dirigente o co-dirigente. Solo viene del detalle. */
+  led_groups?: Array<{ group_id: string; group_name: string; plan_code: string | null; plan_name: string | null }>
   service_history: ServiceRecord[]
   family_members: FamilyEntry[]
   donations: DonationRecord[]

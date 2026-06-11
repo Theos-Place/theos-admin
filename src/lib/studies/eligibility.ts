@@ -49,6 +49,24 @@ function formatDays(days: string[]): string {
   return labels.slice(0, -1).join(', ') + ' y ' + labels[labels.length - 1]
 }
 
+/** ¿Completó algún estudio que tenga a `code` como prerequisito (directo o
+ *  transitivo)? Si llevó algo posterior de la cadena, ya pasó por `code`. */
+function completedDescendant(code: string, plans: StudyType[], completedCodes: string[]): boolean {
+  const completed = new Set(completedCodes)
+  const stack = [code]
+  const seen = new Set<string>()
+  while (stack.length > 0) {
+    const current = stack.pop()!
+    for (const p of plans) {
+      if (p.prerequisite !== current || seen.has(p.code)) continue
+      if (completed.has(p.code)) return true
+      seen.add(p.code)
+      stack.push(p.code)
+    }
+  }
+  return false
+}
+
 export function computeEligibility(
   plans: StudyType[],
   groups: StudyGroup[],
@@ -80,6 +98,12 @@ export function computeEligibility(
       reasons_blocked.push('Ya completaste este estudio')
     }
 
+    // 3b. No completó un estudio POSTERIOR de la cadena (si llevó Panorama,
+    // ya pasó por los Discípulos aunque no estén registrados).
+    if (completedDescendant(study.code, plans, profile.completed_codes)) {
+      reasons_blocked.push('Ya completaste un estudio más avanzado de esta cadena')
+    }
+
     // 4. Compromisos
     if (study.req_donor) {
       if (profile.is_donor) reasons_met.push('Sos donador activo ✓')
@@ -100,7 +124,7 @@ export function computeEligibility(
       ? groups
           .filter(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length
-            return g.study_type_id === study.code && g.status === 'open' && active < g.max_capacity
+            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity
           })
           .map(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length

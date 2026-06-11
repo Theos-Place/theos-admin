@@ -50,9 +50,9 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     count(supabase, 'members', (q) => q.gte('created_at', monthStart)),
     count(supabase, 'members', (q) => q.is('cedula', null)),
 
-    count(supabase, 'study_groups', (q) => q.in('status', ['open', 'in_progress'])),
+    count(supabase, 'study_groups', (q) => q.in('status', ['en_matricula', 'en_curso'])),
     count(supabase, 'study_enrollments', (q) => q.eq('status', 'enrolled')),
-    count(supabase, 'study_groups', (q) => q.in('status', ['open', 'pending_opening'])),
+    count(supabase, 'study_groups', (q) => q.in('status', ['en_matricula'])),
     count(supabase, 'study_requests', (q) => q.eq('status', 'open')),
     count(supabase, 'study_groups', (q) => q.not('ends_at', 'is', null).lte('ends_at', in30).gte('ends_at', todayStr)),
     count(supabase, 'study_groups', (q) => q.is('leader_id', null)),

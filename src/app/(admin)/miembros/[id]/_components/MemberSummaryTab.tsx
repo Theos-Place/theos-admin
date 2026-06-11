@@ -1,4 +1,4 @@
-import { MapPin, BookOpen, Users } from 'lucide-react'
+import { MapPin, BookOpen, Users, Star } from 'lucide-react'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
@@ -51,8 +51,10 @@ export function MemberSummaryTab({
   activeService,
   lastStudyEntry,
 }: Props) {
-  // Estudios actualmente en curso (inscripciones con status 'enrolled').
+  // Estudios actualmente en curso (inscripciones con status 'enrolled') más
+  // los grupos activos que la persona dirige (con tag Dirigente).
   const enrolledStudies = (member.study_history ?? []).filter(s => s.status === 'enrolled')
+  const ledGroups = member.led_groups ?? []
   return (
     <div className="space-y-4">
       {/* Stat cards */}
@@ -84,16 +86,27 @@ export function MemberSummaryTab({
               Estudios en curso
             </span>
           </div>
-          {enrolledStudies.length > 0 ? (
+          {enrolledStudies.length > 0 || ledGroups.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {enrolledStudies.map(s => (
                 <span key={s.code + (s.date ?? '')} className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', studyStageColor(stageOf(s.code)))}>
                   {s.name || s.code}
                 </span>
               ))}
+              {ledGroups.map(g => (
+                <span
+                  key={g.group_id}
+                  className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-body', g.plan_code ? studyStageColor(stageOf(g.plan_code)) : 'bg-navy/10 text-navy')}
+                  title={g.group_name}
+                >
+                  <Star size={10} strokeWidth={2} aria-hidden />
+                  {g.plan_name ?? g.plan_code ?? g.group_name}
+                  <span className="text-[10px] opacity-70">· Dirigente</span>
+                </span>
+              ))}
             </div>
           ) : (
-            <p className="text-sm font-medium text-navy-light/40 font-body">Sin estudios activos</p>
+            <p className="text-sm font-medium text-navy-light/60 font-body">Sin estudios activos</p>
           )}
         </div>
 

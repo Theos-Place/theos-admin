@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ExternalLink, Users, X, Pencil } from 'lucide-react'
+import { ChevronLeft, ExternalLink, Users, X, Pencil, Info } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 
 function initials(name: string) {
@@ -18,6 +18,32 @@ function initials(name: string) {
 function fmtDate(d: string | null) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })
+}
+
+/** Label de sección con tooltip accesible (visible en hover y foco de teclado). */
+function SectionLabel({ text, tooltip }: { text: string; tooltip: string }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span className="relative inline-flex items-center gap-1.5">
+      <span className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">{text}</span>
+      <button
+        type="button"
+        aria-label={tooltip}
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onFocus={() => setShow(true)}
+        onBlur={() => setShow(false)}
+        className="text-navy-light/60 hover:text-navy transition-colors"
+      >
+        <Info size={11} />
+      </button>
+      {show && (
+        <span className="absolute bottom-full left-0 mb-1.5 w-max max-w-[260px] rounded-md bg-navy px-2.5 py-1.5 text-[11px] normal-case tracking-normal text-white z-50 shadow-[var(--shadow-md)] font-body">
+          {tooltip}
+        </span>
+      )}
+    </span>
+  )
 }
 
 function GrupoRow({ g }: { g: DirigenteGrupo }) {
@@ -100,7 +126,9 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
         {/* Estudios habilitados */}
         {d.estudios_habilitados.length > 0 && (
           <div className="mt-4">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display mb-1.5">Estudios que ha impartido</p>
+            <div className="mb-1.5">
+              <SectionLabel text="Formación de estudios" tooltip="Estudios que el dirigente está capacitado para dar" />
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {d.estudios_habilitados.map(code => <StudyTypeBadge key={code} code={code} size="sm" />)}
             </div>
@@ -199,7 +227,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
 
       {/* Estudios que imparte */}
       <div className="space-y-2">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">Estudios que imparte</p>
+        <SectionLabel text="Disponibilidad de estudios" tooltip="Estudios que el dirigente está dispuesto a dar en este momento" />
         <div className="flex flex-wrap gap-1.5 items-center">
           {studies.length === 0 && <span className="text-xs text-navy-light/40 font-body">Ninguno</span>}
           {studies.map(code => (

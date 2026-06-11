@@ -12,7 +12,7 @@ export async function POST(
   try {
     const { id } = await params
     const { results } = (await req.json()) as { results: CloseResult[] }
-    await closeGroup(id, results ?? [])
+    await closeGroup(id, results ?? [], auth.ctx.memberId)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('POST /api/studies/groups/[id]/close:', error)

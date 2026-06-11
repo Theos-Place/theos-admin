@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { StudyType } from '@/data/mock-studies'
 import { useStudies } from '@/hooks/useStudies'
 import { useDirigentes } from '@/hooks/useDirigentes'
+import { usePermissions } from '@/hooks/usePermissions'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
@@ -78,7 +79,7 @@ function StudyCardCompact({ study }: { study: StudyType }) {
   )
 }
 
-function StudyCardFull({ study, mentor }: { study: StudyType; mentor: string | null }) {
+function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor: string | null; canManage: boolean }) {
   const router = useRouter()
   const cat = STUDY_CATALOG.find(s => s.code === study.code)
   // Color del código según su etapa (consistente con StudyTypeBadge).
@@ -124,10 +125,10 @@ function StudyCardFull({ study, mentor }: { study: StudyType; mentor: string | n
         </span>
       </div>
 
-      {/* Dirigente referente */}
-      {(mentor ?? cat?.mentor) && (
+      {/* Dirigente encargado — solo para roles de coordinación/administración */}
+      {canManage && (mentor ?? cat?.mentor) && (
         <div className="text-[11px] text-[var(--fg-muted)] mb-1.5 font-body">
-          Dirigente referente: <strong>{mentor ?? cat?.mentor}</strong>
+          Dirigente encargado: <strong>{mentor ?? cat?.mentor}</strong>
         </div>
       )}
 
@@ -153,15 +154,17 @@ function StudyCardFull({ study, mentor }: { study: StudyType; mentor: string | n
         </div>
       )}
 
-      {/* Botón editar */}
-      <div className="mt-2.5 flex justify-end">
-        <button
-          onClick={e => { e.stopPropagation(); router.push(`/estudios/plan/${study.code}/editar`) }}
-          className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-card hover:text-navy transition-colors border-[var(--outline-variant)] font-body"
-        >
-          <Pencil size={11} /> Editar
-        </button>
-      </div>
+      {/* Botón editar — solo administración */}
+      {canManage && (
+        <div className="mt-2.5 flex justify-end">
+          <button
+            onClick={e => { e.stopPropagation(); router.push(`/estudios/plan/${study.code}/editar`) }}
+            className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-card hover:text-navy transition-colors border-[var(--outline-variant)] font-body"
+          >
+            <Pencil size={11} /> Editar
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -181,6 +184,10 @@ function StageDivider({ label }: { label: string }) {
 export default function PlanDeEstudiosPage() {
   const { studyTypes } = useStudies()
   const { dirigentes } = useDirigentes()
+  // Coordinadores de estudios/dirigentes, dirección y admin (scope 'all' excluye
+  // al rol dirigente, que tiene edit solo sobre lo propio).
+  const { can, getScope } = usePermissions()
+  const canManage = can('estudios', 'edit') && getScope('estudios') === 'all'
   // Dirigente referente (mentor_id) resuelto a nombre desde la lista unificada.
   const mentorName = (s: StudyType) => dirigentes.find(d => d.member_id === s.mentor_id)?.member_name ?? null
   // Archivados (descontinuados) al final de su categoría.
@@ -201,24 +208,26 @@ export default function PlanDeEstudiosPage() {
     if (ga === 2) return tail.indexOf(a.code) - tail.indexOf(b.code)
     return sortKey(a.code).localeCompare(sortKey(b.code))
   }
-  const byStage = (stage: string) => [...studyTypes.filter(s => s.stage === stage)].sort(withinStage(stage))
-  const niveles    = useMemo(() => byStage('niveles'), [studyTypes])
-  const inicial    = useMemo(() => byStage('inicial'), [studyTypes])
-  const intermedia = useMemo(() => byStage('intermedia'), [studyTypes])
-  const campana    = useMemo(() => byStage('campaña'), [studyTypes])
+  // Las charlas no curriculares (ej. BUS) no se listan en el plan.
+  const curricular = useMemo(() => studyTypes.filter(s => s.is_curricular !== false), [studyTypes])
+  const byStage = (stage: string) => [...curricular.filter(s => s.stage === stage)].sort(withinStage(stage))
+  const niveles    = useMemo(() => byStage('niveles'), [curricular])
+  const inicial    = useMemo(() => byStage('inicial'), [curricular])
+  const intermedia = useMemo(() => byStage('intermedia'), [curricular])
+  const campana    = useMemo(() => byStage('campaña'), [curricular])
   // Listado final ordenado por etapa.
   const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, 'campaña': 3 }
   // CDEB y CDC ("cómo dar...") van al final de toda la lista, justo antes de los
   // descontinuados (que siempre quedan de últimos).
   const isInvTail = (code: string) => (code === 'CDEB' || code === 'CDC' ? 1 : 0)
   const sortedStudyTypes = useMemo(
-    () => [...studyTypes].sort((a, b) =>
+    () => [...curricular].sort((a, b) =>
       archLast(a, b)
       || isInvTail(a.code) - isInvTail(b.code)
       || (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99)
       || withinStage(a.stage)(a, b),
     ),
-    [studyTypes],
+    [curricular],
   )
 
   return (
@@ -236,16 +245,109 @@ export default function PlanDeEstudiosPage() {
             Ruta de crecimiento espiritual de Theos Place
           </p>
         </div>
-        <Link
-          href="/estudios/plan/nuevo"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-        >
-          <Plus size={14} strokeWidth={1.75} />
-          Nuevo tipo
-        </Link>
+        {canManage && (
+          <Link
+            href="/estudios/plan/nuevo"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+          >
+            <Plus size={14} strokeWidth={1.75} />
+            Nuevo tipo
+          </Link>
+        )}
       </div>
 
-      {/* ── Plan visual ── */}
+      {/* ── Sección 1: currículo completo (tabla) ── */}
+      <div
+        className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
+      >
+        <div
+          className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]"
+        >
+          <div>
+            <h2 className="text-sm font-semibold text-navy font-display">
+              Todos los tipos de estudio
+            </h2>
+            <p className="text-xs text-navy-light/60 mt-0.5 font-body">
+              {curricular.length} estudios en total
+            </p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-[var(--outline-variant)]">
+                {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', ...(canManage ? ['Dirigente encargado'] : []), 'Prerrequisito', 'Compromisos', ''].map(h => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 whitespace-nowrap font-display"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedStudyTypes.map((s, i) => (
+                <tr
+                  key={s.id}
+                  className="hover:bg-surface-low transition-colors group"
+                  style={{ ...(i < sortedStudyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}), ...(s.is_archived ? { opacity: 0.55 } : {}) }}
+                >
+                  <td className="px-4 py-3">
+                    <StudyTypeBadge code={s.code} size="sm" />
+                  </td>
+                  <td className="px-4 py-3 text-sm text-navy font-body">
+                    {s.name}
+                    {s.is_archived && (
+                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase align-middle font-display bg-[rgba(120,120,130,0.18)] text-[#6b7280]">
+                        Descontinuado
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-navy-light/60 font-body">
+                    {s.stage === 'niveles' ? 'Niveles' : s.stage === 'inicial' ? 'Inicial' : s.stage === 'campaña' ? 'Campaña' : 'Intermedia'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[12px]">
+                    {s.weeks}
+                  </td>
+                  <td className="px-4 py-3 text-sm whitespace-nowrap font-body">
+                    <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/70'}>
+                      {formatCost(s.cost)}
+                    </span>
+                  </td>
+                  {canManage && (
+                    <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
+                      {mentorName(s) ?? STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
+                        <span className="text-navy-light/60">—</span>
+                      )}
+                    </td>
+                  )}
+                  <td className="px-4 py-3">
+                    {s.prerequisite
+                      ? <StudyTypeBadge code={s.prerequisite} size="sm" />
+                      : <span className="text-xs text-navy-light/60 font-body">—</span>
+                    }
+                  </td>
+                  <td className="px-4 py-3">
+                    <CommitmentIcons donor={s.req_donor} server={s.req_server} charlas={s.req_attendee} size={13} />
+                  </td>
+                  <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Link
+                      href={`/estudios/plan/${s.id}`}
+                      className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                    >
+                      Ver
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Sección 2: detalle por etapa (descripciones y expandibles) ── */}
       <div className="rounded-2xl p-4 sm:p-6 bg-surface-card shadow-[var(--shadow-md)]">
 
         {/* Stage header strip */}
@@ -287,7 +389,7 @@ export default function PlanDeEstudiosPage() {
             Etapa Inicial — ₡15,000 · Requiere asistir a charlas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-            {inicial.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} />)}
+            {inicial.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
           </div>
         </div>
 
@@ -299,7 +401,7 @@ export default function PlanDeEstudiosPage() {
             Etapa Intermedia — ₡20,000 · Requiere donador + servidor + charlas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-            {intermedia.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} />)}
+            {intermedia.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
           </div>
         </div>
 
@@ -311,99 +413,11 @@ export default function PlanDeEstudiosPage() {
             Campañas — ₡25,000 · Sin prerrequisito
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-            {campana.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} />)}
+            {campana.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
           </div>
         </div>
       </div>
 
-      {/* ── Tabla administrativa ── */}
-      <div
-        className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
-      >
-        <div
-          className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]"
-        >
-          <div>
-            <h2 className="text-sm font-semibold text-navy font-display">
-              Todos los tipos de estudio
-            </h2>
-            <p className="text-xs text-navy-light/50 mt-0.5 font-body">
-              {studyTypes.length} estudios en total
-            </p>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-[var(--outline-variant)]">
-                {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', 'Mentor', 'Prerrequisito', 'Compromisos', ''].map(h => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap font-display"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedStudyTypes.map((s, i) => (
-                <tr
-                  key={s.id}
-                  className="hover:bg-surface-low transition-colors group"
-                  style={{ ...(i < sortedStudyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}), ...(s.is_archived ? { opacity: 0.55 } : {}) }}
-                >
-                  <td className="px-4 py-3">
-                    <StudyTypeBadge code={s.code} size="sm" />
-                  </td>
-                  <td className="px-4 py-3 text-sm text-navy font-body">
-                    {s.name}
-                    {s.is_archived && (
-                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase align-middle font-display bg-[rgba(120,120,130,0.18)] text-[#6b7280]">
-                        Descontinuado
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-navy-light/60 font-body">
-                    {s.stage === 'niveles' ? 'Niveles' : s.stage === 'inicial' ? 'Inicial' : s.stage === 'campaña' ? 'Campaña' : 'Intermedia'}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[12px]">
-                    {s.weeks}
-                  </td>
-                  <td className="px-4 py-3 text-sm whitespace-nowrap font-body">
-                    <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/70'}>
-                      {formatCost(s.cost)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
-                    {mentorName(s) ?? STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
-                      <span className="text-navy-light/60">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {s.prerequisite
-                      ? <StudyTypeBadge code={s.prerequisite} size="sm" />
-                      : <span className="text-xs text-navy-light/60 font-body">—</span>
-                    }
-                  </td>
-                  <td className="px-4 py-3">
-                    <CommitmentIcons donor={s.req_donor} server={s.req_server} charlas={s.req_attendee} size={13} />
-                  </td>
-                  <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link
-                      href={`/estudios/plan/${s.id}`}
-                      className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-                    >
-                      Ver
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   )
 }

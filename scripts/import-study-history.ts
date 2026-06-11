@@ -101,7 +101,7 @@ async function main() {
     // reusar si ya existe
     const { data: ex } = await supabase.from('study_groups').select('id').eq('plan_id', planId).eq('name', `${code} — Histórico`).maybeSingle()
     if (ex) { histGroupByCode.set(code, (ex as { id: string }).id); continue }
-    const { data, error } = await supabase.from('study_groups').insert({ plan_id: planId, name: `${code} — Histórico`, status: 'finished', current_week: 0 }).select('id').single()
+    const { data, error } = await supabase.from('study_groups').insert({ plan_id: planId, name: `${code} — Histórico`, status: 'finalizado', current_week: 0 }).select('id').single()
     if (error) { console.error('grupo histórico', code, error.message); continue }
     histGroupByCode.set(code, (data as { id: string }).id)
   }

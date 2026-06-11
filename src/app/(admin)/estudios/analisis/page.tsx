@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { getCurrentBlock, getNextBlock } from '@/lib/studies/blocks'
+import { getCurrentBlock, getNextBlock, suggestedGroups } from '@/lib/studies/blocks'
 import { cn } from '@/lib/utils'
 import { HandCoins, CalendarCheck, HeartHandshake, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 
@@ -196,14 +196,14 @@ export default function AnalisisPage() {
         >
           <option value="">Seleccionar estudio...</option>
           <optgroup label="Etapa Inicial (requiere: donador + asistencia)">
-            {STUDY_TYPES.filter(s => s.stage === 'inicial' && !s.is_archived).map(s => (
+            {STUDY_TYPES.filter(s => s.stage === 'inicial' && !s.is_archived && s.is_curricular !== false).map(s => (
               <option key={s.id} value={s.id}>
                 {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
               </option>
             ))}
           </optgroup>
           <optgroup label="Etapa Intermedia (requiere: donador + asistencia + servidor)">
-            {STUDY_TYPES.filter(s => s.stage === 'intermedia' && !s.is_archived).map(s => (
+            {STUDY_TYPES.filter(s => s.stage === 'intermedia' && !s.is_archived && s.is_curricular !== false).map(s => (
               <option key={s.id} value={s.id}>
                 {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
               </option>
@@ -328,7 +328,7 @@ export default function AnalisisPage() {
                             {row.graduating + row.eligible}
                           </td>
                           <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
-                            {Math.ceil((row.graduating + row.eligible) / 12)}
+                            {suggestedGroups(row.graduating + row.eligible)}
                           </td>
                         </tr>
                         {(isExpA || isExpB) && (

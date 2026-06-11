@@ -76,7 +76,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   )
 
   const activeGroups = useMemo(
-    () => MOCK_GROUPS.filter((g: StudyGroup) => g.status === 'open' || g.status === 'in_progress').slice(0, 10),
+    () => MOCK_GROUPS.filter((g: StudyGroup) => g.status === 'en_matricula' || g.status === 'en_curso').slice(0, 10),
     []
   )
 

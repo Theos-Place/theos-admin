@@ -26,7 +26,7 @@ export type Dirigente = {
   status: DirigenteEstado
   /** Códigos de estudio que el dirigente ha impartido (distintos). */
   estudios_habilitados: string[]
-  /** Grupos en curso ahora (open / in_progress / pendientes). */
+  /** Grupos en curso ahora (en_matricula / en_curso). */
   estudios_activos: DirigenteGrupo[]
   /** Grupos finalizados que lideró. */
   estudios_completados: DirigenteGrupo[]
@@ -56,23 +56,32 @@ export function buildDirigentes(
   const byLeader = new Map<string, Acc>()
 
   for (const g of groups) {
-    if (!g.leader_id) continue
-    if (!byLeader.has(g.leader_id)) {
-      byLeader.set(g.leader_id, { name: g.leader_name ?? '', activos: [], completados: [], codes: new Set() })
+    // El grupo cuenta tanto para el dirigente como para el co-dirigente:
+    // antes solo se miraba leader_id y los grupos co-dirigidos no aparecían.
+    const roles: Array<[string | null, string | null]> = [
+      [g.leader_id ?? null, g.leader_name ?? null],
+      [g.co_leader_id !== g.leader_id ? (g.co_leader_id ?? null) : null, g.co_leader_name ?? null],
+    ]
+    for (const [memberId, memberName] of roles) {
+      if (!memberId) continue
+      if (!byLeader.has(memberId)) {
+        byLeader.set(memberId, { name: memberName ?? '', activos: [], completados: [], codes: new Set() })
+      }
+      const acc = byLeader.get(memberId)!
+      if (!acc.name && memberName) acc.name = memberName
+      acc.codes.add(g.study_type_id)
+      const entry: DirigenteGrupo = {
+        plan_code: g.study_type_id,
+        plan_name: planName(g.study_type_id),
+        group_id: g.id,
+        group_name: g.name || planName(g.study_type_id),
+        students_count: enrolled(g),
+        status: g.status,
+        date: g.end_date ?? g.start_date ?? null,
+      }
+      if (g.status === 'finalizado') acc.completados.push(entry)
+      else acc.activos.push(entry)
     }
-    const acc = byLeader.get(g.leader_id)!
-    acc.codes.add(g.study_type_id)
-    const entry: DirigenteGrupo = {
-      plan_code: g.study_type_id,
-      plan_name: planName(g.study_type_id),
-      group_id: g.id,
-      group_name: g.name || planName(g.study_type_id),
-      students_count: enrolled(g),
-      status: g.status,
-      date: g.end_date ?? g.start_date ?? null,
-    }
-    if (g.status === 'finished') acc.completados.push(entry)
-    else acc.activos.push(entry)
   }
 
   // Unión: lideraron grupos ∪ activos del comité ∪ designados manualmente.

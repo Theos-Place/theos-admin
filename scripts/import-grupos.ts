@@ -132,7 +132,7 @@ async function main() {
     if (existingNames.has(g.name)) { gSkip++; continue }
     const { data, error } = await supabase.from('study_groups').insert({
       plan_id: g.planId, name: g.name, leader_id: g.leaderId,
-      status: g.finished ? 'finished' : 'in_progress', starts_at: g.starts_at, current_week: 0,
+      status: g.finished ? 'finalizado' : 'en_curso', starts_at: g.starts_at, current_week: 0,
     }).select('id').single()
     if (error) { console.error('\ngrupo', g.name, error.message); continue }
     gOk++

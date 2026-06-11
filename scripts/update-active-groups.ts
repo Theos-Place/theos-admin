@@ -130,7 +130,7 @@ async function main() {
   let cre = 0
   for (const g of toCreate) {
     const { error } = await supabase.from('study_groups').insert({
-      plan_id: g.planId, name: g.name, status: 'in_progress', current_week: 0,
+      plan_id: g.planId, name: g.name, status: 'en_curso', current_week: 0,
       leader_id: g.f.leader_id, schedule_days: g.f.schedule_days, schedule_time: g.f.schedule_time, location: g.f.location, zone: g.f.zone,
     })
     if (error) { console.error('\ncrear', g.name, error.message); continue }

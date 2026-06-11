@@ -33,6 +33,7 @@ import {
   CreditCard,
   GraduationCap,
   Shield,
+  Bell,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -40,7 +41,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 
 type SubItem = { href: string; label: string; icon: LucideIcon; badge?: number }
-type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null }
+type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null; summaryLabel?: string; badge?: number }
 
 const EVENTOS_SUB: SubItem[] = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
@@ -104,6 +105,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // con 403 simplemente no hay badge.
   const [openRequests, setOpenRequests] = useState(0)
   const [openFinanceRequests, setOpenFinanceRequests] = useState(0)
+  const [unreadNotifs, setUnreadNotifs] = useState(0)
   useEffect(() => {
     let alive = true
     fetch('/api/studies/requests?count=open')
@@ -113,6 +115,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     fetch('/api/finance/requests?count=open')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (alive && d) setOpenFinanceRequests(d.count ?? 0) })
+      .catch(() => {})
+    fetch('/api/notifications/internal')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && Array.isArray(d)) setUnreadNotifs(d.filter((n: { read: boolean }) => !n.read).length) })
       .catch(() => {})
     return () => { alive = false }
   }, [pathname])
@@ -140,7 +146,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // múltiples roles: coordinador_estudios + comunicaciones ve comunicaciones).
   const ALL_NAV: NavModule[] = [
     { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, subs: [],                 module: null },
-    { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros' },
+    { href: '/notificaciones', label: 'Notificaciones', icon: Bell,            subs: [],                 module: null, badge: unreadNotifs },
+    { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros', summaryLabel: 'Buscar miembros' },
     { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: EVENTOS_SUB,        module: 'eventos' },
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
@@ -250,7 +257,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <div className="overflow-hidden min-h-0">
             <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3 pb-1">
               <SubLink
-                sub={{ href: mod.href, label: 'Resumen', icon: Icon }}
+                sub={{ href: mod.href, label: mod.summaryLabel ?? 'Resumen', icon: Icon }}
                 exactActive={pathname === mod.href}
               />
               {mod.subs.map(sub => <SubLink key={sub.href} sub={sub} />)}
@@ -326,6 +333,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     className={cn('shrink-0 transition-colors', active ? 'text-white' : 'text-white/50 group-hover:text-white')}
                   />
                   <span className="flex-1 truncate font-body font-light">{mod.label}</span>
+                  {(mod.badge ?? 0) > 0 && (
+                    <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
+                      {mod.badge}
+                    </span>
+                  )}
                 </Link>
               )
             }

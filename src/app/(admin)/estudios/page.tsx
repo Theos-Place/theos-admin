@@ -38,10 +38,11 @@ export default function EstudiosPage() {
     return () => { alive = false }
   }, [])
 
-  const activeGroups        = useMemo(() => groups.filter(g => g.status === 'open' || g.status === 'in_progress'), [groups])
-  const openGroups          = useMemo(() => groups.filter(g => g.status === 'open'), [groups])
-  const inProgressGroups    = useMemo(() => groups.filter(g => g.status === 'in_progress'), [groups])
-  const pendingLeaderGroups = useMemo(() => groups.filter(g => g.status === 'pending_leader'), [groups])
+  const activeGroups        = useMemo(() => groups.filter(g => g.status === 'en_matricula' || g.status === 'en_curso'), [groups])
+  const openGroups          = useMemo(() => groups.filter(g => g.status === 'en_matricula'), [groups])
+  const inProgressGroups    = useMemo(() => groups.filter(g => g.status === 'en_curso'), [groups])
+  // Sin dirigente: flag derivado (leader_id null) sobre grupos no finalizados.
+  const pendingLeaderGroups = useMemo(() => groups.filter(g => !g.leader_id && g.status !== 'finalizado'), [groups])
   const closingSoon = useMemo(() => {
     const now = new Date()
     const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)

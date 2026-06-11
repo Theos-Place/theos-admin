@@ -163,5 +163,6 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
     wallet_pass_status: db.wallet_pass_id ? 'active' : 'not_generated',
     attendance_active: db.attendance_active,
     last_charla_checkin: db.last_charla_checkin,
+    led_groups: db.led_groups ?? [],
   }
 }

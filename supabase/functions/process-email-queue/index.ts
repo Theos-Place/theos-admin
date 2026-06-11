@@ -21,11 +21,9 @@ Deno.serve(async () => {
     .eq('channel', 'email')
     .lte('scheduled_date', today)
 
-  if (!pendingLogs?.length) {
-    return new Response(JSON.stringify({ processed: 0 }), { status: 200 })
-  }
-
-  const broadcastIds = [...new Set(pendingLogs.map((l: { broadcast_id: string }) => l.broadcast_id))]
+  // Sin early-return: aunque no haya emails pendientes, la verificación de
+  // dirigentes inasistentes (abajo) corre todos los días.
+  const broadcastIds = [...new Set((pendingLogs ?? []).map((l: { broadcast_id: string }) => l.broadcast_id))]
 
   let totalSent = 0
   let totalFailed = 0
@@ -50,5 +48,23 @@ Deno.serve(async () => {
     }
   }
 
-  return new Response(JSON.stringify({ processed: totalSent, failed: totalFailed }), { status: 200 })
+  // Verificación diaria: dirigentes con grupo activo sin asistir a charlas
+  // (>4 semanas) → notificación interna a coordinadores de dirigentes.
+  // La lógica vive en el app (/api/notifications/leader-absence-check) y se
+  // protege con el mismo CRON_SECRET; el anti-duplicado (1/semana) está ahí.
+  let absenceCheck: unknown = null
+  try {
+    const res = await fetch(
+      `${Deno.env.get('NEXT_PUBLIC_SITE_URL')}/api/notifications/leader-absence-check`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Deno.env.get('CRON_SECRET')}` },
+      },
+    )
+    absenceCheck = await res.json()
+  } catch (e) {
+    console.error('leader-absence-check:', e)
+  }
+
+  return new Response(JSON.stringify({ processed: totalSent, failed: totalFailed, absenceCheck }), { status: 200 })
 })

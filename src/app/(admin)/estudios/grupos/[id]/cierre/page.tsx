@@ -15,6 +15,12 @@ type ParticipantResult = {
   attendance_pct: number
   status_result: 'aprobado' | 'reprobado' | 'retirado' | ''
   grade: string
+  /** Justificación obligatoria al reprobar. */
+  fail_reason: string
+  rec_oracion: boolean
+  rec_servicio: boolean
+  rec_dirigente: boolean
+  rec_justification: string
 }
 
 export default function CierrePage({ params }: { params: Promise<{ id: string }> }) {
@@ -56,19 +62,25 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       attendance_pct: p.attendance_pct,
       status_result: (p.status === 'withdrawn' ? 'retirado' : '') as ParticipantResult['status_result'],
       grade: p.grade?.toString() ?? '',
+      fail_reason: '',
+      rec_oracion: false,
+      rec_servicio: false,
+      rec_dirigente: false,
+      rec_justification: '',
     }))
   )
   const [confirmText, setConfirmText] = useState('')
   const [closed, setClosed] = useState(false)
   const [triedNext, setTriedNext] = useState(false)
 
-  function setResult(memberId: string, field: keyof ParticipantResult, value: string) {
+  function setResult(memberId: string, field: keyof ParticipantResult, value: string | boolean) {
     setResults(prev => prev.map(r =>
       r.member_id === memberId ? { ...r, [field]: value } : r
     ))
   }
 
   const unevaluated = results.filter(r => r.status_result === '').length
+  const failsWithoutReason = results.filter(r => r.status_result === 'reprobado' && !r.fail_reason.trim()).length
   const aprobados = results.filter(r => r.status_result === 'aprobado').length
   const reprobados = results.filter(r => r.status_result === 'reprobado').length
   const retirados = results.filter(r => r.status_result === 'retirado').length
@@ -85,18 +97,27 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           member_id: r.member_id,
           status_result: r.status_result,
           grade: r.grade ? Number(r.grade) : null,
+          fail_reason: r.status_result === 'reprobado' ? r.fail_reason.trim() : null,
+          recommendations: (r.rec_oracion || r.rec_servicio || r.rec_dirigente)
+            ? {
+                oracion: r.rec_oracion,
+                servicio: r.rec_servicio,
+                dirigente: r.rec_dirigente,
+                justification: r.rec_justification.trim() || null,
+              }
+            : null,
         }))
       const res = await fetch(`/api/studies/groups/${group.id}/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ results: payload }),
       })
-      if (!res.ok) throw new Error('Error cerrando el grupo')
+      if (!res.ok) throw new Error('Error en el cierre de estudio')
       setClosed(true)
       router.refresh()
     } catch (e) {
       console.error(e)
-      toast('No se pudo cerrar el grupo. Intentá de nuevo.', 'error')
+      toast('No se pudo completar el cierre de estudio. Intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }
@@ -107,7 +128,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         <div className="text-center space-y-3">
           <CheckCircle size={48} className="text-teal-deep mx-auto" />
           <p className="text-xl font-bold text-navy font-display">
-            Grupo cerrado exitosamente
+            Cierre de estudio completado
           </p>
           <p className="text-sm text-navy-light/60 font-body">
             Los historiales académicos fueron actualizados.
@@ -136,7 +157,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         <h1
           className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
         >
-          Cierre del grupo
+          Cierre de estudio
         </h1>
         <p className="mt-1 text-sm text-navy-light/60 font-body">
           {group.study_type_id} · {group.leader_name ?? 'Sin dirigente'}
@@ -169,11 +190,12 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       {/* Step 1: Results */}
       {step === 1 && (
         <div className="space-y-4">
-          {triedNext && unevaluated > 0 && (
+          {triedNext && (unevaluated > 0 || failsWithoutReason > 0) && (
             <div className="flex items-center gap-2 rounded-xl bg-coral/10 px-4 py-3">
               <AlertTriangle size={16} className="text-coral" />
               <p className="text-sm text-coral font-body">
-                {unevaluated} estudiante{unevaluated > 1 ? 's' : ''} sin estado asignado
+                {unevaluated > 0 && `${unevaluated} estudiante${unevaluated > 1 ? 's' : ''} sin estado asignado. `}
+                {failsWithoutReason > 0 && `${failsWithoutReason} reprobado${failsWithoutReason > 1 ? 's' : ''} sin justificación.`}
               </p>
             </div>
           )}
@@ -194,44 +216,103 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </div>
             <div className="divide-y border-[var(--outline-variant)]">
               {results.map(r => (
-                <div key={r.member_id} className="px-4 py-3 flex items-center gap-3 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-navy font-body">{r.member_name}</p>
-                    <p className="text-[11px] text-navy-light/50">Asistencia: {r.attendance_pct}%</p>
+                <div key={r.member_id} className="px-4 py-3 space-y-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-navy font-body">{r.member_name}</p>
+                      <p className="text-[11px] text-navy-light/60">Asistencia: {r.attendance_pct}%</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {(['aprobado', 'reprobado', 'retirado'] as const).map(s => (
+                        <button
+                          key={s}
+                          onClick={() => setResult(r.member_id, 'status_result', s)}
+                          className={cn(
+                            'rounded-lg px-2.5 py-1 text-[11px] font-medium border transition-all',
+                            r.status_result === s
+                              ? s === 'aprobado'
+                                ? 'bg-teal-deep text-white border-teal-deep'
+                                : s === 'reprobado'
+                                ? 'bg-coral text-white border-coral'
+                                : 'bg-surface-low text-navy-light/60 border-navy-light/20'
+                              : 'text-navy-light hover:bg-surface-low',
+                            'font-display',
+                          )}
+                          style={{ borderColor: r.status_result === s ? undefined : 'var(--outline-variant)' }}
+                        >
+                          {s.charAt(0).toUpperCase() + s.slice(1)}
+                        </button>
+                      ))}
+                      {studyType?.requires_grade && (r.status_result === 'aprobado' || r.status_result === 'reprobado') && (
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          placeholder="Nota"
+                          aria-label={`Nota de ${r.member_name}`}
+                          className="w-16 rounded-lg bg-surface-low px-2 py-1 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                          value={r.grade}
+                          onChange={e => setResult(r.member_id, 'grade', e.target.value)}
+                        />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {(['aprobado', 'reprobado', 'retirado'] as const).map(s => (
-                      <button
-                        key={s}
-                        onClick={() => setResult(r.member_id, 'status_result', s)}
+
+                  {/* Justificación obligatoria al reprobar */}
+                  {r.status_result === 'reprobado' && (
+                    <div>
+                      <label htmlFor={`fail-${r.member_id}`} className="block text-[11px] font-medium text-coral font-body mb-1">
+                        Explicá por qué <span aria-hidden>*</span>
+                      </label>
+                      <textarea
+                        id={`fail-${r.member_id}`}
+                        rows={2}
+                        value={r.fail_reason}
+                        onChange={e => setResult(r.member_id, 'fail_reason', e.target.value)}
+                        placeholder="Justificación del reprobado…"
                         className={cn(
-                          'rounded-lg px-2.5 py-1 text-[11px] font-medium border transition-all',
-                          r.status_result === s
-                            ? s === 'aprobado'
-                              ? 'bg-teal-deep text-white border-teal-deep'
-                              : s === 'reprobado'
-                              ? 'bg-coral text-white border-coral'
-                              : 'bg-surface-low text-navy-light/60 border-navy-light/20'
-                            : 'text-navy-light hover:bg-surface-low',
-                          'font-display',
+                          'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50',
+                          triedNext && !r.fail_reason.trim() && 'ring-1 ring-coral',
                         )}
-                        style={{ borderColor: r.status_result === s ? undefined : 'var(--outline-variant)' }}
-                      >
-                        {s.charAt(0).toUpperCase() + s.slice(1)}
-                      </button>
-                    ))}
-                    {studyType?.requires_grade && (r.status_result === 'aprobado' || r.status_result === 'reprobado') && (
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        placeholder="Nota"
-                        className="w-16 rounded-lg bg-surface-low px-2 py-1 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                        value={r.grade}
-                        onChange={e => setResult(r.member_id, 'grade', e.target.value)}
                       />
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Recomendaciones opcionales */}
+                  {r.status_result !== '' && r.status_result !== 'retirado' && (
+                    <div className="rounded-xl bg-surface-low px-3 py-2.5 space-y-2">
+                      <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                        Recomendar para (opcional)
+                      </p>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        {([
+                          ['rec_oracion', 'Oración'],
+                          ['rec_servicio', 'Servicio'],
+                          ['rec_dirigente', 'Dirigente'],
+                        ] as const).map(([field, label]) => (
+                          <label key={field} className="flex items-center gap-1.5 cursor-pointer text-[13px] text-navy font-body">
+                            <input
+                              type="checkbox"
+                              className="accent-coral"
+                              checked={r[field]}
+                              onChange={e => setResult(r.member_id, field, e.target.checked)}
+                            />
+                            {label}
+                          </label>
+                        ))}
+                      </div>
+                      {(r.rec_oracion || r.rec_servicio || r.rec_dirigente) && (
+                        <textarea
+                          rows={2}
+                          value={r.rec_justification}
+                          onChange={e => setResult(r.member_id, 'rec_justification', e.target.value)}
+                          placeholder="Justificación de la recomendación (opcional)…"
+                          aria-label={`Justificación de la recomendación de ${r.member_name}`}
+                          className="w-full rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50"
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -241,7 +322,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             <button
               onClick={() => {
                 setTriedNext(true)
-                if (unevaluated === 0) setStep(2)
+                if (unevaluated === 0 && failsWithoutReason === 0) setStep(2)
               }}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >

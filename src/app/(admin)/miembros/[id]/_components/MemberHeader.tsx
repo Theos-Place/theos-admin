@@ -121,22 +121,14 @@ export function MemberHeader({
 
           {/* Badges */}
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span
-              className={cn(
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-body',
-                member.is_active
-                  ? 'bg-teal-soft/50 text-teal-deep'
-                  : 'bg-surface-low text-navy-light/50'
-              )}
-            >
-              <span
-                className={cn(
-                  'mr-1.5 h-1.5 w-1.5 rounded-full',
-                  member.is_active ? 'bg-teal-deep' : 'bg-navy-light/30'
-                )}
-              />
-              {member.is_active ? 'Activo' : 'Inactivo'}
-            </span>
+            {/* "Activo" es el default (solo se listan activos); el tag solo
+                aparece para los pocos perfiles inactivos (fallecidos/se fueron). */}
+            {!member.is_active && (
+              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-body bg-surface-low text-navy-light/60">
+                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-navy-light/30" />
+                Inactivo
+              </span>
+            )}
             {member.is_donor && (
               <span
                 className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body"

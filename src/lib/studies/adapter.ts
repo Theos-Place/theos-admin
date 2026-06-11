@@ -39,6 +39,7 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
     req_server: db.requires_server,
     req_attendee: db.requires_attendance,
     is_archived: !db.is_active,
+    is_curricular: db.is_curricular ?? true,
   }
 }
 
@@ -100,7 +101,7 @@ const AVAIL_MAP: Record<DbLeaderEnriched['availability_status'], StudyLeader['av
 // evitar O(leaders × groups) — ver useStudies.
 export function toDomainStudyLeader(db: DbLeaderEnriched, ledGroups: StudyGroup[]): StudyLeader {
   const memberName = db.member ? `${db.member.first_name} ${db.member.last_name}`.trim() : ''
-  const activeGroups = ledGroups.filter((g) => g.status === 'open' || g.status === 'in_progress')
+  const activeGroups = ledGroups.filter((g) => g.status === 'en_matricula' || g.status === 'en_curso')
   const currentParticipants = activeGroups.reduce(
     (sum, g) => sum + g.participants.filter((p) => p.status === 'enrolled').length, 0,
   )

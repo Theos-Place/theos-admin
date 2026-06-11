@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
+import { GroupStatusBadge, NoLeaderBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
@@ -269,6 +269,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex items-center gap-2 flex-wrap">
               <StudyTypeBadge code={group.study_type_id} name={studyType?.name} size="md" />
               <GroupStatusBadge status={group.status} />
+              {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
             </div>
             <div className="flex flex-wrap gap-4 text-sm text-navy-light/60 font-body">
               <span>Dirigente: <strong className="text-navy">{group.leader_name ?? 'Sin asignar'}</strong></span>
@@ -278,17 +279,17 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <span>Zona: <strong className="text-navy">{sedeLabel(group.zone)}</strong></span>
               <span>Horario: <strong className="text-navy">{group.schedule_days.join('/')} {group.schedule_time}</strong></span>
             </div>
-            {studyType && group.current_week > 0 && group.status !== 'finished' && (
+            {studyType && group.current_week > 0 && group.status !== 'finalizado' && (
               <WeekProgressBar current={group.current_week} total={studyType.weeks} className="w-48" />
             )}
           </div>
           <div className="flex gap-2">
-            {group.status === 'in_progress' && (
+            {group.status === 'en_curso' && (
               <Link
                 href={`/estudios/grupos/${id}/cierre`}
                 className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
               >
-                Cerrar grupo
+                Cierre de estudio
               </Link>
             )}
             <Link
@@ -366,7 +367,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      {group.status === 'finished' ? (
+                      {group.status === 'finalizado' ? (
                         <span className={cn(
                           'rounded-md px-2 py-0.5 text-[10px] font-medium',
                           p.status === 'withdrawn' ? 'bg-coral/15 text-coral' : 'bg-teal-soft/30 text-teal-deep'
@@ -394,7 +395,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     )}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        {group.status !== 'finished' && (
+                        {group.status !== 'finalizado' && (
                           <button
                             className="rounded-lg px-2 py-1 text-[10px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
                           >
@@ -430,7 +431,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   Ver grupo de WhatsApp
                 </a>
               </div>
-            ) : group.status === 'finished' ? (
+            ) : group.status === 'finalizado' ? (
               <p className="text-sm text-navy-light/40 font-body">
                 Grupo finalizado — sin grupo de WhatsApp.
               </p>
@@ -547,7 +548,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               { label: 'Capacidad máxima', value: `${group.max_capacity} personas` },
               { label: 'Fecha de inicio', value: group.start_date },
               { label: 'Fecha de cierre', value: group.end_date ?? '—' },
-              { label: 'Semana actual', value: group.status === 'finished' ? 'N/A' : `${group.current_week} de ${studyType?.weeks ?? '?'}` },
+              { label: 'Semana actual', value: group.status === 'finalizado' ? 'N/A' : `${group.current_week} de ${studyType?.weeks ?? '?'}` },
               { label: 'Dirigente', value: group.leader_name ?? 'Sin asignar' },
               { label: 'Co-dirigente', value: group.co_leader_name ?? '—' },
             ].map(({ label, value }) => (
@@ -564,7 +565,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             ))}
           </div>
 
-          {group.status !== 'finished' && (
+          {group.status !== 'finalizado' && (
             <div className="flex gap-2 pt-2 border-t border-[var(--outline-variant)]">
               <button
                 className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"

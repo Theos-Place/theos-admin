@@ -10,14 +10,12 @@ import type { StudyRequest } from '@/types/study'
 
 const TABS = [
   { key: 'relocation', label: 'Reubicaciones' },
-  { key: 'join_group', label: 'Unirse a grupo' },
-  { key: 'new_group', label: 'Nuevo grupo en zona' },
+  { key: 'study_interest', label: 'Intereses de estudio' },
 ]
 
 const TYPE_LABEL: Record<string, string> = {
   relocation: 'Reubicación',
-  join_group: 'Unirse a grupo',
-  new_group: 'Grupo nuevo en zona',
+  study_interest: 'Interés en estudio',
 }
 
 function initials(name: string) {
@@ -137,8 +135,8 @@ export default function SolicitudesPage() {
           <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
             Solicitudes de estudios
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
-            Reubicaciones, ingresos a grupos y propuestas de grupos nuevos
+          <p className="mt-1 text-sm text-white/70 font-body">
+            Reubicaciones e intereses de estudio de los miembros
           </p>
         </div>
         <button
@@ -156,6 +154,7 @@ export default function SolicitudesPage() {
         tabs={TABS}
         typeLabel={TYPE_LABEL}
         endpointBase="/api/studies/requests"
+        assigneesUrl="/api/studies/requests/assignees"
         onUpdated={updated => setRequests(prev => prev.map(r => (r.id === updated.id ? updated : r)))}
         renderDetails={r => (
           <>
@@ -172,7 +171,7 @@ export default function SolicitudesPage() {
                 {r.plan_name ?? 'Plan por definir'}
               </span>
             )}
-            {r.existing_group_name && r.request_type === 'join_group' && (
+            {r.existing_group_name && r.request_type === 'study_interest' && (
               <span className="font-medium text-navy">{r.existing_group_name}</span>
             )}
             {r.proposed_location && (

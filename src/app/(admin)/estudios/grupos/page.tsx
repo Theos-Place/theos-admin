@@ -6,7 +6,7 @@ import type { GroupStatus, StudyGroup, StudyType } from '@/data/mock-studies'
 import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
+import { GroupStatusBadge, NoLeaderBadge } from '@/components/studies/GroupStatusBadge'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
@@ -15,22 +15,18 @@ import { cn } from '@/lib/utils'
 import { Plus, BookOpen } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 
-const ALL_STATUSES: GroupStatus[] = ['pending_leader', 'pending_opening', 'open', 'in_progress', 'finished']
+const ALL_STATUSES: GroupStatus[] = ['en_matricula', 'en_curso', 'finalizado']
 const STATUS_LABELS: Record<GroupStatus, string> = {
-  pending_leader: 'Sin dirigente',
-  pending_opening: 'Pendiente apertura',
-  open: 'Abierto',
-  in_progress: 'En curso',
-  finished: 'Finalizado',
+  en_matricula: 'En matrícula',
+  en_curso: 'En curso',
+  finalizado: 'Finalizado',
 }
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
 const STATUS_EXPORT: Record<GroupStatus, string> = {
-  pending_leader: 'Sin dirigente',
-  pending_opening: 'Pendiente apertura',
-  open: 'Abierto',
-  in_progress: 'En curso',
-  finished: 'Finalizado',
+  en_matricula: 'En matrícula',
+  en_curso: 'En curso',
+  finalizado: 'Finalizado',
 }
 
 /** Normaliza para búsqueda insensible a mayúsculas y tildes. */
@@ -105,7 +101,7 @@ export default function GruposPage() {
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
-  const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>(['open', 'in_progress', 'pending_leader', 'pending_opening'])
+  const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>(['en_matricula', 'en_curso'])
   const [selectedType, setSelectedType] = useState('')
   const [selectedZone, setSelectedZone] = useState('')
   const [selectedDay, setSelectedDay] = useState('')
@@ -363,7 +359,14 @@ export default function GruposPage() {
                         case 'max_capacity':
                           return <td key="max_capacity" className="px-4 py-3 text-sm text-navy font-body">{group.max_capacity}</td>
                         case 'status':
-                          return <td key="status" className="px-4 py-3"><GroupStatusBadge status={group.status} /></td>
+                          return (
+                            <td key="status" className="px-4 py-3">
+                              <span className="inline-flex items-center gap-1.5 flex-wrap">
+                                <GroupStatusBadge status={group.status} />
+                                {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
+                              </span>
+                            </td>
+                          )
                         case 'start_date':
                           return <td key="start_date" className="px-4 py-3 text-[12px] text-navy-light/70 font-body">{group.start_date ? new Date(group.start_date).toLocaleDateString('es-CR') : '—'}</td>
                         case 'end_date':
@@ -404,6 +407,7 @@ export default function GruposPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <StudyTypeBadge code={group.study_type_id} size="sm" />
                       <GroupStatusBadge status={group.status} />
+                      {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
                     </div>
                     <p className="text-sm text-navy font-body truncate">
                       {group.leader_name ?? <span className="text-amber-600">Sin dirigente</span>}

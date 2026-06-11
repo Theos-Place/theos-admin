@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getStudyDemand } from '@/lib/supabase/queries/studies'
-import { getCurrentBlock, getNextBlock } from '@/lib/studies/blocks'
-
-const GROUP_SIZE = 12
+import { getCurrentBlock, getNextBlock, suggestedGroups } from '@/lib/studies/blocks'
 
 // GET /api/studies/analysis?study_code=XX — demanda por zona de un estudio,
 // con contexto del bloque actual y el siguiente (para el que se calcula).
@@ -23,7 +21,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ...demand,
       totalDemand,
-      suggestedGroups: Math.ceil(totalDemand / GROUP_SIZE),
+      suggestedGroups: suggestedGroups(totalDemand),
       currentBlock: { block: current.block, label: current.label },
       nextBlock: {
         block: next.block,

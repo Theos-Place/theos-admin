@@ -13,10 +13,8 @@ import { ChevronLeft, CheckCircle } from 'lucide-react'
 import type { GroupStatus } from '@/types/study'
 
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
-  { value: 'pending_leader',  label: 'Sin dirigente' },
-  { value: 'pending_opening', label: 'Pendiente apertura' },
-  { value: 'open',            label: 'Abierto (matriculable)' },
-  { value: 'in_progress',     label: 'En curso' },
+  { value: 'en_matricula', label: 'En matrícula' },
+  { value: 'en_curso',     label: 'En curso' },
 ]
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -80,9 +78,9 @@ export default function NuevoGrupoPage() {
   const leaderData = dirigentes.find(d => d.member_id === selectedLeader)
   const coLeaderData = dirigentes.find(d => d.member_id === selectedCoLeader)
 
-  // Estado inicial: el usuario puede elegirlo; si no toca el selector se deriva
-  // del dirigente (con dirigente → pendiente apertura, sin él → sin dirigente).
-  const initialStatus: GroupStatus = statusOverride || (leaderData ? 'pending_opening' : 'pending_leader')
+  // Estado inicial: el usuario puede elegirlo; por defecto En matrícula.
+  // "Sin dirigente" ya no es estado: es un flag derivado de leader_id null.
+  const initialStatus: GroupStatus = statusOverride || 'en_matricula'
 
   async function handleCreate() {
     if (!studyType) return

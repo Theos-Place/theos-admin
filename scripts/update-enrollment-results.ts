@@ -61,7 +61,7 @@ async function main() {
   const toComplete: string[] = [], toDrop: string[] = []
   for (const e of enrs) {
     const gstatus = e.study_groups?.status
-    if (gstatus !== 'finished') { skipNotFinished++; continue }
+    if (gstatus !== 'finalizado') { skipNotFinished++; continue }
     const code = e.study_groups?.plan?.code
     const ind = e.member?.external_id
     if (!code) continue

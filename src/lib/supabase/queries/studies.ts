@@ -27,6 +27,8 @@ export type DbStudyPlan = {
   difficulty: string | null
   commitments: string | null
   mentor_id: string | null
+  /** FALSE = charla introductoria (ej. BUS), fuera de análisis/matrícula/plan. */
+  is_curricular: boolean
 }
 
 export type DbGroupEnriched = {
@@ -44,7 +46,7 @@ export type DbGroupEnriched = {
   max_students: number | null
   starts_at: string | null
   ends_at: string | null
-  status: 'pending_leader' | 'pending_opening' | 'open' | 'in_progress' | 'finished'
+  status: 'en_matricula' | 'en_curso' | 'finalizado'
   current_week: number
   whatsapp_group_url: string | null
   enrollments: Array<{
@@ -186,11 +188,11 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   // Plan objetivo: etapa, semanas y prerequisito.
   const { data: planRow, error: pErr } = await supabase
     .from('study_plans')
-    .select('code, name, level, duration_weeks, prerequisite_code')
+    .select('id, code, name, level, duration_weeks, prerequisite_code, is_curricular')
     .eq('code', studyCode)
     .maybeSingle()
   if (pErr) throw pErr
-  const plan = planRow as { code: string; name: string; level: string; duration_weeks: number | null; prerequisite_code: string | null } | null
+  const plan = planRow as { id: string; code: string; name: string; level: string; duration_weeks: number | null; prerequisite_code: string | null; is_curricular: boolean } | null
   if (!plan) throw new Error(`Plan ${studyCode} no encontrado`)
   const prereq = plan.prerequisite_code
 
@@ -210,9 +212,107 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     requirements,
   }
 
-  // Sin prerequisito (Niveles, campañas) este análisis no aplica.
+  const emptyResult = { rows: [] as StudyDemandRow[], totalGraduating: 0, totalEligible: 0, studyInfo }
+
+  // Charlas introductorias (ej. BUS) no participan del análisis.
+  if (!plan.is_curricular) return emptyResult
+
+  // Descendientes del estudio en la cadena de prerequisitos: quien completó
+  // cualquiera de ellos (o el estudio mismo) ya pasó por acá y NO es demanda.
+  // Ej: completó PAN → fuera de DIS1, DIS2, DIS3 y CTBD.
+  const { data: allPlanRows, error: apErr } = await supabase
+    .from('study_plans')
+    .select('code, prerequisite_code')
+  if (apErr) throw apErr
+  const childrenOf = new Map<string, string[]>()
+  for (const r of (allPlanRows ?? []) as Array<{ code: string | null; prerequisite_code: string | null }>) {
+    if (!r.code || !r.prerequisite_code) continue
+    const arr = childrenOf.get(r.prerequisite_code) ?? []
+    arr.push(r.code)
+    childrenOf.set(r.prerequisite_code, arr)
+  }
+  const descendants = new Set<string>()
+  const stack = [plan.code]
+  while (stack.length > 0) {
+    for (const child of childrenOf.get(stack.pop()!) ?? []) {
+      if (!descendants.has(child)) { descendants.add(child); stack.push(child) }
+    }
+  }
+
+  // Compromisos: criterio único del sistema — asistencia = ≥1 check-in de
+  // charla en cada uno de los últimos ATTENDANCE_MONTHS meses completos.
+  const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
+  const [attendanceIds, serverIds] = await Promise.all([
+    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
+    requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
+  ])
+  const attendanceSet = new Set(attendanceIds)
+  const serverSet = new Set(serverIds)
+
+  // Sin prerequisito en cadena (ej. estudios por invitación CDEB/CDC): la
+  // demanda se estima por los compromisos de la etapa (asistencia + donador
+  // + servidor según corresponda), excluyendo a quien ya lo cursa o completó.
   if (!prereq) {
-    return { rows: [], totalGraduating: 0, totalEligible: 0, studyInfo }
+    if (requirements.length === 0) return emptyResult // campañas: sin criterios
+
+    let candidateIds = requirements.includes('asistencia') ? attendanceIds : serverIds
+    if (requirements.includes('servidor')) candidateIds = candidateIds.filter(id => serverSet.has(id))
+
+    // Ya inscritos o con el estudio completado (vía grupo o plan directo).
+    const [directRes, viaGroupRes] = await Promise.all([
+      supabase
+        .from('study_enrollments')
+        .select('member_id')
+        .eq('plan_id', plan.id)
+        .in('status', ['enrolled', 'completed']),
+      supabase
+        .from('study_enrollments')
+        .select('member_id, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)')
+        .eq('group.plan_id', plan.id)
+        .in('status', ['enrolled', 'completed']),
+    ])
+    if (directRes.error) throw directRes.error
+    if (viaGroupRes.error) throw viaGroupRes.error
+    const excluded = new Set([
+      ...((directRes.data ?? []) as Array<{ member_id: string }>).map(r => r.member_id),
+      ...((viaGroupRes.data ?? []) as Array<{ member_id: string }>).map(r => r.member_id),
+    ])
+
+    const zonesFallback = new Map<string, { graduating: string[]; eligible: string[] }>()
+    const pending = candidateIds.filter(id => !excluded.has(id))
+    for (let i = 0; i < pending.length; i += 400) {
+      const { data, error } = await supabase
+        .from('members')
+        .select('id, is_donor, is_active, province, sede:sedes(code)')
+        .in('id', pending.slice(i, i + 400))
+      if (error) throw error
+      for (const m of (data ?? []) as unknown as Array<{ id: string; is_donor: boolean; is_active: boolean; province: string | null; sede: { code: string } | null }>) {
+        if (!m.is_active) continue
+        if (requirements.includes('donador') && !m.is_donor) continue
+        const zoneKey = m.sede?.code ?? m.province ?? 'Sin zona'
+        const zone = zonesFallback.get(zoneKey) ?? { graduating: [], eligible: [] }
+        zone.eligible.push(m.id)
+        zonesFallback.set(zoneKey, zone)
+      }
+    }
+
+    const fallbackRows: StudyDemandRow[] = Array.from(zonesFallback.entries())
+      .map(([zone, v]) => ({
+        zone,
+        graduating: 0,
+        eligible: v.eligible.length,
+        graduating_members: [],
+        eligible_members: v.eligible,
+      }))
+      .filter(r => r.eligible > 0)
+      .sort((a, b) => b.eligible - a.eligible)
+
+    return {
+      rows: fallbackRows,
+      totalGraduating: 0,
+      totalEligible: fallbackRows.reduce((s, r) => s + r.eligible, 0),
+      studyInfo,
+    }
   }
 
   // Semanas totales del prerequisito, para el umbral de avance de Categoría A.
@@ -252,16 +352,6 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     if (batch.length < 1000) break
   }
 
-  // Compromisos: criterio único del sistema — asistencia = ≥1 check-in de
-  // charla en cada uno de los últimos ATTENDANCE_MONTHS meses completos.
-  const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
-  const [attendanceIds, serverIds] = await Promise.all([
-    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
-    requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
-  ])
-  const attendanceSet = new Set(attendanceIds)
-  const serverSet = new Set(serverIds)
-
   type MemberState = {
     zone: string
     isDonor: boolean
@@ -269,6 +359,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     completedPrereq: boolean
     enrolledTarget: boolean
     completedTarget: boolean
+    completedDescendant: boolean // completó un estudio POSTERIOR en la cadena
     prereqStartsAt: string | null // inicio del grupo de su inscripción ACTIVA en el prereq
   }
   const byMember = new Map<string, MemberState>()
@@ -282,6 +373,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
       completedPrereq: false,
       enrolledTarget: false,
       completedTarget: false,
+      completedDescendant: false,
       prereqStartsAt: null,
     }
     if (code === prereq) {
@@ -292,6 +384,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
       if (r.status === 'enrolled') entry.enrolledTarget = true
       if (r.status === 'completed') entry.completedTarget = true
     }
+    if (descendants.has(code) && r.status === 'completed') entry.completedDescendant = true
     byMember.set(r.member_id, entry)
   }
 
@@ -307,6 +400,8 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
 
   for (const [memberId, m] of byMember) {
     if (!m.isActive || m.enrolledTarget || m.completedTarget) continue
+    // Completó un estudio posterior de la cadena → ya pasó por acá, no es demanda.
+    if (m.completedDescendant) continue
     if (!meetsCommitments(memberId, m)) continue
 
     // Categoría A: cursando el prereq con avance suficiente
@@ -439,6 +534,7 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
       .from('study_plans')
       .select('id, code, name, level, prerequisite_code')
       .eq('is_active', true)
+      .eq('is_curricular', true)
       .order('code'),
   ])
 
@@ -478,12 +574,35 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const plans = (plansRes.data ?? []) as Array<{
     id: string; code: string | null; name: string; level: string; prerequisite_code: string | null
   }>
+  // Descendientes por estudio: quien completó algo POSTERIOR en la cadena ya
+  // pasó por ese estudio (misma regla que el análisis de demanda).
+  const childrenOf = new Map<string, string[]>()
+  for (const p of plans) {
+    if (!p.code || !p.prerequisite_code) continue
+    const arr = childrenOf.get(p.prerequisite_code) ?? []
+    arr.push(p.code)
+    childrenOf.set(p.prerequisite_code, arr)
+  }
+  const completedDescendantOf = (code: string): boolean => {
+    const stack = [code]
+    const seen = new Set<string>()
+    while (stack.length > 0) {
+      for (const child of childrenOf.get(stack.pop()!) ?? []) {
+        if (seen.has(child)) continue
+        if (completed.has(child)) return true
+        seen.add(child)
+        stack.push(child)
+      }
+    }
+    return false
+  }
   const eligible_plans = plans
     .filter(p => p.code)
     .map(p => ({ ...p, stage: ELIG_LEVEL_TO_STAGE[p.level] ?? p.level }))
     .filter(p =>
       !completed.has(p.code!) &&
       !enrolledCodes.has(p.code!) &&
+      !completedDescendantOf(p.code!) &&
       (!p.prerequisite_code || completed.has(p.prerequisite_code)) &&
       meetsStage(p.stage),
     )
@@ -716,14 +835,25 @@ export type CloseResult = {
   member_id: string
   status_result: 'aprobado' | 'reprobado' | 'retirado'
   grade?: number | null
+  /** Justificación obligatoria cuando status_result === 'reprobado'. */
+  fail_reason?: string | null
+  /** Recomendaciones opcionales del cierre (tabla member_recommendations). */
+  recommendations?: {
+    oracion?: boolean
+    servicio?: boolean
+    dirigente?: boolean
+    justification?: string | null
+  } | null
 }
 
 /**
- * Cierra un grupo: finaliza cada matrícula según su resultado y marca el grupo
- * como 'finished'. aprobado/reprobado → 'completed' (la nota distingue el
- * resultado; se guarda la etiqueta en notes). retirado → 'dropped'.
+ * Cierre de estudio: finaliza cada matrícula según su resultado y marca el
+ * grupo como 'finalizado'. aprobado/reprobado → 'completed' (la nota distingue
+ * el resultado; en notes va la etiqueta y, para reprobados, la justificación).
+ * retirado → 'dropped'. Las recomendaciones se insertan en
+ * member_recommendations con recommended_by = quien cierra.
  */
-export async function closeGroup(groupId: string, results: CloseResult[]): Promise<void> {
+export async function closeGroup(groupId: string, results: CloseResult[], closedBy: string | null = null): Promise<void> {
   const supabase = createAdminClient()
   const now = new Date().toISOString()
 
@@ -742,7 +872,9 @@ export async function closeGroup(groupId: string, results: CloseResult[]): Promi
           status: 'completed',
           completed_at: now,
           grade: r.grade ?? null,
-          notes: r.status_result,
+          notes: r.status_result === 'reprobado' && r.fail_reason
+            ? `reprobado: ${r.fail_reason}`
+            : r.status_result,
         })
         .eq('group_id', groupId)
         .eq('member_id', r.member_id)
@@ -750,11 +882,69 @@ export async function closeGroup(groupId: string, results: CloseResult[]): Promi
     }
   }
 
+  // Recomendaciones (best-effort por fila: una recomendación inválida no
+  // debe impedir el cierre del grupo).
+  const recRows = results.flatMap(r => {
+    const rec = r.recommendations
+    if (!rec) return []
+    return (['oracion', 'servicio', 'dirigente'] as const)
+      .filter(k => rec[k])
+      .map(k => ({
+        member_id: r.member_id,
+        recommended_for: k,
+        justification: rec.justification?.trim() || null,
+        recommended_by: closedBy,
+        study_group_id: groupId,
+      }))
+  })
+  if (recRows.length > 0) {
+    const { error: recErr } = await supabase.from('member_recommendations').insert(recRows)
+    if (recErr) console.warn('closeGroup: recomendaciones fallaron:', recErr.message)
+  }
+
   const { error: gErr } = await supabase
     .from('study_groups')
-    .update({ status: 'finished' })
+    .update({ status: 'finalizado' })
     .eq('id', groupId)
   if (gErr) throw gErr
+}
+
+export type MemberRecommendation = {
+  id: string
+  recommended_for: 'oracion' | 'servicio' | 'dirigente'
+  justification: string | null
+  recommended_by_name: string | null
+  group_name: string | null
+  created_at: string
+}
+
+/** Recomendaciones de un miembro (cierres de estudio). Solo para roles de
+ *  estudios/admin — el guard vive en la ruta API. */
+export async function getMemberRecommendations(memberId: string): Promise<MemberRecommendation[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('member_recommendations')
+    .select('id, recommended_for, justification, created_at, recommender:members!member_recommendations_recommended_by_fkey(first_name, last_name), group:study_groups(name)')
+    .eq('member_id', memberId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return ((data ?? []) as unknown as Array<{
+    id: string
+    recommended_for: 'oracion' | 'servicio' | 'dirigente'
+    justification: string | null
+    created_at: string
+    recommender: { first_name: string | null; last_name: string | null } | null
+    group: { name: string | null } | null
+  }>).map(r => ({
+    id: r.id,
+    recommended_for: r.recommended_for,
+    justification: r.justification,
+    recommended_by_name: r.recommender
+      ? [r.recommender.first_name, r.recommender.last_name].filter(Boolean).join(' ') || null
+      : null,
+    group_name: r.group?.name ?? null,
+    created_at: r.created_at,
+  }))
 }
 
 // Inscripciones

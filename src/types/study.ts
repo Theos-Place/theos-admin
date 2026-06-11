@@ -22,14 +22,16 @@ export type StudyType = {
   req_server: boolean
   req_attendee: boolean
   is_archived: boolean
+  /** FALSE = charla introductoria (ej. BUS); fuera de análisis/matrícula/plan. */
+  is_curricular?: boolean
 }
 
+// 'en_matricula' reemplaza a open/pending_opening; "sin dirigente" ya no es
+// estado guardado sino flag derivado (leader_id IS NULL). Migración 052.
 export type GroupStatus =
-  | 'pending_leader'
-  | 'pending_opening'
-  | 'open'
-  | 'in_progress'
-  | 'finished'
+  | 'en_matricula'
+  | 'en_curso'
+  | 'finalizado'
 
 export type GroupParticipant = {
   member_id: string
@@ -115,7 +117,8 @@ export type RelocationRequest = {
 
 // ── Solicitudes de estudios (tabla study_requests, migración 041) ───────────
 
-export type StudyRequestType = 'new_group' | 'join_group' | 'relocation'
+// 'study_interest' consolida los viejos 'new_group'/'join_group' (migración 050).
+export type StudyRequestType = 'relocation' | 'study_interest'
 export type StudyRequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
 
 export type StudyRequestHistoryEntry = {

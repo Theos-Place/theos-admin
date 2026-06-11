@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { updateStudyRequestStatus } from '@/lib/supabase/queries/study-requests'
+import { updateStudyRequestStatus, assignStudyRequest } from '@/lib/supabase/queries/study-requests'
 
 const ACTIONS: Record<string, 'in_review' | 'resolved' | 'rejected'> = {
   take: 'in_review',
@@ -22,9 +22,19 @@ export async function PATCH(
 
     const { id } = await params
     const body = await req.json()
+
+    // assign: pasa a in_review con reviewed_by = el coordinador ASIGNADO.
+    if (body?.action === 'assign') {
+      if (typeof body?.assignee_member_id !== 'string' || !body.assignee_member_id) {
+        return NextResponse.json({ error: 'Se requiere assignee_member_id' }, { status: 400 })
+      }
+      const updated = await assignStudyRequest(id, body.assignee_member_id, auth.ctx.memberId)
+      return NextResponse.json(updated)
+    }
+
     const status = ACTIONS[body?.action as string]
     if (!status) {
-      return NextResponse.json({ error: 'action debe ser take, resolve o reject' }, { status: 400 })
+      return NextResponse.json({ error: 'action debe ser take, assign, resolve o reject' }, { status: 400 })
     }
 
     const updated = await updateStudyRequestStatus(

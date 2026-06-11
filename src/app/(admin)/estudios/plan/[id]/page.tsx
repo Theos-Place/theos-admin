@@ -361,8 +361,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <option value="all">Todos los estados</option>
             <option value="open">Abierto</option>
             <option value="in_progress">En curso</option>
-            <option value="pending_leader">Pendiente dirigente</option>
-            <option value="pending_opening">Pendiente apertura</option>
+            <option value="en_matricula">En matrícula</option>
             <option value="finished">Finalizado</option>
           </select>
 
