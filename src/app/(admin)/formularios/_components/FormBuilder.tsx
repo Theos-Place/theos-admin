@@ -9,7 +9,7 @@ import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap } from 'lucide-react'
+import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 
 type FormStatus = 'draft' | 'active'
@@ -103,6 +103,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const [showLogicPanel, setShowLogicPanel] = useState(false)
   const [saved, setSaved]             = useState(false)
   const [saving, setSaving]           = useState(false)
+  const [nameError, setNameError]     = useState(false)
 
   // Edición: carga el formulario de la BD (async).
   useEffect(() => {
@@ -150,6 +151,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
   async function handleSave(nextStatus?: FormStatus) {
     if (saving) return
+    if (!name.trim()) {
+      setNameError(true)
+      return
+    }
     setSaving(true)
     const isActive = (nextStatus ?? status) === 'active'
     const payload = { name, description, category, is_active: isActive, fields }
@@ -194,12 +199,25 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         <span className="text-navy-light/40">|</span>
 
         {/* Editable name */}
-        <input
-          className="flex-1 basis-full md:basis-auto bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/50 font-display tracking-[-0.01em]"
-          placeholder="Nombre del formulario"
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
+        <div className="flex-1 basis-full md:basis-auto min-w-0">
+          <input
+            className={cn(
+              'w-full bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/50 font-display tracking-[-0.01em]',
+              nameError && 'border-b border-coral'
+            )}
+            placeholder="Nombre del formulario"
+            aria-label="Nombre del formulario"
+            aria-invalid={nameError}
+            aria-describedby={nameError ? 'form-name-error' : undefined}
+            value={name}
+            onChange={e => { setName(e.target.value); if (nameError && e.target.value.trim()) setNameError(false) }}
+          />
+          {nameError && (
+            <p id="form-name-error" className="text-[11px] text-coral font-body mt-0.5">
+              Escribí un nombre antes de guardar
+            </p>
+          )}
+        </div>
 
         {/* Category */}
         <select
@@ -249,14 +267,18 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               saved ? 'bg-teal-deep' : 'bg-coral hover:bg-coral-deep'
             )}
           >
-            {saved ? <Check size={12} /> : <Save size={12} />}
+            {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <Check size={12} /> : <Save size={12} />}
             {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar'}
           </button>
           {status === 'draft' && (
             <button
               type="button"
-              onClick={() => { setStatus('active'); handleSave('active') }}
-              className="flex items-center gap-1.5 rounded-full bg-navy px-3 py-1.5 text-[12px] text-white hover:bg-navy-light transition-colors font-body"
+              onClick={() => {
+                if (!name.trim()) { setNameError(true); return }
+                setStatus('active'); handleSave('active')
+              }}
+              disabled={saving}
+              className="flex items-center gap-1.5 rounded-full bg-navy px-3 py-1.5 text-[12px] text-white hover:bg-navy-light transition-colors disabled:opacity-50 font-body"
             >
               <Send size={12} />
               Publicar

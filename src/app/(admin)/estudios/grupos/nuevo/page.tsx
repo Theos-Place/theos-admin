@@ -343,7 +343,15 @@ export default function NuevoGrupoPage() {
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex flex-col items-end gap-1.5 pt-2">
+            {(!step1.study_type_id || !step1.zone) && (
+              <p className="text-[12px] text-navy-light/70 font-body" role="status">
+                Para continuar, seleccioná {[
+                  !step1.study_type_id && 'el tipo de estudio',
+                  !step1.zone && 'la zona',
+                ].filter(Boolean).join(' y ')}.
+              </p>
+            )}
             <button
               onClick={() => setStep(2)}
               disabled={!step1.study_type_id || !step1.zone}
@@ -417,6 +425,13 @@ export default function NuevoGrupoPage() {
             </label>
           )}
 
+          {!pendingLeader && (!selectedLeader || !confirmed) && (
+            <p className="text-[12px] text-navy-light/70 text-right font-body" role="status">
+              Para continuar, {!selectedLeader
+                ? 'seleccioná un dirigente o marcá la opción de dejarlo pendiente'
+                : 'confirmá que el dirigente fue contactado y está disponible'}.
+            </p>
+          )}
           <div className="flex justify-between pt-2">
             <button
               onClick={() => setStep(1)}

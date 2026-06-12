@@ -1,22 +1,16 @@
-import { Search, Check, X, User } from 'lucide-react'
-import { type Member } from '@/data/mock-members'
-import { cn } from '@/lib/utils'
-
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+import { Check, X, User } from 'lucide-react'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 
 interface StepPersonSearchProps {
-  query: string
-  onQueryChange: (q: string) => void
-  searchResults: Member[]
-  selected: Member | null
-  onSelect: (m: Member) => void
+  /** IDs de miembros ya contratados (se excluyen de los resultados). */
+  excludeIds: string[]
+  selected: MemberHit | null
+  onSelect: (m: MemberHit) => void
   onClear: () => void
 }
 
 export function StepPersonSearch({
-  query,
-  onQueryChange,
-  searchResults,
+  excludeIds,
   selected,
   onSelect,
   onClear,
@@ -47,11 +41,13 @@ export function StepPersonSearch({
               <p className="truncate text-sm font-semibold text-navy font-display">
                 {selected.first_name} {selected.last_name}
               </p>
-              <p className="truncate text-[12px] text-navy-light/50 font-body">
-                {selected.email}
-              </p>
+              {selected.email && (
+                <p className="truncate text-[12px] text-navy-light/60 font-body">
+                  {selected.email}
+                </p>
+              )}
               {selected.cedula && (
-                <p className="text-[11px] text-navy-light/40 font-mono">
+                <p className="text-[11px] text-navy-light/60 font-mono">
                   {selected.cedula}
                 </p>
               )}
@@ -64,89 +60,32 @@ export function StepPersonSearch({
             <button
               type="button"
               onClick={onClear}
+              aria-label="Quitar miembro seleccionado"
               className="h-7 w-7 rounded-full hover:bg-surface-low flex items-center justify-center transition-colors"
             >
-              <X size={13} className="text-navy-light/40" />
+              <X size={13} className="text-navy-light/60" />
             </button>
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
-            <input
-              autoFocus
-              className={cn(inputCls, 'pl-9 font-body')}
-              placeholder="Buscar por nombre, email o cédula..."
-              aria-label="Buscar por nombre, email o cédula"
-              value={query}
-              onChange={e => onQueryChange(e.target.value)}
-            />
-          </div>
-
-          {query.trim() !== '' && (
-            <div
-              className="rounded-xl overflow-hidden border border-[var(--outline-variant)]"
-            >
-              {searchResults.length === 0 ? (
-                <div className="px-4 py-6 text-center">
-                  <p className="text-sm text-navy-light/40 font-body">
-                    No se encontraron miembros disponibles.
-                  </p>
-                </div>
-              ) : (
-                searchResults.map((m, idx) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => onSelect(m)}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-low transition-colors border-[var(--outline-variant)]',
-                      idx > 0 && 'border-t'
-                    )}
-                  >
-                    <div className="h-9 w-9 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
-                      <span
-                        className="text-[10px] font-bold text-navy-light/60 font-display"
-                      >
-                        {m.first_name[0]}{m.last_name[0]}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm font-medium text-navy truncate font-body"
-                      >
-                        {m.first_name} {m.last_name}
-                      </p>
-                      <p
-                        className="text-[11px] text-navy-light/50 truncate font-body"
-                      >
-                        {m.email}
-                        {m.cedula && <span className="ml-2 font-mono">{m.cedula}</span>}
-                      </p>
-                    </div>
-                    <span
-                      className="text-[11px] text-navy-light/60 shrink-0 font-body"
-                    >
-                      {m.occupation}
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
-          )}
-
-          {query.trim() === '' && (
+        <MemberCombobox
+          autoFocus
+          excludeIds={excludeIds}
+          placeholder="Buscar por nombre, email o cédula..."
+          onSelect={onSelect}
+          secondaryText={m => [m.email, m.cedula].filter(Boolean).join(' · ') || null}
+          metaText={m => m.occupation ?? null}
+          emptyState={
             <div className="flex flex-col items-center gap-2 py-8">
               <div className="h-12 w-12 rounded-full bg-navy/5 flex items-center justify-center">
                 <User size={20} className="text-navy-light/60" />
               </div>
-              <p className="text-sm text-navy-light/40 font-body">
+              <p className="text-sm text-navy-light/60 font-body">
                 Escribí el nombre o cédula del miembro
               </p>
             </div>
-          )}
-        </div>
+          }
+        />
       )}
     </div>
   )

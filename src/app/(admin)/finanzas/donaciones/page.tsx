@@ -3,21 +3,21 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { useFinance } from '@/hooks/useFinance'
 import { TOAST_MS } from '@/lib/constants'
 
-type MemberLite = { id: string; first_name: string; last_name: string; cedula: string | null }
-
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export default function DonacionesPage() {
-  const { donations: MOCK_DONATIONS, refetch } = useFinance()
+  const { donations: MOCK_DONATIONS, error, refetch } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -25,27 +25,11 @@ export default function DonacionesPage() {
   const [search, setSearch] = useState('')
   const [showUnidentifiedModal, setShowUnidentifiedModal] = useState(false)
   const [linkingId, setLinkingId] = useState<string | null>(null)
-  const [linkSearch, setLinkSearch] = useState('')
   const [donations, setDonations] = useState(MOCK_DONATIONS)
-  const [linkResults, setLinkResults] = useState<MemberLite[]>([])
   const [toast, setToast] = useState('')
 
   // Sincroniza con los datos reales cuando cargan/refrescan.
   useEffect(() => { setDonations(MOCK_DONATIONS) }, [MOCK_DONATIONS])
-
-  // Búsqueda real de miembros para vincular (debounced).
-  useEffect(() => {
-    const q = linkSearch.trim()
-    if (q.length < 2) { setLinkResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setLinkResults((d.members ?? []) as MemberLite[]) })
-        .catch(() => { if (alive) setLinkResults([]) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [linkSearch])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -87,7 +71,6 @@ export default function DonacionesPage() {
         : d
     ))
     setLinkingId(null)
-    setLinkSearch('')
     try {
       const res = await fetch(`/api/finance/donations/${donationId}`, {
         method: 'PATCH',
@@ -287,7 +270,9 @@ export default function DonacionesPage() {
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={6}>
-                      <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />
+                      {error
+                        ? <ErrorState message={error} onRetry={refetch} />
+                        : <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />}
                     </td>
                   </tr>
                 )}
@@ -329,7 +314,9 @@ export default function DonacionesPage() {
             ))}
             {filtered.length === 0 && (
               <li>
-                <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />
+                {error
+                  ? <ErrorState message={error} onRetry={refetch} />
+                  : <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />}
               </li>
             )}
           </ul>
@@ -339,7 +326,7 @@ export default function DonacionesPage() {
       {/* Unidentified Modal */}
       {showUnidentifiedModal && (
         <Modal
-          onClose={() => { setShowUnidentifiedModal(false); setLinkingId(null); setLinkSearch('') }}
+          onClose={() => { setShowUnidentifiedModal(false); setLinkingId(null) }}
           titleId="donaciones-sin-identificar"
           width={576}
         >
@@ -368,41 +355,12 @@ export default function DonacionesPage() {
                     </button>
                   </div>
                   {linkingId === d.id && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 rounded-xl border px-3 py-2 border-[var(--outline-variant)]">
-                        <Search size={13} className="text-[rgba(22,20,64,0.40)]" />
-                        <input
-                          autoFocus
-                          type="text"
-                          placeholder="Buscar miembro por nombre o cédula..."
-                          aria-label="Buscar miembro por nombre o cédula"
-                          value={linkSearch}
-                          onChange={e => setLinkSearch(e.target.value)}
-                          className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
-                        />
-                      </div>
-                      {linkResults.length > 0 && (
-                        <div className="rounded-xl border overflow-hidden border-[var(--outline-variant)]">
-                          {linkResults.map(m => (
-                            <button
-                              key={m.id}
-                              onClick={() => handleLink(d.id, m.id, `${m.first_name} ${m.last_name}`, m.cedula ?? '')}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-[var(--outline-variant)]"
-                            >
-                              <Check size={13} className="text-[#3DB97A] shrink-0" />
-                              <div>
-                                <p className="text-[13px] font-medium font-body text-navy">
-                                  {m.first_name} {m.last_name}
-                                </p>
-                                <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">
-                                  {m.cedula ?? 'Sin cédula'}
-                                </p>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <MemberCombobox
+                      autoFocus
+                      pageSize={6}
+                      placeholder="Buscar miembro por nombre o cédula..."
+                      onSelect={m => handleLink(d.id, m.id, `${m.first_name} ${m.last_name}`, m.cedula ?? '')}
+                    />
                   )}
                 </div>
               ))}

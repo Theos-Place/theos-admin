@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Search, UserPlus, Check, AlertTriangle, ChevronDown } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { ROLES, type RoleId, type UserAccess } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
@@ -449,26 +450,9 @@ function DarAccesoModal({
   onClose: () => void
   onConfirm: (memberId: string, name: string, email: string, initials: string, roles: RoleId[]) => void
 }) {
-  type MemberLite = { id: string; first_name: string; last_name: string; email: string | null; cedula: string | null }
   const [step, setStep]               = useState<1 | 2>(1)
-  const [query, setQuery]             = useState('')
-  const [selected, setSelected]       = useState<MemberLite | null>(null)
+  const [selected, setSelected]       = useState<MemberHit | null>(null)
   const [selectedRoles, setSelectedRoles] = useState<Set<RoleId>>(new Set())
-  const [results, setResults]         = useState<MemberLite[]>([])
-
-  // Búsqueda real de miembros (debounced), excluyendo los que ya tienen acceso.
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setResults(((d.members ?? []) as MemberLite[]).filter(m => !existingIds.includes(m.id))) })
-        .catch(() => { if (alive) setResults([]) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query, existingIds])
 
   const AVATAR_COLORS2 = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949']
   function aBg(id: string) { return AVATAR_COLORS2[id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS2.length] }
@@ -506,58 +490,28 @@ function DarAccesoModal({
         {/* Step 1 */}
         {step === 1 && (
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 border-outline">
-              <Search size={15} className="text-navy-light/40 shrink-0" />
-              <input
-                autoFocus
-                type="text"
-                placeholder="Buscar por nombre o cédula..."
-                aria-label="Buscar por nombre o cédula"
-                value={query}
-                onChange={e => { setQuery(e.target.value); setSelected(null) }}
-                className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body"
-              />
-            </div>
-
-            {selected && (
+            {selected ? (
               <div className="flex items-center gap-3 rounded-xl p-4 bg-teal/8 border border-teal/25">
                 <div className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: aBg(selected.id), fontFamily: 'var(--font-display)' }}>
                   {selected.first_name[0]}{selected.last_name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-navy font-body">{selected.first_name} {selected.last_name}</p>
-                  <p className="text-[12px] text-navy-light/50 font-body">{selected.email}</p>
+                  <p className="text-[12px] text-navy-light/60 font-body">{selected.email}</p>
                 </div>
-                <Check size={16} className="text-teal-deep shrink-0" />
+                <button onClick={() => setSelected(null)} aria-label="Quitar miembro seleccionado" className="text-[11px] text-coral hover:underline font-body shrink-0">
+                  Cambiar
+                </button>
               </div>
-            )}
-
-            {results.length > 0 && !selected && (
-              <div className="rounded-xl border overflow-hidden border-outline">
-                {results.map(m => {
-                  const hasAccess = existingIds.includes(m.id)
-                  return (
-                    <button
-                      key={m.id}
-                      onClick={() => { setSelected(m); setQuery(`${m.first_name} ${m.last_name}`) }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-outline"
-                    >
-                      <div className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: aBg(m.id), fontFamily: 'var(--font-display)' }}>
-                        {m.first_name[0]}{m.last_name[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-navy font-body">{m.first_name} {m.last_name}</p>
-                        <p className="text-[11px] text-navy-light/50 truncate font-body">{m.cedula} · {m.email}</p>
-                      </div>
-                      {hasAccess && (
-                        <span className="text-[10px] rounded-full px-2 py-0.5 font-medium shrink-0 bg-teal-deep/12 text-teal-deep">
-                          Ya tiene acceso
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+            ) : (
+              <MemberCombobox
+                autoFocus
+                pageSize={6}
+                excludeIds={existingIds}
+                placeholder="Buscar por nombre o cédula..."
+                onSelect={setSelected}
+                secondaryText={m => [m.cedula, m.email].filter(Boolean).join(' · ') || 'Sin cédula'}
+              />
             )}
           </div>
         )}

@@ -8,6 +8,7 @@ import { useOrg } from '@/lib/org'
 import { cn } from '@/lib/utils'
 import { Plus, Users, ChevronRight } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ErrorState } from '@/components/shared/ErrorState'
 
 const STATUS_FILTERS: { key: VacancyStatus | 'all'; label: string }[] = [
   { key: 'all',       label: 'Todas' },
@@ -29,7 +30,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export default function VacantesPage() {
-  const { vacancies: MOCK_VACANCIES, applications: MOCK_APPLICATIONS } = useServers()
+  const { vacancies: MOCK_VACANCIES, applications: MOCK_APPLICATIONS, error, refetch } = useServers()
   const { areas: AREAS } = useOrg()
   const [statusFilter, setStatusFilter] = useState<VacancyStatus | 'all'>('all')
   const [areaFilter, setAreaFilter] = useState('all')
@@ -210,7 +211,9 @@ export default function VacantesPage() {
 
         {filtered.length === 0 && (
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-            <EmptyState icon={Users} title="No hay vacantes con ese filtro" />
+            {error
+              ? <ErrorState message={error} onRetry={refetch} />
+              : <EmptyState icon={Users} title="No hay vacantes con ese filtro" />}
           </div>
         )}
       </div>

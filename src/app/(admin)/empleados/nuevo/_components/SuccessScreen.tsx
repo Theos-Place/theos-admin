@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { Check } from 'lucide-react'
-import { type Member } from '@/data/mock-members'
+import { type MemberHit } from '@/components/shared/MemberCombobox'
 
 interface SuccessScreenProps {
-  selected: Member | null
+  selected: MemberHit | null
 }
 
 export function SuccessScreen({ selected }: SuccessScreenProps) {

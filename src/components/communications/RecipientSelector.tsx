@@ -61,7 +61,9 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
       .then(r => (r.ok ? r.json() : { events: [] }))
       .then(d => { if (alive) setEvents((d.events ?? []) as EventLite[]) })
       .catch(() => { if (alive) setEvents([]) })
-    fetch('/api/studies/groups')
+    // include=enrollments: este selector necesita los member_id de los inscritos
+    // (el listado default ya solo trae conteos).
+    fetch('/api/studies/groups?include=enrollments')
       .then(r => (r.ok ? r.json() : []))
       .then(d => { if (alive && Array.isArray(d)) setGroups(d as GroupLite[]) })
       .catch(() => { if (alive) setGroups([]) })

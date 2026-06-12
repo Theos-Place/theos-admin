@@ -9,6 +9,7 @@ import {
   CreditCard, Smartphone, BookOpen, ArrowRight,
 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_CATALOG } from '@/data/study-catalog'
@@ -399,57 +400,24 @@ function MemberPicker({ selected, onSelect }: {
   selected: { id: string; name: string } | null
   onSelect: (m: { id: string; name: string } | null) => void
 }) {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<{ id: string; first_name: string; last_name: string }[]>([])
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setResults(d.members ?? []) })
-        .catch(() => { if (alive) setResults([]) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query])
-
   return (
-    <div className="flex flex-col gap-1 relative w-64">
+    <div className="flex flex-col gap-1 w-64">
       <label className="text-[10px] uppercase tracking-widest text-white/40 font-display">
         Ver disponibilidad como:
       </label>
       {selected ? (
         <div className="flex items-center justify-between gap-2 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white">
           <span className="truncate font-body">{selected.name}</span>
-          <button onClick={() => { onSelect(null); setQuery('') }} className="text-white/60 hover:text-white shrink-0"><X size={14} /></button>
+          <button onClick={() => onSelect(null)} aria-label="Quitar miembro seleccionado" className="text-white/60 hover:text-white shrink-0"><X size={14} /></button>
         </div>
       ) : (
-        <>
-          <input
-            value={query}
-            onChange={e => { setQuery(e.target.value); setOpen(true) }}
-            onFocus={() => setOpen(true)}
-            placeholder="Buscar miembro…"
-            aria-label="Buscar miembro"
-            className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-coral/50 font-body"
-          />
-          {open && results.length > 0 && (
-            <div className="absolute top-full mt-1 w-full rounded-xl bg-white overflow-hidden z-20 shadow-card-lg">
-              {results.map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => { onSelect({ id: m.id, name: `${m.first_name} ${m.last_name}` }); setOpen(false) }}
-                  className="w-full text-left px-3 py-2 text-sm text-navy hover:bg-surface-low transition-colors font-body"
-                >
-                  {m.first_name} {m.last_name}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
+        <MemberCombobox
+          dropdown
+          variant="onDark"
+          pageSize={6}
+          placeholder="Buscar miembro…"
+          onSelect={m => onSelect({ id: m.id, name: `${m.first_name} ${m.last_name}` })}
+        />
       )}
     </div>
   )

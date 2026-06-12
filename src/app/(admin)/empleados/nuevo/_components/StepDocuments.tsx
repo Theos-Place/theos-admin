@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { AlertTriangle, Check, Upload, X, FileText, CreditCard, ShieldCheck, File } from 'lucide-react'
-import { type Member } from '@/data/mock-members'
+import { type MemberHit } from '@/components/shared/MemberCombobox'
 import { type ContractType } from '@/data/mock-employees'
 import { type PaidPosition } from '@/types/employee'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
@@ -19,7 +19,7 @@ const OPTIONAL_DOCS: { key: string; label: string; icon: React.ElementType }[] =
 ]
 
 interface StepDocumentsProps {
-  selected: Member | null
+  selected: MemberHit | null
   selectedPosition: PaidPosition | null
   contractType: ContractType
   salary: string

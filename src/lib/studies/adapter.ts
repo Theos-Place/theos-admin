@@ -51,18 +51,42 @@ function mapParticipantStatus(
   return 'withdrawn' // dropped | transferred
 }
 
-export function toDomainStudyGroup(db: DbGroupEnriched): StudyGroup {
+/** Entrada del adapter de grupos: detalle (enrollments completos) o item de
+ *  listado (solo enrollment_counts — C5 auditoría 2026-06-11). */
+export type DbGroupForDomain = Omit<DbGroupEnriched, 'enrollments'> & {
+  enrollments?: DbGroupEnriched['enrollments']
+  enrollment_counts?: { enrolled: number; pending: number; withdrawn: number }
+}
+
+// Participantes "fantasma" para el listado: las vistas de lista solo CUENTAN
+// participants por status (nunca leen member_id/nombre ahí); el detalle usa
+// getGroupById, que sí trae los enrollments reales.
+function stubParticipants(counts: { enrolled: number; pending: number; withdrawn: number }): GroupParticipant[] {
+  const stub = (status: GroupParticipant['status'], n: number): GroupParticipant[] =>
+    Array.from({ length: n }, () => ({
+      member_id: '', member_name: '', status, grade: null, attendance_pct: 0,
+    }))
+  return [
+    ...stub('enrolled', counts.enrolled),
+    ...stub('pending', counts.pending),
+    ...stub('withdrawn', counts.withdrawn),
+  ]
+}
+
+export function toDomainStudyGroup(db: DbGroupForDomain): StudyGroup {
   const leaderName = db.leader ? `${db.leader.first_name} ${db.leader.last_name}`.trim() : null
   const coLeaderName = db.co_leader ? `${db.co_leader.first_name} ${db.co_leader.last_name}`.trim() : null
 
-  const participants: GroupParticipant[] = db.enrollments.map((e) => ({
-    member_id: e.member_id,
-    member_name: e.member ? `${e.member.first_name} ${e.member.last_name}`.trim() : '',
-    status: mapParticipantStatus(e.status),
-    grade: e.grade,
-    // attendance_pct se calcula en la vista de detalle (Fase 2b) con study_attendance.
-    attendance_pct: 0,
-  }))
+  const participants: GroupParticipant[] = db.enrollments
+    ? db.enrollments.map((e) => ({
+        member_id: e.member_id,
+        member_name: e.member ? `${e.member.first_name} ${e.member.last_name}`.trim() : '',
+        status: mapParticipantStatus(e.status),
+        grade: e.grade,
+        // attendance_pct se calcula en la vista de detalle (Fase 2b) con study_attendance.
+        attendance_pct: 0,
+      }))
+    : stubParticipants(db.enrollment_counts ?? { enrolled: 0, pending: 0, withdrawn: 0 })
 
   return {
     id: db.id,

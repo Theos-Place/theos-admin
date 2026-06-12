@@ -117,9 +117,21 @@ export default function NuevoEventoPage() {
   }
 
   function canProceed(): boolean {
-    if (step === 1) return form.name.trim().length > 0 && form.event_type !== ''
-    if (step === 2) return form.start_date !== '' && form.start_time !== ''
-    return true
+    return missingForStep().length === 0
+  }
+
+  // Qué falta para poder avanzar (misma condición que deshabilita "Siguiente").
+  function missingForStep(): string[] {
+    const missing: string[] = []
+    if (step === 1) {
+      if (form.name.trim().length === 0) missing.push('el nombre')
+      if (form.event_type === '') missing.push('el tipo de evento')
+    }
+    if (step === 2) {
+      if (form.start_date === '') missing.push('la fecha de inicio')
+      if (form.start_time === '') missing.push('la hora de inicio')
+    }
+    return missing
   }
 
   const selectedTypeObj = useMemo(
@@ -216,6 +228,11 @@ export default function NuevoEventoPage() {
             )}
           </div>
         </div>
+        {step < STEPS_COUNT && !canProceed() && (
+          <p className="text-[12px] text-navy-light/70 mt-1.5 text-right font-body" role="status">
+            Para continuar, completá {missingForStep().join(' y ')}.
+          </p>
+        )}
       </div>
 
       {/* ── Grid: stepper sidebar + contenido ── */}

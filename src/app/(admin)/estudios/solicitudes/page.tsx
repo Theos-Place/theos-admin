@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Lock, Loader2, ArrowRight, MapPin, Clock, BookOpen, Plus, Search, X } from 'lucide-react'
+import { Lock, Loader2, ArrowRight, MapPin, Clock, BookOpen, Plus, X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Modal } from '@/components/shared/Modal'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { RequestBoard } from '@/components/shared/RequestBoard'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import type { StudyRequest } from '@/types/study'
@@ -22,76 +23,13 @@ function initials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase() || '—'
 }
 
-/* ── Selector de miembro para "Crear solicitud" ── */
-type MemberOption = { id: string; first_name: string; last_name: string; cedula: string | null }
-
-function MemberPicker({ onPick }: { onPick: (m: MemberOption) => void }) {
-  const [q, setQ] = useState('')
-  const [options, setOptions] = useState<MemberOption[]>([])
-  const [searching, setSearching] = useState(false)
-
-  useEffect(() => {
-    let alive = true
-    const t = setTimeout(() => {
-      const term = q.trim()
-      if (term.length < 2) { if (alive) setOptions([]); return }
-      setSearching(true)
-      fetch(`/api/members?search=${encodeURIComponent(term)}&pageSize=8`)
-        .then(r => (r.ok ? r.json() : null))
-        .then(d => { if (alive) { setOptions(d?.members ?? []); setSearching(false) } })
-        .catch(() => { if (alive) setSearching(false) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [q])
-
-  return (
-    <div>
-      <div className="flex items-center gap-2 rounded-xl border border-outline bg-surface-low px-3 py-2.5">
-        <Search size={14} className="text-navy-light/40 shrink-0" />
-        <input
-          autoFocus
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          placeholder="Buscar miembro por nombre o cédula…"
-          aria-label="Buscar miembro"
-          className="min-w-0 flex-1 bg-transparent text-sm text-navy outline-none font-body placeholder:text-navy-light/50"
-        />
-        {searching && <Loader2 size={13} className="animate-spin text-navy-light/40" />}
-      </div>
-      {options.length > 0 && (
-        <ul className="mt-2 rounded-xl border border-outline overflow-hidden divide-y divide-[var(--outline-variant)]">
-          {options.map(m => (
-            <li key={m.id}>
-              <button
-                onClick={() => onPick(m)}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-surface-low transition-colors"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-                  {initials(`${m.first_name} ${m.last_name}`)}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">
-                  {m.first_name} {m.last_name}
-                </span>
-                {m.cedula && <span className="text-[11px] text-navy-light/60 font-mono shrink-0">{m.cedula}</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {q.trim().length >= 2 && !searching && options.length === 0 && (
-        <p className="mt-2 text-[12px] text-navy-light/60 font-body">Sin resultados</p>
-      )}
-    </div>
-  )
-}
-
 export default function SolicitudesPage() {
   const { user, loaded, hasRole } = useAuth()
   const [requests, setRequests] = useState<StudyRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [reloadKey, setReloadKey] = useState(0)
   const [createOpen, setCreateOpen] = useState(false)
-  const [createFor, setCreateFor] = useState<MemberOption | null>(null)
+  const [createFor, setCreateFor] = useState<MemberHit | null>(null)
 
   const allowed = hasRole('coordinador_estudios', 'coordinador_dirigentes', 'admin')
 
@@ -202,7 +140,7 @@ export default function SolicitudesPage() {
                 <p className="text-[13px] text-navy-light/60 font-body">
                   Buscá al miembro; los estudios disponibles se calculan según su elegibilidad.
                 </p>
-                <MemberPicker onPick={setCreateFor} />
+                <MemberCombobox autoFocus onSelect={setCreateFor} />
               </>
             ) : (
               <>

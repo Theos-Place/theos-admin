@@ -14,6 +14,7 @@ import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
 import { Plus, BookOpen } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ErrorState } from '@/components/shared/ErrorState'
 
 const ALL_STATUSES: GroupStatus[] = ['en_matricula', 'en_curso', 'finalizado']
 const STATUS_LABELS: Record<GroupStatus, string> = {
@@ -97,7 +98,7 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
 }
 
 export default function GruposPage() {
-  const { groups: MOCK_GROUPS, studyTypes: STUDY_TYPES } = useStudies()
+  const { groups: MOCK_GROUPS, studyTypes: STUDY_TYPES, error, refetch } = useStudies()
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
@@ -424,7 +425,9 @@ export default function GruposPage() {
         </ul>
 
         {filtered.length === 0 && (
-          <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" />
+          error
+            ? <ErrorState message={error} onRetry={refetch} />
+            : <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" />
         )}
       </div>
     </div>

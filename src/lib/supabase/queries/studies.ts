@@ -87,15 +87,80 @@ export type DbLeaderEnriched = {
   }>
 }
 
-/** Grupos de estudio con líder y participantes (enrollments + nombre del miembro). */
-export async function getStudyGroups(): Promise<DbGroupEnriched[]> {
+/** Item del LISTADO de grupos: en vez de enrollments embebidos lleva solo
+ *  CONTEOS por estado de dominio (C5 auditoría 2026-06-11: el listado pesaba
+ *  varios MB y los consumidores solo cuentan). Los enrollments completos se
+ *  cargan en el detalle (getGroupById) o vía getStudyGroupsWithEnrollments. */
+export type DbGroupListItem = Omit<DbGroupEnriched, 'enrollments'> & {
+  enrollment_counts: { enrolled: number; pending: number; withdrawn: number }
+}
+
+type RawListGroup = Omit<DbGroupEnriched, 'enrollments'> & {
+  enrollments: Array<{ status: DbGroupEnriched['enrollments'][number]['status'] }>
+}
+
+// Misma agrupación que mapParticipantStatus del adapter de dominio.
+function toListItem(g: RawListGroup): DbGroupListItem {
+  const counts = { enrolled: 0, pending: 0, withdrawn: 0 }
+  for (const e of g.enrollments) {
+    if (e.status === 'enrolled' || e.status === 'completed') counts.enrolled++
+    else if (e.status === 'waitlist') counts.pending++
+    else counts.withdrawn++ // dropped | transferred
+  }
+  const { enrollments: _omit, ...rest } = g
+  return { ...rest, enrollment_counts: counts }
+}
+
+/** Grupos de estudio con líder y conteos de participantes.
+ *  Sin opts devuelve TODOS (comportamiento histórico, total = data.length);
+ *  con page/pageSize devuelve esa página + total exacto. */
+export async function getStudyGroups(
+  opts: { page?: number; pageSize?: number } = {},
+): Promise<{ data: DbGroupListItem[]; total: number }> {
   const supabase = createAdminClient()
+
+  if (opts.page !== undefined || opts.pageSize !== undefined) {
+    const page = Math.max(1, opts.page ?? 1)
+    const pageSize = Math.max(1, opts.pageSize ?? 50)
+    const from = (page - 1) * pageSize
+    const { data, error, count } = await supabase
+      .from('study_groups')
+      .select(LIST_GROUP_SELECT, { count: 'exact' })
+      .order('starts_at', { ascending: false })
+      .range(from, from + pageSize - 1)
+    if (error) throw error
+    return {
+      data: ((data ?? []) as unknown as RawListGroup[]).map(toListItem),
+      total: count ?? 0,
+    }
+  }
+
   // PostgREST corta en 1000 filas; hay >1000 grupos → paginar con range().
-  const all: DbGroupEnriched[] = []
+  const all: DbGroupListItem[] = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('study_groups')
       .select(LIST_GROUP_SELECT)
+      .order('starts_at', { ascending: false })
+      .range(from, from + 999)
+    if (error) throw error
+    const batch = (data ?? []) as unknown as RawListGroup[]
+    all.push(...batch.map(toListItem))
+    if (batch.length < 1000) break
+  }
+  return { data: all, total: all.length }
+}
+
+/** Variante con enrollments embebidos (member_id + status) para consumidores
+ *  que necesitan los IDs de los inscritos por grupo (ej. RecipientSelector de
+ *  comunicaciones). Usar solo cuando los conteos no alcanzan. */
+export async function getStudyGroupsWithEnrollments(): Promise<DbGroupEnriched[]> {
+  const supabase = createAdminClient()
+  const all: DbGroupEnriched[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('study_groups')
+      .select(LIST_GROUP_MEMBERS_SELECT)
       .order('starts_at', { ascending: false })
       .range(from, from + 999)
     if (error) throw error
@@ -118,9 +183,20 @@ const GROUP_SELECT = `
   )
 `
 
-// Versión liviana para el LISTADO de grupos: participantes sin nombre ni nota
-// (solo lo necesario para CONTAR). Los nombres se cargan en el detalle (getGroupById).
+// Versión liviana para el LISTADO de grupos: enrollments con solo `status`
+// (lo único necesario para CONTAR; los conteos se calculan en toListItem).
+// Los nombres/notas se cargan en el detalle (getGroupById).
 const LIST_GROUP_SELECT = `
+  id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
+  max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  plan:study_plans(code),
+  leader:members!study_groups_leader_id_fkey(first_name, last_name),
+  co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
+  enrollments:study_enrollments!study_enrollments_group_id_fkey(status)
+`
+
+// Igual al anterior pero con member_id, para getStudyGroupsWithEnrollments.
+const LIST_GROUP_MEMBERS_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
   plan:study_plans(code),

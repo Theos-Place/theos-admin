@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { CreditCard, Eye, EyeOff, Search, Check } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
@@ -20,7 +21,7 @@ function formatDate(d: string | null) {
 }
 
 function PagosContent() {
-  const { payments: allPayments, refetch } = useFinance()
+  const { payments: allPayments, error, refetch } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   // Filtros en la URL: sobreviven recargas y se comparten por link.
   const [entityRaw, setEntityFilter] = useUrlFilter('entidad', 'all')
@@ -264,7 +265,9 @@ function PagosContent() {
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={7}>
-                      <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />
+                      {error
+                        ? <ErrorState message={error} onRetry={refetch} />
+                        : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
                     </td>
                   </tr>
                 )}
@@ -317,7 +320,9 @@ function PagosContent() {
             ))}
             {filtered.length === 0 && (
               <li>
-                <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />
+                {error
+                  ? <ErrorState message={error} onRetry={refetch} />
+                  : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
               </li>
             )}
           </ul>

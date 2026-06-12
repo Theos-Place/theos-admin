@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudies } from '@/hooks/useStudies'
@@ -10,6 +10,7 @@ import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 
 function initials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
@@ -196,28 +197,11 @@ export default function DirigentesPage() {
 }
 
 // ─── Modal: agregar dirigente ───────────────────────────────────────────────────
-type MemberHit = { id: string; first_name: string; last_name: string; cedula: string | null }
-
 function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<MemberHit[]>([])
   const [picked, setPicked] = useState<MemberHit | null>(null)
   const [activo, setActivo] = useState(false)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setResults(Array.isArray(d) ? d : d.members ?? d.data ?? []) })
-        .catch(() => { if (alive) setResults([]) })
-    }, 250)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query])
 
   async function handleSave() {
     if (!picked) return
@@ -244,24 +228,13 @@ function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved:
         <p id="agregar-dirigente-title" className="text-base font-bold text-navy font-display">Agregar dirigente</p>
 
         {!picked ? (
-          <>
-            <input
-              autoFocus
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              placeholder="Buscar miembro por nombre, cédula…"
-              aria-label="Buscar miembro por nombre, cédula"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
-            <div className="max-h-64 overflow-y-auto space-y-1">
-              {results.map(m => (
-                <button key={m.id} onClick={() => setPicked(m)} className="w-full text-left rounded-xl px-3 py-2 hover:bg-surface-low transition-colors">
-                  <p className="text-sm text-navy font-body">{m.first_name} {m.last_name}</p>
-                  <p className="text-[11px] text-navy-light/50 font-body">{m.cedula ? `Cédula ${m.cedula}` : 'Sin cédula'}</p>
-                </button>
-              ))}
-            </div>
-          </>
+          <MemberCombobox
+            autoFocus
+            pageSize={6}
+            placeholder="Buscar miembro por nombre, cédula…"
+            onSelect={setPicked}
+            secondaryText={m => (m.cedula ? `Cédula ${m.cedula}` : 'Sin cédula')}
+          />
         ) : (
           <>
             <div className="rounded-xl bg-surface-low px-3 py-2.5">

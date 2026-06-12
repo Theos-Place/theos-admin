@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { type Member } from '@/data/mock-members'
+import { type MemberHit } from '@/components/shared/MemberCombobox'
 import { type ContractType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useToast } from '@/components/shared/Toast'
@@ -34,9 +34,7 @@ export default function NuevoEmpleadoPage() {
   const toast = useToast()
 
   const [step, setStep]                 = useState(1)
-  const [query, setQuery]               = useState('')
-  const [selected, setSelected]         = useState<Member | null>(null)
-  const [candidates, setCandidates]     = useState<Member[]>([])
+  const [selected, setSelected]         = useState<MemberHit | null>(null)
 
   const [positionId, setPositionId]     = useState('')
   const [contractType, setContractType] = useState<ContractType>('planilla')
@@ -50,7 +48,7 @@ export default function NuevoEmpleadoPage() {
   const [error, setError]               = useState<string | null>(null)
 
   const alreadyHiredIds = useMemo(
-    () => new Set(employees.filter(e => e.status === 'active').map(e => e.member_id)),
+    () => employees.filter(e => e.status === 'active').map(e => e.member_id),
     [employees]
   )
 
@@ -71,24 +69,6 @@ export default function NuevoEmpleadoPage() {
     selectedPosition.salary_min != null && selectedPosition.salary_max != null &&
     salaryNum > 0 &&
     (salaryNum < selectedPosition.salary_min || salaryNum > selectedPosition.salary_max)
-
-  // Búsqueda de personas contra la BD (activas y no contratadas aún).
-  useEffect(() => {
-    const q = query.trim()
-    if (!q) { setCandidates([]); return }
-    const ctrl = new AbortController()
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`, { signal: ctrl.signal })
-        if (!res.ok) return
-        const { members } = await res.json()
-        setCandidates((members ?? []).filter((m: { id: string }) => !alreadyHiredIds.has(m.id)) as Member[])
-      } catch { /* abortado */ }
-    }, 250)
-    return () => { clearTimeout(t); ctrl.abort() }
-  }, [query, alreadyHiredIds])
-
-  const searchResults = candidates
 
   function canAdvanceStep1() { return selected !== null }
   function canAdvanceStep2() { return positionId !== '' && salary !== '' && startDate !== '' }
@@ -151,6 +131,19 @@ export default function NuevoEmpleadoPage() {
 
   const canAdvanceCurrent = step === 1 ? canAdvanceStep1() : step === 2 ? canAdvanceStep2() : canFinish()
 
+  // Qué falta para avanzar (misma condición que deshabilita "Siguiente").
+  const missingForStep: string[] = step === 1
+    ? (selected ? [] : ['seleccionar una persona'])
+    : step === 2
+      ? [
+          positionId === '' && 'el puesto',
+          salary === '' && 'el salario',
+          startDate === '' && 'la fecha de inicio',
+        ].filter((x): x is string => Boolean(x))
+      : REQUIRED_DOCS.filter(d => !uploadedDocs[d.key]).length > 0
+        ? [`subir los documentos pendientes (${REQUIRED_DOCS.filter(d => !uploadedDocs[d.key]).map(d => ({ contrato: 'contrato', cedula: 'cédula', ccss: 'CCSS' }[d.key])).join(', ')})`]
+        : []
+
   return (
     <div className="max-w-2xl space-y-4">
       <TopBar
@@ -163,18 +156,22 @@ export default function NuevoEmpleadoPage() {
 
       <StepProgress steps={STEPS} currentStep={step} />
 
+      {!canAdvanceCurrent && missingForStep.length > 0 && (
+        <p className="text-[12px] text-navy-light/70 font-body" role="status">
+          Para continuar, falta {missingForStep.join(', ')}.
+        </p>
+      )}
+
       {error && (
         <p className="text-sm text-coral font-body">{error}</p>
       )}
 
       {step === 1 && (
         <StepPersonSearch
-          query={query}
-          onQueryChange={setQuery}
-          searchResults={searchResults}
+          excludeIds={alreadyHiredIds}
           selected={selected}
-          onSelect={m => { setSelected(m); setQuery('') }}
-          onClear={() => { setSelected(null); setQuery('') }}
+          onSelect={setSelected}
+          onClear={() => setSelected(null)}
         />
       )}
 

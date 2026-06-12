@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type {
-  DbStudyPlan, DbGroupEnriched, DbLeaderEnriched,
+  DbStudyPlan, DbGroupListItem, DbLeaderEnriched,
 } from '@/lib/supabase/queries/studies'
 import {
   toDomainStudyType, toDomainStudyGroup, toDomainStudyLeader,
@@ -9,7 +9,7 @@ import type { StudyType, StudyGroup, StudyLeader } from '@/types/study'
 
 export function useStudies() {
   const [dbPlans, setDbPlans]     = useState<DbStudyPlan[]>([])
-  const [dbGroups, setDbGroups]   = useState<DbGroupEnriched[]>([])
+  const [dbGroups, setDbGroups]   = useState<DbGroupListItem[]>([])
   const [dbLeaders, setDbLeaders] = useState<DbLeaderEnriched[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)

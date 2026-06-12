@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Search, Check, X } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useEvents } from '@/hooks/useEvents'
 import { useStudies } from '@/hooks/useStudies'
 import { TOAST_MS, REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
 
-type MemberLite = { id: string; first_name: string; last_name: string; cedula: string | null }
 type EntityOption = { id: string; name: string; amount: number }
 
 export default function NuevaBecaPage() {
@@ -16,9 +16,7 @@ export default function NuevaBecaPage() {
   const { events } = useEvents()
   const { groups, studyTypes } = useStudies()
 
-  const [memberQuery, setMemberQuery] = useState('')
-  const [memberResults, setMemberResults] = useState<MemberLite[]>([])
-  const [selectedMember, setSelectedMember] = useState<MemberLite | null>(null)
+  const [selectedMember, setSelectedMember] = useState<MemberHit | null>(null)
   const [entityType, setEntityType] = useState<'event' | 'study_group'>('event')
   const [entityQuery, setEntityQuery] = useState('')
   const [selectedEntity, setSelectedEntity] = useState<EntityOption | null>(null)
@@ -47,22 +45,6 @@ export default function NuevaBecaPage() {
     }),
     [groups, studyTypes],
   )
-
-  // Búsqueda de miembros contra la BD.
-  useEffect(() => {
-    const q = memberQuery.trim()
-    if (!q || selectedMember) { setMemberResults([]); return }
-    const ctrl = new AbortController()
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`, { signal: ctrl.signal })
-        if (!res.ok) return
-        const { members } = await res.json()
-        setMemberResults(members ?? [])
-      } catch { /* abortado */ }
-    }, 250)
-    return () => { clearTimeout(t); ctrl.abort() }
-  }, [memberQuery, selectedMember])
 
   const entityList = entityType === 'event' ? EVENTS : GROUPS
   const entityResults = useMemo(() => {
@@ -145,40 +127,17 @@ export default function NuevaBecaPage() {
                   <p className="text-sm font-medium font-body text-navy">{selectedMember.first_name} {selectedMember.last_name}</p>
                   <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">{selectedMember.cedula ?? 'Sin cédula'}</p>
                 </div>
-                <button onClick={() => { setSelectedMember(null); setMemberQuery('') }}>
+                <button onClick={() => setSelectedMember(null)} aria-label="Quitar miembro seleccionado">
                   <X size={16} className="text-[rgba(22,20,64,0.40)]" />
                 </button>
               </div>
             ) : (
-              <div className="relative">
-                <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 border-[var(--outline-variant)]">
-                  <Search size={14} className="text-[rgba(22,20,64,0.40)]" />
-                  <input
-                    type="text"
-                    placeholder="Buscar por nombre o cédula..."
-                    aria-label="Buscar por nombre o cédula"
-                    value={memberQuery}
-                    onChange={e => setMemberQuery(e.target.value)}
-                    className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
-                  />
-                </div>
-                {memberResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border overflow-hidden z-10 border-[var(--outline-variant)] bg-surface-card shadow-[var(--shadow-md)]">
-                    {memberResults.map(m => (
-                      <button key={m.id} onClick={() => { setSelectedMember(m); setMemberQuery('') }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-[var(--outline-variant)]">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 bg-navy font-display">
-                          {m.first_name[0]}{m.last_name[0]}
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-medium font-body text-navy">{m.first_name} {m.last_name}</p>
-                          <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">{m.cedula ?? 'Sin cédula'}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <MemberCombobox
+                dropdown
+                pageSize={6}
+                placeholder="Buscar por nombre o cédula..."
+                onSelect={setSelectedMember}
+              />
             )}
           </div>
 

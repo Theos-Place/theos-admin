@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const eligibility = computeEligibility(
       // Ni archivados ni charlas no curriculares (ej. BUS) se ofrecen en matrícula.
       plans.map(toDomainStudyType).filter(p => !p.is_archived && p.is_curricular !== false),
-      groups.map(toDomainStudyGroup),
+      groups.data.map(toDomainStudyGroup),
       profile,
     )
     return NextResponse.json({ eligibility, profile })

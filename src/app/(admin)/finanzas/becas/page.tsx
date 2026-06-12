@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Plus, Check, AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
@@ -17,7 +18,7 @@ function formatDate(d: string | null) {
 }
 
 export default function BecasPage() {
-  const { scholarships: allScholarships } = useFinance()
+  const { scholarships: allScholarships, error, refetch } = useFinance()
   const [scholarships, setScholarships] = useState<Scholarship[]>([])
   useEffect(() => { setScholarships(allScholarships) }, [allScholarships])
   const [typeFilter, setTypeFilter] = useState<'all' | 'percentage' | 'fixed'>('all')
@@ -199,7 +200,9 @@ export default function BecasPage() {
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={9}>
-                      <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />
+                      {error
+                        ? <ErrorState message={error} onRetry={refetch} />
+                        : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
                     </td>
                   </tr>
                 )}
@@ -248,7 +251,9 @@ export default function BecasPage() {
             ))}
             {filtered.length === 0 && (
               <li>
-                <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />
+                {error
+                  ? <ErrorState message={error} onRetry={refetch} />
+                  : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
               </li>
             )}
           </ul>

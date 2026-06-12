@@ -10,6 +10,7 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import { Plus, FileText } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ErrorState } from '@/components/shared/ErrorState'
 
 type CategoryFilter = 'all' | MessageTemplate['category']
 
@@ -31,7 +32,7 @@ const CHANNEL_FILTERS: { key: 'all' | CommunicationChannel; label: string }[] = 
 
 export default function PlantillasPage() {
   const router = useRouter()
-  const { templates, refetch } = useCommunications()
+  const { templates, error, refetch } = useCommunications()
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
   const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null)
@@ -131,7 +132,11 @@ export default function PlantillasPage() {
       </div>
 
       {/* Grid */}
-      {filtered.length === 0 ? (
+      {error ? (
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+          <ErrorState message={error} onRetry={refetch} />
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
           <EmptyState
             icon={FileText}
