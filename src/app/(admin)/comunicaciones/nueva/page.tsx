@@ -212,7 +212,7 @@ function NuevaComunicacionContent() {
       <div>
         <Link
           href="/comunicaciones"
-          className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2 font-body"
+          className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors mb-2 font-body"
         >
           <ChevronLeft size={15} />
           Comunicaciones
@@ -301,7 +301,7 @@ function NuevaComunicacionContent() {
 
         {/* Right: Preview */}
         <div className="space-y-3 lg:sticky lg:top-4">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
             Vista previa
           </p>
           <MessagePreview
@@ -354,7 +354,7 @@ export default function NuevaComunicacionPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
       </div>
     }>
       <NuevaComunicacionContent />

@@ -12,7 +12,7 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[10px] tracking-widest uppercase text-navy-light/40 font-display'
+const labelCls = 'text-[10px] tracking-widest uppercase text-navy-light/60 font-display'
 
 // ─── Area modal ───────────────────────────────────────────────────────────────
 
@@ -531,7 +531,7 @@ export default function ServidoresAdminPage() {
           <div
             className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--outline-variant)]"
           >
-            <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50 font-display">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/60 font-display">
               Áreas ({areas.length})
             </span>
             <button
@@ -591,7 +591,7 @@ export default function ServidoresAdminPage() {
                       onClick={() => setAreaModal({ open: true, editing: area })}
                       className={cn(
                         'rounded-lg p-1.5 transition-colors',
-                        isSelected ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-navy-light/40 hover:text-navy hover:bg-surface-low'
+                        isSelected ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-navy-light/60 hover:text-navy hover:bg-surface-low'
                       )}
                       title="Editar área"
                       aria-label={`Editar área ${area.name}`}
@@ -603,7 +603,7 @@ export default function ServidoresAdminPage() {
                       onClick={() => requestDeleteArea(area)}
                       className={cn(
                         'rounded-lg p-1.5 transition-colors',
-                        isSelected ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-navy-light/40 hover:text-coral hover:bg-coral/10'
+                        isSelected ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-navy-light/60 hover:text-coral hover:bg-coral/10'
                       )}
                       title="Eliminar área"
                       aria-label={`Eliminar área ${area.name}`}
@@ -612,7 +612,7 @@ export default function ServidoresAdminPage() {
                     </button>
                   </div>
 
-                  {isSelected && <ChevronRight size={13} className="text-white/40 shrink-0 -mr-1" />}
+                  {isSelected && <ChevronRight size={13} className="text-white/70 shrink-0 -mr-1" />}
                 </div>
               )
             })}
@@ -628,7 +628,7 @@ export default function ServidoresAdminPage() {
               className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--outline-variant)]"
             >
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50 font-display">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/60 font-display">
                   Comités
                 </span>
                 <p className="text-base font-bold text-navy mt-0.5 font-display">
@@ -667,7 +667,7 @@ export default function ServidoresAdminPage() {
                         {['Comité', 'Miembros activos', 'Estado', ''].map(h => (
                           <th
                             key={h}
-                            className="px-5 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/40 whitespace-nowrap font-display"
+                            className="px-5 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 whitespace-nowrap font-display"
                           >
                             {h}
                           </th>
@@ -725,7 +725,7 @@ export default function ServidoresAdminPage() {
                                 </button>
                                 <button
                                   onClick={() => requestDeleteCommittee(c)}
-                                  className="inline-flex items-center justify-center rounded-full border border-[var(--outline-variant)] h-7 w-7 text-navy-light/50 hover:text-coral hover:border-coral/30 transition-colors"
+                                  className="inline-flex items-center justify-center rounded-full border border-[var(--outline-variant)] h-7 w-7 text-navy-light/60 hover:text-coral hover:border-coral/30 transition-colors"
                                   title="Eliminar comité"
                                   aria-label={`Eliminar comité ${c.name}`}
                                 >
@@ -747,7 +747,7 @@ export default function ServidoresAdminPage() {
             className="rounded-2xl flex flex-col items-center justify-center gap-3 p-12 text-center bg-surface-card shadow-[var(--shadow-md)] min-h-[480px]"
           >
             <LayoutGrid size={32} className="text-navy-light/15" />
-            <p className="text-sm text-navy-light/40 font-body">
+            <p className="text-sm text-navy-light/60 font-body">
               Seleccioná un área para ver sus comités
             </p>
           </div>
@@ -760,7 +760,7 @@ export default function ServidoresAdminPage() {
           >
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--outline-variant)]">
               <div className="min-w-0">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/50 font-display">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-navy-light/60 font-display">
                   Puestos
                 </span>
                 <p className="text-base font-bold text-navy mt-0.5 truncate font-display">
@@ -775,7 +775,7 @@ export default function ServidoresAdminPage() {
                   <Plus size={12} />
                   Nuevo
                 </button>
-                <button onClick={() => setSelectedCommId(null)} className="text-navy-light/40 hover:text-navy p-1" title="Cerrar" aria-label="Cerrar panel de puestos">
+                <button onClick={() => setSelectedCommId(null)} className="text-navy-light/60 hover:text-navy p-1" title="Cerrar" aria-label="Cerrar panel de puestos">
                   <X size={16} />
                 </button>
               </div>
@@ -783,8 +783,8 @@ export default function ServidoresAdminPage() {
 
             {selectedCommPositions.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 p-10 text-center">
-                <LayoutGrid size={26} className="text-navy-light/40" />
-                <p className="text-sm text-navy-light/40 font-body">
+                <LayoutGrid size={26} className="text-navy-light/60" />
+                <p className="text-sm text-navy-light/60 font-body">
                   Este comité no tiene puestos
                 </p>
                 <button onClick={() => setPosModalFor(selectedComm.id)} className="text-[12px] text-coral hover:underline font-body">
@@ -802,7 +802,7 @@ export default function ServidoresAdminPage() {
                     <span className="flex-1 text-[13px] text-navy font-body">{p.title}</span>
                     <button
                       onClick={() => requestDeletePosition(p)}
-                      className="rounded-lg p-1.5 text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
+                      className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
                       title="Eliminar puesto"
                       aria-label={`Eliminar puesto ${p.title}`}
                     >

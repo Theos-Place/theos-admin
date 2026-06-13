@@ -34,12 +34,12 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
             <p className="text-navy font-body font-medium truncate">{d.member_name || 'Sin nombre'}</p>
             <span className={cn(
               'rounded-full px-2 py-0.5 text-[10px] font-medium font-body',
-              d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/50',
+              d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60',
             )}>
               {d.status === 'activo' ? 'Activo' : 'Inactivo'}
             </span>
           </div>
-          <p className="text-xs text-navy-light/50 font-body mt-0.5">
+          <p className="text-xs text-navy-light/60 font-body mt-0.5">
             {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} liderado{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
           </p>
         </div>
@@ -49,12 +49,12 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
       {/* Estudios activos */}
       {d.estudios_activos.length > 0 && (
         <div className="mt-3 space-y-1.5">
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">Dando ahora</p>
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Dando ahora</p>
           {d.estudios_activos.slice(0, 3).map(g => (
             <div key={g.group_id} className="flex items-center gap-2 text-xs">
               <StudyTypeBadge code={g.plan_code} size="sm" />
               <span className="text-navy-light/60 font-body truncate flex-1">{g.group_name}</span>
-              <span className="flex items-center gap-0.5 text-navy-light/40 font-body shrink-0">
+              <span className="flex items-center gap-0.5 text-navy-light/60 font-body shrink-0">
                 <Users size={11} /> {g.students_count}
               </span>
             </div>
@@ -68,12 +68,12 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
           {[...new Set(d.estudios_completados.map(g => g.plan_code))].slice(0, 6).map(code => (
             <StudyTypeBadge key={code} code={code} size="sm" />
           ))}
-          <span className="text-[11px] text-navy-light/40 font-body">
+          <span className="text-[11px] text-navy-light/60 font-body">
             · {d.estudios_completados.length} completado{d.estudios_completados.length === 1 ? '' : 's'}
           </span>
         </div>
       ) : d.estudios_activos.length === 0 ? (
-        <p className="mt-3 text-[11px] text-navy-light/40 font-body">Sin estudios registrados</p>
+        <p className="mt-3 text-[11px] text-navy-light/60 font-body">Sin estudios registrados</p>
       ) : null}
     </button>
   )
@@ -158,7 +158,7 @@ export default function DirigentesPage() {
             {tiposDados.map(t => <option key={t.code} value={t.code}>{t.code} — {t.name}</option>)}
           </select>
           <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
-            <Search size={15} className="text-navy-light/40 shrink-0" />
+            <Search size={15} className="text-navy-light/60 shrink-0" />
             <input
               value={query}
               onChange={e => setQuery(e.target.value)}
@@ -174,10 +174,10 @@ export default function DirigentesPage() {
       {loading ? (
         <div className="py-16 text-center font-body">
           <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-          <p className="text-sm text-navy-light/50">Cargando dirigentes…</p>
+          <p className="text-sm text-navy-light/60">Cargando dirigentes…</p>
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-12 text-center text-sm text-navy-light/40 font-body">Sin dirigentes para los filtros aplicados</p>
+        <p className="py-12 text-center text-sm text-navy-light/60 font-body">Sin dirigentes para los filtros aplicados</p>
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map(d => (
@@ -242,7 +242,7 @@ function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved:
               <input type="checkbox" checked={activo} onChange={e => setActivo(e.target.checked)} className="accent-coral h-4 w-4 mt-0.5 rounded" />
               <span className="text-sm text-navy-light/80 font-body">
                 Marcar como <strong className="text-navy">activo</strong>
-                <span className="block text-[11px] text-navy-light/50">Si lo activás, se agrega al Comité de Dirigentes. Si no, queda como dirigente inactivo.</span>
+                <span className="block text-[11px] text-navy-light/60">Si lo activás, se agrega al Comité de Dirigentes. Si no, queda como dirigente inactivo.</span>
               </span>
             </label>
           </>

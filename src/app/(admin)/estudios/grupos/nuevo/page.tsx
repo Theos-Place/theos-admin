@@ -170,14 +170,14 @@ export default function NuevoGrupoPage() {
                 'h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all',
                 step >= n
                   ? 'bg-coral text-white'
-                  : 'bg-surface-low text-navy-light/40',
+                  : 'bg-surface-low text-navy-light/60',
                 'font-display',
               )}
             >
               {n}
             </div>
             <span
-              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/40', 'font-body')}
+              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/60', 'font-body')}
             >
               {n === 1 ? 'Configuración' : n === 2 ? 'Dirigente' : 'Confirmación'}
             </span>
@@ -190,7 +190,7 @@ export default function NuevoGrupoPage() {
       {step === 1 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+            className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
           >
             Paso 1 — Configuración
           </h2>
@@ -367,13 +367,13 @@ export default function NuevoGrupoPage() {
       {step === 2 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+            className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
           >
             Paso 2 — Seleccionar dirigente
           </h2>
 
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Dirigente {pendingLeader ? '' : '*'}
             </label>
             <DirigentesCombobox
@@ -398,7 +398,7 @@ export default function NuevoGrupoPage() {
 
           {!pendingLeader && selectedLeader && (
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
                 Co-dirigente (opcional)
               </label>
               <DirigentesCombobox
@@ -454,7 +454,7 @@ export default function NuevoGrupoPage() {
       {step === 3 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+            className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
           >
             Paso 3 — Confirmación
           </h2>
@@ -462,31 +462,31 @@ export default function NuevoGrupoPage() {
           <div className="rounded-xl p-4 space-y-3 bg-surface-low">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Tipo</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Tipo</p>
                 <StudyTypeBadge code={studyType?.code ?? ''} name={studyType?.name} size="sm" />
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Zona</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Zona</p>
                 <p className="text-navy font-body">{step1.zone ? sedeLabel(step1.zone) : '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Días</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Días</p>
                 <p className="text-navy font-body">{step1.days.length > 0 ? step1.days.map(d => DAY_LABELS[d]).join(', ') : '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Horario</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Horario</p>
                 <p className="text-navy font-body">{step1.time || '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Dirigente</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Dirigente</p>
                 <p className="text-navy font-body">{leaderData?.member_name ?? (pendingLeader ? 'Pendiente' : '—')}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Inicio estimado</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Inicio estimado</p>
                 <p className="text-navy font-body">{step1.start_date || '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/40 mb-0.5 font-display">Capacidad</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Capacidad</p>
                 <p className="text-navy font-body">{step1.capacity} personas</p>
               </div>
               <div>

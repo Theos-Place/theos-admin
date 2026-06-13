@@ -52,7 +52,7 @@ export function StepDocuments({
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
+          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
         >
           Resumen del contrato
         </p>
@@ -66,7 +66,7 @@ export function StepDocuments({
             <p className="text-sm font-semibold text-navy font-display">
               {selected?.first_name} {selected?.last_name}
             </p>
-            <p className="text-[12px] text-navy-light/50 font-body">
+            <p className="text-[12px] text-navy-light/60 font-body">
               {selected?.email}
             </p>
           </div>
@@ -94,7 +94,7 @@ export function StepDocuments({
           ].map(({ label, value }) => (
             <div key={label}>
               <p
-                className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display"
+                className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display"
               >
                 {label}
               </p>
@@ -123,11 +123,11 @@ export function StepDocuments({
       >
         <div className="flex items-center justify-between">
           <p
-            className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
+            className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
           >
             Documentos requeridos
           </p>
-          <span className="text-[11px] text-navy-light/40 font-mono">
+          <span className="text-[11px] text-navy-light/60 font-mono">
             {REQUIRED_DOCS.filter(d => uploadedDocs[d.key]).length}/{REQUIRED_DOCS.length}
           </span>
         </div>
@@ -150,7 +150,7 @@ export function StepDocuments({
                     {uploaded ? (
                       <Check size={15} className="text-teal-deep" />
                     ) : (
-                      <DocIcon size={15} className="text-navy-light/40" />
+                      <DocIcon size={15} className="text-navy-light/60" />
                     )}
                   </div>
                   <div>
@@ -205,7 +205,7 @@ export function StepDocuments({
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display"
+          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
         >
           Documentos adicionales
         </p>
@@ -227,7 +227,7 @@ export function StepDocuments({
                   {uploaded ? (
                     <Check size={15} className="text-teal-deep" />
                   ) : (
-                    <DocIcon size={15} className="text-navy-light/40" />
+                    <DocIcon size={15} className="text-navy-light/60" />
                   )}
                 </div>
                 <div>
@@ -278,7 +278,7 @@ export function StepDocuments({
 
       {!canFinish && (
         <p
-          className="text-center text-[12px] text-navy-light/40 font-body"
+          className="text-center text-[12px] text-navy-light/60 font-body"
         >
           Subí los 3 documentos requeridos para formalizar el contrato.
         </p>

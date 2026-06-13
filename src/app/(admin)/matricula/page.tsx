@@ -143,7 +143,7 @@ export default function MatriculaPage() {
   if (!effectiveMemberId) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-navy-light/50 font-body">
+        <p className="text-sm text-navy-light/60 font-body">
           No hay un miembro asociado a tu cuenta.
         </p>
       </div>
@@ -161,7 +161,7 @@ export default function MatriculaPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <GraduationCap size={18} className="text-white/60" />
-              <span className="text-xs uppercase tracking-widest text-white/40 font-display">
+              <span className="text-xs uppercase tracking-widest text-white/70 font-display">
                 Portal de Matrícula
               </span>
             </div>
@@ -190,14 +190,14 @@ export default function MatriculaPage() {
       <div
         className="rounded-2xl px-5 py-4 bg-surface-card shadow-card"
       >
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-3 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-3 font-display">
           Perfil académico
         </p>
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           <div className="flex-1 space-y-2.5">
             {/* Estudios completados */}
             <div>
-              <p className="text-[11px] text-navy-light/50 mb-1.5 font-body">
+              <p className="text-[11px] text-navy-light/60 mb-1.5 font-body">
                 Estudios completados ({completedStudies.length})
               </p>
               {completedStudies.length > 0 ? (
@@ -212,7 +212,7 @@ export default function MatriculaPage() {
                   ))}
                 </div>
               ) : (
-                <span className="text-[12px] text-navy-light/40 italic font-body">
+                <span className="text-[12px] text-navy-light/60 italic font-body">
                   Ninguno aún
                 </span>
               )}
@@ -221,7 +221,7 @@ export default function MatriculaPage() {
             {/* En curso */}
             {currentStudyInfo && (
               <div>
-                <p className="text-[11px] text-navy-light/50 mb-1.5 font-body">
+                <p className="text-[11px] text-navy-light/60 mb-1.5 font-body">
                   En curso
                 </p>
                 <span
@@ -237,7 +237,7 @@ export default function MatriculaPage() {
           <div
             className="rounded-xl px-4 py-3 shrink-0 bg-surface-low"
           >
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 mb-2 font-display">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-2 font-display">
               Compromisos
             </p>
             <div className="space-y-1.5">
@@ -288,7 +288,7 @@ export default function MatriculaPage() {
         </div>
 
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-64 focus-within:ring-1 focus-within:ring-coral/30 transition-all">
-          <Search size={14} className="text-navy-light/40 shrink-0" />
+          <Search size={14} className="text-navy-light/60 shrink-0" />
           <input
             type="search"
             value={search}
@@ -324,7 +324,7 @@ export default function MatriculaPage() {
         <div
           className="rounded-2xl p-12 text-center bg-surface-card shadow-card"
         >
-          <GraduationCap size={28} className="text-navy-light/40 mx-auto mb-3" />
+          <GraduationCap size={28} className="text-navy-light/60 mx-auto mb-3" />
           <p className="text-sm font-semibold text-navy-light/60 font-body">
             Por ahora no hay grupos abiertos para matricular
           </p>
@@ -347,7 +347,7 @@ export default function MatriculaPage() {
                     {meta.label}
                   </span>
                   <div className="flex-1 h-px bg-outline" />
-                  <span className="text-[11px] text-navy-light/40 font-body">
+                  <span className="text-[11px] text-navy-light/60 font-body">
                     {items.length} estudio{items.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -399,7 +399,7 @@ function MemberPicker({ selected, onSelect }: {
 }) {
   return (
     <div className="flex flex-col gap-1 w-64">
-      <label className="text-[10px] uppercase tracking-widest text-white/40 font-display">
+      <label className="text-[10px] uppercase tracking-widest text-white/70 font-display">
         Ver disponibilidad como:
       </label>
       {selected ? (
@@ -428,7 +428,7 @@ function CommitmentRow({ met, label }: { met: boolean; label: string }) {
         : <XCircle size={13} className="text-navy-light/60 shrink-0" />
       }
       <span
-        className={cn('text-[12px]', met ? 'text-navy' : 'text-navy-light/40', 'font-body')}
+        className={cn('text-[12px]', met ? 'text-navy' : 'text-navy-light/60', 'font-body')}
       >
         {label}
       </span>
@@ -484,7 +484,7 @@ function StudyCard({
         </div>
 
         {/* Meta: semanas + costo */}
-        <div className="flex items-center gap-3 text-[12px] text-navy-light/50 font-body">
+        <div className="flex items-center gap-3 text-[12px] text-navy-light/60 font-body">
           <span className="flex items-center gap-1">
             <Calendar size={12} />
             {result.weeks} semanas
@@ -506,7 +506,7 @@ function StudyCard({
         <div className="space-y-1">
           {result.is_eligible ? (
             <>
-              <p className="text-[11px] text-navy-light/50 font-medium font-display">
+              <p className="text-[11px] text-navy-light/60 font-medium font-display">
                 Prerequisitos cumplidos:
               </p>
               {result.reasons_met.map((r, i) => (
@@ -518,7 +518,7 @@ function StudyCard({
             </>
           ) : (
             <>
-              <p className="text-[11px] text-navy-light/50 font-medium font-display">
+              <p className="text-[11px] text-navy-light/60 font-medium font-display">
                 Para poder matricular necesitás:
               </p>
               {result.reasons_blocked.map((r, i) => (
@@ -555,7 +555,7 @@ function StudyCard({
           className="border-t border-outline"
         >
           <div className="px-5 py-3">
-            <p className="text-[11px] font-semibold text-navy-light/40 uppercase tracking-widest mb-3 font-display">
+            <p className="text-[11px] font-semibold text-navy-light/60 uppercase tracking-widest mb-3 font-display">
               Grupos disponibles — {result.study_name}
             </p>
             <div className="space-y-2">
@@ -579,19 +579,19 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
     >
       <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1.5">
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Zona</p>
+          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Zona</p>
           <p className="text-[13px] font-medium text-navy capitalize font-body">{group.zone}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Horario</p>
+          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Horario</p>
           <p className="text-[13px] text-navy font-body">{group.schedule_days} {group.schedule_time}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Dirigente</p>
+          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Dirigente</p>
           <p className="text-[13px] text-navy font-body">{group.leader_name}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/40 uppercase tracking-wider mb-0.5 font-display">Cupos</p>
+          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Cupos</p>
           <div className="flex items-center gap-2">
             <span className="text-[13px] text-navy font-body">
               {group.spots_available}/{group.max_capacity}
@@ -607,7 +607,7 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className="text-[11px] text-navy-light/50 font-body">
+        <span className="text-[11px] text-navy-light/60 font-body">
           Inicio: {formatDateLong(group.start_date)}
         </span>
         {group.requires_payment && group.cost ? (
@@ -662,7 +662,7 @@ function ConfirmModal({
               key={label}
               className={cn('flex items-center gap-3 px-4 py-2.5', i > 0 && 'border-t', 'border-outline')}
             >
-              <span className="w-24 text-[11px] text-navy-light/40 uppercase tracking-wider shrink-0 font-display">
+              <span className="w-24 text-[11px] text-navy-light/60 uppercase tracking-wider shrink-0 font-display">
                 {label}
               </span>
               <span className="text-[13px] font-medium text-navy font-body">
@@ -685,7 +685,7 @@ function ConfirmModal({
         {/* Método de pago */}
         {group.requires_payment && group.cost && (
           <div className="space-y-2">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
               Método de pago
             </p>
             <div className="space-y-2">

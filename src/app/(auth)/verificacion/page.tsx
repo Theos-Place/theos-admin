@@ -90,7 +90,7 @@ export default function VerificacionPage() {
 
   if (resolving) {
     return (
-      <div className="w-full max-w-[400px] flex items-center gap-2 text-sm text-navy-light/50 font-body">
+      <div className="w-full max-w-[400px] flex items-center gap-2 text-sm text-navy-light/60 font-body">
         <Loader2 size={16} className="animate-spin" /> Cargando...
       </div>
     )
@@ -105,7 +105,7 @@ export default function VerificacionPage() {
         <h1 className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]">
           Verificación en dos pasos
         </h1>
-        <p className="text-sm text-navy-light/50 leading-relaxed font-body">
+        <p className="text-sm text-navy-light/60 leading-relaxed font-body">
           Ingresá el código de tu app de autenticación
         </p>
       </div>
@@ -148,7 +148,7 @@ export default function VerificacionPage() {
       <button
         type="button"
         onClick={handleBack}
-        className="mt-5 mx-auto flex items-center gap-1.5 text-[13px] text-navy-light/50 hover:text-navy transition-colors font-body"
+        className="mt-5 mx-auto flex items-center gap-1.5 text-[13px] text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ArrowLeft size={14} /> Volver al inicio de sesión
       </button>

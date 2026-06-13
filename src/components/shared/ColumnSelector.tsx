@@ -81,7 +81,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
           className="absolute right-0 top-[calc(100%+6px)] z-40 w-56 rounded-2xl overflow-hidden bg-surface-card shadow-[0_20px_48px_rgba(22,20,64,0.14)] border border-[var(--outline-variant)]"
         >
           <div className="px-4 py-3 border-b border-[var(--outline-variant)]">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
               Columnas visibles
             </p>
           </div>
@@ -118,7 +118,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
           <div className="border-t px-4 py-2.5 border-[var(--outline-variant)]">
             <button
               onClick={reset}
-              className="flex items-center gap-1.5 text-[12px] text-navy-light/50 hover:text-navy transition-colors w-full font-body"
+              className="flex items-center gap-1.5 text-[12px] text-navy-light/60 hover:text-navy transition-colors w-full font-body"
             >
               <RotateCcw size={12} />
               Restaurar por defecto

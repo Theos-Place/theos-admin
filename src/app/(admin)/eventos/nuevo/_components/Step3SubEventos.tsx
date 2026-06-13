@@ -61,12 +61,12 @@ export function Step3SubEventos({
                   >
                     {se.name}
                   </p>
-                  <p className="text-[11px] text-navy-light/50">Cap. {se.max_capacity}</p>
+                  <p className="text-[11px] text-navy-light/60">Cap. {se.max_capacity}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => onRemoveSubEvent(se.id)}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors"
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors"
                 >
                   <X size={14} />
                 </button>
@@ -125,7 +125,7 @@ export function Step3SubEventos({
 
         {sub_events.length === 0 && !showSubEventForm && (
           <p
-            className="text-[12px] text-navy-light/40 mt-2 font-body"
+            className="text-[12px] text-navy-light/60 mt-2 font-body"
           >
             Opcional. Agrega divisiones como Kids, Teens o sesiones por día.
           </p>

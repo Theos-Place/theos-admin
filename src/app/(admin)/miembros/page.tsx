@@ -70,7 +70,7 @@ const ROLE_BADGE: Record<string, string> = {
   dirigente:              'bg-navy/10 text-navy',
   editor_perfiles:        'bg-teal-soft/30 text-teal-deep',
   miembro:                'bg-surface-low text-navy-light/60',
-  solo_lectura:           'bg-surface-low text-navy-light/40',
+  solo_lectura:           'bg-surface-low text-navy-light/60',
 }
 const ROLE_LABEL: Record<string, string> = {
   admin:                  'Admin',
@@ -504,7 +504,7 @@ function MiembrosContent() {
 
         {/* Search */}
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-64 focus-within:ring-1 focus-within:ring-coral/30 transition-all">
-          <Search size={15} className="text-navy-light/40 shrink-0" strokeWidth={1.75} />
+          <Search size={15} className="text-navy-light/60 shrink-0" strokeWidth={1.75} />
           <input
             type="search"
             value={search}
@@ -668,16 +668,16 @@ function MiembrosContent() {
               {!shouldFetch ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
-                    <Search size={26} className="text-navy-light/40 mx-auto mb-3" strokeWidth={1.75} />
-                    <p className="text-sm font-semibold text-navy-light/50">Usá el buscador o aplicá un filtro para ver miembros</p>
-                    <p className="text-[13px] text-navy-light/40 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
+                    <Search size={26} className="text-navy-light/60 mx-auto mb-3" strokeWidth={1.75} />
+                    <p className="text-sm font-semibold text-navy-light/60">Usá el buscador o aplicá un filtro para ver miembros</p>
+                    <p className="text-[13px] text-navy-light/60 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
                   </td>
                 </tr>
               ) : loading && visibleMembers.length === 0 ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
                     <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-                    <p className="text-sm text-navy-light/50">Buscando miembros…</p>
+                    <p className="text-sm text-navy-light/60">Buscando miembros…</p>
                   </td>
                 </tr>
               ) : visibleMembers.length === 0 ? (
@@ -719,7 +719,7 @@ function MiembrosContent() {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
-                                  <p className="truncate text-xs text-navy-light/50 font-body">{member.email}</p>
+                                  <p className="truncate text-xs text-navy-light/60 font-body">{member.email}</p>
                                 </div>
                               </div>
                             </td>
@@ -796,14 +796,14 @@ function MiembrosContent() {
         <div className="md:hidden">
           {!shouldFetch ? (
             <div className="px-4 py-14 text-center font-body">
-              <Search size={26} className="text-navy-light/40 mx-auto mb-3" strokeWidth={1.75} />
-              <p className="text-sm font-semibold text-navy-light/50">Usá el buscador o aplicá un filtro</p>
-              <p className="text-[13px] text-navy-light/40 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
+              <Search size={26} className="text-navy-light/60 mx-auto mb-3" strokeWidth={1.75} />
+              <p className="text-sm font-semibold text-navy-light/60">Usá el buscador o aplicá un filtro</p>
+              <p className="text-[13px] text-navy-light/60 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
             </div>
           ) : loading && visibleMembers.length === 0 ? (
             <div className="px-4 py-14 text-center font-body">
               <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-              <p className="text-sm text-navy-light/50">Buscando miembros…</p>
+              <p className="text-sm text-navy-light/60">Buscando miembros…</p>
             </div>
           ) : visibleMembers.length === 0 ? (
             <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" />
@@ -832,7 +832,7 @@ function MiembrosContent() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
-                    <p className="truncate text-xs text-navy-light/50 font-body">
+                    <p className="truncate text-xs text-navy-light/60 font-body">
                       {member.cedula ?? 'Sin cédula'}{member.email ? ` · ${member.email}` : ''}
                     </p>
                   </div>
@@ -853,7 +853,7 @@ function MiembrosContent() {
           <div
             className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap border-t border-[var(--outline-variant)]"
           >
-            <span className="text-xs text-navy-light/50 font-body">
+            <span className="text-xs text-navy-light/60 font-body">
               Mostrando <strong className="text-navy">{visibleMembers.length.toLocaleString('es-CR')}</strong> de{' '}
               <strong className="text-navy">{resultTotal.toLocaleString('es-CR')}</strong> resultados
             </span>
@@ -879,7 +879,7 @@ function MiembrosContent() {
 
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
                   Nombre de la lista *
                 </label>
                 <input
@@ -891,7 +891,7 @@ function MiembrosContent() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
                   Descripción (opcional)
                 </label>
                 <input
@@ -902,7 +902,7 @@ function MiembrosContent() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
                   Tags (separados por coma)
                 </label>
                 <input
@@ -914,7 +914,7 @@ function MiembrosContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
                   Tipo de lista
                 </label>
                 {[
@@ -932,7 +932,7 @@ function MiembrosContent() {
                     </div>
                     <div>
                       <p className="text-[13px] font-medium text-navy font-body">{opt.label}</p>
-                      <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">{opt.desc}</p>
+                      <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">{opt.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -989,7 +989,7 @@ export default function MiembrosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
       </div>
     }>
       <MiembrosContent />

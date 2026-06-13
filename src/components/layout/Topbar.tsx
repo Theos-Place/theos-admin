@@ -90,7 +90,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
           </div>
           <ChevronDown
             size={14}
-            className={`hidden sm:block text-navy-light/40 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}
+            className={`hidden sm:block text-navy-light/60 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
@@ -112,7 +112,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                   <p className="text-sm font-semibold text-navy truncate font-body">
                     {user?.name ?? 'Usuario'}
                   </p>
-                  <p className="text-[11px] text-navy-light/50 truncate font-body">
+                  <p className="text-[11px] text-navy-light/60 truncate font-body">
                     {user?.email ?? ''}
                   </p>
                   {roleLabel && (
@@ -131,7 +131,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
-                <User size={15} className="text-navy-light/50 shrink-0" />
+                <User size={15} className="text-navy-light/60 shrink-0" />
                 Mi perfil
               </Link>
               <Link
@@ -139,7 +139,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
-                <Settings size={15} className="text-navy-light/50 shrink-0" />
+                <Settings size={15} className="text-navy-light/60 shrink-0" />
                 Configuración
               </Link>
               <Link
@@ -147,7 +147,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
-                <Shield size={15} className="text-navy-light/50 shrink-0" />
+                <Shield size={15} className="text-navy-light/60 shrink-0" />
                 Seguridad
               </Link>
             </div>
@@ -223,7 +223,7 @@ function GlobalMemberSearch() {
   return (
     <div className="relative hidden sm:block" ref={boxRef}>
       <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-56 lg:w-72 transition-all focus-within:ring-1 focus-within:ring-coral/30">
-        <Search size={16} className="text-navy-light/50 shrink-0" strokeWidth={1.75} />
+        <Search size={16} className="text-navy-light/60 shrink-0" strokeWidth={1.75} />
         <input
           type="search"
           aria-label="Buscar miembro por nombre, cédula o correo"

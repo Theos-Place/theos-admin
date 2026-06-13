@@ -148,7 +148,7 @@ export default function AnalisisPage() {
               className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-1 text-[12px] text-navy font-body hover:bg-navy/10 transition-colors"
             >
               {memberNames[id] ?? 'Cargando…'}
-              <ExternalLink size={10} className="text-navy-light/50" />
+              <ExternalLink size={10} className="text-navy-light/60" />
             </Link>
           </li>
         ))}
@@ -264,21 +264,21 @@ export default function AnalisisPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display">Zona</th>
+                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Zona</th>
                     <th
                       title={tooltipA}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
                     >
                       Por graduarse (A)
                     </th>
                     <th
                       title={tooltipB}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
                     >
                       Elegibles (B)
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display">Total demanda</th>
-                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display">Grupos sugeridos</th>
+                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Total demanda</th>
+                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Grupos sugeridos</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -304,7 +304,7 @@ export default function AnalisisPage() {
                               disabled={row.graduating === 0}
                               className={cn(
                                 'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
-                                row.graduating > 0 ? 'text-coral hover:bg-coral/10' : 'text-navy-light/40 cursor-default',
+                                row.graduating > 0 ? 'text-coral hover:bg-coral/10' : 'text-navy-light/60 cursor-default',
                               )}
                             >
                               {row.graduating}
@@ -317,7 +317,7 @@ export default function AnalisisPage() {
                               disabled={row.eligible === 0}
                               className={cn(
                                 'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
-                                row.eligible > 0 ? 'text-teal-deep hover:bg-teal/15' : 'text-navy-light/40 cursor-default',
+                                row.eligible > 0 ? 'text-teal-deep hover:bg-teal/15' : 'text-navy-light/60 cursor-default',
                               )}
                             >
                               {row.eligible}

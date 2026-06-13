@@ -45,7 +45,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
   const enrolled = group?.participants.filter(p => p.status === 'enrolled') ?? []
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/50 font-body">Cargando…</p></div>
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/60 font-body">Cargando…</p></div>
   }
 
   if (!group) {
@@ -134,7 +134,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         <p className="mt-1 text-sm text-navy-light/60 font-body">
           {group.study_type_id} — {sedeLabel(group.zone)}
         </p>
-        <p className="text-sm text-navy-light/50 capitalize font-body">
+        <p className="text-sm text-navy-light/60 capitalize font-body">
           {today}
         </p>
       </div>
@@ -144,7 +144,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+              className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
             >
               Sesión {sessionNum} de {studyType?.weeks ?? '?'}
             </p>
@@ -156,7 +156,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
               >
                 {presentCount} / {enrolled.length}
               </p>
-              <p className="text-[11px] text-navy-light/50 font-body">presentes</p>
+              <p className="text-[11px] text-navy-light/60 font-body">presentes</p>
             </div>
             <button
               onClick={markAll}
@@ -192,7 +192,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
                     'rounded-full px-4 py-1.5 text-[12px] font-medium transition-all',
                     present
                       ? 'bg-teal-deep text-white'
-                      : 'bg-surface-low text-navy-light/50 hover:bg-surface-card',
+                      : 'bg-surface-low text-navy-light/60 hover:bg-surface-card',
                     'font-display',
                   )}
                 >
@@ -207,7 +207,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
       {/* Notes */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Notas de la sesión
         </label>

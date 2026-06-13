@@ -122,7 +122,7 @@ export default function ReportesPage() {
             <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
               Reportes financieros
             </h1>
-            <p className="text-[12px] text-white/50 mt-0.5 font-body">
+            <p className="text-[12px] text-white/70 mt-0.5 font-body">
               Análisis y exportación de datos financieros
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Estado'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -224,7 +224,7 @@ export default function ReportesPage() {
                 { label: 'Devuelto', value: refundedPayments.reduce((s, p) => s + p.amount, 0), color: '#519DA2' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                  <p className="text-[10px] uppercase tracking-widests mb-1.5 font-display text-[rgba(22,20,64,0.40)]">{label}</p>
+                  <p className="text-[10px] uppercase tracking-widests mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
                   <p className="text-lg font-extrabold font-display" style={{ color }}>
                     <AmountDisplay amount={value} defaultHidden={false} />
                   </p>
@@ -238,7 +238,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Entidad', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -281,7 +281,7 @@ export default function ReportesPage() {
             {/* Top months */}
             {topMonths.length > 0 && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[11px] uppercase tracking-widests mb-4 font-display text-[rgba(22,20,64,0.40)]">
+                <p className="text-[11px] uppercase tracking-widests mb-4 font-display text-[rgba(22,20,64,0.60)]">
                   Top meses {yearFilter}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -304,7 +304,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Mes', 'Total donaciones', 'Donadores únicos', ''].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -333,7 +333,7 @@ export default function ReportesPage() {
                                   style={{ width: `${(m.total / maxMonthTotal) * 100}%` }}
                                 />
                               </div>
-                              <span className="text-[10px] w-6 text-right text-[rgba(22,20,64,0.40)] font-body">
+                              <span className="text-[10px] w-6 text-right text-[rgba(22,20,64,0.60)] font-body">
                                 {Math.round((m.total / maxMonthTotal) * 100)}%
                               </span>
                             </div>
@@ -356,7 +356,7 @@ export default function ReportesPage() {
             </div>
             <div>
               <p className="text-sm font-bold font-display text-navy">Exportar para QuickBooks</p>
-              <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
+              <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
                 Formatos compatibles para importar en QuickBooks
               </p>
             </div>
@@ -369,7 +369,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-teal-deep shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar donaciones</p>
-                <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
             <button
@@ -379,7 +379,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-[#3DB97A] shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar pagos</p>
-                <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
           </div>

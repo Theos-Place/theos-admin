@@ -36,7 +36,7 @@ export function StepSidebar({ step, onStepClick }: StepSidebarProps) {
                     'h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors',
                     active ? 'bg-coral text-white' :
                     done   ? 'bg-teal-deep text-white' :
-                    'bg-navy-light/15 text-navy-light/50',
+                    'bg-navy-light/15 text-navy-light/60',
                     'font-display',
                   )}
                 >
@@ -45,7 +45,7 @@ export function StepSidebar({ step, onStepClick }: StepSidebarProps) {
                 <span
                   className={cn(
                     'text-[13px] font-medium transition-colors',
-                    active ? 'text-navy' : done ? 'text-teal-deep' : 'text-navy-light/40',
+                    active ? 'text-navy' : done ? 'text-teal-deep' : 'text-navy-light/60',
                     'font-display',
                   )}
                 >

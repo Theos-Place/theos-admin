@@ -20,7 +20,7 @@ export function StepPersonSearch({
       className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
     >
       <p
-        className="text-[11px] tracking-widths uppercase text-navy-light/40 font-display"
+        className="text-[11px] tracking-widths uppercase text-navy-light/60 font-display"
       >
         Paso 1 — Buscar miembro
       </p>

@@ -195,7 +195,7 @@ export default function ConfiguracionPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-navy font-body">{config.name}</p>
-            <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
+            <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
               {config.smtp_host}:{config.smtp_port} · {config.smtp_user}
             </p>
             <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
@@ -232,10 +232,10 @@ export default function ConfiguracionPage() {
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Verificar
           </button>
-          <button type="button" onClick={() => openEditSmtp(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => openEditSmtp(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -250,7 +250,7 @@ export default function ConfiguracionPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-navy font-body">{config.name}</p>
-            <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
+            <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
               {config.wa_phone_number} · ID: {config.wa_account_id}
             </p>
           </div>
@@ -279,10 +279,10 @@ export default function ConfiguracionPage() {
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Reconectar
           </button>
-          <button type="button" onClick={() => openEditWa(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => openEditWa(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -298,7 +298,7 @@ export default function ConfiguracionPage() {
         <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
           Configuración
         </h1>
-        <p className="mt-1 text-sm text-white/50 font-body">
+        <p className="mt-1 text-sm text-white/70 font-body">
           Configurá los canales de envío de mensajes
         </p>
       </div>
@@ -312,7 +312,7 @@ export default function ConfiguracionPage() {
             onClick={() => setTab(t)}
             className={cn(
               'px-5 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-all font-body',
-              tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/50 hover:text-navy'
+              tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/60 hover:text-navy'
             )}
           >
             {t === 'smtp' ? 'SMTP / Correo' : 'WhatsApp'}
@@ -373,7 +373,7 @@ export default function ConfiguracionPage() {
                       value={smtpForm.password}
                       onChange={e => setSmtpForm(p => ({ ...p, password: e.target.value }))}
                     />
-                    <button type="button" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                    <button type="button" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/60">
                       {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -471,7 +471,7 @@ export default function ConfiguracionPage() {
                       value={waForm.token}
                       onChange={e => setWaForm(p => ({ ...p, token: e.target.value }))}
                     />
-                    <button type="button" onClick={() => setShowToken(!showToken)} aria-label={showToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                    <button type="button" onClick={() => setShowToken(!showToken)} aria-label={showToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/60">
                       {showToken ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -520,7 +520,7 @@ export default function ConfiguracionPage() {
               <label className={labelCls}>Contraseña (dejar en blanco para no cambiar)</label>
               <div className="relative">
                 <input aria-label="Contraseña" type={showEditPwd ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="••••••••" value={editSmtpForm.password} onChange={e => setEditSmtpForm(p => ({ ...p, password: e.target.value }))} />
-                <button type="button" onClick={() => setShowEditPwd(v => !v)} aria-label={showEditPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                <button type="button" onClick={() => setShowEditPwd(v => !v)} aria-label={showEditPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/60">
                   {showEditPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -564,7 +564,7 @@ export default function ConfiguracionPage() {
               <label className={labelCls}>Token (dejar en blanco para no cambiar)</label>
               <div className="relative">
                 <input aria-label="Token de acceso" type={showEditToken ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="EAABs..." value={editWaForm.token} onChange={e => setEditWaForm(p => ({ ...p, token: e.target.value }))} />
-                <button type="button" onClick={() => setShowEditToken(v => !v)} aria-label={showEditToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/40">
+                <button type="button" onClick={() => setShowEditToken(v => !v)} aria-label={showEditToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/60">
                   {showEditToken ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>

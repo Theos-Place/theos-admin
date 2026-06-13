@@ -58,7 +58,7 @@ export function MemberSummaryTab({
           <div className="flex items-center gap-2 mb-2">
             <MapPin size={14} className="text-coral" strokeWidth={1.75} />
             <span
-              className="text-[10px] uppercase tracking-wider text-navy-light/50 font-display"
+              className="text-[10px] uppercase tracking-wider text-navy-light/60 font-display"
             >
               Sede
             </span>
@@ -74,7 +74,7 @@ export function MemberSummaryTab({
           <div className="flex items-center gap-2 mb-2">
             <BookOpen size={14} className="text-teal-deep" strokeWidth={1.75} />
             <span
-              className="text-[10px] uppercase tracking-wider text-navy-light/50 font-display"
+              className="text-[10px] uppercase tracking-wider text-navy-light/60 font-display"
             >
               Estudios en curso
             </span>
@@ -109,7 +109,7 @@ export function MemberSummaryTab({
           <div className="flex items-center gap-2 mb-2">
             <Users size={14} className="text-navy" strokeWidth={1.75} />
             <span
-              className="text-[10px] uppercase tracking-wider text-navy-light/50 font-display"
+              className="text-[10px] uppercase tracking-wider text-navy-light/60 font-display"
             >
               Servicio
             </span>
@@ -132,7 +132,7 @@ export function MemberSummaryTab({
               >
                 {currentStudyEntry.name}
               </p>
-              <p className="text-xs text-navy-light/50 mt-0.5 font-body">
+              <p className="text-xs text-navy-light/60 mt-0.5 font-body">
                 {currentWeek > 0 ? `Semana ${currentWeek} de ${currentStudyEntry.weeks}` : 'En curso'}
               </p>
             </div>
@@ -174,7 +174,7 @@ export function MemberSummaryTab({
                   key={code + i}
                   className={cn(
                     'rounded-full px-2.5 py-0.5 text-xs font-body',
-                    entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/50'
+                    entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/60'
                   )}
                 >
                   {entry ? entry.name : code}
@@ -202,7 +202,7 @@ export function MemberSummaryTab({
                   <p className="text-sm text-navy truncate font-body">
                     {ev.name}
                   </p>
-                  <p className="text-xs text-navy-light/50 font-body">
+                  <p className="text-xs text-navy-light/60 font-body">
                     {formatDate(ev.date)}
                   </p>
                 </div>
@@ -210,7 +210,7 @@ export function MemberSummaryTab({
                   <span
                     className={cn(
                       'rounded-full px-2 py-0.5 text-[10px] font-body',
-                      TYPE_BADGE[ev.type] ?? 'bg-surface-low text-navy-light/50'
+                      TYPE_BADGE[ev.type] ?? 'bg-surface-low text-navy-light/60'
                     )}
                   >
                     {ev.type}
@@ -218,7 +218,7 @@ export function MemberSummaryTab({
                   <span
                     className={cn(
                       'rounded-full px-2 py-0.5 text-[10px] font-body',
-                      ATTENDANCE_BADGE[ev.attendance_type] ?? 'bg-surface-low text-navy-light/50'
+                      ATTENDANCE_BADGE[ev.attendance_type] ?? 'bg-surface-low text-navy-light/60'
                     )}
                   >
                     {ev.attendance_type === 'servidor' ? 'Servidor' : 'Participante'}

@@ -65,7 +65,7 @@ export function Step4Financiero({
                   <FieldLabel>Monto</FieldLabel>
                   <div className="relative">
                     <span
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50 font-mono"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono"
                     >
                       ₡
                     </span>

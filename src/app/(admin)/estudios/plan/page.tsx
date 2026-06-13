@@ -66,11 +66,11 @@ function StudyCardCompact({ study }: { study: StudyType }) {
         {study.name}
       </p>
       <div className="flex items-center justify-between mt-0.5">
-        <span className="text-[10px] text-navy-light/40 font-body">
+        <span className="text-[10px] text-navy-light/60 font-body">
           {study.weeks} sem.
         </span>
         <span
-          className={cn('text-[10px] font-medium', study.cost === 0 ? 'text-teal-deep/70' : 'text-navy-light/50', 'font-body')}
+          className={cn('text-[10px] font-medium', study.cost === 0 ? 'text-teal-deep/70' : 'text-navy-light/60', 'font-body')}
         >
           {formatCost(study.cost)}
         </span>
@@ -172,7 +172,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
 function StageDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 py-2">
-      <div className="flex items-center gap-1.5 text-navy-light/40">
+      <div className="flex items-center gap-1.5 text-navy-light/60">
         <ArrowDown size={13} strokeWidth={1.5} />
         <span className="text-[11px] font-body">{label}</span>
       </div>
@@ -359,7 +359,7 @@ export default function PlanDeEstudiosPage() {
           <StageLabel color="coral">Etapa Intermedia</StageLabel>
           <ChevronRight size={13} className="text-navy/25" strokeWidth={1.5} />
           <StageLabel color="purple">Campañas</StageLabel>
-          <span className="ml-auto text-[11px] text-navy-light/40 font-body">
+          <span className="ml-auto text-[11px] text-navy-light/60 font-body">
             Plan de estudios bíblicos
           </span>
         </div>

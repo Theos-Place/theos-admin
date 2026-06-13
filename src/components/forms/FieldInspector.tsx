@@ -124,7 +124,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
     const GROUPS = ['Identificación', 'Contacto', 'Emergencia', 'Trabajo', 'Salud'] as const
     return (
       <div className="p-4 space-y-4">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
           Datos personales del miembro
         </p>
 
@@ -195,17 +195,17 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
   if (field.type === 'page_break') {
     return (
       <div className="space-y-4 p-4">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
           Bloque / Página
         </p>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
             Título de la página
           </label>
           <input className={inputCls} placeholder="ej. Información de emergencia" value={field.label} onChange={e => set('label', e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
             Descripción (opcional)
           </label>
           <textarea
@@ -224,15 +224,15 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
   if (field.type === 'section') {
     return (
       <div className="space-y-4 p-4">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
           Separador de sección
         </p>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Título</label>
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Título</label>
           <input className={inputCls} value={field.label} onChange={e => set('label', e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Texto de ayuda</label>
+          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Texto de ayuda</label>
           <input className={inputCls} value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
         </div>
       </div>
@@ -246,7 +246,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
       onClick={() => setActiveSection(key)}
       className={cn(
         'flex-1 py-2 text-[11px] font-medium transition-all border-b-2 -mb-px font-display',
-        activeSection === key ? 'border-coral text-navy' : 'border-transparent text-navy-light/40 hover:text-navy'
+        activeSection === key ? 'border-coral text-navy' : 'border-transparent text-navy-light/60 hover:text-navy'
       )}
     >
       {label}
@@ -269,7 +269,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
           onClick={() => setActiveSection('logic')}
           className={cn(
             'flex-1 py-2 text-[11px] font-medium transition-all border-b-2 -mb-px flex items-center justify-center gap-1 font-display',
-            activeSection === 'logic' ? 'border-coral text-navy' : 'border-transparent text-navy-light/40 hover:text-navy'
+            activeSection === 'logic' ? 'border-coral text-navy' : 'border-transparent text-navy-light/60 hover:text-navy'
           )}
         >
           Lógica
@@ -284,7 +284,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {activeSection === 'general' && (
           <div className="p-4 space-y-3">
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
                 Etiqueta / Pregunta <span className="text-coral">*</span>
               </label>
               <textarea
@@ -296,13 +296,13 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Texto de ayuda</label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Texto de ayuda</label>
               <input className={inputCls} placeholder="Aparece debajo del campo" value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
             </div>
 
             {(field.type === 'text' || field.type === 'textarea' || field.type === 'number') && (
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Placeholder</label>
+                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Placeholder</label>
                 <input className={inputCls} value={field.placeholder ?? ''} onChange={e => set('placeholder', e.target.value || undefined)} />
               </div>
             )}
@@ -310,7 +310,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             <div className="flex items-center justify-between pt-1">
               <div>
                 <p className="text-[13px] font-medium text-navy font-body">Obligatorio</p>
-                <p className="text-[11px] text-navy-light/40 font-body">Marcado con asterisco</p>
+                <p className="text-[11px] text-navy-light/60 font-body">Marcado con asterisco</p>
               </div>
               <div
                 onClick={() => set('is_required', !field.is_required)}
@@ -325,7 +325,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* OPTIONS */}
         {activeSection === 'options' && showOptions && (
           <div className="p-4 space-y-3">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">Opciones</p>
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Opciones</p>
             <div className="space-y-2">
               {(field.options ?? []).map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -355,9 +355,9 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* SCALE */}
         {activeSection === 'scale' && showScale && (
           <div className="p-4 space-y-3">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">Escala</p>
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Escala</p>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Rango</label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Rango</label>
               <div className="flex gap-2">
                 {([[1, 5], [1, 10]] as const).map(([min, max]) => (
                   <button
@@ -374,11 +374,11 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">Etiq. mínimo</label>
+                <label className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Etiq. mínimo</label>
                 <input className={inputCls} placeholder="Ej: Muy malo" value={field.scale_min_label ?? ''} onChange={e => set('scale_min_label', e.target.value || undefined)} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">Etiq. máximo</label>
+                <label className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Etiq. máximo</label>
                 <input className={inputCls} placeholder="Ej: Excelente" value={field.scale_max_label ?? ''} onChange={e => set('scale_max_label', e.target.value || undefined)} />
               </div>
             </div>
@@ -388,13 +388,13 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* LOGIC */}
         {activeSection === 'logic' && (
           <div className="p-4 space-y-4">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
               Lógica condicional
             </p>
 
             {(field.logic_rules ?? []).length === 0 && (
               <div className="rounded-xl border-2 border-dashed py-6 flex flex-col items-center gap-2 border-[var(--outline-variant)]">
-                <p className="text-[12px] text-navy-light/40 font-body">Sin reglas aún</p>
+                <p className="text-[12px] text-navy-light/60 font-body">Sin reglas aún</p>
               </div>
             )}
 
@@ -402,7 +402,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
               <div key={rule.id} className="rounded-xl border space-y-3 p-3 border-[var(--outline-variant)]">
                 {/* Rule header */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-navy-light/50 font-display">
+                  <span className="text-[11px] font-semibold text-navy-light/60 font-display">
                     Regla {ruleIdx + 1}
                   </span>
                   <button type="button" onClick={() => deleteRule(rule.id)} className="relative after:absolute after:content-[''] after:-inset-2 h-6 w-6 flex items-center justify-center rounded-full hover:bg-coral/10 transition-colors" aria-label={`Eliminar regla ${ruleIdx + 1}`}>
@@ -412,7 +412,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
 
                 {/* Action */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] text-navy-light/50 shrink-0 font-body">Acción</span>
+                  <span className="text-[12px] text-navy-light/60 shrink-0 font-body">Acción</span>
                   <select
                     className={cn(inputCls, 'flex-1')}
                     value={rule.action}
@@ -425,14 +425,14 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
 
                 {/* Combinator */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] text-navy-light/50 shrink-0 font-body">Combinar</span>
+                  <span className="text-[12px] text-navy-light/60 shrink-0 font-body">Combinar</span>
                   <div className="flex gap-1">
                     {(['AND', 'OR'] as const).map(op => (
                       <button
                         key={op}
                         type="button"
                         onClick={() => updateRule(rule.id, { condition_operator: op })}
-                        className={cn('rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all font-display', rule.condition_operator === op ? 'bg-navy text-white' : 'text-navy-light/40 hover:text-navy')}
+                        className={cn('rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all font-display', rule.condition_operator === op ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy')}
                       >
                         {op}
                       </button>
@@ -451,7 +451,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                     return (
                       <div key={cond.id} className="rounded-lg p-2.5 space-y-2 bg-surface-low">
                         {ci > 0 && (
-                          <p className="text-[10px] font-bold text-navy-light/40 text-center font-display">
+                          <p className="text-[10px] font-bold text-navy-light/60 text-center font-display">
                             {rule.condition_operator}
                           </p>
                         )}

@@ -48,7 +48,7 @@ export default function PuestosPage() {
           >
             Puestos pagados
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
+          <p className="mt-1 text-sm text-white/70 font-body">
             Roles remunerados definidos en la organización
           </p>
         </div>
@@ -65,8 +65,8 @@ export default function PuestosPage() {
       <div
         className="flex items-center gap-2.5 rounded-xl px-4 py-3 bg-surface-low"
       >
-        <Lock size={13} className="text-navy-light/40 shrink-0" />
-        <p className="text-[12px] text-navy-light/50 font-body">
+        <Lock size={13} className="text-navy-light/60 shrink-0" />
+        <p className="text-[12px] text-navy-light/60 font-body">
           Los rangos salariales son confidenciales — solo visibles para Administración y Dirección.
         </p>
       </div>
@@ -88,7 +88,7 @@ export default function PuestosPage() {
           <div key={area.code} className="space-y-3">
             <div className="flex items-center gap-3">
               <p
-                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/50 font-display"
+                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/60 font-display"
               >
                 {area.name}
               </p>
@@ -130,7 +130,7 @@ export default function PuestosPage() {
 
                     {/* Salary range */}
                     <div className="space-y-0.5">
-                      <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+                      <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                         Rango salarial
                       </p>
                       <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export default function PuestosPage() {
                         </div>
                       ) : (
                         <span
-                          className="rounded-full bg-navy-light/10 px-2.5 py-0.5 text-[10px] text-navy-light/40 font-display"
+                          className="rounded-full bg-navy-light/10 px-2.5 py-0.5 text-[10px] text-navy-light/60 font-display"
                         >
                           Sin asignar
                         </span>

@@ -54,13 +54,13 @@ export function GoalsTab({
             <p
               className={cn(
                 'text-sm text-navy font-body',
-                g.status === 'completed' && 'line-through text-navy-light/40'
+                g.status === 'completed' && 'line-through text-navy-light/60'
               )}
             >
               {g.description}
             </p>
             {g.due_date && (
-              <p className="text-[11px] text-navy-light/40 font-mono">
+              <p className="text-[11px] text-navy-light/60 font-mono">
                 Límite: {new Date(g.due_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             )}
@@ -89,7 +89,7 @@ export function GoalsTab({
             autoFocus
           />
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Fecha límite (opcional)
             </label>
             <input

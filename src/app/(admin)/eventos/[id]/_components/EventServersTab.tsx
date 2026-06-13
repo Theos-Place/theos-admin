@@ -147,7 +147,7 @@ export function EventServersTab({
         <div className="space-y-3">
           {Object.entries(groupedBookings).map(([role, bookings]) => (
             <div key={role} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display">{role}</p>
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display">{role}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {bookings.map(b => (
                   <div key={b.id} className="relative flex items-center gap-3 rounded-xl px-3 py-2.5 bg-surface-low">
@@ -166,7 +166,7 @@ export function EventServersTab({
                           {b.status === 'confirmed' ? '✓ Confirmado' : b.status === 'pending' ? '⏳ Pendiente' : '✗ Declinó'}
                         </span>
                         {b.is_recurring && (
-                          <span className="text-[10px] text-navy-light/40 font-body">
+                          <span className="text-[10px] text-navy-light/60 font-body">
                             <Link2 size={10} className="inline" /> Serie
                           </span>
                         )}
@@ -224,7 +224,7 @@ export function EventServersTab({
               {modalStep === 1 && (
                 <>
                   <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
-                    <Search size={14} className="text-navy-light/40 shrink-0" />
+                    <Search size={14} className="text-navy-light/60 shrink-0" />
                     <input
                       type="search"
                       autoFocus
@@ -265,7 +265,7 @@ export function EventServersTab({
                           <p className="text-sm text-navy truncate font-body">
                             {m.first_name} {m.last_name}
                           </p>
-                          <p className="text-[11px] text-navy-light/40 truncate font-mono">
+                          <p className="text-[11px] text-navy-light/60 truncate font-mono">
                             {m.cedula ?? 'Sin cédula'}
                             {m.service_history.filter(s => s.status === 'activo').map(s => ` · ${s.committee}`).join('')}
                           </p>
@@ -274,7 +274,7 @@ export function EventServersTab({
                       </button>
                     ))}
                     {filteredMembers.length === 0 && (
-                      <p className="text-sm text-navy-light/40 text-center py-4 font-body">Sin resultados</p>
+                      <p className="text-sm text-navy-light/60 text-center py-4 font-body">Sin resultados</p>
                     )}
                   </div>
                 </>
@@ -291,14 +291,14 @@ export function EventServersTab({
                       <p className="text-sm font-medium text-navy font-body">
                         {selectedMember.first_name} {selectedMember.last_name}
                       </p>
-                      <p className="text-[11px] text-navy-light/50 font-mono">
+                      <p className="text-[11px] text-navy-light/60 font-mono">
                         {selectedMember.cedula ?? 'Sin cédula'}
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+                    <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
                       Rol en este evento
                     </label>
                     <select
@@ -334,7 +334,7 @@ export function EventServersTab({
                       <div>
                         <p className="text-sm text-navy font-body">Booking recurrente</p>
                         {assignRecurring && (
-                          <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">
+                          <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
                             Esta persona quedará asignada a todas las instancias futuras de esta serie
                           </p>
                         )}

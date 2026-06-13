@@ -122,7 +122,7 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
           className="absolute right-0 top-[calc(100%+6px)] z-40 w-64 rounded-2xl overflow-hidden bg-surface-card shadow-[0_20px_48px_rgba(22,20,64,0.14)] border border-[var(--outline-variant)]"
         >
           <div className="px-4 py-3 border-b border-[var(--outline-variant)]">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
               Exportar resultados
             </p>
           </div>
@@ -140,7 +140,7 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
               onClick={handleCSV}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
-              <FileText size={15} className="text-navy-light/50 shrink-0" />
+              <FileText size={15} className="text-navy-light/60 shrink-0" />
               CSV (.csv)
             </button>
           </div>
@@ -169,7 +169,7 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
 
           {/* Record count */}
           <div className="border-t px-4 py-3 border-[var(--outline-variant)]">
-            <p className="text-[11px] text-navy-light/50 font-body">
+            <p className="text-[11px] text-navy-light/60 font-body">
               <span className="font-semibold text-navy">{data.length.toLocaleString('es-CR')}</span> registros a exportar
             </p>
           </div>

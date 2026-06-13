@@ -22,7 +22,7 @@ const INPUT = [
 const LABEL = 'block text-[12px] font-medium text-navy-light/60 mb-1.5 font-body'
 const CARD = 'rounded-2xl p-6 space-y-4'
 const CARD_STYLE = { background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' } as const
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/40 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/60 font-display'
 
 const REQS = [
   { label: 'Mínimo 8 caracteres',    test: (v: string) => v.length >= 8 },
@@ -50,7 +50,7 @@ export default function SeguridadPage() {
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Seguridad
         </h1>
-        <p className="mt-1 text-sm text-navy-light/50 font-body">
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           Gestioná tu contraseña, métodos de acceso y sesiones
         </p>
       </div>
@@ -132,7 +132,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={`${INPUT} pr-11 font-body`}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80" tabIndex={-1}>
+            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy-light/80" tabIndex={-1}>
               {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -165,7 +165,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={cn(`${INPUT} pr-11 font-body`, confirmErr ? 'border-coral/50 focus:ring-coral/10' : '')}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80" tabIndex={-1}>
+            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy-light/80" tabIndex={-1}>
               {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -286,14 +286,14 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
         </p>
       )}
       {!supported && !error && (
-        <p className="flex items-center gap-1.5 text-[12px] text-navy-light/50 font-body">
+        <p className="flex items-center gap-1.5 text-[12px] text-navy-light/60 font-body">
           <AlertCircle size={12} className="shrink-0" />
           Tu dispositivo no soporta passkeys. Podés usarlas desde un dispositivo compatible.
         </p>
       )}
 
       {loading ? (
-        <div className="flex items-center gap-2 text-[13px] text-navy-light/40 py-2 font-body">
+        <div className="flex items-center gap-2 text-[13px] text-navy-light/60 py-2 font-body">
           <Loader2 size={14} className="animate-spin" /> Cargando...
         </div>
       ) : passkeys.length === 0 ? (
@@ -311,13 +311,13 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
             <div key={pk.id} className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-surface-low">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-navy/6">
-                  <Fingerprint size={15} className="text-navy-light/50" />
+                  <Fingerprint size={15} className="text-navy-light/60" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-medium text-navy truncate font-body">
                     {pk.friendly_name?.trim() || 'Passkey sin nombre'}
                   </p>
-                  <p className="text-[11px] text-navy-light/40 font-body">Registrada el {fmtDate(pk.created_at)}</p>
+                  <p className="text-[11px] text-navy-light/60 font-body">Registrada el {fmtDate(pk.created_at)}</p>
                 </div>
               </div>
               <button
@@ -471,7 +471,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
       )}
 
       {loading ? (
-        <div className="flex items-center gap-2 text-[13px] text-navy-light/40 py-2 font-body">
+        <div className="flex items-center gap-2 text-[13px] text-navy-light/60 py-2 font-body">
           <Loader2 size={14} className="animate-spin" /> Cargando...
         </div>
       ) : factor ? (
@@ -491,7 +491,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
                     Activa
                   </span>
                 </div>
-                <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
+                <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
                   Activada el {fmtDate(factor.updated_at || factor.created_at)}
                 </p>
               </div>
@@ -517,7 +517,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
             </div>
             <div className="flex-1 min-w-0 space-y-3">
               <div>
-                <p className="text-[11px] uppercase tracking-widest text-navy-light/40 mb-1 font-display">¿No podés escanear?</p>
+                <p className="text-[11px] uppercase tracking-widest text-navy-light/60 mb-1 font-display">¿No podés escanear?</p>
                 <p className="text-[12px] text-navy-light/60 mb-1.5 font-body">Ingresá este código manualmente:</p>
                 <code className="block rounded-xl bg-surface-low px-3 py-2.5 text-[13px] text-navy break-all font-mono select-all">
                   {enroll.secret}
@@ -560,7 +560,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
         <div className="space-y-4">
           <div className="flex items-start gap-3 rounded-xl px-4 py-4 bg-surface-low">
             <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-navy/6">
-              <Shield size={16} className="text-navy-light/50" />
+              <Shield size={16} className="text-navy-light/60" />
             </div>
             <p className="text-[13px] text-navy-light/60 leading-relaxed font-body">
               Agregá una capa extra de seguridad pidiendo un código de tu app de autenticación
@@ -615,11 +615,11 @@ function SessionsCard({ onSave }: { onSave: (msg: string) => void }) {
       <div className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-surface-low">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-navy/6">
-            <Monitor size={15} className="text-navy-light/50" />
+            <Monitor size={15} className="text-navy-light/60" />
           </div>
           <div>
             <p className="text-[13px] font-medium text-navy font-body">Este dispositivo</p>
-            <p className="text-[11px] text-navy-light/40 font-body">Sesión actual</p>
+            <p className="text-[11px] text-navy-light/60 font-body">Sesión actual</p>
           </div>
         </div>
         <span className="text-[11px] rounded-full px-2.5 py-1 font-medium font-body bg-success/10 text-success">
@@ -627,7 +627,7 @@ function SessionsCard({ onSave }: { onSave: (msg: string) => void }) {
         </span>
       </div>
 
-      <p className="flex items-start gap-1.5 text-[12px] text-navy-light/50 font-body">
+      <p className="flex items-start gap-1.5 text-[12px] text-navy-light/60 font-body">
         <Smartphone size={13} className="shrink-0 mt-0.5" />
         Si ingresaste desde otro dispositivo y querés revocar ese acceso, cerrá las demás sesiones.
       </p>

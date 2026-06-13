@@ -77,7 +77,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
         <div className="space-y-3 pl-2 border-l-2 border-coral/20 ml-1">
           {/* Frecuencia */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               Frecuencia
             </p>
             <div className="flex gap-2">
@@ -99,7 +99,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
 
           {/* Día */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               Día de la semana
             </p>
             <div className="flex gap-1.5">
@@ -121,7 +121,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
 
           {/* Fin de recurrencia */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               Fecha de fin (opcional)
             </p>
             <input

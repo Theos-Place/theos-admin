@@ -32,7 +32,7 @@ export function EventInfoTab({
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">Descripción</h3>
+        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Descripción</h3>
         <p className="text-sm text-navy-light/70 leading-relaxed font-body">{event.description}</p>
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-t-[var(--outline-variant)]">
           {[
@@ -46,7 +46,7 @@ export function EventInfoTab({
             { label: 'Capacidad', value: `${event.max_capacity} personas` },
           ].map(({ label, value }) => (
             <div key={label} className="space-y-0.5">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">{label}</p>
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{label}</p>
               <p className="text-sm text-navy font-body">{value}</p>
             </div>
           ))}
@@ -56,7 +56,7 @@ export function EventInfoTab({
       <div className="space-y-4">
         {event.sub_events.length > 0 && (
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3 font-display">Sub-eventos</h3>
+            <h3 className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-3 font-display">Sub-eventos</h3>
             <div className="space-y-2">
               {event.sub_events.map(se => {
                 const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
@@ -72,14 +72,14 @@ export function EventInfoTab({
         )}
 
         <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">Configuración</h3>
+          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">Configuración</h3>
           {[
             { label: 'Recurrente', value: event.is_recurring ? event.recurrence_rule ?? 'Sí' : 'No' },
             { label: 'Encuesta', value: event.requires_survey ? 'Requerida' : 'No' },
             { label: 'Pago', value: event.requires_payment ? `₡${event.payment_amount?.toLocaleString()}` : 'Gratuito' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between text-sm">
-              <span className="text-navy-light/50 font-body">{label}</span>
+              <span className="text-navy-light/60 font-body">{label}</span>
               <span className="text-navy font-medium font-body">{value}</span>
             </div>
           ))}
@@ -87,7 +87,7 @@ export function EventInfoTab({
 
         {/* Flyer */}
         <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">Flyer / Banner</h3>
+          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">Flyer / Banner</h3>
           <input
             ref={flyerInputRef}
             type="file"
@@ -118,7 +118,7 @@ export function EventInfoTab({
               <p className="text-[12px] font-medium text-navy-light/60 font-body">
                 Subir flyer
               </p>
-              <p className="text-[10px] text-navy-light/40 font-body">
+              <p className="text-[10px] text-navy-light/60 font-body">
                 PNG, JPG, WebP — máx 5MB
               </p>
             </div>

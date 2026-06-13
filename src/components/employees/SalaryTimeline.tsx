@@ -55,7 +55,7 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
             </div>
             {/* Content */}
             <div className={cn('pb-5', idx === items.length - 1 && 'pb-0')}>
-              <p className="text-[11px] text-navy-light/40 mb-0.5 font-mono">
+              <p className="text-[11px] text-navy-light/60 mb-0.5 font-mono">
                 {new Date(item.date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
               </p>
               <p className="text-sm font-semibold text-navy font-display">
@@ -70,7 +70,7 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
                 {item.reason}
               </p>
               {item.approvedBy && (
-                <p className="text-[11px] text-navy-light/40 mt-0.5 font-body">
+                <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
                   Aprobado por {item.approvedBy}
                 </p>
               )}

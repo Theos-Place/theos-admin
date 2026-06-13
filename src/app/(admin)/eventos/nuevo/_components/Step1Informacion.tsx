@@ -105,7 +105,7 @@ export function Step1Informacion({
           <div className="flex items-center justify-between mb-1">
             <FieldLabel>Descripción</FieldLabel>
             <span
-              className="text-[10px] text-navy-light/40 font-mono"
+              className="text-[10px] text-navy-light/60 font-mono"
             >
               {description.length}/500
             </span>
@@ -159,7 +159,7 @@ export function Step1Informacion({
               Subí el flyer del evento
             </p>
             <p
-              className="text-[11px] text-navy-light/40 font-body"
+              className="text-[11px] text-navy-light/60 font-body"
             >
               PNG, JPG, WebP — máx 5MB · Recomendado: 1200×630px
             </p>

@@ -208,7 +208,7 @@ function EventosContent() {
           >
             Eventos
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
+          <p className="mt-1 text-sm text-white/70 font-body">
             {loading ? 'Cargando…' : `${events.length} eventos en el sistema`}
           </p>
         </div>
@@ -258,7 +258,7 @@ function EventosContent() {
             className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
           >
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+              className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
             >
               {label}
             </p>
@@ -354,7 +354,7 @@ function EventosContent() {
                   {['Evento', 'Tipo', 'Fecha', 'Capacidad', 'Inscritos', 'Estado', ''].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                     >
                       {h}
                     </th>
@@ -527,7 +527,7 @@ export default function EventosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
       </div>
     }>
       <EventosContent />

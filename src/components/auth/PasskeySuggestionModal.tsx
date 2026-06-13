@@ -115,7 +115,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
             <button
               onClick={handleNever}
               disabled={phase === 'registering'}
-              className="mt-3 text-[12px] text-navy-light/40 hover:text-navy-light/70 transition-colors disabled:opacity-50 font-body"
+              className="mt-3 text-[12px] text-navy-light/60 hover:text-navy-light/70 transition-colors disabled:opacity-50 font-body"
             >
               No volver a mostrar
             </button>

@@ -72,7 +72,7 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-1 border-t border-[var(--outline-variant)]">
-        <span className="text-[11px] text-navy-light/40 font-body">
+        <span className="text-[11px] text-navy-light/60 font-body">
           Usado {template.used_count} veces
         </span>
         <div className="flex items-center gap-1">
@@ -87,17 +87,17 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
             </button>
           )}
           {onEdit && (
-            <button type="button" onClick={() => onEdit(template)} className="rounded-lg p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onEdit(template)} className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
               <Edit size={13} />
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={() => onDuplicate(template)} className="rounded-lg p-1.5 text-navy-light/50 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onDuplicate(template)} className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
               <Copy size={13} />
             </button>
           )}
           {onDelete && (
-            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/50 hover:text-coral hover:bg-coral/5 transition-colors">
+            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/5 transition-colors">
               <Trash2 size={13} />
             </button>
           )}

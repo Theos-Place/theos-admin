@@ -21,7 +21,7 @@ export function SortableHeader({ label, sortKey, currentSortKey, currentSortDir,
         <span
           className={cn(
             'font-display text-[10px] tracking-widest uppercase transition-colors duration-120',
-            isActive ? 'font-bold text-navy' : 'font-semibold text-navy-light/50'
+            isActive ? 'font-bold text-navy' : 'font-semibold text-navy-light/60'
           )}
         >
           {label}
@@ -29,7 +29,7 @@ export function SortableHeader({ label, sortKey, currentSortKey, currentSortDir,
         <span
           className={cn(
             'flex items-center transition-colors duration-120',
-            isActive ? 'text-coral' : 'text-navy-light/40'
+            isActive ? 'text-coral' : 'text-navy-light/60'
           )}
         >
           {isActive

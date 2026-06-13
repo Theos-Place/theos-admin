@@ -190,7 +190,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
           <button
             type="button"
             onClick={onOpenFilters}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-sm text-navy-light/50 hover:border-navy/30 hover:text-navy transition-all border-[var(--outline-variant)] font-body"
+            className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-sm text-navy-light/60 hover:border-navy/30 hover:text-navy transition-all border-[var(--outline-variant)] font-body"
           >
             <Filter size={15} />
             Abrir filtros de miembros
@@ -199,7 +199,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
             <div className="rounded-xl p-3 flex items-center justify-between gap-2 bg-surface-low">
               <div>
                 <p className="text-[12px] font-medium text-navy font-body">{filtersLabel}</p>
-                <p className="text-[11px] text-navy-light/50 font-body">~{filtersCount} miembros</p>
+                <p className="text-[11px] text-navy-light/60 font-body">~{filtersCount} miembros</p>
               </div>
               <span className="text-[11px] text-teal-deep font-semibold font-display">
                 ✓ Aplicado
@@ -212,7 +212,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
       {value.mode === 'manual' && (
         <div className="space-y-3">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
             <input
               className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar miembro..."
@@ -238,7 +238,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
                     <p className="text-[12px] font-medium text-navy font-body">
                       {m.first_name} {m.last_name}
                     </p>
-                    <p className="text-[11px] text-navy-light/50 font-body">{m.email}</p>
+                    <p className="text-[11px] text-navy-light/60 font-body">{m.email}</p>
                   </div>
                 </button>
               ))}
@@ -254,7 +254,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
                 >
                   {m.first_name} {m.last_name}
                   <button type="button" onClick={() => removeMember(m.id)}>
-                    <X size={12} className="text-navy-light/50 hover:text-coral" />
+                    <X size={12} className="text-navy-light/60 hover:text-coral" />
                   </button>
                 </span>
               ))}

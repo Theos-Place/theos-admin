@@ -294,7 +294,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl text-white mb-1 font-display font-extrabold">
               {getGreeting(today.getHours())}, {user?.name?.split(' ')[0] ?? 'bienvenido'} 👋
             </h1>
-            <p className="text-white/50 text-[13px] font-body">
+            <p className="text-white/70 text-[13px] font-body">
               {formatDay(today)} · {formatTime(today)}
             </p>
           </div>
@@ -361,7 +361,7 @@ export default function DashboardPage() {
             <h1 className="text-xl sm:text-2xl text-white mb-0.5 font-display font-extrabold">
               {getGreeting(today.getHours())}, {user?.name?.split(' ')[0] ?? 'bienvenido'} 👋
             </h1>
-            <p className="text-white/50 text-[13px] mb-1 font-body">
+            <p className="text-white/70 text-[13px] mb-1 font-body">
               {formatDay(today)} · {formatTime(today)}
             </p>
             <p className="text-white/30 text-[12px] font-body">

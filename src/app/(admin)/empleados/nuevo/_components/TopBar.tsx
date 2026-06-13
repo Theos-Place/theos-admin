@@ -23,12 +23,12 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
           <ChevronLeft size={16} />
           Empleados
         </Link>
-        <span className="text-navy-light/40 hidden sm:inline">|</span>
+        <span className="text-navy-light/60 hidden sm:inline">|</span>
         <span className="text-sm font-semibold text-navy font-display truncate hidden sm:inline">
           Contratar empleado
         </span>
         <span
-          className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-semibold text-navy-light/50 lg:hidden font-display"
+          className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-semibold text-navy-light/60 lg:hidden font-display"
         >
           {step}/{totalSteps}
         </span>

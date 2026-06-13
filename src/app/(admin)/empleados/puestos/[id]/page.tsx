@@ -20,7 +20,7 @@ export default function PuestoDetailPage() {
   if (!position) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50 font-body">
+        <p className="text-sm text-navy-light/60 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -31,7 +31,7 @@ export default function PuestoDetailPage() {
     <div className="space-y-4">
       <Link
         href="/empleados/puestos"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors font-body"
+        className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Puestos
@@ -82,19 +82,19 @@ export default function PuestoDetailPage() {
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-center gap-2">
-          <p className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+          <p className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
             Rango salarial aprobado
           </p>
           <Lock size={11} className="text-navy-light/60" />
         </div>
         <div className="flex items-center gap-3">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-navy-light/40 font-display">Mínimo</p>
+            <p className="text-[10px] text-navy-light/60 font-display">Mínimo</p>
             <SalaryBadge amount={position.salary_min} size="md" />
           </div>
-          <span className="text-navy-light/40 text-lg">—</span>
+          <span className="text-navy-light/60 text-lg">—</span>
           <div className="space-y-0.5">
-            <p className="text-[10px] text-navy-light/40 font-display">Máximo</p>
+            <p className="text-[10px] text-navy-light/60 font-display">Máximo</p>
             <SalaryBadge amount={position.salary_max} size="md" />
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function PuestoDetailPage() {
       <div
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+        <p className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
           Persona asignada
         </p>
         {assigned ? (
@@ -119,7 +119,7 @@ export default function PuestoDetailPage() {
                 <p className="truncate text-sm font-semibold text-navy font-display">
                   {assigned.member_name}
                 </p>
-                <p className="truncate text-[12px] text-navy-light/50 font-body">
+                <p className="truncate text-[12px] text-navy-light/60 font-body">
                   {assigned.member_email}
                 </p>
               </div>
@@ -134,7 +134,7 @@ export default function PuestoDetailPage() {
         ) : (
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <span
-              className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/40 font-display"
+              className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/60 font-display"
             >
               Sin asignar
             </span>

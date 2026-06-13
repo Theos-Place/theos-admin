@@ -193,7 +193,7 @@ function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () =>
         {/* Principal + seleccionar todo */}
         <div className="flex flex-wrap items-center gap-2 justify-between">
           <div className="flex items-center gap-2 text-xs font-body">
-            <span className="text-navy-light/50">Perfil principal:</span>
+            <span className="text-navy-light/60">Perfil principal:</span>
             {(['a', 'b'] as const).map(s => (
               <button key={s} onClick={() => setPrincipal(s)}
                 className={cn('rounded-full px-3 py-1 transition-colors', principal === s ? 'bg-navy text-white' : 'bg-surface-low text-navy-light')}>
@@ -227,7 +227,7 @@ function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () =>
                       <input type="radio" checked={choice[f.key] === side} onChange={() => pick(f.key, side)} className="accent-coral mt-1 shrink-0" />
                       <span className="min-w-0">
                         <span className="block text-[13px] text-navy font-body truncate">{fieldDisplay(m, f.key)}</span>
-                        {ed && <span className="block text-[10px] text-navy-light/40 font-body">{ed}</span>}
+                        {ed && <span className="block text-[10px] text-navy-light/60 font-body">{ed}</span>}
                       </span>
                     </label>
                   )
@@ -335,7 +335,7 @@ export default function DuplicadosPage() {
       {loading ? (
         <div className="py-16 text-center font-body">
           <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-          <p className="text-sm text-navy-light/50">Buscando duplicados…</p>
+          <p className="text-sm text-navy-light/60">Buscando duplicados…</p>
         </div>
       ) : visible.length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">

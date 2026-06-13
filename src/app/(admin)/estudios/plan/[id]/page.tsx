@@ -514,7 +514,7 @@ function DirigenteReferenteSelect({ value, onChange }: {
 
   const Badge = ({ status }: { status: 'activo' | 'inactivo' }) => (
     <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium font-body',
-      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/50')}>
+      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60')}>
       {status === 'activo' ? 'Activo' : 'Inactivo'}
     </span>
   )
@@ -535,15 +535,15 @@ function DirigenteReferenteSelect({ value, onChange }: {
             <Badge status={selected.status} />
           </>
         ) : (
-          <span className="flex-1 text-sm text-navy-light/50 font-body">Sin dirigente referente</span>
+          <span className="flex-1 text-sm text-navy-light/60 font-body">Sin dirigente referente</span>
         )}
-        <span className="text-navy-light/40 text-xs">▾</span>
+        <span className="text-navy-light/60 text-xs">▾</span>
       </button>
 
       {open && (
         <div className="absolute z-30 mt-1 w-full rounded-2xl bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)] overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--outline-variant)]">
-            <Search size={14} className="text-navy-light/40 shrink-0" />
+            <Search size={14} className="text-navy-light/60 shrink-0" />
             <input
               autoFocus
               value={q}
@@ -577,7 +577,7 @@ function DirigenteReferenteSelect({ value, onChange }: {
               </button>
             ))}
             {filtered.length === 0 && (
-              <p className="px-3 py-3 text-xs text-navy-light/40 font-body">Sin resultados.</p>
+              <p className="px-3 py-3 text-xs text-navy-light/60 font-body">Sin resultados.</p>
             )}
           </div>
         </div>

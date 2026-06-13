@@ -50,7 +50,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-        <p className="text-navy-light/50 text-sm font-body">Miembro no encontrado</p>
+        <p className="text-navy-light/60 text-sm font-body">Miembro no encontrado</p>
         <Link href="/accesos" className="text-sm text-coral hover:text-coral-deep font-body">
           ← Volver a Accesos
         </Link>
@@ -99,7 +99,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
       {/* Back */}
       <Link
         href="/accesos"
-        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/40 hover:text-navy-light transition-colors font-body"
+        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/60 hover:text-navy-light transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Accesos y Roles
@@ -118,7 +118,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
             <h1 className="text-xl text-navy font-display font-extrabold tracking-[-0.02em]">
               {user.member_name}
             </h1>
-            <p className="text-[13px] text-navy-light/50 font-body">
+            <p className="text-[13px] text-navy-light/60 font-body">
               {user.member_email}
             </p>
           </div>
@@ -134,12 +134,12 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
 
       {/* Roles actuales */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
           Roles actuales
         </p>
 
         {displayRoles.length === 0 ? (
-          <p className="text-sm text-navy-light/40 py-4 text-center font-body">
+          <p className="text-sm text-navy-light/60 py-4 text-center font-body">
             Este miembro no tiene roles adicionales asignados.
           </p>
         ) : (
@@ -156,7 +156,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                     <div className="h-3 w-3 rounded-full shrink-0" style={{ background: role.color }} />
                     <div>
                       <p className="text-sm font-medium text-navy font-body">{role.name}</p>
-                      <p className="text-[12px] text-navy-light/50 font-body">{role.description}</p>
+                      <p className="text-[12px] text-navy-light/60 font-body">{role.description}</p>
                     </div>
                   </div>
                   <button
@@ -175,7 +175,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
       {/* Agregar roles */}
       {availableRoles.length > 0 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
             Agregar rol
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -194,7 +194,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                     <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: role.color }} />
                     <p className="text-[13px] font-semibold text-navy flex-1 font-body">{role.name}</p>
                   </div>
-                  <p className="text-[11px] text-navy-light/50 leading-relaxed mb-3 font-body">
+                  <p className="text-[11px] text-navy-light/60 leading-relaxed mb-3 font-body">
                     {role.description}
                   </p>
                   {assigned ? (
@@ -219,11 +219,11 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
 
       {/* Historial */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
           Historial de cambios
         </p>
         {history.length === 0 ? (
-          <p className="text-sm text-navy-light/40 text-center py-4 font-body">Sin historial</p>
+          <p className="text-sm text-navy-light/60 text-center py-4 font-body">Sin historial</p>
         ) : (
           <div className="relative space-y-0">
             {history.map((entry, i) => {
@@ -248,7 +248,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                       {entry.action === 'assigned' ? 'asignó' : 'revocó'}{' '}
                       <span className="font-medium">"{role?.name ?? entry.role}"</span>
                     </p>
-                    <p className="text-[11px] text-navy-light/40 mt-0.5 font-body">
+                    <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
                       {formatDate(entry.date)}
                     </p>
                   </div>

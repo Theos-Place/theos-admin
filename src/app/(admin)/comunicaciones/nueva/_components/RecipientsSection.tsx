@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { Check, X, List } from 'lucide-react'
 import type { CommunicationMessage } from '@/types/communication'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
 const PREVIEW_COUNT = 20
 
 type Props = {
@@ -74,7 +74,7 @@ export function RecipientsSection({
                   Destinatarios ({recipients.count.toLocaleString('es-CR')})
                 </p>
                 <div className="h-px my-1.5 bg-[var(--outline-variant)]" />
-                <p className="text-[12px] text-navy-light/50 font-body">
+                <p className="text-[12px] text-navy-light/60 font-body">
                   Importado desde lista de miembros
                 </p>
                 {initialSegmentLabel && (
@@ -89,7 +89,7 @@ export function RecipientsSection({
                   setIsImported(false)
                   setRecipients({ mode: 'manual', manualMemberIds: [], groupEntity: null, groupId: '', label: '', count: 0 })
                 }}
-                className="flex items-center gap-1 text-[11px] text-navy-light/50 hover:text-coral transition-colors shrink-0 font-body"
+                className="flex items-center gap-1 text-[11px] text-navy-light/60 hover:text-coral transition-colors shrink-0 font-body"
               >
                 <X size={12} />
                 Limpiar
@@ -115,7 +115,7 @@ export function RecipientsSection({
                   </div>
                 ))}
                 {recipients.count > previewMembers.length && (
-                  <p className="text-[11px] text-navy-light/40 pt-0.5 font-body">
+                  <p className="text-[11px] text-navy-light/60 pt-0.5 font-body">
                     y {(recipients.count - previewMembers.length).toLocaleString('es-CR')} más
                   </p>
                 )}

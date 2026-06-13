@@ -90,7 +90,7 @@ export default function FinanzasPage() {
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
                 Finanzas
               </h1>
-              <p className="text-[12px] text-white/50 mt-0.5 font-body">
+              <p className="text-[12px] text-white/70 mt-0.5 font-body">
                 Gestión financiera de Theos Place
               </p>
             </div>
@@ -134,7 +134,7 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={16} className="text-[#3DB97A]" />
-              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">Total ingresos</p>
+              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Total ingresos</p>
             </div>
             <p className="text-2xl font-extrabold font-display text-navy">
               <AmountDisplay amount={totalIngresos} defaultHidden={false} revealed={revealAll} />
@@ -145,7 +145,7 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <Heart size={16} className="text-teal-deep" />
-              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">Donadores activos</p>
+              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Donadores activos</p>
             </div>
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors}
@@ -156,7 +156,7 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <CreditCard size={16} className={`${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`} />
-              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">Pagos pendientes</p>
+              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Pagos pendientes</p>
             </div>
             <div className="flex items-center gap-2">
               <p className={`text-4xl font-extrabold font-display ${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`}>
@@ -174,7 +174,7 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <ArrowLeftRight size={16} className={`${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`} />
-              <p className="text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">Devoluciones pend.</p>
+              <p className="text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">Devoluciones pend.</p>
             </div>
             <div className="flex items-center gap-2">
               <p className={`text-4xl font-extrabold font-display ${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`}>
@@ -210,7 +210,7 @@ export default function FinanzasPage() {
                     {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]"
+                        className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]"
                       >
                         {h}
                       </th>
@@ -286,7 +286,7 @@ export default function FinanzasPage() {
           <div className="space-y-4">
             {/* Quick access */}
             <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.40)]">
+              <p className="text-[11px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.60)]">
                 Accesos rápidos
               </p>
               <div className="space-y-2">

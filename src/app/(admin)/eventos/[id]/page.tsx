@@ -270,7 +270,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 onClick={() => setActiveTab(t)}
                 className={cn(
                   'flex-1 whitespace-nowrap px-2 py-2.5 text-[12px] transition-colors',
-                  activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/50 hover:text-navy',
+                  activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/60 hover:text-navy',
                   'font-body'
                 )}
               >
@@ -378,7 +378,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                   <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-medium', msg.channel === 'WhatsApp' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy')}>
                     {msg.channel}
                   </span>
-                  <span className="text-[11px] text-navy-light/40 font-body">{msg.date}</span>
+                  <span className="text-[11px] text-navy-light/60 font-body">{msg.date}</span>
                 </div>
                 <p className="text-sm text-navy-light/70 font-body">{msg.content}</p>
               </div>
@@ -393,7 +393,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Gauge tasa de asistencia */}
             <div className="rounded-2xl p-5 flex flex-col items-center bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-4 self-start font-display">
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-4 self-start font-display">
                 Tasa de asistencia
               </p>
               <svg viewBox="0 0 100 60" className="w-40 h-24">
@@ -412,7 +412,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                   {attendanceRate}%
                 </text>
               </svg>
-              <p className="text-[12px] text-navy-light/50 mt-2 font-body">
+              <p className="text-[12px] text-navy-light/60 mt-2 font-body">
                 {checkinCount} de {registrationCount} inscritos asistieron
               </p>
             </div>
@@ -420,22 +420,22 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             {/* Ingresos */}
             {event.requires_payment && event.payment_amount && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-3 font-display">
+                <p className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-3 font-display">
                   Ingresos estimados
                 </p>
                 <p className="text-4xl font-extrabold text-navy tabular-nums font-display">
                   ₡{incomeEstimate.toLocaleString()}
                 </p>
-                <p className="text-[12px] text-navy-light/50 mt-2 font-body">
+                <p className="text-[12px] text-navy-light/60 mt-2 font-body">
                   {checkinCount} asistentes × ₡{event.payment_amount.toLocaleString()}
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-[10px] text-navy-light/40 font-display">Pagados</p>
+                    <p className="text-[10px] text-navy-light/60 font-display">Pagados</p>
                     <p className="font-semibold text-navy font-body">{event.registrations.filter(r => r.payment_status === 'paid').length}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-navy-light/40 font-display">Pendientes</p>
+                    <p className="text-[10px] text-navy-light/60 font-display">Pendientes</p>
                     <p className="font-semibold text-amber-600 font-body">{event.registrations.filter(r => r.payment_status === 'pending').length}</p>
                   </div>
                 </div>

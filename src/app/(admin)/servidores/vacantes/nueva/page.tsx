@@ -126,7 +126,7 @@ function NuevaVacanteContent() {
               <ChevronLeft size={16} />
               Puestos de Servicio
             </Link>
-            <span className="text-navy-light/40">|</span>
+            <span className="text-navy-light/60">|</span>
             <span className="text-sm font-semibold text-navy font-display">
               Preparar publicación
             </span>
@@ -137,7 +137,7 @@ function NuevaVacanteContent() {
         <div
           className="rounded-2xl px-5 py-4 bg-surface-card shadow-[var(--shadow-md)]"
         >
-          <p className="text-[11px] tracking-widest uppercase text-navy-light/40 mb-1 font-display">
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/60 mb-1 font-display">
             Solicitud interna
           </p>
           <p className="text-sm font-semibold text-navy font-display">
@@ -153,7 +153,7 @@ function NuevaVacanteContent() {
         {/* Formulario de publicación */}
         <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Título de la publicación
             </label>
             <input
@@ -166,10 +166,10 @@ function NuevaVacanteContent() {
 
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
                 Descripción pública
               </label>
-              <span className="text-[10px] text-navy-light/40 font-mono">
+              <span className="text-[10px] text-navy-light/60 font-mono">
                 {description.length}/500
               </span>
             </div>
@@ -184,7 +184,7 @@ function NuevaVacanteContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
               Funciones principales
             </label>
             {functions.map((f, idx) => (
@@ -202,7 +202,7 @@ function NuevaVacanteContent() {
                   <button
                     type="button"
                     onClick={() => removeFunction(idx)}
-                    className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors"
+                    className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors"
                   >
                     <X size={13} />
                   </button>
@@ -221,7 +221,7 @@ function NuevaVacanteContent() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
                 Horario
               </label>
               <input
@@ -232,7 +232,7 @@ function NuevaVacanteContent() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
                 Compromiso esperado
               </label>
               <input
@@ -250,7 +250,7 @@ function NuevaVacanteContent() {
           <button
             type="button"
             onClick={() => setSubmitted(false)}
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors font-body"
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
           >
             <ChevronLeft size={14} />
             Volver
@@ -303,7 +303,7 @@ function NuevaVacanteContent() {
             <ChevronLeft size={16} />
             Puestos de Servicio
           </Link>
-          <span className="text-navy-light/40">|</span>
+          <span className="text-navy-light/60">|</span>
           <span className="text-sm font-semibold text-navy font-display">
             Solicitar puesto
           </span>
@@ -324,7 +324,7 @@ function NuevaVacanteContent() {
 
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
             Comité
           </label>
           <select
@@ -340,7 +340,7 @@ function NuevaVacanteContent() {
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
             Puesto
           </label>
           <select
@@ -359,7 +359,7 @@ function NuevaVacanteContent() {
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
             Número de servidores necesarios
           </label>
           <input
@@ -373,7 +373,7 @@ function NuevaVacanteContent() {
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
             Justificación / notas internas
           </label>
           <textarea

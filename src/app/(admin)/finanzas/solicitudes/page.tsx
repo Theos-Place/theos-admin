@@ -42,7 +42,7 @@ export default function FinanzasSolicitudesPage() {
   if (!loaded) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 size={20} className="animate-spin text-navy-light/40" />
+        <Loader2 size={20} className="animate-spin text-navy-light/60" />
       </div>
     )
   }
@@ -85,7 +85,7 @@ export default function FinanzasSolicitudesPage() {
             {r.request_type === 'scholarship' && (
               <>
                 <span className="inline-flex items-center gap-1.5">
-                  <GraduationCap size={13} className="text-navy-light/50" />
+                  <GraduationCap size={13} className="text-navy-light/60" />
                   {r.study_group_name ?? 'Grupo por definir'}
                 </span>
                 {r.amount != null && r.amount > 0 && (
@@ -95,7 +95,7 @@ export default function FinanzasSolicitudesPage() {
             )}
             {r.request_type === 'refund' && (
               <span className="inline-flex items-center gap-1.5">
-                <CreditCard size={13} className="text-navy-light/50" />
+                <CreditCard size={13} className="text-navy-light/60" />
                 {r.payment_label ?? 'Pago no especificado'}
               </span>
             )}

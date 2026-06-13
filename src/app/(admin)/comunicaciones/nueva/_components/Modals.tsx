@@ -24,7 +24,7 @@ export function ListModal({ filteredLists, listSearch, setListSearch, onApplyLis
         </div>
         <div className="px-4 pt-3 pb-2">
           <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
             <input
               className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar lista..."
@@ -37,7 +37,7 @@ export function ListModal({ filteredLists, listSearch, setListSearch, onApplyLis
         </div>
         <div className="px-4 pb-4 space-y-2 max-h-80 overflow-y-auto">
           {filteredLists.length === 0 ? (
-            <p className="text-sm text-navy-light/40 py-4 text-center font-body">Sin listas.</p>
+            <p className="text-sm text-navy-light/60 py-4 text-center font-body">Sin listas.</p>
           ) : filteredLists.map(list => (
             <button
               key={list.id}
@@ -48,7 +48,7 @@ export function ListModal({ filteredLists, listSearch, setListSearch, onApplyLis
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-[13px] font-medium text-navy font-body">{list.name}</p>
-                  <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">{list.segment_label}</p>
+                  <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">{list.segment_label}</p>
                 </div>
                 <span className="shrink-0 rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-semibold text-navy-light/60 tabular-nums font-display">
                   {list.member_count.toLocaleString('es-CR')}
@@ -79,7 +79,7 @@ export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: T
         </div>
         <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
           {filteredTemplates.length === 0 ? (
-            <p className="text-sm text-navy-light/40 py-4 text-center font-body">
+            <p className="text-sm text-navy-light/60 py-4 text-center font-body">
               No hay plantillas para este canal.
             </p>
           ) : (
@@ -94,7 +94,7 @@ export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: T
                   <p className="text-[13px] font-medium text-navy font-body">{tpl.name}</p>
                   <ChannelBadge channel={tpl.channel} size="sm" />
                 </div>
-                <p className="text-[12px] text-navy-light/50 line-clamp-1 font-body">
+                <p className="text-[12px] text-navy-light/60 line-clamp-1 font-body">
                   {tpl.body.split('\n')[0]}
                 </p>
                 <p className="text-[11px] text-navy-light/60 font-body">Usado {tpl.used_count} veces</p>
@@ -139,16 +139,16 @@ export function ConfirmModal({
         <div className="px-6 py-5 space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-[13px] font-body">
-              <span className="text-navy-light/50">Canal</span>
+              <span className="text-navy-light/60">Canal</span>
               <ChannelBadge channel={channel} />
             </div>
             <div className="flex items-center justify-between text-[13px] font-body">
-              <span className="text-navy-light/50">Destinatarios</span>
+              <span className="text-navy-light/60">Destinatarios</span>
               <span className="font-semibold text-navy">~{recipients.count.toLocaleString('es-CR')} {recipients.count === 1 ? 'persona' : 'personas'}</span>
             </div>
             {recipients.label && (
               <div className="flex items-start justify-between text-[13px] gap-4 font-body">
-                <span className="text-navy-light/50 shrink-0">Segmento</span>
+                <span className="text-navy-light/60 shrink-0">Segmento</span>
                 <span className="text-navy text-right">{recipients.label}</span>
               </div>
             )}
@@ -202,7 +202,7 @@ export function SendingOverlay({ recipientCount }: SendingOverlayProps) {
       <div className="rounded-2xl px-8 py-8 flex flex-col items-center gap-4 bg-surface-card">
         <div className="h-12 w-12 rounded-full border-4 border-coral/30 border-t-coral animate-spin" />
         <p className="text-sm font-semibold text-navy font-display">Enviando mensaje...</p>
-        <p className="text-[12px] text-navy-light/50 font-body">
+        <p className="text-[12px] text-navy-light/60 font-body">
           Enviando a {recipientCount.toLocaleString('es-CR')} personas
         </p>
       </div>

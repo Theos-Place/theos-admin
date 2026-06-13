@@ -206,7 +206,7 @@ export default function GruposPage() {
           {/* Status */}
           <div className="space-y-1.5">
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+              className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
             >
               Estado
             </p>
@@ -231,7 +231,7 @@ export default function GruposPage() {
 
           {/* Type */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               Tipo de estudio
             </p>
             <select
@@ -248,7 +248,7 @@ export default function GruposPage() {
 
           {/* Zone */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               Zona
             </p>
             <select
@@ -268,7 +268,7 @@ export default function GruposPage() {
 
           {/* Day */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               Día
             </p>
             <div className="flex gap-1">
@@ -414,7 +414,7 @@ export default function GruposPage() {
                       {sedeLabel(group.zone)} · {group.schedule_days.join('/')} {group.schedule_time} · {enrolled}/{group.max_capacity}
                     </p>
                   </div>
-                  <span className="shrink-0 text-[11px] text-navy-light/40 font-body">{studyType?.stage ?? ''}</span>
+                  <span className="shrink-0 text-[11px] text-navy-light/60 font-body">{studyType?.stage ?? ''}</span>
                 </Link>
               </li>
             )

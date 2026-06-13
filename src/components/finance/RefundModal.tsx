@@ -82,7 +82,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Type */}
           <div>
-            <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.40)]">
+            <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">
               Tipo de devolución
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -106,7 +106,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
           {/* Partial amount input */}
           {type === 'partial' && (
             <div>
-              <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">
+              <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                 Monto a devolver (₡)
               </label>
               <input
@@ -123,7 +123,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Reason */}
           <div>
-            <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">
+            <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
               Motivo
             </label>
             <select

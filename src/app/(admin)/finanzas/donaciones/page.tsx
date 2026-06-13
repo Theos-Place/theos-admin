@@ -100,7 +100,7 @@ export default function DonacionesPage() {
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
                 Donaciones
               </h1>
-              <p className="text-[12px] text-white/50 mt-0.5 font-body">
+              <p className="text-[12px] text-white/70 mt-0.5 font-body">
                 Historial y gestión de donaciones importadas
               </p>
             </div>
@@ -131,7 +131,7 @@ export default function DonacionesPage() {
             { label: 'Sin identificar', value: unidentified.length, isAmount: false, alert: unidentified.length > 0 },
           ].map(({ label, value, isAmount, alert }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.40)]">{label}</p>
+              <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               {isAmount
                 ? <p className="text-2xl font-extrabold font-display text-teal-deep">
                     <AmountDisplay amount={value as number} defaultHidden={false} revealed={revealAll} />
@@ -170,7 +170,7 @@ export default function DonacionesPage() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1 min-w-48 bg-surface-card border border-[var(--outline-variant)]">
-            <Search size={14} className="text-[rgba(22,20,64,0.40)] shrink-0" />
+            <Search size={14} className="text-[rgba(22,20,64,0.60)] shrink-0" />
             <input
               type="search"
               placeholder="Buscar por nombre o cédula..."
@@ -217,7 +217,7 @@ export default function DonacionesPage() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Lote importación', 'Estado'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
+                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}
@@ -340,7 +340,7 @@ export default function DonacionesPage() {
                       <p className="text-[13px] font-medium font-body text-navy">
                         {formatDate(d.donation_date)} — <AmountDisplay amount={d.amount} defaultHidden={false} />
                       </p>
-                      <p className="text-[11px] text-[rgba(22,20,64,0.50)] font-body">
+                      <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
                         {d.source_file}
                       </p>
                     </div>

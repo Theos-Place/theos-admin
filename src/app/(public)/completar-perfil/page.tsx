@@ -59,7 +59,7 @@ export default function CompletarPerfilPage() {
         </div>
 
         {!ready ? (
-          <p className="text-sm text-navy-light/50 py-6 text-center font-body">Cargando…</p>
+          <p className="text-sm text-navy-light/60 py-6 text-center font-body">Cargando…</p>
         ) : done ? (
           <div className="py-6 text-center space-y-3">
             <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
@@ -74,9 +74,9 @@ export default function CompletarPerfilPage() {
         ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Contraseña</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Contraseña</label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
                 <input
                   type="password"
                   value={password}
@@ -87,7 +87,7 @@ export default function CompletarPerfilPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">Repetir contraseña</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Repetir contraseña</label>
               <input
                 type="password"
                 value={confirm}

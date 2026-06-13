@@ -36,7 +36,7 @@ export default function ConfiguracionPage() {
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Configuración de mi cuenta
         </h1>
-        <p className="mt-1 text-sm text-navy-light/50 font-body">
+        <p className="mt-1 text-sm text-navy-light/60 font-body">
           Gestioná tus preferencias de notificación
         </p>
       </div>
@@ -93,14 +93,14 @@ function NotificacionesTab({ onSave }: { onSave: () => void }) {
 
       {/* Toggles */}
       <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Preferencias de notificación
         </p>
         {NOTIF_ITEMS.map(({ key, label, desc }) => (
           <div key={key} className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-navy font-body">{label}</p>
-              <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">{desc}</p>
+              <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">{desc}</p>
             </div>
             <Toggle checked={prefs[key]} onChange={() => toggle(key)} />
           </div>
@@ -109,7 +109,7 @@ function NotificacionesTab({ onSave }: { onSave: () => void }) {
 
       {/* Canal preferido */}
       <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Canal preferido
         </p>
         <div className="flex gap-2">
@@ -253,7 +253,7 @@ function StudyNotificationRecipients({ onChange }: { onChange: (msg: string) => 
     <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-card">
       <div className="flex items-center gap-2">
         <BellRing size={15} className="text-coral" />
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Notificaciones de estudios
         </p>
       </div>
@@ -304,7 +304,7 @@ function StudyNotificationRecipients({ onChange }: { onChange: (msg: string) => 
         {pickerOpen && (
           <div className="absolute z-30 mt-2 w-full max-w-sm rounded-2xl bg-surface-card shadow-card-lg border border-outline overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2.5 border-b border-outline">
-              <Search size={14} className="text-navy-light/40 shrink-0" />
+              <Search size={14} className="text-navy-light/60 shrink-0" />
               <input
                 autoFocus
                 value={q}

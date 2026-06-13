@@ -102,7 +102,7 @@ export default function ComunicacionesPage() {
           >
             Comunicaciones
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
+          <p className="mt-1 text-sm text-white/70 font-body">
             Mensajería masiva por WhatsApp y correo
           </p>
         </div>
@@ -121,11 +121,11 @@ export default function ComunicacionesPage() {
           { label: 'Mensajes este mes', value: stats.sentThisMonth, color: 'text-navy', icon: CheckCircle2 },
           { label: 'Destinatarios alcanzados', value: stats.totalRecipients.toLocaleString('es-CR'), color: 'text-teal-deep', icon: Users },
           { label: 'Tasa de entrega', value: `${stats.avgRate}%`, color: stats.avgRate >= 90 ? 'text-teal-deep' : 'text-amber-600', icon: TrendingUp },
-          { label: 'Con errores', value: stats.withErrors, color: stats.withErrors > 0 ? 'text-coral' : 'text-navy-light/40', icon: AlertTriangle },
+          { label: 'Con errores', value: stats.withErrors, color: stats.withErrors > 0 ? 'text-coral' : 'text-navy-light/60', icon: AlertTriangle },
         ].map(({ label, value, color, icon: Icon }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">
+              <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
                 {label}
               </p>
               <Icon size={14} className={color} />
@@ -139,7 +139,7 @@ export default function ComunicacionesPage() {
 
       {/* Activity chart */}
       <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 mb-4 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 mb-4 font-display">
           Actividad — últimos 7 días
         </p>
         <div className="flex items-end gap-2 h-20">
@@ -156,7 +156,7 @@ export default function ComunicacionesPage() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-navy-light/40 capitalize font-body">{d.label}</span>
+              <span className="text-[10px] text-navy-light/60 capitalize font-body">{d.label}</span>
             </div>
           ))}
         </div>
@@ -172,7 +172,7 @@ export default function ComunicacionesPage() {
               onClick={() => setTab(t)}
               className={cn(
                 'px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-all capitalize font-body',
-                tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/50 hover:text-navy'
+                tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/60 hover:text-navy'
               )}
             >
               {t === 'historial' ? 'Historial' : `Borradores${drafts.length > 0 ? ` (${drafts.length})` : ''}`}
@@ -211,7 +211,7 @@ export default function ComunicacionesPage() {
                   value={dateFrom}
                   onChange={e => setDateFrom(e.target.value)}
                 />
-                <span className="text-navy-light/40 text-sm">—</span>
+                <span className="text-navy-light/60 text-sm">—</span>
                 <input
                   type="date"
                   className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
@@ -246,7 +246,7 @@ export default function ComunicacionesPage() {
                         <p className="text-sm font-semibold text-navy truncate font-body">
                           {msg.subject || msg.body.split('\n')[0].slice(0, 60)}
                         </p>
-                        <p className="text-[12px] text-navy-light/50 mt-0.5 font-body">
+                        <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
                           {msg.segment.label}
                         </p>
                       </div>
@@ -271,11 +271,11 @@ export default function ComunicacionesPage() {
                             {msg.stats.failed} fallidos
                           </span>
                         )}
-                        <span className="text-[12px] text-navy-light/40 font-body">
+                        <span className="text-[12px] text-navy-light/60 font-body">
                           {getDeliveryRate(msg)}% entrega
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-[11px] text-navy-light/40 font-body">
+                      <div className="flex items-center gap-3 text-[11px] text-navy-light/60 font-body">
                         <span className="flex items-center gap-1">
                           <Calendar size={11} />
                           {msg.sent_at ? new Date(msg.sent_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
@@ -309,7 +309,7 @@ export default function ComunicacionesPage() {
                     <p className="text-sm font-semibold text-navy truncate font-body">
                       {msg.subject || msg.body.split('\n')[0].slice(0, 60)}
                     </p>
-                    <p className="text-[11px] text-navy-light/40 mt-0.5 font-body">
+                    <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
                       Guardado el {new Date(msg.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>

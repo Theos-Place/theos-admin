@@ -51,7 +51,7 @@ export function DeleteConfirmModal({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
             Escribí <span className="text-coral font-semibold">{keyword}</span> para confirmar
           </label>
           <input

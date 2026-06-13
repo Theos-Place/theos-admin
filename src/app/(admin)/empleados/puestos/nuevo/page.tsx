@@ -90,7 +90,7 @@ export default function NuevoPuestoPage() {
             <ChevronLeft size={16} />
             Puestos
           </Link>
-          <span className="text-navy-light/40 hidden sm:inline">|</span>
+          <span className="text-navy-light/60 hidden sm:inline">|</span>
           <span className="text-sm font-semibold text-navy font-display truncate hidden sm:inline">
             Nuevo puesto
           </span>
@@ -123,7 +123,7 @@ export default function NuevoPuestoPage() {
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
         {/* Nombre */}
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
             Nombre del puesto <span className="text-coral">*</span>
           </label>
           <input
@@ -136,7 +136,7 @@ export default function NuevoPuestoPage() {
 
         {/* Comité */}
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
             Comité asociado <span className="text-coral">*</span>
           </label>
           <select
@@ -158,10 +158,10 @@ export default function NuevoPuestoPage() {
         {/* Descripción */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
               Descripción de funciones
             </label>
-            <span className="text-[10px] text-navy-light/40 font-mono">
+            <span className="text-[10px] text-navy-light/60 font-mono">
               {description.length}/600
             </span>
           </div>
@@ -177,7 +177,7 @@ export default function NuevoPuestoPage() {
 
         {/* Tipo de contrato */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
             Tipo de contrato
           </label>
           <div className="flex gap-4">
@@ -199,18 +199,18 @@ export default function NuevoPuestoPage() {
         {/* Rango salarial */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/40 font-display">
+            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
               Rango salarial aprobado
             </label>
             <span
-              className="rounded-full bg-navy/10 px-2 py-0.5 text-[9px] font-semibold text-navy-light/50 font-display"
+              className="rounded-full bg-navy/10 px-2 py-0.5 text-[9px] font-semibold text-navy-light/60 font-display"
             >
               Confidencial
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50 font-mono">₡</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
               <input
                 type="number"
                 className={cn(inputCls, 'pl-7 font-body')}
@@ -220,7 +220,7 @@ export default function NuevoPuestoPage() {
               />
             </div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50 font-mono">₡</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
               <input
                 type="number"
                 className={cn(inputCls, 'pl-7 font-body')}
@@ -238,7 +238,7 @@ export default function NuevoPuestoPage() {
         >
           <div>
             <p className="text-sm font-medium text-navy font-body">Puesto activo</p>
-            <p className="text-[12px] text-navy-light/50 font-body">
+            <p className="text-[12px] text-navy-light/60 font-body">
               Los puestos inactivos no aparecen en el proceso de contratación
             </p>
           </div>

@@ -71,7 +71,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
             </div>
           )}
         </div>
-        <span className="text-[11px] text-navy-light/40 font-body">
+        <span className="text-[11px] text-navy-light/60 font-body">
           {activeMembers.length} activo{activeMembers.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -146,7 +146,7 @@ export default function ServidoresPage() {
           >
             Servidores
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
+          <p className="mt-1 text-sm text-white/70 font-body">
             {personasUnicas} personas en {puestosOcupados} puestos · {totalCommittees} comités
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function ServidoresPage() {
             className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                 {label}
               </p>
               <Icon size={14} className="text-navy-light/60" />
@@ -222,7 +222,7 @@ export default function ServidoresPage() {
           <div key={area.code} className="space-y-3">
             <div className="flex items-center gap-3">
               <p
-                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/50 font-display"
+                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/60 font-display"
               >
                 {area.name}
               </p>

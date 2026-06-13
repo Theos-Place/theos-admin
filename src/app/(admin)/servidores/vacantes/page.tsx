@@ -19,7 +19,7 @@ const STATUS_FILTERS: { key: VacancyStatus | 'all'; label: string }[] = [
 ]
 
 const STATUS_COLORS: Record<string, string> = {
-  draft:     'bg-navy-light/10 text-navy-light/50',
+  draft:     'bg-navy-light/10 text-navy-light/60',
   published: 'bg-teal-deep/10 text-teal-deep',
   filled:    'bg-navy/10 text-navy',
   closed:    'bg-coral/10 text-coral',
@@ -72,7 +72,7 @@ export default function VacantesPage() {
           >
             Puestos de Servicio
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
+          <p className="mt-1 text-sm text-white/70 font-body">
             {published} publicadas · {draft} en borrador · {filled} ocupadas
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function VacantesPage() {
                       {v.committee_name}
                     </span>
                     <span
-                      className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/50 font-display"
+                      className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/60 font-display"
                     >
                       {v.area}
                     </span>
@@ -158,10 +158,10 @@ export default function VacantesPage() {
               </p>
 
               <div className="flex items-center gap-4 flex-wrap">
-                <span className="text-[12px] text-navy-light/50 font-body">
+                <span className="text-[12px] text-navy-light/60 font-body">
                   📅 {v.schedule}
                 </span>
-                <span className="text-[12px] text-navy-light/50 font-body">
+                <span className="text-[12px] text-navy-light/60 font-body">
                   ⏱ {v.commitment}
                 </span>
               </div>
@@ -169,12 +169,12 @@ export default function VacantesPage() {
               <div className="flex items-center justify-between pt-1 border-t border-[var(--outline-variant)]">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
-                    <Users size={13} className="text-navy-light/40" />
+                    <Users size={13} className="text-navy-light/60" />
                     <span className="text-[12px] text-navy-light/60 font-body">
                       {appCount} aplicacion{appCount !== 1 ? 'es' : ''}
                     </span>
                   </div>
-                  <span className="text-[12px] text-navy-light/50 font-mono">
+                  <span className="text-[12px] text-navy-light/60 font-mono">
                     {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}
                   </span>
                   {v.published_at && (

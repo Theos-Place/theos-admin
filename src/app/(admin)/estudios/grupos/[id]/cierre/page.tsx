@@ -171,14 +171,14 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             <div
               className={cn(
                 'h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all',
-                step >= n ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/40',
+                step >= n ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/60',
                 'font-display',
               )}
             >
               {n}
             </div>
             <span
-              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/40', 'font-body')}
+              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/60', 'font-body')}
             >
               {n === 1 ? 'Resultados' : 'Confirmación'}
             </span>
@@ -337,14 +337,14 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         <div className="space-y-4">
           {/* Summary */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <h2 className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-4 font-display">
+            <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-4 font-display">
               Resumen
             </h2>
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
                 { label: 'Aprobados', value: aprobados, color: 'text-teal-deep' },
                 { label: 'Reprobados', value: reprobados, color: 'text-coral' },
-                { label: 'Retirados', value: retirados, color: 'text-navy-light/50' },
+                { label: 'Retirados', value: retirados, color: 'text-navy-light/60' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="text-center rounded-xl p-3 bg-surface-low">
                   <p className={`text-2xl font-bold font-display ${color}`}>{value}</p>

@@ -97,10 +97,10 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
                   <p className="text-sm text-navy font-body">
                     {m.first_name} {m.last_name}
                   </p>
-                  <p className="text-[11px] text-navy-light/50">{m.cedula ?? 'Sin cédula'}</p>
+                  <p className="text-[11px] text-navy-light/60">{m.cedula ?? 'Sin cédula'}</p>
                 </div>
-                {already && <span className="text-[11px] text-navy-light/40">Ya inscrito</span>}
-                {adding === m.id && <span className="text-[11px] text-navy-light/40">…</span>}
+                {already && <span className="text-[11px] text-navy-light/60">Ya inscrito</span>}
+                {adding === m.id && <span className="text-[11px] text-navy-light/60">…</span>}
               </button>
             )
           })}
@@ -205,7 +205,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="py-16 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/50">Cargando…</p>
+        <p className="text-sm text-navy-light/60">Cargando…</p>
       </div>
     )
   }
@@ -332,7 +332,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   {['Nombre', 'Estado', 'Asistencia', studyType?.requires_grade ? 'Nota' : '', 'Acciones'].filter(Boolean).map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                     >
                       {h}
                     </th>
@@ -368,7 +368,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                           'rounded-md px-2 py-0.5 text-[10px] font-medium',
                           p.status === 'enrolled' ? 'bg-teal-soft/30 text-teal-deep' :
                           p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-surface-low text-navy-light/40'
+                          'bg-surface-low text-navy-light/60'
                         )}>
                           {p.status === 'enrolled' ? 'Inscrito' : p.status === 'pending' ? 'Pendiente' : 'Retirado'}
                         </span>
@@ -408,7 +408,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           {/* WhatsApp section */}
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display"
+              className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display"
             >
               Grupo de WhatsApp
             </h3>
@@ -421,7 +421,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 </a>
               </div>
             ) : group.status === 'finalizado' ? (
-              <p className="text-sm text-navy-light/40 font-body">
+              <p className="text-sm text-navy-light/60 font-body">
                 Grupo finalizado — sin grupo de WhatsApp.
               </p>
             ) : (
@@ -464,7 +464,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] overflow-x-auto">
             {sessions.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <p className="text-sm text-navy-light/40 font-body">
+                <p className="text-sm text-navy-light/60 font-body">
                   No tenemos asistencia registrada para este grupo.
                 </p>
               </div>
@@ -475,7 +475,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     {['Sesión', 'Fecha', 'Asistencia'].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
+                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                       >
                         {h}
                       </th>
@@ -543,7 +543,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             ].map(({ label, value }) => (
               <div key={label} className="space-y-0.5">
                 <p
-                  className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+                  className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                 >
                   {label}
                 </p>

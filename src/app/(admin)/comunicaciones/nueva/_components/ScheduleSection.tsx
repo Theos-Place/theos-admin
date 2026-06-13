@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
 
 const TIMEZONES = [
   { value: 'America/Costa_Rica', label: 'Costa Rica (GMT-6)' },
@@ -36,7 +36,7 @@ export function ScheduleSection({
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-navy font-body">¿Programar envío?</p>
-          <p className="text-[12px] text-navy-light/40 mt-0.5 font-body">
+          <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
             Elegí cuándo enviar el mensaje
           </p>
         </div>
@@ -54,7 +54,7 @@ export function ScheduleSection({
       {scheduled && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Clock size={14} className="text-navy-light/40 shrink-0" />
+            <Clock size={14} className="text-navy-light/60 shrink-0" />
             <input
               type="datetime-local"
               className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
@@ -63,7 +63,7 @@ export function ScheduleSection({
             />
           </div>
           <div className="flex items-center gap-2 pl-6">
-            <p className="text-[11px] text-navy-light/50 shrink-0 font-body">Zona horaria:</p>
+            <p className="text-[11px] text-navy-light/60 shrink-0 font-body">Zona horaria:</p>
             <select
               className="flex-1 rounded-xl bg-surface-low px-3 py-1.5 text-[12px] text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={timezone}

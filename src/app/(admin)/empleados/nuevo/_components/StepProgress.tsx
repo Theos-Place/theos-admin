@@ -26,7 +26,7 @@ export function StepProgress({ steps, currentStep }: StepProgressProps) {
                   ? 'bg-teal-deep text-white'
                   : currentStep === s.num
                   ? 'bg-coral text-white'
-                  : 'bg-navy/10 text-navy-light/40'
+                  : 'bg-navy/10 text-navy-light/60'
               )}
             >
               {currentStep > s.num ? <Check size={13} /> : s.num}
@@ -38,7 +38,7 @@ export function StepProgress({ steps, currentStep }: StepProgressProps) {
                   ? 'text-navy'
                   : currentStep > s.num
                   ? 'text-teal-deep'
-                  : 'text-navy-light/40'
+                  : 'text-navy-light/60'
               )}
             >
               {s.label}

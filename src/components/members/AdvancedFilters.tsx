@@ -47,7 +47,7 @@ const QTY_OPS: { value: QtyOperator; label: string }[] = [
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-1.5 text-[10px] tracking-widest uppercase text-navy-light/40 font-display">
+    <p className="mb-1.5 text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
       {children}
     </p>
   )
@@ -268,7 +268,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
               <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={sedes.includes(s.id)} onChange={() => toggleSede(s.id)}
                   className="accent-coral h-3.5 w-3.5 cursor-pointer" />
-                <span className="text-xs text-navy-light/40 select-none font-body">
+                <span className="text-xs text-navy-light/60 select-none font-body">
                   {s.name}
                 </span>
               </label>
@@ -595,7 +595,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
             placeholder="Mín"
             className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
-          <span className="text-navy-light/40 shrink-0 text-sm">–</span>
+          <span className="text-navy-light/60 shrink-0 text-sm">–</span>
           <input
             type="number" min={0} max={120} value={ageMax}
             onChange={e => setAgeMax(e.target.value)}
@@ -638,7 +638,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
               'shrink-0 px-4 py-3 text-sm transition-colors whitespace-nowrap',
               activeTab === tab.key
                 ? 'text-navy border-b-2 border-navy -mb-px'
-                : 'text-navy-light/50 hover:text-navy-light',
+                : 'text-navy-light/60 hover:text-navy-light',
               'font-body',
             )}
           >

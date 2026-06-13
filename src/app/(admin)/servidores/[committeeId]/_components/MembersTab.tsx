@@ -62,7 +62,7 @@ export function MembersTab({
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-0 sm:min-w-48 w-full sm:w-auto">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
@@ -142,7 +142,7 @@ export function MembersTab({
                         'rounded-full px-2 py-0.5 text-[10px] font-semibold font-display',
                         m.status === 'active'
                           ? 'bg-teal-deep/10 text-teal-deep'
-                          : 'bg-navy-light/10 text-navy-light/50'
+                          : 'bg-navy-light/10 text-navy-light/60'
                       )}
                     >
                       {m.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -152,7 +152,7 @@ export function MembersTab({
                     <div className="relative">
                       <button
                         onClick={() => onMenuToggle(m.member_id)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-navy hover:bg-surface-low transition-colors"
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors"
                       >
                         <MoreVertical size={14} />
                       </button>
@@ -209,14 +209,14 @@ export function MembersTab({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-navy font-body">{m.name}</p>
-                <p className="truncate text-[12px] text-navy-light/50 font-body">
+                <p className="truncate text-[12px] text-navy-light/60 font-body">
                   {m.position} · {calcularAntiguedad(m.start_date)}
                 </p>
               </div>
               <span
                 className={cn(
                   'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold font-display',
-                  m.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/50',
+                  m.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/60',
                 )}
               >
                 {m.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -224,7 +224,7 @@ export function MembersTab({
               <div className="relative shrink-0">
                 <button
                   onClick={() => onMenuToggle(m.member_id)}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-navy hover:bg-surface-low transition-colors"
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors"
                 >
                   <MoreVertical size={14} />
                 </button>

@@ -50,7 +50,7 @@ export function ResponseSummaryChart({ title, items, average, type = 'bar' }: Re
                   style={{ width: `${barWidth}%` }}
                 />
               </div>
-              <span className="text-[11px] text-navy-light/50 w-20 text-right shrink-0 font-mono">
+              <span className="text-[11px] text-navy-light/60 w-20 text-right shrink-0 font-mono">
                 {item.count} ({pct}%)
               </span>
             </div>

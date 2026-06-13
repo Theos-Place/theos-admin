@@ -11,7 +11,7 @@ const AVAILABILITY_CONFIG = {
   available: { label: 'Disponible',  className: 'bg-teal-soft/30 text-teal-deep' },
   assigned:  { label: 'Asignado',    className: 'bg-navy/10 text-navy' },
   resting:   { label: 'Descansando', className: 'bg-amber-100 text-amber-700' },
-  inactive:  { label: 'Inactivo',    className: 'bg-navy/5 text-navy-light/40' },
+  inactive:  { label: 'Inactivo',    className: 'bg-navy/5 text-navy-light/60' },
 }
 
 const AVATAR_COLORS = [
@@ -53,7 +53,7 @@ export function LeaderCard({ leader, onSelect, selected, compact }: LeaderCardPr
           <p className="text-sm font-medium text-navy truncate font-body">
             {leader.member_name}
           </p>
-          <p className="text-[11px] text-navy-light/50">{leader.zone_preference.map(id => sedeLabel(id)).join(' · ')}</p>
+          <p className="text-[11px] text-navy-light/60">{leader.zone_preference.map(id => sedeLabel(id)).join(' · ')}</p>
         </div>
         <span className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-medium', avail.className)}>
           {avail.label}

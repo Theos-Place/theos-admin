@@ -72,7 +72,7 @@ export default function NuevaPlantillaPage() {
     }
   }
 
-  const labelCls = 'text-[11px] text-navy-light/50 mb-1 block font-body'
+  const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
   return (
@@ -81,7 +81,7 @@ export default function NuevaPlantillaPage() {
       <div>
         <Link
           href="/comunicaciones/plantillas"
-          className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2 font-body"
+          className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors mb-2 font-body"
         >
           <ChevronLeft size={15} />
           Plantillas
@@ -178,7 +178,7 @@ export default function NuevaPlantillaPage() {
 
           {/* Variables panel */}
           <div className="rounded-xl p-4 space-y-3 bg-surface-low">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-semibold font-display">
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-semibold font-display">
               Variables disponibles
             </p>
             <div className="space-y-2">
@@ -199,7 +199,7 @@ export default function NuevaPlantillaPage() {
                       {v.key}
                     </button>
                   </div>
-                  <span className="text-[11px] text-navy-light/40 font-body">{v.description}</span>
+                  <span className="text-[11px] text-navy-light/60 font-body">{v.description}</span>
                 </div>
               ))}
             </div>
@@ -230,7 +230,7 @@ export default function NuevaPlantillaPage() {
         {/* Right: Preview */}
         <div className="space-y-3 lg:sticky lg:top-4">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
               Vista previa
             </p>
             {channel === 'both' && (
@@ -240,7 +240,7 @@ export default function NuevaPlantillaPage() {
                     key={ch}
                     type="button"
                     onClick={() => setPreviewChannel(ch)}
-                    className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium transition-all font-display', previewChannel === ch ? 'bg-navy text-white' : 'text-navy-light/50')}
+                    className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium transition-all font-display', previewChannel === ch ? 'bg-navy text-white' : 'text-navy-light/60')}
                   >
                     {ch === 'whatsapp' ? 'WhatsApp' : 'Email'}
                   </button>

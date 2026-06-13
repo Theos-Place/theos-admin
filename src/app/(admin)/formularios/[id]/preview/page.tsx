@@ -154,7 +154,7 @@ export default function PreviewPage() {
   if (loadingForm) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-low">
-        <p className="text-sm text-navy-light/50 font-body">Cargando…</p>
+        <p className="text-sm text-navy-light/60 font-body">Cargando…</p>
       </div>
     )
   }
@@ -162,7 +162,7 @@ export default function PreviewPage() {
   if (!form) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50 font-body">Formulario no encontrado.</p>
+        <p className="text-sm text-navy-light/60 font-body">Formulario no encontrado.</p>
       </div>
     )
   }
@@ -334,7 +334,7 @@ export default function PreviewPage() {
                   </p>
                 )}
                 {currentPageBreak?.description && (
-                  <p className="text-[12px] text-navy-light/50 font-body">
+                  <p className="text-[12px] text-navy-light/60 font-body">
                     {currentPageBreak.description}
                   </p>
                 )}
@@ -411,7 +411,7 @@ export default function PreviewPage() {
                         {field.is_required && <span className="ml-1 text-coral">*</span>}
                       </span>
                       {field.helper_text && (
-                        <span className="block text-[12px] text-navy-light/50 mt-0.5">{field.helper_text}</span>
+                        <span className="block text-[12px] text-navy-light/60 mt-0.5">{field.helper_text}</span>
                       )}
                     </label>
                   )}

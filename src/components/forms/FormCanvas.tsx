@@ -56,7 +56,7 @@ export function FormCanvas({
         <div className="h-12 w-12 rounded-xl bg-navy/5 flex items-center justify-center">
           <GripVertical size={22} className="text-navy-light/60" />
         </div>
-        <p className="text-sm text-navy-light/40 text-center max-w-xs font-body">
+        <p className="text-sm text-navy-light/60 text-center max-w-xs font-body">
           Hacé clic en un tipo de campo para agregarlo, o arrastrálo aquí
         </p>
       </div>
@@ -102,7 +102,7 @@ export function FormCanvas({
               style={{ borderColor: isActive ? undefined : 'var(--outline-variant)' }}
             >
               <div className="flex items-center gap-3">
-                <GripVertical size={15} className="text-navy-light/40 cursor-grab shrink-0" />
+                <GripVertical size={15} className="text-navy-light/60 cursor-grab shrink-0" />
                 <FileText size={14} className="text-blue-400 shrink-0" />
                 <div className="flex-1">
                   <span className="text-[11px] font-bold text-blue-500 uppercase tracking-widest font-display">
@@ -237,7 +237,7 @@ export function FormCanvas({
 
             <div className="flex items-start gap-3">
               <div className="mt-0.5 cursor-grab active:cursor-grabbing shrink-0">
-                <GripVertical size={16} className="text-navy-light/40 hover:text-navy-light/50 transition-colors" />
+                <GripVertical size={16} className="text-navy-light/60 hover:text-navy-light/60 transition-colors" />
               </div>
 
               {field.type === 'section' ? (
@@ -248,7 +248,7 @@ export function FormCanvas({
                 <div className="flex-1 space-y-2 min-w-0">
                   <div className="flex items-start gap-2">
                     <div className="shrink-0 h-5 w-5 rounded flex items-center justify-center mt-0.5 bg-surface-low">
-                      <FieldTypeIcon type={field.type} size={11} className="text-navy-light/50" />
+                      <FieldTypeIcon type={field.type} size={11} className="text-navy-light/60" />
                     </div>
                     <div className="flex-1 min-w-0 flex items-start gap-2">
                       <p className="text-[13px] font-semibold text-navy leading-snug flex-1 font-display">
@@ -268,7 +268,7 @@ export function FormCanvas({
                     </div>
                   </div>
                   {field.helper_text && (
-                    <p className="text-[11px] text-navy-light/40 ml-7 font-body">{field.helper_text}</p>
+                    <p className="text-[11px] text-navy-light/60 ml-7 font-body">{field.helper_text}</p>
                   )}
                   <div className="pointer-events-none">
                     <FieldPreview field={field} compact />
@@ -276,7 +276,7 @@ export function FormCanvas({
                 </div>
               )}
 
-              <span className="shrink-0 mt-0.5 h-5 min-w-5 rounded-full bg-navy/5 flex items-center justify-center text-[10px] text-navy-light/40 font-mono px-1">
+              <span className="shrink-0 mt-0.5 h-5 min-w-5 rounded-full bg-navy/5 flex items-center justify-center text-[10px] text-navy-light/60 font-mono px-1">
                 {index + 1}
               </span>
             </div>

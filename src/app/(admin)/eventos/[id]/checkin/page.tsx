@@ -177,7 +177,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <Link
             href={`/eventos/${id}`}
-            className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm"
+            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm"
           >
             <ChevronLeft size={16} />
             Volver
@@ -187,7 +187,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <p className="text-white font-semibold text-sm font-display truncate">
               {event.name}
             </p>
-            <p className="text-white/40 text-[11px]">Check-in en vivo</p>
+            <p className="text-white/70 text-[11px]">Check-in en vivo</p>
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6 shrink-0">
@@ -198,7 +198,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             >
               {checkins.length}
             </p>
-            <p className="text-[11px] text-white/40">check-ins</p>
+            <p className="text-[11px] text-white/70">check-ins</p>
           </div>
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div>
                     <p className="text-white font-medium font-body">{r.name}</p>
-                    <p className="text-white/40 text-[12px]">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
+                    <p className="text-white/70 text-[12px]">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
                   </div>
                 </button>
               ))}
@@ -302,7 +302,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 <Scan size={40} className="text-white/20" />
               </div>
             </div>
-            <p className="text-white/40 text-[12px] mt-3 text-center">Escaneá el pase digital</p>
+            <p className="text-white/70 text-[12px] mt-3 text-center">Escaneá el pase digital</p>
           </div>
 
           {/* Feed check-ins recientes */}
@@ -327,7 +327,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm truncate font-body">{ci.member_name}</p>
-                    <p className="text-white/40 text-[11px]">
+                    <p className="text-white/70 text-[11px]">
                       {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -399,7 +399,7 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
           <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5">
             <div className="h-8 w-8 rounded-full bg-coral flex items-center justify-center text-[10px] font-bold text-white">{getInitials(member.name)}</div>
             <span className="flex-1 text-sm text-white font-body">{member.name}</span>
-            <span className="text-[11px] text-white/40">Titular</span>
+            <span className="text-[11px] text-white/70">Titular</span>
           </div>
           {family.map(f => (
             <label key={f.member_id} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5 cursor-pointer">
@@ -407,7 +407,7 @@ function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
               <div className="h-8 w-8 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(f.name)}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white truncate font-body">{f.name}</p>
-                <p className="text-[11px] text-white/40">{f.relation}</p>
+                <p className="text-[11px] text-white/70">{f.relation}</p>
               </div>
             </label>
           ))}
@@ -541,29 +541,29 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[11px] text-white/50" style={fieldStyle}>Nombre *</label>
+            <label className="text-[11px] text-white/70" style={fieldStyle}>Nombre *</label>
             <input className={fieldCls} style={fieldStyle} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Nombre" />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-white/50" style={fieldStyle}>Apellidos *</label>
+            <label className="text-[11px] text-white/70" style={fieldStyle}>Apellidos *</label>
             <input className={fieldCls} style={fieldStyle} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Apellidos" />
           </div>
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] text-white/50" style={fieldStyle}>Teléfono</label>
+          <label className="text-[11px] text-white/70" style={fieldStyle}>Teléfono</label>
           <input className={fieldCls} style={fieldStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="8888-8888" />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] text-white/50" style={fieldStyle}>Correo</label>
+          <label className="text-[11px] text-white/70" style={fieldStyle}>Correo</label>
           <input type="email" className={fieldCls} style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[11px] text-white/50" style={fieldStyle}>Cédula</label>
+            <label className="text-[11px] text-white/70" style={fieldStyle}>Cédula</label>
             <input className={fieldCls} style={fieldStyle} value={cedula} onChange={e => setCedula(e.target.value)} placeholder="1-2345-6789" />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-white/50" style={fieldStyle}>Fecha de nacimiento</label>
+            <label className="text-[11px] text-white/70" style={fieldStyle}>Fecha de nacimiento</label>
             <input type="date" className={fieldCls} style={fieldStyle} value={birthDate} onChange={e => setBirthDate(e.target.value)} />
           </div>
         </div>
@@ -575,7 +575,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
               <div className="h-7 w-7 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(`${d.first_name} ${d.last_name}`)}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white truncate font-body">{d.first_name} {d.last_name}</p>
-                <p className="text-[11px] text-white/40">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
+                <p className="text-[11px] text-white/70">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
               </div>
               <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/30 hover:text-coral"><X size={14} /></button>
             </div>
@@ -590,7 +590,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
 
         {error && <p className="text-[12px] text-coral font-body">{error}</p>}
 
-        <p className="text-[11px] text-white/40 font-body">
+        <p className="text-[11px] text-white/70 font-body">
           Si tiene correo, se le enviará una invitación para completar su perfil y crear su contraseña.
         </p>
 

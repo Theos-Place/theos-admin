@@ -11,7 +11,7 @@ export default function NotFound() {
         <p className="mb-1 font-display text-base font-semibold text-navy">
           Página no encontrada
         </p>
-        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/50">
+        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/60">
           La página que buscás no existe o fue movida.
         </p>
         <Link

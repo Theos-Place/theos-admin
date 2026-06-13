@@ -16,7 +16,7 @@ function Toggle({ checked, onChange, label, sublabel }: {
     <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-sm text-navy font-body">{label}</p>
-        {sublabel && <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">{sublabel}</p>}
+        {sublabel && <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">{sublabel}</p>}
       </div>
       <label className="toggle shrink-0 cursor-pointer">
         <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
@@ -48,7 +48,7 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
       <div className="page">
         <div className="ph"><div className="ptitle">Editar estudio</div></div>
         <div className="card p-[22px]">
-          <p className="text-sm text-navy-light/50 text-center py-8 font-body">
+          <p className="text-sm text-navy-light/60 text-center py-8 font-body">
             Estudio no encontrado.
           </p>
         </div>

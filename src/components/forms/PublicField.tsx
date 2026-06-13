@@ -17,7 +17,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
       <div className="pt-4">
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-[var(--outline-variant)]" />
-          <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/40 font-display">
+          <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/60 font-display">
             {field.label}
           </span>
           <div className="flex-1 h-px bg-[var(--outline-variant)]" />
@@ -163,8 +163,8 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         </div>
         {(field.scale_min_label || field.scale_max_label) && (
           <div className="flex justify-between px-1">
-            <span className="text-[11px] text-navy-light/40 font-body">{field.scale_min_label}</span>
-            <span className="text-[11px] text-navy-light/40 font-body">{field.scale_max_label}</span>
+            <span className="text-[11px] text-navy-light/60 font-body">{field.scale_min_label}</span>
+            <span className="text-[11px] text-navy-light/60 font-body">{field.scale_max_label}</span>
           </div>
         )}
       </div>

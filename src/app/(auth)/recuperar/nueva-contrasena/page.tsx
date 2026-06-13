@@ -103,7 +103,7 @@ export default function NuevaContrasenaPage() {
         >
           Creá tu nueva contraseña
         </h1>
-        <p className="text-[13px] text-navy-light/40 font-body">
+        <p className="text-[13px] text-navy-light/60 font-body">
           El link es válido por 24 horas.
         </p>
       </div>
@@ -129,7 +129,7 @@ export default function NuevaContrasenaPage() {
             <button
               type="button"
               onClick={() => setShowPass(v => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy-light/80 transition-colors"
               tabIndex={-1}
             >
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -176,7 +176,7 @@ export default function NuevaContrasenaPage() {
             <button
               type="button"
               onClick={() => setShowConfirm(v => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/50 hover:text-navy-light/80 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy-light/80 transition-colors"
               tabIndex={-1}
             >
               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}

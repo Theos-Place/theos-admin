@@ -78,7 +78,7 @@ export default function EstudiosPage() {
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-start justify-between">
               <p
-                className="text-[10px] tracking-widest uppercase text-navy-light/40 font-display"
+                className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
               >
                 {label}
               </p>
@@ -117,7 +117,7 @@ export default function EstudiosPage() {
                   {['Estudio', 'Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', ''].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/50 font-display"
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                     >
                       {h}
                     </th>
@@ -190,7 +190,7 @@ export default function EstudiosPage() {
           {/* Quick access */}
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display"
+              className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display"
             >
               Accesos rápidos
             </h3>
@@ -201,12 +201,12 @@ export default function EstudiosPage() {
                   href={href}
                   className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors group"
                 >
-                  <Icon size={16} className="text-navy-light/50 group-hover:text-coral transition-colors" />
+                  <Icon size={16} className="text-navy-light/60 group-hover:text-coral transition-colors" />
                   <div>
                     <p className="text-sm text-navy font-medium font-body">
                       {label}
                     </p>
-                    <p className="text-[11px] text-navy-light/50">{desc}</p>
+                    <p className="text-[11px] text-navy-light/60">{desc}</p>
                   </div>
                 </Link>
               ))}
@@ -216,7 +216,7 @@ export default function EstudiosPage() {
           {/* Alerts */}
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/40 mb-3 font-display"
+              className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display"
             >
               Alertas
             </h3>
@@ -246,7 +246,7 @@ export default function EstudiosPage() {
                 </div>
               )}
               {pendingLeaderGroups.length === 0 && closingSoon.length === 0 && openRequests === 0 && (
-                <p className="text-[12px] text-navy-light/40 text-center py-2 font-body">
+                <p className="text-[12px] text-navy-light/60 text-center py-2 font-body">
                   Sin alertas activas
                 </p>
               )}

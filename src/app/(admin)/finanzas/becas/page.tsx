@@ -65,7 +65,7 @@ export default function BecasPage() {
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
                 Becas y cupones
               </h1>
-              <p className="text-[12px] text-white/50 mt-0.5 font-body">
+              <p className="text-[12px] text-white/70 mt-0.5 font-body">
                 Descuentos y apoyos económicos
               </p>
             </div>
@@ -82,15 +82,15 @@ export default function BecasPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">Becas activas</p>
+            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">Becas activas</p>
             <p className="text-4xl font-extrabold font-display text-[#3DB97A]">{activeCount}</p>
           </div>
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">Usadas</p>
+            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">Usadas</p>
             <p className="text-4xl font-extrabold font-display text-teal-deep">{usedCount}</p>
           </div>
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.40)]">Total descontado</p>
+            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">Total descontado</p>
             <p className="text-xl font-extrabold font-display text-navy">
               <AmountDisplay amount={totalDiscounted} defaultHidden={false} />
             </p>
@@ -132,7 +132,7 @@ export default function BecasPage() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Entidad', 'Tipo descuento', 'Valor', 'Monto final', 'Estado', 'Creada por', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.40)]">
+                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}
@@ -146,7 +146,7 @@ export default function BecasPage() {
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-body text-navy">{s.entity_name}</p>
-                      <p className="text-[11px] text-[rgba(22,20,64,0.40)] font-body">
+                      <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
                         {s.entity_type === 'event' ? 'Evento' : 'Grupo'}
                       </p>
                     </td>
@@ -266,7 +266,7 @@ export default function BecasPage() {
               </div>
               <div>
                 <p id="revocar-beca" className="text-sm font-bold font-display text-navy">¿Revocar esta beca?</p>
-                <p className="text-[12px] font-body text-[rgba(22,20,64,0.50)]">Esta acción no se puede deshacer</p>
+                <p className="text-[12px] font-body text-[rgba(22,20,64,0.60)]">Esta acción no se puede deshacer</p>
               </div>
             </div>
             <p className="text-[13px] leading-relaxed font-body text-[rgba(22,20,64,0.70)]">

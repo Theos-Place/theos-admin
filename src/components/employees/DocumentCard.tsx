@@ -36,7 +36,7 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
         <p className="text-sm font-medium text-navy truncate font-body">
           {doc.name}
         </p>
-        <p className="text-[11px] text-navy-light/40 font-body">
+        <p className="text-[11px] text-navy-light/60 font-body">
           {TYPE_LABELS[doc.type]} · {new Date(doc.uploaded_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
       </div>
@@ -46,7 +46,7 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Abrir documento ${doc.name}`}
-          className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-navy hover:bg-surface-low transition-colors"
+          className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors"
         >
           <ExternalLink size={14} />
         </a>
@@ -55,7 +55,7 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
             type="button"
             onClick={() => onDelete(doc.id)}
             aria-label={`Eliminar documento ${doc.name}`}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/40 hover:text-coral hover:bg-coral/10 transition-colors"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors"
           >
             <Trash2 size={14} />
           </button>

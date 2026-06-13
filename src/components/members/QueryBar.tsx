@@ -95,7 +95,7 @@ function ConditionPill({
       {!groupMode && (
         <button
           onClick={e => { e.stopPropagation(); onRemove() }}
-          className="rounded-full p-0.5 text-navy-light/40 hover:text-coral transition-colors"
+          className="rounded-full p-0.5 text-navy-light/60 hover:text-coral transition-colors"
           aria-label="Quitar"
         >
           <X size={10} strokeWidth={2.5} />
@@ -212,7 +212,7 @@ export function QueryBar({
         {!groupMode && standaloneCount >= 2 && (
           <button
             onClick={toggleGroupMode}
-            className="flex items-center gap-1 rounded-full bg-surface-low px-3 py-1 text-xs text-navy-light/50 hover:bg-navy/8 hover:text-navy transition-colors font-body"
+            className="flex items-center gap-1 rounded-full bg-surface-low px-3 py-1 text-xs text-navy-light/60 hover:bg-navy/8 hover:text-navy transition-colors font-body"
           >
             <Parentheses size={12} strokeWidth={1.75} />
             Agrupar
@@ -230,13 +230,13 @@ export function QueryBar({
           </span>
 
           <div className="flex items-center gap-1.5 text-xs font-body">
-            <span className="text-navy-light/50">Operador:</span>
+            <span className="text-navy-light/60">Operador:</span>
             <span className="flex overflow-hidden rounded border border-[var(--outline-variant)]">
               <button
                 onClick={() => setNewGroupOp('AND')}
                 className={cn(
                   'px-2 py-0.5 text-[9px] font-semibold tracking-wide transition-colors',
-                  newGroupOp === 'AND' ? 'bg-navy text-white' : 'text-navy-light/50 hover:bg-surface-card',
+                  newGroupOp === 'AND' ? 'bg-navy text-white' : 'text-navy-light/60 hover:bg-surface-card',
                   'font-display',
                 )}
               >
@@ -246,7 +246,7 @@ export function QueryBar({
                 onClick={() => setNewGroupOp('OR')}
                 className={cn(
                   'px-2 py-0.5 text-[9px] font-semibold tracking-wide transition-colors',
-                  newGroupOp === 'OR' ? 'bg-coral text-white' : 'text-navy-light/50 hover:bg-surface-card',
+                  newGroupOp === 'OR' ? 'bg-coral text-white' : 'text-navy-light/60 hover:bg-surface-card',
                   'font-display',
                 )}
               >
@@ -265,7 +265,7 @@ export function QueryBar({
 
           <button
             onClick={cancelGroup}
-            className="text-xs text-navy-light/50 hover:text-coral transition-colors font-body"
+            className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
           >
             Cancelar
           </button>

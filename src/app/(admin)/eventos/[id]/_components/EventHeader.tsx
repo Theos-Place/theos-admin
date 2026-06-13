@@ -117,7 +117,7 @@ export function EventHeader({
             </h1>
             <div className="flex flex-wrap gap-4 text-sm text-white/60 font-body">
               <span className="flex items-center gap-1.5">
-                <Calendar size={13} className="text-white/40" />
+                <Calendar size={13} className="text-white/70" />
                 {startDate.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
                 {' · '}
                 {startDate.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
@@ -125,11 +125,11 @@ export function EventHeader({
                 {endDate.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
               </span>
               <span className="flex items-center gap-1.5">
-                <MapPin size={13} className="text-white/40" />
+                <MapPin size={13} className="text-white/70" />
                 {event.location}
               </span>
               <span className="flex items-center gap-1.5">
-                <Users size={13} className="text-white/40" />
+                <Users size={13} className="text-white/70" />
                 {registrationCount} inscritos
               </span>
             </div>
@@ -149,10 +149,10 @@ export function EventHeader({
                   className="absolute right-0 top-full mt-2 rounded-2xl p-4 w-72 z-30 space-y-3 bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display">
+                    <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
                       Exportar evento
                     </p>
-                    <button onClick={onCalendarPopoverClose} className="text-navy-light/40 hover:text-navy transition-colors">
+                    <button onClick={onCalendarPopoverClose} className="text-navy-light/60 hover:text-navy transition-colors">
                       <XIcon size={14} />
                     </button>
                   </div>
@@ -168,7 +168,7 @@ export function EventHeader({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-navy font-body">Google Calendar</p>
-                      <p className="text-[11px] text-navy-light/50 font-body">Abre en una nueva pestaña</p>
+                      <p className="text-[11px] text-navy-light/60 font-body">Abre en una nueva pestaña</p>
                     </div>
                   </a>
                   <div>
@@ -181,7 +181,7 @@ export function EventHeader({
                       </div>
                       <div>
                         <p className="text-sm font-medium text-navy font-body">Apple / Outlook (.ics)</p>
-                        <p className="text-[11px] text-navy-light/50 font-body">Descargar archivo de calendario</p>
+                        <p className="text-[11px] text-navy-light/60 font-body">Descargar archivo de calendario</p>
                       </div>
                     </button>
                     {event.is_recurring && (

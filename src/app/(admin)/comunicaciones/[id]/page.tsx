@@ -94,7 +94,7 @@ export default function ComunicacionDetallePage() {
   if (!message) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50 font-body">Mensaje no encontrado.</p>
+        <p className="text-sm text-navy-light/60 font-body">Mensaje no encontrado.</p>
       </div>
     )
   }
@@ -117,7 +117,7 @@ export default function ComunicacionDetallePage() {
         <div>
           <Link
             href="/comunicaciones"
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors mb-2 font-body"
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors mb-2 font-body"
           >
             <ChevronLeft size={15} />
             Comunicaciones
@@ -133,7 +133,7 @@ export default function ComunicacionDetallePage() {
               {STATUS_LABEL[message.status]}
             </span>
           </div>
-          <p className="text-sm text-navy-light/50 mt-1 font-body">
+          <p className="text-sm text-navy-light/60 mt-1 font-body">
             {message.sent_at
               ? `Enviado el ${new Date(message.sent_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} por ${message.sent_by}`
               : `Creado el ${new Date(message.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })} por ${message.sent_by}`
@@ -170,7 +170,7 @@ export default function ComunicacionDetallePage() {
       {queue && queue.total > 0 && (queue.pending > 0 || queue.failed > 0) && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
               Progreso del envío
             </p>
             <div className="flex items-center gap-2">
@@ -235,27 +235,27 @@ export default function ComunicacionDetallePage() {
 
       {/* Message content */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
           Contenido del mensaje
         </p>
         {message.subject && (
           <div>
-            <p className="text-[11px] text-navy-light/40 mb-1 font-display">Asunto</p>
+            <p className="text-[11px] text-navy-light/60 mb-1 font-display">Asunto</p>
             <p className="text-sm font-semibold text-navy font-body">{message.subject}</p>
           </div>
         )}
         <div>
-          {message.subject && <p className="text-[11px] text-navy-light/40 mb-1 font-display">Cuerpo</p>}
+          {message.subject && <p className="text-[11px] text-navy-light/60 mb-1 font-display">Cuerpo</p>}
           <p className="text-sm text-navy leading-relaxed whitespace-pre-line font-body">
             {message.body}
           </p>
         </div>
         {/* Segment */}
         <div className="rounded-xl px-4 py-3 flex items-center gap-3 bg-surface-low">
-          <Users size={15} className="text-navy-light/40 shrink-0" />
+          <Users size={15} className="text-navy-light/60 shrink-0" />
           <div>
             <p className="text-[12px] font-medium text-navy font-body">{message.segment.label}</p>
-            <p className="text-[11px] text-navy-light/40 font-body">
+            <p className="text-[11px] text-navy-light/60 font-body">
               {message.segment.total_recipients} destinatarios en el segmento
             </p>
           </div>
@@ -265,7 +265,7 @@ export default function ComunicacionDetallePage() {
       {/* Recipients table */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-5 py-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-[var(--outline-variant)]">
-          <p className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">
+          <p className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
             Destinatarios ({recipients.length})
           </p>
           <div className="flex gap-1">
@@ -276,7 +276,7 @@ export default function ComunicacionDetallePage() {
                 onClick={() => setRecipientFilter(f)}
                 className={cn(
                   'rounded-full px-3 py-1 text-[11px] font-medium transition-all font-display',
-                  recipientFilter === f ? 'bg-navy text-white' : 'text-navy-light/50 hover:text-navy'
+                  recipientFilter === f ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy'
                 )}
               >
                 {f === 'all' ? 'Todos' : f === 'sent' ? 'Exitosos' : 'Fallidos'}
@@ -289,7 +289,7 @@ export default function ComunicacionDetallePage() {
             <thead>
               <tr>
                 {['Miembro', 'Canal', 'Estado', 'Entrega'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/40 font-display">
+                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
                     {h}
                   </th>
                 ))}
@@ -320,7 +320,7 @@ export default function ComunicacionDetallePage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/50 font-body">
+                  <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
                     {r.delivered_at
                       ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
                       : '—'}
@@ -340,7 +340,7 @@ export default function ComunicacionDetallePage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] text-navy font-body">{r.name}</p>
-                <p className="text-[11px] text-navy-light/50 font-body">
+                <p className="text-[11px] text-navy-light/60 font-body">
                   {r.delivered_at
                     ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
                     : '—'}
@@ -361,8 +361,8 @@ export default function ComunicacionDetallePage() {
 
         {message.stats.total > recipients.length && (
           <div className="px-5 py-3 border-t flex items-center justify-center gap-2 border-[var(--outline-variant)]">
-            <RefreshCw size={13} className="text-navy-light/40" />
-            <p className="text-[12px] text-navy-light/40 font-body">
+            <RefreshCw size={13} className="text-navy-light/60" />
+            <p className="text-[12px] text-navy-light/60 font-body">
               Mostrando {recipients.length} de {message.stats.total} destinatarios
             </p>
           </div>

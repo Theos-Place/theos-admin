@@ -61,7 +61,7 @@ export default function AplicacionesPage() {
           >
             Aplicaciones
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
+          <p className="mt-1 text-sm text-white/70 font-body">
             {pending} pendiente{pending !== 1 ? 's' : ''} · {reviewing} en revisión
           </p>
         </div>
@@ -70,7 +70,7 @@ export default function AplicacionesPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1 sm:min-w-48 w-full">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre o puesto..."
@@ -125,7 +125,7 @@ export default function AplicacionesPage() {
                 {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50 font-display"
+                    className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display"
                   >
                     {h}
                   </th>
@@ -154,7 +154,7 @@ export default function AplicacionesPage() {
                     <p className="text-[13px] font-medium text-navy font-body">
                       {a.vacancy_title}
                     </p>
-                    <p className="text-[11px] text-navy-light/50 font-body">
+                    <p className="text-[11px] text-navy-light/60 font-body">
                       {a.committee_name}
                     </p>
                   </td>
@@ -208,7 +208,7 @@ export default function AplicacionesPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-navy font-body">{a.applicant_name}</p>
-                  <p className="truncate text-[12px] text-navy-light/50 font-body">
+                  <p className="truncate text-[12px] text-navy-light/60 font-body">
                     {a.vacancy_title} · {a.committee_name}
                   </p>
                 </div>

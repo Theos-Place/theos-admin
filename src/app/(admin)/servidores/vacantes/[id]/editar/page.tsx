@@ -69,7 +69,7 @@ export default function EditarVacantePage() {
   if (loading && !vacancy) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50 font-body">
+        <p className="text-sm text-navy-light/60 font-body">
           Cargando puesto...
         </p>
       </div>
@@ -79,7 +79,7 @@ export default function EditarVacantePage() {
   if (!vacancy) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50 font-body">
+        <p className="text-sm text-navy-light/60 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -195,7 +195,7 @@ export default function EditarVacantePage() {
                       type="button"
                       onClick={() => removeFunction(idx)}
                       aria-label={`Eliminar función ${idx + 1}`}
-                      className="shrink-0 rounded-xl border border-[var(--outline-variant)] px-3 text-navy-light/50 hover:text-coral hover:border-coral/20 transition-colors"
+                      className="shrink-0 rounded-xl border border-[var(--outline-variant)] px-3 text-navy-light/60 hover:text-coral hover:border-coral/20 transition-colors"
                     >
                       ×
                     </button>

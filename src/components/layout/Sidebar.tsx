@@ -202,7 +202,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <SubIcon
           size={14}
           strokeWidth={1.75}
-          className={cn('shrink-0', subActive ? 'text-white' : 'text-white/40 group-hover:text-white')}
+          className={cn('shrink-0', subActive ? 'text-white' : 'text-white/70 group-hover:text-white')}
         />
         <span className="flex-1 font-body font-light">{sub.label}</span>
         {(sub.badge ?? 0) > 0 && (
@@ -228,12 +228,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <Icon
           size={18}
           strokeWidth={1.75}
-          className={cn('shrink-0 transition-colors', moduleActive ? 'text-white' : 'text-white/50 group-hover:text-white')}
+          className={cn('shrink-0 transition-colors', moduleActive ? 'text-white' : 'text-white/70 group-hover:text-white')}
         />
         <span className="flex-1 truncate font-body font-light">{mod.label}</span>
         <ChevronDown
           size={14}
-          className={cn('transition-transform duration-200', chevronOpen ? 'rotate-180' : 'rotate-0', moduleActive ? 'text-white' : 'text-white/40')}
+          className={cn('transition-transform duration-200', chevronOpen ? 'rotate-180' : 'rotate-0', moduleActive ? 'text-white' : 'text-white/70')}
         />
       </>
     )
@@ -333,7 +333,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   <Icon
                     size={18}
                     strokeWidth={1.75}
-                    className={cn('shrink-0 transition-colors', active ? 'text-white' : 'text-white/50 group-hover:text-white')}
+                    className={cn('shrink-0 transition-colors', active ? 'text-white' : 'text-white/70 group-hover:text-white')}
                   />
                   <span className="flex-1 truncate font-body font-light">{mod.label}</span>
                   {(mod.badge ?? 0) > 0 && (
@@ -369,7 +369,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   'shrink-0 transition-colors',
                   pathname === '/accesos' || pathname.startsWith('/accesos/')
                     ? 'text-white'
-                    : 'text-white/50 group-hover:text-white'
+                    : 'text-white/70 group-hover:text-white'
                 )}
               />
               <span className="font-body font-light">Accesos</span>
@@ -398,7 +398,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] text-white/50 hover:bg-white/10 hover:text-white transition-all font-body"
+            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] text-white/70 hover:bg-white/10 hover:text-white transition-all font-body"
           >
             <LogOut size={14} className="shrink-0" />
             Cerrar sesión

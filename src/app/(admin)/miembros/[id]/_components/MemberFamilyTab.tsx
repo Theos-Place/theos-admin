@@ -29,7 +29,7 @@ export function MemberFamilyTab({ member }: Props) {
           <button
             type="button"
             disabled={member.family_members.length === 0}
-            className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-low hover:text-coral font-body"
+            className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light/60 transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-low hover:text-coral font-body"
           >
             <UserMinus size={14} strokeWidth={1.75} />
             Desvincular
@@ -39,8 +39,8 @@ export function MemberFamilyTab({ member }: Props) {
 
       {member.family_members.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <UserPlus size={32} className="text-navy-light/40 mb-3" strokeWidth={1.25} />
-          <p className="text-sm text-navy-light/40 font-body">
+          <UserPlus size={32} className="text-navy-light/60 mb-3" strokeWidth={1.25} />
+          <p className="text-sm text-navy-light/60 font-body">
             No hay familiares vinculados
           </p>
           <p className="text-xs text-navy-light/60 mt-1 font-body">

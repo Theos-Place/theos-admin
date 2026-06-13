@@ -47,7 +47,7 @@ export default function SolicitudesPage() {
   if (!loaded) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 size={20} className="animate-spin text-navy-light/40" />
+        <Loader2 size={20} className="animate-spin text-navy-light/60" />
       </div>
     )
   }
@@ -100,13 +100,13 @@ export default function SolicitudesPage() {
             {r.request_type === 'relocation' && (
               <span className="inline-flex items-center gap-1.5">
                 <span className="font-medium text-navy">{r.current_group_name ?? 'Sin grupo actual'}</span>
-                <ArrowRight size={13} className="text-navy-light/50" />
+                <ArrowRight size={13} className="text-navy-light/60" />
                 <span className="font-medium text-navy">{r.existing_group_name ?? 'Grupo por definir'}</span>
               </span>
             )}
             {r.request_type !== 'relocation' && (
               <span className="inline-flex items-center gap-1.5">
-                <BookOpen size={13} className="text-navy-light/50" />
+                <BookOpen size={13} className="text-navy-light/60" />
                 {r.plan_name ?? 'Plan por definir'}
               </span>
             )}
@@ -115,13 +115,13 @@ export default function SolicitudesPage() {
             )}
             {r.proposed_location && (
               <span className="inline-flex items-center gap-1.5">
-                <MapPin size={13} className="text-navy-light/50" />
+                <MapPin size={13} className="text-navy-light/60" />
                 {r.proposed_location}
               </span>
             )}
             {r.proposed_schedule && (
               <span className="inline-flex items-center gap-1.5">
-                <Clock size={13} className="text-navy-light/50" />
+                <Clock size={13} className="text-navy-light/60" />
                 {r.proposed_schedule}
               </span>
             )}

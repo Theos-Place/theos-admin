@@ -7,13 +7,13 @@ interface FieldPreviewProps {
 }
 
 export function FieldPreview({ field, compact }: FieldPreviewProps) {
-  const inputBase = 'w-full rounded-xl bg-white/60 border px-3 py-2 text-sm text-navy-light/50 cursor-not-allowed border-[var(--outline-variant)]'
+  const inputBase = 'w-full rounded-xl bg-white/60 border px-3 py-2 text-sm text-navy-light/60 cursor-not-allowed border-[var(--outline-variant)]'
 
   if (field.type === 'section') {
     return (
       <div className="flex items-center gap-3 py-1">
         <div className="flex-1 h-px bg-[var(--outline-variant)]" />
-        <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/40 font-display">
+        <span className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/60 font-display">
           {field.label || 'Sección'}
         </span>
         <div className="flex-1 h-px bg-[var(--outline-variant)]" />
@@ -124,7 +124,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
           {nums.map(n => (
             <div
               key={n}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-[13px] font-medium text-navy-light/40 border cursor-not-allowed border-[var(--outline-variant)] font-mono"
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-[13px] font-medium text-navy-light/60 border cursor-not-allowed border-[var(--outline-variant)] font-mono"
             >
               {n}
             </div>
@@ -146,7 +146,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         {['Sí', 'No'].map(v => (
           <div
             key={v}
-            className="flex-1 rounded-xl border py-2 text-center text-sm text-navy-light/40 cursor-not-allowed border-[var(--outline-variant)] font-body"
+            className="flex-1 rounded-xl border py-2 text-center text-sm text-navy-light/60 cursor-not-allowed border-[var(--outline-variant)] font-body"
           >
             {v}
           </div>

@@ -196,7 +196,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           <ChevronLeft size={16} />
           Formularios
         </Link>
-        <span className="text-navy-light/40">|</span>
+        <span className="text-navy-light/60">|</span>
 
         {/* Editable name */}
         <div className="flex-1 basis-full md:basis-auto min-w-0">
@@ -236,7 +236,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           onClick={() => setStatus(s => s === 'draft' ? 'active' : 'draft')}
           className={cn(
             'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors shrink-0 font-display',
-            status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/50'
+            status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/60'
           )}
         >
           {status === 'active' ? 'Activo' : 'Borrador'}
@@ -296,7 +296,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           <div className="p-3 space-y-4">
             {FIELD_GROUPS.map(group => (
               <div key={group.label} className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widests font-semibold text-navy-light/40 px-1 mb-2 font-display">
+                <p className="text-[9px] uppercase tracking-widests font-semibold text-navy-light/60 px-1 mb-2 font-display">
                   {group.label}
                 </p>
                 <div className="grid grid-cols-2 gap-1 md:grid-cols-1">
@@ -309,7 +309,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                     draggable
                     onDragStart={e => e.dataTransfer.setData('fieldType', type)}
                   >
-                    <FieldTypeIcon type={type} size={13} className="text-navy-light/50 shrink-0" />
+                    <FieldTypeIcon type={type} size={13} className="text-navy-light/60 shrink-0" />
                     {label}
                   </button>
                 ))}
@@ -363,7 +363,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           {activeField ? (
             <>
               <div className="px-4 py-3 border-b flex items-center gap-2 shrink-0 border-[var(--outline-variant)]">
-                <FieldTypeIcon type={activeField.type} size={13} className="text-navy-light/50" />
+                <FieldTypeIcon type={activeField.type} size={13} className="text-navy-light/60" />
                 <p className="text-[12px] font-semibold text-navy font-display">
                   {activeField.type === 'section' ? 'Separador' :
                     activeField.type === 'text' ? 'Texto corto' :
@@ -398,9 +398,9 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
               <div className="h-12 w-12 rounded-xl bg-navy/5 flex items-center justify-center">
-                <FieldTypeIcon type="text" size={20} className="text-navy-light/40" />
+                <FieldTypeIcon type="text" size={20} className="text-navy-light/60" />
               </div>
-              <p className="text-[12px] text-navy-light/40 font-body">
+              <p className="text-[12px] text-navy-light/60 font-body">
                 Seleccioná un campo para editarlo
               </p>
             </div>
@@ -414,7 +414,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           <div className="flex flex-col">
             <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b shrink-0 border-[var(--outline-variant)] bg-surface-card">
               <div className="flex items-center gap-2">
-                <GitBranch size={16} className="text-navy-light/50" />
+                <GitBranch size={16} className="text-navy-light/60" />
                 <p id="logica-formulario-title" className="text-sm font-bold text-navy font-display">Lógica del formulario</p>
               </div>
             </div>
@@ -435,7 +435,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 })
                 return sections.map((section, si) => (
                   <div key={si} className="space-y-1">
-                    <p className="text-[11px] font-bold text-navy-light/50 uppercase tracking-widests font-display">
+                    <p className="text-[11px] font-bold text-navy-light/60 uppercase tracking-widests font-display">
                       📄 {section.pageLabel}
                     </p>
                     <div className="ml-3 border-l space-y-0.5 pl-3 border-[var(--outline-variant)]">
@@ -470,7 +470,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             </div>
 
             <div className="px-5 py-3 border-t text-center border-[var(--outline-variant)]">
-              <p className="text-[11px] text-navy-light/40 font-body">
+              <p className="text-[11px] text-navy-light/60 font-body">
                 {fields.filter(f => (f.logic_rules?.length ?? 0) > 0).length} campos con lógica · {fields.filter(f => f.type === 'page_break').length} bloque{fields.filter(f => f.type === 'page_break').length !== 1 ? 's' : ''} · {fields.filter(f => f.type !== 'page_break' && f.type !== 'section').length} campos total
               </p>
             </div>

@@ -90,7 +90,7 @@ export default function PlantillasPage() {
           <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
             Plantillas
           </h1>
-          <p className="mt-1 text-sm text-white/50 font-body">
+          <p className="mt-1 text-sm text-white/70 font-body">
             {templates.filter(t => t.is_active).length} plantillas activas
           </p>
         </div>

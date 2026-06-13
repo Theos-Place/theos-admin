@@ -54,13 +54,13 @@ export function ModalAjusteSalarial({
           <>
             <h2 id="modal-ajuste-salarial" className="text-base font-bold text-navy font-display">Registrar ajuste salarial</h2>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Salario actual</label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Salario actual</label>
               <p className="text-sm text-navy font-mono">{currentSalary != null ? `₡${currentSalary.toLocaleString('es-CR')}` : '₡ ••••••'}</p>
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Nuevo salario <span className="text-coral">*</span></label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Nuevo salario <span className="text-coral">*</span></label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/50 font-mono">₡</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
                 <input
                   type="number"
                   className={cn(inputCls, 'pl-7 font-body')}
@@ -74,7 +74,7 @@ export function ModalAjusteSalarial({
               )}
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Motivo <span className="text-coral">*</span></label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Motivo <span className="text-coral">*</span></label>
               <input
                 className={cn(inputCls, 'font-body')}
                 placeholder="Ej: Ajuste por desempeño"
@@ -83,7 +83,7 @@ export function ModalAjusteSalarial({
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/40 font-display">Fecha efectiva <span className="text-coral">*</span></label>
+              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Fecha efectiva <span className="text-coral">*</span></label>
               <input
                 type="date"
                 className={cn(inputCls, 'font-body')}

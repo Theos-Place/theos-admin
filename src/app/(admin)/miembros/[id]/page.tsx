@@ -161,7 +161,7 @@ export default function MiembroDetailPage() {
   }
   if (loading || !member) {
     return (
-      <div className="p-8 text-center text-navy-light/50 font-body">
+      <div className="p-8 text-center text-navy-light/60 font-body">
         Cargando…
       </div>
     )
@@ -194,7 +194,7 @@ export default function MiembroDetailPage() {
                 'px-5 py-3.5 text-sm whitespace-nowrap transition-all relative font-body',
                 activeTab === tab.id
                   ? 'text-navy font-medium'
-                  : 'text-navy-light/50 hover:text-navy'
+                  : 'text-navy-light/60 hover:text-navy'
               )}
             >
               {tab.label}
@@ -433,9 +433,9 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
               onChange={e => setQuery(e.target.value)}
             />
             <div className="max-h-64 overflow-y-auto space-y-1">
-              {searching && <p className="text-xs text-navy-light/40 px-1 font-body">Buscando…</p>}
+              {searching && <p className="text-xs text-navy-light/60 px-1 font-body">Buscando…</p>}
               {!searching && query.trim().length >= 2 && results.length === 0 && (
-                <p className="text-xs text-navy-light/40 px-1 font-body">Sin resultados.</p>
+                <p className="text-xs text-navy-light/60 px-1 font-body">Sin resultados.</p>
               )}
               {results.map(m => (
                 <button
@@ -444,7 +444,7 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
                   className="w-full text-left rounded-xl px-3 py-2 hover:bg-surface-low transition-colors"
                 >
                   <p className="text-sm text-navy font-body">{m.first_name} {m.last_name}</p>
-                  <p className="text-[11px] text-navy-light/50 font-body">
+                  <p className="text-[11px] text-navy-light/60 font-body">
                     {m.cedula ? `Cédula ${m.cedula}` : 'Sin cédula'}{m.email ? ` · ${m.email}` : ''}
                   </p>
                 </button>
@@ -453,9 +453,9 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
           </>
         ) : (
           <div className="rounded-xl bg-coral-soft/15 px-3 py-3">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display mb-1">Se eliminará y fusionará en {keepName}</p>
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-1">Se eliminará y fusionará en {keepName}</p>
             <p className="text-sm text-navy font-body">{picked.first_name} {picked.last_name}</p>
-            <p className="text-[11px] text-navy-light/50 font-body">
+            <p className="text-[11px] text-navy-light/60 font-body">
               {picked.cedula ? `Cédula ${picked.cedula}` : 'Sin cédula'}{picked.email ? ` · ${picked.email}` : ''}
             </p>
             <button onClick={() => setPicked(null)} className="mt-2 text-[11px] text-coral hover:underline font-body">Elegir otro</button>

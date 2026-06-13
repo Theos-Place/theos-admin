@@ -98,7 +98,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
                     title={`Donaciones: ₡${dv.toLocaleString('es-CR')}`}
                   />
                 </div>
-                <span className="text-[11px] mt-2 text-center font-body text-[rgba(22,20,64,0.50)]">
+                <span className="text-[11px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
                   {label}
                 </span>
               </div>

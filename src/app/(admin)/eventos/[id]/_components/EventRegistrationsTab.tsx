@@ -89,7 +89,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
               {event.max_capacity > 0 ? Math.round((registrationCount / event.max_capacity) * 100) : 0}%
             </text>
           </svg>
-          <p className="text-[11px] text-navy-light/50 mt-1 font-body">Ocupación</p>
+          <p className="text-[11px] text-navy-light/60 mt-1 font-body">Ocupación</p>
           <p className="text-sm font-medium text-navy font-display">
             {registrationCount}/{event.max_capacity || '∞'}
           </p>
@@ -100,7 +100,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/60' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] tracking-widests uppercase text-navy-light/40 font-display">{label}</p>
+            <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{label}</p>
             <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>{value}</p>
           </div>
         ))}
@@ -135,14 +135,14 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
             <thead>
               <tr>
                 {['Nombre', 'Fecha inscripción', 'Pago', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/50 font-display">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {event.registrations.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/40 font-body">
+                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/60 font-body">
                     Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
                   </td>
                 </tr>
@@ -188,7 +188,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         {/* Mobile: tarjetas */}
         <div className="md:hidden">
           {event.registrations.length === 0 ? (
-            <div className="px-4 py-8 text-center text-[13px] text-navy-light/40 font-body">
+            <div className="px-4 py-8 text-center text-[13px] text-navy-light/60 font-body">
               Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
             </div>
           ) : (
@@ -203,7 +203,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-navy font-body">{reg.member_name}</p>
-                    <p className="text-[11px] text-navy-light/50 font-body">
+                    <p className="text-[11px] text-navy-light/60 font-body">
                       {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                     </p>
                   </div>
@@ -218,7 +218,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   <button
                     onClick={() => removeRegistration(reg.member_id)}
                     disabled={busyMember === reg.member_id}
-                    className="text-navy-light/40 hover:text-coral transition-colors shrink-0"
+                    className="text-navy-light/60 hover:text-coral transition-colors shrink-0"
                     aria-label="Quitar inscripción"
                   >
                     <Trash2 size={15} />
@@ -294,7 +294,7 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
         <h3 id="inscribir-miembro-titulo" className="text-lg font-extrabold text-navy font-display">Inscribir miembro</h3>
 
         <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/40" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
           <input
             autoFocus
             value={query}
@@ -306,9 +306,9 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
         </div>
 
         <div className="max-h-72 overflow-y-auto space-y-1">
-          {loading && <p className="text-[12px] text-navy-light/40 py-2 text-center font-body">Buscando…</p>}
+          {loading && <p className="text-[12px] text-navy-light/60 py-2 text-center font-body">Buscando…</p>}
           {!loading && query.trim().length >= 2 && results.length === 0 && (
-            <p className="text-[12px] text-navy-light/40 py-2 text-center font-body">Sin resultados.</p>
+            <p className="text-[12px] text-navy-light/60 py-2 text-center font-body">Sin resultados.</p>
           )}
           {results.map(m => {
             const name = `${m.first_name} ${m.last_name}`
@@ -320,10 +320,10 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-navy truncate font-body">{name}</p>
-                  {m.cedula && <p className="text-[11px] text-navy-light/40">{m.cedula}</p>}
+                  {m.cedula && <p className="text-[11px] text-navy-light/60">{m.cedula}</p>}
                 </div>
                 {already ? (
-                  <span className="text-[11px] text-navy-light/40 font-body">Ya inscrito</span>
+                  <span className="text-[11px] text-navy-light/60 font-body">Ya inscrito</span>
                 ) : (
                   <button
                     onClick={() => inscribir(m.id)}

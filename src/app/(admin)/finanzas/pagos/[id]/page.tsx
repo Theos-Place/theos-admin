@@ -77,7 +77,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
             <Link href="/finanzas/pagos" className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]">
               <ArrowLeft size={18} />
             </Link>
-            <span className="text-[12px] text-[rgba(255,255,255,0.50)] font-body">
+            <span className="text-[12px] text-[rgba(255,255,255,0.70)] font-body">
               Pagos / Detalle
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Left */}
           <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
+            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
               Información del pago
             </p>
             {[
@@ -119,7 +119,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               { label: 'Pagado', value: formatDateTime(payment.paid_at) },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm gap-4">
-                <span className="font-body text-[rgba(22,20,64,0.50)]">{label}</span>
+                <span className="font-body text-[rgba(22,20,64,0.60)]">{label}</span>
                 <span className="font-medium text-right font-body text-navy">{value}</span>
               </div>
             ))}
@@ -127,18 +127,18 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Right */}
           <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
+            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
               Detalles de la transacción
             </p>
             {payment.gateway_ref && (
               <div className="flex justify-between text-sm gap-4">
-                <span className="font-body text-[rgba(22,20,64,0.50)]">Ref. pasarela</span>
+                <span className="font-body text-[rgba(22,20,64,0.60)]">Ref. pasarela</span>
                 <span className="font-medium font-mono text-right text-[12px] text-navy">{payment.gateway_ref}</span>
               </div>
             )}
             {payment.sinpe_confirmation && (
               <div className="flex justify-between text-sm gap-4">
-                <span className="font-body text-[rgba(22,20,64,0.50)]">Confirmación SINPE</span>
+                <span className="font-body text-[rgba(22,20,64,0.60)]">Confirmación SINPE</span>
                 <span className="font-medium font-mono text-right text-[12px] text-teal-deep">{payment.sinpe_confirmation}</span>
               </div>
             )}
@@ -166,7 +166,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Timeline */}
         <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
-          <p className="text-[11px] uppercase tracking-widests mb-5 font-display text-[rgba(22,20,64,0.40)]">
+          <p className="text-[11px] uppercase tracking-widests mb-5 font-display text-[rgba(22,20,64,0.60)]">
             Línea de tiempo
           </p>
           <div className="relative">
@@ -241,7 +241,7 @@ function TimelineItem({ label, date, color, active }: { label: string; date: str
       </div>
       <div className="pt-0.5">
         <p className="text-sm font-medium font-body text-navy">{label}</p>
-        <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">{date}</p>
+        <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{date}</p>
       </div>
     </div>
   )

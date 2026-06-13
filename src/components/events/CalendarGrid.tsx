@@ -144,7 +144,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                         )
                       })}
                       {dayEvents.length > 4 && (
-                        <span className="text-[8px] text-navy-light/40 leading-none font-body">+{dayEvents.length - 4}</span>
+                        <span className="text-[8px] text-navy-light/60 leading-none font-body">+{dayEvents.length - 4}</span>
                       )}
                     </div>
                   )}
@@ -171,7 +171,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                       )
                     })}
                     {dayEvents.length > 3 && (
-                      <p className="text-[9px] text-navy-light/40 px-1 font-body">
+                      <p className="text-[9px] text-navy-light/60 px-1 font-body">
                         +{dayEvents.length - 3} más
                       </p>
                     )}

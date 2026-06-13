@@ -132,7 +132,7 @@ export default function ImportarDonacionesPage() {
               <h1 className="text-xl text-white font-display font-extrabold">
                 Importar donaciones
               </h1>
-              <p className="text-[12px] text-white/50 mt-0.5 font-body">
+              <p className="text-[12px] text-white/70 mt-0.5 font-body">
                 {fileName || 'Cargá el archivo CSV del banco'}
               </p>
             </div>
@@ -174,7 +174,7 @@ export default function ImportarDonacionesPage() {
                 <p className="text-base font-bold font-display text-navy">
                   Arrastrá el CSV aquí
                 </p>
-                <p className="text-sm mt-1 font-body text-[rgba(22,20,64,0.50)]">
+                <p className="text-sm mt-1 font-body text-[rgba(22,20,64,0.60)]">
                   o hacé clic para seleccionar
                 </p>
                 <p className="text-[11px] mt-2 text-[rgba(22,20,64,0.35)] font-body">
@@ -229,7 +229,7 @@ export default function ImportarDonacionesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Cédula', 'Nombre del CSV', 'Fecha', 'Monto'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                           {h}
                         </th>
                       ))}
@@ -311,7 +311,7 @@ export default function ImportarDonacionesPage() {
                   <p className="text-sm font-medium font-body text-navy">
                     Actualizar estado "Donador" en perfiles
                   </p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
+                  <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
                     Marcará como donadores a los miembros identificados en esta importación
                   </p>
                 </div>
@@ -327,7 +327,7 @@ export default function ImportarDonacionesPage() {
                   <p className="text-sm font-medium font-body text-navy">
                     Aplicar lógica familiar
                   </p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
+                  <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
                     Agrupa donaciones de miembros del mismo núcleo familiar
                   </p>
                 </div>

@@ -13,7 +13,7 @@ const BADGE_STYLES: Record<EventStatus, string> = {
   in_progress: 'bg-coral/10 text-coral',
   finished:    'bg-navy/10 text-navy/60',
   cancelled:   'bg-red-100 text-red-600',
-  archived:    'bg-navy-light/10 text-navy-light/50',
+  archived:    'bg-navy-light/10 text-navy-light/60',
 }
 
 export function EventStatusBadge({ status, size = 'sm' }: EventStatusBadgeProps) {

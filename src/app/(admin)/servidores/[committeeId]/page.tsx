@@ -153,7 +153,7 @@ export default function CommitteeDetailPage() {
   if (!committee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50 font-body">
+        <p className="text-sm text-navy-light/60 font-body">
           Comité no encontrado.
         </p>
       </div>
@@ -320,7 +320,7 @@ export default function CommitteeDetailPage() {
                 'shrink-0 whitespace-nowrap px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
                 tab === t
                   ? 'border-coral text-navy font-semibold'
-                  : 'border-transparent text-navy-light/50 hover:text-navy'
+                  : 'border-transparent text-navy-light/60 hover:text-navy'
               )}
             >
               {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Puestos de Servicio (${committeeVacancies.length})` : t === 'metas' ? 'Metas' : 'Estudios'}
@@ -457,7 +457,7 @@ function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
     return (
       <div className="py-12 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/50">Cargando estudios…</p>
+        <p className="text-sm text-navy-light/60">Cargando estudios…</p>
       </div>
     )
   }
@@ -489,7 +489,7 @@ function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
           </Link>
         ))}
         {rows.length === 0 && (
-          <p className="py-8 text-center text-sm text-navy-light/40 font-body">Sin servidores en el comité.</p>
+          <p className="py-8 text-center text-sm text-navy-light/60 font-body">Sin servidores en el comité.</p>
         )}
       </div>
     </div>

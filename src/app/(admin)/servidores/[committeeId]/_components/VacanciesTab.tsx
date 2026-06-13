@@ -14,7 +14,7 @@ type Props = {
 }
 
 const STATUS_COLORS: Record<VacancyStatus, string> = {
-  draft: 'bg-navy-light/10 text-navy-light/50',
+  draft: 'bg-navy-light/10 text-navy-light/60',
   published: 'bg-teal-deep/10 text-teal-deep',
   filled: 'bg-navy/10 text-navy',
   closed: 'bg-coral/10 text-coral',
@@ -62,7 +62,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[11px] text-navy-light/50 font-mono">
+              <span className="text-[11px] text-navy-light/60 font-mono">
                 {v.slots_filled}/{v.slots_total} cupos
               </span>
               <span

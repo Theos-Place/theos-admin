@@ -68,7 +68,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display"
+                  className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
                 >
                   Motivo de cancelación *
                 </label>
@@ -83,7 +83,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[11px] tracking-widest uppercase text-navy-light/40 font-display"
+                  className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
                 >
                   Escribí "CANCELAR" para confirmar
                 </label>

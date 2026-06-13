@@ -108,7 +108,7 @@ export default function AccesosPage() {
             <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
               Accesos y Roles
             </h1>
-            <p className="text-[12px] text-white/50 mt-0.5 font-body">
+            <p className="text-[12px] text-white/70 mt-0.5 font-body">
               Gestión de permisos administrativos del sistema
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function AccesosPage() {
           { label: 'Último acceso',              value: formatDate(latestLogin),  color: 'text-navy', isText: true },
         ].map(({ label, value, color, isText }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-card">
-            <p className="text-[10px] tracking-widests uppercase text-navy-light/40 mb-2 font-display">{label}</p>
+            <p className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-2 font-display">{label}</p>
             <p className={cn('font-extrabold', isText ? 'text-2xl' : 'text-4xl', color, 'font-display')}>
               {value}
             </p>
@@ -141,7 +141,7 @@ export default function AccesosPage() {
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2.5 flex-1 max-w-sm border border-outline">
-          <Search size={15} className="text-navy-light/40 shrink-0" />
+          <Search size={15} className="text-navy-light/60 shrink-0" />
           <input
             type="search"
             placeholder="Buscar por nombre o correo..."
@@ -191,7 +191,7 @@ export default function AccesosPage() {
                 {['Miembro', 'Roles', 'Otorgado por', 'Desde', 'Último login', 'Estado', ''].map(h => (
                   <th
                     key={h}
-                    className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests text-navy-light/40 font-display whitespace-nowrap"
+                    className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests text-navy-light/60 font-display whitespace-nowrap"
                   >
                     {h}
                   </th>
@@ -216,7 +216,7 @@ export default function AccesosPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-navy font-body">{u.member_name}</p>
-                        <p className="text-[12px] text-navy-light/50 font-body">{u.member_email}</p>
+                        <p className="text-[12px] text-navy-light/60 font-body">{u.member_email}</p>
                       </div>
                     </div>
                   </td>
@@ -227,7 +227,7 @@ export default function AccesosPage() {
                         const extra = u.roles.filter(r => r !== 'miembro')
                         if (extra.length === 0) {
                           return (
-                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium text-navy-light/50 bg-navy/6 font-body">
+                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium text-navy-light/60 bg-navy/6 font-body">
                               Solo acceso básico
                             </span>
                           )
@@ -262,7 +262,7 @@ export default function AccesosPage() {
                   {/* Estado */}
                   <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
                     <span
-                      className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/40')}
+                      className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/60')}
                       style={{ background: u.is_active ? 'rgba(61,185,122,0.10)' : 'rgba(22,20,64,0.06)' }}
                     >
                       {u.is_active ? 'Activo' : 'Inactivo'}
@@ -291,7 +291,7 @@ export default function AccesosPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-navy-light/40 font-body">
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-navy-light/60 font-body">
                     No hay usuarios que coincidan con los filtros
                   </td>
                 </tr>
@@ -318,12 +318,12 @@ export default function AccesosPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-navy font-body">{u.member_name}</p>
-                  <p className="truncate text-[12px] text-navy-light/50 font-body">
+                  <p className="truncate text-[12px] text-navy-light/60 font-body">
                     {extra.length === 0 ? 'Solo acceso básico' : `${extra.length} rol${extra.length !== 1 ? 'es' : ''} · ${u.member_email}`}
                   </p>
                 </div>
                 <span
-                  className={cn('shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/40')}
+                  className={cn('shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/60')}
                   style={{ background: u.is_active ? 'rgba(61,185,122,0.10)' : 'rgba(22,20,64,0.06)' }}
                 >
                   {u.is_active ? 'Activo' : 'Inactivo'}
@@ -332,7 +332,7 @@ export default function AccesosPage() {
             )
           })}
           {filtered.length === 0 && (
-            <li className="px-4 py-12 text-center text-sm text-navy-light/40 font-body">
+            <li className="px-4 py-12 text-center text-sm text-navy-light/60 font-body">
               No hay usuarios que coincidan con los filtros
             </li>
           )}
@@ -341,7 +341,7 @@ export default function AccesosPage() {
 
       {/* Referencia de roles */}
       <div>
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 mb-3 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 mb-3 font-display">
           Referencia de roles
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -390,7 +390,7 @@ export default function AccesosPage() {
               </div>
               <div>
                 <p id="confirm-revoke-title" className="text-sm font-bold text-navy font-display">¿Revocar todos los accesos?</p>
-                <p className="text-[12px] text-navy-light/50 font-body">Esta acción es reversible</p>
+                <p className="text-[12px] text-navy-light/60 font-body">Esta acción es reversible</p>
               </div>
             </div>
             <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">
@@ -477,7 +477,7 @@ function DarAccesoModal({
             <p id="dar-acceso-title" className="text-sm font-bold text-navy font-display">
               Dar acceso al sistema
             </p>
-            <p className="text-[11px] text-navy-light/40 mt-0.5 font-body">
+            <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
               Paso {step} de 2 — {step === 1 ? 'Buscar miembro' : 'Asignar roles'}
             </p>
           </div>
@@ -515,7 +515,7 @@ function DarAccesoModal({
         {/* Step 2 */}
         {step === 2 && (
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            <p className="text-[12px] text-navy-light/50 font-body">
+            <p className="text-[12px] text-navy-light/60 font-body">
               Seleccioná uno o más roles para <strong className="text-navy">{selected?.first_name} {selected?.last_name}</strong>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -536,7 +536,7 @@ function DarAccesoModal({
                       <p className="text-[13px] font-semibold text-navy font-body">{role.name}</p>
                       {isSelected && <Check size={13} className="text-coral ml-auto shrink-0" />}
                     </div>
-                    <p className="text-[11px] text-navy-light/50 leading-relaxed font-body">{role.description}</p>
+                    <p className="text-[11px] text-navy-light/60 leading-relaxed font-body">{role.description}</p>
                   </button>
                 )
               })}

@@ -110,7 +110,7 @@ export function MemberCombobox({
         'flex items-center gap-2 rounded-xl border px-3 py-2.5',
         onDark ? 'border-white/20 bg-white/10' : 'border-outline bg-surface-low',
       )}>
-        <Search size={14} className={cn('shrink-0', onDark ? 'text-white/40' : 'text-navy-light/40')} />
+        <Search size={14} className={cn('shrink-0', onDark ? 'text-white/70' : 'text-navy-light/60')} />
         <input
           autoFocus={autoFocus}
           value={query}
@@ -123,7 +123,7 @@ export function MemberCombobox({
             onDark ? 'text-white placeholder-white/40' : 'text-navy placeholder:text-navy-light/50',
           )}
         />
-        {searching && <Loader2 size={13} className={cn('animate-spin', onDark ? 'text-white/40' : 'text-navy-light/40')} />}
+        {searching && <Loader2 size={13} className={cn('animate-spin', onDark ? 'text-white/70' : 'text-navy-light/60')} />}
       </div>
 
       {results.length > 0 && (

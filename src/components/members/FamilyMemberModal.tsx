@@ -128,7 +128,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               placeholder="Cédula del integrante…"
               className={cn(inputCls, 'font-mono')}
             />
-            {searching && <p className="text-[12px] text-navy-light/40 font-body">Buscando…</p>}
+            {searching && <p className="text-[12px] text-navy-light/60 font-body">Buscando…</p>}
 
             {found && (
               <div className="rounded-xl bg-teal-soft/15 p-3 space-y-3">
@@ -140,7 +140,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                     <p className="text-sm text-navy flex items-center gap-1 font-body">
                       <UserCheck size={13} className="text-teal-deep" /> {found.first_name} {found.last_name}
                     </p>
-                    <p className="text-[11px] text-navy-light/50">{found.cedula}</p>
+                    <p className="text-[11px] text-navy-light/60">{found.cedula}</p>
                   </div>
                 </div>
                 <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>

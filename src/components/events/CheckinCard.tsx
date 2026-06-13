@@ -50,7 +50,7 @@ export function CheckinCard({ member, onConfirm, onCancel }: CheckinCardProps) {
           >
             {member.name}
           </p>
-          <p className="text-xs text-navy-light/50 font-body">
+          <p className="text-xs text-navy-light/60 font-body">
             ID {member.id}
           </p>
         </div>

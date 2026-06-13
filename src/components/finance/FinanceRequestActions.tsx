@@ -137,7 +137,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
 
             {dataLoading || loadedFor !== memberId ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 size={18} className="animate-spin text-navy-light/40" />
+                <Loader2 size={18} className="animate-spin text-navy-light/60" />
               </div>
             ) : (
               <>

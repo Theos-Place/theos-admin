@@ -33,7 +33,7 @@ export function MemberWalletTab({ member }: Props) {
 
         {/* Identificador del carné: cédula si la tiene */}
         <p
-          className="text-xs text-white/40 mb-1 font-mono"
+          className="text-xs text-white/70 mb-1 font-mono"
         >
           {member.cedula ? `#${member.cedula}` : ''}
         </p>
@@ -69,7 +69,7 @@ export function MemberWalletTab({ member }: Props) {
             'rounded-full px-2.5 py-0.5 text-xs font-body',
             member.wallet_pass_status === 'active'
               ? 'bg-teal/20 text-teal'
-              : 'bg-white/10 text-white/40'
+              : 'bg-white/10 text-white/70'
           )}
         >
           {member.wallet_pass_status === 'active' ? 'Pase activo' : 'No generado'}
@@ -80,7 +80,7 @@ export function MemberWalletTab({ member }: Props) {
       <p
         className={cn(
           'text-xs font-body',
-          member.wallet_pass_status === 'active' ? 'text-teal-deep' : 'text-navy-light/40'
+          member.wallet_pass_status === 'active' ? 'text-teal-deep' : 'text-navy-light/60'
         )}
       >
         {member.wallet_pass_status === 'active'

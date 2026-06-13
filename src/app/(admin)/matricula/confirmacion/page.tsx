@@ -57,7 +57,7 @@ function ConfirmacionContent() {
   if (!group || !study) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <p className="text-navy-light/50 font-body">
+        <p className="text-navy-light/60 font-body">
           No se encontró la información de la matrícula.
         </p>
         <Link
@@ -106,7 +106,7 @@ function ConfirmacionContent() {
           <div
             className="px-4 py-2.5 border-b bg-surface-low border-outline"
           >
-            <p className="text-[11px] font-semibold text-navy-light/50 uppercase tracking-widest font-display">
+            <p className="text-[11px] font-semibold text-navy-light/60 uppercase tracking-widest font-display">
               Quedaste inscrito/a en
             </p>
           </div>
@@ -122,7 +122,7 @@ function ConfirmacionContent() {
                 : []),
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center gap-3 px-4 py-2.5 border-outline">
-                <span className="w-20 text-[11px] text-navy-light/40 uppercase tracking-wider shrink-0 font-display">
+                <span className="w-20 text-[11px] text-navy-light/60 uppercase tracking-wider shrink-0 font-display">
                   {label}
                 </span>
                 <span className="text-[13px] font-medium text-navy font-body">
@@ -168,7 +168,7 @@ export default function ConfirmacionPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
       </div>
     }>
       <ConfirmacionContent />

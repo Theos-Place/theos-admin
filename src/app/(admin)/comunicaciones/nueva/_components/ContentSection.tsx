@@ -4,7 +4,7 @@ import { VariableChips } from '@/components/communications/VariableChips'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/40 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
 
 type Props = {
   channel: CommunicationChannel
@@ -55,7 +55,7 @@ export function ContentSection({
 
       {(channel === 'email' || channel === 'both' || channel === 'interna') && (
         <div className="space-y-1.5">
-          <p className="text-[11px] text-navy-light/50 font-body">
+          <p className="text-[11px] text-navy-light/60 font-body">
             {channel === 'interna' ? 'Título de la alerta' : 'Asunto del correo'}
           </p>
           <input
@@ -70,7 +70,7 @@ export function ContentSection({
       {(channel === 'whatsapp' || channel === 'both' || channel === 'interna') && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] text-navy-light/50 font-body">
+            <p className="text-[11px] text-navy-light/60 font-body">
               {channel === 'interna'
                 ? 'Mensaje de la alerta'
                 : <>Mensaje de WhatsApp <span className="text-navy-light/60">(soporta *negrita*, _itálica_, ~tachado~)</span></>}
@@ -94,7 +94,7 @@ export function ContentSection({
 
       {(channel === 'email' || channel === 'both') && (
         <div className="space-y-1.5">
-          <p className="text-[11px] text-navy-light/50 font-body">
+          <p className="text-[11px] text-navy-light/60 font-body">
             Cuerpo del correo
           </p>
           <textarea

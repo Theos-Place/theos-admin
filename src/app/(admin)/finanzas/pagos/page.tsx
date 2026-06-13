@@ -119,7 +119,7 @@ function PagosContent() {
             </div>
             <div>
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Pagos</h1>
-              <p className="text-[12px] text-white/50 mt-0.5 font-body">
+              <p className="text-[12px] text-white/70 mt-0.5 font-body">
                 Registro de todos los pagos del sistema
               </p>
             </div>
@@ -142,7 +142,7 @@ function PagosContent() {
             { label: 'Pendientes', value: totalPending, color: '#E9B949' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.40)]">{label}</p>
+              <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               <p className="text-xl font-extrabold font-display" style={{ color }}>
                 <AmountDisplay amount={value} defaultHidden={false} revealed={revealAll} />
               </p>
@@ -153,7 +153,7 @@ function PagosContent() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1 min-w-48 bg-surface-card border border-[var(--outline-variant)]">
-            <Search size={14} className="text-[rgba(22,20,64,0.40)] shrink-0" />
+            <Search size={14} className="text-[rgba(22,20,64,0.60)] shrink-0" />
             <input
               type="search"
               placeholder="Buscar por miembro, concepto..."
@@ -199,7 +199,7 @@ function PagosContent() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.40)]">
+                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}
@@ -214,7 +214,7 @@ function PagosContent() {
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-body text-navy">{p.entity_name}</p>
-                      <p className="text-[11px] text-[rgba(22,20,64,0.40)] font-body">
+                      <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
                         {p.entity_type === 'event' ? 'Evento' : 'Grupo de estudio'}
                       </p>
                     </td>
@@ -348,7 +348,7 @@ function PagosContent() {
                 <strong>{sinpeTarget.member_name}</strong> — {sinpeTarget.entity_name}
               </p>
               <div>
-                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">
+                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Número de confirmación SINPE
                 </label>
                 <input
@@ -360,7 +360,7 @@ function PagosContent() {
                 />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.40)]">
+                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Fecha de transferencia
                 </label>
                 <input
@@ -401,7 +401,7 @@ export default function PagosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/50 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
       </div>
     }>
       <PagosContent />

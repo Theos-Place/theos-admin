@@ -19,7 +19,7 @@ function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
       >
-        <Icon size={18} strokeWidth={1.75} className={cn('transition-colors', active ? activeColor : 'text-navy-light/40')} />
+        <Icon size={18} strokeWidth={1.75} className={cn('transition-colors', active ? activeColor : 'text-navy-light/60')} />
         {show && active && (
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-navy px-2 py-1 text-[10px] text-white z-50 shadow-[var(--shadow-md)]">
             {tooltip}
@@ -115,7 +115,7 @@ export function MemberHeader({
           >
             {member.first_name} {member.last_name}
           </h1>
-          <p className="text-xs text-navy-light/50 mt-0.5 font-mono">
+          <p className="text-xs text-navy-light/60 mt-0.5 font-mono">
             {member.cedula ? `Cédula: ${member.cedula}` : 'Sin cédula'}
             {member.join_date ? ` · Se unió el ${formatDate(member.join_date)}` : ''}
           </p>

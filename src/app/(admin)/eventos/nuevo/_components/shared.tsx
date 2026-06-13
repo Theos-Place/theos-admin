@@ -61,7 +61,7 @@ export function SummaryRow({
       className="flex items-start justify-between gap-4 py-2.5 border-b last:border-0 border-b-[var(--outline-variant)]"
     >
       <span
-        className="text-[11px] tracking-widest uppercase text-navy-light/40 shrink-0 mt-0.5 font-display"
+        className="text-[11px] tracking-widest uppercase text-navy-light/60 shrink-0 mt-0.5 font-display"
       >
         {label}
       </span>
@@ -77,7 +77,7 @@ export function SummaryRow({
 export function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <label
-      className="text-[11px] tracking-widest uppercase text-navy-light/40 block mb-1 font-display"
+      className="text-[11px] tracking-widest uppercase text-navy-light/60 block mb-1 font-display"
     >
       {children}
     </label>

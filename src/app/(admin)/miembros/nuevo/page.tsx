@@ -75,7 +75,7 @@ function StepIndicator({ current }: { current: number }) {
               <div
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full text-xs text-white transition-all font-display font-extrabold',
-                  done ? 'bg-coral' : active ? 'bg-navy' : 'bg-surface-low text-navy-light/50'
+                  done ? 'bg-coral' : active ? 'bg-navy' : 'bg-surface-low text-navy-light/60'
                 )}
               >
                 {done ? <Check size={14} strokeWidth={2.5} /> : num}
@@ -83,7 +83,7 @@ function StepIndicator({ current }: { current: number }) {
               <span
                 className={cn(
                   'mt-1 text-[10px] text-center whitespace-nowrap font-body',
-                  active ? 'text-navy font-medium' : 'text-navy-light/50'
+                  active ? 'text-navy font-medium' : 'text-navy-light/60'
                 )}
               >
                 {label}

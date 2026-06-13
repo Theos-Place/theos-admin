@@ -146,7 +146,7 @@ export default function ListaDetailPage() {
   if (!list) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/50 font-body">
+        <p className="text-sm text-navy-light/60 font-body">
           Lista no encontrada.
         </p>
       </div>
@@ -164,7 +164,7 @@ export default function ListaDetailPage() {
       {/* Back */}
       <Link
         href="/miembros/listas"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/50 hover:text-navy transition-colors font-body"
+        className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Listas guardadas
@@ -185,7 +185,7 @@ export default function ListaDetailPage() {
               >
                 {list.is_dynamic ? 'Dinámica' : 'Snapshot'}
               </span>
-              <span className="text-[12px] text-navy-light/40 font-body">
+              <span className="text-[12px] text-navy-light/60 font-body">
                 {list.member_count.toLocaleString('es-CR')} miembros
               </span>
             </div>
@@ -199,7 +199,7 @@ export default function ListaDetailPage() {
                 {list.description}
               </p>
             )}
-            <p className="text-[12px] text-navy-light/40 font-body">
+            <p className="text-[12px] text-navy-light/60 font-body">
               Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           </div>
@@ -264,7 +264,7 @@ export default function ListaDetailPage() {
       <div
         className="rounded-2xl px-5 py-4 space-y-1 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/40 font-display">
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
           Filtros que generaron esta lista
         </p>
         <p className="text-sm text-navy font-body">
@@ -290,7 +290,7 @@ export default function ListaDetailPage() {
       >
         {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[var(--outline-variant)]">
-          <p className="text-[12px] text-navy-light/50 font-body">
+          <p className="text-[12px] text-navy-light/60 font-body">
             <strong className="text-navy">{listMembers.length}</strong> miembros en esta lista
             {list.member_count > listMembers.length && (
               <span className="ml-1 text-navy-light/60">(mock: mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
@@ -327,7 +327,7 @@ export default function ListaDetailPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-navy font-body">{member.first_name} {member.last_name}</p>
-                  <p className="truncate text-xs text-navy-light/50 font-mono">
+                  <p className="truncate text-xs text-navy-light/60 font-mono">
                     {member.cedula ?? 'Sin cédula'}
                     {member.birth_date ? ` · ${calcularEdad(member.birth_date)} años` : ''}
                   </p>
@@ -384,7 +384,7 @@ export default function ListaDetailPage() {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
-                                  <p className="truncate text-xs text-navy-light/50 font-body">{member.email}</p>
+                                  <p className="truncate text-xs text-navy-light/60 font-body">{member.email}</p>
                                 </div>
                               </div>
                             </td>

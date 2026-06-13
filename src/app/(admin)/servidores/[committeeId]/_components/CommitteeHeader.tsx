@@ -64,11 +64,11 @@ export function CommitteeHeader({
 
           {/* Encargados del comité */}
           <div className="mt-3">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display mb-1.5">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mb-1.5">
               Encargados
             </p>
             {encargados.length === 0 ? (
-              <span className="text-[12px] text-navy-light/40 italic font-body">
+              <span className="text-[12px] text-navy-light/60 italic font-body">
                 Sin encargado asignado
               </span>
             ) : (
@@ -89,7 +89,7 @@ export function CommitteeHeader({
                       <p className="text-[12px] font-medium text-navy leading-tight group-hover:text-coral transition-colors font-body">
                         {e.name}
                       </p>
-                      <p className="text-[11px] text-navy-light/50 leading-tight font-body">
+                      <p className="text-[11px] text-navy-light/60 leading-tight font-body">
                         {e.position}
                       </p>
                     </div>

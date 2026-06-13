@@ -52,9 +52,9 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
       <StudyTypeBadge code={g.plan_code} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-navy font-body truncate">{g.group_name}</p>
-        <p className="text-[11px] text-navy-light/50 font-body">{fmtDate(g.date)}</p>
+        <p className="text-[11px] text-navy-light/60 font-body">{fmtDate(g.date)}</p>
       </div>
-      <span className="flex items-center gap-1 text-xs text-navy-light/50 font-body shrink-0">
+      <span className="flex items-center gap-1 text-xs text-navy-light/60 font-body shrink-0">
         <Users size={12} /> {g.students_count}
       </span>
       <ExternalLink size={13} className="text-navy-light/60 shrink-0" />
@@ -71,7 +71,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
     return (
       <div className="py-16 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/50">Cargando…</p>
+        <p className="text-sm text-navy-light/60">Cargando…</p>
       </div>
     )
   }
@@ -106,7 +106,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
               <h1 className="text-xl text-navy font-display font-extrabold tracking-[-0.02em]">{d.member_name || 'Sin nombre'}</h1>
               <span className={cn(
                 'rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body',
-                d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/50',
+                d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60',
               )}>
                 {d.status === 'activo' ? 'Activo' : 'Inactivo'}
               </span>
@@ -142,7 +142,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
         {d.estudios_activos.length > 0 ? (
           <div className="space-y-1">{d.estudios_activos.map(g => <GrupoRow key={g.group_id} g={g} />)}</div>
         ) : (
-          <p className="text-sm text-navy-light/40 font-body">No tiene grupos activos.</p>
+          <p className="text-sm text-navy-light/60 font-body">No tiene grupos activos.</p>
         )}
       </div>
 
@@ -152,7 +152,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
         {d.estudios_completados.length > 0 ? (
           <div className="space-y-1">{d.estudios_completados.map(g => <GrupoRow key={g.group_id} g={g} />)}</div>
         ) : (
-          <p className="text-sm text-navy-light/40 font-body">Sin estudios registrados.</p>
+          <p className="text-sm text-navy-light/60 font-body">Sin estudios registrados.</p>
         )}
       </div>
     </div>
@@ -226,11 +226,11 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
       <div className="space-y-2">
         <SectionLabel text="Disponibilidad de estudios" tooltip="Estudios que el dirigente está dispuesto a dar en este momento" />
         <div className="flex flex-wrap gap-1.5 items-center">
-          {studies.length === 0 && <span className="text-xs text-navy-light/40 font-body">Ninguno</span>}
+          {studies.length === 0 && <span className="text-xs text-navy-light/60 font-body">Ninguno</span>}
           {studies.map(code => (
             <span key={code} className="inline-flex items-center gap-1">
               <StudyTypeBadge code={code} size="sm" />
-              {editing && <button onClick={() => removeStudy(code)} className="text-navy-light/40 hover:text-coral"><X size={12} /></button>}
+              {editing && <button onClick={() => removeStudy(code)} className="text-navy-light/60 hover:text-coral"><X size={12} /></button>}
             </span>
           ))}
         </div>
@@ -250,13 +250,13 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
 
       {/* Zonas */}
       <div className="space-y-2">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/40 font-display">Zonas donde da estudios</p>
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Zonas donde da estudios</p>
         <div className="flex flex-wrap gap-1.5 items-center">
-          {zones.length === 0 && <span className="text-xs text-navy-light/40 font-body">Ninguna</span>}
+          {zones.length === 0 && <span className="text-xs text-navy-light/60 font-body">Ninguna</span>}
           {zones.map(id => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-0.5 text-xs text-navy font-body">
               {sedeName(id)}
-              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/40 hover:text-coral"><X size={11} /></button>}
+              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/60 hover:text-coral"><X size={11} /></button>}
             </span>
           ))}
         </div>

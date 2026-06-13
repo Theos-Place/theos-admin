@@ -119,7 +119,7 @@ export default function ListasGuardadasPage() {
         <div>
           <Link
             href="/miembros"
-            className="inline-flex items-center gap-1 text-sm text-navy-light/50 hover:text-navy transition-colors mb-1 font-body"
+            className="inline-flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors mb-1 font-body"
           >
             <ChevronLeft size={14} />
             Miembros
@@ -145,7 +145,7 @@ export default function ListasGuardadasPage() {
       {/* Filtros */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30 transition-all">
-          <Search size={14} className="text-navy-light/40 shrink-0" />
+          <Search size={14} className="text-navy-light/60 shrink-0" />
           <input
             type="search"
             value={search}
@@ -206,7 +206,7 @@ export default function ListasGuardadasPage() {
                     <p className="text-sm font-bold text-navy leading-snug font-display">
                       {list.name}
                     </p>
-                    <p className="text-[11px] text-navy-light/50 mt-0.5 font-body">
+                    <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
                       {list.member_count.toLocaleString('es-CR')} miembros
                     </p>
                   </div>
@@ -216,7 +216,7 @@ export default function ListasGuardadasPage() {
                 <div className="relative shrink-0">
                   <button
                     onClick={() => setOpenMenu(openMenu === list.id ? null : list.id)}
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/40 hover:bg-surface-low hover:text-navy transition-colors"
+                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:bg-surface-low hover:text-navy transition-colors"
                   >
                     <MoreHorizontal size={14} />
                   </button>
@@ -269,7 +269,7 @@ export default function ListasGuardadasPage() {
                 {list.tags.map(tag => (
                   <span
                     key={tag}
-                    className="rounded-full bg-surface-low px-2.5 py-0.5 text-[10px] text-navy-light/50 font-body border-[0.5px] border-[var(--outline-variant)]"
+                    className="rounded-full bg-surface-low px-2.5 py-0.5 text-[10px] text-navy-light/60 font-body border-[0.5px] border-[var(--outline-variant)]"
                   >
                     {tag}
                   </span>
@@ -277,7 +277,7 @@ export default function ListasGuardadasPage() {
               </div>
 
               {/* Meta */}
-              <p className="text-[11px] text-navy-light/40 font-body">
+              <p className="text-[11px] text-navy-light/60 font-body">
                 Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                 {list.last_used_at && ` · Último uso: ${timeAgo(list.last_used_at)}`}
               </p>
@@ -313,7 +313,7 @@ export default function ListasGuardadasPage() {
             </p>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                   Nombre
                 </label>
                 <input
@@ -324,7 +324,7 @@ export default function ListasGuardadasPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/40 font-display">
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                   Tags (separados por coma)
                 </label>
                 <input

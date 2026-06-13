@@ -297,7 +297,7 @@ export function RequestBoard<R extends BaseRequest>({
       {/* Lista acordeón por año */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={18} className="animate-spin text-navy-light/40" />
+          <Loader2 size={18} className="animate-spin text-navy-light/60" />
         </div>
       ) : byYear.length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-card">

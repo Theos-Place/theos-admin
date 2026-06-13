@@ -105,7 +105,7 @@ export default function NuevaBecaPage() {
           </button>
           <div>
             <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Nueva beca</h1>
-            <p className="text-[12px] text-white/50 mt-0.5 font-body">
+            <p className="text-[12px] text-white/70 mt-0.5 font-body">
               Asignar descuento o apoyo económico
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function NuevaBecaPage() {
 
           {/* 1. Member search */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               1. Miembro
             </label>
             {selectedMember ? (
@@ -125,10 +125,10 @@ export default function NuevaBecaPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium font-body text-navy">{selectedMember.first_name} {selectedMember.last_name}</p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">{selectedMember.cedula ?? 'Sin cédula'}</p>
+                  <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{selectedMember.cedula ?? 'Sin cédula'}</p>
                 </div>
                 <button onClick={() => setSelectedMember(null)} aria-label="Quitar miembro seleccionado">
-                  <X size={16} className="text-[rgba(22,20,64,0.40)]" />
+                  <X size={16} className="text-[rgba(22,20,64,0.60)]" />
                 </button>
               </div>
             ) : (
@@ -143,7 +143,7 @@ export default function NuevaBecaPage() {
 
           {/* 2. Entity type */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               2. Tipo de entidad
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -158,25 +158,25 @@ export default function NuevaBecaPage() {
 
           {/* 3. Entity search */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               3. {entityType === 'event' ? 'Evento' : 'Grupo'}
             </label>
             {selectedEntity ? (
               <div className="flex items-center gap-3 rounded-xl p-3.5 bg-[rgba(112,189,194,0.08)] border border-[rgba(112,189,194,0.25)]">
                 <div className="flex-1">
                   <p className="text-sm font-medium font-body text-navy">{selectedEntity.name}</p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.50)] font-body">
+                  <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
                     ₡{selectedEntity.amount.toLocaleString('es-CR')}
                   </p>
                 </div>
                 <button onClick={() => { setSelectedEntity(null); setEntityQuery('') }}>
-                  <X size={16} className="text-[rgba(22,20,64,0.40)]" />
+                  <X size={16} className="text-[rgba(22,20,64,0.60)]" />
                 </button>
               </div>
             ) : (
               <div className="relative">
                 <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 border-[var(--outline-variant)]">
-                  <Search size={14} className="text-[rgba(22,20,64,0.40)]" />
+                  <Search size={14} className="text-[rgba(22,20,64,0.60)]" />
                   <input
                     type="text"
                     placeholder={`Buscar ${entityType === 'event' ? 'evento' : 'grupo'}...`}
@@ -198,7 +198,7 @@ export default function NuevaBecaPage() {
                 )}
                 {entityQuery && entityResults.length === 0 && (
                   <div className="mt-2">
-                    <p className="text-[12px] px-2 text-[rgba(22,20,64,0.40)] font-body">
+                    <p className="text-[12px] px-2 text-[rgba(22,20,64,0.60)] font-body">
                       Opciones disponibles:
                     </p>
                     <div className="mt-1 rounded-xl border overflow-hidden border-[var(--outline-variant)]">
@@ -218,7 +218,7 @@ export default function NuevaBecaPage() {
 
           {/* 4. Discount type */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               4. Tipo de descuento
             </label>
             <div className="grid grid-cols-2 gap-2 mb-4">
@@ -298,7 +298,7 @@ export default function NuevaBecaPage() {
 
           {/* 6. Notes */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.40)]">
+            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               Notas (opcional)
             </label>
             <textarea
