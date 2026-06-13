@@ -1,73 +1,71 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
-import { FilterChips } from '@/components/shared/FilterChips'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { FilterChips } from '@/components/shared/FilterChips'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
-import { useFinance } from '@/hooks/useFinance'
+import { useDonations } from '@/hooks/useDonations'
+import { toDomainDonation } from '@/lib/finance/adapter'
+import type { Donation } from '@/types/finance'
+import type { DbDonation } from '@/lib/supabase/queries/finance'
 import { TOAST_MS } from '@/lib/constants'
 import { formatDate } from '@/lib/format'
 
+type StatusFilter = 'all' | 'identified' | 'unidentified'
+
 export default function DonacionesPage() {
-  const { donations: MOCK_DONATIONS, error, refetch } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'identified' | 'unidentified'>('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+  // Debounce de la búsqueda (server-side): no refetch por cada tecla.
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 300)
+    return () => clearTimeout(t)
+  }, [searchInput])
+
+  const { donations, total, stats, loading, error, hasMore, loadMore, refetch } =
+    useDonations({ search, status: statusFilter, from: dateFrom, to: dateTo })
+
   const [showUnidentifiedModal, setShowUnidentifiedModal] = useState(false)
+  const [unidentified, setUnidentified] = useState<Donation[]>([])
   const [linkingId, setLinkingId] = useState<string | null>(null)
-  const [donations, setDonations] = useState(MOCK_DONATIONS)
   const [toast, setToast] = useState('')
 
-  // Sincroniza con los datos reales cuando cargan/refrescan.
-  useEffect(() => { setDonations(MOCK_DONATIONS) }, [MOCK_DONATIONS])
+  // El modal carga las donaciones sin identificar aparte (no están en la lista
+  // paginada salvo que el filtro sea 'unidentified').
+  useEffect(() => {
+    if (!showUnidentifiedModal) return
+    let alive = true
+    fetch('/api/finance/donations?status=unidentified&pageSize=200')
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { donations: DbDonation[] } | null) => {
+        if (alive && d) setUnidentified((d.donations ?? []).map(toDomainDonation))
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [showUnidentifiedModal])
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(''), TOAST_MS)
   }
 
-  const unidentified = donations.filter(d => !d.is_identified)
-  // Con montos restringidos (amount null para roles sin finanzas) el total queda oculto.
-  const unidentifiedTotal = unidentified.some(d => d.amount == null) ? null : unidentified.reduce((s, d) => s + (d.amount ?? 0), 0)
+  const uniqueDonors = stats?.unique_donors ?? 0
+  const totalThisMonth = stats?.total_this_month ?? null
+  const unidentifiedCount = stats?.unidentified_count ?? 0
+  const unidentifiedTotal = stats?.unidentified_total ?? null
 
-  const uniqueDonors = new Set(donations.filter(d => d.is_identified).map(d => d.member_id)).size
-  const now = new Date()
-  const thisMonth = donations.filter(d => {
-    const dt = new Date(d.donation_date)
-    return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear()
-  })
-  const totalThisMonth = thisMonth.some(d => d.amount == null) ? null : thisMonth.reduce((s, d) => s + (d.amount ?? 0), 0)
-
-  const filtered = useMemo(() => {
-    return donations.filter(d => {
-      const q = search.toLowerCase()
-      const matchSearch = !q
-        || d.member_name.toLowerCase().includes(q)
-        || d.member_cedula.includes(q)
-      const matchStatus = statusFilter === 'all'
-        || (statusFilter === 'identified' ? d.is_identified : !d.is_identified)
-      const dt = new Date(d.donation_date)
-      const matchFrom = !dateFrom || dt >= new Date(dateFrom)
-      const matchTo = !dateTo || dt <= new Date(dateTo)
-      return matchSearch && matchStatus && matchFrom && matchTo
-    })
-  }, [donations, search, statusFilter, dateFrom, dateTo])
-
-  async function handleLink(donationId: string, memberId: string, memberName: string, memberCedula: string) {
-    // Optimista
-    setDonations(prev => prev.map(d =>
-      d.id === donationId
-        ? { ...d, member_id: memberId, member_name: memberName, member_cedula: memberCedula ?? d.member_cedula, is_identified: true }
-        : d
-    ))
+  async function handleLink(donationId: string, memberId: string, memberName: string) {
+    setUnidentified(prev => prev.filter(d => d.id !== donationId))
     setLinkingId(null)
     try {
       const res = await fetch(`/api/finance/donations/${donationId}`, {
@@ -129,13 +127,13 @@ export default function DonacionesPage() {
           {[
             { label: 'Donadores identificados', value: uniqueDonors, isAmount: false },
             { label: 'Total donado este mes', value: totalThisMonth, isAmount: true },
-            { label: 'Sin identificar', value: unidentified.length, isAmount: false, alert: unidentified.length > 0 },
+            { label: 'Sin identificar', value: unidentifiedCount, isAmount: false, alert: unidentifiedCount > 0 },
           ].map(({ label, value, isAmount, alert }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
               <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               {isAmount
                 ? <p className="text-2xl font-extrabold font-display text-teal-deep">
-                    <AmountDisplay amount={value as number} defaultHidden={false} revealed={revealAll} />
+                    <AmountDisplay amount={value as number | null} defaultHidden={false} revealed={revealAll} />
                   </p>
                 : <p className={`text-4xl font-extrabold font-display ${alert ? 'text-coral' : 'text-navy'}`}>
                     {value}
@@ -146,13 +144,13 @@ export default function DonacionesPage() {
         </div>
 
         {/* Unidentified warning */}
-        {unidentified.length > 0 && (
+        {unidentifiedCount > 0 && (
           <div className="rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[rgba(233,185,73,0.10)] border border-[rgba(233,185,73,0.25)]">
             <div className="flex items-start gap-3">
               <AlertTriangle size={18} className="text-[#E9B949] shrink-0 mt-[1px]" />
               <div>
                 <p className="text-[13px] font-semibold font-body text-[#9B7200]">
-                  {unidentified.length} donación{unidentified.length !== 1 ? 'es' : ''} sin identificar — <AmountDisplay amount={unidentifiedTotal} defaultHidden={false} revealed={revealAll} /> en total
+                  {unidentifiedCount} donación{unidentifiedCount !== 1 ? 'es' : ''} sin identificar — <AmountDisplay amount={unidentifiedTotal} defaultHidden={false} revealed={revealAll} /> en total
                 </p>
                 <p className="text-[11px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
                   Vinculalas manualmente a un miembro para que queden registradas correctamente.
@@ -176,8 +174,8 @@ export default function DonacionesPage() {
               type="search"
               placeholder="Buscar por nombre o cédula..."
               aria-label="Buscar por nombre o cédula"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
               className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
             />
           </div>
@@ -196,7 +194,7 @@ export default function DonacionesPage() {
           <FilterChips
             ariaLabel="Filtrar por estado de identificación"
             activeKey={statusFilter}
-            onSelect={k => setStatusFilter(k as typeof statusFilter)}
+            onSelect={k => setStatusFilter(k as StatusFilter)}
             chips={[
               { key: 'all', label: 'Todos' },
               { key: 'identified', label: 'Identificado' },
@@ -219,11 +217,11 @@ export default function DonacionesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((d, i) => (
+                {donations.map((d, i) => (
                   <tr key={d.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-4">
                       <p className={`text-[13px] font-medium font-body ${d.is_identified ? 'text-navy' : 'text-coral'}`}>
-                        {d.member_name}
+                        {d.member_name || 'Sin identificar'}
                       </p>
                     </td>
                     <td className="px-5 py-4">
@@ -259,7 +257,7 @@ export default function DonacionesPage() {
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
+                {donations.length === 0 && !loading && (
                   <tr>
                     <td colSpan={6}>
                       {error
@@ -274,15 +272,15 @@ export default function DonacionesPage() {
 
           {/* Mobile: tarjetas */}
           <ul className="md:hidden">
-            {filtered.map((d, i) => (
+            {donations.map((d, i) => (
               <li
                 key={d.id}
                 className="px-4 py-3 flex items-center gap-3"
-                style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                style={i < donations.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
               >
                 <div className="min-w-0 flex-1">
                   <p className={`text-[13px] font-medium font-body truncate ${d.is_identified ? 'text-navy' : 'text-coral'}`}>
-                    {d.member_name}
+                    {d.member_name || 'Sin identificar'}
                   </p>
                   <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">
                     {d.member_cedula} · {formatDate(d.donation_date)}
@@ -304,7 +302,7 @@ export default function DonacionesPage() {
                 </div>
               </li>
             ))}
-            {filtered.length === 0 && (
+            {donations.length === 0 && !loading && (
               <li>
                 {error
                   ? <ErrorState message={error} onRetry={refetch} />
@@ -313,6 +311,24 @@ export default function DonacionesPage() {
             )}
           </ul>
         </div>
+
+        {/* Paginación / contador */}
+        {donations.length > 0 && (
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-navy-light/60 font-body">
+              Mostrando {donations.length.toLocaleString('es-CR')} de {total.toLocaleString('es-CR')} donaciones
+            </p>
+            {hasMore && (
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="rounded-full border px-5 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body disabled:opacity-50"
+              >
+                {loading ? 'Cargando…' : 'Cargar 50 más'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Unidentified Modal */}
@@ -324,7 +340,7 @@ export default function DonacionesPage() {
         >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--outline-variant)]">
               <p id="donaciones-sin-identificar" className="text-sm font-bold font-display text-navy">
-                Donaciones sin identificar ({unidentified.length})
+                Donaciones sin identificar ({unidentifiedCount})
               </p>
             </div>
             <div className="overflow-y-auto flex-1">
@@ -351,11 +367,16 @@ export default function DonacionesPage() {
                       autoFocus
                       pageSize={6}
                       placeholder="Buscar miembro por nombre o cédula..."
-                      onSelect={m => handleLink(d.id, m.id, `${m.first_name} ${m.last_name}`, m.cedula ?? '')}
+                      onSelect={m => handleLink(d.id, m.id, `${m.first_name} ${m.last_name}`)}
                     />
                   )}
                 </div>
               ))}
+              {unidentified.length === 0 && (
+                <p className="px-6 py-8 text-center text-sm text-navy-light/60 font-body">
+                  No hay donaciones sin identificar.
+                </p>
+              )}
             </div>
         </Modal>
       )}

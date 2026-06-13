@@ -116,17 +116,66 @@ export async function linkDonation(donationId: string, memberId: string): Promis
   if (error) throw error
 }
 
-export async function getDonations(): Promise<DbDonation[]> {
+export type DonationFilters = {
+  search?: string
+  status?: 'all' | 'identified' | 'unidentified'
+  from?: string
+  to?: string
+  page?: number
+  pageSize?: number
+}
+
+export type DonationStats = {
+  unique_donors: number
+  total_this_month: number
+  unidentified_count: number
+  unidentified_total: number
+}
+
+const DONATION_SELECT = `
+  id, member_id, family_unit_id, donation_date, amount, source_file, is_identified, imported_at,
+  member:members(first_name, last_name, cedula)
+`
+// Cuando hay búsqueda, el join debe ser inner para filtrar las donaciones por
+// los campos del miembro (las no identificadas no tienen miembro → se excluyen
+// de la búsqueda, que es lo correcto: no tienen nombre que buscar).
+const DONATION_SELECT_SEARCH = DONATION_SELECT.replace('member:members(', 'member:members!inner(')
+
+/** Donaciones paginadas con filtros server-side. Devuelve filas + total. */
+export async function getDonations(filters: DonationFilters = {}): Promise<{ rows: DbDonation[]; total: number }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
+  const page = Math.max(1, Math.trunc(filters.page ?? 1))
+  const pageSize = Math.min(200, Math.max(1, Math.trunc(filters.pageSize ?? 50)))
+  const search = filters.search?.trim()
+
+  let q = supabase
     .from('donations')
-    .select(`
-      id, member_id, family_unit_id, donation_date, amount, source_file, is_identified, imported_at,
-      member:members(first_name, last_name, cedula)
-    `)
+    .select(search ? DONATION_SELECT_SEARCH : DONATION_SELECT, { count: 'exact' })
     .order('donation_date', { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1)
+
+  if (filters.status === 'identified') q = q.eq('is_identified', true)
+  else if (filters.status === 'unidentified') q = q.eq('is_identified', false)
+  if (filters.from) q = q.gte('donation_date', filters.from)
+  if (filters.to) q = q.lte('donation_date', filters.to)
+  if (search) {
+    // Sanitizado para sintaxis de filtro PostgREST (coma/paréntesis inyectan).
+    const s = search.replace(/[%,().*\\]/g, '')
+    if (s) q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,cedula.ilike.%${s}%`, { referencedTable: 'member' })
+  }
+
+  const { data, error, count } = await q
   if (error) throw error
-  return (data ?? []) as DbDonation[]
+  // Select dinámico (ternario inner/left join) → el parser tipado no lo resuelve.
+  return { rows: (data ?? []) as unknown as DbDonation[], total: count ?? 0 }
+}
+
+/** Totales del módulo de donaciones (calculados en SQL, migración 058). */
+export async function getDonationStats(): Promise<DonationStats> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('donation_stats')
+  if (error) throw error
+  return data as DonationStats
 }
 
 export async function getRefunds(): Promise<DbRefund[]> {

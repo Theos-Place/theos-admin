@@ -3496,6 +3496,7 @@ export type Database = {
           total_recipients: number
         }[]
       }
+      donation_stats: { Args: never; Returns: Json }
       find_duplicate_pairs: {
         Args: never
         Returns: {
