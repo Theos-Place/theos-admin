@@ -105,12 +105,22 @@ export default function GruposPage() {
   const [selectedDay, setSelectedDay] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+  // Filtro "sin dirigente" — activable por deep-link desde la alerta del sistema
+  // (/estudios/grupos?sin_dirigente=1).
+  const [noLeaderOnly, setNoLeaderOnly] = useState(false)
 
   // Debounce de 300ms para no re-filtrar la tabla en cada tecla.
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 300)
     return () => clearTimeout(t)
   }, [searchInput])
+
+  // Lee ?sin_dirigente=1 al montar (deep-link de la alerta "grupos sin dirigente").
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('sin_dirigente') === '1') {
+      setNoLeaderOnly(true)
+    }
+  }, [])
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<StudyGroup>[]>(
     STUDY_GROUP_COLUMNS.filter(c => c.defaultVisible)
   )
@@ -123,6 +133,7 @@ export default function GruposPage() {
 
   const filtered = useMemo(() => {
     return MOCK_GROUPS.filter(g => {
+      if (noLeaderOnly && g.leader_id) return false
       if (selectedStatuses.length > 0 && !selectedStatuses.includes(g.status)) return false
       if (selectedType && g.study_type_id !== selectedType) return false
       if (selectedZone && g.zone !== selectedZone) return false
@@ -139,7 +150,7 @@ export default function GruposPage() {
       if (!b.end_date) return -1
       return b.end_date.localeCompare(a.end_date)
     })
-  }, [MOCK_GROUPS, selectedStatuses, selectedType, selectedZone, selectedDay, search])
+  }, [MOCK_GROUPS, noLeaderOnly, selectedStatuses, selectedType, selectedZone, selectedDay, search])
 
   const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(filtered)
 
@@ -226,6 +237,15 @@ export default function GruposPage() {
                   {STATUS_LABELS[s]}
                 </button>
               ))}
+              {noLeaderOnly && (
+                <button
+                  onClick={() => setNoLeaderOnly(false)}
+                  className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium border border-coral/30 bg-coral/10 text-coral-deep transition-all font-display"
+                  aria-label="Quitar filtro sin dirigente"
+                >
+                  Sin dirigente ✕
+                </button>
+              )}
             </div>
           </div>
 

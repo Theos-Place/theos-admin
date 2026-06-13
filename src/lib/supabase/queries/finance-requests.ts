@@ -255,7 +255,7 @@ export async function assignFinanceRequest(
     type: 'finance_request_assigned',
     title: 'Te asignaron una solicitud',
     body: `Te asignaron una solicitud de ${typeLabel} de ${result.member_name}`,
-    link: '/finanzas/solicitudes',
+    link: `/finanzas/solicitudes?request=${result.id}`,
   })
   if (nErr) console.warn('assignFinanceRequest: notificación falló:', nErr.message)
 
@@ -307,7 +307,7 @@ export async function notifyFinanceRolesOfRequest(req: FinanceRequest): Promise<
     type: isScholarship ? 'finance_scholarship_request' : 'finance_refund_request',
     title: isScholarship ? 'Nueva solicitud de beca' : 'Nueva solicitud de devolución',
     body: `${req.member_name} envió una solicitud. Motivo: ${req.reason.slice(0, 140)}`,
-    link: '/finanzas/solicitudes',
+    link: `/finanzas/solicitudes?request=${req.id}`,
   }))
   const { error: nErr } = await supabase.from('internal_notifications').insert(rows)
   if (nErr) console.warn('notifyFinanceRolesOfRequest:', nErr.message)

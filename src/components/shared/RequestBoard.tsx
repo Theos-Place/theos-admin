@@ -9,7 +9,7 @@
  * El módulo dueño aporta: requests cargadas, etiquetas, endpoint de PATCH y
  * el render de los detalles específicos del tipo.
  */
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   Inbox, Loader2, ChevronDown, ChevronUp, X, ArrowUpDown, History, Search, UserPlus,
@@ -109,6 +109,26 @@ export function RequestBoard<R extends BaseRequest>({
       .catch(() => {})
     return () => { alive = false }
   }, [assigneesUrl])
+
+  // Deep-link desde una notificación (?request=ID): abre esa solicitud
+  // específica — cambia al tab de su tipo, quita el filtro de estado, expande
+  // su año y la fila, y hace scroll. Una sola vez por carga.
+  const focusedRef = useRef(false)
+  useEffect(() => {
+    if (focusedRef.current || requests.length === 0) return
+    const id = new URLSearchParams(window.location.search).get('request')
+    if (!id) return
+    const req = requests.find(r => r.id === id)
+    if (!req) return
+    focusedRef.current = true
+    setTab(req.request_type)
+    setStatusFilter('all')
+    setExpandedRequest(id)
+    setExpandedYears(prev => new Set(prev).add(new Date(req.created_at).getFullYear()))
+    setTimeout(() => {
+      document.querySelector(`[data-request-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+  }, [requests])
 
   const visible = useMemo(() => {
     const fromTs = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() : null
@@ -333,7 +353,7 @@ export function RequestBoard<R extends BaseRequest>({
                       const badge = REQUEST_STATUS_BADGE[r.status]
                       const isOpen = expandedRequest === r.id
                       return (
-                        <li key={r.id}>
+                        <li key={r.id} data-request-id={r.id}>
                           <button
                             onClick={() => setExpandedRequest(isOpen ? null : r.id)}
                             className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-surface-low transition-colors"

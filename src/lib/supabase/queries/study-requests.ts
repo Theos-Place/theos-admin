@@ -266,7 +266,7 @@ export async function assignStudyRequest(
     type: 'study_request_assigned',
     title: 'Te asignaron una solicitud',
     body: `Te asignaron una solicitud de ${TYPE_LABEL_NOTIF[result.request_type]} de ${result.member_name}`,
-    link: '/estudios/solicitudes',
+    link: `/estudios/solicitudes?request=${result.id}`,
   })
   if (nErr) console.warn('assignStudyRequest: notificación falló:', nErr.message)
 
@@ -372,7 +372,7 @@ export async function notifyRecipientsOfRequest(req: StudyRequest): Promise<void
     type: meta.type,
     title: meta.title,
     body: `${req.member_name} envió una solicitud. Motivo: ${req.reason.slice(0, 140)}`,
-    link: '/estudios/solicitudes',
+    link: `/estudios/solicitudes?request=${req.id}`,
   }))
   const { error } = await supabase.from('internal_notifications').insert(rows)
   if (error) console.warn('notifyRecipientsOfRequest:', error.message)

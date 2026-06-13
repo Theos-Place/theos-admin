@@ -72,7 +72,7 @@ export default function NotificacionesPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">

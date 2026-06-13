@@ -27,7 +27,7 @@ const ALERT_DEFS: AlertDef[] = [
     // "Sin dirigente" es flag derivado (leader_id IS NULL), no un estado.
     id: 'groups-no-leader', type: 'warning', table: 'study_groups',
     refine: q => q.is('leader_id', null).neq('status', 'finalizado'),
-    url: '/estudios/grupos',
+    url: '/estudios/grupos?sin_dirigente=1',
     message: n => `${n} grupo${n !== 1 ? 's' : ''} de estudio sin dirigente asignado`,
   },
   {
