@@ -20,7 +20,7 @@ import { useDashboard } from '@/hooks/useDashboard'
 // Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
 const EMPTY_STATS = {
   members: { total: 0, active: 0, new_this_month: 0, without_cedula: 0, duplicates_suggested: 0 },
-  studies: { active_groups: 0, students: 0, open_registration: 0, open_requests: 0, closing_soon: 0, without_leader: 0 },
+  studies: { active_groups: 0, active_estudios: 0, active_capacitaciones: 0, students: 0, open_registration: 0, open_requests: 0, closing_soon: 0, without_leader: 0 },
   events: { upcoming_this_month: 0, this_week: 0, pending_payments: 0, near_capacity: 0 },
   servers: { active: 0, positions: 0, committees: 0, open_vacancies: 0, pending_applications: 0 },
   finance: { donors_active: 0, pending_refunds: 0, income_this_month: 0 },
@@ -392,9 +392,10 @@ export default function DashboardPage() {
 
       {/* Módulo 1 — Stats globales */}
       {isAdminOrDir && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard icon={Users}     value={DASHBOARD_STATS.members.total}  label="Miembros"       delta={`+${DASHBOARD_STATS.members.new_this_month}/mes`} color="#161440" href="/miembros" />
-          <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_groups} label="Grupos activos" color="#519DA2" href="/estudios/grupos" />
+          <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_estudios} label="Estudios activos" sub="Niveles N1–N4" color="#519DA2" href="/estudios/grupos" />
+          <StatCard icon={GraduationCap} value={DASHBOARD_STATS.studies.active_capacitaciones} label="Capacitaciones activas" sub="Resto de grupos" color="#9B7FD4" href="/estudios/grupos" />
           <StatCard icon={Heart} value={DASHBOARD_STATS.finance.donors_active} label="Donadores activos" color="#3DB97A" href="/finanzas/donaciones" />
           <StatCard icon={Hammer} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#EF5554" href="/servidores" />
         </div>
@@ -505,7 +506,7 @@ export default function DashboardPage() {
         {can('estudios', 'view') && (
           <ModuleCard
             icon={BookOpen} title="Estudios Bíblicos"
-            subtitle={`${DASHBOARD_STATS.studies.active_groups} grupos · ${DASHBOARD_STATS.studies.students} estudiantes`}
+            subtitle={`${DASHBOARD_STATS.studies.active_estudios} estudios · ${DASHBOARD_STATS.studies.active_capacitaciones} capacitaciones · ${DASHBOARD_STATS.studies.students} estudiantes`}
             rows={[
               { label: 'En inscripción',          value: DASHBOARD_STATS.studies.open_registration },
               { label: 'Solicitudes abiertas',       value: DASHBOARD_STATS.studies.open_requests,    badge: 'yellow' },

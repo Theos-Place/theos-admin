@@ -22,7 +22,7 @@ function startOfMonthISO(now: Date): string {
 
 export type DashboardStats = {
   members: { total: number; active: number; new_this_month: number; without_cedula: number; duplicates_suggested: number }
-  studies: { active_groups: number; students: number; open_registration: number; open_requests: number; closing_soon: number; without_leader: number }
+  studies: { active_groups: number; active_estudios: number; active_capacitaciones: number; students: number; open_registration: number; open_requests: number; closing_soon: number; without_leader: number }
   events: { upcoming_this_month: number; this_week: number; pending_payments: number; near_capacity: number }
   servers: { active: number; positions: number; committees: number; open_vacancies: number; pending_applications: number }
   finance: { donors_active: number; pending_refunds: number; income_this_month: number }
@@ -37,9 +37,15 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
   const todayStr = now.toISOString().slice(0, 10)
   const weekEnd = new Date(now.getTime() + 7 * 86400000).toISOString()
 
+  // Planes de Niveles (N1–N4) → para separar grupos de "estudios" vs
+  // "capacitaciones" (el resto). Si no hay, estudios = 0.
+  const { data: nivelPlans } = await supabase
+    .from('study_plans').select('id').in('code', ['N1', 'N2', 'N3', 'N4'])
+  const nivelIds = (nivelPlans ?? []).map((p) => (p as { id: string }).id)
+
   const [
     membersTotal, membersActive, membersNew, membersNoCedula,
-    activeGroups, students, openReg, openRequests, closingSoon, withoutLeader,
+    activeGroups, activeEstudios, students, openReg, openRequests, closingSoon, withoutLeader,
     upcomingMonth, thisWeek, pendingPayments,
     serversActive, committees, openVacancies, pendingApps,
     donorsActive, pendingRefunds,
@@ -51,6 +57,10 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     count(supabase, 'members', (q) => q.is('cedula', null)),
 
     count(supabase, 'study_groups', (q) => q.in('status', ['en_matricula', 'en_curso'])),
+    // Estudios = grupos activos de Niveles (N1–N4); capacitaciones = el resto.
+    count(supabase, 'study_groups', (q) =>
+      nivelIds.length === 0 ? q.in('status', ['__none__'])
+        : q.in('status', ['en_matricula', 'en_curso']).in('plan_id', nivelIds)),
     count(supabase, 'study_enrollments', (q) => q.eq('status', 'enrolled')),
     count(supabase, 'study_groups', (q) => q.in('status', ['en_matricula'])),
     count(supabase, 'study_requests', (q) => q.eq('status', 'open')),
@@ -106,7 +116,10 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
       without_cedula: membersNoCedula, duplicates_suggested: 0, // heurística, pendiente
     },
     studies: {
-      active_groups: activeGroups, students, open_registration: openReg,
+      active_groups: activeGroups,
+      active_estudios: activeEstudios,
+      active_capacitaciones: Math.max(0, activeGroups - activeEstudios),
+      students, open_registration: openReg,
       open_requests: openRequests, closing_soon: closingSoon, without_leader: withoutLeader,
     },
     events: {
