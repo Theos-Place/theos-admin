@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -95,6 +96,9 @@ export async function getFormResponses(formId: string): Promise<DbFormResponse[]
 // ── Mutaciones ─────────────────────────────────────────────
 
 export type FieldInput = {
+  /** ID del campo en el builder (temporal o UUID existente). Se usa SOLO para
+   *  remapear las referencias field_id de las reglas de lógica al UUID final. */
+  id?: string
   field_type: string
   label: string
   placeholder?: string | null
@@ -109,6 +113,53 @@ export type FieldInput = {
   scale_max_label?: string | null
 }
 
+type LogicCondition = { field_id?: string; operator?: string; value?: unknown }
+type LogicRule = { id?: string; condition_operator?: string; action?: string; conditions?: LogicCondition[] }
+
+/** Remapea los field_id de las reglas de lógica de los ids del builder al UUID
+ *  final del campo referenciado. Descarta condiciones que apunten a un campo
+ *  inexistente (p. ej. borrado) y reglas que se queden sin condiciones. */
+function remapConditions(raw: unknown, idMap: Map<string, string>): LogicRule[] | null {
+  if (!Array.isArray(raw)) return null
+  const rules: LogicRule[] = []
+  for (const rule of raw as LogicRule[]) {
+    const conds = (rule.conditions ?? [])
+      .filter(c => c.field_id && idMap.has(c.field_id))
+      .map(c => ({ ...c, field_id: idMap.get(c.field_id!)! }))
+    if (conds.length > 0) rules.push({ ...rule, conditions: conds })
+  }
+  return rules.length > 0 ? rules : null
+}
+
+/** Construye las filas de form_fields con UUID asignado y reglas de lógica
+ *  remapeadas (las referencias entre campos quedan consistentes con los UUID
+ *  persistidos, sobreviviendo a create y a edit/delete+reinsert). */
+function buildFieldRows(formId: string, fields: FieldInput[]) {
+  const idMap = new Map<string, string>()
+  const uuids = fields.map(f => {
+    const uuid = randomUUID()
+    if (f.id) idMap.set(f.id, uuid)
+    return uuid
+  })
+  return fields.map((f, i) => ({
+    id: uuids[i],
+    form_id: formId,
+    sort_order: i,
+    field_type: f.field_type,
+    label: f.label,
+    placeholder: f.placeholder ?? null,
+    help_text: f.help_text ?? null,
+    description: f.description ?? null,
+    is_required: Boolean(f.is_required),
+    options: f.options ?? null,
+    conditions: remapConditions(f.conditions, idMap),
+    scale_min: f.scale_min ?? null,
+    scale_max: f.scale_max ?? null,
+    scale_min_label: f.scale_min_label ?? null,
+    scale_max_label: f.scale_max_label ?? null,
+  }))
+}
+
 export type FormWriteInput = {
   title: string
   description?: string | null
@@ -121,7 +172,7 @@ export type FormWriteInput = {
 
 async function insertFields(supabase: ReturnType<typeof createAdminClient>, formId: string, fields: FieldInput[]) {
   if (fields.length === 0) return
-  const rows = fields.map((f, i) => ({ ...f, form_id: formId, sort_order: i }))
+  const rows = buildFieldRows(formId, fields)
   const { error } = await supabase.from('form_fields').insert(rows as Insertable<'form_fields'>[])
   if (error) throw error
 }

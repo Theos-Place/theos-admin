@@ -11,6 +11,10 @@ import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
+
+// Tipos estructurales que no exigen label (el separador de página es un divisor).
+const LABEL_OPTIONAL: FieldType[] = ['page_break']
 
 type FormStatus = 'draft' | 'active'
 
@@ -92,6 +96,7 @@ interface FormBuilderProps {
 
 export function FormBuilder({ formId }: FormBuilderProps) {
   const router = useRouter()
+  const toast = useToast()
 
   const [name, setName]               = useState('')
   const [description, setDescription] = useState('')
@@ -153,6 +158,14 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     if (saving) return
     if (!name.trim()) {
       setNameError(true)
+      toast('El formulario necesita un nombre', 'error')
+      return
+    }
+    // Campos sin etiqueta: un formulario con campos en blanco es inservible.
+    const unlabeled = fields.filter(f => !LABEL_OPTIONAL.includes(f.type) && !f.label.trim())
+    if (unlabeled.length > 0) {
+      setActiveFieldId(unlabeled[0].id)
+      toast(`Hay ${unlabeled.length} campo${unlabeled.length !== 1 ? 's' : ''} sin etiqueta`, 'error')
       return
     }
     setSaving(true)
@@ -175,7 +188,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         router.push(`/formularios/${id}`)
       }
     } catch {
-      // queda en el editor para reintentar
+      toast('No se pudo guardar el formulario. Intentá de nuevo.', 'error')
     } finally {
       setSaving(false)
     }

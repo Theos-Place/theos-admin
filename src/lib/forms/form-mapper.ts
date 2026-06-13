@@ -27,6 +27,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
 }
 
 type RawField = {
+  id?: string
   type?: string
   field_type?: string
   label?: string
@@ -46,6 +47,7 @@ type RawField = {
 export function formToFields(body: Record<string, unknown>): FieldInput[] {
   if (!Array.isArray(body.fields)) return []
   return (body.fields as RawField[]).map((f) => ({
+    id: f.id,
     field_type: f.field_type ?? f.type ?? 'text',
     label: f.label ?? '',
     placeholder: f.placeholder ?? null,
