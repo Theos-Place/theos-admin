@@ -8,7 +8,7 @@
  *   CREATE INDEX IF NOT EXISTS idx_message_logs_queue
  *     ON message_logs(status, scheduled_date, channel) WHERE status = 'pending';
  */
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isBrevoConfigured, DAILY_LIMIT } from '@/lib/email/brevo'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
 
@@ -70,7 +70,7 @@ export async function getMessages(): Promise<DbBroadcast[]> {
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbBroadcast[]
+  return (data ?? []) as DbBroadcast[]
 }
 
 export async function getTemplates(): Promise<DbTemplate[]> {
@@ -83,7 +83,7 @@ export async function getTemplates(): Promise<DbTemplate[]> {
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbTemplate[]
+  return (data ?? []) as DbTemplate[]
 }
 
 export async function getChannelConfigs(): Promise<DbChannelConfig[]> {
@@ -110,14 +110,14 @@ export type TemplateWriteInput = {
 
 export async function createTemplate(input: TemplateWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.from('message_templates').insert(input).select('id').single()
+  const { data, error } = await supabase.from('message_templates').insert(input as Insertable<'message_templates'>).select('id').single()
   if (error) throw error
   return data as { id: string }
 }
 
 export async function updateTemplate(id: string, patch: Partial<TemplateWriteInput>): Promise<void> {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('message_templates').update(patch).eq('id', id)
+  const { error } = await supabase.from('message_templates').update(patch as Updatable<'message_templates'>).eq('id', id)
   if (error) throw error
 }
 
@@ -184,7 +184,7 @@ export async function createBroadcast(input: BroadcastWriteInput): Promise<{ id:
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('message_broadcasts')
-    .insert({ ...input, status: 'draft' })
+    .insert({ ...input, status: 'draft' } as Insertable<'message_broadcasts'>)
     .select('id')
     .single()
   if (error) throw error
@@ -377,7 +377,7 @@ export async function processPendingEmails(
     .eq('id', broadcastId)
     .single()
   if (bErr || !broadcastRow) throw new Error('Broadcast no encontrado')
-  const broadcast = broadcastRow as unknown as {
+  const broadcast = broadcastRow as {
     subject: string | null; body: string
     config: { smtp_from_name: string | null; smtp_from_email: string | null } | null
   }
@@ -542,7 +542,7 @@ export async function getMessageRecipients(broadcastId: string): Promise<Message
     .eq('broadcast_id', broadcastId)
     .order('created_at', { ascending: true })
   if (error) throw error
-  const rows = (data ?? []) as unknown as Array<{
+  const rows = (data ?? []) as Array<{
     id: string; recipient: string; channel: 'whatsapp' | 'email'; status: string; delivered_at: string | null
     member: { first_name: string; last_name: string; email: string | null; phone: string | null } | null
   }>

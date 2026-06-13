@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 
 export type AlertType = 'alert' | 'info' | 'warning'
 export type Alert = {
@@ -13,7 +13,7 @@ export type Alert = {
 type AlertDef = {
   id: string
   type: AlertType
-  table: string
+  table: TableName
   filter?: { column: string; value: string }
   /** Filtro adicional no expresable como columna=valor (ej. IS NULL). */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,7 +64,7 @@ export async function getAlerts(): Promise<ActiveAlert[]> {
   const results = await Promise.all(
     ALERT_DEFS.map(async def => {
       try {
-        let q = supabase.from(def.table).select('*', { count: 'exact', head: true })
+        let q: any = supabase.from(def.table).select('*', { count: 'exact', head: true })
         if (def.filter) q = q.eq(def.filter.column, def.filter.value)
         if (def.refine) q = def.refine(q)
         const { count, error } = await q

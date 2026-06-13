@@ -17,7 +17,7 @@
  * Como el resto de queries, corre server-side con service role; la
  * autorización vive en requireRoles() de cada ruta API.
  */
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type {
   StudyRequest, StudyRequestWriteInput, StudyRequestStatus, StudyRequestType,
   NotificationRecipient,
@@ -122,7 +122,7 @@ export async function getStudyRequests(filters?: {
   if (filters?.member_id) q = q.eq('member_id', filters.member_id)
   const { data, error } = await q
   if (error) throw error
-  return ((data ?? []) as unknown as DbRequestRow[]).map(toDomain)
+  return ((data ?? []) as DbRequestRow[]).map(toDomain)
 }
 
 export async function countOpenStudyRequests(): Promise<number> {
@@ -152,7 +152,7 @@ export async function createStudyRequest(input: StudyRequestWriteInput): Promise
     .select(REQUEST_SELECT)
     .single()
   if (error) throw error
-  return toDomain(data as unknown as DbRequestRow)
+  return toDomain(data as DbRequestRow)
 }
 
 export async function updateStudyRequestStatus(
@@ -180,7 +180,7 @@ export async function updateStudyRequestStatus(
   }
   const { data, error } = await supabase
     .from('study_requests')
-    .update(patch)
+    .update(patch as Updatable<'study_requests'>)
     .eq('id', id)
     .select(REQUEST_SELECT)
     .single()
@@ -196,7 +196,7 @@ export async function updateStudyRequestStatus(
   })
   if (hErr) console.warn('updateStudyRequestStatus: historial falló:', hErr.message)
 
-  const result = toDomain(data as unknown as DbRequestRow)
+  const result = toDomain(data as DbRequestRow)
   // El select corrió antes del insert del historial: reflejarlo en la respuesta.
   result.history = [...result.history, {
     from_status: fromStatus,
@@ -233,7 +233,7 @@ export async function assignStudyRequest(
     .maybeSingle()
   if (roleErr) throw roleErr
   if (!roleRow) throw new Error('La persona asignada no tiene rol activo de coordinador de dirigentes')
-  const assigneeName = fullName((roleRow as unknown as { member: { first_name: string | null; last_name: string | null } | null }).member)
+  const assigneeName = fullName((roleRow as { member: { first_name: string | null; last_name: string | null } | null }).member)
 
   // Estado anterior, para el historial.
   const { data: before } = await supabase
@@ -258,7 +258,7 @@ export async function assignStudyRequest(
   })
   if (hErr) console.warn('assignStudyRequest: historial falló:', hErr.message)
 
-  const result = toDomain(data as unknown as DbRequestRow)
+  const result = toDomain(data as DbRequestRow)
 
   // Notificación interna al coordinador asignado (best-effort).
   const { error: nErr } = await supabase.from('internal_notifications').insert({
@@ -290,7 +290,7 @@ export async function getNotificationRecipients(): Promise<NotificationRecipient
     .select('id, member_id, created_at, member:members(first_name, last_name)')
     .order('created_at')
   if (error) throw error
-  return ((data ?? []) as unknown as Array<{
+  return ((data ?? []) as Array<{
     id: string; member_id: string; created_at: string
     member: { first_name: string | null; last_name: string | null } | null
   }>).map(r => ({
@@ -328,7 +328,7 @@ export async function getEligibleCoordinators(): Promise<Array<{ member_id: stri
     .eq('is_active', true)
   if (error) throw error
   const byMember = new Map<string, { member_id: string; member_name: string; roles: string[] }>()
-  for (const r of (data ?? []) as unknown as Array<{
+  for (const r of (data ?? []) as Array<{
     member_id: string; role: string
     member: { first_name: string | null; last_name: string | null; is_active: boolean } | null
   }>) {
@@ -360,7 +360,7 @@ export async function notifyRecipientsOfRequest(req: StudyRequest): Promise<void
     .eq('role', 'coordinador_estudios')
     .eq('is_active', true)
   if (cErr) console.warn('notifyRecipientsOfRequest (coordinadores):', cErr.message)
-  const coordinators = ((coordRows ?? []) as unknown as Array<{
+  const coordinators = ((coordRows ?? []) as Array<{
     member_id: string; member: { is_active: boolean } | null
   }>).filter(r => r.member?.is_active).map(r => r.member_id)
 

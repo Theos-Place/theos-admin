@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
 import type { FilterCondition } from '@/types/filters'
 import { getInitials } from '@/lib/format'
@@ -146,7 +146,7 @@ export async function getActiveAttendanceMemberIds(): Promise<string[]> {
         console.warn('getActiveAttendanceMemberIds:', error.message)
         return []
       }
-      for (const r of (data ?? []) as unknown as Array<{ member_id: string | null; checked_in_at: string | null }>) {
+      for (const r of (data ?? []) as Array<{ member_id: string | null; checked_in_at: string | null }>) {
         if (!r?.member_id || !r?.checked_in_at) continue
         const mo = r.checked_in_at.slice(0, 7)
         if (!byMember.has(r.member_id)) byMember.set(r.member_id, new Set())
@@ -230,7 +230,7 @@ type ConditionResolution = {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function pagedIds(build: (q: any) => any, table: string, select: string): Promise<Set<string>> {
+async function pagedIds(build: (q: any) => any, table: TableName, select: string): Promise<Set<string>> {
   const supabase = createAdminClient()
   const out = new Set<string>()
   for (let from = 0; ; from += 1000) {
@@ -470,7 +470,7 @@ export async function getUserAccess(): Promise<UserAccessRow[]> {
     .order('granted_at', { ascending: false })
   if (error) throw error
 
-  const rows = (data ?? []) as unknown as Array<{
+  const rows = (data ?? []) as Array<{
     member_id: string
     role: string
     is_active: boolean
@@ -903,8 +903,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
 
   type LedGroupRow = { id: string; name: string | null; plan: { code: string | null; name: string | null } | null }
   const ledGroups = [
-    ...((leadsRes.data ?? []) as unknown as LedGroupRow[]),
-    ...((coLeadsRes.data ?? []) as unknown as LedGroupRow[]),
+    ...((leadsRes.data ?? []) as LedGroupRow[]),
+    ...((coLeadsRes.data ?? []) as LedGroupRow[]),
   ]
     .filter((g, i, arr) => arr.findIndex(x => x.id === g.id) === i)
     .map(g => ({
@@ -1232,7 +1232,7 @@ export async function getMemberFamily(memberId: string): Promise<Array<{ member_
     .select('family_unit_id')
     .eq('member_id', memberId)
   if (oErr) throw oErr
-  const unitIds = (own ?? []).map((r: { family_unit_id: string }) => r.family_unit_id)
+  const unitIds = (own ?? []).map((r: { family_unit_id: string | null }) => r.family_unit_id).filter((x): x is string => x !== null)
   if (unitIds.length === 0) return []
 
   const { data, error } = await supabase
@@ -1242,7 +1242,7 @@ export async function getMemberFamily(memberId: string): Promise<Array<{ member_
     .neq('member_id', memberId)
   if (error) throw error
 
-  const rows = (data ?? []) as unknown as Array<{ member_id: string; relation: string; member: { first_name: string; last_name: string } | null }>
+  const rows = (data ?? []) as Array<{ member_id: string; relation: string; member: { first_name: string; last_name: string } | null }>
   // Dedupe por member_id (puede aparecer en varias unidades).
   const seen = new Set<string>()
   const out: Array<{ member_id: string; name: string; relation: string }> = []

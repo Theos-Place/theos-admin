@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -103,7 +103,7 @@ export async function getPayments(): Promise<DbPayment[]> {
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbPayment[]
+  return (data ?? []) as DbPayment[]
 }
 
 /** Vincula una donación a un miembro (la identifica). */
@@ -126,7 +126,7 @@ export async function getDonations(): Promise<DbDonation[]> {
     `)
     .order('donation_date', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbDonation[]
+  return (data ?? []) as DbDonation[]
 }
 
 export async function getRefunds(): Promise<DbRefund[]> {
@@ -141,7 +141,7 @@ export async function getRefunds(): Promise<DbRefund[]> {
     `)
     .order('requested_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbRefund[]
+  return (data ?? []) as DbRefund[]
 }
 
 export async function getScholarships(): Promise<DbScholarship[]> {
@@ -157,7 +157,7 @@ export async function getScholarships(): Promise<DbScholarship[]> {
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbScholarship[]
+  return (data ?? []) as DbScholarship[]
 }
 
 export async function getImportBatches(): Promise<DbImportBatch[]> {
@@ -261,7 +261,7 @@ export async function processRefund(id: string, status: RefundStatus): Promise<v
   if (status === 'completed' || status === 'rejected') {
     patch.processed_at = new Date().toISOString()
   }
-  const { data, error } = await supabase.from('refunds').update(patch).eq('id', id).select('payment_id').single()
+  const { data, error } = await supabase.from('refunds').update(patch as Updatable<'refunds'>).eq('id', id).select('payment_id').single()
   if (error) throw error
 
   if (status === 'completed') {
@@ -331,7 +331,7 @@ export async function importDonations(
   }
 
   if (toInsert.length > 0) {
-    const { error: dErr } = await supabase.from('donations').insert(toInsert)
+    const { error: dErr } = await supabase.from('donations').insert(toInsert as Insertable<'donations'>[])
     if (dErr) throw dErr
   }
 

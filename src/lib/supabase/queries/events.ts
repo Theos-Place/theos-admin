@@ -109,7 +109,7 @@ function normalize(row: Record<string, unknown>): DbEventEnriched {
   }))
 
   return {
-    ...(row as unknown as DbEventEnriched),
+    ...(row as DbEventEnriched),
     sub_events: (row.sub_events ?? []) as DbEventEnriched['sub_events'],
     registrations: (row.registrations ?? []) as DbEventEnriched['registrations'],
     volunteers,

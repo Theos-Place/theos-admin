@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { ContractType, VacationRecordType, VacationRecordStatus, DocumentType } from '@/types/employee'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -77,7 +77,7 @@ export async function getEmployees(): Promise<DbEmployee[]> {
     `)
     .order('start_date', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbEmployee[]
+  return (data ?? []) as DbEmployee[]
 }
 
 export async function getPaidPositions(): Promise<DbPaidPosition[]> {
@@ -90,7 +90,7 @@ export async function getPaidPositions(): Promise<DbPaidPosition[]> {
     `)
     .order('name', { ascending: true })
   if (error) throw error
-  return (data ?? []) as unknown as DbPaidPosition[]
+  return (data ?? []) as DbPaidPosition[]
 }
 
 // ── Mutaciones ─────────────────────────────────────────────
@@ -150,14 +150,14 @@ export async function createEmployee(input: EmployeeWriteInput): Promise<{ id: s
       row.position = 'Sin definir'
     }
   }
-  const { data, error } = await supabase.from('employees').insert(row).select('id').single()
+  const { data, error } = await supabase.from('employees').insert(row as Insertable<'employees'>).select('id').single()
   if (error) throw error
   return data as { id: string }
 }
 
 export async function updateEmployee(id: string, patch: Partial<EmployeeWriteInput>): Promise<void> {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('employees').update(patch).eq('id', id)
+  const { error } = await supabase.from('employees').update(patch as Updatable<'employees'>).eq('id', id)
   if (error) throw error
 }
 

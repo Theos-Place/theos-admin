@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { MemberList } from '@/types/member-list'
 import type { FilterState } from '@/types/filters'
 
@@ -76,7 +76,7 @@ export async function createMemberList(input: ListWriteInput): Promise<MemberLis
       is_dynamic: input.is_dynamic ?? false,
       tags: input.tags ?? [],
       created_by: input.created_by ?? null,
-    })
+    } as Insertable<'member_lists'>)
     .select('*')
     .single()
   if (error) throw error
@@ -85,7 +85,7 @@ export async function createMemberList(input: ListWriteInput): Promise<MemberLis
 
 export async function updateMemberList(id: string, patch: Partial<ListWriteInput>): Promise<void> {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('member_lists').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id)
+  const { error } = await supabase.from('member_lists').update({ ...patch, updated_at: new Date().toISOString() } as Updatable<'member_lists'>).eq('id', id)
   if (error) throw error
 }
 

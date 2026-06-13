@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -83,7 +83,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
     .eq('is_active', true)
     .order('name', { ascending: true })
   if (error) throw error
-  return (data ?? []) as unknown as DbCommittee[]
+  return (data ?? []) as DbCommittee[]
 }
 
 export async function getVacancies(): Promise<DbVacancy[]> {
@@ -97,7 +97,7 @@ export async function getVacancies(): Promise<DbVacancy[]> {
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbVacancy[]
+  return (data ?? []) as DbVacancy[]
 }
 
 export async function getApplications(): Promise<DbApplication[]> {
@@ -111,7 +111,7 @@ export async function getApplications(): Promise<DbApplication[]> {
     `)
     .order('applied_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbApplication[]
+  return (data ?? []) as DbApplication[]
 }
 
 export async function getCommitteeGoals(): Promise<DbCommitteeGoal[]> {
@@ -153,7 +153,7 @@ export async function updateVacancy(id: string, patch: Partial<VacancyWriteInput
   const row: Record<string, unknown> = { ...patch }
   // Al publicar, sellamos published_at si no estaba puesto.
   if (patch.status === 'published') row.published_at = new Date().toISOString()
-  const { error } = await supabase.from('vacancies').update(row).eq('id', id)
+  const { error } = await supabase.from('vacancies').update(row as Updatable<'vacancies'>).eq('id', id)
   if (error) throw error
 }
 
@@ -190,7 +190,7 @@ export async function setApplicationStatus(
       .single()
     if (aErr) throw aErr
 
-    const row = app as unknown as {
+    const row = app as {
       applicant_id: string
       vacancy: { id: string; position_id: string | null; slots_filled: number } | Array<{ id: string; position_id: string | null; slots_filled: number }> | null
     }

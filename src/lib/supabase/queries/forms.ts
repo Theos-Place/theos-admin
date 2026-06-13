@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -62,7 +62,7 @@ export async function getForms(): Promise<DbFormTemplate[]> {
     .order('created_at', { ascending: false })
   if (error) throw error
   // Ordenamos los campos por sort_order (Supabase no garantiza orden en embeds).
-  const rows = (data ?? []) as unknown as DbFormTemplate[]
+  const rows = (data ?? []) as DbFormTemplate[]
   for (const f of rows) f.fields.sort((a, b) => a.sort_order - b.sort_order)
   return rows
 }
@@ -72,7 +72,7 @@ export async function getFormById(id: string): Promise<DbFormTemplate | null> {
   const { data, error } = await supabase.from('forms').select(FORM_SELECT).eq('id', id).maybeSingle()
   if (error) throw error
   if (!data) return null
-  const row = data as unknown as DbFormTemplate
+  const row = data as DbFormTemplate
   row.fields.sort((a, b) => a.sort_order - b.sort_order)
   return row
 }
@@ -89,7 +89,7 @@ export async function getFormResponses(formId: string): Promise<DbFormResponse[]
     .eq('form_id', formId)
     .order('submitted_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as DbFormResponse[]
+  return (data ?? []) as DbFormResponse[]
 }
 
 // ── Mutaciones ─────────────────────────────────────────────
@@ -122,7 +122,7 @@ export type FormWriteInput = {
 async function insertFields(supabase: ReturnType<typeof createAdminClient>, formId: string, fields: FieldInput[]) {
   if (fields.length === 0) return
   const rows = fields.map((f, i) => ({ ...f, form_id: formId, sort_order: i }))
-  const { error } = await supabase.from('form_fields').insert(rows)
+  const { error } = await supabase.from('form_fields').insert(rows as Insertable<'form_fields'>[])
   if (error) throw error
 }
 

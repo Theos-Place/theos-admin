@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -130,7 +130,7 @@ export async function getStudyGroups(
       .range(from, from + pageSize - 1)
     if (error) throw error
     return {
-      data: ((data ?? []) as unknown as RawListGroup[]).map(toListItem),
+      data: ((data ?? []) as RawListGroup[]).map(toListItem),
       total: count ?? 0,
     }
   }
@@ -144,7 +144,7 @@ export async function getStudyGroups(
       .order('starts_at', { ascending: false })
       .range(from, from + 999)
     if (error) throw error
-    const batch = (data ?? []) as unknown as RawListGroup[]
+    const batch = (data ?? []) as RawListGroup[]
     all.push(...batch.map(toListItem))
     if (batch.length < 1000) break
   }
@@ -164,7 +164,7 @@ export async function getStudyGroupsWithEnrollments(): Promise<DbGroupEnriched[]
       .order('starts_at', { ascending: false })
       .range(from, from + 999)
     if (error) throw error
-    const batch = (data ?? []) as unknown as DbGroupEnriched[]
+    const batch = (data ?? []) as DbGroupEnriched[]
     all.push(...batch)
     if (batch.length < 1000) break
   }
@@ -213,7 +213,7 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
-  return (data as unknown as DbGroupEnriched) ?? null
+  return (data as DbGroupEnriched) ?? null
 }
 
 export type StudyDemandRow = {
@@ -362,7 +362,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
         .select('id, is_donor, is_active, province, sede:sedes(code)')
         .in('id', pending.slice(i, i + 400))
       if (error) throw error
-      for (const m of (data ?? []) as unknown as Array<{ id: string; is_donor: boolean; is_active: boolean; province: string | null; sede: { code: string } | null }>) {
+      for (const m of (data ?? []) as Array<{ id: string; is_donor: boolean; is_active: boolean; province: string | null; sede: { code: string } | null }>) {
         if (!m.is_active) continue
         if (requirements.includes('donador') && !m.is_donor) continue
         const zoneKey = m.sede?.code ?? m.province ?? 'Sin zona'
@@ -423,7 +423,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
       .order('id')
       .range(from, from + 999)
     if (error) throw error
-    const batch = (data ?? []) as unknown as EnrollRow[]
+    const batch = (data ?? []) as EnrollRow[]
     enrollments.push(...batch)
     if (batch.length < 1000) break
   }
@@ -545,7 +545,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
       .gte('checked_in_at', sixMonthsAgo.toISOString()),
   ])
 
-  const enrollments = (enrRes.data ?? []) as unknown as Array<{ status: string; study_groups: { plan: { code: string } | null } | null }>
+  const enrollments = (enrRes.data ?? []) as Array<{ status: string; study_groups: { plan: { code: string } | null } | null }>
   const completed_codes = enrollments
     .filter(e => e.status === 'completed' && e.study_groups?.plan?.code)
     .map(e => e.study_groups!.plan!.code)
@@ -615,7 +615,7 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
       .order('code'),
   ])
 
-  const enrollments = (enrRes.data ?? []) as unknown as Array<{
+  const enrollments = (enrRes.data ?? []) as Array<{
     status: string
     group: { id: string; name: string; plan: { code: string | null } | null } | null
     plan_direct: { code: string | null } | null
@@ -633,7 +633,7 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
 
   // Asistencia activa: criterio único vía helper central (members.ts).
   const monthsWithCharla = new Set(
-    ((chkRes.data ?? []) as unknown as Array<{ checked_in_at: string }>).map(c => c.checked_in_at.slice(0, 7)),
+    ((chkRes.data ?? []) as Array<{ checked_in_at: string }>).map(c => c.checked_in_at.slice(0, 7)),
   )
   const attendance_active = attendanceMonthsSatisfyCriteria(monthsWithCharla)
 
@@ -700,7 +700,7 @@ export async function getGroupSessions(groupId: string): Promise<Array<{ id: str
     .eq('group_id', groupId)
     .order('session_date', { ascending: true })
   if (error) throw error
-  const rows = (data ?? []) as unknown as Array<{ id: string; session_date: string; topic: string | null; study_attendance: Array<{ present: boolean }> }>
+  const rows = (data ?? []) as Array<{ id: string; session_date: string; topic: string | null; study_attendance: Array<{ present: boolean }> }>
   return rows.map(r => ({
     id: r.id, date: r.session_date, topic: r.topic,
     present: r.study_attendance.filter(a => a.present).length,
@@ -741,7 +741,7 @@ export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
       evaluations:leader_evaluations(id, group_id, score, evaluation_date, comments)
     `)
   if (error) throw error
-  return (data ?? []) as unknown as DbLeaderEnriched[]
+  return (data ?? []) as DbLeaderEnriched[]
 }
 
 /** Dirigentes ACTIVOS = servidores activos del comité "Comité de Dirigentes".
@@ -765,7 +765,7 @@ export async function getActiveDirigentes(): Promise<Array<{ member_id: string; 
   if (error) throw error
 
   const seen = new Map<string, string>()
-  for (const v of (data ?? []) as unknown as Array<{ member_id: string; member: { first_name: string; last_name: string } | null }>) {
+  for (const v of (data ?? []) as Array<{ member_id: string; member: { first_name: string; last_name: string } | null }>) {
     if (!seen.has(v.member_id)) {
       seen.set(v.member_id, v.member ? `${v.member.first_name} ${v.member.last_name}`.trim() : '')
     }
@@ -877,7 +877,7 @@ export async function updatePlan(id: string, patch: Partial<PlanWriteInput>): Pr
 // Grupos
 export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.from('study_groups').insert(input).select('id').single()
+  const { data, error } = await supabase.from('study_groups').insert(input as Insertable<'study_groups'>).select('id').single()
   if (error) throw error
   return data as { id: string }
 }
@@ -1004,7 +1004,7 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
     .eq('member_id', memberId)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return ((data ?? []) as unknown as Array<{
+  return ((data ?? []) as Array<{
     id: string
     recommended_for: 'oracion' | 'servicio' | 'dirigente'
     justification: string | null

@@ -21,7 +21,7 @@
  * Notificaciones: a diferencia de estudios (lista configurable), acá se
  * notifica directo a todos los miembros con rol activo finanzas o admin.
  */
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type {
   FinanceRequest, FinanceRequestWriteInput, FinanceRequestStatus, FinanceRequestType,
 } from '@/types/finance'
@@ -123,7 +123,7 @@ export async function getFinanceRequests(filters?: {
   if (filters?.member_id) q = q.eq('member_id', filters.member_id)
   const { data, error } = await q
   if (error) throw error
-  return ((data ?? []) as unknown as DbRow[]).map(toDomain)
+  return ((data ?? []) as DbRow[]).map(toDomain)
 }
 
 export async function countOpenFinanceRequests(): Promise<number> {
@@ -151,7 +151,7 @@ export async function createFinanceRequest(input: FinanceRequestWriteInput): Pro
     .select(REQUEST_SELECT)
     .single()
   if (error) throw error
-  return toDomain(data as unknown as DbRow)
+  return toDomain(data as DbRow)
 }
 
 export async function updateFinanceRequestStatus(
@@ -177,7 +177,7 @@ export async function updateFinanceRequestStatus(
   }
   const { data, error } = await supabase
     .from('finance_requests')
-    .update(patch)
+    .update(patch as Updatable<'finance_requests'>)
     .eq('id', id)
     .select(REQUEST_SELECT)
     .single()
@@ -192,7 +192,7 @@ export async function updateFinanceRequestStatus(
   })
   if (hErr) console.warn('updateFinanceRequestStatus: historial falló:', hErr.message)
 
-  const result = toDomain(data as unknown as DbRow)
+  const result = toDomain(data as DbRow)
   result.history = [...result.history, {
     from_status: fromStatus,
     to_status: status,
@@ -223,7 +223,7 @@ export async function assignFinanceRequest(
     .maybeSingle()
   if (roleErr) throw roleErr
   if (!roleRow) throw new Error('La persona asignada no tiene rol activo de finanzas')
-  const assigneeName = fullName((roleRow as unknown as { member: { first_name: string | null; last_name: string | null } | null }).member)
+  const assigneeName = fullName((roleRow as { member: { first_name: string | null; last_name: string | null } | null }).member)
 
   const { data: before } = await supabase
     .from('finance_requests').select('status').eq('id', id).maybeSingle()
@@ -246,7 +246,7 @@ export async function assignFinanceRequest(
   })
   if (hErr) console.warn('assignFinanceRequest: historial falló:', hErr.message)
 
-  const result = toDomain(data as unknown as DbRow)
+  const result = toDomain(data as DbRow)
 
   // Notificación interna al asignado (best-effort).
   const typeLabel = result.request_type === 'scholarship' ? 'beca' : 'devolución'
@@ -279,7 +279,7 @@ export async function getAssignableFinanceMembers(): Promise<Array<{ member_id: 
     .eq('is_active', true)
   if (error) throw error
   const byMember = new Map<string, { member_id: string; member_name: string }>()
-  for (const r of (data ?? []) as unknown as Array<{
+  for (const r of (data ?? []) as Array<{
     member_id: string
     member: { first_name: string | null; last_name: string | null; is_active: boolean } | null
   }>) {

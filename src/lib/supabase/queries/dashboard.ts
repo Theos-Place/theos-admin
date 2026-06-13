@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 
 type SB = ReturnType<typeof createAdminClient>
 
@@ -6,7 +6,7 @@ type SB = ReturnType<typeof createAdminClient>
 /** Cuenta filas con filtros encadenados. */
 async function count(
   supabase: SB,
-  table: string,
+  table: TableName,
   build: (q: any) => any = (q) => q,
 ): Promise<number> {
   const { count: c, error } = await build(
