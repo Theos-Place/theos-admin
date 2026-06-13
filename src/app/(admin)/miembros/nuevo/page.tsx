@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
-import { type Member } from '@/data/mock-members'
+import { type Member } from '@/types/member'
 import { CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
 import { cn } from '@/lib/utils'
 import { REDIRECT_LONG_AFTER_SAVE_MS } from '@/lib/constants'

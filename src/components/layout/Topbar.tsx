@@ -7,19 +7,11 @@ import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield, Loader2 } fr
 import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/lib/auth/roles'
 import { NotificationsBell } from './NotificationsDropdown'
+import { getInitials } from '@/lib/format'
 
 interface TopbarProps {
   title: string
   onMenuToggle: () => void
-}
-
-function initials(name: string) {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase() || 'TP'
 }
 
 export function Topbar({ title, onMenuToggle }: TopbarProps) {
@@ -47,7 +39,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
     }
   }
 
-  const userInitials = user ? initials(user.name) : 'TP'
+  const userInitials = user ? getInitials(user.name) : 'TP'
 
   const roleLabel = useMemo(
     () => user?.roles?.map(rid => ROLES.find(r => r.id === rid)?.name).filter(Boolean).join(' · ') ?? '',

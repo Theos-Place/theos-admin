@@ -6,12 +6,7 @@ import Link from 'next/link'
 import { CheckCircle2, GraduationCap, MessageCircle } from 'lucide-react'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { toDomainStudyGroup, toDomainStudyType } from '@/lib/studies/adapter'
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-CR', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
-}
+import { formatDateLong } from '@/lib/format'
 
 const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles',
@@ -120,7 +115,7 @@ function ConfirmacionContent() {
               { label: 'Estudio',   value: `${study.code} — ${study.name}` },
               { label: 'Grupo',     value: `${zoneName} — ${schedule}` },
               { label: 'Dirigente', value: group.leader_name ?? 'Por asignar' },
-              { label: 'Inicio',    value: formatDate(group.start_date) },
+              { label: 'Inicio',    value: formatDateLong(group.start_date) },
               { label: 'Duración',  value: `${study.weeks} semanas` },
               ...(studyType?.requires_payment && studyType.cost
                 ? [{ label: 'Costo', value: `₡${studyType.cost.toLocaleString('es-CR')}` }]

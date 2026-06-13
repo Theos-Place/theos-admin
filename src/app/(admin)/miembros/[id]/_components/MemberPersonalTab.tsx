@@ -1,15 +1,7 @@
 import { Phone, Mail, MapPin, User, Heart, Briefcase, Building, Lock, Edit2 } from 'lucide-react'
-import type { mockMembers } from '@/data/mock-members'
+import type { Member } from '@/types/member'
+import { formatDate } from '@/lib/format'
 
-type Member = (typeof mockMembers)[number]
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function calculateAge(dateStr: string): number {
   const birth = new Date(dateStr)

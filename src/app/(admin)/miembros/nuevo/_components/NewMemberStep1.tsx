@@ -4,7 +4,7 @@ import { DuplicateWarning } from '@/components/members/DuplicateWarning'
 import { CR_PROVINCES, CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
 import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
-import type { Member } from '@/data/mock-members'
+import type { Member } from '@/types/member'
 
 type Step1Data = {
   first_name: string

@@ -4,16 +4,13 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { cn } from '@/lib/utils'
 import { Search, X, ChevronDown } from 'lucide-react'
+import { getInitials } from '@/lib/format'
 
 type DirigentesComboboxProps = {
   value: string | null              // member_id seleccionado
   onChange: (id: string | null) => void
   placeholder?: string
   excludeId?: string                // member_id a excluir (el del otro campo)
-}
-
-function initials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
 }
 
 function StatusBadge({ status }: { status: 'activo' | 'inactivo' }) {
@@ -77,7 +74,7 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
       <div className="flex items-center gap-2 rounded-2xl border border-[var(--outline-variant)] bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
         {selected && !open && (
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-            {initials(selected.member_name) || '—'}
+            {getInitials(selected.member_name) || '—'}
           </span>
         )}
         <input
@@ -121,7 +118,7 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
                 )}
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-                  {initials(d.member_name) || '—'}
+                  {getInitials(d.member_name) || '—'}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{d.member_name}</span>
                 <StatusBadge status={d.status} />

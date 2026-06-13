@@ -14,11 +14,7 @@ import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
 import { type Payment, type PaymentMethod, type PaymentStatus } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+import { formatDate } from '@/lib/format'
 
 function PagosContent() {
   const { payments: allPayments, error, refetch } = useFinance()

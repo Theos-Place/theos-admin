@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { MemberList } from '@/data/mock-member-lists'
+import type { MemberList } from '@/types/member-list'
 import type { FilterState } from '@/types/filters'
 
 type DbRow = {

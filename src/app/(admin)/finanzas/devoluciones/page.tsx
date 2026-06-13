@@ -9,11 +9,7 @@ import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { type Refund, type RefundStatus } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
 import { TOAST_MS } from '@/lib/constants'
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+import { formatDate } from '@/lib/format'
 
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
   const cfg: Record<RefundStatus, { label: string; color: string; bg: string }> = {

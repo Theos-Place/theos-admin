@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { MATRICULA_MIN_CHARLAS, type EligibilityResult, type EligibleGroup, type MemberStudyProfile } from '@/lib/studies/eligibility'
+import { formatDateLong } from '@/lib/format'
 
 type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'campaña'
 
@@ -36,10 +37,6 @@ const FILTER_TABS_BASE: { id: FilterTab; label: string }[] = [
 
 function formatCRC(amount: number): string {
   return `₡${amount.toLocaleString('es-CR')}`
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 type ConfirmState = { group: EligibleGroup; study: EligibilityResult }
@@ -611,7 +608,7 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
 
       <div className="flex flex-col items-end gap-1 shrink-0">
         <span className="text-[11px] text-navy-light/50 font-body">
-          Inicio: {formatDate(group.start_date)}
+          Inicio: {formatDateLong(group.start_date)}
         </span>
         {group.requires_payment && group.cost ? (
           <span className="text-[11px] font-semibold text-coral font-display">
@@ -657,7 +654,7 @@ function ConfirmModal({
             { label: 'Estudio',   value: study.study_name },
             { label: 'Grupo',     value: `${group.zone.charAt(0).toUpperCase() + group.zone.slice(1)} — ${group.schedule_days} ${group.schedule_time}` },
             { label: 'Dirigente', value: group.leader_name },
-            { label: 'Inicio',    value: formatDate(group.start_date) },
+            { label: 'Inicio',    value: formatDateLong(group.start_date) },
             { label: 'Duración',  value: `${study.weeks} semanas` },
             { label: 'Costo',     value: group.requires_payment && group.cost ? formatCRC(group.cost) : 'Gratuito' },
           ].map(({ label, value }, i) => (

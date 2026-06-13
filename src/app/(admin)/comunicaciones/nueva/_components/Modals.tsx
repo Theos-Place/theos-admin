@@ -1,5 +1,5 @@
 import type { CommunicationChannel, MessageTemplate, CommunicationMessage } from '@/types/communication'
-import type { MemberList } from '@/data/mock-member-lists'
+import type { MemberList } from '@/types/member-list'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import type { RecipientState } from '@/components/communications/RecipientSelector'
 import { Search, Send, AlertTriangle } from 'lucide-react'

@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
 import type { FilterCondition } from '@/types/filters'
+import { getInitials } from '@/lib/format'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -481,7 +482,7 @@ export async function getUserAccess(): Promise<UserAccessRow[]> {
   for (const r of rows) {
     if (!r.member_id) continue
     const name = `${r.member?.first_name ?? ''} ${r.member?.last_name ?? ''}`.trim() || (r.member?.email ?? '')
-    const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')
+    const initials = getInitials(name)
     let entry = byMember.get(r.member_id)
     if (!entry) {
       entry = {

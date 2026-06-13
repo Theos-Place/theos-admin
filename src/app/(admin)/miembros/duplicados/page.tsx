@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
 import { ChevronLeft, Users } from 'lucide-react'
+import { initialsFromParts } from '@/lib/format'
 
 type DupMember = {
   id: string; first_name: string; last_name: string
@@ -58,7 +59,7 @@ function birthLabel(m: DupMember) {
   return `${fmtDate(m.birth_date)}${a !== null ? ` (${a} años)` : ''}`
 }
 function initials(m: DupMember) {
-  return ((m.first_name[0] ?? '') + (m.last_name[0] ?? '')).toUpperCase()
+  return initialsFromParts(m.first_name, m.last_name)
 }
 
 function MemberMini({ m }: { m: DupMember }) {

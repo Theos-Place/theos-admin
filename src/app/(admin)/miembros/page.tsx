@@ -31,6 +31,7 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
+import { initialsFromParts } from '@/lib/format'
 
 function calcularEdad(fechaNacimiento: string): number {
   const hoy = new Date()
@@ -42,7 +43,7 @@ function calcularEdad(fechaNacimiento: string): number {
 }
 
 function initials(m: Member) {
-  return (m.first_name[0] + m.last_name[0]).toUpperCase()
+  return initialsFromParts(m.first_name, m.last_name)
 }
 
 const AVATAR_COLORS = [

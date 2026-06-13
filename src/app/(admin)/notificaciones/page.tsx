@@ -9,17 +9,12 @@ import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import type { ActiveAlert, AlertType } from '@/lib/supabase/queries/alerts'
 import type { InternalNotification } from '@/types/notification'
+import { formatDateTime } from '@/lib/format'
 
 const TYPE_CONFIG: Record<AlertType, { Icon: React.ElementType; color: string; bg: string; label: string }> = {
   alert:   { Icon: AlertCircle,   color: '#EF5554', bg: 'rgba(239,85,84,0.10)',  label: 'Urgente' },
   warning: { Icon: AlertTriangle, color: '#E9B949', bg: 'rgba(233,185,73,0.12)', label: 'Atención' },
   info:    { Icon: Info,          color: '#519DA2', bg: 'rgba(81,157,162,0.10)', label: 'Informativo' },
-}
-
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
 }
 
 export default function NotificacionesPage() {

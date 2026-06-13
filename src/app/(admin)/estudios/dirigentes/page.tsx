@@ -11,10 +11,7 @@ import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
-
-function initials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
-}
+import { getInitials } from '@/lib/format'
 
 const ESTADO_FILTERS = [
   { key: 'todos', label: 'Todos' },
@@ -30,7 +27,7 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
     >
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-xs font-display font-extrabold">
-          {initials(d.member_name) || '—'}
+          {getInitials(d.member_name) || '—'}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">

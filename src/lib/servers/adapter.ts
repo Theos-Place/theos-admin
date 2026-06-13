@@ -6,13 +6,10 @@ import type {
 import type {
   CommitteeData, CommitteeServer, Vacancy, Application, CommitteeGoal,
 } from '@/types/server'
+import { getInitials } from '@/lib/format'
 
 function fullName(m: { first_name: string; last_name: string } | null): string {
   return m ? `${m.first_name} ${m.last_name}`.trim() : ''
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('')
 }
 
 /** Convierte un comité. `openVacancies` se pasa aparte (derivado de vacancies). */
@@ -24,7 +21,7 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
       return {
         member_id: v.member_id,
         name,
-        initials: initials(name),
+        initials: getInitials(name),
         position: pos.title,
         position_id: pos.id,
         start_date: v.start_date ?? '',
@@ -46,7 +43,7 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
     leader: {
       member_id: db.leader_id ?? '',
       name: leaderName,
-      initials: initials(leaderName),
+      initials: getInitials(leaderName),
     },
     ideal_capacity: db.ideal_capacity ?? 0,
     members,
@@ -91,7 +88,7 @@ export function toDomainApplication(db: DbApplication): Application {
     position: db.vacancy?.position ?? '',
     applicant_id: db.applicant_id,
     applicant_name: applicantName,
-    applicant_initials: initials(applicantName),
+    applicant_initials: getInitials(applicantName),
     applied_at: db.applied_at,
     status: db.status,
     notes: db.notes ?? '',

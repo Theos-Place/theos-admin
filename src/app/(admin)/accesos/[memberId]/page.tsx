@@ -7,6 +7,7 @@ import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
 import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
+import { formatDate, formatDateLong } from '@/lib/format'
 
 function RoleBadge({ roleId }: { roleId: RoleId }) {
   const role = ROLES.find(r => r.id === roleId)
@@ -19,15 +20,6 @@ function RoleBadge({ roleId }: { roleId: RoleId }) {
       {role.name}
     </span>
   )
-}
-
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-function formatDateTime(d: string) {
-  const dt = new Date(d)
-  const date = dt.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-  return date
 }
 
 const AVATAR_COLORS = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949', '#3DB97A']
@@ -257,7 +249,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                       <span className="font-medium">"{role?.name ?? entry.role}"</span>
                     </p>
                     <p className="text-[11px] text-navy-light/40 mt-0.5 font-body">
-                      {formatDateTime(entry.date)}
+                      {formatDate(entry.date)}
                     </p>
                   </div>
                 </div>

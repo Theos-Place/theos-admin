@@ -3,6 +3,7 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { initialsFromParts } from '@/lib/format'
 
 /** Fila de miembro tal como la devuelve `GET /api/members`. */
 export type MemberHit = {
@@ -37,7 +38,7 @@ type MemberComboboxProps = {
 }
 
 function initials(m: MemberHit) {
-  return `${m.first_name[0] ?? ''}${m.last_name[0] ?? ''}`.toUpperCase() || '—'
+  return initialsFromParts(m.first_name, m.last_name) || '—'
 }
 
 /**

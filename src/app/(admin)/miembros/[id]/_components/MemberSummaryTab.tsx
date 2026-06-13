@@ -3,6 +3,7 @@ import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
+import { formatDate } from '@/lib/format'
 
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
@@ -14,14 +15,6 @@ const TYPE_BADGE: Record<string, string> = {
 const ATTENDANCE_BADGE: Record<string, string> = {
   servidor: 'bg-coral-soft/20 text-coral',
   participante: 'bg-surface-low text-navy-light/70',
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 function studyStageColor(stage: string): string {

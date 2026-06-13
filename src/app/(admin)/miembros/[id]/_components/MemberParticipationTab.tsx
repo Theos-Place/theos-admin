@@ -5,6 +5,7 @@ import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 
 const LOAD_MORE = 10
 
@@ -18,14 +19,6 @@ const TYPE_BADGE: Record<string, string> = {
 const ATTENDANCE_BADGE: Record<string, string> = {
   servidor: 'bg-coral-soft/20 text-coral',
   participante: 'bg-surface-low text-navy-light/70',
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 function formatAmount(n: number | null) {

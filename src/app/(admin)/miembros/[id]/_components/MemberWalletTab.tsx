@@ -1,8 +1,7 @@
 import { Smartphone, MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { mockMembers } from '@/data/mock-members'
+import type { Member } from '@/types/member'
 
-type Member = (typeof mockMembers)[number]
 
 function qrCells(id: string): boolean[] {
   const n = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)

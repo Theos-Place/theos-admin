@@ -8,6 +8,7 @@ import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombob
 import { ROLES, type RoleId, type UserAccess } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
+import { formatDate, initialsFromParts } from '@/lib/format'
 
 function RoleBadge({ roleId, small }: { roleId: RoleId; small?: boolean }) {
   const role = ROLES.find(r => r.id === roleId)
@@ -20,11 +21,6 @@ function RoleBadge({ roleId, small }: { roleId: RoleId; small?: boolean }) {
       {role.name}
     </span>
   )
-}
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 const AVATAR_COLORS = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949', '#3DB97A']
@@ -467,7 +463,7 @@ function DarAccesoModal({
 
   function handleConfirm() {
     if (!selected || selectedRoles.size === 0) return
-    const initials = `${selected.first_name[0]}${selected.last_name[0]}`.toUpperCase()
+    const initials = initialsFromParts(selected.first_name, selected.last_name)
     onConfirm(selected.id, `${selected.first_name} ${selected.last_name}`, selected.email ?? '', initials, [...selectedRoles])
   }
 

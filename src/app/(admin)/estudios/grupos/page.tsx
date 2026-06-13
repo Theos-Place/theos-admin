@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { Plus, BookOpen } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
+import { getInitials } from '@/lib/format'
 
 const ALL_STATUSES: GroupStatus[] = ['en_matricula', 'en_curso', 'finalizado']
 const STATUS_LABELS: Record<GroupStatus, string> = {
@@ -33,10 +34,6 @@ const STATUS_EXPORT: Record<GroupStatus, string> = {
 /** Normaliza para búsqueda insensible a mayúsculas y tildes. */
 function normalize(s: string) {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-}
-
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
 
 function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[] {

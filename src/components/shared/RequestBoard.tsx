@@ -19,6 +19,7 @@ import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { RequestTabs } from '@/components/shared/RequestTabs'
 import { cn } from '@/lib/utils'
+import { formatDate, formatDateNumeric, getInitials } from '@/lib/format'
 
 export type RequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
 
@@ -58,18 +59,6 @@ const STATUS_FILTERS: { key: RequestStatus | 'all'; label: string }[] = [
   { key: 'rejected', label: 'Rechazadas' },
   { key: 'all', label: 'Todas' },
 ]
-
-function initials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase() || '—'
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-function formatShort(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
 
 function statusLabel(s: string | null): string {
   return s ? (REQUEST_STATUS_BADGE[s as RequestStatus]?.label ?? s) : '—'
@@ -351,7 +340,7 @@ export function RequestBoard<R extends BaseRequest>({
                             aria-expanded={isOpen}
                           >
                             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-                              {initials(r.member_name)}
+                              {getInitials(r.member_name)}
                             </span>
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm text-navy font-body">
@@ -362,7 +351,7 @@ export function RequestBoard<R extends BaseRequest>({
                             {r.reviewed_by_name && r.status !== 'open' && (
                               <span className="hidden sm:inline-flex items-center gap-1.5 shrink-0" title={`Asignada a ${r.reviewed_by_name}`}>
                                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-soft/40 text-teal-deep text-[9px] font-display font-extrabold">
-                                  {initials(r.reviewed_by_name)}
+                                  {getInitials(r.reviewed_by_name)}
                                 </span>
                                 <span className="text-[11px] text-navy-light/70 font-body max-w-[110px] truncate">{r.reviewed_by_name}</span>
                               </span>
@@ -392,12 +381,12 @@ export function RequestBoard<R extends BaseRequest>({
                                   <History size={11} /> Historial
                                 </p>
                                 <p className="text-[12px] text-navy-light/70 font-body">
-                                  Creada · {formatShort(r.created_at)}
+                                  Creada · {formatDateNumeric(r.created_at)}
                                 </p>
                                 {r.history.map((h, i) => (
                                   <p key={i} className="text-[12px] text-navy-light/70 font-body">
                                     {statusLabel(h.from_status)} → {statusLabel(h.to_status)}
-                                    {h.changed_by_name ? ` · por ${h.changed_by_name}` : ''} · {formatShort(h.created_at)}
+                                    {h.changed_by_name ? ` · por ${h.changed_by_name}` : ''} · {formatDateNumeric(h.created_at)}
                                     {h.notes ? ` — ${h.notes}` : ''}
                                   </p>
                                 ))}
@@ -500,7 +489,7 @@ export function RequestBoard<R extends BaseRequest>({
                         className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left hover:bg-surface-low transition-colors disabled:opacity-60"
                       >
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-soft/40 text-teal-deep text-[10px] font-display font-extrabold">
-                          {initials(a.member_name)}
+                          {getInitials(a.member_name)}
                         </span>
                         <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{a.member_name}</span>
                         {assignTarget.reviewed_by === a.member_id && (

@@ -11,11 +11,7 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { type Scholarship } from '@/data/mock-finance'
 import { useFinance } from '@/hooks/useFinance'
 import { TOAST_MS } from '@/lib/constants'
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+import { formatDate } from '@/lib/format'
 
 export default function BecasPage() {
   const { scholarships: allScholarships, error, refetch } = useFinance()

@@ -3,6 +3,7 @@ import { CapacityBar } from '@/components/events/CapacityBar'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/data/mock-events'
+import { getInitials } from '@/lib/format'
 
 type Event = MockEvent
 
@@ -14,9 +15,6 @@ const AVATAR_COLORS: Record<string, string> = {
   U: 'bg-coral', V: 'bg-teal-deep', W: 'bg-navy', X: 'bg-purple-700', Y: 'bg-amber-500', Z: 'bg-coral',
 }
 
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
-}
 function avatarColor(name: string) {
   return AVATAR_COLORS[name.charAt(0).toUpperCase()] ?? 'bg-navy'
 }

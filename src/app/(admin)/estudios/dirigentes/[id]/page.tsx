@@ -10,10 +10,7 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ExternalLink, Users, X, Pencil, Info } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
-
-function initials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
-}
+import { getInitials } from '@/lib/format'
 
 function fmtDate(d: string | null) {
   if (!d) return '—'
@@ -102,7 +99,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
       <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">
         <div className="flex items-start gap-4 flex-wrap">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-base font-display font-extrabold">
-            {initials(d.member_name) || '—'}
+            {getInitials(d.member_name) || '—'}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">

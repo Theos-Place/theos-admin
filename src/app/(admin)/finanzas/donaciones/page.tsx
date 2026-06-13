@@ -11,10 +11,7 @@ import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { useFinance } from '@/hooks/useFinance'
 import { TOAST_MS } from '@/lib/constants'
-
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+import { formatDate } from '@/lib/format'
 
 export default function DonacionesPage() {
   const { donations: MOCK_DONATIONS, error, refetch } = useFinance()

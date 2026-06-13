@@ -7,10 +7,7 @@ import { toDomainStudyGroup, toDomainStudyType } from '@/lib/studies/adapter'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, Users } from 'lucide-react'
-
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
-}
+import { getInitials } from '@/lib/format'
 
 export default function AsistenciaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)

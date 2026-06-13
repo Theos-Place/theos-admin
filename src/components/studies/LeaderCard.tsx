@@ -5,6 +5,7 @@ import type { StudyLeader } from '@/data/mock-studies'
 import { StudyTypeBadge } from './StudyTypeBadge'
 import { CommitmentIcons } from './CommitmentIcons'
 import { sedeLabel } from '@/lib/sedes'
+import { getInitials } from '@/lib/format'
 
 const AVAILABILITY_CONFIG = {
   available: { label: 'Disponible',  className: 'bg-teal-soft/30 text-teal-deep' },
@@ -18,15 +19,6 @@ const AVATAR_COLORS = [
   'bg-teal-soft/30 text-teal-deep',
   'bg-navy/10 text-navy',
 ]
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map(p => p[0])
-    .join('')
-    .toUpperCase()
-}
 
 function getAvatarColor(name: string) {
   const idx = name.charCodeAt(0) % AVATAR_COLORS.length

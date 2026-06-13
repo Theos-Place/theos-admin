@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { type AttendanceType } from '@/data/mock-events'
+import { getInitials } from '@/lib/format'
 
 interface CheckinCardProps {
   member: { id: string; name: string }
@@ -19,10 +20,6 @@ const AVATAR_COLORS: Record<string, string> = {
   S: 'bg-purple-700 text-white', T: 'bg-amber-500 text-white', U: 'bg-coral text-white',
   V: 'bg-teal-deep text-white', W: 'bg-navy text-white', X: 'bg-purple-700 text-white',
   Y: 'bg-amber-500 text-white', Z: 'bg-coral text-white',
-}
-
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
 
 function getAvatarColor(name: string) {

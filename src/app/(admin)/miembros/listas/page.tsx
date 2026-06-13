@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { MemberList } from '@/data/mock-member-lists'
+import type { MemberList } from '@/types/member-list'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import {

@@ -1,5 +1,6 @@
 import type { FilterState } from '@/types/filters'
 
+// Listas guardadas de miembros (tabla member_lists en Supabase).
 export type MemberList = {
   id: string
   name: string
@@ -15,6 +16,3 @@ export type MemberList = {
   last_used_at: string | null
   tags: string[]
 }
-
-// Las listas guardadas ahora viven en Supabase (tabla member_lists).
-// Este archivo conserva solo el tipo de dominio MemberList que consumen las vistas.

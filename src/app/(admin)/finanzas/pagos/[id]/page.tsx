@@ -10,15 +10,7 @@ import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
 import { type Payment } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-function formatDateShort(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+import { formatDate, formatDateTime } from '@/lib/format'
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -123,8 +115,8 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               { label: 'Cédula', value: payment.member_cedula },
               { label: 'Entidad', value: payment.entity_name },
               { label: 'Tipo', value: payment.entity_type === 'event' ? 'Evento' : 'Grupo de estudio' },
-              { label: 'Creado', value: formatDate(payment.created_at) },
-              { label: 'Pagado', value: formatDate(payment.paid_at) },
+              { label: 'Creado', value: formatDateTime(payment.created_at) },
+              { label: 'Pagado', value: formatDateTime(payment.paid_at) },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm gap-4">
                 <span className="font-body text-[rgba(22,20,64,0.50)]">{label}</span>
@@ -182,14 +174,14 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
             <div className="space-y-6">
               <TimelineItem
                 label="Creado"
-                date={formatDateShort(payment.created_at)}
+                date={formatDate(payment.created_at)}
                 color="#161440"
                 active
               />
               {payment.paid_at && (
                 <TimelineItem
                   label="Pago confirmado"
-                  date={formatDateShort(payment.paid_at)}
+                  date={formatDate(payment.paid_at)}
                   color="#3DB97A"
                   active
                 />
@@ -197,7 +189,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               {isRefunded && (
                 <TimelineItem
                   label={payment.status === 'refunded' ? 'Devuelto completamente' : 'Devolución parcial'}
-                  date={formatDateShort(payment.paid_at)}
+                  date={formatDate(payment.paid_at)}
                   color="#519DA2"
                   active
                 />

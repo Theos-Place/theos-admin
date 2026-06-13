@@ -18,16 +18,13 @@ import { EventServersTab } from './_components/EventServersTab'
 import type { VolunteerBooking } from './_components/EventServersTab'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
+import { getInitials } from '@/lib/format'
 
 const FAKE_MESSAGES = [
   { date: '2026-05-10', channel: 'WhatsApp', content: 'Recordatorio: el evento se acerca. ¡Confirmá tu asistencia antes del viernes!' },
   { date: '2026-05-05', channel: 'Correo', content: 'Detalles del evento adjuntos. Revisá el horario y la dirección con anticipación.' },
   { date: '2026-04-28', channel: 'WhatsApp', content: 'Las inscripciones están abiertas. Compartí con quien querés que venga.' },
 ]
-
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
-}
 
 function SendMessageModal({ onClose }: { onClose: () => void }) {
   const [msg, setMsg] = useState('')

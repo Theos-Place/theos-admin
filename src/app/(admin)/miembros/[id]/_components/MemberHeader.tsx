@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Star, Heart, Hammer, CalendarCheck, BookOpen, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
+import { initialsFromParts } from '@/lib/format'
 
 function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
   active: boolean
@@ -62,7 +63,7 @@ function avatarColor(id: string) {
 }
 
 function initials(firstName: string, lastName: string) {
-  return (firstName[0] + lastName[0]).toUpperCase()
+  return initialsFromParts(firstName, lastName)
 }
 
 function formatDate(iso: string) {

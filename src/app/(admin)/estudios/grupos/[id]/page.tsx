@@ -12,10 +12,7 @@ import { cn } from '@/lib/utils'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
-
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
-}
+import { getInitials } from '@/lib/format'
 
 function AttendanceBar({ pct }: { pct: number }) {
   const color = pct >= 70 ? 'bg-teal-deep' : pct >= 40 ? 'bg-amber-400' : 'bg-coral'

@@ -12,11 +12,7 @@ import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { FinanceChart } from '@/components/finance/FinanceChart'
 import { useFinance } from '@/hooks/useFinance'
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+import { formatDate } from '@/lib/format'
 
 export default function FinanzasPage() {
   const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS, refunds: MOCK_REFUNDS } = useFinance()

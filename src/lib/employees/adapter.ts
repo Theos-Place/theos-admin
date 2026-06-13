@@ -5,13 +5,10 @@ import type {
   Employee, PaidPosition, EmployeeStatus, SalaryChange, PositionRecord,
   VacationRecord, EmployeeDocument,
 } from '@/types/employee'
+import { getInitials } from '@/lib/format'
 
 function fullName(m: { first_name: string; last_name: string } | null): string {
   return m ? `${m.first_name} ${m.last_name}`.trim() : ''
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('')
 }
 
 export function toDomainEmployee(db: DbEmployee): Employee {
@@ -55,7 +52,7 @@ export function toDomainEmployee(db: DbEmployee): Employee {
     id: db.id,
     member_id: db.member_id ?? '',
     member_name: name,
-    member_initials: initials(name),
+    member_initials: getInitials(name),
     member_email: db.member?.email ?? '',
     position_id: db.position_id ?? '',
     position_name: db.position?.name ?? '',

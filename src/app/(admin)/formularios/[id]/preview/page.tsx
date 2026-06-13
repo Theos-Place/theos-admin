@@ -8,7 +8,7 @@ import Image from 'next/image'
 import { type FormFieldNew, type LogicRule, type FormTemplate } from '@/types/forms'
 import { PERSONAL_DATA_FIELDS } from '@/data/mock-forms'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
-import { mockMembers, type Member } from '@/data/mock-members'
+import type { Member } from '@/types/member'
 import { PublicField } from '@/components/forms/PublicField'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
@@ -27,11 +27,11 @@ function calcularEdad(birthDate: string): number {
   return age
 }
 
-function getMemberFieldValue(member: Member, key: string): string {
+function getMemberFieldValue(member: Partial<Member>, key: string): string {
   switch (key) {
     case 'full_name':               return `${member.first_name} ${member.last_name}`
     case 'cedula':                  return member.cedula || '—'
-    case 'age':                     return member.birth_date ? `${calcularEdad(member.birth_date)} años` : `${member.age} años`
+    case 'age':                     return member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'
     case 'gender':                  return member.gender === 'M' ? 'Masculino' : member.gender === 'F' ? 'Femenino' : 'No indica'
     case 'marital_status':          return member.marital_status || '—'
     case 'phone':                   return member.phone || '—'
@@ -46,8 +46,16 @@ function getMemberFieldValue(member: Member, key: string): string {
   }
 }
 
-// Use first active mock member as "current user" for preview purposes
-const PREVIEW_MEMBER = mockMembers.find(m => m.is_active) ?? mockMembers[0]
+// Miembro de ejemplo para la vista previa: muestra cómo se ven los campos que
+// se autocompletan desde el perfil. No es dato real, solo un preview.
+const PREVIEW_MEMBER: Partial<Member> = {
+  first_name: 'María', last_name: 'Rojas Vargas',
+  cedula: '1-1234-5678', birth_date: '1990-05-12', gender: 'F',
+  marital_status: 'Casada', phone: '8888-8888', email: 'maria.rojas@ejemplo.cr',
+  address: 'San José, Costa Rica', emergency_contact_name: 'Carlos Rojas',
+  emergency_contact_phone: '8777-7777', occupation: 'Docente',
+  workplace: 'MEP', allergies: 'Ninguna',
+}
 
 // ─── Logic evaluation ─────────────────────────────────────────────────────────
 

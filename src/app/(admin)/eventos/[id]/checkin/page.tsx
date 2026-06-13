@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { ChevronLeft, Scan, UserPlus, X } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { Modal } from '@/components/shared/Modal'
+import { getInitials } from '@/lib/format'
 
 const AVATAR_COLORS: Record<string, string> = {
   A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',
@@ -21,10 +22,6 @@ const AVATAR_COLORS: Record<string, string> = {
 function avatarColor(name: string) {
   return AVATAR_COLORS[name.charAt(0).toUpperCase()] ?? 'bg-navy'
 }
-function getInitials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase()
-}
-
 function Clock() {
   const [time, setTime] = useState(() => new Date().toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
   useEffect(() => {

@@ -8,6 +8,7 @@ import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombob
 import { RequestBoard } from '@/components/shared/RequestBoard'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import type { StudyRequest } from '@/types/study'
+import { getInitials } from '@/lib/format'
 
 const TABS = [
   { key: 'relocation', label: 'Reubicaciones' },
@@ -20,7 +21,7 @@ const TYPE_LABEL: Record<string, string> = {
 }
 
 function initials(name: string) {
-  return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase() || '—'
+  return getInitials(name) || '—'
 }
 
 export default function SolicitudesPage() {

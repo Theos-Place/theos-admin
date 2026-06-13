@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
-import { type Member } from '@/data/mock-members'
+import { type Member } from '@/types/member'
 import { sedeLabel } from '@/lib/sedes'
+import { initialsFromParts } from '@/lib/format'
 
 type Props = {
   member: Member
@@ -11,7 +12,7 @@ type Props = {
 }
 
 export function DuplicateWarning({ member, onDismiss }: Props) {
-  const initials = (member.first_name[0] + member.last_name[0]).toUpperCase()
+  const initials = initialsFromParts(member.first_name, member.last_name)
 
   return (
     <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
