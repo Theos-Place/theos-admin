@@ -72,7 +72,7 @@ export default function NotificacionesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
@@ -101,9 +101,8 @@ export default function NotificacionesPage() {
           <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
         </div>
       ) : (
-        <div className="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start space-y-6 lg:space-y-0">
-          {/* Notificaciones del usuario (columna principal) */}
-          <section className={cn('space-y-2', alerts.length > 0 ? 'lg:col-span-2' : 'lg:col-span-3')}>
+        <>
+          {/* Notificaciones del usuario */}
           {notifications.length === 0 ? (
             <div className="rounded-2xl bg-surface-card shadow-card">
               <EmptyState
@@ -148,12 +147,11 @@ export default function NotificacionesPage() {
               ))}
             </div>
           )}
-          </section>
 
-          {/* Alertas del sistema (panel lateral en desktop; sin estado leída/no leída) */}
+          {/* Alertas del sistema (calculadas en vivo, sin estado leída/no leída) */}
           {alerts.length > 0 && (
-            <aside className="space-y-3 lg:col-span-1">
-              <h2 className="text-sm font-semibold text-navy font-display">
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-navy font-display pt-2">
                 Alertas del sistema
               </h2>
               {alerts.map(a => {
@@ -177,9 +175,9 @@ export default function NotificacionesPage() {
                   </Link>
                 )
               })}
-            </aside>
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   )
