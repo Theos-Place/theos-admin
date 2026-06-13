@@ -8,6 +8,7 @@ import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { SortableHeader } from '@/components/shared/SortableHeader'
+import { FilterChips } from '@/components/shared/FilterChips'
 import { cn } from '@/lib/utils'
 import { Plus, ChevronDown, ChevronUp, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -108,22 +109,12 @@ export default function EmpleadosPage() {
       </div>
 
       {/* Filter chips */}
-      <div className="flex gap-1.5 flex-wrap">
-        {FILTERS.map(f => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
-              filter === f.key
-                ? 'bg-navy text-white border-navy'
-                : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <FilterChips
+        chips={FILTERS}
+        activeKey={filter}
+        onSelect={k => setFilter(k as FilterKey)}
+        ariaLabel="Filtrar empleados por tipo de contrato"
+      />
 
       {/* Table */}
       <div

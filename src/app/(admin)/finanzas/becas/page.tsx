@@ -6,6 +6,7 @@ import { GraduationCap, Plus, Check, AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
+import { FilterChips } from '@/components/shared/FilterChips'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { type Scholarship } from '@/data/mock-finance'
@@ -99,30 +100,36 @@ export default function BecasPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
-          <div className="flex gap-1">
-            {([['all', 'Todos'], ['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setTypeFilter(v)}
-                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${typeFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
-                {l}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1">
-            {([['all', 'Todos'], ['event', 'Eventos'], ['study_group', 'Grupos']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setEntityFilter(v)}
-                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${entityFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
-                {l}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1">
-            {([['all', 'Todos'], ['unused', 'Sin usar'], ['used', 'Usada']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setStatusFilter(v)}
-                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${statusFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
-                {l}
-              </button>
-            ))}
-          </div>
+          <FilterChips
+            ariaLabel="Filtrar por tipo de descuento"
+            activeKey={typeFilter}
+            onSelect={k => setTypeFilter(k as typeof typeFilter)}
+            chips={[
+              { key: 'all', label: 'Todos' },
+              { key: 'percentage', label: 'Porcentaje' },
+              { key: 'fixed', label: 'Monto fijo' },
+            ]}
+          />
+          <FilterChips
+            ariaLabel="Filtrar por entidad"
+            activeKey={entityFilter}
+            onSelect={k => setEntityFilter(k as typeof entityFilter)}
+            chips={[
+              { key: 'all', label: 'Todos' },
+              { key: 'event', label: 'Eventos' },
+              { key: 'study_group', label: 'Grupos' },
+            ]}
+          />
+          <FilterChips
+            ariaLabel="Filtrar por estado"
+            activeKey={statusFilter}
+            onSelect={k => setStatusFilter(k as typeof statusFilter)}
+            chips={[
+              { key: 'all', label: 'Todos' },
+              { key: 'unused', label: 'Sin usar' },
+              { key: 'used', label: 'Usada' },
+            ]}
+          />
         </div>
 
         {/* Table */}

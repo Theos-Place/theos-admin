@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { Plus, Users, ChevronRight } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
+import { FilterChips } from '@/components/shared/FilterChips'
 
 const STATUS_FILTERS: { key: VacancyStatus | 'all'; label: string }[] = [
   { key: 'all',       label: 'Todas' },
@@ -87,22 +88,12 @@ export default function VacantesPage() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex gap-1.5 flex-wrap">
-          {STATUS_FILTERS.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setStatusFilter(f.key)}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
-                statusFilter === f.key
-                  ? 'bg-navy text-white border-navy'
-                  : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <FilterChips
+          chips={STATUS_FILTERS}
+          activeKey={statusFilter}
+          onSelect={k => setStatusFilter(k as VacancyStatus | 'all')}
+          ariaLabel="Filtrar por estatus"
+        />
         <select
           className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
           value={areaFilter}

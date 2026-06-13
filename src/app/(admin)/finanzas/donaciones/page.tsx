@@ -5,6 +5,7 @@ import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff } from 'lucide
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
+import { FilterChips } from '@/components/shared/FilterChips'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -192,22 +193,16 @@ export default function DonacionesPage() {
             onChange={e => setDateTo(e.target.value)}
             className="rounded-xl border px-3 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy max-w-full"
           />
-          <div className="flex gap-1.5">
-            {(['all', 'identified', 'unidentified'] as const).map(s => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className="rounded-full px-3.5 py-2 text-[12px] font-medium border transition-all font-display"
-                style={{
-                  background: statusFilter === s ? '#161440' : 'transparent',
-                  color: statusFilter === s ? 'white' : 'rgba(22,20,64,0.60)',
-                  borderColor: statusFilter === s ? '#161440' : 'transparent',
-                }}
-              >
-                {s === 'all' ? 'Todos' : s === 'identified' ? 'Identificado' : 'No identificado'}
-              </button>
-            ))}
-          </div>
+          <FilterChips
+            ariaLabel="Filtrar por estado de identificación"
+            activeKey={statusFilter}
+            onSelect={k => setStatusFilter(k as typeof statusFilter)}
+            chips={[
+              { key: 'all', label: 'Todos' },
+              { key: 'identified', label: 'Identificado' },
+              { key: 'unidentified', label: 'No identificado' },
+            ]}
+          />
         </div>
 
         {/* Table */}

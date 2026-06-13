@@ -10,6 +10,7 @@ import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { CapacityBar } from '@/components/events/CapacityBar'
+import { FilterChips } from '@/components/shared/FilterChips'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
 import { expandRecurring, nextOccurrence, recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { cn } from '@/lib/utils'
@@ -307,39 +308,18 @@ function EventosContent() {
         {view === 'list' && (
           <div className="flex items-center gap-3 flex-wrap">
             {/* Estado derivado: Próximos · Realizados · Todos */}
-            <div className="inline-flex rounded-full p-1 bg-surface-low">
-              {STATUS_FILTERS.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setStatusFilter(f.key)}
-                  className={cn(
-                    'rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 font-display',
-                    statusFilter === f.key
-                      ? 'bg-navy text-white shadow-sm'
-                      : 'text-navy-light/60 hover:text-navy'
-                  )}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-1.5 flex-wrap">
-            {TYPE_FILTERS.map(f => (
-              <button
-                key={f.key}
-                onClick={() => setTypeFilter(f.key)}
-                className={cn(
-                  'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150',
-                  typeFilter === f.key
-                    ? 'bg-navy text-white border-navy'
-                    : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent',
-                  'font-display'
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-            </div>
+            <FilterChips
+              chips={STATUS_FILTERS}
+              activeKey={statusFilter}
+              onSelect={k => setStatusFilter(k as StatusFilter)}
+              ariaLabel="Filtrar eventos por estado"
+            />
+            <FilterChips
+              chips={TYPE_FILTERS}
+              activeKey={typeFilter}
+              onSelect={k => setTypeFilter(k as EventType | 'all')}
+              ariaLabel="Filtrar eventos por tipo"
+            />
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { CreditCard, Eye, EyeOff, Search, Check } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
+import { FilterChips } from '@/components/shared/FilterChips'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
@@ -164,32 +165,41 @@ function PagosContent() {
             />
           </div>
 
-          <div className="flex gap-1">
-            {([['all', 'Todos'], ['event', 'Eventos'], ['study_group', 'Grupos']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setEntityFilter(v)}
-                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${entityFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
-                {l}
-              </button>
-            ))}
-          </div>
+          <FilterChips
+            ariaLabel="Filtrar por entidad"
+            activeKey={entityFilter}
+            onSelect={k => setEntityFilter(k)}
+            chips={[
+              { key: 'all', label: 'Todos' },
+              { key: 'event', label: 'Eventos' },
+              { key: 'study_group', label: 'Grupos' },
+            ]}
+          />
 
-          <div className="flex gap-1">
-            {([['all', 'Todos'], ['card', 'Tarjeta'], ['sinpe', 'SINPE'], ['scholarship', 'Beca'], ['cash', 'Efectivo']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setMethodFilter(v)}
-                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${methodFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
-                {l}
-              </button>
-            ))}
-          </div>
+          <FilterChips
+            ariaLabel="Filtrar por método de pago"
+            activeKey={methodFilter}
+            onSelect={k => setMethodFilter(k)}
+            chips={[
+              { key: 'all', label: 'Todos' },
+              { key: 'card', label: 'Tarjeta' },
+              { key: 'sinpe', label: 'SINPE' },
+              { key: 'scholarship', label: 'Beca' },
+              { key: 'cash', label: 'Efectivo' },
+            ]}
+          />
 
-          <div className="flex gap-1">
-            {([['all', 'Todos'], ['paid', 'Pagado'], ['pending', 'Pendiente'], ['refunded', 'Devuelto']] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setStatusFilter(v as 'all' | PaymentStatus)}
-                className={`rounded-full px-3 py-2 text-[12px] font-medium border transition-all font-display ${statusFilter === v ? 'bg-navy text-white border-navy' : 'bg-transparent text-navy/60 border-transparent'}`}>
-                {l}
-              </button>
-            ))}
-          </div>
+          <FilterChips
+            ariaLabel="Filtrar por estado"
+            activeKey={statusFilter}
+            onSelect={k => setStatusFilter(k as 'all' | PaymentStatus)}
+            chips={[
+              { key: 'all', label: 'Todos' },
+              { key: 'paid', label: 'Pagado' },
+              { key: 'pending', label: 'Pendiente' },
+              { key: 'refunded', label: 'Devuelto' },
+            ]}
+          />
         </div>
 
         {/* Table */}

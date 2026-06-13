@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { type FormTemplate } from '@/types/forms'
 import { useForms } from '@/hooks/useForms'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
+import { FilterChips } from '@/components/shared/FilterChips'
 import { cn } from '@/lib/utils'
 import {
   Plus,
@@ -175,22 +176,13 @@ export default function FormulariosPage() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex gap-1.5 flex-wrap flex-1">
-          {CATEGORY_FILTERS.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setCategoryFilter(f.key)}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-                categoryFilter === f.key
-                  ? 'bg-navy text-white border-navy'
-                  : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <FilterChips
+          chips={CATEGORY_FILTERS}
+          activeKey={categoryFilter}
+          onSelect={k => setCategoryFilter(k as CategoryFilter)}
+          ariaLabel="Filtrar formularios por categoría"
+          className="flex-1"
+        />
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
           <input
