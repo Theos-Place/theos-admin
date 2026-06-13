@@ -22,14 +22,17 @@ export function useFinance() {
     try {
       const [p, d, r, s, b] = await Promise.all([
         fetch('/api/finance/payments'),
-        fetch('/api/finance/donations'),
+        fetch('/api/finance/donations?all=1'),
         fetch('/api/finance/refunds'),
         fetch('/api/finance/scholarships'),
         fetch('/api/finance/import-batches'),
       ])
       if (![p, d, r, s, b].every((x) => x.ok)) throw new Error('Error cargando finanzas')
       setDbPayments(await p.json())
-      setDbDonations(await d.json())
+      // /api/finance/donations devuelve { donations, total } (paginado); con
+      // ?all=1 trae todas para los agregados/export del dashboard y reportes.
+      const dJson = await d.json()
+      setDbDonations(Array.isArray(dJson) ? dJson : (dJson.donations ?? []))
       setDbRefunds(await r.json())
       setDbScholar(await s.json())
       setDbBatches(await b.json())

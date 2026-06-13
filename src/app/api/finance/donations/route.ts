@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
       to: searchParams.get('to') ?? undefined,
       page: Number(searchParams.get('page') ?? 1),
       pageSize: Number(searchParams.get('pageSize') ?? 50),
+      all: searchParams.get('all') === '1',
     }
     const { rows, total } = await getDonations(filters)
     return NextResponse.json({

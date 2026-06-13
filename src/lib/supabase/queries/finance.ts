@@ -123,6 +123,9 @@ export type DonationFilters = {
   to?: string
   page?: number
   pageSize?: number
+  /** Sin paginar (hasta el límite de PostgREST). Para dashboard/reportes que
+   *  agregan o exportan sobre el conjunto, no para el listado. */
+  all?: boolean
 }
 
 export type DonationStats = {
@@ -152,7 +155,7 @@ export async function getDonations(filters: DonationFilters = {}): Promise<{ row
     .from('donations')
     .select(search ? DONATION_SELECT_SEARCH : DONATION_SELECT, { count: 'exact' })
     .order('donation_date', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1)
+  if (!filters.all) q = q.range((page - 1) * pageSize, page * pageSize - 1)
 
   if (filters.status === 'identified') q = q.eq('is_identified', true)
   else if (filters.status === 'unidentified') q = q.eq('is_identified', false)
