@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { StudyType } from '@/data/mock-studies'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
-import { usePermissions } from '@/hooks/usePermissions'
+import { useAuth } from '@/hooks/useAuth'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
@@ -90,14 +91,18 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
     ? '#7e22ce'
     : 'var(--brand-coral)'
 
+  // Solo los roles de estudios pueden entrar al detalle (listado de grupos).
+  // Para el resto la card se ve igual pero no es clickeable (currículo público).
+  const open = canManage ? () => router.push(`/estudios/plan/${study.id}`) : undefined
+
   return (
     <div
-      className="rounded-xl flex flex-col gap-0 py-[14px] px-4"
+      className={cn('rounded-xl flex flex-col gap-0 py-[14px] px-4', open && 'cursor-pointer')}
       style={{ background: study.is_archived ? 'rgba(120,120,130,0.10)' : 'var(--surface-low)', opacity: study.is_archived ? 0.7 : 1, filter: study.is_archived ? 'grayscale(0.8)' : 'none' }}
-      onClick={() => router.push(`/estudios/plan/${study.id}`)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && router.push(`/estudios/plan/${study.id}`)}
+      onClick={open}
+      role={open ? 'button' : undefined}
+      tabIndex={open ? 0 : undefined}
+      onKeyDown={open ? e => { if (e.key === 'Enter') open() } : undefined}
     >
       {/* Header: código + nombre + semanas */}
       <div className="flex items-start justify-between mb-2">
@@ -187,8 +192,9 @@ export default function PlanDeEstudiosPage() {
   const [tab, setTab] = useState<PlanTab>('curricula')
   // Coordinadores de estudios/dirigentes, dirección y admin (scope 'all' excluye
   // al rol dirigente, que tiene edit solo sobre lo propio).
-  const { can, getScope } = usePermissions()
-  const canManage = can('estudios', 'edit') && getScope('estudios') === 'all'
+  const { hasRole } = useAuth()
+  // Acceso de gestión = roles de estudios (detalle de grupos, crear/editar).
+  const canManage = hasRole(...STUDY_ADMIN_ROLES)
   // Dirigente referente (mentor_id) resuelto a nombre por la query de planes.
   const mentorName = (s: StudyType) => s.mentor_name ?? null
   // Archivados (descontinuados) al final de su categoría.
@@ -356,12 +362,14 @@ export default function PlanDeEstudiosPage() {
                     <CommitmentIcons donor={s.req_donor} server={s.req_server} charlas={s.req_attendee} size={13} />
                   </td>
                   <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link
-                      href={`/estudios/plan/${s.id}`}
-                      className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-                    >
-                      Ver
-                    </Link>
+                    {canManage && (
+                      <Link
+                        href={`/estudios/plan/${s.id}`}
+                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                      >
+                        Ver
+                      </Link>
+                    )}
                   </td>
                 </tr>
               ))}

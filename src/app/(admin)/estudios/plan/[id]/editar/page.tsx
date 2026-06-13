@@ -5,6 +5,9 @@ import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
 import { invalidateStudyPlans } from '@/hooks/useStudyPlans'
+import { useAuth } from '@/hooks/useAuth'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { StudyType, StudyLeader } from '@/types/study'
 
 function Toggle({ checked, onChange, label, sublabel }: {
@@ -33,7 +36,11 @@ const STAGE_LABEL: Record<StudyType['stage'], string> = {
 
 export default function EditarEstudioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: code } = use(params)
+  const { hasRole, loaded } = useAuth()
   const { studyTypes, leaders, loading } = useStudies()
+
+  // Editar tipos de estudio: solo roles de estudios (protección por URL).
+  if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return <AccessDenied />
 
   if (loading) {
     return (

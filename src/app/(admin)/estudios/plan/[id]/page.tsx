@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
 import { useDirigentes } from '@/hooks/useDirigentes'
+import { useAuth } from '@/hooks/useAuth'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
@@ -61,6 +64,7 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
 export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const { hasRole, loaded } = useAuth()
 
   const { studyTypes, groups, refetch } = useStudies()
   const studyType = studyTypes.find(s => s.id === id)
@@ -92,6 +96,12 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
   }, [search, statusFilter, zoneFilter])
+
+  // El detalle (listado de grupos del tipo) es solo para roles de estudios.
+  // Protección por URL: un miembro que tipea la ruta ve acceso denegado.
+  if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) {
+    return <AccessDenied />
+  }
 
   if (!studyType) {
     return (

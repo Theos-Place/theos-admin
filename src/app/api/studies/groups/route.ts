@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import {
   getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode,
   type GroupWriteInput,
 } from '@/lib/supabase/queries/studies'
+
+// Roles que pueden listar todos los grupos: los de estudios + dirigentes, más
+// los consumidores cross-módulo del listado (finanzas en sus solicitudes,
+// comunicaciones para destinatarios, solo_lectura). 'miembro' queda fuera: el
+// detalle del plan no es para ellos (defensa server-side, la UI ya lo oculta).
+const GROUPS_LIST_ROLES = [...STUDY_ADMIN_ROLES, 'dirigente', 'finanzas', 'comunicaciones', 'solo_lectura'] as const
 
 // GET /api/studies/groups
 //  - default: TODOS los grupos con enrollment_counts (sin enrollments embebidos
@@ -13,7 +20,7 @@ import {
 //    para consumidores que necesitan los IDs (ej. RecipientSelector).
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles()
+    const auth = await requireRoles(...GROUPS_LIST_ROLES)
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
 

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { updatePlan, type PlanWriteInput } from '@/lib/supabase/queries/studies'
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    const auth = await requireRoles(...STUDY_ADMIN_ROLES)
     if (auth.res) return auth.res
   try {
     const { id } = await params

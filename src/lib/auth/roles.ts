@@ -3,6 +3,13 @@
 import type { RoleId, Permission, Role, UserAccess, AccessHistoryEntry } from '@/types/auth'
 export type { RoleId, Permission, Role, UserAccess, AccessHistoryEntry }
 
+/** Roles con acceso completo a estudios (gestión del plan, detalle de grupos,
+ *  crear/editar tipos de estudio). 'dirigente' y 'miembro' quedan fuera: solo
+ *  ven el currículo público. Reutilizar en guards de UI y de API. */
+export const STUDY_ADMIN_ROLES: RoleId[] = [
+  'coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin',
+]
+
 // Orden de menor a mayor privilegio
 export const ROLES: Role[] = [
   {

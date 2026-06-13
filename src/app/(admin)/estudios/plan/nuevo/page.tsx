@@ -5,6 +5,9 @@ import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useStudyPlans, invalidateStudyPlans } from '@/hooks/useStudyPlans'
+import { useAuth } from '@/hooks/useAuth'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import { REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
@@ -74,10 +77,14 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 export default function NuevoTipoPage() {
   const router = useRouter()
   const toast = useToast()
+  const { hasRole, loaded } = useAuth()
   const { studyTypes } = useStudyPlans()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [saved, setSaved] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  // Crear tipos de estudio: solo roles de estudios (protección por URL).
+  if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return <AccessDenied />
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(prev => ({ ...prev, [key]: value }))

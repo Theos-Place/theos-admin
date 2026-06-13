@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getStudyPlans, createPlan, type PlanWriteInput } from '@/lib/supabase/queries/studies'
 
 export async function GET() {
@@ -15,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    const auth = await requireRoles(...STUDY_ADMIN_ROLES)
     if (auth.res) return auth.res
   try {
     const body = (await req.json()) as PlanWriteInput
