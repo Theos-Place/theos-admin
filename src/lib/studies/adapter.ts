@@ -26,6 +26,7 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
     difficulty: db.difficulty ?? null,
     commitments: db.commitments ?? null,
     mentor_id: db.mentor_id ?? null,
+    mentor_name: db.mentor ? `${db.mentor.first_name} ${db.mentor.last_name}`.trim() : null,
     stage: LEVEL_TO_STAGE[db.level] ?? 'niveles',
     weeks: db.duration_weeks ?? 0,
     prerequisite: db.prerequisite_code,

@@ -1,11 +1,10 @@
 'use client'
 
-import { Fragment, useMemo } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { StudyType } from '@/data/mock-studies'
-import { useStudies } from '@/hooks/useStudies'
-import { useDirigentes } from '@/hooks/useDirigentes'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { usePermissions } from '@/hooks/usePermissions'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
@@ -181,15 +180,17 @@ function StageDivider({ label }: { label: string }) {
   )
 }
 
+type PlanTab = 'curricula' | 'detalles'
+
 export default function PlanDeEstudiosPage() {
-  const { studyTypes } = useStudies()
-  const { dirigentes } = useDirigentes()
+  const { studyTypes } = useStudyPlans()
+  const [tab, setTab] = useState<PlanTab>('curricula')
   // Coordinadores de estudios/dirigentes, dirección y admin (scope 'all' excluye
   // al rol dirigente, que tiene edit solo sobre lo propio).
   const { can, getScope } = usePermissions()
   const canManage = can('estudios', 'edit') && getScope('estudios') === 'all'
-  // Dirigente referente (mentor_id) resuelto a nombre desde la lista unificada.
-  const mentorName = (s: StudyType) => dirigentes.find(d => d.member_id === s.mentor_id)?.member_name ?? null
+  // Dirigente referente (mentor_id) resuelto a nombre por la query de planes.
+  const mentorName = (s: StudyType) => s.mentor_name ?? null
   // Archivados (descontinuados) al final de su categoría.
   const archLast = (a: { is_archived: boolean }, b: { is_archived: boolean }) => Number(a.is_archived) - Number(b.is_archived)
   // Orden manual dentro de cada etapa: HEAD van primero (en ese orden), TAIL al
@@ -256,7 +257,29 @@ export default function PlanDeEstudiosPage() {
         )}
       </div>
 
-      {/* ── Sección 1: currículo completo (tabla) ── */}
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-2xl bg-surface-card shadow-[var(--shadow-md)] w-fit" role="tablist">
+        {([
+          ['curricula', 'Currícula'],
+          ['detalles', 'Detalles de cada estudio'],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={cn(
+              'rounded-xl px-4 py-2 text-sm font-medium transition-all font-body',
+              tab === key ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy hover:bg-surface-low',
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Tab 1 · Currícula: tabla con todos los tipos de estudio ── */}
+      {tab === 'curricula' && (
       <div
         className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"
       >
@@ -346,8 +369,10 @@ export default function PlanDeEstudiosPage() {
           </table>
         </div>
       </div>
+      )}
 
-      {/* ── Sección 2: detalle por etapa (descripciones y expandibles) ── */}
+      {/* ── Tab 2 · Detalles de cada estudio: detalle por etapa ── */}
+      {tab === 'detalles' && (
       <div className="rounded-2xl p-4 sm:p-6 bg-surface-card shadow-[var(--shadow-md)]">
 
         {/* Stage header strip */}
@@ -417,6 +442,7 @@ export default function PlanDeEstudiosPage() {
           </div>
         </div>
       </div>
+      )}
 
     </div>
   )

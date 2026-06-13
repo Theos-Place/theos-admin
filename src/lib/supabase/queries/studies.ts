@@ -27,6 +27,9 @@ export type DbStudyPlan = {
   difficulty: string | null
   commitments: string | null
   mentor_id: string | null
+  /** Mentor (dirigente referente) resuelto por join — para mostrar su nombre
+   *  sin cargar toda la maquinaria de dirigentes. Solo lo trae getStudyPlans. */
+  mentor?: { first_name: string; last_name: string } | null
   /** FALSE = charla introductoria (ej. BUS), fuera de análisis/matrícula/plan. */
   is_curricular: boolean
 }
@@ -64,10 +67,10 @@ export async function getStudyPlans(): Promise<DbStudyPlan[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('study_plans')
-    .select('*')
+    .select('*, mentor:members!study_plans_mentor_id_fkey(first_name, last_name)')
     .order('code', { ascending: true })
   if (error) throw error
-  return (data ?? []) as DbStudyPlan[]
+  return (data ?? []) as unknown as DbStudyPlan[]
 }
 
 export type DbLeaderEnriched = {

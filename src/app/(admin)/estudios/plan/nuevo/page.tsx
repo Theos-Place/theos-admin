@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useStudies } from '@/hooks/useStudies'
+import { useStudyPlans, invalidateStudyPlans } from '@/hooks/useStudyPlans'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import { REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
@@ -74,7 +74,7 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 export default function NuevoTipoPage() {
   const router = useRouter()
   const toast = useToast()
-  const { studyTypes } = useStudies()
+  const { studyTypes } = useStudyPlans()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [saved, setSaved] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -119,6 +119,7 @@ export default function NuevoTipoPage() {
         }),
       })
       if (!res.ok) throw new Error('Error guardando el tipo de estudio')
+      invalidateStudyPlans()
       setSaved(true)
       setTimeout(() => { router.push('/estudios/plan') }, REDIRECT_AFTER_SAVE_MS)
     } catch (e) {

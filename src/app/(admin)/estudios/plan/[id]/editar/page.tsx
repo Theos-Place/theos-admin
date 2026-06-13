@@ -4,6 +4,7 @@ import { use, useState } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
+import { invalidateStudyPlans } from '@/hooks/useStudyPlans'
 import type { StudyType, StudyLeader } from '@/types/study'
 
 function Toggle({ checked, onChange, label, sublabel }: {
@@ -110,6 +111,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
         }),
       })
       if (!res.ok) throw new Error('Error guardando los cambios')
+      invalidateStudyPlans()
       router.push('/estudios/plan')
       router.refresh()
     } catch (e) {
