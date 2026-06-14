@@ -6,6 +6,9 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
+import { useAuth } from '@/hooks/useAuth'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { CommitteePosition } from '@/types/server'
 import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -192,39 +195,88 @@ function DeactivateConfirm({
 
 // ─── Position modal (Cambio 3) ──────────────────────────────────────────────────
 
+export type PositionFormData = {
+  title: string
+  description: string
+  location: string
+  quantity: number
+  study_requirement: string
+  functions: string
+  profile: string
+  expires_at: string
+  is_featured: boolean
+  base_area_id: string
+}
+
 function PositionModal({
-  onSave, onClose,
+  areas, onSave, onClose,
 }: {
-  onSave: (data: { title: string; description: string; maxVolunteers: number }) => void
+  areas: { id: string; name: string }[]
+  onSave: (data: PositionFormData) => void
   onClose: () => void
 }) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [maxVol, setMaxVol] = useState('1')
-  const valid = title.trim().length > 0
+  const [f, setF] = useState<PositionFormData>({
+    title: '', description: '', location: '', quantity: 1, study_requirement: '',
+    functions: '', profile: '', expires_at: '', is_featured: false, base_area_id: '',
+  })
+  const set = <K extends keyof PositionFormData>(k: K, v: PositionFormData[K]) => setF(p => ({ ...p, [k]: v }))
+  const valid = f.title.trim().length > 0
 
   return (
-    <Modal onClose={onClose} titleId="position-modal-title" width={384}>
-      <div className="p-6 space-y-4">
+    <Modal onClose={onClose} titleId="position-modal-title" width={448}>
+      <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
         <h2 id="position-modal-title" className="text-base font-bold text-navy font-display">Nuevo puesto</h2>
         <div className="space-y-1.5">
-          <label className={labelCls}>Nombre *</label>
+          <label className={labelCls}>Nombre del puesto *</label>
           <input autoFocus aria-label="Nombre del puesto" className={inputCls}
-            placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} />
+            placeholder="Ej. Colaborador de Bienvenida" value={f.title} onChange={e => set('title', e.target.value)} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className={labelCls}>Ubicación</label>
+            <input aria-label="Ubicación" className={inputCls} placeholder="Sede / lugar" value={f.location} onChange={e => set('location', e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <label className={labelCls}>Cantidad</label>
+            <input type="number" min={1} aria-label="Cantidad" className={inputCls} value={f.quantity} onChange={e => set('quantity', Math.max(1, Number(e.target.value) || 1))} />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Área base</label>
+          <select className={inputCls} value={f.base_area_id} onChange={e => set('base_area_id', e.target.value)}>
+            <option value="">Sin área base</option>
+            {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Requisito de estudio (categoría)</label>
+          <input aria-label="Requisito de estudio" className={inputCls} placeholder="Ej. N4 completado" value={f.study_requirement} onChange={e => set('study_requirement', e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <label className={labelCls}>Descripción</label>
-          <textarea aria-label="Descripción del puesto" className={cn(inputCls, 'resize-none')} rows={3}
-            placeholder="Funciones del puesto..." value={description} onChange={e => setDescription(e.target.value)} />
+          <textarea aria-label="Descripción del puesto" className={cn(inputCls, 'resize-none')} rows={2} value={f.description} onChange={e => set('description', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls}>Máximo de voluntarios</label>
-          <input type="number" min={1} aria-label="Máximo de voluntarios" className={inputCls}
-            value={maxVol} onChange={e => setMaxVol(e.target.value)} />
+          <label className={labelCls}>Funciones</label>
+          <textarea aria-label="Funciones" className={cn(inputCls, 'resize-none')} rows={2} value={f.functions} onChange={e => set('functions', e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Perfil</label>
+          <textarea aria-label="Perfil" className={cn(inputCls, 'resize-none')} rows={2} value={f.profile} onChange={e => set('profile', e.target.value)} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 items-end">
+          <div className="space-y-1.5">
+            <label className={labelCls}>Expiración</label>
+            <input type="date" aria-label="Expiración" className={inputCls} value={f.expires_at} onChange={e => set('expires_at', e.target.value)} />
+          </div>
+          <label className="flex items-center gap-2 pb-2 cursor-pointer">
+            <input type="checkbox" className="accent-coral" checked={f.is_featured} onChange={e => set('is_featured', e.target.checked)} />
+            <span className="text-sm text-navy font-body">Destacado</span>
+          </label>
         </div>
         <div className="flex gap-2 pt-1">
           <button disabled={!valid}
-            onClick={() => onSave({ title: title.trim(), description: description.trim(), maxVolunteers: Math.max(1, Number(maxVol) || 1) })}
+            onClick={() => onSave({ ...f, title: f.title.trim() })}
             className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body">
             Crear puesto
           </button>
@@ -240,8 +292,20 @@ function PositionModal({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ServidoresAdminPage() {
+  const { hasRole, loaded } = useAuth()
   const { adminAreas, adminCommittees } = useOrg()
   const { committees: serverCommittees, refetch: refetchServers } = useServers()
+
+  // Áreas reales (tipo area) para el dropdown de "área base" del puesto.
+  const [baseAreas, setBaseAreas] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    let alive = true
+    fetch('/api/servers/areas')
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: Array<{ id: string; name: string }>) => { if (alive) setBaseAreas((Array.isArray(d) ? d : []).map(a => ({ id: a.id, name: a.name }))) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
 
   // Conteo real de servidores activos por comité (id de área-comité).
   const activeByCommittee = useMemo(() => {
@@ -348,7 +412,7 @@ export default function ServidoresAdminPage() {
   }
 
   // ── Puestos (service_positions) ──────────────────────────────────────────────
-  async function createPosition(data: { title: string; description: string; maxVolunteers: number }) {
+  async function createPosition(data: PositionFormData) {
     if (!posModalFor) return
     const areaId = posModalFor
     setPosModalFor(null)
@@ -356,7 +420,19 @@ export default function ServidoresAdminPage() {
       const res = await fetch('/api/servers/positions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ area_id: areaId, title: data.title, description: data.description || null, max_volunteers: data.maxVolunteers }),
+        body: JSON.stringify({
+          area_id: areaId,
+          title: data.title,
+          description: data.description || null,
+          location: data.location || null,
+          quantity: data.quantity,
+          study_requirement: data.study_requirement || null,
+          functions: data.functions || null,
+          profile: data.profile || null,
+          expires_at: data.expires_at || null,
+          is_featured: data.is_featured,
+          base_area_id: data.base_area_id || null,
+        }),
       })
       if (!res.ok) throw new Error()
       await refetchServers()
@@ -461,6 +537,9 @@ export default function ServidoresAdminPage() {
     setDeactTarget(null)
   }
 
+  // Mantenimiento solo para encargado_staff / coordinador_servidores / admin.
+  if (loaded && !hasRole(...SERVICE_ADMIN_ROLES)) return <AccessDenied />
+
   return (
     <div className="space-y-5">
 
@@ -490,7 +569,7 @@ export default function ServidoresAdminPage() {
         />
       )}
       {posModalFor && (
-        <PositionModal onSave={createPosition} onClose={() => setPosModalFor(null)} />
+        <PositionModal areas={baseAreas} onSave={createPosition} onClose={() => setPosModalFor(null)} />
       )}
       <DeleteConfirmModal
         open={!!confirmState}
