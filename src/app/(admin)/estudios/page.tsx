@@ -3,16 +3,16 @@
 import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
-import { sedeLabel } from '@/lib/sedes'
-import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import {
   Users, Clock, AlertTriangle, TrendingUp,
   BookOpen, UserCheck, BarChart2, ListChecks, LayoutList, Inbox,
+  GraduationCap, History,
 } from 'lucide-react'
+import type { StudyDashboardStats } from '@/lib/supabase/queries/studies'
 
-function formatSchedule(days: string[], time: string) {
-  return `${days.join('/')} ${time}`
+const EMPTY_STATS: StudyDashboardStats = {
+  activos:   { niveles: { grupos: 0, estudiantes: 0 }, capacitaciones: { grupos: 0, estudiantes: 0 } },
+  historico: { niveles: { grupos: 0, estudiantes: 0 }, capacitaciones: { grupos: 0, estudiantes: 0 } },
 }
 
 const QUICK_ACCESS = [
@@ -34,6 +34,17 @@ export default function EstudiosPage() {
     fetch('/api/studies/requests?count=open')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
+
+  // Métricas en curso / histórico — calculadas en la BD (RPC), no client-side.
+  const [stats, setStats] = useState<StudyDashboardStats>(EMPTY_STATS)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/studies/dashboard-stats')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setStats(d as StudyDashboardStats) })
       .catch(() => {})
     return () => { alive = false }
   }, [])
@@ -95,94 +106,58 @@ export default function EstudiosPage() {
 
       {/* Main grid */}
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        {/* Left: Active groups table */}
-        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
-            <h2
-              className="text-sm font-semibold text-navy font-display"
-            >
-              Grupos activos
-            </h2>
-            <Link
-              href="/estudios/grupos"
-              className="text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
-            >
-              Ver todos →
-            </Link>
-          </div>
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  {['Estudio', 'Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', ''].map(h => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {activeGroups.slice(0, 10).map(group => (
-                  <tr
-                    key={group.id}
-                    className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
-                  >
-                    <td className="px-4 py-3">
-                      <StudyTypeBadge code={group.study_type_id} size="sm" />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
-                      {group.leader_name ?? <span className="text-amber-600 text-[11px]">Sin asignar</span>}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
-                      {sedeLabel(group.zone)}
-                    </td>
-                    <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
-                      {formatSchedule(group.schedule_days, group.schedule_time)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-navy font-body">
-                      {group.participants.filter(p => p.status !== 'withdrawn').length}/{group.max_capacity}
-                    </td>
-                    <td className="px-4 py-3">
-                      <GroupStatusBadge status={group.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/estudios/grupos/${group.id}`}
-                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low border transition-colors border-[var(--outline-variant)] font-body"
-                      >
-                        Ver
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* Left: boxes En curso / Histórico */}
+        <div className="space-y-6">
+          {/* En curso */}
+          <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
+              <TrendingUp size={16} className="text-coral" />
+              <h2 className="text-sm font-semibold text-navy font-display">En curso</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--outline-variant)]">
+              <StatRow
+                icon={GraduationCap}
+                label="Niveles activos"
+                hint="N1–N4"
+                grupos={stats.activos.niveles.grupos}
+                estudiantes={stats.activos.niveles.estudiantes}
+              />
+              <StatRow
+                icon={BookOpen}
+                label="Capacitaciones activas"
+                hint="Etapa Inicial + Intermedia"
+                grupos={stats.activos.capacitaciones.grupos}
+                estudiantes={stats.activos.capacitaciones.estudiantes}
+              />
+            </div>
+          </section>
 
-          {/* Mobile: tarjetas */}
-          <ul className="md:hidden">
-            {activeGroups.slice(0, 10).map((group, i, arr) => (
-              <li key={group.id} style={i < arr.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}>
-                <Link href={`/estudios/grupos/${group.id}`} className="flex items-start gap-3 px-4 py-3 active:bg-surface-low">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <StudyTypeBadge code={group.study_type_id} size="sm" />
-                      <GroupStatusBadge status={group.status} />
-                    </div>
-                    <p className="text-sm text-navy font-body truncate">
-                      {group.leader_name ?? <span className="text-amber-600">Sin asignar</span>}
-                    </p>
-                    <p className="text-[12px] text-navy-light/60 font-body truncate">
-                      {sedeLabel(group.zone)} · {formatSchedule(group.schedule_days, group.schedule_time)} · {group.participants.filter(p => p.status !== 'withdrawn').length}/{group.max_capacity}
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {/* Histórico */}
+          <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
+              <History size={16} className="text-navy-light/60" />
+              <h2 className="text-sm font-semibold text-navy font-display">Histórico</h2>
+              <span className="text-[11px] text-navy-light/60 font-body">grupos finalizados</span>
+            </div>
+            <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--outline-variant)]">
+              <StatRow
+                icon={GraduationCap}
+                label="Niveles finalizados"
+                hint="N1–N4"
+                grupos={stats.historico.niveles.grupos}
+                estudiantes={stats.historico.niveles.estudiantes}
+                muted
+              />
+              <StatRow
+                icon={BookOpen}
+                label="Capacitaciones finalizadas"
+                hint="Etapa Inicial + Intermedia"
+                grupos={stats.historico.capacitaciones.grupos}
+                estudiantes={stats.historico.capacitaciones.estudiantes}
+                muted
+              />
+            </div>
+          </section>
         </div>
 
         {/* Right column */}
@@ -253,6 +228,36 @@ export default function EstudiosPage() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function StatRow({
+  icon: Icon, label, hint, grupos, estudiantes, muted = false,
+}: {
+  icon: typeof GraduationCap
+  label: string
+  hint: string
+  grupos: number
+  estudiantes: number
+  muted?: boolean
+}) {
+  return (
+    <div className="px-5 py-4">
+      <div className="flex items-center gap-2">
+        <Icon size={16} className={muted ? 'text-navy-light/60' : 'text-coral'} />
+        <p className="text-sm font-semibold text-navy font-body">{label}</p>
+      </div>
+      <p className="mt-0.5 text-[11px] text-navy-light/60 font-body">{hint}</p>
+      <div className="mt-3 flex items-baseline gap-2 font-body">
+        <span className={`text-3xl font-bold font-display ${muted ? 'text-navy' : 'text-coral'}`}>
+          {grupos}
+        </span>
+        <span className="text-sm text-navy-light/70">grupos</span>
+        <span className="text-navy-light/30">·</span>
+        <span className="text-xl font-semibold text-navy font-display">{estudiantes}</span>
+        <span className="text-sm text-navy-light/70">estudiantes</span>
       </div>
     </div>
   )

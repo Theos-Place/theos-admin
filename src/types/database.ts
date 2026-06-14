@@ -3511,6 +3511,15 @@ export type Database = {
       }
       refresh_donor_flags: { Args: never; Returns: undefined }
       refresh_member_sedes: { Args: never; Returns: undefined }
+      study_dashboard_stats: {
+        Args: never
+        Returns: {
+          estado: string
+          categoria: string
+          grupos: number
+          estudiantes: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

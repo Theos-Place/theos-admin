@@ -73,6 +73,41 @@ export async function getStudyPlans(): Promise<DbStudyPlan[]> {
   return (data ?? []) as unknown as DbStudyPlan[]
 }
 
+/** Métricas del resumen de estudios, calculadas en la BD (no client-side).
+ *  Categorías por study_plans.level:
+ *    niveles        = N1–N4
+ *    capacitaciones = etapa_inicial + etapa_intermedia
+ *  Campañas (campanas) quedan FUERA de ambos boxes (se reportan aparte si hace falta).
+ *  Estudiantes:
+ *    activos (en_curso)   → inscripciones 'enrolled'  (los que cursan hoy)
+ *    histórico (finalizado) → inscripciones 'completed' (los que pasaron por el grupo) */
+export type StudyDashboardStats = {
+  activos:   { niveles: { grupos: number; estudiantes: number }; capacitaciones: { grupos: number; estudiantes: number } }
+  historico: { niveles: { grupos: number; estudiantes: number }; capacitaciones: { grupos: number; estudiantes: number } }
+}
+
+export async function getStudyDashboardStats(): Promise<StudyDashboardStats> {
+  const supabase = createAdminClient()
+  // Un solo round-trip vía RPC SQL: agrupa grupos por estado+categoría y suma
+  // inscripciones del estado relevante (enrolled para en_curso, completed para
+  // finalizado). count(DISTINCT g) evita inflar el grupo por sus inscripciones.
+  const { data, error } = await supabase.rpc('study_dashboard_stats')
+  if (error) throw error
+
+  const empty = { grupos: 0, estudiantes: 0 }
+  const stats: StudyDashboardStats = {
+    activos:   { niveles: { ...empty }, capacitaciones: { ...empty } },
+    historico: { niveles: { ...empty }, capacitaciones: { ...empty } },
+  }
+  for (const r of (data ?? []) as Array<{ estado: string; categoria: string; grupos: number; estudiantes: number }>) {
+    const bucket = r.estado === 'en_curso' ? stats.activos : r.estado === 'finalizado' ? stats.historico : null
+    if (!bucket) continue
+    if (r.categoria === 'niveles') bucket.niveles = { grupos: Number(r.grupos), estudiantes: Number(r.estudiantes) }
+    else if (r.categoria === 'capacitaciones') bucket.capacitaciones = { grupos: Number(r.grupos), estudiantes: Number(r.estudiantes) }
+  }
+  return stats
+}
+
 export type DbLeaderEnriched = {
   id: string
   member_id: string
