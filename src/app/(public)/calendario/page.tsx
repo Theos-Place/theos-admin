@@ -176,10 +176,10 @@ function CalendarioWidget() {
                   const dayEvents = day ? monthEvs.filter(e => new Date(e.start_at).getDate() === day) : []
                   const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
                   return (
-                    <div key={i} className="min-h-[64px] rounded-lg p-1" style={{ background: day ? 'rgba(255,255,255,0.8)' : 'transparent', border: isToday ? `2px solid ${accent}` : '1px solid rgba(0,0,0,0.06)' }}>
+                    <div key={i} className="min-h-[64px] rounded-md p-1.5" style={{ background: day ? 'rgba(255,255,255,0.8)' : 'transparent', border: isToday ? `2px solid ${accent}` : '1px solid rgba(0,0,0,0.06)' }}>
                       {day && (
                         <>
-                          <div className="text-[11px] mb-0.5" style={{ fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary }}>{day}</div>
+                          <div className="text-[11px] mb-0.5 leading-none" style={{ fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary }}>{day}</div>
                           {dayEvents.slice(0, 2).map(ev => (
                             <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
                               className="text-[9px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
