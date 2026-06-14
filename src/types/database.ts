@@ -14,10 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      application_status_history: {
+        Row: {
+          application_id: string
+          assigned_to: string | null
+          changed_by: string | null
+          created_at: string | null
+          from_status: string | null
+          id: string
+          notes: string | null
+          to_status: string | null
+        }
+        Insert: {
+          application_id: string
+          assigned_to?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          application_id?: string
+          assigned_to?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_status_history_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_status_history_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_status_history_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           applicant_id: string
           applied_at: string | null
+          assigned_to: string | null
           created_at: string | null
           id: string
           notes: string | null
@@ -28,6 +98,7 @@ export type Database = {
         Insert: {
           applicant_id: string
           applied_at?: string | null
+          assigned_to?: string | null
           created_at?: string | null
           id?: string
           notes?: string | null
@@ -38,6 +109,7 @@ export type Database = {
         Update: {
           applicant_id?: string
           applied_at?: string | null
+          assigned_to?: string | null
           created_at?: string | null
           id?: string
           notes?: string | null
@@ -56,6 +128,20 @@ export type Database = {
           {
             foreignKeyName: "applications_applicant_id_fkey"
             columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "vw_asistentes"
             referencedColumns: ["id"]
@@ -2514,34 +2600,58 @@ export type Database = {
       service_positions: {
         Row: {
           area_id: string
+          base_area_id: string | null
           created_at: string | null
           description: string | null
+          expires_at: string | null
+          functions: string | null
           id: string
           is_active: boolean | null
+          is_featured: boolean | null
+          location: string | null
           max_volunteers: number | null
+          profile: string | null
+          quantity: number | null
           requirements: string | null
+          study_requirement: string | null
           title: string
           updated_at: string | null
         }
         Insert: {
           area_id: string
+          base_area_id?: string | null
           created_at?: string | null
           description?: string | null
+          expires_at?: string | null
+          functions?: string | null
           id?: string
           is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
           max_volunteers?: number | null
+          profile?: string | null
+          quantity?: number | null
           requirements?: string | null
+          study_requirement?: string | null
           title: string
           updated_at?: string | null
         }
         Update: {
           area_id?: string
+          base_area_id?: string | null
           created_at?: string | null
           description?: string | null
+          expires_at?: string | null
+          functions?: string | null
           id?: string
           is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
           max_volunteers?: number | null
+          profile?: string | null
+          quantity?: number | null
           requirements?: string | null
+          study_requirement?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -2549,6 +2659,13 @@ export type Database = {
           {
             foreignKeyName: "service_positions_area_id_fkey"
             columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_positions_base_area_id_fkey"
+            columns: ["base_area_id"]
             isOneToOne: false
             referencedRelation: "areas"
             referencedColumns: ["id"]
@@ -3497,7 +3614,6 @@ export type Database = {
         }[]
       }
       donation_stats: { Args: never; Returns: Json }
-      payment_stats: { Args: never; Returns: Json }
       find_duplicate_pairs: {
         Args: never
         Returns: {
@@ -3510,15 +3626,16 @@ export type Database = {
         Args: { dup_id: string; keep_id: string; soft?: boolean }
         Returns: undefined
       }
+      payment_stats: { Args: never; Returns: Json }
       refresh_donor_flags: { Args: never; Returns: undefined }
       refresh_member_sedes: { Args: never; Returns: undefined }
       study_dashboard_stats: {
         Args: never
         Returns: {
-          estado: string
           categoria: string
-          grupos: number
+          estado: string
           estudiantes: number
+          grupos: number
         }[]
       }
     }

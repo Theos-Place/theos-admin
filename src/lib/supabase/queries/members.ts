@@ -578,8 +578,8 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
 
   // is_server: inner join a volunteers activos (evita listas de ids enormes en la URL).
   const volunteersEmbed = is_server
-    ? `volunteers!inner(status, start_date, service_positions(title, area:areas(name, parent:areas!parent_id(name))))`
-    : `volunteers(status, start_date, service_positions(title, area:areas(name, parent:areas!parent_id(name))))`
+    ? `volunteers!inner(status, start_date, service_positions(title, area:areas!service_positions_area_id_fkey(name, parent:areas!parent_id(name))))`
+    : `volunteers(status, start_date, service_positions(title, area:areas!service_positions_area_id_fkey(name, parent:areas!parent_id(name))))`
 
   let query = supabase
     .from('members')
@@ -805,7 +805,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         end_date,
         service_positions(
           title,
-          area:areas(name, parent:areas!parent_id(name))
+          area:areas!service_positions_area_id_fkey(name, parent:areas!parent_id(name))
         )
       ),
       study_enrollments(

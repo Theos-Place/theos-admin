@@ -52,6 +52,8 @@ export type DbApplication = {
   status: 'pending' | 'reviewing' | 'approved' | 'rejected'
   notes: string | null
   applied_at: string
+  assigned_to: string | null
+  assignee: { first_name: string; last_name: string } | null
 }
 
 export type DbCommitteeGoal = {
@@ -60,6 +62,40 @@ export type DbCommitteeGoal = {
   description: string
   status: 'in_progress' | 'completed'
   due_date: string | null
+}
+
+/** Área (areas con area_type='area'): nivel superior bajo el que cuelgan
+ *  comités y al que un puesto puede tener como "área base". */
+export type DbArea = {
+  id: string
+  name: string
+  description: string | null
+  area_type: 'area' | 'committee'
+  parent_id: string | null
+  leader_id: string | null
+}
+
+/** Puesto de servicio con el formato real (Excel): ubicación, cantidad,
+ *  requisito de estudio (categoría), funciones, perfil, expiración, destacado,
+ *  comité (area_id) y área base (base_area_id). */
+export type DbServicePosition = {
+  id: string
+  area_id: string
+  area: { id: string; name: string } | null
+  base_area_id: string | null
+  base_area: { id: string; name: string } | null
+  title: string
+  description: string | null
+  location: string | null
+  quantity: number | null
+  study_requirement: string | null
+  functions: string | null
+  profile: string | null
+  expires_at: string | null
+  is_featured: boolean | null
+  is_active: boolean | null
+  /** Conteo embebido de servidores activos (para validación de borrado). */
+  volunteers?: { count: number }[]
 }
 
 // ── Queries ────────────────────────────────────────────────
@@ -73,7 +109,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
       id, name, ideal_capacity, leader_id, parent_id,
       parent:areas!parent_id(id, name),
       leader:members!areas_leader_id_fkey(first_name, last_name),
-      positions:service_positions(
+      positions:service_positions!service_positions_area_id_fkey(
         id, title,
         volunteers(
           member_id, status, start_date,
@@ -104,9 +140,10 @@ export async function getVacancies(): Promise<DbVacancy[]> {
 }
 
 const APPLICATION_SELECT = `
-  id, vacancy_id, applicant_id, status, notes, applied_at,
+  id, vacancy_id, applicant_id, status, notes, applied_at, assigned_to,
   vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name, parent:areas!parent_id(name))),
-  applicant:members(first_name, last_name)
+  applicant:members!applications_applicant_id_fkey(first_name, last_name),
+  assignee:members!applications_assigned_to_fkey(first_name, last_name)
 `
 
 export async function getApplications(): Promise<DbApplication[]> {
@@ -123,6 +160,8 @@ export type ApplicationFilters = {
   search?: string
   status?: 'pending' | 'reviewing' | 'approved' | 'rejected'
   committeeId?: string
+  /** member_id del responsable, o 'unassigned' para las sin asignar. */
+  assignedTo?: string
   page?: number
   pageSize?: number
 }
@@ -166,6 +205,8 @@ export async function getApplicationsPage(filters: ApplicationFilters = {}): Pro
     .order('applied_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
   if (filters.status) q = q.eq('status', filters.status)
+  if (filters.assignedTo === 'unassigned') q = q.is('assigned_to', null)
+  else if (filters.assignedTo) q = q.eq('assigned_to', filters.assignedTo)
   if (committeeVacancyIds) q = q.in('vacancy_id', committeeVacancyIds)
   if (searchOr) q = q.or(searchOr)
 
@@ -182,6 +223,38 @@ export async function getApplicationStats(): Promise<{ pending: number; reviewin
     supabase.from('applications').select('id', { count: 'exact', head: true }).eq('status', 'reviewing'),
   ])
   return { pending: p.count ?? 0, reviewing: r.count ?? 0 }
+}
+
+/** Áreas (areas con area_type='area') para dropdowns de área padre / área base. */
+export async function getAreas(): Promise<DbArea[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('areas')
+    .select('id, name, description, area_type, parent_id, leader_id')
+    .eq('area_type', 'area')
+    .eq('is_active', true)
+    .order('name', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as DbArea[]
+}
+
+const SERVICE_POSITION_SELECT = `
+  id, area_id, base_area_id, title, description, location, quantity,
+  study_requirement, functions, profile, expires_at, is_featured, is_active,
+  area:areas!service_positions_area_id_fkey(id, name),
+  base_area:areas!service_positions_base_area_id_fkey(id, name),
+  volunteers:volunteers(count)
+`
+
+/** Puestos de servicio con comité, área base y conteo de servidores. */
+export async function getServicePositions(): Promise<DbServicePosition[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('service_positions')
+    .select(SERVICE_POSITION_SELECT)
+    .order('title', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as unknown as DbServicePosition[]
 }
 
 export async function getCommitteeGoals(): Promise<DbCommitteeGoal[]> {
@@ -287,6 +360,79 @@ export async function setApplicationStatus(
   if (error) throw error
 }
 
+/** Coordinadores de servidores activos (candidatos para asignar aplicaciones). */
+export async function getServiceCoordinators(): Promise<Array<{ member_id: string; member_name: string }>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(first_name, last_name, is_active)')
+    .eq('role', 'coordinador_servidores')
+    .eq('is_active', true)
+  if (error) throw error
+  const byId = new Map<string, string>()
+  for (const r of (data ?? []) as Array<{ member_id: string; member: { first_name: string; last_name: string; is_active: boolean } | null }>) {
+    if (!r.member || r.member.is_active === false) continue
+    byId.set(r.member_id, `${r.member.first_name} ${r.member.last_name}`.trim())
+  }
+  return [...byId].map(([member_id, member_name]) => ({ member_id, member_name }))
+    .sort((a, b) => a.member_name.localeCompare(b.member_name))
+}
+
+/** Asigna (o reasigna) el responsable de una aplicación: setea assigned_to,
+ *  registra historial y notifica al asignado. Si assigneeMemberId === changedBy
+ *  es "Tomar" (auto-asignarse). null = quitar responsable. */
+export async function assignApplication(
+  id: string,
+  assigneeMemberId: string | null,
+  changedBy: string | null,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  const { data: before } = await supabase
+    .from('applications')
+    .select('assigned_to, status, applicant:members!applications_applicant_id_fkey(first_name, last_name), vacancy:vacancies(title)')
+    .eq('id', id)
+    .maybeSingle()
+  const prev = before as {
+    assigned_to: string | null
+    status: string
+    applicant: { first_name: string; last_name: string } | null
+    vacancy: { title: string } | null
+  } | null
+
+  const { error } = await supabase.from('applications').update({ assigned_to: assigneeMemberId }).eq('id', id)
+  if (error) throw error
+
+  // Historial (best-effort).
+  let assigneeName = ''
+  if (assigneeMemberId) {
+    const { data: m } = await supabase.from('members').select('first_name, last_name').eq('id', assigneeMemberId).maybeSingle()
+    const mm = m as { first_name: string; last_name: string } | null
+    assigneeName = mm ? `${mm.first_name} ${mm.last_name}`.trim() : ''
+  }
+  await supabase.from('application_status_history').insert({
+    application_id: id,
+    from_status: prev?.status ?? null,
+    to_status: prev?.status ?? null,
+    assigned_to: assigneeMemberId,
+    changed_by: changedBy,
+    notes: assigneeMemberId ? `Asignada a ${assigneeName}` : 'Responsable removido',
+  })
+
+  // Notificación interna al asignado (no si se auto-asignó).
+  if (assigneeMemberId && assigneeMemberId !== changedBy) {
+    const applicantName = prev?.applicant ? `${prev.applicant.first_name} ${prev.applicant.last_name}`.trim() : 'un aplicante'
+    const vacTitle = prev?.vacancy?.title ?? 'una vacante'
+    await supabase.from('internal_notifications').insert({
+      recipient_member_id: assigneeMemberId,
+      type: 'application_assigned',
+      title: 'Te asignaron una aplicación de servicio',
+      body: `Aplicación de ${applicantName} para ${vacTitle}`,
+      link: `/servidores/aplicaciones?app=${id}`,
+    })
+  }
+}
+
 // Metas de comité
 export async function createGoal(input: {
   committee_id: string
@@ -314,30 +460,113 @@ export async function deleteGoal(id: string): Promise<void> {
   if (error) throw error
 }
 
-// Comité (area)
+// Comité (area). parent_id = área padre; leader_id = encargado del comité.
 export async function updateCommittee(
   id: string,
-  patch: { name?: string; leader_id?: string | null; ideal_capacity?: number | null },
+  patch: { name?: string; description?: string | null; leader_id?: string | null; parent_id?: string | null },
 ): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('areas').update(patch).eq('id', id)
   if (error) throw error
 }
 
-// Puestos (service_positions)
-export async function createServicePosition(input: {
-  area_id: string
-  title: string
+// Áreas / comités (filas de `areas`) — para el mantenimiento CRUD.
+export async function createArea(input: {
+  name: string
+  area_type: 'area' | 'committee'
   description?: string | null
-  max_volunteers?: number
+  parent_id?: string | null
+  leader_id?: string | null
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
-    .from('service_positions')
-    .insert({ ...input, max_volunteers: input.max_volunteers ?? 1, is_active: true })
+    .from('areas')
+    .insert({ ...input, is_active: true })
     .select('id').single()
   if (error) throw error
   return data as { id: string }
+}
+
+export async function updateArea(
+  id: string,
+  patch: { name?: string; description?: string | null; parent_id?: string | null; leader_id?: string | null },
+): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('areas').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+/** Elimina un área o comité (fila de `areas`). El caller debe verificar antes que
+ *  no tenga servidores activos / puestos / comités hijos. */
+export async function deleteArea(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('areas').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Cuenta entidades activas ligadas a un área/comité (para ActiveWarningModal):
+ *  servidores activos en sus puestos, puestos y comités hijos. */
+export async function countAreaLinks(id: string): Promise<{ activeVolunteers: number; positions: number; childCommittees: number }> {
+  const supabase = createAdminClient()
+  const { data: positions } = await supabase.from('service_positions').select('id').eq('area_id', id)
+  const positionIds = ((positions ?? []) as Array<{ id: string }>).map(p => p.id)
+  let activeVolunteers = 0
+  if (positionIds.length) {
+    const { count } = await supabase
+      .from('volunteers').select('id', { count: 'exact', head: true })
+      .in('position_id', positionIds).eq('status', 'active')
+    activeVolunteers = count ?? 0
+  }
+  const { count: childCount } = await supabase
+    .from('areas').select('id', { count: 'exact', head: true }).eq('parent_id', id)
+  return { activeVolunteers, positions: positionIds.length, childCommittees: childCount ?? 0 }
+}
+
+// Puestos (service_positions) — formato real del Excel.
+export type ServicePositionWriteInput = {
+  area_id: string
+  base_area_id?: string | null
+  title: string
+  description?: string | null
+  location?: string | null
+  quantity?: number | null
+  study_requirement?: string | null
+  functions?: string | null
+  profile?: string | null
+  expires_at?: string | null
+  is_featured?: boolean
+}
+
+export async function createServicePosition(input: ServicePositionWriteInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('service_positions')
+    .insert({
+      ...input,
+      quantity: input.quantity ?? 1,
+      max_volunteers: input.quantity ?? 1, // compat con la columna vieja
+      is_active: true,
+    })
+    .select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function updateServicePosition(id: string, patch: Partial<ServicePositionWriteInput>): Promise<void> {
+  const supabase = createAdminClient()
+  const row: Record<string, unknown> = { ...patch }
+  if (patch.quantity !== undefined) row.max_volunteers = patch.quantity // mantener columna vieja en sync
+  const { error } = await supabase.from('service_positions').update(row as Updatable<'service_positions'>).eq('id', id)
+  if (error) throw error
+}
+
+/** Servidores activos en un puesto (para ActiveWarningModal antes de borrar). */
+export async function countActivePositionVolunteers(positionId: string): Promise<number> {
+  const supabase = createAdminClient()
+  const { count } = await supabase
+    .from('volunteers').select('id', { count: 'exact', head: true })
+    .eq('position_id', positionId).eq('status', 'active')
+  return count ?? 0
 }
 
 export async function deleteServicePosition(id: string): Promise<void> {
@@ -346,12 +575,80 @@ export async function deleteServicePosition(id: string): Promise<void> {
   if (error) throw error
 }
 
-/** Elimina un área o comité (fila de `areas`). El caller debe verificar antes que
- *  no tenga servidores activos. */
-export async function deleteArea(id: string): Promise<void> {
+/** Importación bulk de puestos desde Excel/CSV. Matchea el comité por nombre
+ *  (case-insensitive) contra areas de tipo committee; evita duplicados por
+ *  (title + area_id + location). Reporta filas sin comité para revisión. */
+export type ImportPositionRow = {
+  committee: string
+  location?: string | null
+  title: string
+  quantity?: number | null
+  description?: string | null
+  study_requirement?: string | null
+  functions?: string | null
+  profile?: string | null
+  expires_at?: string | null
+  is_featured?: boolean
+}
+
+export type ImportPositionsResult = {
+  inserted: number
+  duplicates: number
+  unmatched: Array<{ row: number; committee: string; title: string }>
+}
+
+export async function importServicePositions(rows: ImportPositionRow[]): Promise<ImportPositionsResult> {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('areas').delete().eq('id', id)
-  if (error) throw error
+
+  // Comités por nombre normalizado (lower/trim) → id.
+  const { data: committees } = await supabase
+    .from('areas').select('id, name').eq('area_type', 'committee')
+  const byName = new Map<string, string>()
+  for (const c of (committees ?? []) as Array<{ id: string; name: string }>) {
+    byName.set(c.name.trim().toLowerCase(), c.id)
+  }
+
+  // Puestos existentes para deduplicar (title|area_id|location normalizados).
+  const { data: existing } = await supabase
+    .from('service_positions').select('title, area_id, location')
+  const seen = new Set<string>()
+  const dupKey = (areaId: string, title: string, location: string | null | undefined) =>
+    `${areaId}|${title.trim().toLowerCase()}|${(location ?? '').trim().toLowerCase()}`
+  for (const p of (existing ?? []) as Array<{ title: string; area_id: string; location: string | null }>) {
+    seen.add(dupKey(p.area_id, p.title, p.location))
+  }
+
+  const unmatched: ImportPositionsResult['unmatched'] = []
+  const toInsert: Record<string, unknown>[] = []
+  let duplicates = 0
+
+  rows.forEach((r, i) => {
+    const areaId = byName.get((r.committee ?? '').trim().toLowerCase())
+    if (!areaId) { unmatched.push({ row: i + 1, committee: r.committee, title: r.title }); return }
+    const key = dupKey(areaId, r.title, r.location)
+    if (seen.has(key)) { duplicates++; return }
+    seen.add(key)
+    toInsert.push({
+      area_id: areaId,
+      title: r.title,
+      location: r.location ?? null,
+      quantity: r.quantity ?? 1,
+      max_volunteers: r.quantity ?? 1,
+      description: r.description ?? null,
+      study_requirement: r.study_requirement ?? null,
+      functions: r.functions ?? null,
+      profile: r.profile ?? null,
+      expires_at: r.expires_at ?? null,
+      is_featured: r.is_featured ?? false,
+      is_active: true,
+    })
+  })
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from('service_positions').insert(toInsert as Insertable<'service_positions'>[])
+    if (error) throw error
+  }
+  return { inserted: toInsert.length, duplicates, unmatched }
 }
 
 // Servidores (volunteers en una posición)
