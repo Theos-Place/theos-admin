@@ -3,15 +3,16 @@ import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { MockEvent } from '@/data/mock-events'
 import { usePublicEvents } from '@/hooks/useEvents'
-import { upcomingEvents, monthEvents, eventsInRange } from '@/lib/events/event-views'
+import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { Modal } from '@/components/shared/Modal'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
   const searchParams = useSearchParams()
-  const view = (searchParams.get('view') || 'monthly') as 'monthly' | 'weekly' | 'list'
+  const view = (searchParams.get('view') || 'monthly') as 'monthly' | 'weekly' | 'list' | 'grid'
   const typesParam = searchParams.get('types')
-  const types = typesParam ? typesParam.split(',') : ['charla', 'campamento', 'social', 'capacitacion']
+  // Sin ?types= → todos los tipos (equivalente a la BD); con param, solo esos.
+  const types = typesParam ? typesParam.split(',') : null
   const primary = searchParams.get('primary') || '#161440'
   const accent = searchParams.get('accent') || '#EF5554'
   const bg = searchParams.get('bg') || '#FFFFFF'
@@ -20,19 +21,25 @@ function CalendarioWidget() {
   const showBtn = searchParams.get('showBtn') !== 'false'
 
   const { events: allEvents } = usePublicEvents()
-  // Base: misma fuente que el interno, filtrada por tipo y excluyendo
-  // cancelados/archivados. La expansión de recurrentes se hace por vista
-  // (util compartido), igual que el calendario interno.
+  // Base: misma fuente que el interno, filtrada por tipo (si hay) y excluyendo
+  // cancelados/archivados. La expansión de recurrentes se hace por vista.
   const baseEvents = useMemo(() =>
     allEvents.filter(e =>
-      e.status !== 'cancelled' && e.status !== 'archived' && types.includes(e.event_type)
+      e.status !== 'cancelled' && e.status !== 'archived' && (!types || types.includes(e.event_type))
     )
   , [allEvents, types])
-  const upcoming = useMemo(() => upcomingEvents(baseEvents), [baseEvents])
+
+  // Lista y Grid: desde HOY hasta el fin del mes en curso, recurrentes expandidos.
+  const rangedEvents = useMemo(() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+    return eventsInRange(baseEvents, today, endOfMonth)
+  }, [baseEvents])
 
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [selectedEvent, setSelectedEvent] = useState<MockEvent | null>(null)
+  const [dayModal, setDayModal] = useState<{ date: number; events: MockEvent[] } | null>(null)
 
   function formatEventTime(iso: string) {
     return new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })
@@ -49,13 +56,13 @@ function CalendarioWidget() {
       {/* Header */}
       <div className="py-3 px-5 flex items-center justify-between" style={{ background: primary }}>
         <span className="text-white font-bold text-[15px]">Theos Place — Eventos</span>
-        <span className="text-[rgba(255,255,255,0.6)] text-xs">{upcoming.length} próximos</span>
+        <span className="text-[rgba(255,255,255,0.6)] text-xs">{rangedEvents.length} este mes</span>
       </div>
 
       {/* List view */}
       {view === 'list' && (
         <div className="p-5 flex flex-col gap-3">
-          {upcoming.map(ev => {
+          {rangedEvents.map(ev => {
             const { day, month, dow } = formatDate(ev.start_at)
             return (
               <div key={`${ev.id}-${ev.start_at}`} className="flex gap-4 p-4 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer"
@@ -87,6 +94,47 @@ function CalendarioWidget() {
               </div>
             )
           })}
+          {rangedEvents.length === 0 && (
+            <p className="text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos este mes.</p>
+          )}
+        </div>
+      )}
+
+      {/* Grid view */}
+      {view === 'grid' && (
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {rangedEvents.map(ev => {
+            const { day, month } = formatDate(ev.start_at)
+            return (
+              <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
+                className="flex flex-col overflow-hidden rounded-xl border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer">
+                {ev.flyer_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={ev.flyer_url} alt={`Flyer de ${ev.name}`} className="h-32 w-full object-cover" />
+                ) : (
+                  <div className="flex h-32 w-full flex-col items-center justify-center" style={{ background: `${accent}14` }}>
+                    <div className="text-[28px] font-extrabold leading-none" style={{ color: primary }}>{day}</div>
+                    <div className="text-[11px] uppercase mt-0.5" style={{ color: `${primary}99` }}>{month}</div>
+                  </div>
+                )}
+                <div className="flex flex-1 flex-col gap-1.5 p-3">
+                  <div className="font-bold text-sm" style={{ color: primary }}>{ev.name}</div>
+                  {showDesc && ev.description && (
+                    <div className="text-xs text-[rgba(0,0,0,0.55)] line-clamp-2">{ev.description}</div>
+                  )}
+                  <div className="mt-auto pt-1 space-y-0.5">
+                    {showLoc && ev.location && (
+                      <div className="text-[11px] text-[rgba(0,0,0,0.4)]">📍 {ev.location}</div>
+                    )}
+                    <div className="text-[11px] text-[rgba(0,0,0,0.4)]">🕐 {formatDate(ev.start_at).day} {formatDate(ev.start_at).month} · {formatEventTime(ev.start_at)}</div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+          {rangedEvents.length === 0 && (
+            <p className="col-span-full text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos este mes.</p>
+          )}
         </div>
       )}
 
@@ -138,7 +186,14 @@ function CalendarioWidget() {
                               {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                             </div>
                           ))}
-                          {dayEvents.length > 2 && <div className="text-[9px] text-[rgba(0,0,0,0.4)]">+{dayEvents.length - 2} más</div>}
+                          {dayEvents.length > 2 && (
+                            <button
+                              onClick={() => setDayModal({ date: day, events: dayEvents })}
+                              className="text-[9px] text-[rgba(0,0,0,0.5)] hover:underline"
+                            >
+                              +{dayEvents.length - 2} más
+                            </button>
+                          )}
                         </>
                       )}
                     </div>
@@ -196,6 +251,30 @@ function CalendarioWidget() {
               {showBtn && <div className="flex-1 text-white rounded-lg py-2.5 text-center font-semibold text-[13px] cursor-pointer" style={{ background: accent }}>Inscribirse</div>}
               <div className="flex-1 border border-[rgba(0,0,0,0.15)] rounded-lg py-2.5 text-center text-[13px] cursor-pointer text-[rgba(0,0,0,0.5)]" onClick={() => setSelectedEvent(null)}>Cerrar</div>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Day events modal (desde "+N más" del calendario mensual) */}
+      {dayModal && (
+        <Modal onClose={() => setDayModal(null)} titleId="dia-eventos-title" width={420}>
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[rgba(0,0,0,0.08)]">
+            <p id="dia-eventos-title" className="font-bold text-sm" style={{ color: primary }}>
+              {dayModal.date} de {new Date(currentYear, currentMonth).toLocaleDateString('es-CR', { month: 'long' })} · {dayModal.events.length} eventos
+            </p>
+          </div>
+          <div className="max-h-[60vh] overflow-y-auto p-2">
+            {dayModal.events.map(ev => (
+              <button key={`${ev.id}-${ev.start_at}`}
+                onClick={() => { setSelectedEvent(ev); setDayModal(null) }}
+                className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-[rgba(0,0,0,0.03)]">
+                <span className="mt-1 h-2 w-2 rounded-full shrink-0" style={{ background: accent }} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-medium" style={{ color: primary }}>{ev.flyer_url ? '🖼 ' : ''}{ev.name}</span>
+                  <span className="text-[11px] text-[rgba(0,0,0,0.45)]">🕐 {formatEventTime(ev.start_at)}{ev.location ? ` · 📍 ${ev.location}` : ''}</span>
+                </span>
+              </button>
+            ))}
           </div>
         </Modal>
       )}

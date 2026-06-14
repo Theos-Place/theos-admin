@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
-import { EVENT_TYPE_CONFIG, EVENT_TYPES, type EventType, type MockEvent } from '@/data/mock-events'
+import { useEventTypes } from '@/hooks/useEventTypes'
+import { EVENT_TYPE_CONFIG, type EventType, type MockEvent } from '@/data/mock-events'
 import { useEvents, useAllEventsLight } from '@/hooks/useEvents'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
@@ -23,14 +24,6 @@ import { EmptyState } from '@/components/shared/EmptyState'
 
 type EventView = 'calendar' | 'list' | 'grid'
 const VIEW_STORAGE_KEY = 'theos_eventos_view'
-
-const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
-  { key: 'all', label: 'Todos' },
-  ...EVENT_TYPES.filter(t => t.is_active).map(t => ({
-    key: t.id as EventType,
-    label: t.name,
-  })),
-]
 
 const PAGE_SIZE = 15
 
@@ -75,6 +68,12 @@ function EventosContent() {
   // (históricos para calendario y "Realizados"). Se fusionan por id.
   const { hasRole } = useAuth()
   const canShare = hasRole('comunicaciones', 'direccion', 'admin')
+  // Filtros de tipo desde la BD (no el mock): si se agrega un tipo, aparece solo.
+  const eventTypes = useEventTypes()
+  const typeFilters = useMemo(
+    () => [{ key: 'all', label: 'Todos' }, ...eventTypes.map(t => ({ key: t.id, label: t.name }))],
+    [eventTypes],
+  )
   const { events, loading } = useEvents()
   const { events: allEventsLight } = useAllEventsLight()
   // Vista en URL (?view=) + recuerdo en localStorage; default calendario.
@@ -93,11 +92,13 @@ function EventosContent() {
   useEffect(() => {
     if (initRef.current) return
     initRef.current = true
-    if (!new URLSearchParams(window.location.search).has('view')) {
+    const sp = new URLSearchParams(window.location.search)
+    if (!sp.has('view')) {
+      // Compatibilidad con links viejos que usaban ?vista=
+      const legacy = sp.get('vista')
       const stored = localStorage.getItem(VIEW_STORAGE_KEY)
-      if (stored && stored !== 'calendar' && ['list', 'grid', 'calendar'].includes(stored)) {
-        setViewRaw(stored)
-      }
+      const next = [legacy, stored].find(v => v && v !== 'calendar' && ['list', 'grid', 'calendar'].includes(v))
+      if (next) setViewRaw(next)
     }
   }, [setViewRaw])
 
@@ -270,7 +271,7 @@ function EventosContent() {
       {/* Lista y Grid: solo próximos; único filtro = tipo de evento */}
       {(view === 'list' || view === 'grid') && (
         <FilterChips
-          chips={TYPE_FILTERS}
+          chips={typeFilters}
           activeKey={typeFilter}
           onSelect={k => setTypeFilter(k as EventType | 'all')}
           ariaLabel="Filtrar eventos por tipo"

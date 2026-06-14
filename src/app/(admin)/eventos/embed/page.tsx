@@ -1,25 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Copy, Check, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useEventTypes } from '@/hooks/useEventTypes'
 import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
-
-const EVENT_TYPE_OPTIONS = [
-  { id: 'charla', label: 'Charlas' },
-  { id: 'campamento', label: 'Campamentos' },
-  { id: 'social', label: 'Actividades Sociales' },
-  { id: 'capacitacion', label: 'Capacitaciones' },
-]
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60'
 
 export default function EmbedPage() {
+  // Tipos desde la BD (no mock): los checkboxes reflejan el catálogo real.
+  const eventTypes = useEventTypes()
   const [cfg, setCfg] = useState({
-    view: 'list' as 'monthly' | 'weekly' | 'list',
-    types: ['charla', 'campamento', 'social', 'capacitacion'] as string[],
+    view: 'monthly' as 'monthly' | 'weekly' | 'list' | 'grid',
+    types: [] as string[],
     primary: '#161440',
     accent: '#EF5554',
     bg: '#FFFFFF',
@@ -32,6 +28,14 @@ export default function EmbedPage() {
   })
   const [codeTab, setCodeTab] = useState<'iframe' | 'js' | 'react'>('iframe')
   const [copied, setCopied] = useState(false)
+
+  // Al cargar los tipos, seleccionar todos por defecto (una vez).
+  const typesInit = useRef(false)
+  useEffect(() => {
+    if (typesInit.current || eventTypes.length === 0) return
+    typesInit.current = true
+    setCfg(prev => ({ ...prev, types: eventTypes.map(t => t.id) }))
+  }, [eventTypes])
 
   function toggleType(id: string) {
     setCfg(prev => ({
@@ -123,8 +127,8 @@ export default function MiPagina() {
           <div className="space-y-2">
             <label className={`${labelCls} font-display`}>Vista</label>
             <div className="flex gap-2">
-              {(['monthly', 'weekly', 'list'] as const).map(v => {
-                const labels = { monthly: 'Mensual', weekly: 'Semanal', list: 'Lista' }
+              {(['monthly', 'weekly', 'list', 'grid'] as const).map(v => {
+                const labels = { monthly: 'Mensual', weekly: 'Semanal', list: 'Lista', grid: 'Grid' }
                 return (
                   <button
                     key={v}
@@ -150,7 +154,7 @@ export default function MiPagina() {
           <div className="space-y-2">
             <label className={`${labelCls} font-display`}>Tipos de evento</label>
             <div className="space-y-2">
-              {EVENT_TYPE_OPTIONS.map(t => (
+              {eventTypes.map(t => (
                 <label key={t.id} className="flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
@@ -158,7 +162,7 @@ export default function MiPagina() {
                     checked={cfg.types.includes(t.id)}
                     onChange={() => toggleType(t.id)}
                   />
-                  <span className="text-sm text-navy font-body">{t.label}</span>
+                  <span className="text-sm text-navy font-body">{t.name}</span>
                 </label>
               ))}
             </div>

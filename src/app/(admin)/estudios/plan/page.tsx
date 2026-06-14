@@ -267,7 +267,7 @@ export default function PlanDeEstudiosPage() {
       {/* Tabs */}
       <Tabs
         tabs={[
-          { key: 'curricula', label: 'Currícula' },
+          { key: 'curricula', label: 'Currículo' },
           { key: 'detalles', label: 'Detalles de cada estudio' },
         ]}
         active={tab}
