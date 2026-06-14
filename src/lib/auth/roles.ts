@@ -10,6 +10,13 @@ export const STUDY_ADMIN_ROLES: RoleId[] = [
   'coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin',
 ]
 
+/** Roles que administran servidores: comités, áreas, puestos y aplicaciones
+ *  (mantenimiento CRUD, importación, asignación de responsables). Reutilizar en
+ *  guards de UI (usePermissions/hasRole) y de API (requireRoles). */
+export const SERVICE_ADMIN_ROLES: RoleId[] = [
+  'encargado_staff', 'coordinador_servidores', 'direccion', 'admin',
+]
+
 // Orden de menor a mayor privilegio
 export const ROLES: Role[] = [
   {
@@ -99,6 +106,16 @@ export const ROLES: Role[] = [
       { module: 'servidores', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'empleados',  actions: ['view', 'create', 'edit'],           scope: 'all' },
       { module: 'miembros',   actions: ['view'],                             scope: 'all' },
+    ],
+  },
+  {
+    id: 'coordinador_servidores',
+    name: 'Coordinador de Servidores',
+    description: 'Comités, áreas, puestos y aplicaciones de servicio',
+    color: '#7FB2D4',
+    permissions: [
+      { module: 'servidores', actions: ['view', 'create', 'edit'], scope: 'all' },
+      { module: 'miembros',   actions: ['view'],                   scope: 'all' },
     ],
   },
   {

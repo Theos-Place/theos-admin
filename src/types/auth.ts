@@ -5,6 +5,7 @@ export type RoleId =
   | 'direccion'
   | 'finanzas'
   | 'encargado_staff'
+  | 'coordinador_servidores'
   | 'coordinador_estudios'
   | 'coordinador_dirigentes'
   | 'lider_comite'
