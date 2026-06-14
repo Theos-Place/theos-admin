@@ -39,6 +39,8 @@ export type DbVacancy = {
   status: 'draft' | 'published' | 'filled' | 'closed'
   published_at: string | null
   created_at: string
+  /** Conteo embebido de aplicaciones (PostgREST aggregate). */
+  applications?: { count: number }[]
 }
 
 export type DbApplication = {
@@ -93,25 +95,93 @@ export async function getVacancies(): Promise<DbVacancy[]> {
     .select(`
       id, committee_id, title, position, description, functions, schedule, commitment,
       slots_total, slots_filled, status, published_at, created_at,
-      committee:areas!vacancies_committee_id_fkey(name, parent:areas!parent_id(name))
+      committee:areas!vacancies_committee_id_fkey(name, parent:areas!parent_id(name)),
+      applications:applications(count)
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as DbVacancy[]
 }
 
+const APPLICATION_SELECT = `
+  id, vacancy_id, applicant_id, status, notes, applied_at,
+  vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name, parent:areas!parent_id(name))),
+  applicant:members(first_name, last_name)
+`
+
 export async function getApplications(): Promise<DbApplication[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('applications')
-    .select(`
-      id, vacancy_id, applicant_id, status, notes, applied_at,
-      vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name, parent:areas!parent_id(name))),
-      applicant:members(first_name, last_name)
-    `)
+    .select(APPLICATION_SELECT)
     .order('applied_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as DbApplication[]
+}
+
+export type ApplicationFilters = {
+  search?: string
+  status?: 'pending' | 'reviewing' | 'approved' | 'rejected'
+  committeeId?: string
+  page?: number
+  pageSize?: number
+}
+
+/** Aplicaciones paginadas con filtros server-side. La búsqueda matchea nombre
+ *  del aplicante o título de la vacante; el comité se filtra por sus vacantes. */
+export async function getApplicationsPage(filters: ApplicationFilters = {}): Promise<{ rows: DbApplication[]; total: number }> {
+  const supabase = createAdminClient()
+  const page = Math.max(1, Math.trunc(filters.page ?? 1))
+  const pageSize = Math.min(200, Math.max(1, Math.trunc(filters.pageSize ?? 50)))
+  const search = filters.search?.trim()
+
+  // Comité → ids de sus vacantes (las applications referencian vacancy_id).
+  let committeeVacancyIds: string[] | null = null
+  if (filters.committeeId) {
+    const { data } = await supabase.from('vacancies').select('id').eq('committee_id', filters.committeeId)
+    committeeVacancyIds = ((data ?? []) as Array<{ id: string }>).map(v => v.id)
+    if (committeeVacancyIds.length === 0) return { rows: [], total: 0 }
+  }
+
+  // Búsqueda → ids de miembros (por nombre) + ids de vacantes (por título).
+  let searchOr: string | null = null
+  if (search) {
+    const like = `%${search.replace(/[%,().*\\]/g, '')}%`
+    const [memRes, vacRes] = await Promise.all([
+      supabase.from('members').select('id').or(`first_name.ilike.${like},last_name.ilike.${like}`).limit(500),
+      supabase.from('vacancies').select('id').ilike('title', like).limit(500),
+    ])
+    const memIds = ((memRes.data ?? []) as Array<{ id: string }>).map(m => m.id)
+    const vacIds = ((vacRes.data ?? []) as Array<{ id: string }>).map(v => v.id)
+    const parts: string[] = []
+    if (memIds.length) parts.push(`applicant_id.in.(${memIds.join(',')})`)
+    if (vacIds.length) parts.push(`vacancy_id.in.(${vacIds.join(',')})`)
+    if (parts.length === 0) return { rows: [], total: 0 } // sin coincidencias
+    searchOr = parts.join(',')
+  }
+
+  let q = supabase
+    .from('applications')
+    .select(APPLICATION_SELECT, { count: 'exact' })
+    .order('applied_at', { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1)
+  if (filters.status) q = q.eq('status', filters.status)
+  if (committeeVacancyIds) q = q.in('vacancy_id', committeeVacancyIds)
+  if (searchOr) q = q.or(searchOr)
+
+  const { data, error, count } = await q
+  if (error) throw error
+  return { rows: (data ?? []) as DbApplication[], total: count ?? 0 }
+}
+
+/** Conteos globales de aplicaciones por estado (para los badges del header). */
+export async function getApplicationStats(): Promise<{ pending: number; reviewing: number }> {
+  const supabase = createAdminClient()
+  const [p, r] = await Promise.all([
+    supabase.from('applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('applications').select('id', { count: 'exact', head: true }).eq('status', 'reviewing'),
+  ])
+  return { pending: p.count ?? 0, reviewing: r.count ?? 0 }
 }
 
 export async function getCommitteeGoals(): Promise<DbCommitteeGoal[]> {

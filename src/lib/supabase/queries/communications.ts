@@ -533,26 +533,40 @@ export type MessageRecipient = {
   delivered_at: string | null
 }
 
-/** Destinatarios reales de un broadcast (desde message_logs + member). */
-export async function getMessageRecipients(broadcastId: string): Promise<MessageRecipient[]> {
+/** Destinatarios reales de un broadcast (desde message_logs + member),
+ *  paginados server-side con count exacto. `status` filtra exitosos/fallidos. */
+export async function getMessageRecipients(
+  broadcastId: string,
+  opts: { page?: number; pageSize?: number; status?: 'all' | 'sent' | 'failed' } = {},
+): Promise<{ rows: MessageRecipient[]; total: number }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
+  const page = Math.max(1, Math.trunc(opts.page ?? 1))
+  const pageSize = Math.min(200, Math.max(1, Math.trunc(opts.pageSize ?? 50)))
+
+  let q = supabase
     .from('message_logs')
-    .select('id, member_id, recipient, channel, status, delivered_at, member:members(first_name, last_name, email, phone)')
+    .select('id, member_id, recipient, channel, status, delivered_at, member:members(first_name, last_name, email, phone)', { count: 'exact' })
     .eq('broadcast_id', broadcastId)
     .order('created_at', { ascending: true })
+  if (opts.status === 'failed') q = q.in('status', ['failed', 'bounced'])
+  else if (opts.status === 'sent') q = q.not('status', 'in', '("failed","bounced")')
+
+  const { data, error, count } = await q.range((page - 1) * pageSize, page * pageSize - 1)
   if (error) throw error
   const rows = (data ?? []) as Array<{
     id: string; recipient: string; channel: 'whatsapp' | 'email'; status: string; delivered_at: string | null
     member: { first_name: string; last_name: string; email: string | null; phone: string | null } | null
   }>
-  return rows.map(r => ({
-    id: r.id,
-    name: r.member ? `${r.member.first_name} ${r.member.last_name}`.trim() : r.recipient,
-    email: r.member?.email ?? null,
-    phone: r.member?.phone ?? null,
-    channel: r.channel,
-    status: r.status === 'failed' || r.status === 'bounced' ? 'failed' : 'sent',
-    delivered_at: r.delivered_at,
-  }))
+  return {
+    rows: rows.map(r => ({
+      id: r.id,
+      name: r.member ? `${r.member.first_name} ${r.member.last_name}`.trim() : r.recipient,
+      email: r.member?.email ?? null,
+      phone: r.member?.phone ?? null,
+      channel: r.channel,
+      status: r.status === 'failed' || r.status === 'bounced' ? 'failed' : 'sent',
+      delivered_at: r.delivered_at,
+    })),
+    total: count ?? 0,
+  }
 }

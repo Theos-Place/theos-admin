@@ -5,10 +5,12 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { type CommunicationStatus } from '@/data/mock-communications'
 import { useCommunications } from '@/hooks/useCommunications'
+import { usePaginatedList } from '@/hooks/usePaginatedList'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { DeliveryStats } from '@/components/communications/DeliveryStats'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, RefreshCw, Send, Clock, Zap } from 'lucide-react'
+import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, Send, Clock, Zap } from 'lucide-react'
 
 type QueueStats = {
   total: number
@@ -50,19 +52,28 @@ export default function ComunicacionDetallePage() {
   const [recipientFilter, setRecipientFilter] = useState<RecipientFilter>('all')
   const [retrying, setRetrying] = useState(false)
   const [processing, setProcessing] = useState(false)
-  const [recipients, setRecipients] = useState<RecipientRow[]>([])
   const [queue, setQueue] = useState<QueueStats | null>(null)
   const [actionMsg, setActionMsg] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
 
-  // Destinatarios reales + estado de la cola de email (message_logs).
+  // Destinatarios reales: paginados server-side (count exacto + filtro al servidor).
+  const recipBuildUrl = (page: number) => {
+    if (!id) return null
+    const u = new URLSearchParams()
+    if (recipientFilter !== 'all') u.set('status', recipientFilter)
+    u.set('page', String(page))
+    u.set('pageSize', '50')
+    return `/api/communications/messages/${id}/recipients?${u.toString()}`
+  }
+  const {
+    items: recipients, total: recipTotal, loading: recipLoading,
+    hasMore, loadMore, reload: reloadRecipients,
+  } = usePaginatedList<RecipientRow>(recipBuildUrl, { pageSize: 50, itemsKey: 'recipients' })
+
+  // Estado de la cola de email (message_logs). Se recarga tras procesar.
   useEffect(() => {
     if (!id) return
     let alive = true
-    fetch(`/api/communications/messages/${id}/recipients`)
-      .then(r => (r.ok ? r.json() : []))
-      .then(d => { if (alive) setRecipients(Array.isArray(d) ? d : []) })
-      .catch(() => { if (alive) setRecipients([]) })
     fetch(`/api/communications/messages/${id}/process`)
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (alive) setQueue(d) })
@@ -84,6 +95,7 @@ export default function ComunicacionDetallePage() {
       if (!res.ok) throw new Error(d?.error ?? 'No se pudo procesar la cola')
       setActionMsg(`Procesado: ${d.sent} enviados, ${d.failed} fallidos${d.retried ? `, ${d.retried} reencolados` : ''}`)
       setReloadKey(k => k + 1)
+      reloadRecipients()
     } catch (e) {
       setActionMsg(e instanceof Error ? e.message : 'No se pudo procesar la cola')
     } finally {
@@ -99,11 +111,8 @@ export default function ComunicacionDetallePage() {
     )
   }
 
-  const filtered = recipients.filter(r => {
-    if (recipientFilter === 'sent') return r.status === 'sent'
-    if (recipientFilter === 'failed') return r.status === 'failed'
-    return true
-  })
+  // El filtro viaja al servidor; lo cargado ya viene filtrado.
+  const filtered = recipients
 
   const queueFailed = queue?.failed ?? message.stats.failed
   const lastBatchLabel = queue?.lastScheduledDate
@@ -266,7 +275,7 @@ export default function ComunicacionDetallePage() {
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-5 py-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-[var(--outline-variant)]">
           <p className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
-            Destinatarios ({recipients.length})
+            Destinatarios ({recipTotal})
           </p>
           <div className="flex gap-1">
             {(['all', 'sent', 'failed'] as RecipientFilter[]).map(f => (
@@ -359,13 +368,22 @@ export default function ComunicacionDetallePage() {
           ))}
         </ul>
 
-        {message.stats.total > recipients.length && (
-          <div className="px-5 py-3 border-t flex items-center justify-center gap-2 border-[var(--outline-variant)]">
-            <RefreshCw size={13} className="text-navy-light/60" />
-            <p className="text-[12px] text-navy-light/60 font-body">
-              Mostrando {recipients.length} de {message.stats.total} destinatarios
-            </p>
-          </div>
+        {filtered.length === 0 && (
+          <p className="px-5 py-8 text-center text-[13px] text-navy-light/60 font-body">
+            {recipLoading ? 'Cargando destinatarios…' : 'Sin destinatarios para este filtro.'}
+          </p>
+        )}
+
+        {filtered.length > 0 && (
+          <LoadMoreFooter
+            shown={recipients.length}
+            total={recipTotal}
+            hasMore={hasMore}
+            loading={recipLoading}
+            onLoadMore={loadMore}
+            noun="destinatarios"
+            increment={50}
+          />
         )}
       </div>
     </div>

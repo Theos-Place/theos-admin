@@ -3497,6 +3497,7 @@ export type Database = {
         }[]
       }
       donation_stats: { Args: never; Returns: Json }
+      payment_stats: { Args: never; Returns: Json }
       find_duplicate_pairs: {
         Args: never
         Returns: {

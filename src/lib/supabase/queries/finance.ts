@@ -90,20 +90,76 @@ export type DbImportBatch = {
 
 // ── Queries ────────────────────────────────────────────────
 
+const PAYMENT_SELECT = `
+  id, member_id, entity_type, event_id, study_group_id, amount, payment_method,
+  status, gateway_ref, sinpe_confirmation, scholarship_id, paid_at, description, created_at,
+  member:members(first_name, last_name, cedula),
+  event:events(title),
+  study_group:study_groups(name)
+`
+// Con búsqueda el join al miembro es inner: filtramos por nombre/cédula y los
+// pagos sin miembro (no buscables por persona) quedan fuera.
+const PAYMENT_SELECT_SEARCH = PAYMENT_SELECT.replace('member:members(', 'member:members!inner(')
+
 export async function getPayments(): Promise<DbPayment[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('payments')
-    .select(`
-      id, member_id, entity_type, event_id, study_group_id, amount, payment_method,
-      status, gateway_ref, sinpe_confirmation, scholarship_id, paid_at, description, created_at,
-      member:members(first_name, last_name, cedula),
-      event:events(title),
-      study_group:study_groups(name)
-    `)
+    .select(PAYMENT_SELECT)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as DbPayment[]
+}
+
+export type PaymentFilters = {
+  search?: string
+  entity_type?: 'event' | 'study_group'
+  method?: string
+  status?: string
+  page?: number
+  pageSize?: number
+}
+
+/** Pagos paginados con filtros server-side. Devuelve filas + total exacto.
+ *  La búsqueda matchea nombre/cédula del miembro (no el concepto/entidad). */
+export async function getPaymentsPage(filters: PaymentFilters = {}): Promise<{ rows: DbPayment[]; total: number }> {
+  const supabase = createAdminClient()
+  const page = Math.max(1, Math.trunc(filters.page ?? 1))
+  const pageSize = Math.min(200, Math.max(1, Math.trunc(filters.pageSize ?? 50)))
+  const search = filters.search?.trim()
+
+  let q = supabase
+    .from('payments')
+    .select(search ? PAYMENT_SELECT_SEARCH : PAYMENT_SELECT, { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1)
+
+  if (filters.entity_type) q = q.eq('entity_type', filters.entity_type)
+  if (filters.method) q = q.eq('payment_method', filters.method)
+  if (filters.status) q = q.eq('status', filters.status)
+  if (search) {
+    const s = search.replace(/[%,().*\\]/g, '')
+    if (s) q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,cedula.ilike.%${s}%`, { referencedTable: 'member' })
+  }
+
+  const { data, error, count } = await q
+  if (error) throw error
+  return { rows: (data ?? []) as unknown as DbPayment[], total: count ?? 0 }
+}
+
+export type PaymentStats = {
+  total_paid: number
+  total_card: number
+  total_sinpe: number
+  total_pending: number
+}
+
+/** Totales globales de pagos (SQL, migración 060). */
+export async function getPaymentStats(): Promise<PaymentStats> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('payment_stats')
+  if (error) throw error
+  return data as unknown as PaymentStats
 }
 
 /** Vincula una donación a un miembro (la identifica). */

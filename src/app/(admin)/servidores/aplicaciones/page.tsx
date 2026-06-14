@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { type ApplicationStatus } from '@/types/server'
-import { useServers } from '@/hooks/useServers'
+import { type Application, type ApplicationStatus } from '@/types/server'
+import { usePaginatedList } from '@/hooks/usePaginatedList'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
+import type { DbApplication } from '@/lib/supabase/queries/servers'
+import { toDomainApplication } from '@/lib/servers/adapter'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, ClipboardList } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -31,23 +34,56 @@ const STATUS_FILTERS: { key: ApplicationStatus | 'all'; label: string }[] = [
 ]
 
 export default function AplicacionesPage() {
-  const { committees: MOCK_COMMITTEES, applications: MOCK_APPLICATIONS } = useServers()
   const [search, setSearch]             = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all')
   const [committeeFilter, setCommitteeFilter] = useState('all')
 
-  const pending   = MOCK_APPLICATIONS.filter(a => a.status === 'pending').length
-  const reviewing = MOCK_APPLICATIONS.filter(a => a.status === 'reviewing').length
+  // Comités para el dropdown (solo id + nombre).
+  const [committees, setCommittees] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    let alive = true
+    fetch('/api/servers/committees')
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: Array<{ id: string; name: string }>) => {
+        if (alive) setCommittees((Array.isArray(d) ? d : []).map(c => ({ id: c.id, name: c.name })))
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
+  const MOCK_COMMITTEES = committees
 
-  const filtered = useMemo(() => {
-    return MOCK_APPLICATIONS.filter(a => {
-      const matchSearch    = a.applicant_name.toLowerCase().includes(search.toLowerCase()) ||
-                             a.vacancy_title.toLowerCase().includes(search.toLowerCase())
-      const matchStatus    = statusFilter === 'all' || a.status === statusFilter
-      const matchCommittee = committeeFilter === 'all' || a.committee_id === committeeFilter
-      return matchSearch && matchStatus && matchCommittee
-    })
-  }, [search, statusFilter, committeeFilter])
+  // Conteos globales para los badges (pendientes / en revisión).
+  const [counts, setCounts] = useState({ pending: 0, reviewing: 0 })
+  useEffect(() => {
+    let alive = true
+    fetch('/api/servers/applications?stats=1')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setCounts(d) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
+  const { pending, reviewing } = counts
+
+  // Listado paginado server-side (búsqueda + estado + comité al servidor).
+  const buildUrl = (page: number) => {
+    const u = new URLSearchParams()
+    if (debouncedSearch.trim()) u.set('search', debouncedSearch.trim())
+    if (statusFilter !== 'all') u.set('status', statusFilter)
+    if (committeeFilter !== 'all') u.set('committee', committeeFilter)
+    u.set('page', String(page))
+    u.set('pageSize', '25')
+    return `/api/servers/applications?${u.toString()}`
+  }
+  const {
+    items: filtered, total, loading, hasMore, loadMore,
+  } = usePaginatedList<DbApplication, Application>(buildUrl, {
+    pageSize: 25, itemsKey: 'applications', mapItem: toDomainApplication,
+  })
 
   return (
     <div className="space-y-6">
@@ -221,7 +257,21 @@ export default function AplicacionesPage() {
         </ul>
 
         {filtered.length === 0 && (
-          <EmptyState icon={ClipboardList} title="No hay aplicaciones con ese filtro" />
+          loading
+            ? <p className="px-4 py-8 text-center text-sm text-navy-light/60 font-body">Cargando aplicaciones…</p>
+            : <EmptyState icon={ClipboardList} title="No hay aplicaciones con ese filtro" />
+        )}
+
+        {filtered.length > 0 && (
+          <LoadMoreFooter
+            shown={filtered.length}
+            total={total}
+            hasMore={hasMore}
+            loading={loading}
+            onLoadMore={loadMore}
+            noun="aplicaciones"
+            increment={25}
+          />
         )}
       </div>
     </div>

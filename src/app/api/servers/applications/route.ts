@@ -1,12 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
-import { getApplications, createApplication } from '@/lib/supabase/queries/servers'
+import {
+  getApplications, getApplicationsPage, getApplicationStats, createApplication,
+  type ApplicationFilters,
+} from '@/lib/supabase/queries/servers'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const auth = await requireModuleView('servidores')
     if (auth.res) return auth.res
-    return NextResponse.json(await getApplications())
+    const { searchParams } = req.nextUrl
+
+    if (searchParams.get('stats') === '1') {
+      return NextResponse.json(await getApplicationStats())
+    }
+
+    const rawPage = searchParams.get('page')
+    const rawPageSize = searchParams.get('pageSize')
+    const search = searchParams.get('search') ?? undefined
+    const statusParam = searchParams.get('status')
+    const committeeId = searchParams.get('committee') ?? undefined
+    const status = (['pending', 'reviewing', 'approved', 'rejected'] as const).find(s => s === statusParam)
+    const hasFilter = !!(search || status || committeeId)
+
+    // Sin paginación ni filtros: array completo (back-compat para useServers).
+    if (rawPage === null && rawPageSize === null && !hasFilter) {
+      return NextResponse.json(await getApplications())
+    }
+
+    const filters: ApplicationFilters = {
+      search, status, committeeId,
+      page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
+      pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
+    }
+    const { rows, total } = await getApplicationsPage(filters)
+    return NextResponse.json({ applications: rows, total })
   } catch (error) {
     console.error('GET /api/servers/applications:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

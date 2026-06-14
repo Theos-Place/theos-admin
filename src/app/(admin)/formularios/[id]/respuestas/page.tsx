@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { type FormResponse, type FormTemplate } from '@/types/forms'
 import { toDomainFormTemplate, toDomainFormResponse } from '@/lib/forms/adapter'
 import { ResponseSummaryChart } from '@/components/forms/ResponseSummaryChart'
+import { useClientPagination } from '@/hooks/useClientPagination'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
@@ -113,6 +115,11 @@ export default function RespuestasPage() {
       })
       .filter((c): c is ChartData => c !== null)
   }, [dataFields, responses])
+
+  // El resumen y el CSV operan sobre el set completo (cargado arriba). La TABLA
+  // de respuestas individuales se pagina para no renderizar miles de filas.
+  const respPage = useClientPagination(responses, 25)
+  const visibleResponses = respPage.visible
 
   if (loading) {
     return (
@@ -222,7 +229,7 @@ export default function RespuestasPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {responses.map((resp, idx) => (
+                  {visibleResponses.map((resp, idx) => (
                     <tr
                       key={resp.id}
                       className={cn(
@@ -261,7 +268,7 @@ export default function RespuestasPage() {
 
             {/* Mobile: tarjetas */}
             <ul className="md:hidden divide-y divide-[var(--outline-variant)]">
-              {responses.map(resp => (
+              {visibleResponses.map(resp => (
                 <li
                   key={resp.id}
                   onClick={() => setDetailResponse(resp)}
@@ -282,6 +289,15 @@ export default function RespuestasPage() {
                 </li>
               ))}
             </ul>
+            <LoadMoreFooter
+              shown={respPage.shown}
+              total={respPage.total}
+              hasMore={respPage.hasMore}
+              loading={false}
+              onLoadMore={respPage.loadMore}
+              noun="respuestas"
+              increment={25}
+            />
           </div>
         </>
       )}

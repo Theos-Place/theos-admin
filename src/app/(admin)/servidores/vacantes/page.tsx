@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { type VacancyStatus } from '@/types/server'
-import { useServers } from '@/hooks/useServers'
+import { type Vacancy, type VacancyStatus } from '@/types/server'
+import type { DbVacancy } from '@/lib/supabase/queries/servers'
+import { toDomainVacancy } from '@/lib/servers/adapter'
 import { useOrg } from '@/lib/org'
+import { useClientPagination } from '@/hooks/useClientPagination'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
 import { Plus, Users, ChevronRight } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -31,10 +34,23 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export default function VacantesPage() {
-  const { vacancies: MOCK_VACANCIES, applications: MOCK_APPLICATIONS, error, refetch } = useServers()
   const { areas: AREAS } = useOrg()
   const [statusFilter, setStatusFilter] = useState<VacancyStatus | 'all'>('all')
   const [areaFilter, setAreaFilter] = useState('all')
+
+  // Vacantes con su conteo de aplicaciones EMBEBIDO (no se cargan todas las
+  // applications). El dataset es acotado (cientos) → paginación de la vista.
+  const [vacancies, setVacancies] = useState<Vacancy[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const refetch = useCallback(() => {
+    setError(null)
+    fetch('/api/servers/vacancies')
+      .then(r => { if (!r.ok) throw new Error('Error cargando vacantes'); return r.json() })
+      .then((d: DbVacancy[]) => setVacancies((Array.isArray(d) ? d : []).map(toDomainVacancy)))
+      .catch(e => setError(e instanceof Error ? e.message : 'Error desconocido'))
+  }, [])
+  useEffect(() => { refetch() }, [refetch])
+  const MOCK_VACANCIES = vacancies
 
   const published = MOCK_VACANCIES.filter(v => v.status === 'published').length
   const draft     = MOCK_VACANCIES.filter(v => v.status === 'draft').length
@@ -48,13 +64,7 @@ export default function VacantesPage() {
     })
   }, [MOCK_VACANCIES, statusFilter, areaFilter])
 
-  const appCountByVacancy = useMemo(() => {
-    const map: Record<string, number> = {}
-    MOCK_APPLICATIONS.forEach(a => {
-      map[a.vacancy_id] = (map[a.vacancy_id] ?? 0) + 1
-    })
-    return map
-  }, [MOCK_APPLICATIONS])
+  const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 15)
 
   const areaOptions = [
     { key: 'all', label: 'Todas las áreas' },
@@ -107,8 +117,8 @@ export default function VacantesPage() {
 
       {/* Vacancy cards */}
       <div className="space-y-3">
-        {filtered.map(v => {
-          const appCount = appCountByVacancy[v.id] ?? 0
+        {visible.map(v => {
+          const appCount = v.application_count ?? 0
           const slotsLeft = v.slots_total - v.slots_filled
           return (
             <div
@@ -205,6 +215,20 @@ export default function VacantesPage() {
             {error
               ? <ErrorState message={error} onRetry={refetch} />
               : <EmptyState icon={Users} title="No hay vacantes con ese filtro" />}
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+            <LoadMoreFooter
+              shown={shown}
+              total={total}
+              hasMore={hasMore}
+              loading={false}
+              onLoadMore={loadMore}
+              noun="vacantes"
+              increment={15}
+            />
           </div>
         )}
       </div>

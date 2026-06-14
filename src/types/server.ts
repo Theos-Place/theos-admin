@@ -58,6 +58,9 @@ export type Vacancy = {
   status: VacancyStatus
   published_at: string | null
   created_at: string
+  /** Conteo de aplicaciones de la vacante (embebido en la query, no se cargan
+   *  todas las applications). Ausente en datos mock → tratar como 0. */
+  application_count?: number
 }
 
 export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected'

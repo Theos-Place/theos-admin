@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { CreditCard, Eye, EyeOff, Search, Check } from 'lucide-react'
@@ -14,11 +14,13 @@ import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
 import { type Payment, type PaymentMethod, type PaymentStatus } from '@/types/finance'
-import { useFinance } from '@/hooks/useFinance'
+import { usePaginatedList } from '@/hooks/usePaginatedList'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
+import type { DbPayment } from '@/lib/supabase/queries/finance'
+import { toDomainPayment } from '@/lib/finance/adapter'
 import { formatDate } from '@/lib/format'
 
 function PagosContent() {
-  const { payments: allPayments, error, refetch } = useFinance()
   const [revealAll, setRevealAll] = useState(false)
   // Filtros en la URL: sobreviven recargas y se comparten por link.
   const [entityRaw, setEntityFilter] = useUrlFilter('entidad', 'all')
@@ -28,8 +30,11 @@ function PagosContent() {
   const [statusRaw, setStatusFilter] = useUrlFilter('estado', 'all')
   const statusFilter = statusRaw as 'all' | PaymentStatus
   const [search, setSearch] = useState('')
-  const [payments, setPayments] = useState<Payment[]>([])
-  useEffect(() => { setPayments(allPayments) }, [allPayments])
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
   const [refundTarget, setRefundTarget] = useState<Payment | null>(null)
   const [sinpeTarget, setSinpeTarget] = useState<Payment | null>(null)
   const [sinpeConf, setSinpeConf] = useState('')
@@ -41,21 +46,37 @@ function PagosContent() {
     setTimeout(() => setToast(''), 3500)
   }
 
-  const totalPaid = payments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0)
-  const totalCard = payments.filter(p => p.status === 'paid' && p.method === 'card').reduce((s, p) => s + p.amount, 0)
-  const totalSinpe = payments.filter(p => p.status === 'paid' && p.method === 'sinpe').reduce((s, p) => s + p.amount, 0)
-  const totalPending = payments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0)
+  // Listado paginado server-side (filtros + búsqueda viajan al servidor).
+  const buildUrl = (page: number) => {
+    const u = new URLSearchParams()
+    if (debouncedSearch.trim()) u.set('search', debouncedSearch.trim())
+    if (entityFilter !== 'all') u.set('entity_type', entityFilter)
+    if (methodFilter !== 'all') u.set('method', methodFilter)
+    if (statusFilter !== 'all') u.set('status', statusFilter)
+    u.set('page', String(page))
+    u.set('pageSize', '25')
+    return `/api/finance/payments?${u.toString()}`
+  }
+  const {
+    items: payments, total, loading, error, hasMore, loadMore, reload,
+  } = usePaginatedList<DbPayment, Payment>(buildUrl, { pageSize: 25, itemsKey: 'payments', mapItem: toDomainPayment })
+  const filtered = payments
 
-  const filtered = useMemo(() => {
-    return payments.filter(p => {
-      const q = search.toLowerCase()
-      const matchSearch = !q || p.member_name.toLowerCase().includes(q) || p.entity_name.toLowerCase().includes(q) || p.member_cedula.includes(q)
-      const matchEntity = entityFilter === 'all' || p.entity_type === entityFilter
-      const matchMethod = methodFilter === 'all' || p.method === methodFilter
-      const matchStatus = statusFilter === 'all' || p.status === statusFilter
-      return matchSearch && matchEntity && matchMethod && matchStatus
-    })
-  }, [payments, search, entityFilter, methodFilter, statusFilter])
+  // Totales globales (los 4 montos del header) — SQL, no sobre lo cargado.
+  const [stats, setStats] = useState({ total_paid: 0, total_card: 0, total_sinpe: 0, total_pending: 0 })
+  const loadStats = useCallback(() => {
+    fetch('/api/finance/payments?stats=1')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setStats(d) })
+      .catch(() => {})
+  }, [])
+  useEffect(() => { loadStats() }, [loadStats])
+  const totalPaid = stats.total_paid
+  const totalCard = stats.total_card
+  const totalSinpe = stats.total_sinpe
+  const totalPending = stats.total_pending
+
+  const refetch = useCallback(() => { reload(); loadStats() }, [reload, loadStats])
 
   async function handleRefundConfirm(data: { type: 'full' | 'partial'; amount: number; reason: string; reasonDetail: string }) {
     if (!refundTarget) return
@@ -328,10 +349,23 @@ function PagosContent() {
               <li>
                 {error
                   ? <ErrorState message={error} onRetry={refetch} />
-                  : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
+                  : loading
+                    ? <p className="px-4 py-8 text-center text-sm text-navy-light/60 font-body">Cargando pagos…</p>
+                    : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
               </li>
             )}
           </ul>
+          {filtered.length > 0 && (
+            <LoadMoreFooter
+              shown={payments.length}
+              total={total}
+              hasMore={hasMore}
+              loading={loading}
+              onLoadMore={loadMore}
+              noun="pagos"
+              increment={25}
+            />
+          )}
         </div>
       </div>
 
