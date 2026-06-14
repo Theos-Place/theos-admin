@@ -46,4 +46,36 @@ cargan y el plan de corrección. Patrón de referencia: `/miembros` (server-side
   más) sin rehacer el fetch.
 - Export / "seleccionar todos" sigue trayendo el set completo por endpoint
   dedicado, nunca depende de lo cargado en pantalla.
+
+## Resultado (qué se cambió)
+
+Server-side (query trae una página con count exacto; filtros/búsqueda al servidor):
+- `/estudios/grupos` — getStudyGroups + filtros; export vía `?all=1`
+- `/finanzas/pagos` — getPaymentsPage + filtros; totales vía RPC `payment_stats` (060)
+- `/servidores/aplicaciones` — getApplicationsPage + filtros; badges vía getApplicationStats
+- `/comunicaciones/[id]` (recipients) — getMessageRecipients paginado + filtro sent/failed
+
+Client-side paginado (vista; dataset acotado o con agregado que necesita todo):
+- `/estudios/dirigentes` (15), `/comunicaciones` historial (15),
+  `/comunicaciones/plantillas` (15), `/formularios` (25)
+- `/formularios/[id]/respuestas` (tabla 25) — resumen/CSV sobre el set completo
+- `/servidores/vacantes` (15) — conteo de aplicaciones EMBEBIDO en la query
+  (`applications(count)`), ya no carga todas las applications
+
+Ya estaban bien (no se tocaron): `/miembros`, `/finanzas/donaciones`.
+Quedaron como están por volumen chico/acotado: `/empleados`, `/estudios/plan`,
+`/estudios/solicitudes`, `/finanzas/solicitudes`, `/finanzas/devoluciones`,
+`/servidores` y `/servidores/admin` (comités/áreas), `/miembros/listas`,
+`/miembros/duplicados`, notificaciones.
+
+### Notas / limitaciones documentadas
+- Grupos: se quitó "Capacidad total / Ocupación %" del header (eran agregados
+  sobre todo el set filtrado); ahora se muestra el total real de grupos.
+- Búsqueda server-side de grupos/aplicaciones por nombre de persona resuelve
+  primero los member_ids que matchean (cap 500) y los suma al OR.
+- Respuestas de formularios: el resumen (charts) y el CSV siguen leyendo el set
+  completo por diseño; la agregación server-side de resúmenes queda como
+  follow-up si algún formulario crece a miles.
+- Piezas compartidas: `usePaginatedList` (server), `useClientPagination`
+  (vista), `LoadMoreFooter` (UI).
 </content>
