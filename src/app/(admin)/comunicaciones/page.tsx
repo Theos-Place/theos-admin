@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { getDeliveryRate, type CommunicationChannel, type CommunicationStatus } from '@/data/mock-communications'
 import { useCommunications } from '@/hooks/useCommunications'
+import { useForms } from '@/hooks/useForms'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
@@ -18,6 +19,8 @@ import {
   FileEdit,
   Calendar,
   MessageSquare,
+  FileText,
+  ClipboardList,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 
@@ -57,6 +60,14 @@ export default function ComunicacionesPage() {
     const withErrors = sent.filter(m => m.stats.failed > 0).length
     return { sentThisMonth: sentThisMonth.length, totalRecipients, avgRate, withErrors }
   }, [sent])
+
+  // Formularios viven dentro de Comunicaciones: resumen con sus métricas.
+  const { forms } = useForms()
+  const formStats = useMemo(() => ({
+    active: forms.filter(f => f.is_active).length,
+    total: forms.length,
+    responses: forms.reduce((s, f) => s + f.responses_count, 0),
+  }), [forms])
 
   const activityData = useMemo(() => {
     return LAST_7_DAYS.map(day => ({
@@ -139,6 +150,34 @@ export default function ComunicacionesPage() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Formularios — viven dentro de Comunicaciones */}
+      <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <FileText size={16} className="text-coral" />
+            <h2 className="text-sm font-semibold text-navy font-display">Formularios</h2>
+          </div>
+          <Link href="/formularios" className="inline-flex items-center gap-1 text-[12px] text-coral hover:text-coral-deep transition-colors font-body">
+            Ver formularios <ChevronRight size={12} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: 'Activos', value: formStats.active, Icon: FileText, color: 'text-navy' },
+            { label: 'Total', value: formStats.total, Icon: ClipboardList, color: 'text-navy-light/70' },
+            { label: 'Respuestas', value: formStats.responses.toLocaleString('es-CR'), Icon: CheckCircle2, color: 'text-teal-deep' },
+          ].map(({ label, value, Icon, color }) => (
+            <div key={label} className="rounded-xl bg-surface-low px-4 py-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{label}</p>
+                <Icon size={13} className={color} />
+              </div>
+              <p className={cn('text-2xl font-extrabold tabular-nums font-display', color)}>{value}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Activity chart */}

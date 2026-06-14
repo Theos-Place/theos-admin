@@ -34,6 +34,7 @@ import {
   GraduationCap,
   Shield,
   Bell,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -52,9 +53,6 @@ const EMPLEADOS_SUB: SubItem[] = [
   { href: '/empleados/puestos', label: 'Puestos pagados', icon: Tag },
 ]
 
-const FORMULARIOS_SUB: SubItem[] = [
-  { href: '/formularios/nuevo', label: 'Nuevo formulario', icon: Plus },
-]
 
 const FINANZAS_SUB: SubItem[] = [
   { href: '/finanzas/donaciones',  label: 'Donaciones',   icon: Heart           },
@@ -75,6 +73,9 @@ const SERVIDORES_SUB: SubItem[] = [
   { href: '/servidores/vacantes',     label: 'Puestos de Servicio', icon: Bookmark      },
   { href: '/servidores/aplicaciones', label: 'Aplicaciones',        icon: ClipboardList },
 ]
+
+// Roles que ven la página de mantenimiento (áreas/comités/puestos).
+const SERVICE_ADMIN = ['encargado_staff', 'coordinador_servidores', 'direccion', 'admin']
 
 const ESTUDIOS_SUB: SubItem[] = [
   { href: '/estudios/grupos',      label: 'Grupos',               icon: LayoutList },
@@ -142,6 +143,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const finanzasSub: SubItem[] = FINANZAS_SUB.map(s =>
     s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s)
 
+  // Mantenimiento de áreas/comités/puestos: solo para roles de admin de servidores.
+  const canServiceAdmin = userRoles.some(r => SERVICE_ADMIN.includes(r))
+  const servidoresSub: SubItem[] = canServiceAdmin
+    ? [...SERVIDORES_SUB, { href: '/servidores/admin', label: 'Áreas y comités', icon: Wrench }]
+    : SERVIDORES_SUB
+
+  // Formularios vive dentro de Comunicaciones (sub-ítem), no como módulo aparte.
+  const comunicacionesSub: SubItem[] = can('formularios', 'view')
+    ? [{ href: '/formularios', label: 'Formularios', icon: FileText }, ...COMUNICACIONES_SUB]
+    : COMUNICACIONES_SUB
+
   // Cada módulo se muestra solo si el rol tiene 'view' sobre él (can combina
   // múltiples roles: coordinador_estudios + comunicaciones ve comunicaciones).
   const ALL_NAV: NavModule[] = [
@@ -151,11 +163,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: EVENTOS_SUB,        module: 'eventos' },
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
-    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: SERVIDORES_SUB,     module: 'servidores' },
+    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores' },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
-    { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: COMUNICACIONES_SUB, module: 'comunicaciones' },
-    { href: '/formularios',    label: 'Formularios',    icon: FileText,        subs: FORMULARIOS_SUB,    module: 'formularios' },
+    { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
   ]
   // El padrón (listado de miembros) exige alcance más allá de 'own' — el rol
   // base 'miembro' ve su perfil, no el listado (espejo del guard de la API).
