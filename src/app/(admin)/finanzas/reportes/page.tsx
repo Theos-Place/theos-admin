@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { BarChart2, Download, Package } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import { Tabs } from '@/components/shared/Tabs'
 import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 
@@ -129,25 +130,15 @@ export default function ReportesPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-col sm:flex-row gap-1 p-1 rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-          {([
-            ['donations', 'Donaciones'],
-            ['payments', 'Pagos por entidad'],
-            ['transparency', 'Informe de transparencia'],
-          ] as const).map(([v, l]) => (
-            <button
-              key={v}
-              onClick={() => setActiveTab(v)}
-              className="flex-1 rounded-xl py-2.5 px-4 text-sm font-medium transition-all font-body"
-              style={{
-                background: activeTab === v ? '#161440' : 'transparent',
-                color: activeTab === v ? 'white' : 'rgba(22,20,64,0.55)',
-              }}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          tabs={[
+            { key: 'donations', label: 'Donaciones' },
+            { key: 'payments', label: 'Pagos por entidad' },
+            { key: 'transparency', label: 'Informe de transparencia' },
+          ]}
+          active={activeTab}
+          onChange={v => setActiveTab(v as typeof activeTab)}
+        />
 
         {/* Tab 1 — Donations */}
         {activeTab === 'donations' && (

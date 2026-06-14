@@ -7,6 +7,7 @@ import type { StudyType } from '@/data/mock-studies'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { Tabs } from '@/components/shared/Tabs'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
@@ -264,25 +265,14 @@ export default function PlanDeEstudiosPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-2xl bg-surface-card shadow-[var(--shadow-md)] w-fit" role="tablist">
-        {([
-          ['curricula', 'Currícula'],
-          ['detalles', 'Detalles de cada estudio'],
-        ] as const).map(([key, label]) => (
-          <button
-            key={key}
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => setTab(key)}
-            className={cn(
-              'rounded-xl px-4 py-2 text-sm font-medium transition-all font-body',
-              tab === key ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy hover:bg-surface-low',
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        tabs={[
+          { key: 'curricula', label: 'Currícula' },
+          { key: 'detalles', label: 'Detalles de cada estudio' },
+        ]}
+        active={tab}
+        onChange={k => setTab(k as PlanTab)}
+      />
 
       {/* ── Tab 1 · Currícula: tabla con todos los tipos de estudio ── */}
       {tab === 'curricula' && (

@@ -11,10 +11,11 @@ import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { FilterChips } from '@/components/shared/FilterChips'
+import { Tabs } from '@/components/shared/Tabs'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
 import { expandRecurring, nextOccurrence, recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { cn } from '@/lib/utils'
-import { Plus, LayoutList, Calendar, Download, Code, ExternalLink, Repeat } from 'lucide-react'
+import { Plus, Calendar, Download, Code, ExternalLink, Repeat } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 
 const TYPE_FILTERS: { key: EventType | 'all'; label: string }[] = [
@@ -273,56 +274,32 @@ function EventosContent() {
       </div>
 
       {/* Toggle Vista */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div
-          className="inline-flex rounded-full p-1 bg-surface-low"
-        >
-          <button
-            onClick={() => setView('list')}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-all duration-150',
-              view === 'list'
-                ? 'bg-navy text-white shadow-sm'
-                : 'text-navy-light/60 hover:text-navy',
-              'font-body'
-            )}
-          >
-            <LayoutList size={14} />
-            Lista
-          </button>
-          <button
-            onClick={() => setView('calendar')}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-all duration-150',
-              view === 'calendar'
-                ? 'bg-navy text-white shadow-sm'
-                : 'text-navy-light/60 hover:text-navy',
-              'font-body'
-            )}
-          >
-            <Calendar size={14} />
-            Calendario
-          </button>
-        </div>
+      <Tabs
+        tabs={[
+          { key: 'list', label: 'Lista' },
+          { key: 'calendar', label: 'Calendario' },
+        ]}
+        active={view}
+        onChange={v => setView(v as 'list' | 'calendar')}
+      />
 
-        {view === 'list' && (
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Estado derivado: Próximos · Realizados · Todos */}
-            <FilterChips
-              chips={STATUS_FILTERS}
-              activeKey={statusFilter}
-              onSelect={k => setStatusFilter(k as StatusFilter)}
-              ariaLabel="Filtrar eventos por estado"
-            />
-            <FilterChips
-              chips={TYPE_FILTERS}
-              activeKey={typeFilter}
-              onSelect={k => setTypeFilter(k as EventType | 'all')}
-              ariaLabel="Filtrar eventos por tipo"
-            />
-          </div>
-        )}
-      </div>
+      {view === 'list' && (
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Estado derivado: Próximos · Realizados · Todos */}
+          <FilterChips
+            chips={STATUS_FILTERS}
+            activeKey={statusFilter}
+            onSelect={k => setStatusFilter(k as StatusFilter)}
+            ariaLabel="Filtrar eventos por estado"
+          />
+          <FilterChips
+            chips={TYPE_FILTERS}
+            activeKey={typeFilter}
+            onSelect={k => setTypeFilter(k as EventType | 'all')}
+            ariaLabel="Filtrar eventos por tipo"
+          />
+        </div>
+      )}
 
       {/* Vista Lista */}
       {view === 'list' && (
