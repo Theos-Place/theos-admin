@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid, Trash2 } from 'lucide-react'
+import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid, Trash2, Upload } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
@@ -598,6 +598,12 @@ export default function ServidoresAdminPage() {
             {activeCount} área{activeCount !== 1 ? 's' : ''} activa{activeCount !== 1 ? 's' : ''} · {activeCommCount} comités activos
           </p>
         </div>
+        <a
+          href="/servidores/admin/importar"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body shrink-0"
+        >
+          <Upload size={14} /> Importar puestos
+        </a>
       </div>
 
       {/* Paneles: áreas · comités · (puestos cuando hay comité seleccionado) */}
