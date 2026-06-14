@@ -2,6 +2,7 @@
 
 import { Search, Plus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import type { CommitteeServer, CommitteePosition } from '@/types/server'
 
 type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
@@ -124,19 +125,22 @@ export function DisconnectModal({
 
 export type CommitteeFormState = {
   name: string
-  area: string
-  area_code: string
-  ideal_capacity: string
+  /** Área padre (areas.parent_id). */
+  parent_id: string
+  /** Encargado del comité (areas.leader_id). */
+  leader_id: string
+  leader_name: string
 }
 
 type EditCommitteeModalProps = {
   form: CommitteeFormState
+  areas: { id: string; name: string }[]
   onFormChange: (updater: (prev: CommitteeFormState) => CommitteeFormState) => void
   onSave: () => void
   onCancel: () => void
 }
 
-export function EditCommitteeModal({ form, onFormChange, onSave, onCancel }: EditCommitteeModalProps) {
+export function EditCommitteeModal({ form, areas, onFormChange, onSave, onCancel }: EditCommitteeModalProps) {
   return (
     <Modal onClose={onCancel} titleId="editar-comite" width={448}>
       <div className="p-6 space-y-4">
@@ -147,16 +151,32 @@ export function EditCommitteeModal({ form, onFormChange, onSave, onCancel }: Edi
             <input className={inputCls} value={form.name} onChange={e => onFormChange(p => ({ ...p, name: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Área</label>
-            <input className={inputCls} value={form.area} onChange={e => onFormChange(p => ({ ...p, area: e.target.value }))} />
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Área padre</label>
+            <select className={inputCls} value={form.parent_id} onChange={e => onFormChange(p => ({ ...p, parent_id: e.target.value }))}>
+              <option value="">Sin área</option>
+              {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Código de área</label>
-            <input className={inputCls} value={form.area_code} onChange={e => onFormChange(p => ({ ...p, area_code: e.target.value }))} />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Capacidad ideal</label>
-            <input type="number" min="1" max="100" className={inputCls} value={form.ideal_capacity} onChange={e => onFormChange(p => ({ ...p, ideal_capacity: e.target.value }))} />
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Encargado de comité</label>
+            {form.leader_id ? (
+              <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2">
+                <span className="flex-1 text-sm text-navy font-body">{form.leader_name || 'Encargado asignado'}</span>
+                <button
+                  type="button"
+                  onClick={() => onFormChange(p => ({ ...p, leader_id: '', leader_name: '' }))}
+                  className="text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
+                >
+                  Quitar
+                </button>
+              </div>
+            ) : (
+              <MemberCombobox
+                dropdown
+                placeholder="Buscar miembro por nombre o cédula…"
+                onSelect={m => onFormChange(p => ({ ...p, leader_id: m.id, leader_name: `${m.first_name} ${m.last_name}`.trim() }))}
+              />
+            )}
           </div>
         </div>
         <div className="flex gap-2">

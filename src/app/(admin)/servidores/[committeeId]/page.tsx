@@ -71,17 +71,27 @@ export default function CommitteeDetailPage() {
   // Edit committee modal
   const [editCommitteeOpen, setEditCommitteeOpen] = useState(false)
   const [committeeForm, setCommitteeForm] = useState<CommitteeFormState>({
-    name: '', area: '', area_code: '', ideal_capacity: '',
+    name: '', parent_id: '', leader_id: '', leader_name: '',
   })
   useEffect(() => {
     if (!committee) return
     setCommitteeForm({
       name: committee.name,
-      area: committee.area,
-      area_code: committee.area_code,
-      ideal_capacity: String(committee.ideal_capacity ?? ''),
+      parent_id: committee.area_code, // area_code = parent_id en el dominio
+      leader_id: committee.leader.member_id ?? '',
+      leader_name: committee.leader.name ?? '',
     })
   }, [committee])
+  // Áreas reales (tipo area) para el dropdown de área padre.
+  const [areas, setAreas] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    let alive = true
+    fetch('/api/servers/areas')
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: Array<{ id: string; name: string }>) => { if (alive) setAreas((Array.isArray(d) ? d : []).map(a => ({ id: a.id, name: a.name }))) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
   const [committeeOverride, setCommitteeOverride] = useState<Partial<CommitteeData>>({})
 
   // Add server modal
@@ -176,20 +186,18 @@ export default function CommitteeDetailPage() {
   }
 
   async function updateCommitteeInMock() {
-    const ideal = parseInt(committeeForm.ideal_capacity) || committee?.ideal_capacity
-    // Reflejo inmediato en UI (el área no se persiste: cambiar de área = cambiar parent_id, fuera de alcance).
-    setCommitteeOverride({
-      name: committeeForm.name,
-      area: committeeForm.area,
-      area_code: committeeForm.area_code,
-      ideal_capacity: ideal,
-    })
+    // Reflejo inmediato del nombre; el área padre y el encargado se ven al refetch.
+    setCommitteeOverride({ name: committeeForm.name })
     setEditCommitteeOpen(false)
     try {
       const res = await fetch(`/api/servers/committees/${committeeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: committeeForm.name, ideal_capacity: ideal }),
+        body: JSON.stringify({
+          name: committeeForm.name,
+          parent_id: committeeForm.parent_id || null,
+          leader_id: committeeForm.leader_id || null,
+        }),
       })
       if (!res.ok) throw new Error('update failed')
       await refetch()
@@ -300,9 +308,9 @@ export default function CommitteeDetailPage() {
         onEditClick={() => {
           setCommitteeForm({
             name: committeeOverride.name ?? committee.name,
-            area: committeeOverride.area ?? committee.area,
-            area_code: committeeOverride.area_code ?? committee.area_code,
-            ideal_capacity: String(committeeOverride.ideal_capacity ?? committee.ideal_capacity),
+            parent_id: committee.area_code,
+            leader_id: committee.leader.member_id ?? '',
+            leader_name: committee.leader.name ?? '',
           })
           setEditCommitteeOpen(true)
         }}
@@ -412,6 +420,7 @@ export default function CommitteeDetailPage() {
       {editCommitteeOpen && (
         <EditCommitteeModal
           form={committeeForm}
+          areas={areas}
           onFormChange={setCommitteeForm}
           onSave={updateCommitteeInMock}
           onCancel={() => setEditCommitteeOpen(false)}
