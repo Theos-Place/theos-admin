@@ -17,7 +17,7 @@ import { FilterChips } from '@/components/shared/FilterChips'
 import { Tabs } from '@/components/shared/Tabs'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
 import { recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
-import { upcomingEvents, monthEvents } from '@/lib/events/event-views'
+import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
 import { Plus, Calendar, Download, Code, ExternalLink, Repeat } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -122,16 +122,15 @@ function EventosContent() {
     return result
   }, [events, allEventsLight])
 
-  const thisMonthEvents = events.filter(e => {
-    const d = new Date(e.start_at)
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-  })
+  // Ocurrencias del mes en curso (recurrentes contados por día).
+  const thisMonthEvents = monthEvents(merged, now.getMonth(), now.getFullYear())
 
-  const next7Days = events.filter(e => {
-    const d = new Date(e.start_at)
-    const diff = (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    return diff >= 0 && diff <= 7
-  })
+  // Ocurrencias de los próximos 7 días (recurrentes por día).
+  const next7Days = (() => {
+    const from = new Date(now); from.setHours(0, 0, 0, 0)
+    const to = new Date(from); to.setDate(to.getDate() + 7)
+    return eventsInRange(merged, from, to)
+  })()
 
   const totalRegistrations = events.reduce((sum, e) => sum + e.registrations.length, 0)
 
@@ -142,11 +141,15 @@ function EventosContent() {
     }).length
   }, 0)
 
-  // Lista/Grid: SOLO próximos (recurrentes → próxima ocurrencia). Filtro por tipo.
+  // Lista/Grid: próximas OCURRENCIAS (los recurrentes se cuentan por día, no una
+  // sola vez) dentro de una ventana de 90 días hacia adelante. Filtro por tipo.
   // Los realizados se ven únicamente en el calendario (con opacidad/badge).
   const listRows = useMemo(() => {
-    const up = upcomingEvents(merged)
+    const from = new Date(); from.setHours(0, 0, 0, 0)
+    const to = new Date(from); to.setDate(to.getDate() + 90)
+    const up = eventsInRange(merged, from, to)
     return typeFilter === 'all' ? up : up.filter(e => e.event_type === typeFilter)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [merged, typeFilter])
 
   const visibleRows = listRows.slice(0, visibleCount)
@@ -308,7 +311,7 @@ function EventosContent() {
                   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
                   return (
                     <tr
-                      key={event.id}
+                      key={`${event.id}-${event.start_at}`}
                       onClick={() => router.push(`/eventos/${event.id}`)}
                       className={cn(
                         'hover:bg-navy/5 transition-colors cursor-pointer',
@@ -378,7 +381,7 @@ function EventosContent() {
               const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
               return (
                 <li
-                  key={event.id}
+                  key={`${event.id}-${event.start_at}`}
                   onClick={() => router.push(`/eventos/${event.id}`)}
                   className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
                   style={idx < visibleRows.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
@@ -444,7 +447,7 @@ function EventosContent() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleRows.map(event => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard key={`${event.id}-${event.start_at}`} event={event} />
                 ))}
               </div>
               <div className="flex flex-col items-center gap-2">
