@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { type Application, type ApplicationStatus } from '@/types/server'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
@@ -42,6 +42,18 @@ export default function AplicacionesPage() {
   }, [search])
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all')
   const [committeeFilter, setCommitteeFilter] = useState('all')
+  const [assignedFilter, setAssignedFilter] = useState('all')
+
+  // Coordinadores de servidores activos (candidatos para asignar).
+  const [coordinators, setCoordinators] = useState<{ member_id: string; member_name: string }[]>([])
+  useEffect(() => {
+    let alive = true
+    fetch('/api/servers/applications/assignees')
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: Array<{ member_id: string; member_name: string }>) => { if (alive) setCoordinators(Array.isArray(d) ? d : []) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
 
   // Comités para el dropdown (solo id + nombre).
   const [committees, setCommittees] = useState<{ id: string; name: string }[]>([])
@@ -75,15 +87,26 @@ export default function AplicacionesPage() {
     if (debouncedSearch.trim()) u.set('search', debouncedSearch.trim())
     if (statusFilter !== 'all') u.set('status', statusFilter)
     if (committeeFilter !== 'all') u.set('committee', committeeFilter)
+    if (assignedFilter !== 'all') u.set('assigned_to', assignedFilter)
     u.set('page', String(page))
     u.set('pageSize', '25')
     return `/api/servers/applications?${u.toString()}`
   }
   const {
-    items: filtered, total, loading, hasMore, loadMore,
+    items: filtered, total, loading, hasMore, loadMore, reload,
   } = usePaginatedList<DbApplication, Application>(buildUrl, {
     pageSize: 25, itemsKey: 'applications', mapItem: toDomainApplication,
   })
+
+  // Asigna / toma / quita responsable y recarga.
+  async function assign(appId: string, body: Record<string, unknown>) {
+    await fetch(`/api/servers/applications/${appId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    reload()
+  }
 
   return (
     <div className="space-y-6">
@@ -125,6 +148,18 @@ export default function AplicacionesPage() {
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+        <select
+          className="w-full sm:w-auto rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          value={assignedFilter}
+          onChange={e => setAssignedFilter(e.target.value)}
+          aria-label="Filtrar por responsable"
+        >
+          <option value="all">Cualquier responsable</option>
+          <option value="unassigned">Sin asignar</option>
+          {coordinators.map(c => (
+            <option key={c.member_id} value={c.member_id}>{c.member_name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Status chips */}
@@ -158,7 +193,7 @@ export default function AplicacionesPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
+                {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', 'Responsable', ''].map(h => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display"
@@ -210,6 +245,9 @@ export default function AplicacionesPage() {
                     >
                       {APP_STATUS_LABELS[a.status]}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <AssignCell app={a} coordinators={coordinators} onAssign={assign} />
                   </td>
                   <td className="px-4 py-3">
                     <Link
@@ -274,6 +312,76 @@ export default function AplicacionesPage() {
           />
         )}
       </div>
+    </div>
+  )
+}
+
+// ── Celda de responsable: asignar / tomar / quitar ───────────────────────────
+function AssignCell({
+  app, coordinators, onAssign,
+}: {
+  app: Application
+  coordinators: { member_id: string; member_name: string }[]
+  onAssign: (appId: string, body: Record<string, unknown>) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  const act = (body: Record<string, unknown>) => { setOpen(false); onAssign(app.id, body) }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body max-w-[160px]"
+      >
+        <span className="truncate">{app.assignee_name ?? 'Sin asignar'}</span>
+        <span className="text-navy-light/60">▾</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 z-30 mt-1 w-56 rounded-2xl bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => act({ action: 'take' })}
+            className="w-full px-3 py-2 text-left text-[12px] text-navy hover:bg-surface-low transition-colors font-body"
+          >
+            Tomar (asignármela)
+          </button>
+          {app.assigned_to && (
+            <button
+              type="button"
+              onClick={() => act({ action: 'unassign' })}
+              className="w-full px-3 py-2 text-left text-[12px] text-coral hover:bg-surface-low transition-colors font-body"
+            >
+              Quitar responsable
+            </button>
+          )}
+          <div className="border-t border-[var(--outline-variant)] max-h-56 overflow-y-auto py-1">
+            <p className="px-3 py-1 text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Asignar a</p>
+            {coordinators.length === 0 && (
+              <p className="px-3 py-2 text-[11px] text-navy-light/60 font-body">No hay coordinadores de servidores activos.</p>
+            )}
+            {coordinators.map(c => (
+              <button
+                key={c.member_id}
+                type="button"
+                onClick={() => act({ action: 'assign', assignee_member_id: c.member_id })}
+                className="w-full px-3 py-2 text-left text-[12px] text-navy hover:bg-surface-low transition-colors font-body"
+              >
+                {c.member_name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
