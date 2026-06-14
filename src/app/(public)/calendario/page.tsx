@@ -3,6 +3,7 @@ import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { MockEvent } from '@/data/mock-events'
 import { usePublicEvents } from '@/hooks/useEvents'
+import { upcomingEvents, monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { Modal } from '@/components/shared/Modal'
 
 // Inner component that reads searchParams
@@ -19,11 +20,15 @@ function CalendarioWidget() {
   const showBtn = searchParams.get('showBtn') !== 'false'
 
   const { events: allEvents } = usePublicEvents()
-  const events = useMemo(() =>
+  // Base: misma fuente que el interno, filtrada por tipo y excluyendo
+  // cancelados/archivados. La expansión de recurrentes se hace por vista
+  // (util compartido), igual que el calendario interno.
+  const baseEvents = useMemo(() =>
     allEvents.filter(e =>
       e.status !== 'cancelled' && e.status !== 'archived' && types.includes(e.event_type)
-    ).sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
+    )
   , [allEvents, types])
+  const upcoming = useMemo(() => upcomingEvents(baseEvents), [baseEvents])
 
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
@@ -44,16 +49,16 @@ function CalendarioWidget() {
       {/* Header */}
       <div className="py-3 px-5 flex items-center justify-between" style={{ background: primary }}>
         <span className="text-white font-bold text-[15px]">Theos Place — Eventos</span>
-        <span className="text-[rgba(255,255,255,0.6)] text-xs">{events.length} eventos</span>
+        <span className="text-[rgba(255,255,255,0.6)] text-xs">{upcoming.length} próximos</span>
       </div>
 
       {/* List view */}
       {view === 'list' && (
         <div className="p-5 flex flex-col gap-3">
-          {events.map(ev => {
+          {upcoming.map(ev => {
             const { day, month, dow } = formatDate(ev.start_at)
             return (
-              <div key={ev.id} className="flex gap-4 p-4 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer"
+              <div key={`${ev.id}-${ev.start_at}`} className="flex gap-4 p-4 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer"
                 onClick={() => setSelectedEvent(ev)}>
                 <div className="text-center min-w-[44px] pt-0.5">
                   <div className="text-[28px] font-extrabold leading-none" style={{ color: primary }}>{day}</div>
@@ -116,14 +121,11 @@ function CalendarioWidget() {
             for (let i = 0; i < firstDay; i++) cells.push(null)
             for (let d = 1; d <= daysInMonth; d++) cells.push(d)
             while (cells.length % 7 !== 0) cells.push(null)
-            const monthEvents = events.filter(e => {
-              const d = new Date(e.start_at)
-              return d.getMonth() === currentMonth && d.getFullYear() === currentYear
-            })
+            const monthEvs = monthEvents(baseEvents, currentMonth, currentYear)
             return (
               <div className="grid grid-cols-[repeat(7,1fr)] gap-0.5">
                 {cells.map((day, i) => {
-                  const dayEvents = day ? monthEvents.filter(e => new Date(e.start_at).getDate() === day) : []
+                  const dayEvents = day ? monthEvs.filter(e => new Date(e.start_at).getDate() === day) : []
                   const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
                   return (
                     <div key={i} className="min-h-[64px] rounded-lg p-1" style={{ background: day ? 'rgba(255,255,255,0.8)' : 'transparent', border: isToday ? `2px solid ${accent}` : '1px solid rgba(0,0,0,0.06)' }}>
@@ -131,7 +133,7 @@ function CalendarioWidget() {
                         <>
                           <div className="text-[11px] mb-0.5" style={{ fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary }}>{day}</div>
                           {dayEvents.slice(0, 2).map(ev => (
-                            <div key={ev.id} onClick={() => setSelectedEvent(ev)}
+                            <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
                               className="text-[9px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
                               {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                             </div>
@@ -149,13 +151,17 @@ function CalendarioWidget() {
       )}
 
       {/* Weekly view */}
-      {view === 'weekly' && (
+      {view === 'weekly' && (() => {
+        const weekStart = new Date(); weekStart.setHours(0, 0, 0, 0)
+        const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7)
+        const weekEvs = eventsInRange(baseEvents, weekStart, weekEnd)
+        return (
         <div className="p-5">
           <div className="grid grid-cols-[repeat(7,1fr)] gap-2">
             {Array.from({ length: 7 }, (_, i) => {
               const d = new Date()
               d.setDate(d.getDate() + i)
-              const dayEvents = events.filter(e => new Date(e.start_at).toDateString() === d.toDateString())
+              const dayEvents = weekEvs.filter(e => new Date(e.start_at).toDateString() === d.toDateString())
               return (
                 <div key={i} className="bg-white rounded-xl p-3 border border-[rgba(0,0,0,0.08)]">
                   <div className="text-[10px] uppercase text-[rgba(0,0,0,0.4)] mb-1">
@@ -163,7 +169,7 @@ function CalendarioWidget() {
                   </div>
                   <div className="text-xl font-bold mb-2" style={{ color: primary }}>{d.getDate()}</div>
                   {dayEvents.map(ev => (
-                    <div key={ev.id} className="rounded-lg py-1.5 px-2 mb-1.5 cursor-pointer" style={{ background: `${accent}18`, border: `1px solid ${accent}40` }}
+                    <div key={`${ev.id}-${ev.start_at}`} className="rounded-lg py-1.5 px-2 mb-1.5 cursor-pointer" style={{ background: `${accent}18`, border: `1px solid ${accent}40` }}
                       onClick={() => setSelectedEvent(ev)}>
                       <div className="text-[11px] font-semibold" style={{ color: primary }}>{ev.name}</div>
                       <div className="text-[10px] text-[rgba(0,0,0,0.4)] mt-0.5">{formatEventTime(ev.start_at)}</div>
@@ -174,7 +180,8 @@ function CalendarioWidget() {
             })}
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* Event detail modal */}
       {selectedEvent && (

@@ -46,7 +46,7 @@ export default function EmbedPage() {
 
   const iframeCode = `<!-- Calendario Theos Place -->
 <iframe
-  src="https://admin.theosplace.org/calendario-publico?view=${cfg.view}&types=${cfg.types.join(',')}&primary=%23${cfg.primary.slice(1)}&accent=%23${cfg.accent.slice(1)}&lang=${cfg.lang}"
+  src="https://admin.theosplace.org/calendario?view=${cfg.view}&types=${cfg.types.join(',')}&primary=%23${cfg.primary.slice(1)}&accent=%23${cfg.accent.slice(1)}&lang=${cfg.lang}"
   width="100%"
   height="${cfg.height}px"
   frameborder="0"

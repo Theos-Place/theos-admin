@@ -3,15 +3,17 @@ import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getEvents, type DbEventEnriched } from '@/lib/supabase/queries/events'
 
 // GET público para el widget /calendario (embebible en el sitio de la iglesia).
-// Decisión documentada: NO lleva requireRoles — expone solo eventos activos no
-// cancelados/archivados con campos de cartelera (sin inscripciones ni check-ins,
-// que sí viajan en /api/events). Rate limit por IP como freno básico.
+// Decisión documentada: NO lleva requireRoles — expone los eventos con campos de
+// cartelera (sin inscripciones ni check-ins, que sí viajan en /api/events).
+// La tabla events NO tiene columna is_public; "hoy todos son públicos", así que
+// lee la MISMA fuente que el calendario interno (is_active=all menos
+// cancelados/archivados) para que ambos coincidan. Rate limit por IP.
 export async function GET(req: Request) {
   try {
     if (!rateLimit(`public-events:${clientIp(req)}`, 60, 60_000)) {
       return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
     }
-    const { events } = await getEvents({ light: true, is_active: true, pageSize: 500 })
+    const { events } = await getEvents({ light: true, is_active: 'all', pageSize: 2000 })
     const publicEvents = events
       .filter(e => e.status !== 'cancelled' && e.status !== 'archived')
       .map((e: DbEventEnriched) => ({
