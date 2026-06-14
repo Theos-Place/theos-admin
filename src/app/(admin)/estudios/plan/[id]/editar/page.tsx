@@ -8,7 +8,9 @@ import { invalidateStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
-import type { StudyType, StudyLeader } from '@/types/study'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
+import { X } from 'lucide-react'
+import type { StudyType } from '@/types/study'
 
 function Toggle({ checked, onChange, label, sublabel }: {
   checked: boolean
@@ -37,7 +39,7 @@ const STAGE_LABEL: Record<StudyType['stage'], string> = {
 export default function EditarEstudioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: code } = use(params)
   const { hasRole, loaded } = useAuth()
-  const { studyTypes, leaders, loading } = useStudies()
+  const { studyTypes, loading } = useStudies()
 
   // Editar tipos de estudio: solo roles de estudios (protección por URL).
   if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return <AccessDenied />
@@ -64,10 +66,10 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
     )
   }
 
-  return <EditarForm studyType={studyType} leaders={leaders} />
+  return <EditarForm studyType={studyType} />
 }
 
-function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: StudyLeader[] }) {
+function EditarForm({ studyType }: { studyType: StudyType }) {
   const router = useRouter()
   const toast = useToast()
   const [submitting, setSubmitting] = useState(false)
@@ -76,6 +78,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
     name:             studyType.name,
     weeks:            studyType.weeks,
     mentor_id:        studyType.mentor_id ?? '',
+    mentor_name:      studyType.mentor_name ?? '',
     description:      studyType.description ?? '',
     commitments:      studyType.commitments ?? '',
     difficulty:       studyType.difficulty ?? '',
@@ -128,10 +131,6 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
     }
   }
 
-  const qualifiedLeaders = leaders.filter(
-    l => l.is_active && l.qualified_studies.includes(studyType.code)
-  )
-
   return (
     <div className="page">
 
@@ -183,17 +182,26 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="edit-study-mentor">Mentor</label>
-            <select id="edit-study-mentor" className="form-select" value={form.mentor_id} onChange={e => set('mentor_id', e.target.value)}>
-              <option value="">Sin asignar</option>
-              {qualifiedLeaders.map(l => (
-                <option key={l.id} value={l.member_id}>{l.member_name}</option>
-              ))}
-            </select>
-            {qualifiedLeaders.length === 0 && (
-              <span className="text-[11px] text-[var(--fg-muted)] mt-[3px] font-body">
-                No hay dirigentes calificados para este estudio
-              </span>
+            <label className="form-label">Dirigente encargado</label>
+            {form.mentor_id ? (
+              <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2">
+                <span className="flex-1 text-sm text-navy font-body">{form.mentor_name || 'Dirigente asignado'}</span>
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, mentor_id: '', mentor_name: '' }))}
+                  className="inline-flex items-center gap-1 text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
+                >
+                  <X size={13} /> Quitar
+                </button>
+              </div>
+            ) : (
+              <MemberCombobox
+                dropdown
+                placeholder="Buscar miembro por nombre o cédula…"
+                onSelect={(m: MemberHit) =>
+                  setForm(p => ({ ...p, mentor_id: m.id, mentor_name: `${m.first_name} ${m.last_name}`.trim() }))
+                }
+              />
             )}
           </div>
 
@@ -228,7 +236,7 @@ function EditarForm({ studyType, leaders }: { studyType: StudyType; leaders: Stu
           <Toggle checked={form.requires_grade} onChange={v => set('requires_grade', v)} label="Requiere calificación numérica" />
           <Toggle checked={form.requires_invitation} onChange={v => set('requires_invitation', v)} label="Requiere invitación" sublabel="Solo se puede ingresar por invitación (no abierto a inscripción libre)" />
           <Toggle checked={form.auto_promote}   onChange={v => set('auto_promote', v)}   label="Transición automática al siguiente nivel" sublabel="Al cerrar el grupo, pasar automáticamente al siguiente estudio" />
-          <Toggle checked={form.is_archived}    onChange={v => set('is_archived', v)}    label="Archivar estudio" sublabel="No estará disponible para nuevos grupos" />
+          <Toggle checked={form.is_archived}    onChange={v => set('is_archived', v)}    label="Desactivar estudio" sublabel="No estará disponible para nuevos grupos" />
         </div>
       </div>
 

@@ -1,10 +1,10 @@
 'use client'
 
-import { use, useState, useEffect, useRef } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
-import { useDirigentes } from '@/hooks/useDirigentes'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -36,18 +36,18 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
         <div className="flex items-center gap-3">
           <Archive size={20} className="text-coral" />
           <h3 id="archivar-estudio-title" className="font-semibold text-navy font-display">
-            Archivar estudio
+            Desactivar estudio
           </h3>
         </div>
         <p className="text-sm text-navy-light/70 font-body">
-          Al archivar este tipo de estudio no podrás crear nuevos grupos con él. Los grupos existentes no se ven afectados.
+          Al desactivar este tipo de estudio no podrás crear nuevos grupos con él. Los grupos existentes no se ven afectados.
         </p>
         <div className="flex gap-3">
           <button
             onClick={onConfirm}
             className="btn btn-primary btn-sm"
           >
-            Sí, archivar
+            Sí, desactivar
           </button>
           <button
             onClick={onCancel}
@@ -183,17 +183,17 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <div className="ptitle">{view.name}</div>
             <div className="psub">
               {stageInfo?.label}
-              {isArchived && <span className="ml-2 text-coral font-semibold">[Archivado]</span>}
+              {isArchived && <span className="ml-2 text-coral font-semibold">[Desactivado]</span>}
             </div>
           </div>
           <div className="ph-actions">
             {isArchived ? (
               <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setArchive(false)}>
-                <Archive size={13} /> Desarchivar
+                <Archive size={13} /> Activar
               </button>
             ) : (
               <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setShowArchive(true)}>
-                <Archive size={13} /> Archivar
+                <Archive size={13} /> Desactivar
               </button>
             )}
             <button
@@ -233,12 +233,13 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </div>
           )}
 
-          {/* Dirigente referente */}
+          {/* Dirigente encargado */}
           <div>
-            <div className="st">Dirigente referente</div>
+            <div className="st">Dirigente encargado</div>
             <div className="mt-1">
               <DirigenteReferenteSelect
                 value={studyType.mentor_id ?? null}
+                currentName={studyType.mentor_name ?? null}
                 onChange={async (memberId) => {
                   if (!studyType.plan_id) return
                   await fetch(`/api/studies/plans/${studyType.plan_id}`, {
@@ -500,98 +501,35 @@ function dInitials(name: string) {
   return name.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
 }
 
-function DirigenteReferenteSelect({ value, onChange }: {
+function DirigenteReferenteSelect({ value, currentName, onChange }: {
   value: string | null
+  currentName: string | null
   onChange: (memberId: string | null) => void
 }) {
-  const { dirigentes } = useDirigentes()
-  const [open, setOpen] = useState(false)
-  const [q, setQ] = useState('')
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
-
-  const selected = dirigentes.find(d => d.member_id === value)
-  const filtered = dirigentes
-    .filter(d => d.member_name.toLowerCase().includes(q.trim().toLowerCase()))
-    .slice(0, 50)
-
-  const Badge = ({ status }: { status: 'activo' | 'inactivo' }) => (
-    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium font-body',
-      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60')}>
-      {status === 'activo' ? 'Activo' : 'Inactivo'}
-    </span>
-  )
-
+  if (value) {
+    return (
+      <div className="flex items-center gap-2 rounded-2xl border border-[var(--outline-variant)] bg-surface-low px-3 py-2">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
+          {dInitials(currentName ?? '') || '—'}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">
+          {currentName ?? 'Dirigente asignado'}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="inline-flex items-center gap-1 text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
+        >
+          <X size={13} /> Quitar
+        </button>
+      </div>
+    )
+  }
   return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="flex w-full items-center gap-2 rounded-2xl border border-[var(--outline-variant)] bg-surface-low px-3 py-2 text-left hover:bg-surface-container transition-colors"
-      >
-        {selected ? (
-          <>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-              {dInitials(selected.member_name) || '—'}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{selected.member_name}</span>
-            <Badge status={selected.status} />
-          </>
-        ) : (
-          <span className="flex-1 text-sm text-navy-light/60 font-body">Sin dirigente referente</span>
-        )}
-        <span className="text-navy-light/60 text-xs">▾</span>
-      </button>
-
-      {open && (
-        <div className="absolute z-30 mt-1 w-full rounded-2xl bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)] overflow-hidden">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--outline-variant)]">
-            <Search size={14} className="text-navy-light/60 shrink-0" />
-            <input
-              autoFocus
-              value={q}
-              onChange={e => setQ(e.target.value)}
-              placeholder="Buscar dirigente…"
-              aria-label="Buscar dirigente"
-              className="w-full bg-transparent text-sm text-navy outline-none font-body"
-            />
-          </div>
-          <div className="max-h-64 overflow-y-auto py-1">
-            <button
-              type="button"
-              onClick={() => { onChange(null); setOpen(false) }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-navy-light/60 hover:bg-surface-low transition-colors font-body"
-            >
-              <X size={14} /> Quitar dirigente referente
-            </button>
-            {filtered.map(d => (
-              <button
-                key={d.member_id}
-                type="button"
-                onClick={() => { onChange(d.member_id); setOpen(false) }}
-                className={cn('flex w-full items-center gap-2 px-3 py-2 hover:bg-surface-low transition-colors',
-                  d.member_id === value && 'bg-coral/5')}
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-                  {dInitials(d.member_name) || '—'}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-left text-sm text-navy font-body">{d.member_name}</span>
-                <Badge status={d.status} />
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <p className="px-3 py-3 text-xs text-navy-light/60 font-body">Sin resultados.</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    <MemberCombobox
+      dropdown
+      placeholder="Buscar miembro por nombre o cédula…"
+      onSelect={(m) => onChange(m.id)}
+    />
   )
 }
