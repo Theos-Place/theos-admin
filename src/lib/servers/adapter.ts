@@ -93,6 +93,8 @@ export function toDomainApplication(db: DbApplication): Application {
     applied_at: db.applied_at,
     status: db.status,
     notes: db.notes ?? '',
+    assigned_to: db.assigned_to ?? null,
+    assignee_name: db.assignee ? `${db.assignee.first_name} ${db.assignee.last_name}`.trim() : null,
     // service_history se carga en la vista de detalle del aplicante (Fase 2b).
     service_history: [],
   }
