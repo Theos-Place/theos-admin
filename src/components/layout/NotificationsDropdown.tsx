@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Bell, AlertCircle, Info, AlertTriangle, Inbox } from 'lucide-react'
@@ -32,18 +32,29 @@ export function NotificationsBell() {
   const unread = notifications.filter(n => !n.read)
   const count = alerts.length + unread.length
 
-  useEffect(() => {
-    let alive = true
+  const load = useCallback(() => {
     fetch('/api/alerts')
       .then(r => (r.ok ? r.json() : []))
-      .then(d => { if (alive) setAlerts(Array.isArray(d) ? d : []) })
-      .catch(() => { if (alive) setAlerts([]) })
+      .then(d => setAlerts(Array.isArray(d) ? d : []))
+      .catch(() => setAlerts([]))
     fetch('/api/notifications/internal')
       .then(r => (r.ok ? r.json() : []))
-      .then(d => { if (alive) setNotifications(Array.isArray(d) ? d : []) })
-      .catch(() => { if (alive) setNotifications([]) })
-    return () => { alive = false }
+      .then(d => setNotifications(Array.isArray(d) ? d : []))
+      .catch(() => setNotifications([]))
   }, [])
+
+  useEffect(() => {
+    load()
+    // Refresca el conteo cuando se marcan leídas en otra parte (página de
+    // notificaciones) o al volver el foco a la pestaña.
+    const onChanged = () => load()
+    window.addEventListener('notifications:changed', onChanged)
+    window.addEventListener('focus', onChanged)
+    return () => {
+      window.removeEventListener('notifications:changed', onChanged)
+      window.removeEventListener('focus', onChanged)
+    }
+  }, [load])
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -58,7 +69,10 @@ export function NotificationsBell() {
     setOpen(false)
     setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: true } : x)))
     fetch(`/api/notifications/internal/${n.id}`, { method: 'PATCH' })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        window.dispatchEvent(new Event('notifications:changed'))
+      })
       .catch(() => {
         // Rollback del optimista si falló el PATCH.
         setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: false } : x)))

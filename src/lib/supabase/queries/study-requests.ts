@@ -401,6 +401,18 @@ export async function markNotificationRead(id: string, memberId: string): Promis
   if (error) throw error
 }
 
+/** Marca un conjunto de notificaciones (por id) del miembro como leídas. */
+export async function markNotificationsRead(ids: string[], memberId: string): Promise<void> {
+  if (ids.length === 0) return
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('internal_notifications')
+    .update({ read: true })
+    .in('id', ids)
+    .eq('recipient_member_id', memberId)
+  if (error) throw error
+}
+
 /** Marca TODAS las notificaciones no leídas del miembro como leídas. */
 export async function markAllNotificationsRead(memberId: string): Promise<void> {
   const supabase = createAdminClient()

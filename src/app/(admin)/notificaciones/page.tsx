@@ -24,6 +24,41 @@ export default function NotificacionesPage() {
   const [alerts, setAlerts] = useState<ActiveAlert[]>([])
   const [loading, setLoading] = useState(true)
   const [markingAll, setMarkingAll] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  // Avisa al ícono (NotificationsBell, otro componente) que el conteo cambió.
+  function notifyChanged() {
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('notifications:changed'))
+  }
+
+  function toggleSelected(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+  const allSelected = notifications.length > 0 && selected.size === notifications.length
+  function toggleSelectAll() {
+    setSelected(allSelected ? new Set() : new Set(notifications.map(n => n.id)))
+  }
+
+  async function markSelectedRead() {
+    const ids = [...selected]
+    if (ids.length === 0) return
+    setNotifications(prev => prev.map(n => (selected.has(n.id) ? { ...n, read: true } : n)))
+    setSelected(new Set())
+    try {
+      await fetch('/api/notifications/internal/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      })
+      notifyChanged()
+    } catch {
+      toast('No se pudieron marcar las notificaciones', 'error')
+    }
+  }
 
   useEffect(() => {
     let alive = true
@@ -48,7 +83,7 @@ export default function NotificacionesPage() {
     if (!n.read) {
       setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: true } : x)))
       fetch(`/api/notifications/internal/${n.id}`, { method: 'PATCH' })
-        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); notifyChanged() })
         .catch(() => {
           // Rollback del optimista si falló el PATCH.
           setNotifications(prev => prev.map(x => (x.id === n.id ? { ...x, read: false } : x)))
@@ -64,6 +99,7 @@ export default function NotificacionesPage() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     try {
       await fetch('/api/notifications/internal/read-all', { method: 'POST' })
+      notifyChanged()
     } catch {
       // El refetch del próximo render corrige si falló.
     } finally {
@@ -113,37 +149,71 @@ export default function NotificacionesPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {notifications.map(n => (
+              {/* Barra de selección */}
+              <div className="flex items-center justify-between gap-3 px-1 py-1 flex-wrap">
+                <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-navy-light/70 font-body">
+                  <input
+                    type="checkbox"
+                    className="accent-coral h-4 w-4"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    aria-label="Seleccionar todas"
+                  />
+                  Seleccionar todas
+                  {selected.size > 0 && <span className="text-navy-light/60">· {selected.size} seleccionada{selected.size !== 1 ? 's' : ''}</span>}
+                </label>
                 <button
+                  onClick={markSelectedRead}
+                  disabled={selected.size === 0}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-50"
+                >
+                  <CheckCheck size={14} />
+                  Marcar como leídas
+                </button>
+              </div>
+
+              {notifications.map(n => (
+                <div
                   key={n.id}
-                  onClick={() => openNotification(n)}
                   className={cn(
-                    'flex w-full items-start gap-4 rounded-2xl px-5 py-4 text-left transition-colors shadow-card',
+                    'flex w-full items-start gap-3 rounded-2xl px-4 py-4 transition-colors shadow-card',
                     n.read
-                      ? 'bg-surface-card hover:bg-surface-low'
-                      : 'bg-coral/5 border border-coral/20 hover:bg-coral/10',
+                      ? 'bg-surface-card'
+                      : 'bg-coral/5 border border-coral/20',
                   )}
                 >
-                  <div className={cn(
-                    'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
-                    n.read ? 'bg-surface-low' : 'bg-coral/10',
-                  )}>
-                    <Inbox size={18} className={n.read ? 'text-navy-light/60' : 'text-coral'} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={cn('text-sm font-body leading-snug', n.read ? 'text-navy-light/70' : 'text-navy font-semibold')}>
-                      {n.title}
-                    </p>
-                    {n.body && (
-                      <p className="text-[13px] text-navy-light/70 font-body mt-0.5">{n.body}</p>
-                    )}
-                    <p className="text-[11px] text-navy-light/60 font-body mt-1">{formatDateTime(n.created_at)}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 self-center">
-                    {!n.read && <span className="h-2 w-2 rounded-full bg-coral" aria-label="No leída" />}
-                    <ChevronRight size={16} className="text-navy-light/60" />
-                  </div>
-                </button>
+                  <input
+                    type="checkbox"
+                    className="accent-coral h-4 w-4 mt-3 shrink-0"
+                    checked={selected.has(n.id)}
+                    onChange={() => toggleSelected(n.id)}
+                    aria-label={`Seleccionar ${n.title}`}
+                  />
+                  <button
+                    onClick={() => openNotification(n)}
+                    className="flex flex-1 items-start gap-3 min-w-0 text-left"
+                  >
+                    <div className={cn(
+                      'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                      n.read ? 'bg-surface-low' : 'bg-coral/10',
+                    )}>
+                      <Inbox size={18} className={n.read ? 'text-navy-light/60' : 'text-coral'} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn('text-sm font-body leading-snug', n.read ? 'text-navy-light/70' : 'text-navy font-semibold')}>
+                        {n.title}
+                      </p>
+                      {n.body && (
+                        <p className="text-[13px] text-navy-light/70 font-body mt-0.5">{n.body}</p>
+                      )}
+                      <p className="text-[11px] text-navy-light/60 font-body mt-1">{formatDateTime(n.created_at)}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 self-center">
+                      {!n.read && <span className="h-2 w-2 rounded-full bg-coral" aria-label="No leída" />}
+                      <ChevronRight size={16} className="text-navy-light/60" />
+                    </div>
+                  </button>
+                </div>
               ))}
             </div>
           )}
