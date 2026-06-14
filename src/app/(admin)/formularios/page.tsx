@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { type FormTemplate } from '@/types/forms'
 import { useForms } from '@/hooks/useForms'
+import { useClientPagination } from '@/hooks/useClientPagination'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { FilterChips } from '@/components/shared/FilterChips'
 import { cn } from '@/lib/utils'
@@ -130,6 +132,8 @@ export default function FormulariosPage() {
     })
   }, [localTemplates, categoryFilter, query])
 
+  const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
+
   return (
     <div className="space-y-6" onClick={() => setMenuOpen(null)}>
       {/* Header */}
@@ -215,7 +219,7 @@ export default function FormulariosPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((form, idx) => {
+                {visible.map((form, idx) => {
                   const CatIcon = CATEGORY_ICONS[form.category] ?? FileText
                   return (
                     <tr
@@ -348,7 +352,7 @@ export default function FormulariosPage() {
         {/* Mobile: tarjetas */}
         {filtered.length > 0 && (
           <ul className="md:hidden divide-y divide-[var(--outline-variant)]">
-            {filtered.map(form => {
+            {visible.map(form => {
               const CatIcon = CATEGORY_ICONS[form.category] ?? FileText
               return (
                 <li
@@ -377,6 +381,18 @@ export default function FormulariosPage() {
               )
             })}
           </ul>
+        )}
+
+        {filtered.length > 0 && (
+          <LoadMoreFooter
+            shown={shown}
+            total={total}
+            hasMore={hasMore}
+            loading={false}
+            onLoadMore={loadMore}
+            noun="formularios"
+            increment={25}
+          />
         )}
       </div>
     </div>

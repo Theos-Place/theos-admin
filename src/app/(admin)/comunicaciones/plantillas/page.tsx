@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type MessageTemplate, type CommunicationChannel } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
+import { useClientPagination } from '@/hooks/useClientPagination'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { TemplateCard } from '@/components/communications/TemplateCard'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
@@ -44,6 +46,8 @@ export default function PlantillasPage() {
       return true
     })
   }, [templates, categoryFilter, channelFilter])
+
+  const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 15)
 
   async function handleDuplicate(t: MessageTemplate) {
     try {
@@ -152,18 +156,29 @@ export default function PlantillasPage() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(t => (
-            <TemplateCard
-              key={t.id}
-              template={t}
-              onUse={handleUse}
-              onEdit={() => {}}
-              onDuplicate={handleDuplicate}
-              onDelete={setDeleteTarget}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {visible.map(t => (
+              <TemplateCard
+                key={t.id}
+                template={t}
+                onUse={handleUse}
+                onEdit={() => {}}
+                onDuplicate={handleDuplicate}
+                onDelete={setDeleteTarget}
+              />
+            ))}
+          </div>
+          <LoadMoreFooter
+            shown={shown}
+            total={total}
+            hasMore={hasMore}
+            loading={false}
+            onLoadMore={loadMore}
+            noun="plantillas"
+            increment={15}
+          />
+        </>
       )}
 
       <DeleteConfirmModal

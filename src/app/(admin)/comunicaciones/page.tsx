@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { getDeliveryRate, type CommunicationChannel, type CommunicationStatus } from '@/data/mock-communications'
 import { useCommunications } from '@/hooks/useCommunications'
+import { useClientPagination } from '@/hooks/useClientPagination'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { cn } from '@/lib/utils'
 import {
@@ -78,6 +80,8 @@ export default function ComunicacionesPage() {
       return true
     }).sort((a, b) => (b.sent_at ?? b.created_at).localeCompare(a.sent_at ?? a.created_at))
   }, [sent, channelFilter, statusFilter, dateFrom, dateTo])
+
+  const histPage = useClientPagination(filtered, 15)
 
   const STATUS_STYLE: Record<CommunicationStatus, string> = {
     draft:   'bg-navy/10 text-navy-light/60',
@@ -228,7 +232,7 @@ export default function ComunicacionesPage() {
                   <EmptyState icon={MessageSquare} title="No hay mensajes con ese filtro" />
                 </div>
               ) : (
-                filtered.map(msg => (
+                histPage.visible.map(msg => (
                   <div
                     key={msg.id}
                     className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
@@ -285,6 +289,19 @@ export default function ComunicacionesPage() {
                     </div>
                   </div>
                 ))
+              )}
+              {filtered.length > 0 && (
+                <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+                  <LoadMoreFooter
+                    shown={histPage.shown}
+                    total={histPage.total}
+                    hasMore={histPage.hasMore}
+                    loading={false}
+                    onLoadMore={histPage.loadMore}
+                    noun="mensajes"
+                    increment={15}
+                  />
+                </div>
               )}
             </div>
           </div>

@@ -3,9 +3,11 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDirigentes } from '@/hooks/useDirigentes'
-import { useStudies } from '@/hooks/useStudies'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { useClientPagination } from '@/hooks/useClientPagination'
 import { useAuth } from '@/hooks/useAuth'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus } from 'lucide-react'
@@ -82,7 +84,7 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
 export default function DirigentesPage() {
   const router = useRouter()
   const { dirigentes, loading, refetch } = useDirigentes()
-  const { studyTypes } = useStudies()
+  const { studyTypes } = useStudyPlans()
   const { hasRole } = useAuth()
   const canAdd = hasRole('admin', 'coordinador_dirigentes')
   const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
@@ -111,6 +113,8 @@ export default function DirigentesPage() {
     activos: dirigentes.filter(d => d.status === 'activo').length,
     inactivos: dirigentes.filter(d => d.status === 'inactivo').length,
   }), [dirigentes])
+
+  const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 15)
 
   return (
     <div className="space-y-5">
@@ -179,11 +183,22 @@ export default function DirigentesPage() {
       ) : filtered.length === 0 ? (
         <p className="py-12 text-center text-sm text-navy-light/60 font-body">Sin dirigentes para los filtros aplicados</p>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map(d => (
-            <DirigenteCard key={d.member_id} d={d} onClick={() => router.push(`/estudios/dirigentes/${d.member_id}`)} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {visible.map(d => (
+              <DirigenteCard key={d.member_id} d={d} onClick={() => router.push(`/estudios/dirigentes/${d.member_id}`)} />
+            ))}
+          </div>
+          <LoadMoreFooter
+            shown={shown}
+            total={total}
+            hasMore={hasMore}
+            loading={false}
+            onLoadMore={loadMore}
+            noun="dirigentes"
+            increment={15}
+          />
+        </>
       )}
 
       {showAdd && (
