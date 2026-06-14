@@ -489,7 +489,7 @@ export async function createArea(input: {
 
 export async function updateArea(
   id: string,
-  patch: { name?: string; description?: string | null; parent_id?: string | null; leader_id?: string | null },
+  patch: { name?: string; description?: string | null; parent_id?: string | null; leader_id?: string | null; is_active?: boolean },
 ): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('areas').update(patch).eq('id', id)

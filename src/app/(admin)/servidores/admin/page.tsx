@@ -293,7 +293,7 @@ function PositionModal({
 
 export default function ServidoresAdminPage() {
   const { hasRole, loaded } = useAuth()
-  const { adminAreas, adminCommittees } = useOrg()
+  const { adminAreas, adminCommittees, refetch: refetchOrg } = useOrg()
   const { committees: serverCommittees, refetch: refetchServers } = useServers()
 
   // Áreas reales (tipo area) para el dropdown de "área base" del puesto.
@@ -383,9 +383,8 @@ export default function ServidoresAdminPage() {
       run: async () => {
         const res = await fetch(`/api/servers/areas/${area.id}`, { method: 'DELETE' })
         if (!res.ok) return
-        setAreas(prev => prev.filter(a => a.id !== area.id))
-        setCommittees(prev => prev.filter(c => c.area_code !== area.id))
         if (selectedAreaId === area.id) setSelectedAreaId(null)
+        refetchOrg()
         await refetchServers()
       },
     })
@@ -404,8 +403,8 @@ export default function ServidoresAdminPage() {
       run: async () => {
         const res = await fetch(`/api/servers/areas/${c.id}`, { method: 'DELETE' })
         if (!res.ok) return
-        setCommittees(prev => prev.filter(x => x.id !== c.id))
         if (selectedCommId === c.id) setSelectedCommId(null)
+        refetchOrg()
         await refetchServers()
       },
     })
@@ -459,56 +458,60 @@ export default function ServidoresAdminPage() {
 
   // ── Area handlers ──────────────────────────────────────────────────────────
 
-  function saveArea(name: string) {
+  async function saveArea(name: string) {
     const { editing } = areaModal
-    if (editing) {
-      const updated = areas.map(a => a.id === editing.id ? { ...a, name } : a)
-      setAreas(updated)
-    } else {
-      const code = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 20)
-      const id   = `${code}-${Date.now()}`
-      const newArea: Area = { id, code, name, is_active: true }
-      const updated = [...areas, newArea]
-      setAreas(updated)
-      setSelectedAreaId(id)
-    }
     setAreaModal({ open: false, editing: null })
+    try {
+      if (editing) {
+        const res = await fetch(`/api/servers/areas/${editing.id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }),
+        })
+        if (!res.ok) throw new Error()
+      } else {
+        const res = await fetch('/api/servers/areas', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, area_type: 'area' }),
+        })
+        if (!res.ok) throw new Error()
+        const { id } = await res.json()
+        if (id) setSelectedAreaId(id)
+      }
+      refetchOrg()
+    } catch { /* sin cambios si falla */ }
   }
 
   function requestToggleArea(area: Area) {
-    if (area.is_active) {
-      // Just deactivate — no member check needed for areas
-      toggleAreaActive(area)
-    } else {
-      toggleAreaActive(area)
-    }
+    toggleAreaActive(area)
   }
 
-  function toggleAreaActive(area: Area) {
-    const updated = areas.map(a => a.id === area.id ? { ...a, is_active: !a.is_active } : a)
-    setAreas(updated)
+  async function toggleAreaActive(area: Area) {
+    try {
+      const res = await fetch(`/api/servers/areas/${area.id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !area.is_active }),
+      })
+      if (res.ok) refetchOrg()
+    } catch { /* */ }
   }
 
   // ── Committee handlers ────────────────────────────────────────────────────
 
-  function saveCommittee(name: string, area_code: string) {
+  async function saveCommittee(name: string, area_code: string) {
     const { editing } = commModal
-    if (editing) {
-      const updated = committees.map(c =>
-        c.id === editing.id ? { ...c, name, area_code } : c
-      )
-      setCommittees(updated)
-    } else {
-      const newComm: Committee = {
-        id: `${area_code}-${Date.now()}`,
-        area_code,
-        name,
-        is_active: true,
-      }
-      const updated = [...committees, newComm]
-      setCommittees(updated)
-    }
     setCommModal({ open: false, editing: null })
+    try {
+      if (editing) {
+        const res = await fetch(`/api/servers/areas/${editing.id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, parent_id: area_code || null }),
+        })
+        if (!res.ok) throw new Error()
+      } else {
+        const res = await fetch('/api/servers/areas', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, area_type: 'committee', parent_id: area_code || null }),
+        })
+        if (!res.ok) throw new Error()
+      }
+      refetchOrg()
+    } catch { /* sin cambios si falla */ }
   }
 
   function requestToggleCommittee(c: Committee) {
@@ -522,9 +525,13 @@ export default function ServidoresAdminPage() {
     toggleCommitteeActive(c)
   }
 
-  function toggleCommitteeActive(c: Committee) {
-    const updated = committees.map(x => x.id === c.id ? { ...x, is_active: !x.is_active } : x)
-    setCommittees(updated)
+  async function toggleCommitteeActive(c: Committee) {
+    try {
+      const res = await fetch(`/api/servers/areas/${c.id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !c.is_active }),
+      })
+      if (res.ok) { refetchOrg(); await refetchServers() }
+    } catch { /* */ }
   }
 
   function confirmDeactivate() {

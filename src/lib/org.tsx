@@ -3,7 +3,7 @@
 // Catálogo de áreas/comités desde la BD (reemplaza AREAS/ALL_COMMITTEES/ADMIN_*
 // de mock-committees). Mismo patrón que SedesProvider.
 
-import { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import type { OrgArea, OrgCommittee } from '@/lib/supabase/queries/org'
 
 // Tipos compatibles con los del mock-committees.
@@ -28,6 +28,8 @@ type OrgCtx = {
   adminAreas: Area[]
   adminCommittees: Committee[]
   loading: boolean
+  /** Recarga el catálogo desde la BD (tras crear/editar/borrar áreas o comités). */
+  refetch: () => void
 }
 
 const Ctx = createContext<OrgCtx | null>(null)
@@ -38,21 +40,20 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
   const [positions, setPositions] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    let alive = true
+  const load = useCallback(() => {
     fetch('/api/org')
       .then((r) => (r.ok ? r.json() : { areas: [], committees: [], positions: [] }))
       .then((d: { areas: OrgArea[]; committees: OrgCommittee[]; positions?: string[] }) => {
-        if (!alive) return
         setAreas(d.areas ?? [])
         setCommittees(d.committees ?? [])
         setPositions(d.positions ?? [])
         _commToArea = Object.fromEntries((d.committees ?? []).map((c) => [c.name, c.area_id ?? '']))
       })
       .catch(() => {})
-      .finally(() => alive && setLoading(false))
-    return () => { alive = false }
+      .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => { load() }, [load])
 
   const value = useMemo<OrgCtx>(() => ({
     areas: areas.map((a) => ({ code: a.id, name: a.name, committees: a.committees })),
@@ -61,11 +62,12 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
     adminAreas: areas.map((a) => ({ id: a.id, code: a.id, name: a.name, is_active: true })),
     adminCommittees: committees.map((c) => ({ id: c.id, area_code: c.area_id ?? '', name: c.name, is_active: true })),
     loading,
-  }), [areas, committees, positions, loading])
+    refetch: load,
+  }), [areas, committees, positions, loading, load])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
 export function useOrg(): OrgCtx {
-  return useContext(Ctx) ?? { areas: [], allCommittees: [], positions: [], adminAreas: [], adminCommittees: [], loading: false }
+  return useContext(Ctx) ?? { areas: [], allCommittees: [], positions: [], adminAreas: [], adminCommittees: [], loading: false, refetch: () => {} }
 }
