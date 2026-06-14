@@ -152,35 +152,90 @@ function toListItem(g: RawListGroup): DbGroupListItem {
 /** Grupos de estudio con líder y conteos de participantes.
  *  Sin opts devuelve TODOS (comportamiento histórico, total = data.length);
  *  con page/pageSize devuelve esa página + total exacto. */
+/** Filtros del listado de grupos — viajan al servidor (no se filtra en memoria). */
+export type GroupFilters = {
+  statuses?: string[]
+  planCode?: string | null
+  zone?: string | null
+  /** Día de la semana abreviado (L/M/X/J/V/S/D); match contra schedule_days. */
+  day?: string | null
+  /** Búsqueda por nombre de grupo o de dirigente/co-dirigente. */
+  search?: string | null
+  /** Solo grupos sin dirigente asignado (leader_id null). */
+  noLeader?: boolean
+}
+
+/** Resuelve las partes de los filtros que viven en tablas relacionadas:
+ *  el plan (code → id) y los dirigentes que matchean la búsqueda (nombre → ids).
+ *  Devuelve la cláusula `or` de búsqueda ya armada y el plan_id a igualar. */
+async function resolveGroupFilters(
+  supabase: ReturnType<typeof createAdminClient>,
+  f: GroupFilters,
+): Promise<{ planId: string | null; searchOr: string | null }> {
+  let planId: string | null = null
+  if (f.planCode) {
+    // Plan inexistente → id imposible para forzar resultado vacío.
+    planId = (await getPlanIdByCode(f.planCode)) ?? '00000000-0000-0000-0000-000000000000'
+  }
+
+  let searchOr: string | null = null
+  if (f.search && f.search.trim()) {
+    const like = `%${f.search.trim()}%`
+    const { data: members } = await supabase
+      .from('members').select('id')
+      .or(`first_name.ilike.${like},last_name.ilike.${like}`)
+      .limit(500)
+    const memberIds = ((members ?? []) as Array<{ id: string }>).map(m => m.id)
+    const parts = [`name.ilike.${like}`]
+    if (memberIds.length > 0) {
+      parts.push(`leader_id.in.(${memberIds.join(',')})`, `co_leader_id.in.(${memberIds.join(',')})`)
+    }
+    searchOr = parts.join(',')
+  }
+  return { planId, searchOr }
+}
+
 export async function getStudyGroups(
-  opts: { page?: number; pageSize?: number } = {},
+  opts: { page?: number; pageSize?: number; filters?: GroupFilters } = {},
 ): Promise<{ data: DbGroupListItem[]; total: number }> {
   const supabase = createAdminClient()
+  const f = opts.filters ?? {}
+  const { planId, searchOr } = await resolveGroupFilters(supabase, f)
 
   if (opts.page !== undefined || opts.pageSize !== undefined) {
     const page = Math.max(1, opts.page ?? 1)
     const pageSize = Math.max(1, opts.pageSize ?? 50)
     const from = (page - 1) * pageSize
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('study_groups')
       .select(LIST_GROUP_SELECT, { count: 'exact' })
-      .order('starts_at', { ascending: false })
-      .range(from, from + pageSize - 1)
+      .order('ends_at', { ascending: false, nullsFirst: false })
+    if (f.statuses?.length) query = query.in('status', f.statuses)
+    if (f.zone)  query = query.eq('zone', f.zone)
+    if (f.day)   query = query.contains('schedule_days', [f.day])
+    if (f.noLeader) query = query.is('leader_id', null)
+    if (planId)  query = query.eq('plan_id', planId)
+    if (searchOr) query = query.or(searchOr)
+    const { data, error, count } = await query.range(from, from + pageSize - 1)
     if (error) throw error
-    return {
-      data: ((data ?? []) as RawListGroup[]).map(toListItem),
-      total: count ?? 0,
-    }
+    return { data: ((data ?? []) as RawListGroup[]).map(toListItem), total: count ?? 0 }
   }
 
+  // Sin page/pageSize: TODOS los grupos (con filtros) — usado por el export.
   // PostgREST corta en 1000 filas; hay >1000 grupos → paginar con range().
   const all: DbGroupListItem[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
+    let query = supabase
       .from('study_groups')
       .select(LIST_GROUP_SELECT)
-      .order('starts_at', { ascending: false })
-      .range(from, from + 999)
+      .order('ends_at', { ascending: false, nullsFirst: false })
+    if (f.statuses?.length) query = query.in('status', f.statuses)
+    if (f.zone)  query = query.eq('zone', f.zone)
+    if (f.day)   query = query.contains('schedule_days', [f.day])
+    if (f.noLeader) query = query.is('leader_id', null)
+    if (planId)  query = query.eq('plan_id', planId)
+    if (searchOr) query = query.or(searchOr)
+    const { data, error } = await query.range(from, from + 999)
     if (error) throw error
     const batch = (data ?? []) as RawListGroup[]
     all.push(...batch.map(toListItem))

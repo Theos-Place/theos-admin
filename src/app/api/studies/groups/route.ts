@@ -28,10 +28,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(await getStudyGroupsWithEnrollments())
     }
 
+    // Filtros del listado — viajan al servidor (status[], plan, zona, día, búsqueda).
+    const statuses = searchParams.getAll('status')
+    const filters = {
+      statuses: statuses.length ? statuses : undefined,
+      planCode: searchParams.get('plan') ?? undefined,
+      zone: searchParams.get('zone') ?? undefined,
+      day: searchParams.get('day') ?? undefined,
+      search: searchParams.get('search') ?? undefined,
+      noLeader: searchParams.get('no_leader') === '1' || undefined,
+    }
+    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.day || filters.search || filters.noLeader
+
+    // ?all=1 → set COMPLETO filtrado (para el export, sin paginar).
+    if (searchParams.get('all') === '1') {
+      const { data } = await getStudyGroups({ filters })
+      return NextResponse.json(data)
+    }
+
     const rawPage = searchParams.get('page')
     const rawPageSize = searchParams.get('pageSize')
-    if (rawPage === null && rawPageSize === null) {
-      // Sin params: comportamiento histórico (array plano con todos los grupos).
+    if (rawPage === null && rawPageSize === null && !hasFilter) {
+      // Sin params ni filtros: comportamiento histórico (array plano con todos).
       const { data } = await getStudyGroups()
       return NextResponse.json(data)
     }
@@ -41,7 +59,7 @@ export async function GET(req: NextRequest) {
     const page = Number.isFinite(pageNum) ? Math.max(1, Math.trunc(pageNum)) : 1
     const pageSize = Number.isFinite(pageSizeNum) ? Math.min(200, Math.max(1, Math.trunc(pageSizeNum))) : 50
 
-    const { data, total } = await getStudyGroups({ page, pageSize })
+    const { data, total } = await getStudyGroups({ page, pageSize, filters })
     return NextResponse.json({ groups: data, total, page, pageSize })
   } catch (error) {
     console.error('GET /api/studies/groups:', error)

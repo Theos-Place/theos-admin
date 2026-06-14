@@ -1,21 +1,27 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import type { GroupStatus, StudyGroup, StudyType } from '@/data/mock-studies'
-import { useStudies } from '@/hooks/useStudies'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { usePaginatedList } from '@/hooks/usePaginatedList'
+import type { DbGroupListItem } from '@/lib/supabase/queries/studies'
+import { toDomainStudyGroup } from '@/lib/studies/adapter'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge } from '@/components/studies/GroupStatusBadge'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
 import { Plus, BookOpen } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { getInitials } from '@/lib/format'
+
+const PAGE_SIZE = 25
 
 const ALL_STATUSES: GroupStatus[] = ['en_matricula', 'en_curso', 'finalizado']
 const STATUS_LABELS: Record<GroupStatus, string> = {
@@ -29,11 +35,6 @@ const STATUS_EXPORT: Record<GroupStatus, string> = {
   en_matricula: 'En matrícula',
   en_curso: 'En curso',
   finalizado: 'Finalizado',
-}
-
-/** Normaliza para búsqueda insensible a mayúsculas y tildes. */
-function normalize(s: string) {
-  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 }
 
 function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[] {
@@ -95,7 +96,8 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
 }
 
 export default function GruposPage() {
-  const { groups: MOCK_GROUPS, studyTypes: STUDY_TYPES, error, refetch } = useStudies()
+  // studyTypes: catálogo liviano (34 filas), NO trae los ~1.680 grupos.
+  const { studyTypes: STUDY_TYPES, error: typesError } = useStudyPlans()
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
@@ -131,33 +133,48 @@ export default function GruposPage() {
     )
   }
 
-  const filtered = useMemo(() => {
-    return MOCK_GROUPS.filter(g => {
-      if (noLeaderOnly && g.leader_id) return false
-      if (selectedStatuses.length > 0 && !selectedStatuses.includes(g.status)) return false
-      if (selectedType && g.study_type_id !== selectedType) return false
-      if (selectedZone && g.zone !== selectedZone) return false
-      if (selectedDay && !g.schedule_days.includes(selectedDay)) return false
-      if (search) {
-        const haystack = normalize(`${g.name} ${g.leader_name ?? ''} ${g.co_leader_name ?? ''}`)
-        if (!haystack.includes(normalize(search))) return false
-      }
-      return true
-    }).sort((a, b) => {
-      // Orden por defecto: fecha de finalización más reciente primero; sin fecha al final.
-      if (!a.end_date && !b.end_date) return 0
-      if (!a.end_date) return 1
-      if (!b.end_date) return -1
-      return b.end_date.localeCompare(a.end_date)
-    })
-  }, [MOCK_GROUPS, noLeaderOnly, selectedStatuses, selectedType, selectedZone, selectedDay, search])
+  // Filtros → query string. Viajan al servidor; nada se filtra en memoria.
+  const filterQS = useCallback(() => {
+    const u = new URLSearchParams()
+    selectedStatuses.forEach(s => u.append('status', s))
+    if (selectedType) u.set('plan', selectedType)
+    if (selectedZone) u.set('zone', selectedZone)
+    if (selectedDay)  u.set('day', selectedDay)
+    if (search.trim()) u.set('search', search.trim())
+    if (noLeaderOnly) u.set('no_leader', '1')
+    return u
+  }, [selectedStatuses, selectedType, selectedZone, selectedDay, search, noLeaderOnly])
 
-  const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(filtered)
+  const buildUrl = (page: number) => {
+    const u = filterQS()
+    u.set('page', String(page))
+    u.set('pageSize', String(PAGE_SIZE))
+    return `/api/studies/groups?${u.toString()}`
+  }
 
-  const totalCapacity = filtered.reduce((sum, g) => sum + g.max_capacity, 0)
-  const totalEnrolled = filtered.reduce((sum, g) =>
-    sum + g.participants.filter(p => p.status !== 'withdrawn').length, 0)
-  const occupancy = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0
+  // Paginación server-side acumulativa (count exacto + cargar más). Resetea sola
+  // al cambiar cualquier filtro/búsqueda (cambia la URL base).
+  const {
+    items: groups, total, loading, error: groupsError, hasMore, loadMore, reload,
+  } = usePaginatedList<DbGroupListItem, StudyGroup>(buildUrl, {
+    pageSize: PAGE_SIZE,
+    itemsKey: 'groups',
+    mapItem: toDomainStudyGroup,
+  })
+  const error = typesError || groupsError
+
+  // El sort reordena solo las filas ya cargadas (in-page). El orden base lo da
+  // el servidor (fecha de fin desc).
+  const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(groups)
+
+  // Export: trae el set COMPLETO filtrado vía endpoint dedicado (?all=1), no
+  // depende de lo cargado en pantalla.
+  const fetchAllForExport = useCallback(async (): Promise<StudyGroup[]> => {
+    const res = await fetch(`/api/studies/groups?all=1&${filterQS().toString()}`)
+    if (!res.ok) throw new Error('Error exportando grupos')
+    const rows = (await res.json()) as DbGroupListItem[]
+    return rows.map(toDomainStudyGroup)
+  }, [filterQS])
 
   const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -182,7 +199,8 @@ export default function GruposPage() {
             onChange={setVisibleColumns}
           />
           <ExportButton<StudyGroup>
-            data={filtered}
+            data={sortedGroups}
+            fetchData={fetchAllForExport}
             columns={visibleColumns}
             allColumns={STUDY_GROUP_COLUMNS}
             filename="grupos-estudio-theos"
@@ -316,11 +334,7 @@ export default function GruposPage() {
       <div
         className="flex items-center gap-1 text-[12px] text-navy-light/60 px-1 font-body"
       >
-        <span><strong className="text-navy">{filtered.length}</strong> grupos filtrados</span>
-        <span className="mx-2 text-navy-light/60">·</span>
-        <span>Capacidad total: <strong className="text-navy">{totalCapacity}</strong></span>
-        <span className="mx-2 text-navy-light/60">·</span>
-        <span>Ocupación: <strong className="text-navy">{occupancy}%</strong></span>
+        <span><strong className="text-navy">{total.toLocaleString('es-CR')}</strong> grupos con estos filtros</span>
       </div>
 
       {/* Table */}
@@ -441,10 +455,24 @@ export default function GruposPage() {
           })}
         </ul>
 
-        {filtered.length === 0 && (
+        {groups.length === 0 && (
           error
-            ? <ErrorState message={error} onRetry={refetch} />
-            : <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" />
+            ? <ErrorState message={error} onRetry={reload} />
+            : loading
+              ? <div className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando grupos…</div>
+              : <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" />
+        )}
+
+        {groups.length > 0 && (
+          <LoadMoreFooter
+            shown={groups.length}
+            total={total}
+            hasMore={hasMore}
+            loading={loading}
+            onLoadMore={loadMore}
+            noun="grupos"
+            increment={PAGE_SIZE}
+          />
         )}
       </div>
     </div>
