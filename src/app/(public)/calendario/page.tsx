@@ -38,6 +38,13 @@ function CalendarioWidget() {
 
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+
+  // Conteo del badge "este mes": TODO el mes en curso (no solo de hoy en
+  // adelante), para que coincida con lo que muestra la vista mensual.
+  const monthCount = useMemo(
+    () => monthEvents(baseEvents, currentMonth, currentYear).length,
+    [baseEvents, currentMonth, currentYear],
+  )
   const [selectedEvent, setSelectedEvent] = useState<MockEvent | null>(null)
   const [dayModal, setDayModal] = useState<{ date: number; events: MockEvent[] } | null>(null)
 
@@ -56,7 +63,7 @@ function CalendarioWidget() {
       {/* Header */}
       <div className="py-3 px-5 flex items-center justify-between" style={{ background: primary }}>
         <span className="text-white font-bold text-[15px]">Theos Place — Eventos</span>
-        <span className="text-[rgba(255,255,255,0.6)] text-xs">{rangedEvents.length} este mes</span>
+        <span className="text-[rgba(255,255,255,0.6)] text-xs">{monthCount} este mes</span>
       </div>
 
       {/* List view */}
