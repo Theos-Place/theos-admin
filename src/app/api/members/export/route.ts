@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireModuleView } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { getMembers } from '@/lib/supabase/queries/members'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
 // para exportar. Mismos params que /api/members. Usa createAdminClient (en getMembers).
-// Solo coordinadores y admin: exporta el padrón completo con PII (auditoría S1).
+// Mismo gate que el listado del padrón: módulo miembros con scope ≠ own
+// (auditoría S1; antes pedía roles de estudios, inconsistente con quién ve el padrón).
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes')
+    const auth = await requireModuleView('miembros', { beyondOwn: true })
     if (auth.res) return auth.res
     // Exporta el padrón completo: 5 corridas por minuto por usuario es de sobra.
     if (!rateLimit(`export:${auth.ctx.userId}`, 5, 60_000)) {
