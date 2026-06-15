@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield, Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { cn } from '@/lib/utils'
 import { ROLES } from '@/lib/auth/roles'
 import { NotificationsBell } from './NotificationsDropdown'
 import { getInitials } from '@/lib/format'
@@ -181,6 +182,7 @@ function GlobalMemberSearch() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
   const [searching, setSearching] = useState(false)
+  const [highlight, setHighlight] = useState(0)
   const boxRef = useRef<HTMLDivElement>(null)
 
   // Debounce de 300ms; mínimo 2 caracteres.
@@ -193,7 +195,7 @@ function GlobalMemberSearch() {
       setOpen(true)
       fetch(`/api/members?search=${encodeURIComponent(term)}&pageSize=8`)
         .then(r => (r.ok ? r.json() : null))
-        .then(d => { if (alive) { setResults(d?.members ?? []); setSearching(false) } })
+        .then(d => { if (alive) { setResults(d?.members ?? []); setHighlight(0); setSearching(false) } })
         .catch(() => { if (alive) { setResults([]); setSearching(false) } })
     }, 300)
     return () => { alive = false; clearTimeout(t) }
@@ -217,7 +219,13 @@ function GlobalMemberSearch() {
 
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Escape') { setOpen(false); return }
-    if (e.key === 'Enter' && results[0]) { e.preventDefault(); go(results[0].id) }
+    if (!open || results.length === 0) {
+      if (e.key === 'Enter' && results[0]) { e.preventDefault(); go(results[0].id) }
+      return
+    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight(h => (h + 1) % results.length) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight(h => (h - 1 + results.length) % results.length) }
+    else if (e.key === 'Enter') { e.preventDefault(); const m = results[highlight]; if (m) go(m.id) }
   }
 
   return (
@@ -226,7 +234,12 @@ function GlobalMemberSearch() {
         <Search size={16} className="text-navy-light/60 shrink-0" strokeWidth={1.75} />
         <input
           type="search"
+          role="combobox"
           aria-label="Buscar miembro por nombre, cédula o correo"
+          aria-expanded={open}
+          aria-controls="global-search-listbox"
+          aria-autocomplete="list"
+          aria-activedescendant={open && results[highlight] ? `gms-opt-${results[highlight].id}` : undefined}
           placeholder="Buscar miembro por nombre, cédula o correo..."
           value={q}
           onChange={e => setQ(e.target.value)}
@@ -247,12 +260,16 @@ function GlobalMemberSearch() {
               No se encontraron miembros
             </p>
           ) : (
-            <ul className="max-h-80 overflow-y-auto py-1">
-              {results.map(m => (
-                <li key={m.id}>
+            <ul id="global-search-listbox" role="listbox" aria-label="Resultados de miembros" className="max-h-80 overflow-y-auto py-1">
+              {results.map((m, i) => (
+                <li key={m.id} role="option" id={`gms-opt-${m.id}`} aria-selected={i === highlight}>
                   <button
                     onClick={() => go(m.id)}
-                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-surface-low transition-colors"
+                    onMouseEnter={() => setHighlight(i)}
+                    className={cn(
+                      'flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors',
+                      i === highlight ? 'bg-surface-low' : 'hover:bg-surface-low',
+                    )}
                   >
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
                       {resultInitials(m)}

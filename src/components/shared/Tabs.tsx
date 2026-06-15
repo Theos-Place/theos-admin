@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { cn } from '@/lib/utils'
 
 export type Tab = { key: string; label: string; count?: number }
@@ -17,6 +18,21 @@ export function Tabs({
   onChange: (key: string) => void
   className?: string
 }) {
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  // Navegación por teclado del patrón tablist: ←/→ mueven y activan; Home/End a los extremos.
+  function onKeyDown(e: React.KeyboardEvent, idx: number) {
+    let next = idx
+    if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length
+    else if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length
+    else if (e.key === 'Home') next = 0
+    else if (e.key === 'End') next = tabs.length - 1
+    else return
+    e.preventDefault()
+    onChange(tabs[next].key)
+    btnRefs.current[next]?.focus()
+  }
+
   return (
     <div
       role="tablist"
@@ -25,13 +41,16 @@ export function Tabs({
         className,
       )}
     >
-      {tabs.map(t => {
+      {tabs.map((t, idx) => {
         const isActive = active === t.key
         return (
           <button
             key={t.key}
+            ref={el => { btnRefs.current[idx] = el }}
             role="tab"
             aria-selected={isActive}
+            tabIndex={isActive ? 0 : -1}
+            onKeyDown={e => onKeyDown(e, idx)}
             onClick={() => onChange(t.key)}
             className={cn(
               'shrink-0 px-4 py-2.5 text-sm font-body border-b-2 -mb-px transition-colors',

@@ -187,7 +187,7 @@ function ModuleCard({
           </span>
           <div>
             <div className="text-lg mb-0.5 font-display font-extrabold text-navy">{title}</div>
-            <div className="text-[12px] text-navy/50 font-body">{subtitle}</div>
+            <div className="text-[12px] text-navy/70 font-body">{subtitle}</div>
           </div>
         </div>
       </div>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="font-semibold text-navy font-body">{user?.name ?? 'Usuario'}</div>
-              <div className="text-[12px] text-navy/50 font-body">{user?.email}</div>
+              <div className="text-[12px] text-navy/70 font-body">{user?.email}</div>
             </div>
           </div>
           {user?.member_id && (
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type] }} />
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-medium text-navy truncate font-body">{ev.name}</div>
-                    <div className="text-[11px] text-navy/50 font-body">
+                    <div className="text-[11px] text-navy/70 font-body">
                       {formatShortDate(ev.start_at)} · {formatEventTime(ev.start_at)}
                     </div>
                   </div>
@@ -429,7 +429,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: EVENT_TYPE_COLORS[ev.event_type] }} />
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-navy truncate font-body">{ev.name}</div>
-                      <div className="text-[11px] text-navy/50 mt-0.5 font-body">
+                      <div className="text-[11px] text-navy/70 mt-0.5 font-body">
                         {formatEventTime(ev.start_at)} · {ev.location} · {ev.registrations.length} inscritos
                       </div>
                     </div>
@@ -551,7 +551,7 @@ export default function DashboardPage() {
                 </span>
                 <div>
                   <div className="text-lg mb-0.5 font-display font-extrabold text-navy">Finanzas</div>
-                  <div className="text-[12px] text-navy/50 font-body">Ingresos este mes</div>
+                  <div className="text-[12px] text-navy/70 font-body">Ingresos este mes</div>
                 </div>
               </div>
             </div>
@@ -700,7 +700,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
             <div key={i} className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
               <div>
                 <div className="text-[13px] font-semibold text-navy font-body">{g.name}</div>
-                <div className="text-[11px] text-navy/50 mt-0.5 font-body">
+                <div className="text-[11px] text-navy/70 mt-0.5 font-body">
                   {g.participants}/{g.total} participantes · Semana {g.week}/{g.weeks}
                 </div>
               </div>
@@ -733,7 +733,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
             { label: 'Aplicaciones pend.', value: '3' },
           ].map((s, i) => (
             <div key={i}>
-              <div className="text-[11px] text-navy/50 font-body">{s.label}</div>
+              <div className="text-[11px] text-navy/70 font-body">{s.label}</div>
               <div className="text-[15px] font-bold text-navy font-display">{s.value}</div>
             </div>
           ))}
@@ -761,7 +761,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           ].map((s, i) => (
             <div key={i} className="text-center p-3 rounded-xl bg-[rgba(22,20,64,0.02)]">
               <div className="text-2xl font-bold mb-0.5 font-display" style={{ color: s.color }}>{s.value}</div>
-              <div className="text-[11px] text-navy/50 font-body">{s.label}</div>
+              <div className="text-[11px] text-navy/70 font-body">{s.label}</div>
             </div>
           ))}
         </div>

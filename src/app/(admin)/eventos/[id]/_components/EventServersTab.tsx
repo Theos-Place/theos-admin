@@ -112,7 +112,7 @@ export function EventServersTab({
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-[12px] text-amber-700 font-body">
             <Clock size={12} strokeWidth={2} className="animate-pulse" /> {pendingCount} pendientes
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1.5 text-[12px] text-navy/50 font-body">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1.5 text-[12px] text-navy/70 font-body">
             <XIcon size={12} strokeWidth={2} /> {declinedCount} declinaron
           </span>
         </div>
@@ -161,7 +161,7 @@ export function EventServersTab({
                           'rounded-md px-1.5 py-0.5 text-[10px] font-medium',
                           b.status === 'confirmed' ? 'bg-teal-soft/30 text-teal-deep' :
                           b.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-navy/10 text-navy/50'
+                          'bg-navy/10 text-navy/70'
                         )}>
                           {b.status === 'confirmed' ? '✓ Confirmado' : b.status === 'pending' ? '⏳ Pendiente' : '✗ Declinó'}
                         </span>
