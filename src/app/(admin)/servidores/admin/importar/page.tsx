@@ -197,7 +197,7 @@ export default function ImportarPuestosPage() {
             <div className="text-center">
               <p className="text-base font-bold font-display text-navy">Subí el archivo de puestos</p>
               <p className="text-sm mt-1 font-body text-navy-light/60">.xlsx o .csv — hacé clic para seleccionar</p>
-              <p className="text-[11px] mt-2 text-navy-light/40 font-body">
+              <p className="text-[11px] mt-2 text-navy-light/70 font-body">
                 Columnas: comité, ubicación, puesto, cantidad, descripción, categoría, funciones, perfil, expiración, destacado
               </p>
             </div>

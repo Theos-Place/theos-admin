@@ -255,7 +255,7 @@ function StatRow({
           {grupos}
         </span>
         <span className="text-sm text-navy-light/70">grupos</span>
-        <span className="text-navy-light/30">·</span>
+        <span className="text-navy-light/40">·</span>
         <span className="text-xl font-semibold text-navy font-display">{estudiantes}</span>
         <span className="text-sm text-navy-light/70">estudiantes</span>
       </div>

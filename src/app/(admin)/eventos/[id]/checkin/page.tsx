@@ -261,7 +261,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             </div>
           ) : query.trim().length >= 2 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <p className="text-white/30 text-sm">{searching ? 'Buscando…' : 'No se encontró nadie con ese nombre.'}</p>
+              <p className="text-white/70 text-sm">{searching ? 'Buscando…' : 'No se encontró nadie con ese nombre.'}</p>
               {!searching && (
                 <button
                   onClick={() => setShowNewPerson(true)}
@@ -273,7 +273,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <p className="text-white/20 text-sm">Escribí un nombre o usá el QR.</p>
+              <p className="text-white/70 text-sm">Escribí un nombre o usá el QR.</p>
               <button
                 onClick={() => setShowNewPerson(true)}
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors font-body"
@@ -307,11 +307,11 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
           {/* Feed check-ins recientes */}
           <div className="flex-1 space-y-2 overflow-y-auto">
-            <p className="text-[10px] tracking-widest uppercase text-white/30 mb-3 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-white/70 mb-3 font-display">
               Recientes
             </p>
             {recentCheckins.length === 0 ? (
-              <p className="text-white/20 text-sm text-center pt-4">Los check-ins aparecerán aquí.</p>
+              <p className="text-white/70 text-sm text-center pt-4">Los check-ins aparecerán aquí.</p>
             ) : (
               recentCheckins.map((ci, i) => (
                 <div
@@ -577,7 +577,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
                 <p className="text-sm text-white truncate font-body">{d.first_name} {d.last_name}</p>
                 <p className="text-[11px] text-white/70">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
               </div>
-              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/30 hover:text-coral"><X size={14} /></button>
+              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/60 hover:text-coral"><X size={14} /></button>
             </div>
           ))}
           <button

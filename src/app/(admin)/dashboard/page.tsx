@@ -364,7 +364,7 @@ export default function DashboardPage() {
             <p className="text-white/70 text-[13px] mb-1 font-body">
               {formatDay(today)} · {formatTime(today)}
             </p>
-            <p className="text-white/30 text-[12px] font-body">
+            <p className="text-white/70 text-[12px] font-body">
               Theos Place · Sistema Administrativo
             </p>
           </div>
@@ -411,13 +411,13 @@ export default function DashboardPage() {
               <div className="font-bold text-navy text-base font-display font-extrabold">
                 Hoy · {formatShortDate(today.toISOString())}
               </div>
-              <div className="text-[12px] text-navy/40 font-body">Eventos programados</div>
+              <div className="text-[12px] text-navy/70 font-body">Eventos programados</div>
             </div>
             <Calendar size={18} className="text-navy/60" />
           </div>
 
           {todayEvents.length === 0 ? (
-            <div className="text-[13px] text-navy/40 py-4 text-center font-body">
+            <div className="text-[13px] text-navy/70 py-4 text-center font-body">
               No hay eventos programados para hoy
             </div>
           ) : (
@@ -452,7 +452,7 @@ export default function DashboardPage() {
               <div className="font-bold text-navy text-base font-display font-extrabold">
                 Check-ins de hoy
               </div>
-              <div className="text-[12px] text-navy/40 font-body">Asistencias registradas</div>
+              <div className="text-[12px] text-navy/70 font-body">Asistencias registradas</div>
             </div>
             <CheckCircle2 size={18} className="text-[#3DB97A]/60" />
           </div>
@@ -471,12 +471,12 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <span className="text-[13px] text-navy/80 truncate font-body">{c.name}</span>
                   </div>
-                  <span className="text-[11px] text-navy/40 shrink-0 font-body">{c.time}</span>
+                  <span className="text-[11px] text-navy/70 shrink-0 font-body">{c.time}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-[13px] text-navy/40 py-2 font-body">
+            <div className="text-[13px] text-navy/70 py-2 font-body">
               Aún no hay check-ins hoy
             </div>
           )}
@@ -640,7 +640,7 @@ export default function DashboardPage() {
             className="w-full flex items-center justify-between px-5 py-4 text-left"
           >
             <div className="flex items-center gap-2">
-              <Clock size={15} className="text-navy/40" />
+              <Clock size={15} className="text-navy/70" />
               <span className="font-bold text-navy font-display font-extrabold">
                 Actividad reciente
               </span>
@@ -668,7 +668,7 @@ export default function DashboardPage() {
                         ) : item.resource}
                       </p>
                     </div>
-                    <span className="text-[11px] text-navy/40 shrink-0 mt-0.5 font-body">
+                    <span className="text-[11px] text-navy/70 shrink-0 mt-0.5 font-body">
                       {item.time}
                     </span>
                   </div>

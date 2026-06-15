@@ -972,7 +972,7 @@ function MiembrosContent() {
           <p className="text-[13px] text-white font-body">
             Lista guardada
           </p>
-          <span className="text-white/20 mx-1">·</span>
+          <span className="text-white/40 mx-1">·</span>
           <button
             onClick={() => { setToast(''); router.push('/miembros/listas') }}
             className="text-[13px] text-coral hover:underline cursor-pointer font-body bg-transparent border-0"
