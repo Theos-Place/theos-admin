@@ -2358,61 +2358,6 @@ export type Database = {
           },
         ]
       }
-      relocation_requests: {
-        Row: {
-          created_at: string | null
-          from_group_id: string | null
-          id: string
-          member_id: string
-          reason: string | null
-          requested_at: string | null
-          status: string
-          study_plan_code: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          from_group_id?: string | null
-          id?: string
-          member_id: string
-          reason?: string | null
-          requested_at?: string | null
-          status?: string
-          study_plan_code?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          from_group_id?: string | null
-          id?: string
-          member_id?: string
-          reason?: string | null
-          requested_at?: string | null
-          status?: string
-          study_plan_code?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "relocation_requests_from_group_id_fkey"
-            columns: ["from_group_id"]
-            isOneToOne: false
-            referencedRelation: "study_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "relocation_requests_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "relocation_requests_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "vw_asistentes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       salary_changes: {
         Row: {
           approved_by: string | null
@@ -3283,54 +3228,6 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "study_groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      study_waitlist: {
-        Row: {
-          campaign_code: string | null
-          created_at: string | null
-          id: string
-          member_id: string
-          requested_at: string | null
-          schedule_preference: string | null
-          type: string
-          zone_preference: string | null
-        }
-        Insert: {
-          campaign_code?: string | null
-          created_at?: string | null
-          id?: string
-          member_id: string
-          requested_at?: string | null
-          schedule_preference?: string | null
-          type?: string
-          zone_preference?: string | null
-        }
-        Update: {
-          campaign_code?: string | null
-          created_at?: string | null
-          id?: string
-          member_id?: string
-          requested_at?: string | null
-          schedule_preference?: string | null
-          type?: string
-          zone_preference?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "study_waitlist_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "study_waitlist_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "vw_asistentes"
             referencedColumns: ["id"]
           },
         ]
