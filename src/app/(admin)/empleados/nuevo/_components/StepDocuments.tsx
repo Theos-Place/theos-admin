@@ -25,8 +25,8 @@ interface StepDocumentsProps {
   salary: string
   startDate: string
   salaryOutOfRange: boolean
-  uploadedDocs: Record<string, string>
-  onUpload: (key: string, fileName: string) => void
+  uploadedDocs: Record<string, File>
+  onUpload: (key: string, file: File) => void
   onRemoveDoc: (key: string) => void
   canFinish: boolean
 }
@@ -159,7 +159,7 @@ export function StepDocuments({
                     </p>
                     {uploaded && (
                       <p className="text-[11px] text-teal-deep font-mono truncate max-w-[160px]">
-                        {uploaded}
+                        {uploaded.name}
                       </p>
                     )}
                   </div>
@@ -181,7 +181,7 @@ export function StepDocuments({
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={e => {
                         const file = e.target.files?.[0]
-                        if (file) onUpload(doc.key, file.name)
+                        if (file) onUpload(doc.key, file)
                       }}
                     />
                     <button
@@ -236,7 +236,7 @@ export function StepDocuments({
                   </p>
                   {uploaded && (
                     <p className="text-[11px] text-teal-deep font-mono truncate max-w-[160px]">
-                      {uploaded}
+                      {uploaded.name}
                     </p>
                   )}
                 </div>
@@ -258,7 +258,7 @@ export function StepDocuments({
                     accept=".pdf,.jpg,.jpeg,.png"
                     onChange={e => {
                       const file = e.target.files?.[0]
-                      if (file) onUpload(doc.key, file.name)
+                      if (file) onUpload(doc.key, file)
                     }}
                   />
                   <button

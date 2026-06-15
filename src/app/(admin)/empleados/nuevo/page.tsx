@@ -27,6 +27,12 @@ const REQUIRED_DOCS: { key: DocKey }[] = [
   { key: 'cedula' },
   { key: 'ccss' },
 ]
+// Las keys del wizard → doc_type que acepta /api/employees/[id]/documents.
+const DOC_TYPE_MAP: Record<DocKey, string> = {
+  contrato: 'contrato',
+  cedula: 'identificacion',
+  ccss: 'seguro_social',
+}
 
 export default function NuevoEmpleadoPage() {
   const router = useRouter()
@@ -42,7 +48,9 @@ export default function NuevoEmpleadoPage() {
   const [startDate, setStartDate]       = useState('')
   const [notes, setNotes]               = useState('')
 
-  const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({})
+  // Archivos reales seleccionados (se suben tras crear el empleado, que es
+  // cuando existe el id para /api/employees/[id]/documents).
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, File>>({})
   const [done, setDone]                 = useState(false)
   const [saving, setSaving]             = useState(false)
   const [error, setError]               = useState<string | null>(null)
@@ -82,8 +90,8 @@ export default function NuevoEmpleadoPage() {
     if (pos) setContractType(pos.contract_type)
   }
 
-  function simulateUpload(key: string, fileName: string) {
-    setUploadedDocs(prev => ({ ...prev, [key]: fileName }))
+  function handleDocSelected(key: string, file: File) {
+    setUploadedDocs(prev => ({ ...prev, [key]: file }))
   }
 
   function removeDoc(key: string) {
@@ -114,7 +122,30 @@ export default function NuevoEmpleadoPage() {
         }),
       })
       if (!res.ok) throw new Error('No se pudo crear el empleado')
-      toast('Empleado creado', 'success')
+      const { id: employeeId } = (await res.json()) as { id: string }
+
+      // Subir los documentos reales al empleado recién creado. Si alguno falla,
+      // el empleado ya existe → avisamos pero no bloqueamos (se reintenta en edición).
+      const failed: string[] = []
+      for (const d of REQUIRED_DOCS) {
+        const file = uploadedDocs[d.key]
+        if (!file) continue
+        try {
+          const form = new FormData()
+          form.append('file', file)
+          form.append('doc_type', DOC_TYPE_MAP[d.key])
+          form.append('title', file.name)
+          const up = await fetch(`/api/employees/${employeeId}/documents`, { method: 'POST', body: form })
+          if (!up.ok) throw new Error()
+        } catch {
+          failed.push(d.key)
+        }
+      }
+      if (failed.length > 0) {
+        toast(`Empleado creado, pero fallaron ${failed.length} documento(s) — subilos desde su perfil`, 'error')
+      } else {
+        toast('Empleado creado con sus documentos', 'success')
+      }
       setDone(true)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
@@ -202,7 +233,7 @@ export default function NuevoEmpleadoPage() {
           startDate={startDate}
           salaryOutOfRange={salaryOutOfRange}
           uploadedDocs={uploadedDocs}
-          onUpload={simulateUpload}
+          onUpload={handleDocSelected}
           onRemoveDoc={removeDoc}
           canFinish={canFinish()}
         />
