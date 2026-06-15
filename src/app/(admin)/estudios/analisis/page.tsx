@@ -267,13 +267,13 @@ export default function AnalisisPage() {
                     <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Zona</th>
                     <th
                       title={tooltipA}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/70 font-display cursor-help underline decoration-dotted decoration-navy-light/50 underline-offset-2"
                     >
                       Por graduarse (A)
                     </th>
                     <th
                       title={tooltipB}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display cursor-help underline decoration-dotted decoration-navy-light/40 underline-offset-2"
+                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/70 font-display cursor-help underline decoration-dotted decoration-navy-light/50 underline-offset-2"
                     >
                       Elegibles (B)
                     </th>

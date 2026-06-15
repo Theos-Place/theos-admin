@@ -201,7 +201,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
                           className={cn(
                             'w-full text-left rounded px-1.5 py-0.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80 font-body',
                             colorClass,
-                            past && 'opacity-60 hover:opacity-80'
+                            past && 'opacity-75 hover:opacity-90'
                           )}
                         >
                           {ev.flyer_url ? '🖼 ' : ''}{ev.name}

@@ -186,7 +186,7 @@ export default function ConfiguracionPage() {
   }
 
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-  const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
+  const labelCls = 'text-[11px] text-navy-light/70 mb-1 block font-body'
 
   function SmtpCard({ config }: { config: ChannelConfig }) {
     const result = verifyResult[config.id]
