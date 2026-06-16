@@ -120,8 +120,11 @@ export default function ImportarPuestosPage() {
 
   function downloadTemplate() {
     generateCSV(
-      ['comité', 'ubicación', 'puesto', 'cantidad', 'descripción', 'categoría', 'funciones', 'perfil', 'expiración', 'destacado'],
-      [['Sede Oeste', 'Auditorio', 'Anfitrión de Bienvenida', '4', 'Recibe a los asistentes', 'N4 completado', 'Saludar, orientar', 'Persona extrovertida', '2026-12-31', 'no']],
+      ['comite', 'ubicacion', 'puesto', 'cantidad', 'descripcion', 'categoria', 'funciones', 'perfil', 'expiracion', 'destacado'],
+      [
+        ['PRO OESTE', 'Edificio Meridiano Escazú', 'Colaborador de Finanzas', '2', 'Administramos y cuidamos el dinero confiado a Theos', 'Discípulos 1', 'Agradeciendo a cada persona que dona, registrando aportes y conciliando cuentas', 'Honradas y ordenadas', '2026-07-07', 'TRUE'],
+        ['ANTARES', 'Plaza Antares, San Pedro', 'Anfitrión de Bienvenida', '4', 'Recibe y orienta a los asistentes', 'N4 completado', 'Saludar, orientar, repartir material', 'Persona extrovertida y servicial', '2026-12-31', 'FALSE'],
+      ],
       'plantilla-puestos',
     )
   }
@@ -203,13 +206,18 @@ export default function ImportarPuestosPage() {
             </div>
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
           </div>
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <button
               onClick={downloadTemplate}
               className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium border border-[var(--outline-variant)] text-navy font-body"
             >
               <Download size={15} /> Descargar plantilla CSV
             </button>
+            <p className="text-[11px] text-navy-light/70 font-body text-center max-w-md">
+              <strong>categoria</strong> = nivel de estudio requerido ·{' '}
+              <strong>expiracion</strong> = fecha YYYY-MM-DD ·{' '}
+              <strong>destacado</strong> = TRUE/FALSE. El comité se matchea por nombre contra los comités de la BD.
+            </p>
           </div>
         </div>
       )}

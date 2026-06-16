@@ -6,10 +6,12 @@ import { type Vacancy, type VacancyStatus } from '@/types/server'
 import type { DbVacancy } from '@/lib/supabase/queries/servers'
 import { toDomainVacancy } from '@/lib/servers/adapter'
 import { useOrg } from '@/lib/org'
+import { useAuth } from '@/hooks/useAuth'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
-import { Plus, Users, ChevronRight } from 'lucide-react'
+import { Plus, Users, ChevronRight, Upload } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { FilterChips } from '@/components/shared/FilterChips'
@@ -35,6 +37,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function VacantesPage() {
   const { areas: AREAS } = useOrg()
+  const { hasRole } = useAuth()
+  const canImport = hasRole(...SERVICE_ADMIN_ROLES)
   const [statusFilter, setStatusFilter] = useState<VacancyStatus | 'all'>('all')
   const [areaFilter, setAreaFilter] = useState('all')
 
@@ -87,13 +91,24 @@ export default function VacantesPage() {
             {published} publicadas · {draft} en borrador · {filled} ocupadas
           </p>
         </div>
-        <Link
-          href="/servidores/vacantes/nueva"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
-        >
-          <Plus size={14} />
-          Nuevo puesto de servicio
-        </Link>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {canImport && (
+            <Link
+              href="/servidores/admin/importar"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body"
+            >
+              <Upload size={14} />
+              Importar puestos
+            </Link>
+          )}
+          <Link
+            href="/servidores/vacantes/nueva"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
+          >
+            <Plus size={14} />
+            Nuevo puesto de servicio
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
