@@ -4,7 +4,8 @@ import { useState, useMemo, useRef } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
-import { EVENT_TYPES, type EventType } from '@/data/event-config'
+import { type EventType } from '@/data/event-config'
+import { useEventTypes } from '@/hooks/useEventTypes'
 import { StepSidebar } from './_components/StepSidebar'
 import { Step1Informacion } from './_components/Step1Informacion'
 import { Step2Programacion } from './_components/Step2Programacion'
@@ -134,9 +135,10 @@ export default function NuevoEventoPage() {
     return missing
   }
 
+  const eventTypes = useEventTypes() // catálogo real de la BD (solo activos)
   const selectedTypeObj = useMemo(
-    () => EVENT_TYPES.filter(t => t.is_active).find(t => t.id === form.event_type),
-    [form.event_type],
+    () => eventTypes.find(t => t.id === form.event_type),
+    [eventTypes, form.event_type],
   )
 
   const [submitting, setSubmitting] = useState(false)

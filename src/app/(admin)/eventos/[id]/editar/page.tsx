@@ -4,7 +4,8 @@ import { use, useState, useEffect } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
 import Link from 'next/link'
-import { EVENT_TYPES, type EventType } from '@/data/event-config'
+import { type EventType } from '@/data/event-config'
+import { useEventTypes } from '@/hooks/useEventTypes'
 import { useEvent } from '@/hooks/useEvents'
 import { useOrg } from '@/lib/org'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
@@ -20,8 +21,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   mic: Mic, tent: Tent, users: Users, star: Star, 'book-open': BookOpen,
   heart: Heart, 'map-pin': MapPin, music: Music, coffee: Coffee, zap: Zap,
 }
-
-const activeEventTypes = EVENT_TYPES.filter(t => t.is_active)
 
 type SubEventInput = { id: string; name: string; max_capacity: string }
 
@@ -137,6 +136,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const { allCommittees: ALL_COMMITTEES } = useOrg()
   const { id } = use(params)
   const { event, loading } = useEvent(id)
+  const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
 
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['info']))
   const [name, setName] = useState(event?.name ?? '')

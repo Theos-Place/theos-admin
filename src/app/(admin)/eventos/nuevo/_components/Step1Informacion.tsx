@@ -1,11 +1,10 @@
 import { useRef } from 'react'
 import { Mic, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { EVENT_TYPES, type EventType } from '@/data/event-config'
+import { type EventType } from '@/data/event-config'
+import { useEventTypes } from '@/hooks/useEventTypes'
 import { useOrg } from '@/lib/org'
 import { inputCls, ICON_MAP, FieldLabel } from './shared'
-
-const activeEventTypes = EVENT_TYPES.filter(t => t.is_active)
 
 interface Step1Props {
   name: string
@@ -41,6 +40,7 @@ export function Step1Informacion({
   onFlyerRemove,
 }: Step1Props) {
   const { allCommittees: ALL_COMMITTEES } = useOrg()
+  const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
   return (
     <div className="card py-5 px-6 w-full">
       <div className="card-title mb-5">Información principal</div>
