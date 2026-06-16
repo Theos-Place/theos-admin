@@ -3,7 +3,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { StudyType } from '@/data/mock-studies'
+import type { StudyType } from '@/types/study'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'

@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { GroupStatus } from '@/data/mock-studies'
+import type { GroupStatus } from '@/types/study'
 
 const STATUS_CONFIG: Record<GroupStatus, { label: string; className: string }> = {
   en_matricula: { label: 'En matrícula', className: 'bg-teal-soft/30 text-teal-deep' },

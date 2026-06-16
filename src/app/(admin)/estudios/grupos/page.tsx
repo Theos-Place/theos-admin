@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import type { GroupStatus, StudyGroup, StudyType } from '@/data/mock-studies'
+import type { GroupStatus, StudyGroup, StudyType } from '@/types/study'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import type { DbGroupListItem } from '@/lib/supabase/queries/studies'

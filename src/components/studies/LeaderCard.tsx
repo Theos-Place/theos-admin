@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { StudyLeader } from '@/data/mock-studies'
+import type { StudyLeader } from '@/types/study'
 import { StudyTypeBadge } from './StudyTypeBadge'
 import { CommitmentIcons } from './CommitmentIcons'
 import { sedeLabel } from '@/lib/sedes'
