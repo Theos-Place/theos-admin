@@ -10,7 +10,7 @@ export function conditionLabel(c: FilterCondition): string {
       return `Estudio: ${name}`
     }
     case 'attendance': {
-      const type = c.eventType || 'Asistencia'
+      const type = c.eventTypeName || c.eventType || 'Asistencia'
       if (!c.qty || c.qtyOp === 'any') return type
       const sym = c.qtyOp === 'gte' ? '≥' : c.qtyOp === 'lte' ? '≤' : '='
       return `${type} ${sym}${c.qty}×`

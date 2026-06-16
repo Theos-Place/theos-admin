@@ -8,6 +8,7 @@ import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
 import { useSedes } from '@/lib/sedes'
 import { useOrg } from '@/lib/org'
 import { useForms } from '@/hooks/useForms'
+import { useEventTypes } from '@/hooks/useEventTypes'
 import type { FormTemplate } from '@/types/forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
 
@@ -35,7 +36,6 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'profile', label: 'Perfil' },
 ]
 
-const EVENT_TYPES = ['Charla', 'Campamento', 'Actividad Social', 'United']
 const QTY_OPS: { value: QtyOperator; label: string }[] = [
   { value: 'any', label: 'Cualquiera' },
   { value: 'gte', label: 'Al menos' },
@@ -225,6 +225,7 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 
 function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
+  const eventTypes = useEventTypes() // catálogo real de la BD (id + nombre)
   const [eventType, setEventType]       = useState('')
   const [sedes, setSedes]               = useState<string[]>([])
   const [camp, setCamp]                 = useState('')
@@ -244,11 +245,11 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
         <Label>Tipo de evento</Label>
         <Sel value={eventType} onChange={setEventType}>
           <option value="">Cualquier evento</option>
-          {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          {eventTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </Sel>
       </div>
 
-      {eventType === 'Charla' && (
+      {eventType === 'charla' && (
         <div>
           <Label>Sede</Label>
           <div className="space-y-1.5">
@@ -277,7 +278,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
         </div>
       )}
 
-      {eventType === 'Campamento' && (
+      {eventType === 'campamento' && (
         <div>
           <Label>Nombre del campamento</Label>
           <input
@@ -328,7 +329,9 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
         onClick={() => {
           addCondition({
             group: 'attend', type: 'attendance',
-            eventType, sedes, camp, attendanceType, qtyOp,
+            eventType,
+            eventTypeName: eventTypes.find(t => t.id === eventType)?.name,
+            sedes, camp, attendanceType, qtyOp,
             qty: qtyOp !== 'any' ? qty : '',
             from, to,
           })

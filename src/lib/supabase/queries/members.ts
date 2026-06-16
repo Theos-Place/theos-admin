@@ -313,8 +313,44 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         break
       }
       case 'attendance': {
-        // Criterio vigente de asistencia activa (charlas mensuales).
-        res.include.push(new Set(await getActiveAttendanceMemberIds()))
+        // Sin refinamiento → criterio de asistencia activa (charlas mensuales).
+        const hasRefine = !!(c.eventType || c.from || c.to || (c.sedes && c.sedes.length) || c.camp || (c.qtyOp && c.qtyOp !== 'any'))
+        if (!hasRefine) {
+          res.include.push(new Set(await getActiveAttendanceMemberIds()))
+          break
+        }
+        // Cuenta check-ins por miembro filtrando por tipo de evento (id real de
+        // la BD), sede(s), nombre de campamento y rango de fechas; luego aplica el
+        // operador de cantidad. NOTA: attendanceType (participante/servidor) aún no
+        // se distingue — cuenta todos los check-ins del miembro.
+        const counts = new Map<string, number>()
+        for (let from = 0; ; from += 1000) {
+          let q = supabase
+            .from('event_checkins')
+            .select('member_id, events!inner(event_type, sede_id, title)')
+            .not('member_id', 'is', null)
+            .order('id')
+            .range(from, from + 999)
+          if (c.eventType) q = q.eq('events.event_type', c.eventType)
+          if (c.sedes && c.sedes.length) q = q.in('events.sede_id', c.sedes)
+          if (c.camp) { const s = c.camp.replace(/[%,()*\\]/g, ''); if (s) q = q.ilike('events.title', `%${s}%`) }
+          if (c.from) q = q.gte('checked_in_at', c.from)
+          if (c.to) q = q.lte('checked_in_at', `${c.to}T23:59:59.999Z`)
+          const { data, error } = await q
+          if (error) throw error
+          const rows = (data ?? []) as Array<{ member_id: string | null }>
+          for (const r of rows) if (r.member_id) counts.set(r.member_id, (counts.get(r.member_id) ?? 0) + 1)
+          if (rows.length < 1000) break
+        }
+        const n = parseInt(c.qty) || 0
+        const passes = (count: number) =>
+          c.qtyOp === 'gte' ? count >= n
+          : c.qtyOp === 'lte' ? count <= n
+          : c.qtyOp === 'eq' ? count === n
+          : count >= 1 // 'any'
+        const set = new Set<string>()
+        for (const [id, count] of counts) if (passes(count)) set.add(id)
+        res.include.push(set)
         break
       }
       case 'status': {
