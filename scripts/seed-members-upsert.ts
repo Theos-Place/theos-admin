@@ -137,6 +137,10 @@ async function main() {
           if (val === cur) continue
           const owner = emailOwner.get(val)
           if (owner && owner !== existing.id) { emailConflicts.push(id); continue } // email de otro → omitir
+        } else if (f === 'phone') {
+          // Comparar por dígitos: no reescribir un teléfono que ya tiene el
+          // mismo número pero con otro formato (espacios/guiones) en la BD.
+          if (normPhone(existing.phone) === val) continue
         } else if (str(existing[f]) === str(val)) {
           continue // sin cambio
         }
