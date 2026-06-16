@@ -8,7 +8,6 @@ import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { Tabs } from '@/components/shared/Tabs'
-import { STUDY_CATALOG } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
 import { ExpandableDescription } from '@/components/studies/ExpandableDescription'
@@ -82,7 +81,6 @@ function StudyCardCompact({ study }: { study: StudyType }) {
 
 function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor: string | null; canManage: boolean }) {
   const router = useRouter()
-  const cat = STUDY_CATALOG.find(s => s.code === study.code)
   // Color del código según su etapa (consistente con StudyTypeBadge).
   const codeColor = study.stage === 'niveles'
     ? 'var(--brand-navy)'
@@ -131,14 +129,14 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
       </div>
 
       {/* Dirigente encargado — solo para roles de coordinación/administración */}
-      {canManage && (mentor ?? cat?.mentor) && (
+      {canManage && mentor && (
         <div className="text-[11px] text-[var(--fg-muted)] mb-1.5 font-body">
-          Dirigente encargado: <strong>{mentor ?? cat?.mentor}</strong>
+          Dirigente encargado: <strong>{mentor}</strong>
         </div>
       )}
 
       {/* Descripción expandible */}
-      <ExpandableDescription text={cat?.description} maxLength={120} />
+      <ExpandableDescription text={study.description ?? undefined} maxLength={120} />
 
       {/* Compromisos */}
       {(study.req_donor || study.req_server || study.req_attendee) && (
@@ -147,14 +145,14 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
         </div>
       )}
 
-      {/* Nivel */}
-      {cat?.level && (
+      {/* Nivel (dificultad) */}
+      {study.difficulty && (
         <div className="mt-2">
           <span
             className="text-[10px] py-0.5 px-2 rounded-full font-semibold font-display"
-            style={{ background: getLevelColor(cat.level) }}
+            style={{ background: getLevelColor(study.difficulty) }}
           >
-            {cat.level}
+            {study.difficulty}
           </span>
         </div>
       )}
@@ -337,7 +335,7 @@ export default function PlanDeEstudiosPage() {
                   </td>
                   {canManage && (
                     <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
-                      {mentorName(s) ?? STUDY_CATALOG.find(c => c.code === s.code)?.mentor ?? (
+                      {mentorName(s) ?? (
                         <span className="text-navy-light/60">—</span>
                       )}
                     </td>

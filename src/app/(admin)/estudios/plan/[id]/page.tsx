@@ -8,7 +8,7 @@ import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
-import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
+import { STUDY_STAGES } from '@/data/study-catalog'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { sedeLabel } from '@/lib/sedes'
@@ -68,7 +68,6 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
   const { studyTypes, groups, refetch } = useStudies()
   const studyType = studyTypes.find(s => s.id === id)
-  const catalog   = STUDY_CATALOG.find(s => s.code === id)
 
   const [showArchive, setShowArchive] = useState(false)
   const [busy,        setBusy]        = useState(false)
@@ -118,7 +117,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
     )
   }
 
-  // Vista del plan: datos reales (studyType) + extras opcionales del catálogo (descripción, mentor…).
+  // Vista del plan: todo desde la BD (study_plans). Descripción/dificultad/
+  // compromisos/mentor migrados del catálogo a la BD (migrate-study-catalog).
   const view = {
     code: studyType.code,
     name: studyType.name,
@@ -131,10 +131,10 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
     req_server: studyType.req_server,
     req_attendee: studyType.req_attendee,
     requires_invitation: studyType.requires_invitation ?? false,
-    level: catalog?.level,
-    description: catalog?.description,
-    mentor: catalog?.mentor,
-    commitments: catalog?.commitments,
+    level: studyType.difficulty,
+    description: studyType.description,
+    mentor: studyType.mentor_name,
+    commitments: studyType.commitments,
   }
 
   const stageInfo = STUDY_STAGES[view.stage as keyof typeof STUDY_STAGES]
@@ -292,9 +292,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               <div className="st">Prerequisito</div>
               <div className="font-semibold text-[13px] font-body">
                 {view.prerequisite
-                  ? studyTypes.find(s => s.code === view.prerequisite)?.name
-                    || STUDY_CATALOG.find(s => s.code === view.prerequisite)?.name
-                    || view.prerequisite
+                  ? studyTypes.find(s => s.code === view.prerequisite)?.name || view.prerequisite
                   : 'Ninguno'}
               </div>
             </div>

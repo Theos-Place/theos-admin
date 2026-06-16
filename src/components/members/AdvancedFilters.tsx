@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
-import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
+import { STUDY_STAGES } from '@/data/study-catalog'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useSedes } from '@/lib/sedes'
 import { useOrg } from '@/lib/org'
 import { useForms } from '@/hooks/useForms'
@@ -166,6 +167,7 @@ function ConditionsList({
 // ─── panels ──────────────────────────────────────────────────────────────────
 
 function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const { studyTypes } = useStudyPlans() // catálogo real de la BD
   const [study, setStudy] = useState('')
   const [status, setStatus] = useState<StudyStatus>('completed')
   const [from, setFrom] = useState('')
@@ -179,7 +181,7 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
           <option value="">Seleccioná un estudio</option>
           {(Object.entries(STUDY_STAGES) as [string, { label: string }][]).map(([key, stage]) => (
             <optgroup key={key} label={stage.label}>
-              {STUDY_CATALOG.filter(s => s.stage === key).map(s => (
+              {studyTypes.filter(s => s.stage === key).map(s => (
                 <option key={s.code} value={s.code}>{s.code} — {s.name}</option>
               ))}
             </optgroup>
