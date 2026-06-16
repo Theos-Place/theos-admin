@@ -81,13 +81,6 @@ export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string
   capacitacion: { label: 'Capacitación', color: 'amber' },
 }
 
-export const EVENT_TYPES: EventTypeEntry[] = [
-  { id: 'charla',       name: 'Charla',           color: '#161440', icon: 'mic',       description: 'Servicio semanal en sede',     is_active: true },
-  { id: 'campamento',   name: 'Campamento',        color: '#70BDC2', icon: 'tent',      description: 'Retiro de varios días',        is_active: true },
-  { id: 'social',       name: 'Actividad Social',  color: '#EF5554', icon: 'users',     description: 'Actividades comunitarias',     is_active: true },
-  { id: 'capacitacion', name: 'Capacitación',      color: '#519DA2', icon: 'book-open', description: 'Formación de líderes',         is_active: true },
-]
-
 export const EVENT_STATUS_CONFIG: Record<EventStatus, { label: string; color: string }> = {
   upcoming:    { label: 'Próximo',      color: 'teal' },
   in_progress: { label: 'En curso',     color: 'coral' },
