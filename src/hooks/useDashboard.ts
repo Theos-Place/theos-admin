@@ -1,6 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { DashboardStats, DbActivity } from '@/lib/supabase/queries/dashboard'
-import type { ActivityItem } from '@/data/mock-dashboard'
+
+/** Item del feed de actividad reciente del dashboard (vista). */
+export type ActivityItem = {
+  id: string
+  actor: string
+  actor_initials: string
+  action: string
+  resource: string
+  resource_url: string
+  time: string
+  time_minutes: number
+}
 
 const ENTITY_LABEL: Record<string, { label: string; url: string }> = {
   members: { label: 'un miembro', url: '/miembros' },
