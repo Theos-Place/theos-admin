@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import type { Payment, Donation } from '@/data/mock-finance'
+import type { Payment, Donation } from '@/types/finance'
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
 

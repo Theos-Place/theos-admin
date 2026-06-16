@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { type Vacancy } from '@/data/mock-servers'
+import { type Vacancy } from '@/types/server'
 import { cn } from '@/lib/utils'
 
 type VacancyStatus = 'draft' | 'published' | 'filled' | 'closed'

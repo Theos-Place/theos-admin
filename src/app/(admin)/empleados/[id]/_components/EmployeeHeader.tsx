@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import type { Employee } from '@/data/mock-employees'
+import type { Employee } from '@/types/employee'
 import { cn } from '@/lib/utils'
 
 function calcularAntiguedad(startDate: string): string {

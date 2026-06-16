@@ -1,6 +1,6 @@
 'use client'
 
-import type { Employee } from '@/data/mock-employees'
+import type { Employee } from '@/types/employee'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryBadge } from '@/components/employees/SalaryBadge'
 import { AlertTriangle } from 'lucide-react'

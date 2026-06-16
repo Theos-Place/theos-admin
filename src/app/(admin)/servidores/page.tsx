@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { type CommitteeData } from '@/data/mock-servers'
+import { type CommitteeData } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { useOrg } from '@/lib/org'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'

@@ -1,6 +1,6 @@
 'use client'
 import { CreditCard, Smartphone, GraduationCap, Banknote } from 'lucide-react'
-import type { PaymentMethod } from '@/data/mock-finance'
+import type { PaymentMethod } from '@/types/finance'
 
 const METHOD_CONFIG: Record<PaymentMethod, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
   card:        { label: 'Tarjeta',   color: '#161440', bg: 'rgba(22,20,64,0.08)',    Icon: CreditCard    },

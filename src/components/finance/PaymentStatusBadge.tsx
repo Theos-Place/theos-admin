@@ -1,5 +1,5 @@
 'use client'
-import type { PaymentStatus } from '@/data/mock-finance'
+import type { PaymentStatus } from '@/types/finance'
 
 const STATUS_CONFIG: Record<PaymentStatus, { label: string; color: string; bg: string }> = {
   paid:           { label: 'Pagado',       color: '#3DB97A', bg: 'rgba(61,185,122,0.12)'  },

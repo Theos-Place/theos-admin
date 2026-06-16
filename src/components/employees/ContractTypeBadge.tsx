@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { ContractType } from '@/data/mock-employees'
+import type { ContractType } from '@/types/employee'
 
 interface ContractTypeBadgeProps {
   type: ContractType

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { SalaryChange } from '@/data/mock-employees'
+import type { SalaryChange } from '@/types/employee'
 
 interface SalaryTimelineProps {
   history: SalaryChange[]

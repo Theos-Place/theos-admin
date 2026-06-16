@@ -2,7 +2,7 @@
 
 import { Plus, Check, Target } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { type CommitteeGoal } from '@/data/mock-servers'
+import { type CommitteeGoal } from '@/types/server'
 import { cn } from '@/lib/utils'
 
 type Props = {

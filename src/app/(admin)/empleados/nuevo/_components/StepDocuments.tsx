@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { AlertTriangle, Check, Upload, X, FileText, CreditCard, ShieldCheck, File } from 'lucide-react'
 import { type MemberHit } from '@/components/shared/MemberCombobox'
-import { type ContractType } from '@/data/mock-employees'
+import { type ContractType } from '@/types/employee'
 import { type PaidPosition } from '@/types/employee'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { cn } from '@/lib/utils'

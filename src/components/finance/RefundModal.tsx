@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { AlertTriangle, Info } from 'lucide-react'
-import type { PaymentMethod } from '@/data/mock-finance'
+import type { PaymentMethod } from '@/types/finance'
 import { Modal } from '@/components/shared/Modal'
 import { AmountDisplay } from './AmountDisplay'
 

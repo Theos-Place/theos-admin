@@ -1,5 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
-import { type ContractType } from '@/data/mock-employees'
+import { type ContractType } from '@/types/employee'
 import { type PaidPosition } from '@/types/employee'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryBadge } from '@/components/employees/SalaryBadge'

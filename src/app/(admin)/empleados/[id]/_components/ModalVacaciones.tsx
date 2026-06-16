@@ -1,6 +1,6 @@
 'use client'
 
-import type { VacationRecordType } from '@/data/mock-employees'
+import type { VacationRecordType } from '@/types/employee'
 import { cn } from '@/lib/utils'
 import { Check, Clock } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
