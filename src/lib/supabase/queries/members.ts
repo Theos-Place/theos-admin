@@ -319,28 +319,54 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
           res.include.push(new Set(await getActiveAttendanceMemberIds()))
           break
         }
-        // Cuenta check-ins por miembro filtrando por tipo de evento (id real de
+        // Cuenta asistencias por miembro filtrando por tipo de evento (id real de
         // la BD), sede(s), nombre de campamento y rango de fechas; luego aplica el
-        // operador de cantidad. NOTA: attendanceType (participante/servidor) aún no
-        // se distingue — cuenta todos los check-ins del miembro.
-        const counts = new Map<string, number>()
-        for (let from = 0; ; from += 1000) {
-          let q = supabase
-            .from('event_checkins')
-            .select('member_id, events!inner(event_type, sede_id, title)')
-            .not('member_id', 'is', null)
-            .order('id')
-            .range(from, from + 999)
+        // operador de cantidad. Dos fuentes según attendanceType:
+        //   participante → event_checkins (rango sobre checked_in_at)
+        //   servidor     → event_volunteers (rango sobre la fecha del evento)
+        //   cualquiera   → suma de ambas
+        // event_volunteers hoy está vacía, pero queda previsto para cuando se use.
+        const campLike = c.camp ? c.camp.replace(/[%,()*\\]/g, '') : ''
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const applyEventFilters = (q: any) => {
           if (c.eventType) q = q.eq('events.event_type', c.eventType)
           if (c.sedes && c.sedes.length) q = q.in('events.sede_id', c.sedes)
-          if (c.camp) { const s = c.camp.replace(/[%,()*\\]/g, ''); if (s) q = q.ilike('events.title', `%${s}%`) }
-          if (c.from) q = q.gte('checked_in_at', c.from)
-          if (c.to) q = q.lte('checked_in_at', `${c.to}T23:59:59.999Z`)
-          const { data, error } = await q
-          if (error) throw error
-          const rows = (data ?? []) as Array<{ member_id: string | null }>
-          for (const r of rows) if (r.member_id) counts.set(r.member_id, (counts.get(r.member_id) ?? 0) + 1)
-          if (rows.length < 1000) break
+          if (campLike) q = q.ilike('events.title', `%${campLike}%`)
+          return q
+        }
+        const countFrom = async (
+          table: 'event_checkins' | 'event_volunteers',
+          dateField: string, // columna (o ruta embebida) para el rango de fechas
+        ): Promise<Map<string, number>> => {
+          const m = new Map<string, number>()
+          for (let from = 0; ; from += 1000) {
+            let q = supabase
+              .from(table)
+              .select('member_id, events!inner(event_type, sede_id, title, starts_at)')
+              .not('member_id', 'is', null)
+              .order('id')
+              .range(from, from + 999)
+            q = applyEventFilters(q)
+            if (c.from) q = q.gte(dateField, c.from)
+            if (c.to) q = q.lte(dateField, `${c.to}T23:59:59.999Z`)
+            const { data, error } = await q
+            if (error) throw error
+            const rows = (data ?? []) as Array<{ member_id: string | null }>
+            for (const r of rows) if (r.member_id) m.set(r.member_id, (m.get(r.member_id) ?? 0) + 1)
+            if (rows.length < 1000) break
+          }
+          return m
+        }
+
+        let counts: Map<string, number>
+        if (c.attendanceType === 'server') {
+          counts = await countFrom('event_volunteers', 'events.starts_at')
+        } else if (c.attendanceType === 'participant') {
+          counts = await countFrom('event_checkins', 'checked_in_at')
+        } else {
+          counts = await countFrom('event_checkins', 'checked_in_at')
+          const serv = await countFrom('event_volunteers', 'events.starts_at')
+          for (const [id, n2] of serv) counts.set(id, (counts.get(id) ?? 0) + n2)
         }
         const n = parseInt(c.qty) || 0
         const passes = (count: number) =>
