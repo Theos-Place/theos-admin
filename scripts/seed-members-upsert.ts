@@ -112,6 +112,7 @@ async function main() {
   const claimedEmails = new Set<string>() // emails reclamados por inserts en esta corrida
   const fieldChanges: Record<ProfileField, number> = { first_name: 0, last_name: 0, email: 0, phone: 0, birth_date: 0, gender: 0 }
   let unchanged = 0, skippedNoId = 0
+  let emailFill = 0, emailReplace = 0 // desglose de cambios de email en updates
 
   for (const row of excelRows) {
     const id = extId(row['Individual ID'])
@@ -137,6 +138,7 @@ async function main() {
           if (val === cur) continue
           const owner = emailOwner.get(val)
           if (owner && owner !== existing.id) { emailConflicts.push(id); continue } // email de otro → omitir
+          if (!cur) emailFill++; else emailReplace++ // desglose: rellenar vs reemplazar
         } else if (f === 'phone') {
           // Comparar por dígitos: no reescribir un teléfono que ya tiene el
           // mismo número pero con otro formato (espacios/guiones) en la BD.
@@ -177,6 +179,7 @@ async function main() {
   console.log(`  Conflictos email:${emailConflicts.length.toLocaleString('es-CR')}`)
   if (skippedNoId) console.log(`  Filas sin Individual ID (saltadas): ${skippedNoId}`)
   console.log(`  Campos a cambiar (updates): ${PROFILE_FIELDS.map(f => `${f}=${fieldChanges[f]}`).join('  ')}`)
+  console.log(`  Desglose email (updates): rellenar nulo=${emailFill}  reemplazar existente=${emailReplace}`)
 
   if (emailConflicts.length > 0) {
     mkdirSync(new URL('./output/', import.meta.url), { recursive: true })
