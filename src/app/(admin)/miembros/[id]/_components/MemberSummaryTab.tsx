@@ -1,5 +1,7 @@
 import { MapPin, BookOpen, Users, Star } from 'lucide-react'
-import { STUDY_CATALOG, STUDY_STAGES } from '@/data/study-catalog'
+import { STUDY_STAGES } from '@/data/study-catalog'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
+import type { StudyType } from '@/types/study'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
@@ -24,17 +26,17 @@ function studyStageColor(stage: string): string {
   return 'bg-coral-soft/20 text-coral'
 }
 
-/** Etapa (del catálogo) de un estudio por código. */
-function stageOf(code: string): string {
-  return STUDY_CATALOG.find(s => s.code === code)?.stage ?? 'intermedia'
+/** Etapa de un estudio por código (catálogo real de la BD). */
+function stageOf(code: string, types: StudyType[]): string {
+  return types.find(s => s.code === code)?.stage ?? 'intermedia'
 }
 
 type Props = {
   member: Member
-  currentStudyEntry: (typeof STUDY_CATALOG)[number] | null | undefined
+  currentStudyEntry: StudyType | null | undefined
   currentWeek: number
   activeService: Member['service_history'][number] | undefined
-  lastStudyEntry: (typeof STUDY_CATALOG)[number] | null | undefined
+  lastStudyEntry: StudyType | null | undefined
 }
 
 export function MemberSummaryTab({
@@ -44,6 +46,7 @@ export function MemberSummaryTab({
   activeService,
   lastStudyEntry,
 }: Props) {
+  const { studyTypes } = useStudyPlans()
   // Estudios actualmente en curso (inscripciones con status 'enrolled') más
   // los grupos activos que la persona dirige (con tag Dirigente).
   const enrolledStudies = (member.study_history ?? []).filter(s => s.status === 'enrolled')
@@ -82,14 +85,14 @@ export function MemberSummaryTab({
           {enrolledStudies.length > 0 || ledGroups.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {enrolledStudies.map(s => (
-                <span key={s.code + (s.date ?? '')} className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', studyStageColor(stageOf(s.code)))}>
+                <span key={s.code + (s.date ?? '')} className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', studyStageColor(stageOf(s.code, studyTypes)))}>
                   {s.name || s.code}
                 </span>
               ))}
               {ledGroups.map(g => (
                 <span
                   key={g.group_id}
-                  className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-body', g.plan_code ? studyStageColor(stageOf(g.plan_code)) : 'bg-navy/10 text-navy')}
+                  className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-body', g.plan_code ? studyStageColor(stageOf(g.plan_code, studyTypes)) : 'bg-navy/10 text-navy')}
                   title={g.group_name}
                 >
                   <Star size={10} strokeWidth={2} aria-hidden />
@@ -168,7 +171,7 @@ export function MemberSummaryTab({
           </h3>
           <div className="flex flex-wrap gap-1.5">
             {member.completed_studies.map((code, i) => {
-              const entry = STUDY_CATALOG.find(s => s.code === code || s.name === code)
+              const entry = studyTypes.find(s => s.code === code || s.name === code)
               return (
                 <span
                   key={code + i}

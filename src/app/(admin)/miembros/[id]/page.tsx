@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { useMember } from '@/hooks/useMember'
 import { useStudies } from '@/hooks/useStudies'
-import { STUDY_CATALOG } from '@/data/study-catalog'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { MemberHeader } from './_components/MemberHeader'
@@ -55,6 +55,7 @@ export default function MiembroDetailPage() {
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : ''
 
   const { member, loading, notFound: isNotFound, error, refetch } = useMember(id || undefined)
+  const { studyTypes } = useStudyPlans()
 
   const [activeTab, setActiveTab] = useState('resumen')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -78,7 +79,7 @@ export default function MiembroDetailPage() {
 
   // Derived (safe-against-null para no romper los hooks de abajo mientras carga)
   const currentStudyEntry = member?.current_study
-    ? STUDY_CATALOG.find(s => s.code === member.current_study)
+    ? studyTypes.find(s => s.code === member.current_study)
     : null
 
   const currentWeek = member?.current_study_week ?? 0
@@ -86,7 +87,7 @@ export default function MiembroDetailPage() {
   const activeService = member?.service_history.find(s => s.status === 'activo')
 
   const lastStudyCode = member?.completed_studies[member.completed_studies.length - 1]
-  const lastStudyEntry = lastStudyCode ? STUDY_CATALOG.find(s => s.code === lastStudyCode) : null
+  const lastStudyEntry = lastStudyCode ? studyTypes.find(s => s.code === lastStudyCode) : null
 
   const hasFinanceRole = true // demo
 
@@ -102,7 +103,7 @@ export default function MiembroDetailPage() {
     }
     return member.study_history.map(s => ({
       code: s.code,
-      name: s.name || STUDY_CATALOG.find(x => x.code === s.code)?.name || s.code,
+      name: s.name || studyTypes.find(x => x.code === s.code)?.name || s.code,
       startYear: s.year ?? 0,
       startLabel: fmt(s.date, s.year),
       duration: s.weeks ? `${s.weeks} sem.` : '—',

@@ -12,7 +12,7 @@ import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
-import { STUDY_CATALOG } from '@/data/study-catalog'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { MATRICULA_MIN_CHARLAS, type EligibilityResult, type EligibleGroup, type MemberStudyProfile } from '@/lib/studies/eligibility'
 import { formatDateLong } from '@/lib/format'
 
@@ -45,6 +45,7 @@ export default function MatriculaPage() {
   const router = useRouter()
 
   const { user } = useAuth()
+  const { studyTypes } = useStudyPlans()
   const userRoles = user?.roles ?? []
   const isAdminView = userRoles.some(r => ['admin', 'direccion'].includes(r))
 
@@ -115,8 +116,8 @@ export default function MatriculaPage() {
     .filter(g => g.items.length > 0)
 
   // Métricas del perfil (datos reales)
-  const completedStudies = STUDY_CATALOG.filter(s => profile?.completed_codes.includes(s.code))
-  const currentStudyInfo = STUDY_CATALOG.find(s => s.code === profile?.current_code)
+  const completedStudies = studyTypes.filter(s => profile?.completed_codes.includes(s.code))
+  const currentStudyInfo = studyTypes.find(s => s.code === profile?.current_code)
   const isDonor = profile?.is_donor ?? false
   const isActiveServer = profile?.is_server ?? false
   const charlaCount = profile?.charla_count ?? 0

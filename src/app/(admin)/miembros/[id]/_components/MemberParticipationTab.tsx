@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Lock, ChevronDown, ChevronUp, HeartHandshake } from 'lucide-react'
-import { STUDY_CATALOG } from '@/data/study-catalog'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { cn } from '@/lib/utils'
@@ -201,6 +201,7 @@ export function MemberParticipationTab({
   donationsCount,
   onAddStudy,
 }: Props) {
+  const { studyTypes } = useStudyPlans()
   return (
     <div className="space-y-3">
       {/* Solicitudes de estudios y finanzas — disponibles para cualquier rol */}
@@ -250,7 +251,7 @@ export function MemberParticipationTab({
             </thead>
             <tbody>
               {estudiosTable.sorted.slice(0, visibleEstudios).map((row, i) => {
-                const entry = STUDY_CATALOG.find(s => s.code === row.code)
+                const entry = studyTypes.find(s => s.code === row.code)
                 return (
                   <tr
                     key={row.code}
