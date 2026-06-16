@@ -48,7 +48,13 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
     let cancelled = false
     setLoading(true); setError(null)
     fetch(`/api/members?${key}`)
-      .then(r => { if (!r.ok) throw new Error('Error cargando miembros'); return r.json() })
+      .then(async r => {
+        if (!r.ok) {
+          const detail = await r.json().catch(() => null) as { error?: string } | null
+          throw new Error(`No se pudieron cargar los miembros (${r.status}${detail?.error ? `: ${detail.error}` : ''}). Probá ajustar los filtros.`)
+        }
+        return r.json()
+      })
       .then((d: { members: DbMemberEnriched[]; total: number }) => {
         if (cancelled) return
         setMembers((d.members ?? []).map(toDomainMember))

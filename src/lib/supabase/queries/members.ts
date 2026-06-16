@@ -457,7 +457,7 @@ export async function getMembersByIds(allIds: string[], chunk = 100): Promise<Db
  *  select('id'). Sirve para guardar listas / acciones sobre "todos los resultados". */
 export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: string[]; total: number }> {
   const supabase = createAdminClient()
-  const { search, is_donor, is_server, active_attendance, conditions } = filters
+  const { search, is_donor, is_server, active_attendance, conditions, province, gender, ids: explicitIds } = filters
   let { is_active = true } = filters
 
   // Filtros avanzados → sets de inclusión/exclusión (AND entre condiciones).
@@ -467,11 +467,17 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
     if (resolution.isActiveOverride !== undefined) is_active = resolution.isActiveOverride
   }
 
-  let idFilter: string[] | null = null
+  // Sets que se intersectan EN MEMORIA tras el escaneo de ids — nunca como un
+  // .in('id', [...]) en la query (un array de cientos/miles revienta la URL).
+  const intersectSets: Array<Set<string>> = []
   if (active_attendance) {
-    const ids = await getActiveAttendanceMemberIds()
-    if (ids.length === 0) return { ids: [], total: 0 }
-    idFilter = ids
+    const aids = await getActiveAttendanceMemberIds()
+    if (aids.length === 0) return { ids: [], total: 0 }
+    intersectSets.push(new Set(aids))
+  }
+  if (explicitIds) {
+    if (explicitIds.length === 0) return { ids: [], total: 0 }
+    intersectSets.push(new Set(explicitIds))
   }
 
   // PostgREST corta cada respuesta en ~1000 filas (db-max-rows), así que un
@@ -493,7 +499,8 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
     }
     if (is_donor !== undefined) query = query.eq('is_donor', is_donor)
     if (is_server) query = query.eq('volunteers.status', 'active')
-    if (idFilter) query = query.in('id', idFilter)
+    if (province) query = query.eq('province', province)
+    if (gender) query = query.eq('gender', gender)
 
     const { data, error } = await query
     if (error) throw error
@@ -503,6 +510,7 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
   }
 
   let finalIds = Array.from(ids)
+  for (const set of intersectSets) finalIds = finalIds.filter(id => set.has(id))
   if (resolution) {
     for (const inc of resolution.include) finalIds = finalIds.filter(id => inc.has(id))
     for (const exc of resolution.exclude) finalIds = finalIds.filter(id => !exc.has(id))
@@ -598,10 +606,12 @@ export async function revokeMemberRole(memberId: string, role: string): Promise<
 /** Lista paginada de miembros con datos relacionados ligeros para el list view.
  *  Incluye: sede, roles activos, flag is_server, estudio actual/completados, servicio activo. */
 export async function getMembers(filters: MemberFilters = {}): Promise<{ members: DbMemberEnriched[]; total: number }> {
-  // Con filtros avanzados: resolver primero los ids (server-side) y traer solo
-  // la página pedida por ids — así el conteo y la paginación reflejan las
-  // condiciones y nunca pasamos miles de uuids en una URL.
-  if (filters.conditions?.length) {
+  // Con filtros avanzados o asistencia activa: resolver primero los ids
+  // (server-side) y traer solo la página pedida por ids — así el conteo y la
+  // paginación reflejan los filtros y nunca pasamos miles de uuids en un .in()
+  // (URL gigante → "fetch failed"). El criterio de asistencia puede devolver
+  // cientos/miles de ids, por eso también entra por acá.
+  if (filters.conditions?.length || filters.active_attendance) {
     const { ids: allIds, total } = await getMemberIds(filters)
     const page = filters.page ?? 1
     const pageSize = filters.pageSize ?? 50
@@ -618,24 +628,19 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     is_active = true,
     is_donor,
     is_server,
-    active_attendance,
     gender,
     ids,
     page = 1,
     pageSize = 50,
   } = filters
 
-  // active_attendance: lista de member_ids (hoy pocos/0; a escala conviene un RPC).
+  // ids explícitos: solo una página ya resuelta (p. ej. desde getMembersByIds,
+  // chunks ≤100). active_attendance/conditions se resuelven y paginan arriba
+  // (vía getMemberIds) para no pasar miles de ids en un .in() → URL gigante.
   let idFilter: string[] | null = null
-  if (active_attendance) {
-    const aids = await getActiveAttendanceMemberIds()
-    if (aids.length === 0) return { members: [], total: 0 } // sin datos → 0 resultados, sin query
-    idFilter = aids
-  }
-  // ids explícitos (p. ej. integrantes de una lista guardada).
   if (ids) {
     if (ids.length === 0) return { members: [], total: 0 }
-    idFilter = idFilter ? idFilter.filter(x => ids.includes(x)) : ids
+    idFilter = ids
   }
 
   // is_server: inner join a volunteers activos (evita listas de ids enormes en la URL).
