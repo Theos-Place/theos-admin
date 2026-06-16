@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { type CommunicationStatus } from '@/data/mock-communications'
+import { type CommunicationStatus } from '@/data/communication-utils'
 import { useCommunications } from '@/hooks/useCommunications'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'

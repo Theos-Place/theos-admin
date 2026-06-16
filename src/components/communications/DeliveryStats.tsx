@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { CheckCircle2, XCircle, Users, TrendingUp } from 'lucide-react'
-import type { CommunicationMessage } from '@/data/mock-communications'
+import type { CommunicationMessage } from '@/data/communication-utils'
 
 interface Props {
   message: CommunicationMessage

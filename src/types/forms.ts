@@ -1,5 +1,5 @@
 // Form builder / template domain types.
-// Imported by src/data/mock-forms.ts and form components.
+// Imported by src/data/form-config.ts and form components.
 
 /** Legacy field shape used by the old MockForm type */
 export type FormField = {

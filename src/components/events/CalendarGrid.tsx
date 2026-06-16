@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { type MockEvent, EVENT_TYPE_CONFIG } from '@/data/mock-events'
+import { type MockEvent, EVENT_TYPE_CONFIG } from '@/data/event-config'
 import { isPastEvent } from '@/lib/events/expand-recurrence'
 import { Popover } from '@/components/shared/Popover'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'

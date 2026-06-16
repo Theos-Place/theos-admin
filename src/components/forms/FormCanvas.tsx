@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { GripVertical, Copy, Trash2, Pencil, Zap, FileText, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { FormFieldNew } from '@/data/mock-forms'
-import { PERSONAL_DATA_FIELDS } from '@/data/mock-forms'
+import type { FormFieldNew } from '@/data/form-config'
+import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { FieldTypeIcon } from './FieldTypeIcon'
 import { FieldPreview } from './FieldPreview'
 

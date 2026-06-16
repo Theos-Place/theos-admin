@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { EVENT_STATUS_CONFIG, type EventStatus } from '@/data/mock-events'
+import { EVENT_STATUS_CONFIG, type EventStatus } from '@/data/event-config'
 
 interface EventStatusBadgeProps {
   status: EventStatus

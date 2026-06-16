@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Mic, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { EVENT_TYPES, type EventType } from '@/data/mock-events'
+import { EVENT_TYPES, type EventType } from '@/data/event-config'
 import { useOrg } from '@/lib/org'
 import { inputCls, ICON_MAP, FieldLabel } from './shared'
 

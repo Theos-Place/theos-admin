@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import type { RoleId } from '@/lib/auth/roles'
-import { type EventType } from '@/data/mock-events'
+import { type EventType } from '@/data/event-config'
 import { useEvents } from '@/hooks/useEvents'
 import { useDashboard } from '@/hooks/useDashboard'
 

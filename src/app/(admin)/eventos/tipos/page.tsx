@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { type EventTypeEntry } from '@/data/mock-events'
+import { type EventTypeEntry } from '@/data/event-config'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import {

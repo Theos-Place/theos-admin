@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { Plus, X, GripVertical, Trash2, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { FormFieldNew, LogicRule, LogicCondition, ConditionOperator } from '@/data/mock-forms'
-import { PERSONAL_DATA_FIELDS } from '@/data/mock-forms'
+import type { FormFieldNew, LogicRule, LogicCondition, ConditionOperator } from '@/data/form-config'
+import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 

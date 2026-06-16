@@ -8,7 +8,7 @@ import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
 import { Repeat } from 'lucide-react'
-import type { MockEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/event-config'
 
 type Event = MockEvent
 

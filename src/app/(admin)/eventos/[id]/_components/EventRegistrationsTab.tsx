@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Download, Send, UserPlus, Search, Trash2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
-import type { MockEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
 
 type Event = MockEvent

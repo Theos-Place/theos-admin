@@ -1,6 +1,6 @@
 import { MessageCircle, Mail, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { CommunicationChannel } from '@/data/mock-communications'
+import type { CommunicationChannel } from '@/data/communication-utils'
 
 interface Props {
   channel: CommunicationChannel

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { type EventType } from '@/data/mock-events'
+import { type EventType } from '@/data/event-config'
 import { inputCls, Toggle, SummaryRow, FieldLabel } from './shared'
 
 type SubEventInput = { id: string; name: string; max_capacity: string }

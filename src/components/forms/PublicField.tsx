@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { FormFieldNew } from '@/data/mock-forms'
+import type { FormFieldNew } from '@/data/form-config'
 
 interface PublicFieldProps {
   field: FormFieldNew

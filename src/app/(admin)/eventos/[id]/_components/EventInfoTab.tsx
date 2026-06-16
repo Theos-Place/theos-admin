@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { Image as ImageIcon } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { cn } from '@/lib/utils'
-import type { MockEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/event-config'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
 
 type Event = MockEvent

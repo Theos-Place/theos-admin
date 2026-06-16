@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { getDeliveryRate, type CommunicationChannel, type CommunicationStatus } from '@/data/mock-communications'
+import { getDeliveryRate, type CommunicationChannel, type CommunicationStatus } from '@/data/communication-utils'
 import { useCommunications } from '@/hooks/useCommunications'
 import { useForms } from '@/hooks/useForms'
 import { useClientPagination } from '@/hooks/useClientPagination'

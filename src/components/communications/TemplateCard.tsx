@@ -3,7 +3,7 @@
 import { Copy, Edit, Trash2, Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChannelBadge } from './ChannelBadge'
-import type { MessageTemplate } from '@/data/mock-communications'
+import type { MessageTemplate } from '@/data/communication-utils'
 
 const CATEGORY_LABELS: Record<MessageTemplate['category'], string> = {
   bienvenida:  'Bienvenida',

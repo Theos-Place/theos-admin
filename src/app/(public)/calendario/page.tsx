@@ -1,7 +1,7 @@
 'use client'
 import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import type { MockEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/event-config'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { Modal } from '@/components/shared/Modal'

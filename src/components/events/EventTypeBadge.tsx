@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { EVENT_TYPE_CONFIG, type EventType } from '@/data/mock-events'
+import { EVENT_TYPE_CONFIG, type EventType } from '@/data/event-config'
 
 interface EventTypeBadgeProps {
   type: EventType

@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { type AttendanceType } from '@/data/mock-events'
+import { type AttendanceType } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
 
 interface CheckinCardProps {

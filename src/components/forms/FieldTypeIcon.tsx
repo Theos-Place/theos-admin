@@ -13,7 +13,7 @@ import {
   User,
   type LucideIcon,
 } from 'lucide-react'
-import type { FieldType } from '@/data/mock-forms'
+import type { FieldType } from '@/data/form-config'
 
 const ICON_MAP: Record<FieldType, LucideIcon> = {
   text:          AlignLeft,

@@ -2,7 +2,7 @@ import { QrCode } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
-import type { MockEvent } from '@/data/mock-events'
+import type { MockEvent } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
 
 type Event = MockEvent
