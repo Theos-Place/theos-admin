@@ -87,10 +87,28 @@ export async function getStudyPlans(): Promise<DbStudyPlan[]> {
 export type StudyDashboardStats = {
   activos:   { niveles: { grupos: number; estudiantes: number }; capacitaciones: { grupos: number; estudiantes: number } }
   historico: { niveles: { grupos: number; estudiantes: number }; capacitaciones: { grupos: number; estudiantes: number } }
+  /** Campañas (histórico): grupos finalizados + total de estudiantes (incluye
+   *  inscripciones directas sin grupo del histórico importado). */
+  campanas: { grupos: number; estudiantes: number }
 }
 
 export async function getStudyDashboardStats(): Promise<StudyDashboardStats> {
   const supabase = createAdminClient()
+  // Campañas: grupos finalizados + estudiantes distintos (vía grupo o plan directo).
+  const campanas = await (async () => {
+    const { data: planRows } = await supabase.from('study_plans').select('id').eq('level', 'campanas')
+    const planIds = ((planRows ?? []) as Array<{ id: string }>).map(p => p.id)
+    if (planIds.length === 0) return { grupos: 0, estudiantes: 0 }
+    const [{ count: grupos }, viaGroup, direct] = await Promise.all([
+      supabase.from('study_groups').select('id', { count: 'exact', head: true }).in('plan_id', planIds).eq('status', 'finalizado'),
+      supabase.from('study_enrollments').select('member_id, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)').in('group.plan_id', planIds),
+      supabase.from('study_enrollments').select('member_id').in('plan_id', planIds),
+    ])
+    const members = new Set<string>()
+    for (const r of ((viaGroup.data ?? []) as Array<{ member_id: string }>)) members.add(r.member_id)
+    for (const r of ((direct.data ?? []) as Array<{ member_id: string }>)) members.add(r.member_id)
+    return { grupos: grupos ?? 0, estudiantes: members.size }
+  })()
   // Un solo round-trip vía RPC SQL: agrupa grupos por estado+categoría y suma
   // inscripciones del estado relevante (enrolled para en_curso, completed para
   // finalizado). count(DISTINCT g) evita inflar el grupo por sus inscripciones.
@@ -101,6 +119,7 @@ export async function getStudyDashboardStats(): Promise<StudyDashboardStats> {
   const stats: StudyDashboardStats = {
     activos:   { niveles: { ...empty }, capacitaciones: { ...empty } },
     historico: { niveles: { ...empty }, capacitaciones: { ...empty } },
+    campanas,
   }
   for (const r of (data ?? []) as Array<{ estado: string; categoria: string; grupos: number; estudiantes: number }>) {
     const bucket = r.estado === 'en_curso' ? stats.activos : r.estado === 'finalizado' ? stats.historico : null

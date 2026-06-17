@@ -6,13 +6,14 @@ import { useStudies } from '@/hooks/useStudies'
 import {
   Users, Clock, AlertTriangle, TrendingUp,
   BookOpen, UserCheck, BarChart2, ListChecks, LayoutList, Inbox,
-  GraduationCap, History,
+  GraduationCap, History, Megaphone,
 } from 'lucide-react'
 import type { StudyDashboardStats } from '@/lib/supabase/queries/studies'
 
 const EMPTY_STATS: StudyDashboardStats = {
   activos:   { niveles: { grupos: 0, estudiantes: 0 }, capacitaciones: { grupos: 0, estudiantes: 0 } },
   historico: { niveles: { grupos: 0, estudiantes: 0 }, capacitaciones: { grupos: 0, estudiantes: 0 } },
+  campanas:  { grupos: 0, estudiantes: 0 },
 }
 
 const QUICK_ACCESS = [
@@ -154,6 +155,25 @@ export default function EstudiosPage() {
                 hint="Etapa Inicial + Intermedia"
                 grupos={stats.historico.capacitaciones.grupos}
                 estudiantes={stats.historico.capacitaciones.estudiantes}
+                muted
+              />
+            </div>
+          </section>
+
+          {/* Campañas (histórico) */}
+          <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
+              <Megaphone size={16} className="text-purple-700" />
+              <h2 className="text-sm font-semibold text-navy font-display">Campañas</h2>
+              <span className="text-[11px] text-navy-light/60 font-body">histórico</span>
+            </div>
+            <div className="grid sm:grid-cols-1">
+              <StatRow
+                icon={Megaphone}
+                label="Campañas"
+                hint="Transformados, Tiempo para Soñar, etc."
+                grupos={stats.campanas.grupos}
+                estudiantes={stats.campanas.estudiantes}
                 muted
               />
             </div>
