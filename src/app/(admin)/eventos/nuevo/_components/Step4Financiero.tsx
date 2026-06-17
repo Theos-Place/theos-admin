@@ -4,19 +4,23 @@ import { inputCls, Toggle, FieldLabel } from './shared'
 interface Step4Props {
   requires_payment: boolean
   payment_amount: string
-  payment_methods: string[]
+  server_price: string
+  servers_pay: boolean
   onTogglePayment: () => void
   onPaymentAmountChange: (v: string) => void
-  onTogglePaymentMethod: (m: string) => void
+  onServerPriceChange: (v: string) => void
+  onToggleServersPay: () => void
 }
 
 export function Step4Financiero({
   requires_payment,
   payment_amount,
-  payment_methods,
+  server_price,
+  servers_pay,
   onTogglePayment,
   onPaymentAmountChange,
-  onTogglePaymentMethod,
+  onServerPriceChange,
+  onToggleServersPay,
 }: Step4Props) {
   return (
     <div className="space-y-4">
@@ -30,16 +34,12 @@ export function Step4Financiero({
             label="Evento con cobro"
           />
           {requires_payment && (
-            <div className="space-y-3 pl-14">
+            <div className="space-y-4 pl-14">
               <div className="form-row">
                 <div>
-                  <FieldLabel>Monto</FieldLabel>
+                  <FieldLabel>Costo</FieldLabel>
                   <div className="relative">
-                    <span
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono"
-                    >
-                      ₡
-                    </span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
                     <input
                       type="number"
                       className={cn(inputCls, 'pl-7', 'font-body')}
@@ -50,26 +50,28 @@ export function Step4Financiero({
                   </div>
                 </div>
                 <div>
-                  <FieldLabel>Métodos de pago</FieldLabel>
-                  <div className="flex flex-wrap gap-4 pt-2">
-                    {['Tarjeta', 'SINPE Móvil'].map(m => (
-                      <label key={m} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="accent-coral"
-                          checked={payment_methods.includes(m)}
-                          onChange={() => onTogglePaymentMethod(m)}
-                        />
-                        <span
-                          className="text-sm text-navy font-body"
-                        >
-                          {m}
-                        </span>
-                      </label>
-                    ))}
+                  <FieldLabel>Costo para servidores (opcional)</FieldLabel>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
+                    <input
+                      type="number"
+                      className={cn(inputCls, 'pl-7', 'font-body')}
+                      placeholder="Igual al costo"
+                      value={server_price}
+                      onChange={e => onServerPriceChange(e.target.value)}
+                      disabled={!servers_pay}
+                    />
                   </div>
+                  <p className="text-[11px] text-navy-light/60 mt-1 font-body">
+                    Se aplica a servidores activos de los comités organizadores.
+                  </p>
                 </div>
               </div>
+              <Toggle
+                checked={!servers_pay}
+                onToggle={onToggleServersPay}
+                label="Servidores exentos de pago"
+              />
             </div>
           )}
         </div>

@@ -234,6 +234,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
       {showInscribir && (
         <InscribirModal
           eventId={eventId}
+          requiresPayment={event.requires_payment}
           alreadyRegistered={new Set(event.registrations.map(r => r.member_id))}
           onClose={() => setShowInscribir(false)}
           onInscrito={() => { onChanged() }}
@@ -245,8 +246,11 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
 
 // ─── Modal para inscribir miembros ──────────────────────────────────────────────
 
-function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
+type Pricing = { requiresPayment: boolean; isServer: boolean; exempt: boolean; price: number }
+
+function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, onInscrito }: {
   eventId: string
+  requiresPayment: boolean
   alreadyRegistered: Set<string>
   onClose: () => void
   onInscrito: () => void
@@ -255,6 +259,8 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
   const [results, setResults] = useState<MemberResult[]>([])
   const [loading, setLoading] = useState(false)
   const [adding, setAdding] = useState<string | null>(null)
+  // Evento pago: al elegir, se resuelve el precio/exención antes de confirmar.
+  const [payFor, setPayFor] = useState<{ id: string; name: string; pricing: Pricing } | null>(null)
 
   useEffect(() => {
     const q = query.trim()
@@ -271,19 +277,36 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
     return () => { alive = false; clearTimeout(t) }
   }, [query])
 
-  async function inscribir(memberId: string) {
+  async function inscribir(memberId: string, paymentStatus?: 'paid' | 'exempted') {
     setAdding(memberId)
     try {
       const res = await fetch(`/api/events/${eventId}/registrations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: memberId }),
+        body: JSON.stringify({ member_id: memberId, payment_status: paymentStatus }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       onInscrito()
       setResults(prev => prev.filter(m => m.id !== memberId))
+      setPayFor(null)
     } catch (err) {
       console.error('No se pudo inscribir al miembro:', err)
+    } finally {
+      setAdding(null)
+    }
+  }
+
+  // Evento pago: resolver precio/exención y pedir confirmación de pago.
+  async function startInscribir(memberId: string, name: string) {
+    if (!requiresPayment) { inscribir(memberId); return }
+    setAdding(memberId)
+    try {
+      const res = await fetch(`/api/events/${eventId}/registrations?member_id=${memberId}`)
+      const pricing = (res.ok ? await res.json() : { requiresPayment: true, isServer: false, exempt: false, price: 0 }) as Pricing
+      if (pricing.exempt) { await inscribir(memberId, 'exempted'); return } // servidor exento
+      setPayFor({ id: memberId, name, pricing })
+    } catch {
+      setPayFor({ id: memberId, name, pricing: { requiresPayment: true, isServer: false, exempt: false, price: 0 } })
     } finally {
       setAdding(null)
     }
@@ -293,6 +316,40 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
     <Modal onClose={onClose} titleId="inscribir-miembro-titulo" width={448}>
       <div className="p-6 space-y-4">
         <h3 id="inscribir-miembro-titulo" className="text-lg font-extrabold text-navy font-display">Inscribir miembro</h3>
+
+        {payFor && (
+          <div className="rounded-2xl border border-coral/30 bg-coral/5 p-4 space-y-3">
+            <p className="text-sm text-navy font-body">
+              <span className="font-semibold">{payFor.name}</span> — evento con cobro.
+              {payFor.pricing.isServer && <span className="text-[12px] text-navy-light/70"> (precio servidor)</span>}
+            </p>
+            <p className="text-2xl font-extrabold text-coral font-display">₡{payFor.pricing.price.toLocaleString('es-CR')}</p>
+            <p className="text-[12px] text-navy-light/60 font-body">La inscripción solo se completa al registrar el pago o marcarla exenta.</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => inscribir(payFor.id, 'paid')}
+                disabled={adding === payFor.id}
+                className="rounded-full bg-coral px-4 py-2 text-[12px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+              >
+                Registrar pago ₡{payFor.pricing.price.toLocaleString('es-CR')}
+              </button>
+              <button
+                onClick={() => inscribir(payFor.id, 'exempted')}
+                disabled={adding === payFor.id}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+              >
+                Marcar exento
+              </button>
+              <button
+                onClick={() => setPayFor(null)}
+                disabled={adding === payFor.id}
+                className="rounded-full px-4 py-2 text-[12px] text-navy-light/60 hover:text-navy transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
@@ -327,7 +384,7 @@ function InscribirModal({ eventId, alreadyRegistered, onClose, onInscrito }: {
                   <span className="text-[11px] text-navy-light/60 font-body">Ya inscrito</span>
                 ) : (
                   <button
-                    onClick={() => inscribir(m.id)}
+                    onClick={() => startInscribir(m.id, name)}
                     disabled={adding === m.id}
                     className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
                   >

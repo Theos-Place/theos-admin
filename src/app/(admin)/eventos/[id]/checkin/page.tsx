@@ -81,6 +81,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [showNewPerson, setShowNewPerson] = useState(false)
   const [familyCheckin, setFamilyCheckin] = useState<{ member: { id: string; name: string }; family: { member_id: string; name: string; relation: string }[] } | null>(null)
   const [checkingFamily, setCheckingFamily] = useState(false)
+  // ¿El miembro seleccionado es servidor de algún comité organizador? (gating de "Servidor")
+  const [serverInfo, setServerInfo] = useState<{ hasCommittees: boolean; isServer: boolean } | null>(null)
 
   // Sin permiso → fuera (el registro lo hace un encargado autenticado).
   useEffect(() => { if (!canCheckin) router.replace('/dashboard') }, [canCheckin, router])
@@ -89,6 +91,18 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     if (event) setCheckins(event.checkins)
   }, [event])
+
+  // Al seleccionar un miembro, consulta si es servidor de los comités organizadores.
+  useEffect(() => {
+    if (!selectedMember) { setServerInfo(null); return }
+    let alive = true
+    setServerInfo(null)
+    fetch(`/api/events/${id}/server-check?member_id=${selectedMember.id}`)
+      .then(r => (r.ok ? r.json() : { hasCommittees: false, isServer: false }))
+      .then(d => { if (alive) setServerInfo({ hasCommittees: !!d.hasCommittees, isServer: !!d.isServer }) })
+      .catch(() => { if (alive) setServerInfo({ hasCommittees: false, isServer: false }) })
+    return () => { alive = false }
+  }, [selectedMember, id])
 
   // Búsqueda real entre TODOS los miembros (debounced).
   useEffect(() => {
@@ -186,6 +200,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     if (!UUID_RE.test(memberId)) { scanFeedback(false); flash('error', 'QR no válido'); return }
     const already = checkins.find(c => c.member_id === memberId)
     if (already) { scanFeedback(false); flash('dup', `${already.member_name} ya estaba registrado`); return }
+    // Eventos pagos: solo se permite check-in de inscritos.
+    if (event!.requires_payment && !registeredIds.has(memberId)) {
+      scanFeedback(false); flash('error', 'No inscrito: este evento es pago y requiere inscripción previa'); return
+    }
     try {
       const res = await fetch(`/api/members/${memberId}`)
       if (!res.ok) { scanFeedback(false); flash('error', 'El QR no corresponde a ningún miembro'); return }
@@ -264,14 +282,22 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     .filter(c => !hasSubs || c.sub_event_id === targetSub)
     .sort((a, b) => (b.checked_at ?? '').localeCompare(a.checked_at ?? ''))
   const targetLabel = targetSub ? (subName(targetSub) ?? event.name) : event.name
-  // Validación 2 (check-in de servidor): con comité organizador, solo voluntarios
-  // ya asignados al evento (la asignación valida el comité). Sin comité → permisivo + aviso.
-  const isAssignedVolunteer = selectedMember ? (event.volunteer_bookings ?? []).some(v => v.member_id === selectedMember.id) : false
-  const serverGate: { allow: boolean; notice: string | null } = !event.committee_id
-    ? { allow: true, notice: 'Sin comité organizador asignado.' }
-    : isAssignedVolunteer
-      ? { allow: true, notice: null }
-      : { allow: false, notice: 'Solo servidores asignados del comité pueden marcarse como servidor.' }
+  // Check-in de servidor: solo servidores activos de los comités organizadores.
+  // Sin comités organizadores → permisivo (históricos). Mientras carga la consulta
+  // no se ofrece "Servidor" para no permitirlo de más.
+  const serverGate: { allow: boolean; notice: string | null } =
+    serverInfo === null
+      ? { allow: false, notice: null }
+      : !serverInfo.hasCommittees
+        ? { allow: true, notice: 'Sin comité organizador asignado.' }
+        : serverInfo.isServer
+          ? { allow: true, notice: null }
+          : { allow: false, notice: 'Solo servidores activos del comité organizador pueden marcarse como servidor.' }
+
+  // Eventos pagos: el check-in se limita a la lista de inscritos. Sin pago → abierto.
+  const checkinRestrictedToRegistered = event.requires_payment
+  const selectedRegistered = selectedMember ? registeredIds.has(selectedMember.id) : false
+  const selectedBlocked = checkinRestrictedToRegistered && !!selectedMember && !selectedRegistered
   // Fecha mostrada: la de la ocurrencia (?date=) si viene, si no la del evento.
   const headerDate = (() => {
     const d = occParam ? new Date(occParam) : new Date(event.start_at)
@@ -362,7 +388,20 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           />
 
           {/* Selección de miembro / resultados de búsqueda */}
-          {selectedMember ? (
+          {selectedMember && selectedBlocked ? (
+            <div className="rounded-2xl bg-surface-card p-6 text-center shadow-[var(--shadow-sm)] space-y-3">
+              <p className="text-navy font-medium font-body">{selectedMember.name}</p>
+              <p className="text-sm text-navy-light/70 font-body">
+                Este evento es pago: el check-in solo está disponible para personas inscritas y con su pago al día. Inscribí y registrá el pago primero.
+              </p>
+              <button
+                onClick={() => { setSelectedMember(null); setQuery('') }}
+                className="inline-flex rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Entendido
+              </button>
+            </div>
+          ) : selectedMember ? (
             <div className="flex justify-center">
               <CheckinCard
                 member={selectedMember}

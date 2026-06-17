@@ -3,20 +3,20 @@ import { Mic, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type EventType } from '@/data/event-config'
 import { useEventTypes } from '@/hooks/useEventTypes'
-import { useOrg } from '@/lib/org'
+import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
 import { inputCls, ICON_MAP, FieldLabel } from './shared'
 
 interface Step1Props {
   name: string
   event_type: EventType | ''
-  committee: string
+  organizing_committee_ids: string[]
   description: string
   flyer: string | null
   flyerDragOver: boolean
   flyerInputRef: React.RefObject<HTMLInputElement | null>
   onNameChange: (v: string) => void
   onEventTypeChange: (v: EventType) => void
-  onCommitteeChange: (v: string) => void
+  onCommitteesChange: (ids: string[]) => void
   onDescriptionChange: (v: string) => void
   onFlyerSelect: (file: File) => void
   onFlyerDragOver: (v: boolean) => void
@@ -26,20 +26,19 @@ interface Step1Props {
 export function Step1Informacion({
   name,
   event_type,
-  committee,
+  organizing_committee_ids,
   description,
   flyer,
   flyerDragOver,
   flyerInputRef,
   onNameChange,
   onEventTypeChange,
-  onCommitteeChange,
+  onCommitteesChange,
   onDescriptionChange,
   onFlyerSelect,
   onFlyerDragOver,
   onFlyerRemove,
 }: Step1Props) {
-  const { adminCommittees } = useOrg()
   const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
   return (
     <div className="card py-5 px-6 w-full">
@@ -89,17 +88,11 @@ export function Step1Informacion({
       {/* Comité + Descripción en grid */}
       <div className="form-row mb-5">
         <div>
-          <FieldLabel>Comité organizador</FieldLabel>
-          <select
-            className={cn(inputCls, 'font-body')}
-            value={committee}
-            onChange={e => onCommitteeChange(e.target.value)}
-          >
-            <option value="">Seleccionar comité...</option>
-            {adminCommittees.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <FieldLabel>Comités organizadores</FieldLabel>
+          <CommitteeMultiSelect
+            value={organizing_committee_ids}
+            onChange={onCommitteesChange}
+          />
         </div>
         <div>
           <div className="flex items-center justify-between mb-1">

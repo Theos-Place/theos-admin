@@ -21,7 +21,7 @@ type SubEventInput = { id: string; name: string; max_capacity: string }
 interface FormData {
   name: string
   event_type: EventType | ''
-  committee: string
+  organizing_committee_ids: string[]
   description: string
   start_date: string
   start_time: string
@@ -40,7 +40,8 @@ interface FormData {
   has_satisfaction_survey: boolean
   requires_payment: boolean
   payment_amount: string
-  payment_methods: string[]
+  server_price: string
+  servers_pay: boolean
   flyer: string | null
 }
 
@@ -100,7 +101,7 @@ function NuevoEventoForm() {
   const [form, setForm] = useState<FormData>({
     name: '',
     event_type: '',
-    committee: '',
+    organizing_committee_ids: [],
     description: '',
     start_date: initialDate,
     start_time: initialStart,
@@ -119,7 +120,8 @@ function NuevoEventoForm() {
     has_satisfaction_survey: false,
     requires_payment: false,
     payment_amount: '',
-    payment_methods: [],
+    server_price: '',
+    servers_pay: true,
     flyer: null,
   })
 
@@ -127,14 +129,6 @@ function NuevoEventoForm() {
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
-  function togglePaymentMethod(m: string) {
-    setForm(prev => ({
-      ...prev,
-      payment_methods: prev.payment_methods.includes(m)
-        ? prev.payment_methods.filter(x => x !== m)
-        : [...prev.payment_methods, m],
-    }))
-  }
 
   function addSubEvent() {
     if (!newSubName.trim()) return
@@ -306,14 +300,14 @@ function NuevoEventoForm() {
             <Step1Informacion
               name={form.name}
               event_type={form.event_type}
-              committee={form.committee}
+              organizing_committee_ids={form.organizing_committee_ids}
               description={form.description}
               flyer={flyer}
               flyerDragOver={flyerDragOver}
               flyerInputRef={flyerInputRef}
               onNameChange={v => set('name', v)}
               onEventTypeChange={v => set('event_type', v)}
-              onCommitteeChange={v => set('committee', v)}
+              onCommitteesChange={v => set('organizing_committee_ids', v)}
               onDescriptionChange={v => set('description', v)}
               onFlyerSelect={handleFlyerSelect}
               onFlyerDragOver={setFlyerDragOver}
@@ -390,10 +384,12 @@ function NuevoEventoForm() {
             <Step4Financiero
               requires_payment={form.requires_payment}
               payment_amount={form.payment_amount}
-              payment_methods={form.payment_methods}
+              server_price={form.server_price}
+              servers_pay={form.servers_pay}
               onTogglePayment={() => set('requires_payment', !form.requires_payment)}
               onPaymentAmountChange={v => set('payment_amount', v)}
-              onTogglePaymentMethod={togglePaymentMethod}
+              onServerPriceChange={v => set('server_price', v)}
+              onToggleServersPay={() => set('servers_pay', !form.servers_pay)}
             />
           )}
 
@@ -416,7 +412,7 @@ function NuevoEventoForm() {
         <EventSummary
           name={form.name}
           selectedTypeName={selectedTypeObj?.name}
-          committee={form.committee}
+          organizing_committee_ids={form.organizing_committee_ids}
           start_date={form.start_date}
           start_time={form.start_time}
           end_date={form.end_date}

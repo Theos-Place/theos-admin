@@ -28,7 +28,10 @@ export function EventInfoTab({
   onFlyerClear,
 }: Props) {
   const { adminCommittees } = useOrg()
-  const committeeName = adminCommittees.find(c => c.id === event.committee_id)?.name ?? event.committee_id
+  const committeeName = event.organizing_committee_ids
+    .map(id => adminCommittees.find(c => c.id === id)?.name)
+    .filter(Boolean)
+    .join(', ') || '—'
   const startDate = new Date(event.start_at)
   const endDate = new Date(event.end_at)
 

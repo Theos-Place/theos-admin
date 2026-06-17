@@ -159,15 +159,18 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     return () => { alive = false; clearTimeout(t) }
   }, [searchQuery, showAssignModal])
 
-  // committee_id guarda el id del área-comité; service_history.committee es el
-  // nombre. Se resuelve el id → nombre para comparar.
-  const committeeName = adminCommittees.find(c => c.id === event?.committee_id)?.name ?? event?.committee_id
+  // organizing_committee_ids son ids de área; service_history.committee es el
+  // nombre. Se resuelven los ids → nombres para comparar (cualquiera de ellos).
+  const committeeNames = (event?.organizing_committee_ids ?? [])
+    .map(id => adminCommittees.find(c => c.id === id)?.name)
+    .filter((n): n is string => !!n)
   const filteredMembers = useMemo(() => {
     if (!filterCommittee) return memberResults
     return memberResults.filter(m =>
-      m.service_history?.some(s => s.committee === committeeName && s.status === 'activo'),
+      m.service_history?.some(s => committeeNames.includes(s.committee) && s.status === 'activo'),
     )
-  }, [memberResults, filterCommittee, committeeName])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberResults, filterCommittee, committeeNames.join(',')])
 
   if (!event) {
     return (

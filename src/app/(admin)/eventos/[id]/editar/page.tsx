@@ -8,8 +8,8 @@ import Link from 'next/link'
 import { type EventType } from '@/data/event-config'
 import { useEventTypes } from '@/hooks/useEventTypes'
 import { useEvent } from '@/hooks/useEvents'
-import { useOrg } from '@/lib/org'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
+import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
 import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
 import { cn } from '@/lib/utils'
@@ -136,7 +136,6 @@ function RecurringSaveModal({
 
 export default function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
   const toast = useToast()
-  const { adminCommittees } = useOrg()
   const { id } = use(params)
   const { event, loading } = useEvent(id)
   const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
@@ -146,7 +145,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['info']))
   const [name, setName] = useState(event?.name ?? '')
   const [selectedType, setSelectedType] = useState<EventType | ''>(event?.event_type ?? '')
-  const [committee, setCommittee] = useState(event?.committee_id ?? '')
+  const [committeeIds, setCommitteeIds] = useState<string[]>(event?.organizing_committee_ids ?? [])
   const [description, setDescription] = useState(event?.description ?? '')
   const [startDate, setStartDate] = useState(event ? event.start_at.split('T')[0] : '')
   const [startTime, setStartTime] = useState(event ? event.start_at.split('T')[1]?.slice(0, 5) : '')
@@ -167,7 +166,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [maxCapacity, setMaxCapacity] = useState(event ? String(event.max_capacity ?? '') : '')
   const [requiresPayment, setRequiresPayment] = useState(event?.requires_payment ?? false)
   const [paymentAmount, setPaymentAmount] = useState(event?.payment_amount ? String(event.payment_amount) : '')
-  const [paymentMethods, setPaymentMethods] = useState<string[]>(['SINPE Móvil'])
+  const [serverPrice, setServerPrice] = useState(event?.server_price != null ? String(event.server_price) : '')
+  const [serversPay, setServersPay] = useState(event?.servers_pay ?? true)
   const [showRecurringModal, setShowRecurringModal] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -177,7 +177,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     if (!event) return
     setName(event.name ?? '')
     setSelectedType(event.event_type ?? '')
-    setCommittee(event.committee_id ?? '')
+    setCommitteeIds(event.organizing_committee_ids ?? [])
     setDescription(event.description ?? '')
     // Con ocurrencia (?date=): desplazar las fechas a ESA ocurrencia (hora CR local),
     // conservando la duración del evento. Sin ocurrencia: la fecha real del evento.
@@ -203,6 +203,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setMaxCapacity(String(event.max_capacity ?? ''))
     setRequiresPayment(event.requires_payment ?? false)
     setPaymentAmount(event.payment_amount ? String(event.payment_amount) : '')
+    setServerPrice(event.server_price != null ? String(event.server_price) : '')
+    setServersPay(event.servers_pay ?? true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event, occParam])
 
@@ -238,10 +240,6 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setSubEvents(prev => prev.filter(s => s.id !== subId))
   }
 
-  function togglePaymentMethod(m: string) {
-    setPaymentMethods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
-  }
-
   // Fecha (YYYY-MM-DD, hora CR) e inicio ISO de la ocurrencia sobre la que se actúa.
   function occurrenceRef(): { date: string; start: string } | null {
     if (!occParam) {
@@ -261,13 +259,15 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setSaving(true)
     const occ = occurrenceRef()
     const body = {
-      name, event_type: selectedType, committee, description,
+      name, event_type: selectedType, description,
+      organizing_committee_ids: committeeIds,
       start_date: startDate, start_time: startTime,
       end_date: endDate, end_time: endTime,
       is_virtual: isVirtual, virtual_link: virtualLink, location,
       is_recurring: isRecurring, recurrence_rule: recurrenceRule,
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
       requires_payment: requiresPayment, payment_amount: paymentAmount,
+      server_price: serverPrice, servers_pay: serversPay,
       sub_events: subEvents,
       // Alcance para series recurrentes (lo ignora el backend si scope='all').
       scope,
@@ -414,11 +414,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Comité</label>
-            <select className={cn(inputCls, 'font-body')} value={committee} onChange={e => setCommittee(e.target.value)}>
-              <option value="">Seleccionar comité...</option>
-              {adminCommittees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Comités organizadores</label>
+            <CommitteeMultiSelect value={committeeIds} onChange={setCommitteeIds} />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
@@ -562,23 +559,24 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           {requiresPayment && (
             <div className="space-y-3 pl-1">
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Monto</label>
+                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Costo</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
                   <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Métodos de pago</label>
-                <div className="flex gap-4">
-                  {['Tarjeta', 'SINPE Móvil'].map(m => (
-                    <label key={m} className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className="accent-coral" checked={paymentMethods.includes(m)} onChange={() => togglePaymentMethod(m)} />
-                      <span className="text-sm text-navy font-body">{m}</span>
-                    </label>
-                  ))}
+              <div className="space-y-1">
+                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Costo para servidores (opcional)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
+                  <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} placeholder="Igual al costo" value={serverPrice} onChange={e => setServerPrice(e.target.value)} disabled={!serversPay} />
                 </div>
+                <p className="text-[11px] text-navy-light/60 font-body">Se aplica a servidores activos de los comités organizadores.</p>
               </div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button type="button" role="switch" aria-checked={!serversPay} aria-label="Servidores exentos de pago" onClick={() => setServersPay(s => !s)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', !serversPay ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', !serversPay ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+                <span className="text-sm text-navy font-body">Servidores exentos de pago</span>
+              </label>
             </div>
           )}
         </div>

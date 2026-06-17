@@ -8,7 +8,7 @@ type SubEventInput = { id: string; name: string; max_capacity: string }
 interface EventSummaryProps {
   name: string
   selectedTypeName: string | undefined
-  committee: string
+  organizing_committee_ids: string[]
   start_date: string
   start_time: string
   end_date: string
@@ -35,7 +35,10 @@ function fmt(date: string, time: string): string {
 /** Box de resumen que se va llenando con lo que se captura en cada paso. */
 export function EventSummary(p: EventSummaryProps) {
   const { adminCommittees } = useOrg()
-  const committeeName = adminCommittees.find(c => c.id === p.committee)?.name ?? p.committee
+  const committeeNames = p.organizing_committee_ids
+    .map(id => adminCommittees.find(c => c.id === id)?.name)
+    .filter(Boolean)
+    .join(', ')
 
   return (
     <div className="card py-5 px-6 w-full lg:sticky lg:top-4">
@@ -43,7 +46,7 @@ export function EventSummary(p: EventSummaryProps) {
       <div className="space-y-1">
         <SummaryRow label="Nombre" value={p.name || '—'} />
         <SummaryRow label="Tipo" value={p.selectedTypeName ?? '—'} />
-        <SummaryRow label="Comité" value={committeeName || '—'} />
+        <SummaryRow label={p.organizing_committee_ids.length > 1 ? 'Comités' : 'Comité'} value={committeeNames || '—'} />
         <SummaryRow label="Inicio" value={fmt(p.start_date, p.start_time)} />
         <SummaryRow label="Fin" value={fmt(p.end_date, p.end_time)} />
         <SummaryRow label="Lugar" value={p.is_virtual ? 'Virtual' : p.location || '—'} />
