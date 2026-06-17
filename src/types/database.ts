@@ -3657,6 +3657,14 @@ export type Database = {
       }
     }
     Functions: {
+      campaign_student_counts: {
+        Args: never
+        Returns: {
+          grupos: number
+          inscripciones: number
+          unicos: number
+        }[]
+      }
       charla_sede_code: { Args: { p_title: string }; Returns: string }
       dashboard_sums: {
         Args: { p_month_start: string; p_month_start_date: string }
@@ -3689,6 +3697,16 @@ export type Database = {
           estado: string
           estudiantes: number
           grupos: number
+        }[]
+      }
+      study_dashboard_stats_v2: {
+        Args: never
+        Returns: {
+          categoria: string
+          estado: string
+          grupos: number
+          inscripciones: number
+          unicos: number
         }[]
       }
     }

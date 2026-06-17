@@ -84,48 +84,38 @@ export async function getStudyPlans(): Promise<DbStudyPlan[]> {
  *  Estudiantes:
  *    activos (en_curso)   → inscripciones 'enrolled'  (los que cursan hoy)
  *    histórico (finalizado) → inscripciones 'completed' (los que pasaron por el grupo) */
+/** Conteo de un box: grupos, inscripciones (participaciones) y estudiantes únicos
+ *  (personas distintas). Todos EXCLUYEN a los dirigentes (líder/co-líder). */
+export type StudyCount = { grupos: number; inscripciones: number; unicos: number }
 export type StudyDashboardStats = {
-  activos:   { niveles: { grupos: number; estudiantes: number }; capacitaciones: { grupos: number; estudiantes: number } }
-  historico: { niveles: { grupos: number; estudiantes: number }; capacitaciones: { grupos: number; estudiantes: number } }
-  /** Campañas (histórico): grupos finalizados + total de estudiantes (incluye
-   *  inscripciones directas sin grupo del histórico importado). */
-  campanas: { grupos: number; estudiantes: number }
+  activos:   { niveles: StudyCount; capacitaciones: StudyCount }
+  historico: { niveles: StudyCount; capacitaciones: StudyCount }
+  campanas: StudyCount
 }
 
 export async function getStudyDashboardStats(): Promise<StudyDashboardStats> {
   const supabase = createAdminClient()
-  // Campañas: grupos finalizados + estudiantes = inscripciones COMPLETADAS (mismo
-  // criterio que niveles/capacitaciones: cuenta participaciones, no personas
-  // distintas), sumando las de grupo y las directas (histórico sin grupo).
-  // Se usa count(head) para no toparse con el límite de 1000 filas de PostgREST.
-  const campanas = await (async () => {
-    const { data: planRows } = await supabase.from('study_plans').select('id').eq('level', 'campanas')
-    const planIds = ((planRows ?? []) as Array<{ id: string }>).map(p => p.id)
-    if (planIds.length === 0) return { grupos: 0, estudiantes: 0 }
-    const [grp, viaGroup, direct] = await Promise.all([
-      supabase.from('study_groups').select('id', { count: 'exact', head: true }).in('plan_id', planIds).eq('status', 'finalizado'),
-      supabase.from('study_enrollments').select('id, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)', { count: 'exact', head: true }).in('group.plan_id', planIds).eq('status', 'completed'),
-      supabase.from('study_enrollments').select('id', { count: 'exact', head: true }).in('plan_id', planIds).eq('status', 'completed'),
-    ])
-    return { grupos: grp.count ?? 0, estudiantes: (viaGroup.count ?? 0) + (direct.count ?? 0) }
-  })()
-  // Un solo round-trip vía RPC SQL: agrupa grupos por estado+categoría y suma
-  // inscripciones del estado relevante (enrolled para en_curso, completed para
-  // finalizado). count(DISTINCT g) evita inflar el grupo por sus inscripciones.
-  const { data, error } = await supabase.rpc('study_dashboard_stats')
+  // Vía RPC: por estado+categoría → grupos, inscripciones y únicos, excluyendo
+  // dirigentes (study_dashboard_stats_v2). Campañas con su propio RPC.
+  const [{ data, error }, { data: campRows }] = await Promise.all([
+    supabase.rpc('study_dashboard_stats_v2'),
+    supabase.rpc('campaign_student_counts'),
+  ])
   if (error) throw error
 
-  const empty = { grupos: 0, estudiantes: 0 }
+  const c = (campRows?.[0] ?? {}) as Partial<StudyCount>
+  const empty: StudyCount = { grupos: 0, inscripciones: 0, unicos: 0 }
   const stats: StudyDashboardStats = {
     activos:   { niveles: { ...empty }, capacitaciones: { ...empty } },
     historico: { niveles: { ...empty }, capacitaciones: { ...empty } },
-    campanas,
+    campanas: { grupos: Number(c.grupos ?? 0), inscripciones: Number(c.inscripciones ?? 0), unicos: Number(c.unicos ?? 0) },
   }
-  for (const r of (data ?? []) as Array<{ estado: string; categoria: string; grupos: number; estudiantes: number }>) {
+  for (const r of (data ?? []) as Array<{ estado: string; categoria: string; grupos: number; inscripciones: number; unicos: number }>) {
     const bucket = r.estado === 'en_curso' ? stats.activos : r.estado === 'finalizado' ? stats.historico : null
     if (!bucket) continue
-    if (r.categoria === 'niveles') bucket.niveles = { grupos: Number(r.grupos), estudiantes: Number(r.estudiantes) }
-    else if (r.categoria === 'capacitaciones') bucket.capacitaciones = { grupos: Number(r.grupos), estudiantes: Number(r.estudiantes) }
+    const val: StudyCount = { grupos: Number(r.grupos), inscripciones: Number(r.inscripciones), unicos: Number(r.unicos) }
+    if (r.categoria === 'niveles') bucket.niveles = val
+    else if (r.categoria === 'capacitaciones') bucket.capacitaciones = val
   }
   return stats
 }

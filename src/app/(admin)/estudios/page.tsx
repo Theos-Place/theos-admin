@@ -10,10 +10,11 @@ import {
 } from 'lucide-react'
 import type { StudyDashboardStats } from '@/lib/supabase/queries/studies'
 
+const EMPTY_COUNT = { grupos: 0, inscripciones: 0, unicos: 0 }
 const EMPTY_STATS: StudyDashboardStats = {
-  activos:   { niveles: { grupos: 0, estudiantes: 0 }, capacitaciones: { grupos: 0, estudiantes: 0 } },
-  historico: { niveles: { grupos: 0, estudiantes: 0 }, capacitaciones: { grupos: 0, estudiantes: 0 } },
-  campanas:  { grupos: 0, estudiantes: 0 },
+  activos:   { niveles: { ...EMPTY_COUNT }, capacitaciones: { ...EMPTY_COUNT } },
+  historico: { niveles: { ...EMPTY_COUNT }, capacitaciones: { ...EMPTY_COUNT } },
+  campanas:  { ...EMPTY_COUNT },
 }
 
 const QUICK_ACCESS = [
@@ -121,14 +122,16 @@ export default function EstudiosPage() {
                 label="Niveles activos"
                 hint="N1–N4"
                 grupos={stats.activos.niveles.grupos}
-                estudiantes={stats.activos.niveles.estudiantes}
+                inscripciones={stats.activos.niveles.inscripciones}
+                unicos={stats.activos.niveles.unicos}
               />
               <StatRow
                 icon={BookOpen}
                 label="Capacitaciones activas"
                 hint="Etapa Inicial + Intermedia"
                 grupos={stats.activos.capacitaciones.grupos}
-                estudiantes={stats.activos.capacitaciones.estudiantes}
+                inscripciones={stats.activos.capacitaciones.inscripciones}
+                unicos={stats.activos.capacitaciones.unicos}
               />
             </div>
           </section>
@@ -146,7 +149,8 @@ export default function EstudiosPage() {
                 label="Niveles finalizados"
                 hint="N1–N4"
                 grupos={stats.historico.niveles.grupos}
-                estudiantes={stats.historico.niveles.estudiantes}
+                inscripciones={stats.historico.niveles.inscripciones}
+                unicos={stats.historico.niveles.unicos}
                 muted
               />
               <StatRow
@@ -154,7 +158,8 @@ export default function EstudiosPage() {
                 label="Capacitaciones finalizadas"
                 hint="Etapa Inicial + Intermedia"
                 grupos={stats.historico.capacitaciones.grupos}
-                estudiantes={stats.historico.capacitaciones.estudiantes}
+                inscripciones={stats.historico.capacitaciones.inscripciones}
+                unicos={stats.historico.capacitaciones.unicos}
                 muted
               />
             </div>
@@ -173,7 +178,8 @@ export default function EstudiosPage() {
                 label="Campañas"
                 hint="Transformados, Tiempo para Soñar, etc."
                 grupos={stats.campanas.grupos}
-                estudiantes={stats.campanas.estudiantes}
+                inscripciones={stats.campanas.inscripciones}
+                unicos={stats.campanas.unicos}
                 muted
               />
             </div>
@@ -254,13 +260,14 @@ export default function EstudiosPage() {
 }
 
 function StatRow({
-  icon: Icon, label, hint, grupos, estudiantes, muted = false,
+  icon: Icon, label, hint, grupos, inscripciones, unicos, muted = false,
 }: {
   icon: typeof GraduationCap
   label: string
   hint: string
   grupos: number
-  estudiantes: number
+  inscripciones: number
+  unicos: number
   muted?: boolean
 }) {
   return (
@@ -275,9 +282,13 @@ function StatRow({
           {grupos}
         </span>
         <span className="text-sm text-navy-light/70">grupos</span>
+      </div>
+      <div className="mt-1.5 flex items-baseline gap-1.5 font-body text-sm">
+        <span className="font-semibold text-navy font-display">{inscripciones.toLocaleString('es-CR')}</span>
+        <span className="text-navy-light/70">inscripciones</span>
         <span className="text-navy-light/40">·</span>
-        <span className="text-xl font-semibold text-navy font-display">{estudiantes}</span>
-        <span className="text-sm text-navy-light/70">estudiantes</span>
+        <span className="font-semibold text-navy font-display">{unicos.toLocaleString('es-CR')}</span>
+        <span className="text-navy-light/70">estudiantes únicos</span>
       </div>
     </div>
   )
