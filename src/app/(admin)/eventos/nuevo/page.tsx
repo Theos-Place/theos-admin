@@ -258,16 +258,8 @@ function NuevoEventoForm() {
             <button type="button" className="btn btn-ghost btn-sm">
               Guardar borrador
             </button>
-            {step < STEPS_COUNT ? (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={() => setStep(s => s + 1)}
-                disabled={!canProceed()}
-              >
-                Siguiente <ChevronRight size={13} />
-              </button>
-            ) : (
+            {/* "Siguiente" va al pie del paso; arriba solo Publicar (último paso). */}
+            {step === STEPS_COUNT && (
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
@@ -393,9 +385,9 @@ function NuevoEventoForm() {
             />
           )}
 
-          {/* Navegación inferior */}
-          {step > 1 && (
-            <div className="mt-3">
+          {/* Navegación inferior: Paso anterior + Siguiente/Publicar al pie del paso */}
+          <div className="mt-4 flex items-center justify-between gap-3">
+            {step > 1 ? (
               <button
                 type="button"
                 onClick={() => setStep(s => s - 1)}
@@ -403,8 +395,27 @@ function NuevoEventoForm() {
               >
                 ← Paso anterior
               </button>
-            </div>
-          )}
+            ) : <span />}
+            {step < STEPS_COUNT ? (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => setStep(s => s + 1)}
+                disabled={!canProceed()}
+              >
+                Siguiente <ChevronRight size={13} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={handlePublish}
+                disabled={submitting}
+              >
+                {submitting ? 'Publicando…' : 'Publicar evento'}
+              </button>
+            )}
+          </div>
 
         </div>
 
