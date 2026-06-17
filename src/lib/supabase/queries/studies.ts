@@ -94,20 +94,20 @@ export type StudyDashboardStats = {
 
 export async function getStudyDashboardStats(): Promise<StudyDashboardStats> {
   const supabase = createAdminClient()
-  // Campañas: grupos finalizados + estudiantes distintos (vía grupo o plan directo).
+  // Campañas: grupos finalizados + estudiantes = inscripciones COMPLETADAS (mismo
+  // criterio que niveles/capacitaciones: cuenta participaciones, no personas
+  // distintas), sumando las de grupo y las directas (histórico sin grupo).
+  // Se usa count(head) para no toparse con el límite de 1000 filas de PostgREST.
   const campanas = await (async () => {
     const { data: planRows } = await supabase.from('study_plans').select('id').eq('level', 'campanas')
     const planIds = ((planRows ?? []) as Array<{ id: string }>).map(p => p.id)
     if (planIds.length === 0) return { grupos: 0, estudiantes: 0 }
-    const [{ count: grupos }, viaGroup, direct] = await Promise.all([
+    const [grp, viaGroup, direct] = await Promise.all([
       supabase.from('study_groups').select('id', { count: 'exact', head: true }).in('plan_id', planIds).eq('status', 'finalizado'),
-      supabase.from('study_enrollments').select('member_id, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)').in('group.plan_id', planIds),
-      supabase.from('study_enrollments').select('member_id').in('plan_id', planIds),
+      supabase.from('study_enrollments').select('id, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)', { count: 'exact', head: true }).in('group.plan_id', planIds).eq('status', 'completed'),
+      supabase.from('study_enrollments').select('id', { count: 'exact', head: true }).in('plan_id', planIds).eq('status', 'completed'),
     ])
-    const members = new Set<string>()
-    for (const r of ((viaGroup.data ?? []) as Array<{ member_id: string }>)) members.add(r.member_id)
-    for (const r of ((direct.data ?? []) as Array<{ member_id: string }>)) members.add(r.member_id)
-    return { grupos: grupos ?? 0, estudiantes: members.size }
+    return { grupos: grp.count ?? 0, estudiantes: (viaGroup.count ?? 0) + (direct.count ?? 0) }
   })()
   // Un solo round-trip vía RPC SQL: agrupa grupos por estado+categoría y suma
   // inscripciones del estado relevante (enrolled para en_curso, completed para
