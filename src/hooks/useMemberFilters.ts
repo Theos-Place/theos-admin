@@ -78,6 +78,13 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
     case 'status': return c.value === 'active' ? m.is_active : !m.is_active
     case 'leader': return c.value === 'yes' ? m.es_dirigente : !m.es_dirigente
     case 'marital': return m.marital_status === c.value
+    case 'created': {
+      const d = (m.created_at ?? '').slice(0, 10)
+      if (!d) return false
+      if (c.from && d < c.from) return false
+      if (c.to && d > c.to) return false
+      return true
+    }
   }
 }
 

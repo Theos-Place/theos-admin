@@ -554,6 +554,17 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
     if (ageMin || ageMax) addCondition({ group: 'age', type: 'age', min: ageMin, max: ageMax })
   }
 
+  // Fecha de creación del perfil (rango sobre members.created_at).
+  const createdCond = conditions.find(c => c.type === 'created') as Extract<FilterCondition, { type: 'created' }> | undefined
+  const [createdFrom, setCreatedFrom] = useState(createdCond?.from ?? '')
+  const [createdTo, setCreatedTo] = useState(createdCond?.to ?? '')
+  useEffect(() => { if (!createdCond) { setCreatedFrom(''); setCreatedTo('') } }, [createdCond])
+  function syncCreated(from: string, to: string) {
+    setCreatedFrom(from); setCreatedTo(to)
+    if (createdCond) removeCondition(createdCond.id)
+    if (from || to) addCondition({ group: 'created', type: 'created', from, to })
+  }
+
   return (
     <div className="space-y-5">
       <div>
@@ -627,6 +638,12 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           />
         </div>
       </div>
+
+      <div>
+        <Label>Fecha de creación del perfil</Label>
+        <DateRange from={createdFrom} to={createdTo}
+          onFrom={v => syncCreated(v, createdTo)} onTo={v => syncCreated(createdFrom, v)} />
+      </div>
     </div>
   )
 }
@@ -641,7 +658,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
     attend:  ['attendance'],
     service: ['service'],
     form:    ['form'],
-    profile: ['donor', 'age', 'status', 'leader'],
+    profile: ['donor', 'age', 'status', 'leader', 'marital', 'created'],
   }
 
   return (

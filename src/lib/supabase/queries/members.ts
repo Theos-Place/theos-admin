@@ -419,6 +419,14 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id'))
         break
       }
+      case 'created': {
+        res.include.push(await pagedIds(q => {
+          if (c.from) q = q.gte('created_at', c.from)
+          if (c.to) q = q.lte('created_at', `${c.to}T23:59:59.999Z`)
+          return q
+        }, 'members', 'member_id:id', 'id'))
+        break
+      }
       case 'form': {
         // Mismo contrato que el filtro client-side (useMemberFilters):
         // 'not_filled' excluye a quien tenga CUALQUIER respuesta al formulario
