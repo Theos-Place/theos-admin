@@ -231,11 +231,13 @@ type ConditionResolution = {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function pagedIds(build: (q: any) => any, table: TableName, select: string): Promise<Set<string>> {
+async function pagedIds(build: (q: any) => any, table: TableName, select: string, orderCol = 'member_id'): Promise<Set<string>> {
   const supabase = createAdminClient()
   const out = new Set<string>()
   for (let from = 0; ; from += 1000) {
-    let q = supabase.from(table).select(select).order('member_id').range(from, from + 999)
+    // orderCol: en `members` la columna real es `id` (member_id ahí es alias del
+    // select); en volunteers/event_checkins sí existe member_id.
+    let q = supabase.from(table).select(select).order(orderCol).range(from, from + 999)
     q = build(q)
     const { data, error } = await q
     if (error) throw error
@@ -308,7 +310,7 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
       }
       case 'donor': {
         // is_donor es el flag derivado de donador activo (criterio por trimestres).
-        const set = await pagedIds(q => q.eq('is_donor', true), 'members', 'member_id:id')
+        const set = await pagedIds(q => q.eq('is_donor', true), 'members', 'member_id:id', 'id')
         if (c.value === 'yes') res.include.push(set)
         else res.exclude.push(set)
         break
@@ -398,7 +400,7 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
           if (c.min) q = q.lte('birth_date', new Date(now.getFullYear() - parseInt(c.min), now.getMonth(), now.getDate()).toISOString().slice(0, 10))
           if (c.max) q = q.gte('birth_date', new Date(now.getFullYear() - parseInt(c.max) - 1, now.getMonth(), now.getDate() + 1).toISOString().slice(0, 10))
           return q.not('birth_date', 'is', null)
-        }, 'members', 'member_id:id')
+        }, 'members', 'member_id:id', 'id')
         res.include.push(set)
         break
       }
@@ -414,7 +416,7 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         break
       }
       case 'marital': {
-        res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id'))
+        res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id'))
         break
       }
       case 'form': {
