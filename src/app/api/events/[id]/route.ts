@@ -4,7 +4,7 @@ import {
   getEventById, updateEventScoped, deleteEventScoped, cancelEvent,
   EventHasAttendanceError, type EventScope, type OccurrenceRef,
 } from '@/lib/supabase/queries/events'
-import { formToPartialWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
+import { formToPartialWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
 
 /** Lee el alcance (all/future/single) y la ocurrencia del body, si vienen.
  *  `occurrence_date` = YYYY-MM-DD en hora CR (lo calcula el cliente). */
@@ -46,7 +46,8 @@ export async function PUT(
     const { scope, occurrence } = readScope(body)
     // Solo reemplazamos sub-eventos si el body los trae explícitamente.
     const subEvents = 'sub_events' in body ? formToSubEvents(body) : undefined
-    const event = await updateEventScoped(id, scope, formToPartialWriteInput(body), subEvents, occurrence, auth.ctx.userId)
+    const committees = 'organizing_committee_ids' in body ? formToOrganizingCommittees(body) : undefined
+    const event = await updateEventScoped(id, scope, formToPartialWriteInput(body), subEvents, occurrence, auth.ctx.userId, committees)
     return NextResponse.json(event)
   } catch (error) {
     console.error('PUT /api/events/[id]:', error)

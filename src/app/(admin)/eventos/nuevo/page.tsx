@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
@@ -72,6 +72,15 @@ function plusOneHour(time: string): string {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NuevoEventoPage() {
+  // useSearchParams exige límite de Suspense en prerender.
+  return (
+    <Suspense fallback={null}>
+      <NuevoEventoForm />
+    </Suspense>
+  )
+}
+
+function NuevoEventoForm() {
   const toast = useToast()
   // Fecha precargada al venir del clic en una celda del calendario (?date=YYYY-MM-DD).
   const dateParam = useSearchParams().get('date')

@@ -10,6 +10,13 @@ function combineDateTime(date?: string, time?: string): string | null {
 
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v))
 
+/** Ids de comités organizadores (m2m). El form envía `organizing_committee_ids`. */
+export function formToOrganizingCommittees(body: Record<string, unknown>): string[] {
+  return Array.isArray(body.organizing_committee_ids)
+    ? (body.organizing_committee_ids as unknown[]).filter((x): x is string => typeof x === 'string')
+    : []
+}
+
 export function formToSubEvents(body: Record<string, unknown>): { name: string; max_capacity: number }[] {
   return Array.isArray(body.sub_events)
     ? (body.sub_events as Array<{ name: string; max_capacity: unknown }>).map((s) => ({
@@ -38,6 +45,8 @@ export function formToWriteInput(body: Record<string, unknown>): EventWriteInput
     max_capacity: num(body.max_capacity),
     requires_payment: Boolean(body.requires_payment),
     payment_amount: num(body.payment_amount),
+    server_price: num(body.server_price),
+    servers_pay: body.servers_pay === undefined ? true : Boolean(body.servers_pay),
     requires_survey: Boolean(body.has_satisfaction_survey),
     flyer_url: (body.flyer as string) || null,
     status: 'upcoming',
@@ -55,6 +64,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
     is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule',
     requires_registration: 'requires_registration', max_capacity: 'max_capacity',
     requires_payment: 'requires_payment', payment_amount: 'payment_amount',
+    server_price: 'server_price', servers_pay: 'servers_pay',
     has_satisfaction_survey: 'requires_survey', flyer: 'flyer_url', status: 'status',
   }
   for (const [formKey, dbKey] of Object.entries(map)) {

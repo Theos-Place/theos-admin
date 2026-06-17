@@ -685,6 +685,36 @@ export type Database = {
           },
         ]
       }
+      event_organizing_committees: {
+        Row: {
+          committee_id: string
+          event_id: string
+        }
+        Insert: {
+          committee_id: string
+          event_id: string
+        }
+        Update: {
+          committee_id?: string
+          event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_organizing_committees_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_organizing_committees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
           event_id: string
@@ -843,6 +873,8 @@ export type Database = {
           requires_registration: boolean | null
           requires_survey: boolean | null
           sede_id: string | null
+          server_price: number | null
+          servers_pay: boolean
           starts_at: string
           status: string | null
           title: string
@@ -875,6 +907,8 @@ export type Database = {
           requires_registration?: boolean | null
           requires_survey?: boolean | null
           sede_id?: string | null
+          server_price?: number | null
+          servers_pay?: boolean
           starts_at: string
           status?: string | null
           title: string
@@ -907,6 +941,8 @@ export type Database = {
           requires_registration?: boolean | null
           requires_survey?: boolean | null
           sede_id?: string | null
+          server_price?: number | null
+          servers_pay?: boolean
           starts_at?: string
           status?: string | null
           title?: string

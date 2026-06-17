@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getEvents, createEvent } from '@/lib/supabase/queries/events'
-import { formToWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
+import { formToWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
 import type { EventType, EventStatus } from '@/types/event'
 
 export async function GET(req: NextRequest) {
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
     if (auth.res) return auth.res
     const body = await req.json()
-    const event = await createEvent(formToWriteInput(body), formToSubEvents(body), auth.ctx.userId)
+    const event = await createEvent(formToWriteInput(body), formToSubEvents(body), auth.ctx.userId, formToOrganizingCommittees(body))
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
     console.error('POST /api/events:', error)

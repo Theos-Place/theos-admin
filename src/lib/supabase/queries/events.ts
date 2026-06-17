@@ -30,6 +30,8 @@ export type DbEventEnriched = {
   requires_registration: boolean
   requires_payment: boolean
   payment_amount: number | null
+  server_price: number | null
+  servers_pay: boolean
   requires_survey: boolean
   status: EventStatus
   cancellation_reason: string | null
@@ -37,6 +39,7 @@ export type DbEventEnriched = {
   created_at: string
   updated_at: string
   exceptions: Array<{ exception_date: string; override_event_id: string | null }>
+  organizing_committees: Array<{ committee_id: string }>
   sub_events: Array<{ id: string; name: string; max_capacity: number }>
   registrations: Array<{
     member_id: string
@@ -77,6 +80,7 @@ export type EventFilters = {
 const SELECT = `
   *,
   exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id),
+  organizing_committees:event_organizing_committees(committee_id),
   sub_events(id, name, max_capacity),
   registrations:event_registrations(
     member_id,
@@ -117,6 +121,7 @@ function normalize(row: Record<string, unknown>): DbEventEnriched {
   return {
     ...(row as DbEventEnriched),
     exceptions: (row.exceptions ?? []) as DbEventEnriched['exceptions'],
+    organizing_committees: (row.organizing_committees ?? []) as DbEventEnriched['organizing_committees'],
     sub_events: (row.sub_events ?? []) as DbEventEnriched['sub_events'],
     registrations: (row.registrations ?? []) as DbEventEnriched['registrations'],
     volunteers,
@@ -140,7 +145,7 @@ export async function getEvents(filters: EventFilters = {}): Promise<{ events: D
 
   // select como string plano: el parser de tipos de supabase-js no soporta el ternario
   const select: string = filters.light
-    ? '*, exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id), sub_events(id, name, max_capacity)'
+    ? '*, exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id), organizing_committees:event_organizing_committees(committee_id), sub_events(id, name, max_capacity)'
     : SELECT
   let query = supabase
     .from('events')
@@ -200,6 +205,8 @@ export type EventWriteInput = {
   requires_registration?: boolean
   requires_payment?: boolean
   payment_amount?: number | null
+  server_price?: number | null
+  servers_pay?: boolean
   requires_survey?: boolean
   status?: EventStatus
   cancellation_reason?: string | null
@@ -207,12 +214,29 @@ export type EventWriteInput = {
 
 type SubEventInput = { name: string; max_capacity: number }
 
-/** Crea un evento y sus sub-eventos. Devuelve el evento enriquecido.
+/** Reemplaza el set de comités organizadores (m2m) de un evento. */
+async function setOrganizingCommittees(
+  supabase: ReturnType<typeof createAdminClient>,
+  eventId: string,
+  committeeIds: string[],
+): Promise<void> {
+  await supabase.from('event_organizing_committees').delete().eq('event_id', eventId)
+  const ids = Array.from(new Set(committeeIds.filter(Boolean)))
+  if (ids.length > 0) {
+    const { error } = await supabase
+      .from('event_organizing_committees')
+      .insert(ids.map((committee_id) => ({ event_id: eventId, committee_id })))
+    if (error) throw error
+  }
+}
+
+/** Crea un evento, sus sub-eventos y comités organizadores. Devuelve el evento enriquecido.
  *  `createdBy` = id de auth del usuario (events.created_by → auth.users.id). */
 export async function createEvent(
   input: EventWriteInput,
   subEvents: SubEventInput[] = [],
   createdBy?: string | null,
+  organizingCommitteeIds?: string[],
 ): Promise<DbEventEnriched> {
   const supabase = createAdminClient()
 
@@ -232,6 +256,8 @@ export async function createEvent(
     if (subErr) throw subErr
   }
 
+  if (organizingCommitteeIds) await setOrganizingCommittees(supabase, eventId, organizingCommitteeIds)
+
   const created = await getEventById(eventId)
   if (!created) throw new Error('No se pudo cargar el evento recién creado')
   return created
@@ -243,11 +269,14 @@ export async function updateEvent(
   id: string,
   input: Partial<EventWriteInput>,
   subEvents?: SubEventInput[],
+  organizingCommitteeIds?: string[],
 ): Promise<DbEventEnriched> {
   const supabase = createAdminClient()
 
   const { error } = await supabase.from('events').update(input as Updatable<'events'>).eq('id', id)
   if (error) throw error
+
+  if (organizingCommitteeIds) await setOrganizingCommittees(supabase, id, organizingCommitteeIds)
 
   if (subEvents) {
     const { error: delErr } = await supabase.from('sub_events').delete().eq('event_id', id)
@@ -267,15 +296,59 @@ export async function updateEvent(
 
 type PaymentStatus = 'pending' | 'paid' | 'exempted'
 
-/** Inscribe a un miembro en un evento. UNIQUE(event_id, member_id) evita duplicados. */
+/**
+ * Precio aplicable y exención para inscribir a un miembro:
+ *  - Si el miembro es servidor activo de un comité organizador y el evento exime
+ *    a servidores (servers_pay=false) → exento.
+ *  - Si es servidor y server_price está definido → ese precio; si no, payment_amount.
+ *  - Caso normal → payment_amount.
+ */
+export async function registrationPricing(
+  eventId: string,
+  memberId: string,
+): Promise<{ requiresPayment: boolean; isServer: boolean; exempt: boolean; price: number }> {
+  const supabase = createAdminClient()
+  const { data: ev } = await supabase
+    .from('events')
+    .select('requires_payment, payment_amount, server_price, servers_pay')
+    .eq('id', eventId).maybeSingle()
+  const e = (ev ?? {}) as { requires_payment?: boolean; payment_amount?: number | null; server_price?: number | null; servers_pay?: boolean }
+  const requiresPayment = !!e.requires_payment
+  if (!requiresPayment) return { requiresPayment: false, isServer: false, exempt: false, price: 0 }
+
+  const committeeIds = await eventOrganizingCommitteeIds(eventId)
+  // Solo evaluamos "servidor" si hay comités (sin comités no hay servidores que distinguir).
+  const isServer = committeeIds.length > 0 ? await memberServesAnyCommittee(memberId, committeeIds) : false
+  const serversExempt = e.servers_pay === false
+  if (isServer && serversExempt) return { requiresPayment, isServer, exempt: true, price: 0 }
+  const base = e.payment_amount ?? 0
+  const price = isServer && e.server_price != null ? e.server_price : base
+  return { requiresPayment, isServer, exempt: false, price }
+}
+
+/** Inscribe a un miembro en un evento. UNIQUE(event_id, member_id) evita duplicados.
+ *  Si el evento es pago, exige pago completado (paid) o exención; los servidores
+ *  exentos se inscriben como 'exempted' automáticamente. */
 export async function createRegistration(
   eventId: string,
   input: { member_id: string; payment_status?: PaymentStatus },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
+  const pricing = await registrationPricing(eventId, input.member_id)
+
+  let status: PaymentStatus = input.payment_status ?? 'pending'
+  if (pricing.requiresPayment) {
+    if (pricing.exempt) {
+      status = 'exempted' // servidor exento del comité organizador
+    } else if (status !== 'paid' && status !== 'exempted') {
+      // Evento pago: la inscripción no se completa sin pago/exención.
+      throw new PaymentRequiredError()
+    }
+  }
+
   const { data, error } = await supabase
     .from('event_registrations')
-    .insert({ event_id: eventId, member_id: input.member_id, payment_status: input.payment_status ?? 'pending' })
+    .insert({ event_id: eventId, member_id: input.member_id, payment_status: status })
     .select('id')
     .single()
   if (error) throw error
@@ -396,9 +469,31 @@ export async function memberServesCommittee(memberId: string, committee: string)
     .some(v => { const a = v.position?.area; return !!a && (a.id === committeeAreaId || a.parent_id === committeeAreaId) })
 }
 
-/** Error de validación: la persona no pertenece al comité organizador. */
+/** ¿El miembro sirve en ALGUNO de los comités dados? Sin comités → permisivo (true). */
+export async function memberServesAnyCommittee(memberId: string, committeeIds: string[]): Promise<boolean> {
+  const ids = committeeIds.filter(Boolean)
+  if (ids.length === 0) return true // evento sin comités organizadores → permisivo
+  for (const c of ids) {
+    if (await memberServesCommittee(memberId, c)) return true
+  }
+  return false
+}
+
+/** Ids de los comités organizadores de un evento (m2m). */
+export async function eventOrganizingCommitteeIds(eventId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('event_organizing_committees').select('committee_id').eq('event_id', eventId)
+  return ((data ?? []) as Array<{ committee_id: string }>).map((r) => r.committee_id)
+}
+
+/** Error de validación: la persona no pertenece a ningún comité organizador. */
 export class NotCommitteeServerError extends Error {
-  constructor(msg = 'La persona no es servidora activa del comité organizador del evento.') { super(msg); this.name = 'NotCommitteeServerError' }
+  constructor(msg = 'La persona no es servidora activa de ningún comité organizador del evento.') { super(msg); this.name = 'NotCommitteeServerError' }
+}
+
+/** Error: el evento es pago y la inscripción no completó el pago. */
+export class PaymentRequiredError extends Error {
+  constructor(msg = 'Este evento requiere pago: la inscripción solo se completa marcándola como pagada o exenta.') { super(msg); this.name = 'PaymentRequiredError' }
 }
 
 export async function createVolunteer(
@@ -406,12 +501,10 @@ export async function createVolunteer(
   input: { member_id: string; role?: string | null; status?: VolunteerStatus },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  // Validación 2: si el evento tiene comité organizador, solo se asignan
-  // servidores activos de ese comité. Históricos sin comité (committee_id null)
-  // → sin restricción (permisivo).
-  const { data: ev } = await supabase.from('events').select('committee_id').eq('id', eventId).maybeSingle()
-  const committeeId = (ev as { committee_id: string | null } | null)?.committee_id ?? null
-  if (committeeId && !(await memberServesCommittee(input.member_id, committeeId))) {
+  // Validación 2: solo servidores activos de los comités organizadores. Eventos
+  // sin comités organizadores → sin restricción (permisivo).
+  const committeeIds = await eventOrganizingCommitteeIds(eventId)
+  if (!(await memberServesAnyCommittee(input.member_id, committeeIds))) {
     throw new NotCommitteeServerError()
   }
   const { data, error } = await supabase
@@ -526,6 +619,8 @@ function toWriteInput(e: DbEventEnriched): EventWriteInput {
     requires_registration: e.requires_registration,
     requires_payment: e.requires_payment,
     payment_amount: e.payment_amount,
+    server_price: e.server_price,
+    servers_pay: e.servers_pay,
     requires_survey: e.requires_survey,
     status: e.status,
   }
@@ -533,6 +628,10 @@ function toWriteInput(e: DbEventEnriched): EventWriteInput {
 
 function parentSubEvents(e: DbEventEnriched): SubEventInput[] {
   return e.sub_events.map((s) => ({ name: s.name, max_capacity: s.max_capacity }))
+}
+
+function parentCommitteeIds(e: DbEventEnriched): string[] {
+  return e.organizing_committees.map((c) => c.committee_id)
 }
 
 /**
@@ -550,14 +649,16 @@ export async function updateEventScoped(
   subEvents: SubEventInput[] | undefined,
   occurrence: OccurrenceRef | null,
   createdBy?: string | null,
+  organizingCommitteeIds?: string[],
 ): Promise<DbEventEnriched> {
-  if (scope === 'all' || !occurrence) return updateEvent(id, input, subEvents)
+  if (scope === 'all' || !occurrence) return updateEvent(id, input, subEvents, organizingCommitteeIds)
 
   const supabase = createAdminClient()
   const parent = await getEventById(id)
   if (!parent) throw new Error('Evento no encontrado')
   const base = toWriteInput(parent)
   const subs = subEvents ?? parentSubEvents(parent)
+  const committees = organizingCommitteeIds ?? parentCommitteeIds(parent)
 
   if (scope === 'single') {
     const overrideInput: EventWriteInput = {
@@ -565,7 +666,7 @@ export async function updateEventScoped(
       is_recurring: false, recurrence_rule: null, recurrence_end: null,
       parent_event_id: id,
     }
-    const override = await createEvent(overrideInput, subs, createdBy)
+    const override = await createEvent(overrideInput, subs, createdBy, committees)
     const { error } = await supabase.from('event_exceptions').upsert(
       { parent_event_id: id, exception_date: occurrence.date, override_event_id: override.id },
       { onConflict: 'parent_event_id,exception_date' },
@@ -585,7 +686,7 @@ export async function updateEventScoped(
     recurrence_end: parent.recurrence_end ?? null, // conserva el fin original de la serie
     parent_event_id: null,
   }
-  return createEvent(newParentInput, subs, createdBy)
+  return createEvent(newParentInput, subs, createdBy, committees)
 }
 
 /**

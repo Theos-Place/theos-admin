@@ -57,6 +57,12 @@ export type MockEvent = {
   max_capacity: number | null
   requires_payment: boolean
   payment_amount: number | null
+  /** Precio para servidores de los comités organizadores. null = igual al normal. */
+  server_price: number | null
+  /** false = servidores del comité organizador exentos de pago. */
+  servers_pay: boolean
+  /** Ids de áreas-comité organizadoras (m2m). */
+  organizing_committee_ids: string[]
   requires_survey: boolean
   status: EventStatus
   is_recurring: boolean

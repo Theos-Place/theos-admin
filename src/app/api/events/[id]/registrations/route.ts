@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { createRegistration } from '@/lib/supabase/queries/events'
+import { createRegistration, registrationPricing, PaymentRequiredError } from '@/lib/supabase/queries/events'
+
+// GET: precio aplicable para inscribir a un miembro. ?member_id=<uuid>
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    if (auth.res) return auth.res
+    const { id } = await params
+    const memberId = req.nextUrl.searchParams.get('member_id')
+    if (!memberId) return NextResponse.json({ error: 'Falta member_id' }, { status: 400 })
+    const pricing = await registrationPricing(id, memberId)
+    return NextResponse.json(pricing)
+  } catch (error) {
+    console.error('GET /api/events/[id]/registrations:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
 
 // POST: inscribe un miembro. Body: { member_id, payment_status? }
 export async function POST(
@@ -18,6 +37,9 @@ export async function POST(
     const res = await createRegistration(id, { member_id: body.member_id, payment_status: body.payment_status })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
+    if (error instanceof PaymentRequiredError) {
+      return NextResponse.json({ error: error.message }, { status: 422 })
+    }
     console.error('POST /api/events/[id]/registrations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
