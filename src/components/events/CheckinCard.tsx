@@ -8,6 +8,8 @@ interface CheckinCardProps {
   member: { id: string; name: string }
   onConfirm: (type: AttendanceType) => void
   onCancel: () => void
+  /** Destino del check-in (subevento o evento) — se muestra en la confirmación. */
+  targetLabel?: string
 }
 
 const AVATAR_COLORS: Record<string, string> = {
@@ -27,7 +29,7 @@ function getAvatarColor(name: string) {
   return AVATAR_COLORS[first] ?? 'bg-navy text-white'
 }
 
-export function CheckinCard({ member, onConfirm, onCancel }: CheckinCardProps) {
+export function CheckinCard({ member, onConfirm, onCancel, targetLabel }: CheckinCardProps) {
   const initials = getInitials(member.name)
   const avatarColor = getAvatarColor(member.name)
 
@@ -50,9 +52,11 @@ export function CheckinCard({ member, onConfirm, onCancel }: CheckinCardProps) {
           >
             {member.name}
           </p>
-          <p className="text-xs text-navy-light/60 font-body">
-            ID {member.id}
-          </p>
+          {targetLabel && (
+            <p className="text-[13px] text-navy-light/70 font-body mt-1">
+              Asistencia a <span className="font-semibold text-navy">{targetLabel}</span>
+            </p>
+          )}
         </div>
       </div>
 

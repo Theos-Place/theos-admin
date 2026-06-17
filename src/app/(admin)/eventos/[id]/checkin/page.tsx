@@ -181,7 +181,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       const mem = await res.json() as { first_name: string; last_name: string }
       const name = `${mem.first_name} ${mem.last_name}`.trim()
       const r = await persistCheckin({ id: memberId, name }, 'participant', 'qr')
-      if (r === 'ok') { scanFeedback(true); flash('ok', `✓ ${name} registrado`) }
+      const dest = targetSub ? subName(targetSub) : null
+      if (r === 'ok') { scanFeedback(true); flash('ok', `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`) }
       else if (r === 'dup') { scanFeedback(false); flash('dup', `${name} ya estaba registrado`) }
       else { scanFeedback(false); flash('error', 'No se pudo registrar') }
     } catch { scanFeedback(false); flash('error', 'Error al registrar') }
@@ -246,8 +247,14 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     setQuery(member.name)
   }
 
-  const sortedCheckins = [...checkins].sort((a, b) => (b.checked_at ?? '').localeCompare(a.checked_at ?? ''))
   const subName = (subId: string | null) => event.sub_events.find(s => s.id === subId)?.name ?? null
+  const hasSubs = event.sub_events.length > 0
+  // Con subeventos, el contador y la lista reflejan el destino activo (targetSub);
+  // sin subeventos, todos los check-ins del evento.
+  const visibleCheckins = [...checkins]
+    .filter(c => !hasSubs || c.sub_event_id === targetSub)
+    .sort((a, b) => (b.checked_at ?? '').localeCompare(a.checked_at ?? ''))
+  const targetLabel = targetSub ? (subName(targetSub) ?? event.name) : event.name
   // Fecha mostrada: la de la ocurrencia (?date=) si viene, si no la del evento.
   const headerDate = (() => {
     const d = occParam ? new Date(occParam) : new Date(event.start_at)
@@ -276,9 +283,11 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           </div>
           <div className="text-right shrink-0">
             <p className="text-4xl sm:text-5xl font-extrabold text-coral tabular-nums font-display leading-none">
-              {checkins.length}
+              {visibleCheckins.length}
             </p>
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mt-1">registrados</p>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mt-1">
+              {hasSubs ? 'en este subevento' : 'registrados'}
+            </p>
           </div>
         </div>
         {/* Selector de evento/subevento destino del check-in */}
@@ -342,6 +351,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 member={selectedMember}
                 onConfirm={handleConfirm}
                 onCancel={() => { setSelectedMember(null); setQuery('') }}
+                targetLabel={targetLabel}
               />
             </div>
           ) : searchResults.length > 0 ? (
@@ -385,13 +395,15 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
           {/* Lista de registrados */}
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
-            <div className="px-4 py-3 border-b border-[var(--outline-variant)] flex items-center justify-between">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Registrados</p>
-              <span className="text-[12px] text-navy-light/60 font-body tabular-nums">{checkins.length}</span>
+            <div className="px-4 py-3 border-b border-[var(--outline-variant)] flex items-center justify-between gap-3">
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display truncate">
+                Registrados{hasSubs ? ` · ${targetLabel}` : ''}
+              </p>
+              <span className="text-[12px] text-navy-light/60 font-body tabular-nums shrink-0">{visibleCheckins.length}</span>
             </div>
-            {sortedCheckins.length === 0 ? (
+            {visibleCheckins.length === 0 ? (
               <p className="px-4 py-10 text-center text-sm text-navy-light/50 font-body">Aún nadie registrado. Escaneá un QR o buscá por nombre.</p>
-            ) : sortedCheckins.map(ci => (
+            ) : visibleCheckins.map(ci => (
               <div key={ci.id} className="flex items-center gap-3 px-4 py-3 border-b border-[var(--outline-variant)] last:border-0">
                 <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
                   {getInitials(ci.member_name)}
