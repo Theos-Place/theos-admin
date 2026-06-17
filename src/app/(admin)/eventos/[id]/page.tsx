@@ -6,6 +6,8 @@ import { useEvent } from '@/hooks/useEvents'
 import type { Member } from '@/types/member'
 import { toDomainMember } from '@/lib/members/adapter'
 import { CancellationModal } from '@/components/events/CancellationModal'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -99,9 +101,10 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
   const [showMenu, setShowMenu] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showDeleteScope, setShowDeleteScope] = useState(false) // selector de alcance (recurrentes)
+  const [confirmScope, setConfirmScope] = useState<'all' | 'future' | 'single' | null>(null) // pendiente de confirmar con "eliminar"
+  const [showActiveWarning, setShowActiveWarning] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
   const router = useRouter()
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [showCalendarPopover, setShowCalendarPopover] = useState(false)
@@ -172,9 +175,14 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
           <ChevronLeft size={16} /> Eventos
         </Link>
-        <p className="text-navy-light/60 font-body">
-          {loading ? 'Cargando…' : 'Evento no encontrado.'}
-        </p>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-24 text-navy-light/60">
+            <div className="h-8 w-8 rounded-full border-2 border-coral/30 border-t-coral animate-spin" aria-hidden />
+            <p className="text-sm font-body">Cargando evento…</p>
+          </div>
+        ) : (
+          <p className="text-navy-light/60 font-body">Evento no encontrado.</p>
+        )}
       </div>
     )
   }
@@ -209,10 +217,31 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     return { date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, start: d.toISOString() }
   }
 
-  async function handleDelete(scope: 'all' | 'future' | 'single') {
+  // ¿Tiene asistencia ligada? (bloquea borrado destructivo de la serie/puntual).
+  const hasAttendance = event.checkins.length > 0 || event.registrations.length > 0
+
+  // Inicia el flujo de borrado desde el menú.
+  function startDelete() {
+    setShowMenu(false)
+    if (rawEvent?.is_recurring) { setShowDeleteScope(true); return }
+    if (hasAttendance) { setShowActiveWarning(true); return }
+    setConfirmScope('all') // puntual sin asistencia → confirmar escribiendo "eliminar"
+  }
+
+  // El usuario eligió alcance (recurrente).
+  function chooseScope(scope: 'all' | 'future' | 'single') {
+    setShowDeleteScope(false)
+    if (scope === 'all') {
+      if (hasAttendance) { setShowActiveWarning(true); return }
+      setConfirmScope('all') // destructivo → confirmar con "eliminar"
+    } else {
+      runDelete(scope) // single/future no destruyen asistencia → directo
+    }
+  }
+
+  async function runDelete(scope: 'all' | 'future' | 'single') {
     if (deleting) return
     setDeleting(true)
-    setDeleteError(null)
     const occ = occurrenceRef()
     try {
       const res = await fetch(`/api/events/${id}`, {
@@ -221,23 +250,21 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         body: JSON.stringify({ scope, occurrence_date: occ.date, occurrence_start: occ.start }),
       })
       if (res.status === 422) {
-        const d = await res.json().catch(() => null) as { error?: string } | null
-        setDeleteError(d?.error || 'No se puede eliminar: tiene asistencia registrada.')
+        setConfirmScope(null)
+        setShowActiveWarning(true)
         setDeleting(false)
         return
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      // single/future no borran la serie: volvemos al detalle refrescado; all → a la lista.
       if (scope === 'all' || !rawEvent?.is_recurring) {
         router.push('/eventos')
       } else {
-        setShowDeleteModal(false)
+        setConfirmScope(null)
         setDeleting(false)
         refetch()
       }
     } catch (e) {
       console.error('No se pudo eliminar el evento:', e)
-      setDeleteError('No se pudo eliminar el evento. Intentá de nuevo.')
       setDeleting(false)
     }
   }
@@ -330,15 +357,29 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         />
       )}
       {showMessageModal && <SendMessageModal onClose={() => setShowMessageModal(false)} />}
-      {showDeleteModal && (
+      {showDeleteScope && (
         <DeleteEventModal
-          isRecurring={!!rawEvent?.is_recurring}
           busy={deleting}
-          error={deleteError}
-          onConfirm={handleDelete}
-          onClose={() => { if (!deleting) { setShowDeleteModal(false); setDeleteError(null) } }}
+          onConfirm={chooseScope}
+          onClose={() => { if (!deleting) setShowDeleteScope(false) }}
         />
       )}
+      <DeleteConfirmModal
+        open={confirmScope !== null}
+        title="Eliminar evento"
+        description="Esta acción es permanente y no se puede deshacer."
+        keyword="eliminar"
+        confirmLabel="Eliminar"
+        loading={deleting}
+        onConfirm={() => confirmScope && runDelete(confirmScope)}
+        onCancel={() => setConfirmScope(null)}
+      />
+      <ActiveWarningModal
+        open={showActiveWarning}
+        title="No se puede eliminar"
+        message="Este evento tiene check-ins o inscripciones registrados. Cancelalo en su lugar para conservar el historial."
+        onClose={() => setShowActiveWarning(false)}
+      />
 
       {/* Header */}
       <EventHeader
@@ -349,7 +390,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         showMenu={showMenu}
         onMenuToggle={() => setShowMenu(m => !m)}
         onCancelClick={() => { setShowMenu(false); setShowCancelModal(true) }}
-        onDeleteClick={() => { setShowMenu(false); setDeleteError(null); setShowDeleteModal(true) }}
+        onDeleteClick={startDelete}
         occParam={occParam}
         showCalendarPopover={showCalendarPopover}
         onCalendarPopoverToggle={() => setShowCalendarPopover(p => !p)}
@@ -576,14 +617,14 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
 // ─── Modal: eliminar evento (con alcances si es recurrente) ──────────────────────
 
-function DeleteEventModal({ isRecurring, busy, error, onConfirm, onClose }: {
-  isRecurring: boolean
+// Selector de alcance para eliminar un recurrente. El borrado destructivo de
+// "toda la serie" se confirma luego con DeleteConfirmModal (escribir "eliminar").
+function DeleteEventModal({ busy, onConfirm, onClose }: {
   busy: boolean
-  error: string | null
   onConfirm: (scope: 'all' | 'future' | 'single') => void
   onClose: () => void
 }) {
-  const [scope, setScope] = useState<'all' | 'future' | 'single'>(isRecurring ? 'single' : 'all')
+  const [scope, setScope] = useState<'all' | 'future' | 'single'>('single')
   const OPTIONS: { key: 'all' | 'future' | 'single'; title: string; desc: string }[] = [
     { key: 'single', title: 'Solo este evento', desc: 'Cancela únicamente esta fecha; el resto de la serie no cambia.' },
     { key: 'future', title: 'Esta y las siguientes', desc: 'Termina la serie justo antes de esta fecha (las anteriores se conservan).' },
@@ -595,11 +636,11 @@ function DeleteEventModal({ isRecurring, busy, error, onConfirm, onClose }: {
       <div className="px-5 py-4 border-b border-b-[var(--outline-variant)]">
         <h3 id="del-evento-title" className="text-sm font-semibold text-navy font-display">Eliminar evento</h3>
         <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
-          {isRecurring ? 'Este es un evento recurrente. ¿Qué querés eliminar?' : 'Esta acción no se puede deshacer.'}
+          Este es un evento recurrente. ¿Qué querés eliminar?
         </p>
       </div>
       <div className="p-5 space-y-3">
-        {isRecurring && OPTIONS.map(opt => (
+        {OPTIONS.map(opt => (
           <div
             key={opt.key}
             onClick={() => setScope(opt.key)}
@@ -619,19 +660,13 @@ function DeleteEventModal({ isRecurring, busy, error, onConfirm, onClose }: {
             </div>
           </div>
         ))}
-        {!isRecurring && (
-          <p className="text-sm text-navy-light/70 font-body">
-            Se eliminará el evento de forma permanente. Si tiene check-ins o inscripciones, no se podrá borrar (cancelalo en su lugar).
-          </p>
-        )}
-        {error && <p className="text-[12px] text-coral font-body" role="alert">{error}</p>}
         <div className="flex gap-2 pt-1">
           <button
             onClick={() => onConfirm(scope)}
             disabled={busy}
             className="flex-1 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
           >
-            {busy ? 'Eliminando…' : 'Eliminar'}
+            {busy ? 'Procesando…' : 'Continuar'}
           </button>
           <button
             onClick={onClose}

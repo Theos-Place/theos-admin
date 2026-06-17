@@ -53,7 +53,8 @@ export type MockEvent = {
   is_virtual: boolean
   virtual_url: string | null
   requires_registration: boolean
-  max_capacity: number
+  /** null = sin límite de cupo (default). */
+  max_capacity: number | null
   requires_payment: boolean
   payment_amount: number | null
   requires_survey: boolean

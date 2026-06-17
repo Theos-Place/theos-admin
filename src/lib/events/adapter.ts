@@ -23,7 +23,7 @@ export function toDomainEvent(db: DbEventEnriched): MockEvent {
     is_virtual: db.is_virtual,
     virtual_url: db.virtual_url ?? null,
     requires_registration: db.requires_registration,
-    max_capacity: db.max_capacity ?? 0,
+    max_capacity: db.max_capacity, // null = sin límite
     requires_payment: db.requires_payment,
     payment_amount: db.payment_amount,
     requires_survey: db.requires_survey,

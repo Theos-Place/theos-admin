@@ -72,6 +72,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
     }
   }
 
+  const cap = event.max_capacity ?? 0 // 0 = sin límite (no se calcula ocupación)
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -81,17 +82,17 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
             <circle
               cx="50" cy="50" r="40" fill="none" strokeWidth="8" stroke="#70BDC2"
               strokeDasharray={circumference}
-              strokeDashoffset={registrationCount > 0 && event.max_capacity > 0 ? circumference * (1 - registrationCount / event.max_capacity) : circumference}
+              strokeDashoffset={registrationCount > 0 && cap > 0 ? circumference * (1 - registrationCount / cap) : circumference}
               strokeLinecap="round"
               transform="rotate(-90 50 50)"
             />
             <text x="50" y="54" textAnchor="middle" fontSize="18" fontWeight="bold" fill="#161440" fontFamily="var(--font-display)">
-              {event.max_capacity > 0 ? Math.round((registrationCount / event.max_capacity) * 100) : 0}%
+              {cap > 0 ? Math.round((registrationCount / cap) * 100) : 0}%
             </text>
           </svg>
           <p className="text-[11px] text-navy-light/60 mt-1 font-body">Ocupación</p>
           <p className="text-sm font-medium text-navy font-display">
-            {registrationCount}/{event.max_capacity || '∞'}
+            {registrationCount}/{cap || '∞'}
           </p>
         </div>
         {[

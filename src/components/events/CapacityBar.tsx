@@ -4,12 +4,13 @@ import { cn } from '@/lib/utils'
 
 interface CapacityBarProps {
   current: number
-  max: number
+  /** null = sin límite de cupo. */
+  max: number | null
   showLabel?: boolean
 }
 
 export function CapacityBar({ current, max, showLabel = true }: CapacityBarProps) {
-  const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0
+  const pct = max && max > 0 ? Math.min((current / max) * 100, 100) : 0
   const fillColor = pct > 90 ? 'bg-coral' : pct > 70 ? 'bg-amber-500' : 'bg-teal-deep'
 
   return (
@@ -24,7 +25,7 @@ export function CapacityBar({ current, max, showLabel = true }: CapacityBarProps
         <span
           className="text-[11px] text-navy-light/60 whitespace-nowrap font-body"
         >
-          {current}/{max}
+          {current}/{max ?? '∞'}
         </span>
       )}
     </div>

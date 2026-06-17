@@ -63,7 +63,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const router = useRouter()
   const { can } = usePermissions()
   const canCheckin = can('eventos', 'edit') // encargado_eventos, direccion, admin
-  const { event } = useEvent(id)
+  const { event, loading } = useEvent(id)
   // Fecha de ESTA ocurrencia (si venimos de una recurrente con ?date=), para el header.
   const occParam = useSearchParams().get('date')
   // Subevento destino del check-in (null = evento padre).
@@ -110,11 +110,22 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     return () => { alive = false; clearTimeout(t) }
   }, [query])
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface-low flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-navy-light/60">
+          <div className="h-8 w-8 rounded-full border-2 border-coral/30 border-t-coral animate-spin" aria-hidden />
+          <p className="text-sm font-body">Cargando evento…</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!event) {
     return (
-      <div className="min-h-screen bg-navy flex items-center justify-center">
+      <div className="min-h-screen bg-surface-low flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-white/60">Evento no encontrado.</p>
+          <p className="text-navy-light/60 font-body">Evento no encontrado.</p>
           <Link href="/eventos" className="text-coral hover:text-coral-deep">← Volver</Link>
         </div>
       </div>
@@ -502,8 +513,9 @@ function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onReg
     { member_id: member.id, name: member.name, relation: 'Titular' as const },
     ...family,
   ]
-  // El titular y los familiares arrancan seleccionados; cada quien con el subevento por defecto.
-  const [selected, setSelected] = useState<Set<string>>(new Set(everyone.map(p => p.member_id)))
+  // El titular arranca seleccionado; los familiares deseleccionados (solo se
+  // registra a quien se marque). Cada quien con el subevento por defecto.
+  const [selected, setSelected] = useState<Set<string>>(new Set([member.id]))
   const [subById, setSubById] = useState<Record<string, string | null>>(
     () => Object.fromEntries(everyone.map(p => [p.member_id, defaultSub])),
   )
@@ -558,15 +570,24 @@ function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onReg
                   </div>
                 </div>
                 {hasSubs && on && (
-                  <select
-                    value={subById[p.member_id] ?? ''}
-                    onChange={e => setSub(p.member_id, e.target.value || null)}
-                    aria-label={`Subevento de ${p.name}`}
-                    className="mt-2 w-full rounded-lg bg-white/10 px-2.5 py-1.5 text-[13px] text-white outline-none focus:ring-1 focus:ring-coral/40 font-body"
-                  >
-                    <option value="">Evento general</option>
-                    {subEvents.map(se => <option key={se.id} value={se.id}>{se.name}</option>)}
-                  </select>
+                  <div className="mt-2 pl-7 flex flex-wrap gap-1.5" role="radiogroup" aria-label={`Subevento de ${p.name}`}>
+                    {[{ id: null as string | null, name: 'Evento general' }, ...subEvents.map(se => ({ id: se.id as string | null, name: se.name }))].map(opt => {
+                      const checked = (subById[p.member_id] ?? null) === opt.id
+                      return (
+                        <button
+                          key={opt.id ?? 'general'}
+                          type="button"
+                          role="radio"
+                          aria-checked={checked}
+                          onClick={() => setSub(p.member_id, opt.id)}
+                          className={cn('rounded-full px-3 py-1 text-[12px] font-body transition-colors',
+                            checked ? 'bg-coral text-white' : 'bg-white/10 text-white/70 hover:bg-white/15')}
+                        >
+                          {opt.name}
+                        </button>
+                      )
+                    })}
+                  </div>
                 )}
               </div>
             )

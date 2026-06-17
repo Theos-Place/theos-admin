@@ -432,7 +432,7 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3 mb-4">
               {todayEvents.map(ev => {
-                const pct = ev.registrations.length / ev.max_capacity
+                const pct = ev.max_capacity ? ev.registrations.length / ev.max_capacity : 0
                 return (
                   <div key={ev.id} className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
                     <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: EVENT_TYPE_COLORS[ev.event_type] }} />

@@ -164,7 +164,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [newSubName, setNewSubName] = useState('')
   const [newSubCap, setNewSubCap] = useState('')
   const [requiresRegistration, setRequiresRegistration] = useState(event?.requires_registration ?? false)
-  const [maxCapacity, setMaxCapacity] = useState(event ? String(event.max_capacity) : '')
+  const [maxCapacity, setMaxCapacity] = useState(event ? String(event.max_capacity ?? '') : '')
   const [requiresPayment, setRequiresPayment] = useState(event?.requires_payment ?? false)
   const [paymentAmount, setPaymentAmount] = useState(event?.payment_amount ? String(event.payment_amount) : '')
   const [paymentMethods, setPaymentMethods] = useState<string[]>(['SINPE Móvil'])

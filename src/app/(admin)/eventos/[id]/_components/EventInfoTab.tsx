@@ -46,7 +46,7 @@ export function EventInfoTab({
             { label: 'Ubicación', value: event.location },
             { label: 'Virtual', value: event.is_virtual ? 'Sí' : 'No' },
             { label: 'Inscripción', value: event.requires_registration ? 'Requerida' : 'Libre' },
-            { label: 'Capacidad', value: `${event.max_capacity} personas` },
+            { label: 'Capacidad', value: event.max_capacity != null ? `${event.max_capacity} personas` : 'Sin límite' },
           ].map(({ label, value }) => (
             <div key={label} className="space-y-0.5">
               <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{label}</p>
