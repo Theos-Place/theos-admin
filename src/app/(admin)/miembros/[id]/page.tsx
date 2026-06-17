@@ -65,6 +65,7 @@ export default function MiembroDetailPage() {
   const [showMerge, setShowMerge] = useState(false)
   const [openSections, setOpenSections] = useState({
     estudios: true,
+    ledStudies: false,
     servicio: false,
     eventos: false,
     donaciones: false,
