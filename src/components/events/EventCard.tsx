@@ -25,10 +25,16 @@ export function EventCard({ event }: { event: MockEvent }) {
   const past = isPastEvent(event)
   const start = new Date(event.start_at)
   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
+  // Ocurrencias virtuales comparten el id del padre → pasamos su fecha para que
+  // el detalle muestre la de esta ocurrencia, no la del padre.
+  const isOccurrence = (event as MockEvent & { occurrence_key?: string }).occurrence_key != null
+  const href = isOccurrence
+    ? `/eventos/${event.id}?date=${encodeURIComponent(event.start_at)}`
+    : `/eventos/${event.id}`
 
   return (
     <Link
-      href={`/eventos/${event.id}`}
+      href={href}
       className="group flex flex-col overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)] transition-shadow hover:shadow-[var(--shadow-lg)]"
     >
       {/* Flyer o placeholder */}

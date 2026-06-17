@@ -8,7 +8,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    // Check-in operable por encargado_eventos, dirección y admin (admin pasa siempre).
+    const auth = await requireRoles('encargado_eventos', 'direccion')
     if (auth.res) return auth.res
   try {
     const { id } = await params

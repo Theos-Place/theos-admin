@@ -17,7 +17,7 @@ interface CalendarGridProps {
   events: CalendarEvent[]
   month: number
   year: number
-  onEventClick?: (id: string) => void
+  onEventClick?: (id: string, occurrenceDate?: string) => void
   onPrev: () => void
   onNext: () => void
 }
@@ -86,9 +86,11 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
   function openEvent(ev: CalendarEvent, e: React.MouseEvent) {
     setPop({ kind: 'event', event: ev, rect: e.currentTarget.getBoundingClientRect() })
   }
-  function goToEvent(id: string) {
+  function goToEvent(ev: CalendarEvent) {
     setPop(null)
-    onEventClick?.(id)
+    // Para recurrentes pasamos la fecha de ESTA ocurrencia, así el detalle no
+    // muestra la del evento padre.
+    onEventClick?.(ev.id, isRecurring(ev) ? ev.start_at : undefined)
   }
 
   return (
@@ -240,7 +242,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
               return (
                 <li key={ev.occurrence_key ?? ev.id}>
                   <button
-                    onClick={() => goToEvent(ev.id)}
+                    onClick={() => goToEvent(ev)}
                     className="w-full flex items-start gap-2.5 rounded-xl px-2.5 py-2 text-left hover:bg-surface-low transition-colors"
                   >
                     <span className={cn('mt-1.5 h-2 w-2 rounded-full shrink-0', DOT_ONLY[config.color] ?? 'bg-navy', past && 'opacity-50')} />
@@ -315,7 +317,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
               )}
 
               <button
-                onClick={() => goToEvent(ev.id)}
+                onClick={() => goToEvent(ev)}
                 className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-navy px-4 py-2 text-sm text-white hover:bg-navy-light transition-colors font-body"
               >
                 Ver detalle completo

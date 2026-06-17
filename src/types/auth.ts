@@ -8,6 +8,7 @@ export type RoleId =
   | 'coordinador_servidores'
   | 'coordinador_estudios'
   | 'coordinador_dirigentes'
+  | 'encargado_eventos'
   | 'lider_comite'
   | 'comunicaciones'
   | 'dirigente'

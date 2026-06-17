@@ -1,12 +1,15 @@
 'use client'
 
 import { use, useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useEvent } from '@/hooks/useEvents'
 import type { Member } from '@/types/member'
 import { toDomainMember } from '@/lib/members/adapter'
 import { CancellationModal } from '@/components/events/CancellationModal'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
+import { usePermissions } from '@/hooks/usePermissions'
+import { generateCSV } from '@/lib/export'
 import { Send, Download } from 'lucide-react'
 import { TOAST_MS } from '@/lib/constants'
 import { useRef } from 'react'
@@ -19,12 +22,6 @@ import type { VolunteerBooking } from './_components/EventServersTab'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { getInitials } from '@/lib/format'
-
-const FAKE_MESSAGES = [
-  { date: '2026-05-10', channel: 'WhatsApp', content: 'Recordatorio: el evento se acerca. ¡Confirmá tu asistencia antes del viernes!' },
-  { date: '2026-05-05', channel: 'Correo', content: 'Detalles del evento adjuntos. Revisá el horario y la dirección con anticipación.' },
-  { date: '2026-04-28', channel: 'WhatsApp', content: 'Las inscripciones están abiertas. Compartí con quien querés que venga.' },
-]
 
 function SendMessageModal({ onClose }: { onClose: () => void }) {
   const [msg, setMsg] = useState('')
@@ -73,7 +70,30 @@ const TAB_LABELS: Record<Tab, string> = {
 
 export default function EventoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { event, loading, refetch } = useEvent(id)
+  const { event: rawEvent, loading, refetch } = useEvent(id)
+  // Si venimos de una ocurrencia recurrente (?date=ISO), mostramos SU fecha, no
+  // la del evento padre. Conserva la duración del evento (end - start).
+  const occParam = useSearchParams().get('date')
+  const event = useMemo(() => {
+    if (!rawEvent || !occParam) return rawEvent
+    const occStart = new Date(occParam)
+    if (isNaN(occStart.getTime())) return rawEvent
+    const durMs = Math.max(0, new Date(rawEvent.end_at).getTime() - new Date(rawEvent.start_at).getTime())
+    return { ...rawEvent, start_at: occStart.toISOString(), end_at: new Date(occStart.getTime() + durMs).toISOString() }
+  }, [rawEvent, occParam])
+  const { can } = usePermissions()
+  // Gating de tabs: los miembros normales solo ven Información. encargado_eventos
+  // (edit/export en eventos) ve check-in y reportes; gestión (inscripciones,
+  // servidores, comunicaciones) requiere create → solo dirección/admin.
+  const canCheckin = can('eventos', 'edit')
+  const canReport  = can('eventos', 'export')
+  const canManage  = can('eventos', 'create')
+  const visibleTabs = TABS.filter(t =>
+    t === 'informacion' ? true
+    : t === 'checkin'   ? canCheckin
+    : t === 'reportes'  ? canReport
+    : canManage,
+  )
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
   const [showMenu, setShowMenu] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -154,8 +174,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const checkinCount = event.checkins.length
   const attendanceRate = registrationCount > 0 ? Math.round((checkinCount / registrationCount) * 100) : 0
 
-  const activeTabIndex = TABS.indexOf(activeTab)
-  const tabWidthPct = 100 / TABS.length
+  const activeTabIndex = Math.max(0, visibleTabs.indexOf(activeTab))
+  const tabWidthPct = 100 / visibleTabs.length
 
   const incomeEstimate = event.requires_payment && event.payment_amount
     ? checkinCount * event.payment_amount
@@ -264,7 +284,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       <div className="overflow-x-auto border-b border-b-[var(--outline-variant)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="relative min-w-[480px] md:min-w-0">
           <div className="flex">
-            {TABS.map(t => (
+            {visibleTabs.map(t => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
@@ -371,18 +391,10 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             </button>
           </div>
 
-          <div className="space-y-3">
-            {FAKE_MESSAGES.map((msg, i) => (
-              <div key={i} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                <div className="flex items-center justify-between mb-2">
-                  <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-medium', msg.channel === 'WhatsApp' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy')}>
-                    {msg.channel}
-                  </span>
-                  <span className="text-[11px] text-navy-light/60 font-body">{msg.date}</span>
-                </div>
-                <p className="text-sm text-navy-light/70 font-body">{msg.content}</p>
-              </div>
-            ))}
+          <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)] text-center">
+            <p className="text-sm text-navy-light/60 font-body">
+              No hay comunicaciones registradas para este evento.
+            </p>
           </div>
         </div>
       )}
@@ -444,10 +456,34 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
+            <button
+              onClick={() => generateCSV(
+                ['Nombre', 'Tipo de asistencia', 'Fecha de check-in'],
+                event.checkins.map(c => [
+                  c.member_name,
+                  c.attendance_type === 'server' ? 'Servidor' : 'Participante',
+                  c.checked_at ? new Date(c.checked_at).toLocaleString('es-CR') : '',
+                ]),
+                `asistencia-${event.name}`,
+              )}
+              disabled={event.checkins.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <Download size={14} /> Exportar asistencia
             </button>
-            <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
+            <button
+              onClick={() => generateCSV(
+                ['Nombre', 'Estado de pago', 'Fecha de inscripción'],
+                event.registrations.map(r => [
+                  r.member_name,
+                  r.payment_status === 'paid' ? 'Pagado' : r.payment_status === 'pending' ? 'Pendiente' : (r.payment_status ?? ''),
+                  r.registered_at ? new Date(r.registered_at).toLocaleDateString('es-CR') : '',
+                ]),
+                `inscritos-${event.name}`,
+              )}
+              disabled={event.registrations.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <Download size={14} /> Exportar inscritos
             </button>
           </div>

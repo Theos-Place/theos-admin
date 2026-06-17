@@ -17,6 +17,11 @@ export const SERVICE_ADMIN_ROLES: RoleId[] = [
   'encargado_staff', 'coordinador_servidores', 'direccion', 'admin',
 ]
 
+/** Roles que operan el check-in y los reportes de eventos (ver detalle, hacer
+ *  check-in, exportar). Reutilizar en guards de UI (usePermissions/hasRole) y de
+ *  API (requireRoles) de eventos/check-in/reportes. */
+export const EVENT_CHECKIN_ROLES: RoleId[] = ['encargado_eventos', 'direccion', 'admin']
+
 // Orden de menor a mayor privilegio
 export const ROLES: Role[] = [
   {
@@ -116,6 +121,16 @@ export const ROLES: Role[] = [
     permissions: [
       { module: 'servidores', actions: ['view', 'create', 'edit'], scope: 'all' },
       { module: 'miembros',   actions: ['view'],                   scope: 'all' },
+    ],
+  },
+  {
+    id: 'encargado_eventos',
+    name: 'Encargado de Eventos / Check-in',
+    description: 'Check-in de eventos, reportes y detalle. Sin otros módulos',
+    color: '#E0823D',
+    permissions: [
+      // view = ver detalle/check-in/reportes; edit = hacer check-in; export = reportes.
+      { module: 'eventos', actions: ['view', 'edit', 'export'], scope: 'all' },
     ],
   },
   {

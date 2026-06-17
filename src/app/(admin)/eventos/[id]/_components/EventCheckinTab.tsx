@@ -1,6 +1,10 @@
+'use client'
+
 import { QrCode } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
+import { useClientPagination } from '@/hooks/useClientPagination'
 import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
@@ -25,6 +29,7 @@ type Props = {
 }
 
 export function EventCheckinTab({ event, checkinCount }: Props) {
+  const page = useClientPagination(event.checkins, 20)
   return (
     <div className="space-y-4">
       {event.sub_events.length > 0 && (
@@ -50,13 +55,13 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-4 py-3 border-b border-b-[var(--outline-variant)]">
-          <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">Últimos check-ins</p>
+          <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">Check-ins registrados</p>
         </div>
         {event.checkins.length === 0 ? (
           <EmptyState icon={QrCode} title="Aún no hay check-ins registrados" />
         ) : (
           <div>
-            {event.checkins.slice(0, 10).map((ci, idx) => (
+            {page.visible.map((ci, idx) => (
               <div
                 key={`${ci.member_id}-${idx}`}
                 className={cn('flex items-center gap-3 px-4 py-3', idx % 2 === 1 ? 'bg-surface-low/40' : '')}
@@ -79,6 +84,15 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
                 </span>
               </div>
             ))}
+            <LoadMoreFooter
+              shown={page.shown}
+              total={page.total}
+              hasMore={page.hasMore}
+              loading={false}
+              onLoadMore={page.loadMore}
+              noun="check-ins"
+              increment={20}
+            />
           </div>
         )}
       </div>

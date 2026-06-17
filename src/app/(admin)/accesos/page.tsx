@@ -9,6 +9,8 @@ import { ROLES, type RoleId, type UserAccess } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
 import { formatDate, initialsFromParts } from '@/lib/format'
+import { useClientPagination } from '@/hooks/useClientPagination'
+import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 
 function RoleBadge({ roleId, small }: { roleId: RoleId; small?: boolean }) {
   const role = ROLES.find(r => r.id === roleId)
@@ -65,6 +67,9 @@ export default function AccesosPage() {
       return matchSearch && matchRole && matchStatus
     })
   }, [users, search, roleFilter, statusFilter])
+
+  // Lista acotada (solo miembros con rol asignado) → paginación de vista, patrón /miembros.
+  const usersPage = useClientPagination(filtered, 15)
 
   function handleRevoke(u: UserAccess) {
     setUsers(prev => prev.map(x => x.id === u.id ? { ...x, roles: [], is_active: false } : x))
@@ -138,6 +143,47 @@ export default function AccesosPage() {
         ))}
       </div>
 
+      {/* Referencia de roles (al inicio, antes de la lista de usuarios) */}
+      <div>
+        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 mb-3 font-display">
+          Referencia de roles
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {ROLES.filter(r => r.id !== 'miembro').map(role => (
+            <div
+              key={role.id}
+              className="rounded-xl p-4 border bg-surface-card border-outline"
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="h-3 w-3 rounded-full shrink-0" style={{ background: role.color }} />
+                <p className="text-[13px] font-semibold text-navy font-body">{role.name}</p>
+              </div>
+              <p className="text-[12px] text-navy-light/55 leading-relaxed font-body">{role.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Rol miembro — separado, con nota */}
+        <div className="mt-4 pt-4 border-t border-outline">
+          {(() => {
+            const miembro = ROLES.find(r => r.id === 'miembro')
+            if (!miembro) return null
+            return (
+              <div className="flex items-start gap-3 rounded-xl p-4 border bg-navy/2 border-outline">
+                <div className="h-3 w-3 rounded-full mt-0.5 shrink-0" style={{ background: miembro.color }} />
+                <div>
+                  <p className="text-[13px] font-semibold text-navy font-body">{miembro.name}</p>
+                  <p className="text-[12px] text-navy-light/55 leading-relaxed mb-1.5 font-body">{miembro.description}</p>
+                  <span className="inline-flex text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#9CA0B4]/15 text-[#9CA0B4] font-body">
+                    Asignado automáticamente a todos — no requiere gestión manual
+                  </span>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2.5 flex-1 max-w-sm border border-outline">
@@ -199,7 +245,7 @@ export default function AccesosPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(u => (
+              {usersPage.visible.map(u => (
                 <tr
                   key={u.id}
                   className="border-b hover:bg-surface-low/50 transition-colors cursor-pointer border-outline"
@@ -302,7 +348,7 @@ export default function AccesosPage() {
 
         {/* Mobile: tarjetas */}
         <ul className="md:hidden divide-y border-outline">
-          {filtered.map(u => {
+          {usersPage.visible.map(u => {
             const extra = u.roles.filter(r => r !== 'miembro')
             return (
               <li
@@ -337,47 +383,17 @@ export default function AccesosPage() {
             </li>
           )}
         </ul>
-      </div>
-
-      {/* Referencia de roles */}
-      <div>
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 mb-3 font-display">
-          Referencia de roles
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {ROLES.filter(r => r.id !== 'miembro').map(role => (
-            <div
-              key={role.id}
-              className="rounded-xl p-4 border bg-surface-card border-outline"
-            >
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="h-3 w-3 rounded-full shrink-0" style={{ background: role.color }} />
-                <p className="text-[13px] font-semibold text-navy font-body">{role.name}</p>
-              </div>
-              <p className="text-[12px] text-navy-light/55 leading-relaxed font-body">{role.description}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Rol miembro — separado, con nota */}
-        <div className="mt-4 pt-4 border-t border-outline">
-          {(() => {
-            const miembro = ROLES.find(r => r.id === 'miembro')
-            if (!miembro) return null
-            return (
-              <div className="flex items-start gap-3 rounded-xl p-4 border bg-navy/2 border-outline">
-                <div className="h-3 w-3 rounded-full mt-0.5 shrink-0" style={{ background: miembro.color }} />
-                <div>
-                  <p className="text-[13px] font-semibold text-navy font-body">{miembro.name}</p>
-                  <p className="text-[12px] text-navy-light/55 leading-relaxed mb-1.5 font-body">{miembro.description}</p>
-                  <span className="inline-flex text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#9CA0B4]/15 text-[#9CA0B4] font-body">
-                    Asignado automáticamente a todos — no requiere gestión manual
-                  </span>
-                </div>
-              </div>
-            )
-          })()}
-        </div>
+        {filtered.length > 0 && (
+          <LoadMoreFooter
+            shown={usersPage.shown}
+            total={usersPage.total}
+            hasMore={usersPage.hasMore}
+            loading={false}
+            onLoadMore={usersPage.loadMore}
+            noun="usuarios"
+            increment={15}
+          />
+        )}
       </div>
 
       {/* Confirm revoke modal */}

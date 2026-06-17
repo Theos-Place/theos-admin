@@ -21,6 +21,8 @@ import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
 import { Plus, Calendar, Download, Code, ExternalLink, Repeat } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
+import { CheckSquare } from 'lucide-react'
 
 type EventView = 'calendar' | 'list' | 'grid'
 const VIEW_STORAGE_KEY = 'theos_eventos_view'
@@ -68,6 +70,9 @@ function EventosContent() {
   // (históricos para calendario y "Realizados"). Se fusionan por id.
   const { hasRole } = useAuth()
   const canShare = hasRole('comunicaciones', 'direccion', 'admin')
+  const canCheckin = hasRole('encargado_eventos', 'direccion', 'admin')
+  const [checkinPicker, setCheckinPicker] = useState(false)
+  const [checkinSearch, setCheckinSearch] = useState('')
   // Filtros de tipo desde la BD (no el mock): si se agrega un tipo, aparece solo.
   const eventTypes = useEventTypes()
   const typeFilters = useMemo(
@@ -76,6 +81,16 @@ function EventosContent() {
   )
   const { events, loading } = useEvents()
   const { events: allEventsLight } = useAllEventsLight()
+  // Eventos elegibles para check-in: próximos o en curso (no pasados/cancelados),
+  // filtrados por el buscador y ordenados por fecha de inicio.
+  const checkinPickerEvents = useMemo(() => {
+    const q = checkinSearch.trim().toLowerCase()
+    return events
+      .filter(e => e.status !== 'cancelled' && !isPastEvent(e))
+      .filter(e => !q || e.name.toLowerCase().includes(q))
+      .sort((a, b) => (a.start_at ?? '').localeCompare(b.start_at ?? ''))
+      .slice(0, 50)
+  }, [events, checkinSearch])
   // Vista en URL (?view=) + recuerdo en localStorage; default calendario.
   const [viewRaw, setViewRaw] = useUrlFilter('view', 'calendar')
   const view: EventView = (['calendar', 'list', 'grid'] as const).includes(viewRaw as EventView)
@@ -224,6 +239,15 @@ function EventosContent() {
               Compartir calendario
             </Link>
           )}
+          {canCheckin && (
+            <button
+              onClick={() => { setCheckinSearch(''); setCheckinPicker(true) }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
+            >
+              <CheckSquare size={13} />
+              Check-in
+            </button>
+          )}
           <Link
             href="/eventos/nuevo"
             className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
@@ -233,6 +257,46 @@ function EventosContent() {
           </Link>
         </div>
       </div>
+
+      {/* Selector de evento para check-in */}
+      {checkinPicker && (
+        <Modal onClose={() => setCheckinPicker(false)} titleId="checkin-picker-titulo" width={460}>
+          <div className="p-5 space-y-4">
+            <h2 id="checkin-picker-titulo" className="text-lg font-display font-extrabold text-navy">
+              Hacer check-in — elegí el evento
+            </h2>
+            <input
+              autoFocus
+              value={checkinSearch}
+              onChange={e => setCheckinSearch(e.target.value)}
+              placeholder="Buscar evento próximo o en curso…"
+              aria-label="Buscar evento para check-in"
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+            />
+            <div className="max-h-[50vh] overflow-y-auto -mx-1">
+              {checkinPickerEvents.length === 0 ? (
+                <p className="px-1 py-6 text-center text-sm text-navy-light/60 font-body">
+                  No hay eventos próximos o en curso con ese nombre.
+                </p>
+              ) : checkinPickerEvents.map(ev => (
+                <button
+                  key={ev.id}
+                  onClick={() => router.push(`/eventos/${ev.id}/checkin`)}
+                  className="w-full text-left rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors flex items-center justify-between gap-3"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm text-navy truncate font-body">{ev.name}</span>
+                    <span className="block text-[11px] text-navy-light/60 font-body">
+                      {ev.start_at ? new Date(ev.start_at).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' }) : ''}
+                    </span>
+                  </span>
+                  <CheckSquare size={14} className="text-coral shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -474,7 +538,7 @@ function EventosContent() {
           events={calendarMonthEvents}
           month={currentMonth}
           year={currentYear}
-          onEventClick={id => router.push(`/eventos/${id}`)}
+          onEventClick={(id, occ) => router.push(occ ? `/eventos/${id}?date=${encodeURIComponent(occ)}` : `/eventos/${id}`)}
           onPrev={handlePrev}
           onNext={handleNext}
         />
