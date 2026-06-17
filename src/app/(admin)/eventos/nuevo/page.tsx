@@ -11,6 +11,7 @@ import { Step1Informacion } from './_components/Step1Informacion'
 import { Step2Programacion } from './_components/Step2Programacion'
 import { Step3SubEventos } from './_components/Step3SubEventos'
 import { Step4Financiero } from './_components/Step4Financiero'
+import { EventSummary } from './_components/EventSummary'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -252,9 +253,9 @@ export default function NuevoEventoPage() {
         )}
       </div>
 
-      {/* ── Grid: stepper sidebar + contenido ── */}
+      {/* ── Grid: stepper sidebar + contenido + resumen ── */}
       <div
-        className="sidebar-content-grid grid grid-cols-[clamp(180px,20%,240px)_1fr] gap-6 w-full items-start"
+        className="grid grid-cols-1 lg:grid-cols-[clamp(170px,16%,210px)_1fr_clamp(240px,24%,300px)] gap-6 w-full items-start"
       >
         {/* Sidebar de pasos */}
         <StepSidebar step={step} onStepClick={setStep} />
@@ -337,19 +338,6 @@ export default function NuevoEventoPage() {
               requires_payment={form.requires_payment}
               payment_amount={form.payment_amount}
               payment_methods={form.payment_methods}
-              name={form.name}
-              event_type={form.event_type}
-              selectedTypeName={selectedTypeObj?.name}
-              committee={form.committee}
-              start_date={form.start_date}
-              start_time={form.start_time}
-              is_virtual={form.is_virtual}
-              location={form.location}
-              location_map_url={form.location_map_url}
-              is_recurring={form.is_recurring}
-              sub_events={form.sub_events}
-              requires_registration={form.requires_registration}
-              max_capacity={form.max_capacity}
               onTogglePayment={() => set('requires_payment', !form.requires_payment)}
               onPaymentAmountChange={v => set('payment_amount', v)}
               onTogglePaymentMethod={togglePaymentMethod}
@@ -370,6 +358,27 @@ export default function NuevoEventoPage() {
           )}
 
         </div>
+
+        {/* Resumen persistente: se va llenando con cada paso */}
+        <EventSummary
+          name={form.name}
+          selectedTypeName={selectedTypeObj?.name}
+          committee={form.committee}
+          start_date={form.start_date}
+          start_time={form.start_time}
+          end_date={form.end_date}
+          end_time={form.end_time}
+          is_virtual={form.is_virtual}
+          virtual_link={form.virtual_link}
+          location={form.location}
+          location_map_url={form.location_map_url}
+          is_recurring={form.is_recurring}
+          sub_events={form.sub_events}
+          requires_registration={form.requires_registration}
+          max_capacity={form.max_capacity}
+          requires_payment={form.requires_payment}
+          payment_amount={form.payment_amount}
+        />
       </div>
     </div>
   )
