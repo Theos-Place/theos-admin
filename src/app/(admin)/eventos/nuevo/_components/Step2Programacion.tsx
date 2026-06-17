@@ -1,6 +1,7 @@
 import { ExternalLink } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
+import { DatePicker } from '@/components/events/DatePicker'
+import { TimePicker } from '@/components/events/TimePicker'
 import { inputCls, Toggle, FieldLabel } from './shared'
 
 interface Step2Props {
@@ -61,40 +62,23 @@ export function Step2Programacion({
         <div className="form-row">
           <div>
             <FieldLabel>Fecha inicio</FieldLabel>
-            <input
-              type="date"
-              className={`${inputCls} font-body`}
-              value={start_date}
-              onChange={e => onStartDateChange(e.target.value)}
-            />
+            <DatePicker value={start_date} onChange={onStartDateChange} />
           </div>
           <div>
             <FieldLabel>Hora inicio</FieldLabel>
-            <input
-              type="time"
-              className={`${inputCls} font-body`}
-              value={start_time}
-              onChange={e => onStartTimeChange(e.target.value)}
-            />
+            <TimePicker value={start_time} onChange={onStartTimeChange} />
           </div>
           <div>
             <FieldLabel>Fecha fin</FieldLabel>
-            <input
-              type="date"
-              className={cn(`${inputCls} font-body`, endBeforeStart && 'ring-1 ring-coral border-coral')}
-              value={end_date}
-              min={start_date || undefined}
-              onChange={e => onEndDateChange(e.target.value)}
-            />
+            <DatePicker value={end_date} onChange={onEndDateChange} min={start_date || undefined} error={endBeforeStart} />
           </div>
           <div>
             <FieldLabel>Hora fin</FieldLabel>
-            <input
-              type="time"
-              className={cn(`${inputCls} font-body`, endBeforeStart && 'ring-1 ring-coral border-coral')}
+            <TimePicker
               value={end_time}
+              onChange={onEndTimeChange}
+              error={endBeforeStart}
               min={end_date && end_date === start_date ? start_time || undefined : undefined}
-              onChange={e => onEndTimeChange(e.target.value)}
             />
           </div>
         </div>

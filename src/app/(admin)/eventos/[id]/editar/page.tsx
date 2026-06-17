@@ -9,6 +9,8 @@ import { useEventTypes } from '@/hooks/useEventTypes'
 import { useEvent } from '@/hooks/useEvents'
 import { useOrg } from '@/lib/org'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
+import { DatePicker } from '@/components/events/DatePicker'
+import { TimePicker } from '@/components/events/TimePicker'
 import { cn } from '@/lib/utils'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
@@ -406,19 +408,19 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Fecha inicio</label>
-              <input type="date" className={cn(inputCls, 'font-body')} value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <DatePicker value={startDate} onChange={setStartDate} />
             </div>
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Hora inicio</label>
-              <input type="time" className={cn(inputCls, 'font-body')} value={startTime} onChange={e => setStartTime(e.target.value)} />
+              <TimePicker value={startTime} onChange={setStartTime} />
             </div>
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Fecha fin</label>
-              <input type="date" className={cn(inputCls, 'font-body', endBeforeStart && 'ring-1 ring-coral border-coral')} value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} />
+              <DatePicker value={endDate} onChange={setEndDate} min={startDate || undefined} error={endBeforeStart} />
             </div>
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Hora fin</label>
-              <input type="time" className={cn(inputCls, 'font-body', endBeforeStart && 'ring-1 ring-coral border-coral')} value={endTime} min={endDate && endDate === startDate ? startTime || undefined : undefined} onChange={e => setEndTime(e.target.value)} />
+              <TimePicker value={endTime} onChange={setEndTime} error={endBeforeStart} min={endDate && endDate === startDate ? startTime || undefined : undefined} />
             </div>
           </div>
           {endBeforeStart && (

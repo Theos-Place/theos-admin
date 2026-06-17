@@ -360,6 +360,34 @@ body {
   }
 }
 
+/* ─── react-day-picker: tema Theos ───────────────────────────────────────────── */
+.theos-daypicker {
+  --rdp-accent-color: var(--color-coral);
+  --rdp-accent-background-color: var(--color-coral-soft);
+  --rdp-today-color: var(--color-coral-deep);
+  --rdp-day-width: 2.1rem;
+  --rdp-day-height: 2.1rem;
+  --rdp-selected-border: 2px solid var(--color-coral);
+  font-family: var(--font-body);
+  color: var(--color-navy);
+}
+.theos-daypicker .rdp-caption_label,
+.theos-daypicker .rdp-month_caption {
+  font-family: var(--font-display);
+  color: var(--color-navy);
+}
+.theos-daypicker .rdp-weekday {
+  color: var(--color-navy-light);
+  font-weight: 600;
+}
+.theos-daypicker .rdp-day_button:hover {
+  background-color: var(--surface-low);
+}
+.theos-daypicker .rdp-selected .rdp-day_button {
+  background-color: var(--color-coral);
+  color: #fff;
+}
+
 /* ─── Font utility classes ────────────────────────────────────────────────── */
 /* Tailwind v4: no tailwind.config.ts — utilities definidas aquí como CSS puro */
 .font-display { font-family: var(--font-display); }
