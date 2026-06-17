@@ -18,6 +18,8 @@ interface CalendarGridProps {
   month: number
   year: number
   onEventClick?: (id: string, occurrenceDate?: string) => void
+  /** Clic en el espacio vacío de una celda de día → crear evento con esa fecha (YYYY-MM-DD). */
+  onDayClick?: (dateYmd: string) => void
   onPrev: () => void
   onNext: () => void
 }
@@ -59,7 +61,7 @@ type PopoverState =
   | { kind: 'event'; event: CalendarEvent; rect: DOMRect }
   | null
 
-export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext }: CalendarGridProps) {
+export function CalendarGrid({ events, month, year, onEventClick, onDayClick, onPrev, onNext }: CalendarGridProps) {
   const today = new Date()
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -81,10 +83,17 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
   }
 
   function openDay(day: number, evs: CalendarEvent[], e: React.MouseEvent) {
+    e.stopPropagation() // no disparar el "crear evento" de la celda
     setPop({ kind: 'day', day, events: evs, rect: e.currentTarget.getBoundingClientRect() })
   }
   function openEvent(ev: CalendarEvent, e: React.MouseEvent) {
+    e.stopPropagation() // no disparar el "crear evento" de la celda
     setPop({ kind: 'event', event: ev, rect: e.currentTarget.getBoundingClientRect() })
+  }
+  function handleDayClick(day: number) {
+    if (!onDayClick) return
+    const ymd = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    onDayClick(ymd)
   }
   function goToEvent(ev: CalendarEvent) {
     setPop(null)
@@ -141,10 +150,12 @@ export function CalendarGrid({ events, month, year, onEventClick, onPrev, onNext
           return (
             <div
               key={i}
+              onClick={day && onDayClick ? () => handleDayClick(day) : undefined}
               className={cn(
                 'min-h-[58px] p-1 sm:min-h-[80px] sm:p-1.5 border-b border-r border-[var(--outline-variant)]',
                 isWeekend && 'bg-surface-low/40',
-                !day && 'opacity-0 pointer-events-none'
+                !day && 'opacity-0 pointer-events-none',
+                day && onDayClick && 'cursor-pointer hover:bg-coral/5 transition-colors'
               )}
             >
               {day && (

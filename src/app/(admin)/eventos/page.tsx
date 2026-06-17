@@ -487,6 +487,7 @@ function EventosContent() {
           month={currentMonth}
           year={currentYear}
           onEventClick={(id, occ) => router.push(occ ? `/eventos/${id}?date=${encodeURIComponent(occ)}` : `/eventos/${id}`)}
+          onDayClick={(ymd) => router.push(`/eventos/nuevo?date=${ymd}`)}
           onPrev={handlePrev}
           onNext={handleNext}
         />

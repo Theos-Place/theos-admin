@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
@@ -45,10 +46,39 @@ interface FormData {
 
 const STEPS_COUNT = 4
 
+// ── Defaults de fecha/hora para agilizar la creación ──────────────────────────
+function todayYmd(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+/** Hora actual redondeada hacia arriba a la siguiente media hora (HH:mm). */
+function nextHalfHour(): string {
+  const d = new Date()
+  d.setSeconds(0, 0)
+  const m = d.getMinutes()
+  if (m === 0 || m === 30) { /* ya está en punto/media */ }
+  else if (m < 30) d.setMinutes(30)
+  else { d.setHours(d.getHours() + 1); d.setMinutes(0) }
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+/** 'HH:mm' + 1 hora (envuelve a 23:59 máximo). */
+function plusOneHour(time: string): string {
+  const [h, m] = time.split(':').map(Number)
+  if (Number.isNaN(h)) return ''
+  const nh = Math.min(h + 1, 23)
+  return `${String(nh).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NuevoEventoPage() {
   const toast = useToast()
+  // Fecha precargada al venir del clic en una celda del calendario (?date=YYYY-MM-DD).
+  const dateParam = useSearchParams().get('date')
+  const initialDate = dateParam || todayYmd()
+  const initialStart = nextHalfHour()
+  // Marca si el usuario tocó la hora/fecha final (para no sobreescribir el default +1h).
+  const [endTouched, setEndTouched] = useState(false)
   const [step, setStep]                         = useState(1)
   const [published, setPublished]               = useState(false)
   const [showSubEventForm, setShowSubEventForm] = useState(false)
@@ -63,10 +93,10 @@ export default function NuevoEventoPage() {
     event_type: '',
     committee: '',
     description: '',
-    start_date: '',
-    start_time: '',
-    end_date: '',
-    end_time: '',
+    start_date: initialDate,
+    start_time: initialStart,
+    end_date: initialDate,
+    end_time: plusOneHour(initialStart),
     is_virtual: false,
     virtual_link: '',
     location: '',
@@ -294,10 +324,24 @@ export default function NuevoEventoPage() {
               location_map_url={form.location_map_url}
               is_recurring={form.is_recurring}
               recurrence_rule={form.recurrence_rule}
-              onStartDateChange={v => set('start_date', v)}
-              onStartTimeChange={v => set('start_time', v)}
-              onEndDateChange={v => set('end_date', v)}
-              onEndTimeChange={v => set('end_time', v)}
+              onStartDateChange={v => {
+                setForm(prev => ({
+                  ...prev,
+                  start_date: v,
+                  // Si no se tocó la fecha fin, la seguimos a la de inicio.
+                  end_date: endTouched ? prev.end_date : v,
+                }))
+              }}
+              onStartTimeChange={v => {
+                setForm(prev => ({
+                  ...prev,
+                  start_time: v,
+                  // Default ágil: hora fin = inicio + 1h, salvo que el usuario ya la haya puesto.
+                  end_time: endTouched ? prev.end_time : plusOneHour(v),
+                }))
+              }}
+              onEndDateChange={v => { setEndTouched(true); set('end_date', v) }}
+              onEndTimeChange={v => { setEndTouched(true); set('end_time', v) }}
               onToggleVirtual={() => set('is_virtual', !form.is_virtual)}
               onVirtualLinkChange={v => set('virtual_link', v)}
               onLocationChange={v => set('location', v)}
