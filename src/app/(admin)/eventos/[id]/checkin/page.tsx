@@ -153,19 +153,20 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // individual, el de familia y el de persona nueva.
   async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub): Promise<'ok' | 'dup' | 'error'> {
     const subEventId = subEvent // null = evento padre; o el subevento elegido para esta persona
-    const stamp = new Date().toISOString() + ':' + m.id
+    const nowIso = new Date().toISOString()       // fecha real del check-in (válida)
+    const tempId = `tmp:${nowIso}:${m.id}`        // id temporal para rollback/replace
     const newCheckin: EventCheckin & { _new?: boolean } = {
-      id: stamp, // optimista; al refrescar trae el id real de la BD
+      id: tempId, // optimista; al refrescar trae el id real de la BD
       member_id: m.id,
       member_name: m.name,
       attendance_type: type,
       sub_event_id: subEventId,
-      checked_at: stamp,
+      checked_at: nowIso,
       _new: true,
     }
     setCheckins(prev => [newCheckin, ...prev])
     const rollback = () => {
-      setCheckins(prev => prev.filter(c => c.checked_at !== stamp))
+      setCheckins(prev => prev.filter(c => c.id !== tempId))
     }
     try {
       const res = await fetch(`/api/events/${id}/checkins`, {
@@ -178,7 +179,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       // Reemplaza el id optimista por el real (para poder eliminarlo luego).
       const data = await res.json().catch(() => null) as { id?: string } | null
       if (data?.id) {
-        setCheckins(prev => prev.map(c => c.checked_at === stamp ? { ...c, id: data.id! } : c))
+        setCheckins(prev => prev.map(c => c.id === tempId ? { ...c, id: data.id! } : c))
       }
       return 'ok'
     } catch (err) {
@@ -299,10 +300,13 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const selectedRegistered = selectedMember ? registeredIds.has(selectedMember.id) : false
   const selectedBlocked = checkinRestrictedToRegistered && !!selectedMember && !selectedRegistered
   // Fecha mostrada: la de la ocurrencia (?date=) si viene, si no la del evento.
-  const headerDate = (() => {
-    const d = occParam ? new Date(occParam) : new Date(event.start_at)
-    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-  })()
+  const eventDate = occParam ? new Date(occParam) : new Date(event.start_at)
+  const headerDate = isNaN(eventDate.getTime())
+    ? ''
+    : eventDate.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  // ¿Se está registrando en una fecha distinta a la del evento? (registro tardío)
+  const ymdLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const dateMismatch = !isNaN(eventDate.getTime()) && ymdLocal(eventDate) !== ymdLocal(new Date())
 
   return (
     <div className="min-h-screen bg-surface-low flex flex-col font-body">
@@ -353,6 +357,16 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       {/* Contenido */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4">
+          {/* Aviso: registro en fecha distinta a la del evento */}
+          {dateMismatch && (
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-start gap-2.5" role="alert">
+              <span className="text-amber-600 text-base leading-none mt-0.5">⚠️</span>
+              <p className="text-[13px] text-amber-800 font-body">
+                Estás registrando asistencia en una fecha distinta a la del evento ({headerDate}). El check-in quedará con la fecha de hoy.
+              </p>
+            </div>
+          )}
+
           {/* Acción principal: escanear QR */}
           <button
             onClick={() => setScanOn(s => !s)}
@@ -469,7 +483,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 <div className="flex-1 min-w-0">
                   <p className="text-navy text-sm truncate font-body">{ci.member_name}</p>
                   <p className="text-navy-light/60 text-[11px] font-body">
-                    {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+                    {(() => { const d = new Date(ci.checked_at); return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) })()}
                     {subName(ci.sub_event_id) ? ` · ${subName(ci.sub_event_id)}` : ''}
                   </p>
                 </div>
