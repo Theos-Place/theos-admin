@@ -216,14 +216,17 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ member_id: selectedMember.id, role, status: 'pending' }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const detail = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(detail?.error || `HTTP ${res.status}`)
+      }
       await refetch()
       setServerToast(`${name} asignado como ${role}`)
       setTimeout(() => setServerToast(null), TOAST_MS)
       resetModal()
     } catch (err) {
       console.error('No se pudo asignar el servidor:', err)
-      setServerToast('No se pudo asignar el servidor. Intentá de nuevo.')
+      setServerToast(err instanceof Error ? err.message : 'No se pudo asignar el servidor. Intentá de nuevo.')
       setTimeout(() => setServerToast(null), TOAST_MS)
     } finally {
       setAssigning(false)
@@ -393,6 +396,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           onResetModal={resetModal}
           onConfirmAssignment={confirmAssignment}
           serverToast={serverToast}
+          noCommittee={!event.committee_id}
         />
       )}
 

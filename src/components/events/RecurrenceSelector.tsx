@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface RecurrenceSelectorProps {
@@ -25,58 +25,35 @@ function parseRule(rule: string | null) {
 }
 
 export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps) {
-  const active = value !== null
   const parsed = parseRule(value)
   const [freq, setFreq] = useState(parsed.freq)
   const [selectedDay, setSelectedDay] = useState(parsed.day)
   const [endDate, setEndDate] = useState('')
 
-  function handleToggle() {
-    if (active) {
-      onChange(null)
-    } else {
-      onChange(`${freq}:${selectedDay}`)
-    }
-  }
+  // El toggle "Evento recurrente" externo controla si hay recurrencia. Acá solo
+  // se eligen frecuencia/día. Si llega sin regla (value null) se fija un default
+  // sensato (semanal) para que recurrence_rule nunca quede inválido con is_recurring=true.
+  useEffect(() => {
+    if (value === null) onChange(`${freq}:${selectedDay}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
 
   function handleFreqChange(f: string) {
     setFreq(f)
-    if (active) onChange(`${f}:${selectedDay}`)
+    onChange(`${f}:${selectedDay}`)
   }
 
   function handleDayChange(d: string) {
     setSelectedDay(d)
-    if (active) onChange(`${freq}:${d}`)
+    onChange(`${freq}:${d}`)
   }
 
   const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
   return (
     <div className="space-y-3">
-      <label className="flex items-center gap-3 cursor-pointer">
-        <div
-          onClick={handleToggle}
-          className={cn(
-            'relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer',
-            active ? 'bg-coral' : 'bg-navy-light/20'
-          )}
-        >
-          <div
-            className={cn(
-              'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200',
-              active ? 'translate-x-4' : 'translate-x-0.5'
-            )}
-          />
-        </div>
-        <span className="text-sm text-navy font-body">
-          {active ? 'Evento recurrente' : 'Sin recurrencia'}
-        </span>
-      </label>
-
-      {active && (
-        <div className="space-y-3 pl-2 border-l-2 border-coral/20 ml-1">
-          {/* Frecuencia */}
-          <div className="space-y-1.5">
+      {/* Frecuencia */}
+      <div className="space-y-1.5">
             <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               Frecuencia
             </p>
@@ -130,9 +107,7 @@ export function RecurrenceSelector({ value, onChange }: RecurrenceSelectorProps)
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
             />
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   )
 }

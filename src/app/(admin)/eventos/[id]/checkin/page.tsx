@@ -255,6 +255,14 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     .filter(c => !hasSubs || c.sub_event_id === targetSub)
     .sort((a, b) => (b.checked_at ?? '').localeCompare(a.checked_at ?? ''))
   const targetLabel = targetSub ? (subName(targetSub) ?? event.name) : event.name
+  // Validación 2 (check-in de servidor): con comité organizador, solo voluntarios
+  // ya asignados al evento (la asignación valida el comité). Sin comité → permisivo + aviso.
+  const isAssignedVolunteer = selectedMember ? (event.volunteer_bookings ?? []).some(v => v.member_id === selectedMember.id) : false
+  const serverGate: { allow: boolean; notice: string | null } = !event.committee_id
+    ? { allow: true, notice: 'Sin comité organizador asignado.' }
+    : isAssignedVolunteer
+      ? { allow: true, notice: null }
+      : { allow: false, notice: 'Solo servidores asignados del comité pueden marcarse como servidor.' }
   // Fecha mostrada: la de la ocurrencia (?date=) si viene, si no la del evento.
   const headerDate = (() => {
     const d = occParam ? new Date(occParam) : new Date(event.start_at)
@@ -352,6 +360,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 onConfirm={handleConfirm}
                 onCancel={() => { setSelectedMember(null); setQuery('') }}
                 targetLabel={targetLabel}
+                allowServer={serverGate.allow}
+                serverNotice={serverGate.notice}
               />
             </div>
           ) : searchResults.length > 0 ? (

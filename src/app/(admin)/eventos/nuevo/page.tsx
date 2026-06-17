@@ -288,7 +288,11 @@ export default function NuevoEventoPage() {
               onToggleVirtual={() => set('is_virtual', !form.is_virtual)}
               onLocationChange={v => set('location', v)}
               onLocationMapUrlChange={v => set('location_map_url', v)}
-              onToggleRecurring={() => set('is_recurring', !form.is_recurring)}
+              onToggleRecurring={() => {
+                const next = !form.is_recurring
+                set('is_recurring', next)
+                if (!next) set('recurrence_rule', null) // apagar limpia la regla
+              }}
               onRecurrenceRuleChange={v => set('recurrence_rule', v)}
             />
           )}

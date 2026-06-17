@@ -425,7 +425,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           )}
           <div className="space-y-2">
             <label className="flex items-center gap-3 cursor-pointer">
-              <button type="button" role="switch" aria-checked={isRecurring} aria-label="Evento recurrente" onClick={() => setIsRecurring(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isRecurring ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isRecurring ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+              <button type="button" role="switch" aria-checked={isRecurring} aria-label="Evento recurrente" onClick={() => { const next = !isRecurring; setIsRecurring(next); if (!next) setRecurrenceRule(null) }} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isRecurring ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isRecurring ? 'translate-x-4' : 'translate-x-0.5')} /></button>
               <span className="text-sm text-navy font-body">Recurrente</span>
             </label>
             {isRecurring && (

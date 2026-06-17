@@ -64,6 +64,8 @@ type Props = {
   onResetModal: () => void
   onConfirmAssignment: () => void
   serverToast: string | null
+  /** El evento no tiene comité organizador → aviso suave (sin bloquear). */
+  noCommittee?: boolean
 }
 
 export function EventServersTab({
@@ -99,6 +101,7 @@ export function EventServersTab({
   onResetModal,
   onConfirmAssignment,
   serverToast,
+  noCommittee,
 }: Props) {
   return (
     <div className="space-y-4">
@@ -220,6 +223,11 @@ export function EventServersTab({
             </div>
 
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              {noCommittee && modalStep === 1 && (
+                <div className="rounded-xl bg-amber-50 px-3 py-2.5 text-[12px] text-amber-700 font-body">
+                  Este evento no tiene comité organizador asignado. Asigná uno para habilitar la validación de servidores.
+                </div>
+              )}
               {/* Step 1 — search */}
               {modalStep === 1 && (
                 <>

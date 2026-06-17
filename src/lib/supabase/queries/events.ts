@@ -359,11 +359,37 @@ export async function updateEventType(
 type VolunteerStatus = 'confirmed' | 'pending' | 'cancelled'
 
 /** Asigna un servidor (voluntario) a un evento. UNIQUE(event_id, member_id). */
+/** ¿El miembro es servidor ACTIVO del comité (o de una sub-área del comité)? */
+export async function memberServesCommittee(memberId: string, committeeId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('volunteers')
+    .select('id, position:service_positions!inner(area:areas!service_positions_area_id_fkey!inner(id, parent_id))')
+    .eq('member_id', memberId)
+    .eq('status', 'active')
+  if (error) throw error
+  return ((data ?? []) as Array<{ position: { area: { id: string; parent_id: string | null } | null } | null }>)
+    .some(v => { const a = v.position?.area; return !!a && (a.id === committeeId || a.parent_id === committeeId) })
+}
+
+/** Error de validación: la persona no pertenece al comité organizador. */
+export class NotCommitteeServerError extends Error {
+  constructor(msg = 'La persona no es servidora activa del comité organizador del evento.') { super(msg); this.name = 'NotCommitteeServerError' }
+}
+
 export async function createVolunteer(
   eventId: string,
   input: { member_id: string; role?: string | null; status?: VolunteerStatus },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
+  // Validación 2: si el evento tiene comité organizador, solo se asignan
+  // servidores activos de ese comité. Históricos sin comité (committee_id null)
+  // → sin restricción (permisivo).
+  const { data: ev } = await supabase.from('events').select('committee_id').eq('id', eventId).maybeSingle()
+  const committeeId = (ev as { committee_id: string | null } | null)?.committee_id ?? null
+  if (committeeId && !(await memberServesCommittee(input.member_id, committeeId))) {
+    throw new NotCommitteeServerError()
+  }
   const { data, error } = await supabase
     .from('event_volunteers')
     .insert({ event_id: eventId, member_id: input.member_id, role: input.role ?? null, status: input.status ?? 'pending' })

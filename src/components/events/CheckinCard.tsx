@@ -10,6 +10,10 @@ interface CheckinCardProps {
   onCancel: () => void
   /** Destino del check-in (subevento o evento) — se muestra en la confirmación. */
   targetLabel?: string
+  /** Validación 2: si false, no se ofrece marcar como Servidor (solo Participante). */
+  allowServer?: boolean
+  /** Aviso suave sobre el estado del comité organizador. */
+  serverNotice?: string | null
 }
 
 const AVATAR_COLORS: Record<string, string> = {
@@ -29,7 +33,7 @@ function getAvatarColor(name: string) {
   return AVATAR_COLORS[first] ?? 'bg-navy text-white'
 }
 
-export function CheckinCard({ member, onConfirm, onCancel, targetLabel }: CheckinCardProps) {
+export function CheckinCard({ member, onConfirm, onCancel, targetLabel, allowServer = true, serverNotice }: CheckinCardProps) {
   const initials = getInitials(member.name)
   const avatarColor = getAvatarColor(member.name)
 
@@ -68,13 +72,18 @@ export function CheckinCard({ member, onConfirm, onCancel, targetLabel }: Checki
           <span>✓</span>
           Participante
         </button>
-        <button
-          onClick={() => onConfirm('server')}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-3 text-sm font-medium text-white hover:bg-coral-deep transition-all duration-150 font-body"
-        >
-          <span>⚡</span>
-          Servidor
-        </button>
+        {allowServer && (
+          <button
+            onClick={() => onConfirm('server')}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-3 text-sm font-medium text-white hover:bg-coral-deep transition-all duration-150 font-body"
+          >
+            <span>⚡</span>
+            Servidor
+          </button>
+        )}
+        {serverNotice && (
+          <p className="text-[11px] text-navy-light/60 text-center font-body">{serverNotice}</p>
+        )}
         <button
           onClick={onCancel}
           className="w-full rounded-full border px-5 py-2.5 text-sm text-navy-light/60 hover:bg-surface-low transition-all duration-150 border-[var(--outline-variant)] font-body"
