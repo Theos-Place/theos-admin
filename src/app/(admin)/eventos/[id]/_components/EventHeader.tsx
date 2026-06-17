@@ -60,6 +60,9 @@ type Props = {
   showMenu: boolean
   onMenuToggle: () => void
   onCancelClick: () => void
+  onDeleteClick: () => void
+  /** Fecha ISO de la ocurrencia actual (recurrentes), para propagar a editar/check-in. */
+  occParam?: string | null
   showCalendarPopover: boolean
   onCalendarPopoverToggle: () => void
   onCalendarPopoverClose: () => void
@@ -75,6 +78,8 @@ export function EventHeader({
   showMenu,
   onMenuToggle,
   onCancelClick,
+  onDeleteClick,
+  occParam,
   showCalendarPopover,
   onCalendarPopoverToggle,
   onCalendarPopoverClose,
@@ -83,6 +88,7 @@ export function EventHeader({
 }: Props) {
   const startDate = new Date(event.start_at)
   const endDate = new Date(event.end_at)
+  const occQuery = occParam ? `?date=${encodeURIComponent(occParam)}` : ''
 
   return (
     <>
@@ -107,6 +113,12 @@ export function EventHeader({
                 <span className="inline-flex items-center gap-1 text-[11px] text-white/60 font-body">
                   <Repeat size={11} />
                   {recurrenceLabel(event.recurrence_rule) ?? 'Recurrente'}
+                </span>
+              )}
+              {!event.is_recurring && event.parent_event_id && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-white/60 font-body">
+                  <Repeat size={11} />
+                  Editado de una serie
                 </span>
               )}
             </div>
@@ -202,14 +214,14 @@ export function EventHeader({
               )}
             </div>
             <Link
-              href={`/eventos/${id}/editar`}
+              href={`/eventos/${id}/editar${occQuery}`}
               className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
             >
               <Edit2 size={13} />
               Editar
             </Link>
             <Link
-              href={`/eventos/${id}/checkin`}
+              href={`/eventos/${id}/checkin${occQuery}`}
               className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
             >
               <QrCode size={13} />
@@ -228,9 +240,15 @@ export function EventHeader({
                 >
                   <button
                     onClick={onCancelClick}
-                    className="w-full text-left px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body"
+                    className="w-full text-left px-4 py-2.5 text-sm text-navy hover:bg-surface-low transition-colors font-body"
                   >
                     Cancelar evento
+                  </button>
+                  <button
+                    onClick={onDeleteClick}
+                    className="w-full text-left px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body border-t border-t-[var(--outline-variant)]"
+                  >
+                    Eliminar evento
                   </button>
                 </div>
               )}

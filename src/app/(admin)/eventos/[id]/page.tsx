@@ -1,7 +1,7 @@
 'use client'
 
 import { use, useState, useMemo, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useEvent } from '@/hooks/useEvents'
 import type { Member } from '@/types/member'
 import { toDomainMember } from '@/lib/members/adapter'
@@ -99,6 +99,10 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
   const [showMenu, setShowMenu] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const router = useRouter()
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [showCalendarPopover, setShowCalendarPopover] = useState(false)
   const [icsWithRRule, setIcsWithRRule] = useState(false)
@@ -198,6 +202,46 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
   const selectedMember = selectedMemberId ? memberResults.find(m => m.id === selectedMemberId) : null
 
+  // Ocurrencia sobre la que se actúa: date (YYYY-MM-DD hora CR) + start ISO.
+  function occurrenceRef(): { date: string; start: string } {
+    const d = occParam ? new Date(occParam) : new Date(rawEvent!.start_at)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return { date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, start: d.toISOString() }
+  }
+
+  async function handleDelete(scope: 'all' | 'future' | 'single') {
+    if (deleting) return
+    setDeleting(true)
+    setDeleteError(null)
+    const occ = occurrenceRef()
+    try {
+      const res = await fetch(`/api/events/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope, occurrence_date: occ.date, occurrence_start: occ.start }),
+      })
+      if (res.status === 422) {
+        const d = await res.json().catch(() => null) as { error?: string } | null
+        setDeleteError(d?.error || 'No se puede eliminar: tiene asistencia registrada.')
+        setDeleting(false)
+        return
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      // single/future no borran la serie: volvemos al detalle refrescado; all → a la lista.
+      if (scope === 'all' || !rawEvent?.is_recurring) {
+        router.push('/eventos')
+      } else {
+        setShowDeleteModal(false)
+        setDeleting(false)
+        refetch()
+      }
+    } catch (e) {
+      console.error('No se pudo eliminar el evento:', e)
+      setDeleteError('No se pudo eliminar el evento. Intentá de nuevo.')
+      setDeleting(false)
+    }
+  }
+
   function resetModal() {
     setModalStep(1)
     setSearchQuery('')
@@ -286,6 +330,15 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         />
       )}
       {showMessageModal && <SendMessageModal onClose={() => setShowMessageModal(false)} />}
+      {showDeleteModal && (
+        <DeleteEventModal
+          isRecurring={!!rawEvent?.is_recurring}
+          busy={deleting}
+          error={deleteError}
+          onConfirm={handleDelete}
+          onClose={() => { if (!deleting) { setShowDeleteModal(false); setDeleteError(null) } }}
+        />
+      )}
 
       {/* Header */}
       <EventHeader
@@ -296,6 +349,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         showMenu={showMenu}
         onMenuToggle={() => setShowMenu(m => !m)}
         onCancelClick={() => { setShowMenu(false); setShowCancelModal(true) }}
+        onDeleteClick={() => { setShowMenu(false); setDeleteError(null); setShowDeleteModal(true) }}
+        occParam={occParam}
         showCalendarPopover={showCalendarPopover}
         onCalendarPopoverToggle={() => setShowCalendarPopover(p => !p)}
         onCalendarPopoverClose={() => setShowCalendarPopover(false)}
@@ -516,5 +571,77 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         </div>
       )}
     </div>
+  )
+}
+
+// ─── Modal: eliminar evento (con alcances si es recurrente) ──────────────────────
+
+function DeleteEventModal({ isRecurring, busy, error, onConfirm, onClose }: {
+  isRecurring: boolean
+  busy: boolean
+  error: string | null
+  onConfirm: (scope: 'all' | 'future' | 'single') => void
+  onClose: () => void
+}) {
+  const [scope, setScope] = useState<'all' | 'future' | 'single'>(isRecurring ? 'single' : 'all')
+  const OPTIONS: { key: 'all' | 'future' | 'single'; title: string; desc: string }[] = [
+    { key: 'single', title: 'Solo este evento', desc: 'Cancela únicamente esta fecha; el resto de la serie no cambia.' },
+    { key: 'future', title: 'Esta y las siguientes', desc: 'Termina la serie justo antes de esta fecha (las anteriores se conservan).' },
+    { key: 'all', title: 'Toda la serie', desc: 'Elimina todos los eventos de la serie. No se puede deshacer.' },
+  ]
+
+  return (
+    <Modal onClose={onClose} titleId="del-evento-title" width={448}>
+      <div className="px-5 py-4 border-b border-b-[var(--outline-variant)]">
+        <h3 id="del-evento-title" className="text-sm font-semibold text-navy font-display">Eliminar evento</h3>
+        <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
+          {isRecurring ? 'Este es un evento recurrente. ¿Qué querés eliminar?' : 'Esta acción no se puede deshacer.'}
+        </p>
+      </div>
+      <div className="p-5 space-y-3">
+        {isRecurring && OPTIONS.map(opt => (
+          <div
+            key={opt.key}
+            onClick={() => setScope(opt.key)}
+            className={cn('rounded-xl border p-3.5 cursor-pointer transition-all',
+              scope === opt.key ? 'border-coral bg-coral/5' : 'hover:bg-surface-low')}
+            style={{ borderColor: scope === opt.key ? undefined : 'var(--outline-variant)' }}
+          >
+            <div className="flex items-start gap-2">
+              <div className={cn('mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0',
+                scope === opt.key ? 'border-coral' : 'border-navy-light/30')}>
+                {scope === opt.key && <div className="h-2 w-2 rounded-full bg-coral" />}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-navy font-body">{opt.title}</p>
+                <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">{opt.desc}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+        {!isRecurring && (
+          <p className="text-sm text-navy-light/70 font-body">
+            Se eliminará el evento de forma permanente. Si tiene check-ins o inscripciones, no se podrá borrar (cancelalo en su lugar).
+          </p>
+        )}
+        {error && <p className="text-[12px] text-coral font-body" role="alert">{error}</p>}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={() => onConfirm(scope)}
+            disabled={busy}
+            className="flex-1 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
+          >
+            {busy ? 'Eliminando…' : 'Eliminar'}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-full border border-[var(--outline-variant)] px-5 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </Modal>
   )
 }

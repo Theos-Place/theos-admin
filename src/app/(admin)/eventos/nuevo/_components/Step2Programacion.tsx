@@ -175,6 +175,7 @@ export function Step2Programacion({
             <RecurrenceSelector
               value={recurrence_rule}
               onChange={onRecurrenceRuleChange}
+              startDate={start_date}
             />
           </div>
         )}

@@ -126,8 +126,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
   // Persiste un check-in (optimista con rollback). Reutilizado por el flujo
   // individual, el de familia y el de persona nueva.
-  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual'): Promise<'ok' | 'dup' | 'error'> {
-    const subEventId = targetSub // null = evento padre; o el subevento elegido
+  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub): Promise<'ok' | 'dup' | 'error'> {
+    const subEventId = subEvent // null = evento padre; o el subevento elegido para esta persona
     const stamp = new Date().toISOString() + ':' + m.id
     const newCheckin: EventCheckin & { _new?: boolean } = {
       id: stamp, // optimista; al refrescar trae el id real de la BD
@@ -209,14 +209,12 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     await persistCheckin(member, type)
   }
 
-  // Registra varios miembros (familia) al evento.
-  async function registerFamily(ids: string[]) {
+  // Registra varios miembros (familia) al evento. Cada entrada lleva su subevento.
+  async function registerFamily(entries: Array<{ id: string; name: string; sub_event_id: string | null }>) {
     if (!familyCheckin) return
     setCheckingFamily(true)
-    const all = [{ member_id: familyCheckin.member.id, name: familyCheckin.member.name }, ...familyCheckin.family]
-    for (const id of ids) {
-      const m = all.find(x => x.member_id === id)
-      if (m) await persistCheckin({ id: m.member_id, name: m.name }, 'participant')
+    for (const e of entries) {
+      await persistCheckin({ id: e.id, name: e.name }, 'participant', 'manual', e.sub_event_id)
     }
     setCheckingFamily(false)
     setFamilyCheckin(null)
@@ -459,6 +457,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         <FamilyCheckinModal
           member={familyCheckin.member}
           family={familyCheckin.family}
+          subEvents={event.sub_events}
+          defaultSub={targetSub}
           busy={checkingFamily}
           onRegister={registerFamily}
           onClose={() => setFamilyCheckin(null)}
@@ -488,64 +488,105 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
 // ─── Modal: check-in en familia (miembro existente con familia) ──────────────────
 
-function FamilyCheckinModal({ member, family, busy, onRegister, onClose }: {
+function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onRegister, onClose }: {
   member: { id: string; name: string }
   family: { member_id: string; name: string; relation: string }[]
+  subEvents: { id: string; name: string }[]
+  defaultSub: string | null
   busy: boolean
-  onRegister: (ids: string[]) => void
+  onRegister: (entries: Array<{ id: string; name: string; sub_event_id: string | null }>) => void
   onClose: () => void
 }) {
-  // El miembro encontrado siempre va; los familiares arrancan seleccionados.
-  const [selected, setSelected] = useState<Set<string>>(new Set(family.map(f => f.member_id)))
+  const hasSubs = subEvents.length > 0
+  const everyone = [
+    { member_id: member.id, name: member.name, relation: 'Titular' as const },
+    ...family,
+  ]
+  // El titular y los familiares arrancan seleccionados; cada quien con el subevento por defecto.
+  const [selected, setSelected] = useState<Set<string>>(new Set(everyone.map(p => p.member_id)))
+  const [subById, setSubById] = useState<Record<string, string | null>>(
+    () => Object.fromEntries(everyone.map(p => [p.member_id, defaultSub])),
+  )
 
   function toggle(id: string) {
+    if (id === member.id) return // el titular siempre va
     setSelected(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id); else next.add(id)
       return next
     })
   }
+  function setSub(id: string, sub: string | null) {
+    setSubById(prev => ({ ...prev, [id]: sub }))
+  }
+
+  function buildEntries(ids: string[]): Array<{ id: string; name: string; sub_event_id: string | null }> {
+    return ids.map(id => {
+      const p = everyone.find(x => x.member_id === id)!
+      return { id, name: p.name, sub_event_id: hasSubs ? (subById[id] ?? null) : defaultSub }
+    })
+  }
+
+  const subLabel = (id: string | null) => id === null ? 'Evento general' : (subEvents.find(s => s.id === id)?.name ?? 'Evento general')
 
   return (
-    <Modal onClose={onClose} titleId="family-checkin-title" width={448} tone="dark">
+    <Modal onClose={onClose} titleId="family-checkin-title" width={480} tone="dark">
       <div className="p-6 space-y-4">
         <h3 id="family-checkin-title" className="text-lg font-extrabold text-white font-display">
           {member.name} viene con familia
         </h3>
-        <p className="text-sm text-white/60 font-body">¿Quién más llegó?</p>
+        <p className="text-sm text-white/60 font-body">
+          {hasSubs ? '¿Quién llegó y a qué subevento va cada uno?' : '¿Quién más llegó?'}
+        </p>
 
-        <div className="space-y-2 max-h-72 overflow-y-auto">
-          <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5">
-            <div className="h-8 w-8 rounded-full bg-coral flex items-center justify-center text-[10px] font-bold text-white">{getInitials(member.name)}</div>
-            <span className="flex-1 text-sm text-white font-body">{member.name}</span>
-            <span className="text-[11px] text-white/70">Titular</span>
-          </div>
-          {family.map(f => (
-            <label key={f.member_id} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5 cursor-pointer">
-              <input type="checkbox" checked={selected.has(f.member_id)} onChange={() => toggle(f.member_id)} className="accent-coral h-4 w-4" />
-              <div className="h-8 w-8 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(f.name)}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-white truncate font-body">{f.name}</p>
-                <p className="text-[11px] text-white/70">{f.relation}</p>
+        <div className="space-y-2 max-h-80 overflow-y-auto">
+          {everyone.map(p => {
+            const isTitular = p.member_id === member.id
+            const on = selected.has(p.member_id)
+            return (
+              <div key={p.member_id} className={cn('rounded-xl px-3 py-2.5', isTitular ? 'bg-white/10' : 'bg-white/5')}>
+                <div className="flex items-center gap-3">
+                  {isTitular ? (
+                    <span className="h-4 w-4 shrink-0" aria-hidden />
+                  ) : (
+                    <input type="checkbox" checked={on} onChange={() => toggle(p.member_id)} className="accent-coral h-4 w-4 shrink-0" aria-label={`Incluir a ${p.name}`} />
+                  )}
+                  <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', isTitular ? 'bg-coral' : 'bg-navy-light')}>{getInitials(p.name)}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white truncate font-body">{p.name}</p>
+                    <p className="text-[11px] text-white/70">{p.relation}</p>
+                  </div>
+                </div>
+                {hasSubs && on && (
+                  <select
+                    value={subById[p.member_id] ?? ''}
+                    onChange={e => setSub(p.member_id, e.target.value || null)}
+                    aria-label={`Subevento de ${p.name}`}
+                    className="mt-2 w-full rounded-lg bg-white/10 px-2.5 py-1.5 text-[13px] text-white outline-none focus:ring-1 focus:ring-coral/40 font-body"
+                  >
+                    <option value="">Evento general</option>
+                    {subEvents.map(se => <option key={se.id} value={se.id}>{se.name}</option>)}
+                  </select>
+                )}
               </div>
-            </label>
-          ))}
+            )
+          })}
         </div>
 
         <div className="flex gap-2 pt-1">
           <button
-            onClick={() => onRegister([member.id])}
+            onClick={() => onRegister(buildEntries([member.id]))}
             disabled={busy}
             className="flex-1 rounded-2xl border border-white/15 py-3 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50 font-body"
           >
-            Solo {member.name.split(' ')[0]}
+            Solo {member.name.split(' ')[0]}{hasSubs ? ` (${subLabel(subById[member.id] ?? null)})` : ''}
           </button>
           <button
-            onClick={() => onRegister([member.id, ...Array.from(selected)])}
+            onClick={() => onRegister(buildEntries(Array.from(selected)))}
             disabled={busy}
             className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
-            {busy ? 'Registrando…' : `Registrar ${1 + selected.size}`}
+            {busy ? 'Registrando…' : `Registrar ${selected.size}`}
           </button>
         </div>
       </div>

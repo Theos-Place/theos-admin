@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
 import Link from 'next/link'
@@ -139,6 +140,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const { id } = use(params)
   const { event, loading } = useEvent(id)
   const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
+  // Si venimos de una ocurrencia recurrente (?date=ISO), editamos SOBRE su fecha.
+  const occParam = useSearchParams().get('date')
 
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['info']))
   const [name, setName] = useState(event?.name ?? '')
@@ -176,10 +179,20 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setSelectedType(event.event_type ?? '')
     setCommittee(event.committee_id ?? '')
     setDescription(event.description ?? '')
-    setStartDate(event.start_at.split('T')[0])
-    setStartTime(event.start_at.split('T')[1]?.slice(0, 5) ?? '')
-    setEndDate(event.end_at ? event.end_at.split('T')[0] : '')
-    setEndTime(event.end_at ? (event.end_at.split('T')[1]?.slice(0, 5) ?? '') : '')
+    // Con ocurrencia (?date=): desplazar las fechas a ESA ocurrencia (hora CR local),
+    // conservando la duración del evento. Sin ocurrencia: la fecha real del evento.
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    const hm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    const realStart = new Date(event.start_at)
+    const realEnd = new Date(event.end_at)
+    const occStart = occParam ? new Date(occParam) : realStart
+    const dur = Math.max(0, realEnd.getTime() - realStart.getTime())
+    const occEnd = new Date(occStart.getTime() + dur)
+    setStartDate(ymd(occStart))
+    setStartTime(hm(occStart))
+    setEndDate(ymd(occEnd))
+    setEndTime(hm(occEnd))
     setIsVirtual(event.is_virtual ?? false)
     setVirtualLink(event.virtual_url ?? '')
     setLocation(event.location ?? '')
@@ -190,7 +203,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setMaxCapacity(String(event.max_capacity ?? ''))
     setRequiresPayment(event.requires_payment ?? false)
     setPaymentAmount(event.payment_amount ? String(event.payment_amount) : '')
-  }, [event])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event, occParam])
 
   if (!event) {
     return (
@@ -228,8 +242,24 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setPaymentMethods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
   }
 
-  async function doSave() {
+  // Fecha (YYYY-MM-DD, hora CR) e inicio ISO de la ocurrencia sobre la que se actúa.
+  function occurrenceRef(): { date: string; start: string } | null {
+    if (!occParam) {
+      // Sin ?date: la ocurrencia es el inicio real del evento (padre).
+      const d = event ? new Date(event.start_at) : null
+      if (!d) return null
+      const pad = (n: number) => String(n).padStart(2, '0')
+      return { date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, start: d.toISOString() }
+    }
+    const d = new Date(occParam)
+    if (isNaN(d.getTime())) return null
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return { date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, start: d.toISOString() }
+  }
+
+  async function doSave(scope: RecurringScope = 'all') {
     setSaving(true)
+    const occ = occurrenceRef()
     const body = {
       name, event_type: selectedType, committee, description,
       start_date: startDate, start_time: startTime,
@@ -239,6 +269,10 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
       requires_payment: requiresPayment, payment_amount: paymentAmount,
       sub_events: subEvents,
+      // Alcance para series recurrentes (lo ignora el backend si scope='all').
+      scope,
+      occurrence_date: occ?.date,
+      occurrence_start: occ?.start,
     }
     try {
       const res = await fetch(`/api/events/${id}`, {
@@ -259,13 +293,13 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     if (event!.is_recurring) {
       setShowRecurringModal(true)
     } else {
-      doSave()
+      doSave('all')
     }
   }
 
-  function handleRecurringSave() {
+  function handleRecurringSave(scope: RecurringScope) {
     setShowRecurringModal(false)
-    doSave()
+    doSave(scope)
   }
 
   if (saved) {
@@ -451,7 +485,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             </label>
             {isRecurring && (
               <div className="pl-12">
-                <RecurrenceSelector value={recurrenceRule} onChange={setRecurrenceRule} />
+                <RecurrenceSelector value={recurrenceRule} onChange={setRecurrenceRule} startDate={startDate} />
               </div>
             )}
           </div>
