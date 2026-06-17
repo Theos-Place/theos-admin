@@ -305,7 +305,7 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
           // interpola si es un UUID válido (anti filter-injection, auditoría S4).
           if (c.area && UUID_RE.test(c.area)) q = q.or(`id.eq.${c.area},parent_id.eq.${c.area}`, { referencedTable: 'position.area' })
           return q
-        }, 'volunteers', 'member_id, position:service_positions!inner(title, area:areas!inner(id, name, parent_id))'))
+        }, 'volunteers', 'member_id, position:service_positions!inner(title, area:areas!service_positions_area_id_fkey!inner(id, name, parent_id))'))
         break
       }
       case 'donor': {
@@ -409,7 +409,7 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         const set = await pagedIds(
           q => q.eq('status', 'active').ilike('position.area.name', '%dirigente%'),
           'volunteers',
-          'member_id, position:service_positions!inner(area:areas!inner(name))',
+          'member_id, position:service_positions!inner(area:areas!service_positions_area_id_fkey!inner(name))',
         )
         if (c.value === 'yes') res.include.push(set)
         else res.exclude.push(set)

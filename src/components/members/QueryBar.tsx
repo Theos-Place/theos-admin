@@ -176,8 +176,8 @@ export function QueryBar({
 
   return (
     <div className="space-y-2">
-      {/* Pills row */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Lista vertical de filtros activos (se apilan hacia abajo, no se enciman) */}
+      <div className="flex flex-col items-start gap-1.5">
         {units.map((unit, i) => {
           const key = unit.kind === 'condition' ? `c${unit.id}` : `g${unit.id}`
           const op = topLevelOps[key] ?? 'AND'

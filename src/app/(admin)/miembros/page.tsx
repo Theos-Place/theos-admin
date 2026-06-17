@@ -481,8 +481,19 @@ function MiembrosContent() {
               >
                 {labelWithCount}
                 {key === 'activo' && (
-                  <span title={ATTENDANCE_GENERAL_TOOLTIP} aria-label={ATTENDANCE_GENERAL_TOOLTIP} className="ml-1 inline-flex align-[-2px] opacity-70">
+                  <span
+                    tabIndex={0}
+                    role="img"
+                    aria-label={ATTENDANCE_GENERAL_TOOLTIP}
+                    className="group/info relative ml-1 inline-flex align-[-2px] opacity-70 outline-none"
+                  >
                     <Info size={13} strokeWidth={2} />
+                    <span
+                      role="tooltip"
+                      className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 hidden w-60 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[11px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
+                    >
+                      {ATTENDANCE_GENERAL_TOOLTIP}
+                    </span>
                   </span>
                 )}
               </button>
@@ -568,7 +579,13 @@ function MiembrosContent() {
               : `${resultTotal.toLocaleString('es-CR')} resultados`}
           </p>
           <button
-            onClick={() => filters.clearAll()}
+            onClick={() => {
+              filters.clearAll()                 // condiciones avanzadas + grupos + rangos
+              setShowDonors(false)               // chips rápidos
+              setShowServers(false)
+              setShowActive(false)
+              setSearch('')                      // búsqueda
+            }}
             className="flex items-center gap-1 text-sm text-coral hover:underline transition-colors font-body"
           >
             <X size={12} strokeWidth={2} />
