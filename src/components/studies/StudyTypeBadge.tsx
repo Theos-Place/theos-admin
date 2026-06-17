@@ -9,7 +9,7 @@ import { STUDY_CATALOG, type StudyStage } from '@/data/study-catalog'
 const STAGE_BY_CODE: Record<string, StudyStage> = Object.fromEntries(STUDY_CATALOG.map(s => [s.code, s.stage]))
 const STAGE_OVERRIDE: Record<string, StudyStage> = {
   BUS: 'inicial', TEOAT: 'inicial', PLANDANIEL: 'inicial', LECTPROP: 'inicial', PAREJAS: 'inicial', QEJ: 'inicial',
-  CAMP: 'campaña', PRETRANS: 'campaña',
+  CAMP: 'campaña', PRETRANS: 'campaña', REDESC: 'campaña',
 }
 const STAGE_COLOR: Record<StudyStage, string> = {
   niveles:    'bg-navy/10 text-navy',
