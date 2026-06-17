@@ -214,7 +214,9 @@ export default function PlanDeEstudiosPage() {
     if (ga === 2) return tail.indexOf(a.code) - tail.indexOf(b.code)
     return sortKey(a.code).localeCompare(sortKey(b.code))
   }
-  // Las charlas no curriculares (ej. BUS) no se listan en el plan.
+  // Solo se ocultan las charlas NO curriculares (ej. BUS "¿Adónde va este bus?").
+  // Los estudios reales desactivados sí son curriculares → se muestran marcados
+  // como inactivos (is_archived: gris + badge "Desactivado", ordenados al final).
   const curricular = useMemo(() => studyTypes.filter(s => s.is_curricular !== false), [studyTypes])
   const byStage = (stage: string) => [...curricular.filter(s => s.stage === stage)].sort(withinStage(stage))
   const niveles    = useMemo(() => byStage('niveles'), [curricular])

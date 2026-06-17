@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { createCheckin } from '@/lib/supabase/queries/events'
+import { createCheckin, deleteCheckin } from '@/lib/supabase/queries/events'
 
 // POST: registra un check-in. Body: { member_id?, guest_name?, sub_event_id?, method? }
 // El constraint checkin_member_or_guest exige member_id O guest_name.
@@ -26,6 +26,25 @@ export async function POST(
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
     console.error('POST /api/events/[id]/checkins:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+// DELETE: deshace un check-in. ?checkinId=<uuid>. Mismos roles que el alta.
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRoles('encargado_eventos', 'direccion')
+  if (auth.res) return auth.res
+  try {
+    const { id } = await params
+    const checkinId = req.nextUrl.searchParams.get('checkinId')
+    if (!checkinId) return NextResponse.json({ error: 'Falta checkinId' }, { status: 400 })
+    await deleteCheckin(id, checkinId)
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('DELETE /api/events/[id]/checkins:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

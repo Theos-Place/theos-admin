@@ -49,7 +49,7 @@ const CHARLAS: Charla[] = [
   { title: 'Charla Alajuela', description: 'Charla semanal sede Alajuela. Grupo +18.', location: 'Lifehouse, Alajuela Centro', location_url: 'https://waze.com/ul/hd1u158h2e', day: 'THU', startH: 19, startM: 30, endH: 21, endM: 30 },
   { title: 'Charla Madrid', description: 'Charla semanal sede Madrid. Todas las edades.', location: 'MadHat, Madrid', location_url: 'https://maps.app.goo.gl/VoquA2tPCYk6MYLv7', day: 'SUN', startH: 11, startM: 30, endH: 13, endM: 30 },
   { title: 'Charla Pedregal', description: 'Charla semanal sede Pedregal. Todas las edades.', location: 'Pedregal', location_url: 'https://waze.com/ul/hd1u0u2xsj', day: 'WED', startH: 19, startM: 30, endH: 21, endM: 30 },
-  { title: 'Charla Pedregal (Jóvenes)', description: 'Charla semanal sede Pedregal. Grupo 18–32.', location: 'Pedregal', location_url: 'https://waze.com/ul/hd1u0u2xsj', day: 'THU', startH: 19, startM: 30, endH: 21, endM: 30 },
+  { title: 'Charla Pedregal Home', description: 'Charla semanal sede Pedregal Home. Grupo 18–32.', location: 'Pedregal', location_url: 'https://waze.com/ul/hd1u0u2xsj', day: 'THU', startH: 19, startM: 30, endH: 21, endM: 30 },
   { title: 'Charla Pedregal (Domingo)', description: 'Charla semanal sede Pedregal. Todas las edades.', location: 'Pedregal', location_url: 'https://waze.com/ul/hd1u0u2xsj', day: 'SUN', startH: 11, startM: 0, endH: 13, endM: 0 },
 ]
 

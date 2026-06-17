@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { eventsInRange, upcomingEvents as upcomingEventsView } from '@/lib/events/event-views'
 import {
   Users, BookOpen, Calendar, DollarSign,
   Heart, Hammer,
@@ -21,7 +23,7 @@ import { useDashboard } from '@/hooks/useDashboard'
 const EMPTY_STATS = {
   members: { total: 0, active: 0, new_this_month: 0, without_cedula: 0, duplicates_suggested: 0 },
   studies: { active_groups: 0, active_estudios: 0, active_capacitaciones: 0, students: 0, open_registration: 0, open_requests: 0, closing_soon: 0, without_leader: 0 },
-  events: { upcoming_this_month: 0, this_week: 0, pending_payments: 0, near_capacity: 0 },
+  events: { today: 0, upcoming_this_month: 0, this_week: 0, pending_payments: 0, near_capacity: 0 },
   servers: { active: 0, positions: 0, committees: 0, open_vacancies: 0, pending_applications: 0 },
   finance: { donors_active: 0, pending_refunds: 0, income_this_month: 0 },
   communications: { sent_this_month: 0, total_recipients: 0, failed: 0 },
@@ -101,9 +103,6 @@ function capacityColor(pct: number) {
   return '#EF5554'
 }
 
-function isSameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
-}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function StatCard({
@@ -245,25 +244,35 @@ export default function DashboardPage() {
     return () => clearInterval(timer)
   }, [])
 
+  // Landing del encargado_eventos puro (sin otros roles de mayor alcance): su
+  // pantalla de inicio es el check-in, no el dashboard.
+  const router = useRouter()
+  useEffect(() => {
+    if (!loaded) return
+    const roles = user?.roles ?? []
+    const onlyEncargado = roles.filter(r => r !== 'miembro').length === 1 && roles.includes('encargado_eventos')
+    if (onlyEncargado) router.replace('/eventos/checkin')
+  }, [loaded, user, router])
+
   const today = now
   const isAdminOrDir = hasRole('admin', 'direccion')
   const isFinance    = hasRole('admin', 'direccion', 'finanzas')
   const isMember     = !loaded || (user?.roles?.length === 1 && user.roles[0] === 'miembro')
 
-  // Events today and upcoming
-  const todayEvents = useMemo(() =>
-    MOCK_EVENTS.filter(e => isSameDay(new Date(e.start_at), today))
-  , [today])
+  // Events today and upcoming — EXPANDIENDO recurrentes (las charlas de hoy son
+  // ocurrencias del evento padre; no existen como fila con la fecha de hoy).
+  const todayEvents = useMemo(() => {
+    const start = new Date(today); start.setHours(0, 0, 0, 0)
+    const end = new Date(start); end.setDate(end.getDate() + 1)
+    return eventsInRange(MOCK_EVENTS, start, end)
+  }, [MOCK_EVENTS, today])
 
-  const upcomingEvents = useMemo(() =>
-    MOCK_EVENTS
-      .filter(e => {
-        const d = new Date(e.start_at)
-        return d > today && d.getTime() - today.getTime() < 1000 * 60 * 60 * 24 * 30
-      })
-      .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
+  const upcomingEvents = useMemo(() => {
+    const in30 = new Date(today.getTime() + 1000 * 60 * 60 * 24 * 30)
+    return upcomingEventsView(MOCK_EVENTS, today)
+      .filter(e => new Date(e.start_at) < in30)
       .slice(0, 5)
-  , [today])
+  }, [MOCK_EVENTS, today])
 
   // Today check-ins (mock last 5)
   const todayCheckins = useMemo(() => {

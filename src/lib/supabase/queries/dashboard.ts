@@ -1,4 +1,6 @@
 import { createAdminClient, type TableName } from '@/lib/supabase/admin'
+import { getEvents } from './events'
+import { eventsInRange } from '@/lib/events/event-views'
 
 type SB = ReturnType<typeof createAdminClient>
 
@@ -23,7 +25,7 @@ function startOfMonthISO(now: Date): string {
 export type DashboardStats = {
   members: { total: number; active: number; new_this_month: number; without_cedula: number; duplicates_suggested: number }
   studies: { active_groups: number; active_estudios: number; active_capacitaciones: number; students: number; open_registration: number; open_requests: number; closing_soon: number; without_leader: number }
-  events: { upcoming_this_month: number; this_week: number; pending_payments: number; near_capacity: number }
+  events: { today: number; upcoming_this_month: number; this_week: number; pending_payments: number; near_capacity: number }
   servers: { active: number; positions: number; committees: number; open_vacancies: number; pending_applications: number }
   finance: { donors_active: number; pending_refunds: number; income_this_month: number }
   communications: { sent_this_month: number; total_recipients: number; failed: number }
@@ -46,7 +48,7 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
   const [
     membersTotal, membersActive, membersNew, membersNoCedula,
     activeGroups, activeEstudios, students, openReg, openRequests, closingSoon, withoutLeader,
-    upcomingMonth, thisWeek, pendingPayments,
+    pendingPayments,
     serversActive, committees, openVacancies, pendingApps,
     donorsActive, pendingRefunds,
     sentThisMonth, failedComms,
@@ -67,8 +69,6 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     count(supabase, 'study_groups', (q) => q.not('ends_at', 'is', null).lte('ends_at', in30).gte('ends_at', todayStr)),
     count(supabase, 'study_groups', (q) => q.is('leader_id', null)),
 
-    count(supabase, 'events', (q) => q.eq('status', 'upcoming').gte('starts_at', monthStart)),
-    count(supabase, 'events', (q) => q.gte('starts_at', now.toISOString()).lte('starts_at', weekEnd)),
     count(supabase, 'payments', (q) => q.eq('status', 'pending')),
 
     count(supabase, 'volunteers', (q) => q.eq('status', 'active')),
@@ -82,6 +82,22 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     count(supabase, 'message_broadcasts', (q) => q.eq('status', 'sent').gte('created_at', monthStart)),
     count(supabase, 'message_logs', (q) => q.in('status', ['failed', 'bounced']).gte('created_at', monthStart)),
   ])
+
+  // Eventos: NO se cuentan crudo (las charlas de hoy son ocurrencias de eventos
+  // recurrentes, no filas con la fecha de hoy). Se traen los ACTIVOS (recurrentes
+  // + próximos) y se EXPANDE con la misma lógica del calendario/lista.
+  const { events: activeEvents } = await getEvents({ light: true, is_active: true, pageSize: 2000 })
+  // Forma mínima para la expansión (eventsInRange usa start_at/end_at/recurrencia).
+  const rangeable = activeEvents.map(e => ({
+    id: e.id, start_at: e.starts_at, end_at: e.ends_at ?? e.starts_at,
+    is_recurring: e.is_recurring, recurrence_rule: e.recurrence_rule, recurrence_end: e.recurrence_end,
+  })) as unknown as Parameters<typeof eventsInRange>[0]
+  const startToday = new Date(now); startToday.setHours(0, 0, 0, 0)
+  const endToday = new Date(startToday); endToday.setDate(endToday.getDate() + 1)
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  const eventsToday = eventsInRange(rangeable, startToday, endToday).length
+  const thisWeek = eventsInRange(rangeable, now, new Date(weekEnd)).length
+  const upcomingMonth = eventsInRange(rangeable, now, monthEnd).length
 
   // Sumas y distinct agregados en SQL (RPC dashboard_sums, migración 040):
   // income del mes, destinatarios del mes y personas únicas sirviendo
@@ -123,7 +139,7 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
       open_requests: openRequests, closing_soon: closingSoon, without_leader: withoutLeader,
     },
     events: {
-      upcoming_this_month: upcomingMonth, this_week: thisWeek,
+      today: eventsToday, upcoming_this_month: upcomingMonth, this_week: thisWeek,
       pending_payments: pendingPayments, near_capacity: 0, // heurística, pendiente
     },
     servers: {

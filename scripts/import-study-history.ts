@@ -32,7 +32,7 @@ const QUEUE_MAP: Record<string, string> = {
   'Efesios': 'EFE', 'Galatas': 'GAL', 'Gálatas': 'GAL', 'Apocalipsis': 'APO',
   '¿Adónde va este bus?': 'BUS',
   // "Bienestar Integral" es el mismo estudio que CTBD (Cómo Tomar Buenas Decisiones)
-  'Bienestar Integral': 'CTBD',
+  'Bienestar Integral': 'PLANDANIEL',
 }
 
 function parseCSV(text: string): string[][] {

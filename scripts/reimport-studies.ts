@@ -53,11 +53,11 @@ const RULES: Array<[RegExp, string]> = [
   [/hermen|interpretar la b/i, 'HER'], [/relig/i, 'RDM'], [/defendiendo|apolog/i, 'DLF'],
   [/dinero|finanzas/i, 'AED'], [/amor sin front/i, 'ASF'],
   [/liderazgo/i, 'SCJ'], // nombre viejo de Sirviendo como Jesús
-  [/plan\s+(de\s+)?daniel/i, 'PLANDANIEL'], // capacitación inicial histórica (archivada)
+  [/plan\s+(de\s+)?daniel|bienestar integral/i, 'PLANDANIEL'], // "Bienestar Integral" = Plan Daniel (NO CTBD)
   [/teolog[ií]a|esepa/i, 'TEOAT'], // curso externo (archivado)
   [/c[oó]mo\s+dar\s+charlas|homil[eé]tica|predicaci/i, 'CDC'], // homilética/predicación = dar charlas
   [/\bcdeb\b|c[oó]mo\s+dar\s+(estudios?|eb)/i, 'CDEB'],
-  [/buenas de[cs]i|bienestar integral|integri|[eé]tica\b/i, 'CTBD'], // "Decisiones"/"Desiciones"; Ética = CTBD
+  [/buenas de[cs]i|integri|[eé]tica\b/i, 'CTBD'], // "Decisiones"/"Desiciones"/"Viviendo en Integridad"; Ética = CTBD
   [/lecturas con prop/i, 'LECTPROP'], // estudio de prueba (archivado)
   [/este bus|ad[oó]nde va/i, 'BUS'],
   [/qui[eé]n es jes[uú]s/i, 'QEJ'], // estudio inicial descontinuado (archivado)
@@ -111,7 +111,7 @@ const QUEUE_MAP: Record<string, string> = {
   'Defendiendo la Fe (Apologética)': 'DLF', 'Cómo Tomar Buenas Desiciones (Viviendo en Integri)': 'CTBD',
   'Pre Matrimonial': 'PREMAT', 'Hebreos': 'HEB', 'Romanos': 'ROM', 'Amor sin Fronteras': 'ASF',
   'Efesios': 'EFE', 'Galatas': 'GAL', 'Gálatas': 'GAL', 'Apocalipsis': 'APO', '¿Adónde va este bus?': 'BUS',
-  'Bienestar Integral': 'CTBD', '¿Cómo dar Estudios Bíblicos?': 'CDEB', '¿Cómo dar Charlas?': 'CDC',
+  'Bienestar Integral': 'PLANDANIEL', '¿Cómo dar Estudios Bíblicos?': 'CDEB', '¿Cómo dar Charlas?': 'CDC',
   '¿Quien es Jesús?': 'QEJ', '¿Quién es Jesús?': 'QEJ',
 }
 const REPRUEBA_NIVEL = 'Reprueba Nivel 1 - 4'

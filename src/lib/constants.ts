@@ -24,6 +24,9 @@ export const MOCK_LONG_SEND_DELAY_MS = 2500
 export const TOAST_SHORT_MS = 3200
 /** Standard toast dismiss — finanzas, eventos (ms) */
 export const TOAST_MS = 3500
+/** Horas de gracia tras terminar un evento en que sigue disponible para check-in
+ *  (selector del día): la ventana va del inicio del día hasta ends_at + estas horas. */
+export const CHECKIN_GRACE_HOURS = 4
 /** Long toast dismiss — miembros, vacantes (ms) */
 export const TOAST_LONG_MS = 4000
 

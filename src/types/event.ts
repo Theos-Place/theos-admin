@@ -25,6 +25,7 @@ export type EventRegistration = {
 }
 
 export type EventCheckin = {
+  id: string
   member_id: string
   member_name: string
   attendance_type: AttendanceType

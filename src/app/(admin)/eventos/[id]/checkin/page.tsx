@@ -95,6 +95,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     const subEventId = event!.sub_events.length > 0 ? event!.sub_events[0].id : null
     const stamp = new Date().toISOString() + ':' + m.id
     const newCheckin: EventCheckin & { _new?: boolean } = {
+      id: stamp, // optimista; al refrescar trae el id real de la BD
       member_id: m.id,
       member_name: m.name,
       attendance_type: type,

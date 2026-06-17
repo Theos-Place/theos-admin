@@ -72,7 +72,7 @@ const QUEUE_MAP: Record<string, string> = {
   'Defendiendo la Fe (Apologética)': 'DLF', 'Cómo Tomar Buenas Desiciones (Viviendo en Integri)': 'CTBD',
   'Pre Matrimonial': 'PREMAT', 'Hebreos': 'HEB', 'Romanos': 'ROM', 'Amor sin Fronteras': 'ASF',
   'Efesios': 'EFE', 'Galatas': 'GAL', 'Gálatas': 'GAL', 'Apocalipsis': 'APO', '¿Adónde va este bus?': 'BUS',
-  'Bienestar Integral': 'CTBD', '¿Cómo dar Estudios Bíblicos?': 'CDEB', '¿Cómo dar Charlas?': 'CDC',
+  'Bienestar Integral': 'PLANDANIEL', '¿Cómo dar Estudios Bíblicos?': 'CDEB', '¿Cómo dar Charlas?': 'CDC',
   '¿Quien es Jesús?': 'QEJ', '¿Quién es Jesús?': 'QEJ', 'Lecturas con Propósito': 'LECTPROP',
   'Seminario - Teologia AT - Esepa': 'TEOAT', // curso externo (plan TEOAT existe, archivado)
 }

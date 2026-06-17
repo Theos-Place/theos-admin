@@ -24,7 +24,7 @@ const QUEUE_MAP: Record<string, string> = {
   'Defendiendo la Fe (Apologética)': 'DLF', 'Cómo Tomar Buenas Desiciones (Viviendo en Integri)': 'CTBD',
   'Pre Matrimonial': 'PREMAT', 'Hebreos': 'HEB', 'Romanos': 'ROM', 'Amor sin Fronteras': 'ASF',
   'Efesios': 'EFE', 'Galatas': 'GAL', 'Gálatas': 'GAL', 'Apocalipsis': 'APO', '¿Adónde va este bus?': 'BUS',
-  'Bienestar Integral': 'CTBD',
+  'Bienestar Integral': 'PLANDANIEL',
 }
 
 async function fetchAll<T>(table: string, select: string, filter?: (q: ReturnType<typeof supabase.from> extends never ? never : any) => any): Promise<T[]> {

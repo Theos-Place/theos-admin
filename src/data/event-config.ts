@@ -61,6 +61,7 @@ function makeCheckins(count: number, prefix: string, subEventIds: string[] | nul
     'Maricela Piedra', 'Joselyn Loría', 'Franklin Prado', 'Yolanda Gutiérrez', 'Cesar Azofeifa',
   ]
   return Array.from({ length: Math.min(count, names.length) }, (_, i) => ({
+    id: `${prefix}-c-${i + 1}`,
     member_id: `${prefix}-m-${i + 1}`,
     member_name: names[i % names.length],
     attendance_type: (i % 6 === 0 ? 'server' : 'participant') as AttendanceType,

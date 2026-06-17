@@ -30,7 +30,7 @@ const RULES: Array<[RegExp, string]> = [
   [/panorama/i, 'PAN'], [/evangelismo/i, 'EVM'], [/evangelios/i, 'EVA'], [/hechos/i, 'HCH'],
   [/romanos/i, 'ROM'], [/hebreos/i, 'HEB'], [/efesios/i, 'EFE'], [/g[aá]latas/i, 'GAL'], [/apocalipsis/i, 'APO'],
   [/hermen|interpretar la b/i, 'HER'], [/religiones/i, 'RDM'], [/defendiendo|apolog/i, 'DLF'],
-  [/dinero/i, 'AED'], [/amor sin front/i, 'ASF'], [/buenas decis|bienestar integral/i, 'CTBD'],
+  [/dinero/i, 'AED'], [/amor sin front/i, 'ASF'], [/buenas decis/i, 'CTBD'],
   [/este bus|ad[oó]nde va/i, 'BUS'], [/una fe audaz/i, 'UFA'], [/transformad/i, 'TRANS'],
   [/tiempo para so/i, 'TPS'], [/para qu[eé] estoy/i, 'PQET'], [/campa[ñn]a/i, 'CAMP'],
 ]

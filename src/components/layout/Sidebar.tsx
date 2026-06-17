@@ -19,6 +19,7 @@ import {
   LayoutList,
   BookText,
   UserCheck,
+  QrCode,
   ArrowLeftRight,
   Inbox,
   BarChart2,
@@ -172,6 +173,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // base 'miembro' ve su perfil, no el listado (espejo del guard de la API).
   const NAV = ALL_NAV.filter(m => !m.module || (can(m.module, 'view')
     && (m.href !== '/miembros' || getScope('miembros') !== 'own')))
+
+  // Item destacado de Check-in (encargado_eventos, dirección, admin). Para el
+  // encargado_eventos puro es el ítem MÁS prominente (arriba de todo).
+  const roles = user?.roles ?? []
+  const canCheckin = roles.some(r => ['encargado_eventos', 'direccion', 'admin'].includes(r))
+  const onlyEncargado = roles.filter(r => r !== 'miembro').length === 1 && roles.includes('encargado_eventos')
+  if (canCheckin) {
+    const checkinItem: NavModule = { href: '/eventos/checkin', label: 'Check-in', icon: QrCode, subs: [], module: null }
+    if (onlyEncargado) NAV.unshift(checkinItem)
+    else NAV.splice(1, 0, checkinItem) // tras Dashboard
+  }
 
   // ── Acordeón exclusivo (mobile y desktop) ──
   const moduleOfPath = NAV.find(m => m.subs.length > 0 && (pathname === m.href || pathname.startsWith(m.href + '/')))?.href ?? null

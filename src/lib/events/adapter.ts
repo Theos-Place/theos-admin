@@ -49,6 +49,7 @@ export function toDomainEvent(db: DbEventEnriched): MockEvent {
     })),
 
     checkins: db.checkins.map((c) => ({
+      id: c.id,
       member_id: c.member_id ?? '',
       member_name: fullName(c.member),
       attendance_type: (c.is_volunteer ? 'server' : 'participant') as AttendanceType,

@@ -23,11 +23,17 @@ export const SEDE_CANONICAL: Record<string, string> = {
   'pro este': 'Charla Antares',
   'pro este (antares)': 'Charla Antares',
   'antares': 'Charla Antares',
-  // Theos Home (antes Meridiano Jueves / "Home")
-  'home': 'Charla Theos Home',
-  'theos home': 'Charla Theos Home',
-  'meridiano jueves': 'Charla Theos Home',
-  'theos home (antes meridiano jueves)': 'Charla Theos Home',
+  // "Theos Home" se dividió en DOS sedes:
+  //  · Charla Meridiano Home ← Meridiano Jueves / "Theos Home (antes Meridiano Jueves)"
+  'meridiano jueves': 'Charla Meridiano Home',
+  'theos home (antes meridiano jueves)': 'Charla Meridiano Home',
+  'meridiano home': 'Charla Meridiano Home',
+  //  · Charla Pedregal Home ← "Theos Home"/"Home" + "Pedregal (Jóvenes)"
+  'home': 'Charla Pedregal Home',
+  'theos home': 'Charla Pedregal Home',
+  'pedregal (jovenes)': 'Charla Pedregal Home',
+  'pedregal jovenes': 'Charla Pedregal Home',
+  'pedregal home': 'Charla Pedregal Home',
   // Resto de sedes: patrón "Charla [Sede]"
   'liberia': 'Charla Liberia',
   'cartago': 'Charla Cartago',

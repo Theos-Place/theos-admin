@@ -43,6 +43,7 @@ export type DbEventEnriched = {
     member: { first_name: string; last_name: string } | null
   }>
   checkins: Array<{
+    id: string
     member_id: string | null
     sub_event_id: string | null
     checked_in_at: string
@@ -81,6 +82,7 @@ const SELECT = `
     member:members(first_name, last_name)
   ),
   checkins:event_checkins(
+    id,
     member_id,
     sub_event_id,
     checked_in_at,
@@ -101,6 +103,7 @@ function normalize(row: Record<string, unknown>): DbEventEnriched {
   const volunteerIds = new Set(volunteers.map((v) => v.member_id))
 
   const checkins = ((row.checkins ?? []) as Array<Record<string, unknown>>).map((c) => ({
+    id: c.id as string,
     member_id: (c.member_id as string) ?? null,
     sub_event_id: (c.sub_event_id as string) ?? null,
     checked_in_at: c.checked_in_at as string,
@@ -399,6 +402,15 @@ export async function createCheckin(
     .single()
   if (error) throw error
   return data as { id: string }
+}
+
+/** Deshace un check-in: borra la fila de event_checkins. Borrado duro — el
+ *  check-in no requiere auditoría (se puede volver a registrar). Acotado al
+ *  evento para evitar borrar de otro evento por un id ajeno. */
+export async function deleteCheckin(eventId: string, checkinId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('event_checkins').delete().eq('id', checkinId).eq('event_id', eventId)
+  if (error) throw error
 }
 
 /** Borrado lógico: marca is_active=false. El borrado duro lo hace el cascade. */

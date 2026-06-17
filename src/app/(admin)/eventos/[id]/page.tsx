@@ -337,7 +337,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       {activeTab === 'checkin' && (
         <EventCheckinTab
           event={event}
+          eventId={id}
           checkinCount={checkinCount}
+          onChanged={refetch}
         />
       )}
 

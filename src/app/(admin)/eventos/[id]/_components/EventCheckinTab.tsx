@@ -1,12 +1,16 @@
 'use client'
 
-import { QrCode } from 'lucide-react'
+import { useState } from 'react'
+import { QrCode, Undo2 } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
+import { Modal } from '@/components/shared/Modal'
 import { useClientPagination } from '@/hooks/useClientPagination'
+import { usePermissions } from '@/hooks/usePermissions'
+import { TOAST_MS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import type { MockEvent } from '@/data/event-config'
+import type { MockEvent, EventCheckin } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
 
 type Event = MockEvent
@@ -25,11 +29,37 @@ function avatarColor(name: string) {
 
 type Props = {
   event: Event
+  eventId: string
   checkinCount: number
+  onChanged?: () => void
 }
 
-export function EventCheckinTab({ event, checkinCount }: Props) {
+export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Props) {
   const page = useClientPagination(event.checkins, 20)
+  const { can } = usePermissions()
+  const canUndo = can('eventos', 'edit') // encargado_eventos, direccion, admin
+  const [toUndo, setToUndo] = useState<EventCheckin | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+
+  async function confirmUndo() {
+    if (!toUndo || busy) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/events/${eventId}/checkins?checkinId=${encodeURIComponent(toUndo.id)}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('No se pudo deshacer')
+      setToUndo(null)
+      onChanged?.()
+      setToast('Check-in deshecho')
+      setTimeout(() => setToast(null), TOAST_MS)
+    } catch {
+      setToast('Error al deshacer el check-in')
+      setTimeout(() => setToast(null), TOAST_MS)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       {event.sub_events.length > 0 && (
@@ -63,7 +93,7 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
           <div>
             {page.visible.map((ci, idx) => (
               <div
-                key={`${ci.member_id}-${idx}`}
+                key={ci.id}
                 className={cn('flex items-center gap-3 px-4 py-3', idx % 2 === 1 ? 'bg-surface-low/40' : '')}
               >
                 <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
@@ -82,6 +112,16 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
                 )}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
                 </span>
+                {canUndo && (
+                  <button
+                    onClick={() => setToUndo(ci)}
+                    aria-label={`Deshacer check-in de ${ci.member_name}`}
+                    title="Deshacer check-in"
+                    className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/50 hover:text-coral hover:bg-coral/5 transition-colors"
+                  >
+                    <Undo2 size={14} />
+                  </button>
+                )}
               </div>
             ))}
             <LoadMoreFooter
@@ -96,6 +136,42 @@ export function EventCheckinTab({ event, checkinCount }: Props) {
           </div>
         )}
       </div>
+
+      {/* Confirmación de deshacer check-in */}
+      {toUndo && (
+        <Modal onClose={() => !busy && setToUndo(null)} titleId="undo-checkin-title" width={400}>
+          <div className="p-5 space-y-4">
+            <h2 id="undo-checkin-title" className="text-base font-display font-extrabold text-navy">
+              ¿Deshacer el check-in de {toUndo.member_name}?
+            </h2>
+            <p className="text-sm text-navy-light/70 font-body">
+              Esto quita el registro de asistencia a este evento. Se puede volver a hacer check-in.
+            </p>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setToUndo(null)}
+                disabled={busy}
+                className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmUndo}
+                disabled={busy}
+                className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
+              >
+                {busy ? 'Deshaciendo…' : 'Deshacer check-in'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full bg-navy px-4 py-2 text-sm text-white shadow-[var(--shadow-lg)] font-body">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }
