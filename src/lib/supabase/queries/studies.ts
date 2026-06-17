@@ -635,7 +635,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
     supabase
       .from('study_enrollments')
-      .select('status, study_groups!study_enrollments_group_id_fkey(plan:study_plans(code))')
+      .select('status, study_groups!study_enrollments_group_id_fkey(plan:study_plans(code)), plan_direct:study_plans!study_enrollments_plan_id_fkey(code)')
       .eq('member_id', memberId),
     supabase.from('volunteers').select('id').eq('member_id', memberId).eq('status', 'active').limit(1),
     supabase
@@ -647,13 +647,16 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     activeInvitationCodesForMember(memberId),
   ])
 
-  const enrollments = (enrRes.data ?? []) as Array<{ status: string; study_groups: { plan: { code: string } | null } | null }>
+  // Completados/actual resueltos por grupo O por plan directo (inscripciones sin
+  // grupo, p.ej. histórico de campañas) — criterio centralizado de elegibilidad (B1).
+  const enrollments = (enrRes.data ?? []) as Array<{ status: string; study_groups: { plan: { code: string } | null } | null; plan_direct: { code: string } | null }>
+  const codeOf = (e: typeof enrollments[number]) => e.study_groups?.plan?.code ?? e.plan_direct?.code ?? null
   const completed_codes = enrollments
-    .filter(e => e.status === 'completed' && e.study_groups?.plan?.code)
-    .map(e => e.study_groups!.plan!.code)
+    .filter(e => e.status === 'completed' && codeOf(e))
+    .map(e => codeOf(e)!)
   const current_code = enrollments
-    .find(e => e.status === 'enrolled' && e.study_groups?.plan?.code)
-    ?.study_groups?.plan?.code ?? null
+    .map(e => e.status === 'enrolled' ? codeOf(e) : null)
+    .find(Boolean) ?? null
 
   return {
     completed_codes,
