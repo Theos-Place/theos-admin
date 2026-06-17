@@ -1,30 +1,35 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { STUDY_CATALOG, type StudyStage } from '@/data/study-catalog'
 
-const NIVELES = ['N1', 'N2', 'N3', 'N4']
-const INICIAL = ['SCJ', 'BUS', 'ASF', 'EVM', 'AED', 'MAT', 'PREMAT']
-const CAMPANA = ['TRANS', 'UFA', 'PQET', 'TPS', 'CAMP', 'PRETRANS']
+// Color por ETAPA (no por lista de códigos suelta, que dejaba estudios de etapa
+// inicial fuera, en coral). La etapa sale del catálogo; para códigos que solo
+// viven en la BD (charlas/planes archivados) hay un override explícito.
+const STAGE_BY_CODE: Record<string, StudyStage> = Object.fromEntries(STUDY_CATALOG.map(s => [s.code, s.stage]))
+const STAGE_OVERRIDE: Record<string, StudyStage> = {
+  BUS: 'inicial', TEOAT: 'inicial', PLANDANIEL: 'inicial', LECTPROP: 'inicial', PAREJAS: 'inicial', QEJ: 'inicial',
+  CAMP: 'campaña', PRETRANS: 'campaña',
+}
+const STAGE_COLOR: Record<StudyStage, string> = {
+  niveles:    'bg-navy/10 text-navy',
+  inicial:    'bg-teal-soft/30 text-teal-deep', // etapa inicial = verde/teal
+  intermedia: 'bg-coral/10 text-coral',
+  campaña:    'bg-purple-100 text-purple-700',
+}
 
 interface StudyTypeBadgeProps {
   code: string
   name?: string
   size?: 'sm' | 'md'
+  /** Etapa explícita (opcional). Si no se pasa, se resuelve por código. */
+  stage?: StudyStage
   className?: string
 }
 
-export function StudyTypeBadge({ code, name, size = 'md', className }: StudyTypeBadgeProps) {
-  const isNiveles = NIVELES.includes(code)
-  const isInicial = INICIAL.includes(code)
-  const isCampana = CAMPANA.includes(code)
-
-  const colorClass = isNiveles
-    ? 'bg-navy/10 text-navy'
-    : isInicial
-    ? 'bg-teal-soft/30 text-teal-deep'
-    : isCampana
-    ? 'bg-purple-100 text-purple-700'
-    : 'bg-coral/10 text-coral'
+export function StudyTypeBadge({ code, name, size = 'md', stage, className }: StudyTypeBadgeProps) {
+  const resolvedStage = stage ?? STAGE_OVERRIDE[code] ?? STAGE_BY_CODE[code] ?? 'intermedia'
+  const colorClass = STAGE_COLOR[resolvedStage]
 
   const sizeClass = size === 'sm'
     ? 'px-1.5 py-0.5 text-[10px]'
