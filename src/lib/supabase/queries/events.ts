@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import type { EventType, EventStatus, EventPaymentStatus, AttendanceType } from '@/types/event'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
@@ -199,16 +199,18 @@ export type EventWriteInput = {
 
 type SubEventInput = { name: string; max_capacity: number }
 
-/** Crea un evento y sus sub-eventos. Devuelve el evento enriquecido. */
+/** Crea un evento y sus sub-eventos. Devuelve el evento enriquecido.
+ *  `createdBy` = id de auth del usuario (events.created_by → auth.users.id). */
 export async function createEvent(
   input: EventWriteInput,
   subEvents: SubEventInput[] = [],
+  createdBy?: string | null,
 ): Promise<DbEventEnriched> {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('events')
-    .insert(input)
+    .insert({ ...input, is_active: true, created_by: createdBy ?? null } as Insertable<'events'>)
     .select('id')
     .single()
   if (error) throw error
@@ -410,6 +412,13 @@ export async function createCheckin(
 export async function deleteCheckin(eventId: string, checkinId: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('event_checkins').delete().eq('id', checkinId).eq('event_id', eventId)
+  if (error) throw error
+}
+
+/** Cancela un evento: status='cancelled' + motivo. No borra (conserva inscritos/check-ins). */
+export async function cancelEvent(id: string, reason: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('events').update({ status: 'cancelled', cancellation_reason: reason || null }).eq('id', id)
   if (error) throw error
 }
 

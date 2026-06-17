@@ -1,15 +1,36 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState, useEffect, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { type AttendanceType, type EventCheckin } from '@/types/event'
 import { useEvent } from '@/hooks/useEvents'
+import { usePermissions } from '@/hooks/usePermissions'
 import { CheckinCard } from '@/components/events/CheckinCard'
+import { QrScanner } from '@/components/events/QrScanner'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
-import { ChevronLeft, Scan, UserPlus, X } from 'lucide-react'
+import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { Modal } from '@/components/shared/Modal'
 import { getInitials } from '@/lib/format'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Feedback al escanear: beep corto (WebAudio) + vibración.
+function scanFeedback(ok: boolean) {
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const ctx = new AC()
+    const osc = ctx.createOscillator(); const gain = ctx.createGain()
+    osc.connect(gain); gain.connect(ctx.destination)
+    osc.frequency.value = ok ? 880 : 300
+    gain.gain.setValueAtTime(0.12, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18)
+    osc.start(); osc.stop(ctx.currentTime + 0.18)
+    osc.onended = () => ctx.close()
+  } catch { /* sin audio */ }
+  try { navigator.vibrate?.(ok ? 80 : [60, 40, 60]) } catch { /* */ }
+}
 
 const AVATAR_COLORS: Record<string, string> = {
   A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',
@@ -39,16 +60,30 @@ function Clock() {
 
 export default function CheckinLivePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const router = useRouter()
+  const { can } = usePermissions()
+  const canCheckin = can('eventos', 'edit') // encargado_eventos, direccion, admin
   const { event } = useEvent(id)
+  // Fecha de ESTA ocurrencia (si venimos de una recurrente con ?date=), para el header.
+  const occParam = useSearchParams().get('date')
+  // Subevento destino del check-in (null = evento padre).
+  const [targetSub, setTargetSub] = useState<string | null>(null)
+  const [scanOn, setScanOn] = useState(false)
+  const [scanMsg, setScanMsg] = useState<{ kind: 'ok' | 'dup' | 'error'; text: string } | null>(null)
+  const [toDelete, setToDelete] = useState<EventCheckin | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const lastScanRef = useRef<{ id: string; t: number } | null>(null)
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null)
   const [checkins, setCheckins] = useState<EventCheckin[]>([])
-  const [recentCheckins, setRecentCheckins] = useState<(EventCheckin & { _new?: boolean })[]>([])
   const [memberResults, setMemberResults] = useState<{ id: string; name: string }[]>([])
   const [searching, setSearching] = useState(false)
   const [showNewPerson, setShowNewPerson] = useState(false)
   const [familyCheckin, setFamilyCheckin] = useState<{ member: { id: string; name: string }; family: { member_id: string; name: string; relation: string }[] } | null>(null)
   const [checkingFamily, setCheckingFamily] = useState(false)
+
+  // Sin permiso → fuera (el registro lo hace un encargado autenticado).
+  useEffect(() => { if (!canCheckin) router.replace('/dashboard') }, [canCheckin, router])
 
   // Sincroniza los check-ins ya registrados cuando carga el evento.
   useEffect(() => {
@@ -91,8 +126,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
   // Persiste un check-in (optimista con rollback). Reutilizado por el flujo
   // individual, el de familia y el de persona nueva.
-  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType) {
-    const subEventId = event!.sub_events.length > 0 ? event!.sub_events[0].id : null
+  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual'): Promise<'ok' | 'dup' | 'error'> {
+    const subEventId = targetSub // null = evento padre; o el subevento elegido
     const stamp = new Date().toISOString() + ':' + m.id
     const newCheckin: EventCheckin & { _new?: boolean } = {
       id: stamp, // optimista; al refrescar trae el id real de la BD
@@ -104,20 +139,52 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       _new: true,
     }
     setCheckins(prev => [newCheckin, ...prev])
-    setRecentCheckins(prev => [newCheckin, ...prev].slice(0, 8))
-    setTimeout(() => setRecentCheckins(prev => prev.map(c => ({ ...c, _new: false }))), 50)
+    const rollback = () => {
+      setCheckins(prev => prev.filter(c => c.checked_at !== stamp))
+    }
     try {
       const res = await fetch(`/api/events/${id}/checkins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: m.id, sub_event_id: subEventId, method: 'manual' }),
+        body: JSON.stringify({ member_id: m.id, sub_event_id: subEventId, method }),
       })
+      if (res.status === 409) { rollback(); return 'dup' } // ya estaba registrado
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      // Reemplaza el id optimista por el real (para poder eliminarlo luego).
+      const data = await res.json().catch(() => null) as { id?: string } | null
+      if (data?.id) {
+        setCheckins(prev => prev.map(c => c.checked_at === stamp ? { ...c, id: data.id! } : c))
+      }
+      return 'ok'
     } catch (err) {
       console.error('No se pudo registrar el check-in:', err)
-      setCheckins(prev => prev.filter(c => c.checked_at !== stamp))
-      setRecentCheckins(prev => prev.filter(c => c.checked_at !== stamp))
+      rollback()
+      return 'error'
     }
+  }
+
+  // Lee un QR (member_id) y registra al miembro en este evento. Mantiene la
+  // cámara abierta; ignora el mismo código por 3s para no duplicar lecturas.
+  async function handleScan(text: string) {
+    const memberId = text.trim()
+    const now = Date.now()
+    if (lastScanRef.current && lastScanRef.current.id === memberId && now - lastScanRef.current.t < 3000) return
+    lastScanRef.current = { id: memberId, t: now }
+    const flash = (kind: 'ok' | 'dup' | 'error', txt: string) => { setScanMsg({ kind, text: txt }); setTimeout(() => setScanMsg(m => (m?.text === txt ? null : m)), 3000) }
+
+    if (!UUID_RE.test(memberId)) { scanFeedback(false); flash('error', 'QR no válido'); return }
+    const already = checkins.find(c => c.member_id === memberId)
+    if (already) { scanFeedback(false); flash('dup', `${already.member_name} ya estaba registrado`); return }
+    try {
+      const res = await fetch(`/api/members/${memberId}`)
+      if (!res.ok) { scanFeedback(false); flash('error', 'El QR no corresponde a ningún miembro'); return }
+      const mem = await res.json() as { first_name: string; last_name: string }
+      const name = `${mem.first_name} ${mem.last_name}`.trim()
+      const r = await persistCheckin({ id: memberId, name }, 'participant', 'qr')
+      if (r === 'ok') { scanFeedback(true); flash('ok', `✓ ${name} registrado`) }
+      else if (r === 'dup') { scanFeedback(false); flash('dup', `${name} ya estaba registrado`) }
+      else { scanFeedback(false); flash('error', 'No se pudo registrar') }
+    } catch { scanFeedback(false); flash('error', 'Error al registrar') }
   }
 
   // Al elegir un miembro existente: si tiene familia, ofrecer registrar a todos.
@@ -155,12 +222,20 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     setQuery('')
   }
 
-  function handleSimulateQR() {
-    const registered = event!.registrations
-    if (registered.length === 0) return
-    const random = registered[Math.floor(Math.random() * registered.length)]
-    setSelectedMember({ id: random.member_id, name: random.member_name })
-    setQuery(random.member_name)
+  // Elimina un check-in (basurero). Confirmación corta vía modal.
+  async function confirmDelete() {
+    if (!toDelete || deleting) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/events/${id}/checkins?checkinId=${encodeURIComponent(toDelete.id)}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setCheckins(prev => prev.filter(c => c.id !== toDelete.id))
+      setToDelete(null)
+    } catch (e) {
+      console.error('No se pudo eliminar el check-in:', e)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   // Crea un miembro nuevo (primera visita) y lo deja seleccionado para el check-in.
@@ -171,64 +246,98 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     setQuery(member.name)
   }
 
+  const sortedCheckins = [...checkins].sort((a, b) => (b.checked_at ?? '').localeCompare(a.checked_at ?? ''))
+  const subName = (subId: string | null) => event.sub_events.find(s => s.id === subId)?.name ?? null
+  // Fecha mostrada: la de la ocurrencia (?date=) si viene, si no la del evento.
+  const headerDate = (() => {
+    const d = occParam ? new Date(occParam) : new Date(event.start_at)
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  })()
+
   return (
-    <div className="min-h-screen bg-navy flex flex-col font-body">
+    <div className="min-h-screen bg-surface-low flex flex-col font-body">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b border-white/10">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+      <div className="bg-surface-card border-b border-[var(--outline-variant)] px-4 py-3 sm:px-6 sm:py-4 shadow-[var(--shadow-sm)]">
+        <div className="flex items-center justify-between gap-3">
           <Link
             href={`/eventos/${id}`}
-            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm"
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors"
           >
-            <ChevronLeft size={16} />
-            Volver
+            <ChevronLeft size={16} /> Volver
           </Link>
-          <div className="h-5 w-px bg-white/10 shrink-0" />
-          <div className="min-w-0">
-            <p className="text-white font-semibold text-sm font-display truncate">
-              {event.name}
-            </p>
-            <p className="text-white/70 text-[11px]">Check-in en vivo</p>
-          </div>
+          <span className="hidden sm:inline-flex text-navy-light/50"><Clock /></span>
         </div>
-        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
-          <span className="hidden sm:inline-flex"><Clock /></span>
-          <div className="text-right">
-            <p
-              className="text-4xl font-extrabold text-white tabular-nums font-display"
-            >
+        <div className="mt-2 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-display font-extrabold text-navy tracking-[-0.02em] truncate">
+              {event.name}
+            </h1>
+            <p className="text-sm text-navy-light/60 font-body capitalize">{headerDate}</p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-4xl sm:text-5xl font-extrabold text-coral tabular-nums font-display leading-none">
               {checkins.length}
             </p>
-            <p className="text-[11px] text-white/70">check-ins</p>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mt-1">registrados</p>
           </div>
         </div>
+        {/* Selector de evento/subevento destino del check-in */}
+        {event.sub_events.length > 0 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            {[{ id: null as string | null, name: 'Evento general' }, ...event.sub_events.map(se => ({ id: se.id as string | null, name: se.name }))].map(opt => (
+              <button
+                key={opt.id ?? 'parent'}
+                onClick={() => setTargetSub(opt.id)}
+                className={cn('shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium font-body transition-colors',
+                  targetSub === opt.id ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/70 hover:bg-surface-low/70')}
+              >
+                {opt.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-0 overflow-y-auto lg:overflow-hidden">
-        {/* Panel izquierdo — 60% */}
-        <div className="w-full lg:w-3/5 p-4 sm:p-6 flex flex-col gap-4 border-b lg:border-b-0 lg:border-r border-white/10">
-          {/* Search */}
-          <div className="relative">
-            <input
-              className="w-full rounded-2xl px-5 py-4 text-base text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-coral/40 transition-all bg-[rgba(255,255,255,0.08)] font-body"
-              placeholder="Buscar por nombre..."
-              aria-label="Buscar por nombre"
-              value={query}
-              onChange={e => { setQuery(e.target.value); setSelectedMember(null) }}
-            />
-            <button
-              onClick={handleSimulateQR}
-              className="absolute right-4 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[12px] text-white/60 hover:bg-white/20 transition-colors"
-            >
-              <Scan size={13} />
-              Simular QR
-            </button>
-          </div>
+      {/* Contenido */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4">
+          {/* Acción principal: escanear QR */}
+          <button
+            onClick={() => setScanOn(s => !s)}
+            className={cn('w-full inline-flex items-center justify-center gap-2 rounded-2xl py-4 text-base font-semibold font-body transition-colors min-h-[56px] shadow-[var(--shadow-sm)]',
+              scanOn ? 'bg-navy text-white hover:bg-navy/90' : 'bg-coral text-white hover:bg-coral-deep')}
+          >
+            {scanOn ? <X size={18} /> : <Camera size={18} />}
+            {scanOn ? 'Cerrar cámara' : 'Escanear QR'}
+          </button>
 
-          {/* Results o Checkin card */}
+          {scanOn && (
+            <div className="space-y-2">
+              <QrScanner onResult={handleScan} className="w-full aspect-square max-h-[340px]" />
+              {scanMsg && (
+                <div className={cn('rounded-xl px-4 py-3 text-sm font-medium font-body text-center',
+                  scanMsg.kind === 'ok' ? 'bg-teal-soft/40 text-teal-deep'
+                  : scanMsg.kind === 'dup' ? 'bg-amber-50 text-amber-700'
+                  : 'bg-coral/10 text-coral')}>
+                  {scanMsg.text}
+                </div>
+              )}
+              <p className="text-navy-light/50 text-[12px] text-center font-body">Apuntá al pase digital. La cámara sigue abierta para el siguiente.</p>
+            </div>
+          )}
+
+          {/* Búsqueda manual */}
+          <input
+            className="w-full rounded-2xl bg-surface-card px-5 py-4 text-base text-navy placeholder-navy-light/40 outline-none focus:ring-2 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
+            placeholder="Buscar por nombre…"
+            aria-label="Buscar por nombre"
+            value={query}
+            onChange={e => { setQuery(e.target.value); setSelectedMember(null) }}
+          />
+
+          {/* Selección de miembro / resultados de búsqueda */}
           {selectedMember ? (
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center">
               <CheckinCard
                 member={selectedMember}
                 onConfirm={handleConfirm}
@@ -236,33 +345,33 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               />
             </div>
           ) : searchResults.length > 0 ? (
-            <div className="space-y-2 flex-1 overflow-y-auto">
+            <div className="space-y-2">
               {searchResults.map(r => (
                 <button
                   key={r.id}
                   onClick={() => handleSelectMember(r)}
-                  className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left hover:bg-white/10 transition-all bg-[rgba(255,255,255,0.05)]"
+                  className="w-full flex items-center gap-4 rounded-2xl bg-surface-card px-4 py-3 text-left hover:bg-surface-low transition-colors shadow-[var(--shadow-sm)] min-h-[60px]"
                 >
                   <div className={cn('h-10 w-10 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0', avatarColor(r.name))}>
                     {getInitials(r.name)}
                   </div>
-                  <div>
-                    <p className="text-white font-medium font-body">{r.name}</p>
-                    <p className="text-white/70 text-[12px]">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
+                  <div className="min-w-0">
+                    <p className="text-navy font-medium font-body truncate">{r.name}</p>
+                    <p className="text-navy-light/60 text-[12px] font-body">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
                   </div>
                 </button>
               ))}
               <button
                 onClick={() => setShowNewPerson(true)}
-                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-coral hover:bg-coral/10 transition-all border border-dashed border-coral/40"
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-coral hover:bg-coral/5 transition-colors border border-dashed border-coral/40"
               >
                 <UserPlus size={18} />
                 <span className="text-sm font-medium font-body">Agregar a «{query.trim()}» como persona nueva</span>
               </button>
             </div>
           ) : query.trim().length >= 2 ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <p className="text-white/70 text-sm">{searching ? 'Buscando…' : 'No se encontró nadie con ese nombre.'}</p>
+            <div className="rounded-2xl bg-surface-card p-6 text-center shadow-[var(--shadow-sm)] space-y-3">
+              <p className="text-navy-light/60 text-sm font-body">{searching ? 'Buscando…' : 'No se encontró nadie con ese nombre.'}</p>
               {!searching && (
                 <button
                   onClick={() => setShowNewPerson(true)}
@@ -272,75 +381,44 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 </button>
               )}
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <p className="text-white/70 text-sm">Escribí un nombre o usá el QR.</p>
-              <button
-                onClick={() => setShowNewPerson(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 transition-colors font-body"
-              >
-                <UserPlus size={15} /> Agregar persona nueva
-              </button>
-            </div>
-          )}
-        </div>
+          ) : null}
 
-        {/* Panel derecho — 40% */}
-        <div className="w-full lg:w-2/5 p-4 sm:p-6 flex flex-col gap-5">
-          {/* Marco QR */}
-          <div className="flex flex-col items-center justify-center py-6">
-            <div className="relative w-36 h-36">
-              {/* Esquinas del marco */}
-              {[
-                'top-0 left-0 border-t-2 border-l-2',
-                'top-0 right-0 border-t-2 border-r-2',
-                'bottom-0 left-0 border-b-2 border-l-2',
-                'bottom-0 right-0 border-b-2 border-r-2',
-              ].map((cls, i) => (
-                <div key={i} className={cn('absolute h-6 w-6 border-coral/60 animate-pulse', cls)} />
-              ))}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Scan size={40} className="text-white/20" />
-              </div>
+          {/* Lista de registrados */}
+          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--outline-variant)] flex items-center justify-between">
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Registrados</p>
+              <span className="text-[12px] text-navy-light/60 font-body tabular-nums">{checkins.length}</span>
             </div>
-            <p className="text-white/70 text-[12px] mt-3 text-center">Escaneá el pase digital</p>
-          </div>
-
-          {/* Feed check-ins recientes */}
-          <div className="flex-1 space-y-2 overflow-y-auto">
-            <p className="text-[10px] tracking-widest uppercase text-white/70 mb-3 font-display">
-              Recientes
-            </p>
-            {recentCheckins.length === 0 ? (
-              <p className="text-white/70 text-sm text-center pt-4">Los check-ins aparecerán aquí.</p>
-            ) : (
-              recentCheckins.map((ci, i) => (
-                <div
-                  key={`${ci.member_id}-${ci.checked_at}`}
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-300',
-                    ci._new ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0',
-                    i === 0 ? 'bg-white/15' : 'bg-white/5'
-                  )}
-                >
-                  <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
-                    {getInitials(ci.member_name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm truncate font-body">{ci.member_name}</p>
-                    <p className="text-white/70 text-[11px]">
-                      {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <span className={cn(
-                    'rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0',
-                    ci.attendance_type === 'server' ? 'bg-coral/20 text-coral' : 'bg-teal-deep/20 text-teal-soft'
-                  )}>
-                    {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
-                  </span>
+            {sortedCheckins.length === 0 ? (
+              <p className="px-4 py-10 text-center text-sm text-navy-light/50 font-body">Aún nadie registrado. Escaneá un QR o buscá por nombre.</p>
+            ) : sortedCheckins.map(ci => (
+              <div key={ci.id} className="flex items-center gap-3 px-4 py-3 border-b border-[var(--outline-variant)] last:border-0">
+                <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
+                  {getInitials(ci.member_name)}
                 </div>
-              ))
-            )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-navy text-sm truncate font-body">{ci.member_name}</p>
+                  <p className="text-navy-light/60 text-[11px] font-body">
+                    {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+                    {subName(ci.sub_event_id) ? ` · ${subName(ci.sub_event_id)}` : ''}
+                  </p>
+                </div>
+                <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0',
+                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral' : 'bg-teal-soft/30 text-teal-deep')}>
+                  {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
+                </span>
+                {canCheckin && (
+                  <button
+                    onClick={() => setToDelete(ci)}
+                    aria-label={`Eliminar check-in de ${ci.member_name}`}
+                    title="Eliminar check-in"
+                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/50 hover:text-coral hover:bg-coral/5 transition-colors"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -363,6 +441,24 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           onRegister={registerFamily}
           onClose={() => setFamilyCheckin(null)}
         />
+      )}
+
+      {/* Confirmar eliminación de check-in */}
+      {toDelete && (
+        <Modal onClose={() => !deleting && setToDelete(null)} titleId="del-checkin-title" width={380}>
+          <div className="p-5 space-y-4">
+            <h2 id="del-checkin-title" className="text-base font-display font-extrabold text-navy">
+              ¿Eliminar el check-in de {toDelete.member_name}?
+            </h2>
+            <p className="text-sm text-navy-light/70 font-body">
+              Quita su registro de asistencia a este evento. Se puede volver a registrar.
+            </p>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setToDelete(null)} disabled={deleting} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40">Cancelar</button>
+              <button onClick={confirmDelete} disabled={deleting} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50">{deleting ? 'Eliminando…' : 'Eliminar'}</button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )
@@ -442,7 +538,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
   onClose: () => void
   onCreated: (member: { id: string; name: string }) => void
   onCheckedIn: () => void
-  persistCheckin: (m: { id: string; name: string }, type: AttendanceType) => Promise<void>
+  persistCheckin: (m: { id: string; name: string }, type: AttendanceType) => Promise<'ok' | 'dup' | 'error'>
 }) {
   const parts = initialName.split(' ')
   const [firstName, setFirstName] = useState(parts[0] ?? '')

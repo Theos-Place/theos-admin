@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { getEventById, updateEvent, deleteEvent } from '@/lib/supabase/queries/events'
+import { getEventById, updateEvent, deleteEvent, cancelEvent } from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
 
 export async function GET(
@@ -37,6 +37,25 @@ export async function PUT(
     return NextResponse.json(event)
   } catch (error) {
     console.error('PUT /api/events/[id]:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+// PATCH: cancelar evento. Body: { action: 'cancel', reason }.
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRoles('direccion')
+  if (auth.res) return auth.res
+  try {
+    const { id } = await params
+    const body = await req.json()
+    if (body?.action !== 'cancel') return NextResponse.json({ error: 'Acción no soportada' }, { status: 400 })
+    await cancelEvent(id, typeof body.reason === 'string' ? body.reason : '')
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('PATCH /api/events/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

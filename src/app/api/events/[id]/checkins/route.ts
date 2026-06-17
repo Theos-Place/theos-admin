@@ -25,6 +25,10 @@ export async function POST(
     const res = await createCheckin(id, { ...body, guest_name: memberId ? body.guest_name ?? null : guestName })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
+    // UNIQUE(member_id, event_id): la persona ya tenía check-in en este evento.
+    if ((error as { code?: string })?.code === '23505') {
+      return NextResponse.json({ error: 'duplicate' }, { status: 409 })
+    }
     console.error('POST /api/events/[id]/checkins:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

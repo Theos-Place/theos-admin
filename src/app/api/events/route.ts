@@ -38,10 +38,13 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
     if (auth.res) return auth.res
     const body = await req.json()
-    const event = await createEvent(formToWriteInput(body), formToSubEvents(body))
+    const event = await createEvent(formToWriteInput(body), formToSubEvents(body), auth.ctx.userId)
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
     console.error('POST /api/events:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    // Propaga el mensaje real (ej. FK de event_type, columna faltante) para que
+    // el formulario lo muestre en vez de redirigir como si hubiera guardado.
+    const msg = (error as { message?: string })?.message ?? 'Error interno'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

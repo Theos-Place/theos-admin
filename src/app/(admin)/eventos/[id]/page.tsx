@@ -258,7 +258,22 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         <CancellationModal
           eventName={event.name}
           registrationCount={registrationCount}
-          onConfirm={() => { setCancelled(true); setShowCancelModal(false) }}
+          onConfirm={async (reason) => {
+            try {
+              const res = await fetch(`/api/events/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'cancel', reason }),
+              })
+              if (!res.ok) throw new Error(`HTTP ${res.status}`)
+              setCancelled(true)
+              refetch()
+            } catch (e) {
+              console.error('No se pudo cancelar el evento:', e)
+            } finally {
+              setShowCancelModal(false)
+            }
+          }}
           onClose={() => setShowCancelModal(false)}
         />
       )}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { QrCode, Undo2 } from 'lucide-react'
+import { QrCode, Trash2 } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
@@ -119,7 +119,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                     title="Deshacer check-in"
                     className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/50 hover:text-coral hover:bg-coral/5 transition-colors"
                   >
-                    <Undo2 size={14} />
+                    <Trash2 size={14} />
                   </button>
                 )}
               </div>

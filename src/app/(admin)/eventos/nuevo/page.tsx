@@ -151,11 +151,15 @@ export default function NuevoEventoPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, flyer }),
       })
-      if (!res.ok) throw new Error('Error creando el evento')
-      setPublished(true)
+      if (!res.ok) {
+        const detail = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(detail?.error || 'Error creando el evento')
+      }
+      setPublished(true) // solo "publicado" si el INSERT realmente persistió
     } catch (e) {
       console.error(e)
-      toast('No se pudo crear el evento. Revisá los datos e intentá de nuevo.', 'error')
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      toast(`No se pudo crear el evento: ${msg}`, 'error')
       setSubmitting(false)
     }
   }

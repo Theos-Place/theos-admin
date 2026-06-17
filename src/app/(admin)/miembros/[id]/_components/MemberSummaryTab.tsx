@@ -6,6 +6,7 @@ import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
 import { formatDate } from '@/lib/format'
+import { MemberDigitalPass } from './MemberDigitalPass'
 
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
@@ -53,6 +54,9 @@ export function MemberSummaryTab({
   const ledGroups = member.led_groups ?? []
   return (
     <div className="space-y-4">
+      {/* Pase digital (QR del member_id) */}
+      <MemberDigitalPass member={member} />
+
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div
