@@ -8,6 +8,7 @@ import { Modal } from '@/components/shared/Modal'
 import { sedeLabel } from '@/lib/sedes'
 import { useMember } from '@/hooks/useMember'
 import { PhoneInput } from '@/components/shared/PhoneInput'
+import { normalizePhoneOrNull } from '@/lib/phone'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
@@ -94,7 +95,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       last_name: lastName.trim(),
       cedula: cedula.trim() || null,
       email: email.trim() || null,
-      phone: phone.trim() || null,
+      phone: normalizePhoneOrNull(phone),
       birth_date: birthDate || null,
       gender: gender || null,
       marital_status: maritalStatus || null,
@@ -107,7 +108,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       allergies: alergias.trim() || null,
       medications: medicamentos.trim() || null,
       emergency_contact_name: emergencyContactName.trim() || null,
-      emergency_contact_phone: emergencyContactPhone.trim() || null,
+      emergency_contact_phone: normalizePhoneOrNull(emergencyContactPhone),
       is_active: isActive,
     }
     try {

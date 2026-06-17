@@ -65,6 +65,11 @@ export async function POST(req: NextRequest) {
     const payload: Record<string, unknown> = {}
     for (const k of MEMBER_FIELDS) if (k in body) payload[k] = body[k]
 
+    // Teléfonos solo dígitos (centralizado): cubre formularios, check-in familia e imports.
+    const { normalizePhoneOrNull } = await import('@/lib/phone')
+    if ('phone' in payload) payload.phone = normalizePhoneOrNull(payload.phone as string)
+    if ('emergency_contact_phone' in payload) payload.emergency_contact_phone = normalizePhoneOrNull(payload.emergency_contact_phone as string)
+
     // Verificación de duplicados a nivel de app (cédula / correo), porque la BD
     // no tiene el UNIQUE activo sobre estos campos.
     const cedula = typeof payload.cedula === 'string' ? payload.cedula.trim() : ''

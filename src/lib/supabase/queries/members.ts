@@ -2,6 +2,7 @@ import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
 import type { FilterCondition } from '@/types/filters'
 import { getInitials } from '@/lib/format'
+import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -842,6 +843,8 @@ export type DbFamilyMember = {
 }
 
 export type DbMemberFull = DbMemberEnriched & {
+  /** Sede calculada por asistencia a charlas (últimos 12 meses). null = sin sede. */
+  attendance_sede: { name: string; count: number } | null
   study_history: Array<{ group_id: string | null; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
   attendance: DbAttendance[]
   service_history: DbService[]
@@ -1143,6 +1146,34 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   ))
   const lastCharlaCheckin = charlaCheckins.find(c => c.checked_in_at)?.checked_in_at ?? null
 
+  // Sede calculada: charla a la que MÁS asistió en los últimos 12 meses (sede
+  // canónica derivada del título). Empate → la más reciente. Sin charlas en 12
+  // meses → null ("Sin sede asignada"). Decisión 2026: la sede es dinámica por
+  // asistencia, no el sede_id estático del perfil.
+  const attendance_sede = (() => {
+    const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 12)
+    const cutoffMs = cutoff.getTime()
+    const tally = new Map<string, { count: number; last: string }>()
+    for (const c of (checkinsRes.data ?? []) as Array<{ checked_in_at: string | null; events: { title: string; event_type: string } | null }>) {
+      if (c.events?.event_type !== 'charla' || !c.checked_in_at) continue
+      if (new Date(c.checked_in_at).getTime() < cutoffMs) continue
+      const canonical = canonicalCharlaTitle(c.events.title)
+      if (!canonical) continue
+      const name = canonical.replace(/^Charla\s+/, '') // "Charla Heredia" → "Heredia"
+      const cur = tally.get(name) ?? { count: 0, last: '' }
+      cur.count++
+      if (c.checked_in_at > cur.last) cur.last = c.checked_in_at
+      tally.set(name, cur)
+    }
+    let best: { name: string; count: number; last: string } | null = null
+    for (const [name, v] of tally) {
+      if (!best || v.count > best.count || (v.count === best.count && v.last > best.last)) {
+        best = { name, count: v.count, last: v.last }
+      }
+    }
+    return best ? { name: best.name, count: best.count } : null
+  })()
+
   // Familia: dos queries — primero los family_unit_id del miembro, después
   // los OTROS miembros de esos units.
   const family: DbFamilyMember[] = await loadFamily(supabase, id)
@@ -1150,6 +1181,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   return {
     ...(memberRow as DbMember),
     sede,
+    attendance_sede,
     roles: activeRoles,
     estado_dirigente: estadoDirigente,
     is_server: volunteers.some(v => v.status === 'active'),

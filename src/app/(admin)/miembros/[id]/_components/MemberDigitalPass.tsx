@@ -31,8 +31,9 @@ export function MemberDigitalPass({ member }: { member: Member }) {
 
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-5">
         {/* QR */}
-        <div ref={canvasWrapRef} className="rounded-2xl bg-white p-3 shadow-[var(--shadow-md)] shrink-0">
-          <QRCodeCanvas value={member.id} size={132} level="M" marginSize={1} />
+        <div ref={canvasWrapRef} className="rounded-2xl bg-white p-3 shadow-[var(--shadow-md)] shrink-0 ring-2 ring-navy/10">
+          {/* Navy oscuro (#161440) sobre blanco: alto contraste, escaneable. */}
+          <QRCodeCanvas value={member.id} size={132} level="M" marginSize={1} fgColor="#161440" bgColor="#ffffff" />
         </div>
 
         <div className="flex-1 min-w-0 w-full space-y-3">
@@ -71,7 +72,7 @@ export function MemberDigitalPass({ member }: { member: Member }) {
               {fullName || 'Pase digital'}
             </h2>
             <div className="rounded-2xl bg-white p-4 shadow-[var(--shadow-md)]">
-              <QRCodeCanvas value={member.id} size={260} level="M" marginSize={1} />
+              <QRCodeCanvas value={member.id} size={260} level="M" marginSize={1} fgColor="#161440" bgColor="#ffffff" />
             </div>
             <p className="text-[12px] text-navy-light/60 font-body text-center">Acercá la pantalla al lector en la entrada.</p>
             <button

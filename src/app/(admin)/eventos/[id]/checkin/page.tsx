@@ -381,8 +381,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           {/* Búsqueda manual */}
           <input
             className="w-full rounded-2xl bg-surface-card px-5 py-4 text-base text-navy placeholder-navy-light/40 outline-none focus:ring-2 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
-            placeholder="Buscar por nombre…"
-            aria-label="Buscar por nombre"
+            placeholder="Buscar por nombre o cédula…"
+            aria-label="Buscar por nombre o cédula"
             value={query}
             onChange={e => { setQuery(e.target.value); setSelectedMember(null) }}
           />

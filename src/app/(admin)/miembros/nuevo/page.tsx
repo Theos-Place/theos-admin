@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { normalizePhoneOrNull } from '@/lib/phone'
 import { Check } from 'lucide-react'
 import { type Member } from '@/types/member'
 import { CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
@@ -259,7 +260,7 @@ export default function NuevoMiembroPage() {
       last_name: data.last_name.trim(),
       cedula: data.cedula.trim() || null,
       email: data.email.trim() || null,
-      phone: data.phone.trim() || null,
+      phone: normalizePhoneOrNull(data.phone),
       birth_date: data.birth_date || null,
       gender: data.gender || null,
       marital_status: data.marital_status || null,
@@ -272,7 +273,7 @@ export default function NuevoMiembroPage() {
       allergies: data.alergias.trim() || null,
       medications: data.medicamentos.trim() || null,
       emergency_contact_name: data.emergency_contact_name.trim() || null,
-      emergency_contact_phone: data.emergency_contact_phone.trim() || null,
+      emergency_contact_phone: normalizePhoneOrNull(data.emergency_contact_phone),
       is_donor: false,
       is_active: true,
       send_invite: !!data.email.trim(),

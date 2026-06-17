@@ -79,6 +79,8 @@ export type Member = {
   current_study: string | null
   current_study_week?: number | null
   sede: string
+  /** Sede calculada por asistencia a charlas (últimos 12 meses). null = sin sede. */
+  attendance_sede?: { name: string; count: number } | null
   age: number
   tipos_evento: string[]
   comites: string[]

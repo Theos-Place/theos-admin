@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { MemberHeader } from './_components/MemberHeader'
 import { MemberSummaryTab } from './_components/MemberSummaryTab'
+import { MemberDigitalPass } from './_components/MemberDigitalPass'
 import { MemberPersonalTab } from './_components/MemberPersonalTab'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
@@ -84,7 +85,6 @@ export default function MiembroDetailPage() {
 
   const currentWeek = member?.current_study_week ?? 0
 
-  const activeService = member?.service_history.find(s => s.status === 'activo')
 
   const lastStudyCode = member?.completed_studies[member.completed_studies.length - 1]
   const lastStudyEntry = lastStudyCode ? studyTypes.find(s => s.code === lastStudyCode) : null
@@ -215,7 +215,6 @@ export default function MiembroDetailPage() {
           member={member}
           currentStudyEntry={currentStudyEntry}
           currentWeek={currentWeek}
-          activeService={activeService}
           lastStudyEntry={lastStudyEntry}
         />
       )}
@@ -275,7 +274,10 @@ export default function MiembroDetailPage() {
 
       {/* TAB: Pase Digital */}
       {activeTab === 'pase' && (
-        <MemberWalletTab member={member} />
+        <div className="space-y-4">
+          <MemberDigitalPass member={member} />
+          <MemberWalletTab member={member} />
+        </div>
       )}
     </div>
   )

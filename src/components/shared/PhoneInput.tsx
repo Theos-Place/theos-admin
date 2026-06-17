@@ -46,7 +46,8 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }
     onChange(`${code} ${number}`.trim())
   }
 
-  function handleNumberChange(num: string) {
+  function handleNumberChange(raw: string) {
+    const num = raw.replace(/\D+/g, '') // solo dígitos (limpia al vuelo lo pegado)
     setNumber(num)
     onChange(`${countryCode} ${num}`.trim())
   }

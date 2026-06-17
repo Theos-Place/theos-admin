@@ -2,11 +2,9 @@ import { MapPin, BookOpen, Users, Star } from 'lucide-react'
 import { STUDY_STAGES } from '@/data/study-catalog'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import type { StudyType } from '@/types/study'
-import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
 import { formatDate } from '@/lib/format'
-import { MemberDigitalPass } from './MemberDigitalPass'
 
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
@@ -36,7 +34,6 @@ type Props = {
   member: Member
   currentStudyEntry: StudyType | null | undefined
   currentWeek: number
-  activeService: Member['service_history'][number] | undefined
   lastStudyEntry: StudyType | null | undefined
 }
 
@@ -44,19 +41,17 @@ export function MemberSummaryTab({
   member,
   currentStudyEntry,
   currentWeek,
-  activeService,
   lastStudyEntry,
 }: Props) {
   const { studyTypes } = useStudyPlans()
+  // Todos los servicios activos del miembro (comité + puesto), no solo el primero.
+  const activeServices = (member.service_history ?? []).filter(s => s.status === 'activo')
   // Estudios actualmente en curso (inscripciones con status 'enrolled') más
   // los grupos activos que la persona dirige (con tag Dirigente).
   const enrolledStudies = (member.study_history ?? []).filter(s => s.status === 'enrolled')
   const ledGroups = member.led_groups ?? []
   return (
     <div className="space-y-4">
-      {/* Pase digital (QR del member_id) */}
-      <MemberDigitalPass member={member} />
-
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div
@@ -71,8 +66,13 @@ export function MemberSummaryTab({
             </span>
           </div>
           <p className="text-sm font-medium text-navy font-body">
-            {sedeLabel(member.sede)}
+            {member.attendance_sede ? member.attendance_sede.name : 'Sin sede asignada'}
           </p>
+          {member.attendance_sede && (
+            <p className="text-[11px] text-navy-light/60 font-body mt-0.5">
+              {member.attendance_sede.count} charla{member.attendance_sede.count !== 1 ? 's' : ''} · últimos 12 meses
+            </p>
+          )}
         </div>
 
         <div
@@ -121,9 +121,17 @@ export function MemberSummaryTab({
               Servicio
             </span>
           </div>
-          <p className="text-sm font-medium text-navy font-body">
-            {activeService ? activeService.committee : 'Ninguno'}
-          </p>
+          {activeServices.length > 0 ? (
+            <div className="space-y-1">
+              {activeServices.map((s, i) => (
+                <p key={i} className="text-sm font-medium text-navy font-body leading-snug">
+                  {s.committee}{s.position ? ` — ${s.position}` : ''}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm font-medium text-navy-light/60 font-body">Sin servicio activo</p>
+          )}
         </div>
       </div>
 
