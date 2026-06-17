@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { updateVacancy, deleteVacancy, type VacancyWriteInput } from '@/lib/supabase/queries/servers'
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('encargado_staff', 'direccion', 'lider_comite')
+    const auth = await requireRoles(...SERVICE_ADMIN_ROLES, 'lider_comite')
     if (auth.res) return auth.res
   try {
     const { id } = await params
@@ -22,7 +23,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('encargado_staff', 'direccion', 'lider_comite')
+    const auth = await requireRoles(...SERVICE_ADMIN_ROLES, 'lider_comite')
     if (auth.res) return auth.res
   try {
     const { id } = await params

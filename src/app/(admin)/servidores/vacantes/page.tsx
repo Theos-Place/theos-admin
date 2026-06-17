@@ -2,251 +2,243 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { type Vacancy, type VacancyStatus } from '@/types/server'
+import { type Vacancy } from '@/types/server'
 import type { DbVacancy } from '@/lib/supabase/queries/servers'
 import { toDomainVacancy } from '@/lib/servers/adapter'
-import { useOrg } from '@/lib/org'
 import { useAuth } from '@/hooks/useAuth'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
-import { useClientPagination } from '@/hooks/useClientPagination'
-import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
-import { Plus, Users, ChevronRight, Upload } from 'lucide-react'
+import { Plus, Users, ChevronDown, Upload, Search, MapPin, Clock, Calendar, Pencil, XCircle, Eye } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
-import { FilterChips } from '@/components/shared/FilterChips'
-
-const STATUS_FILTERS: { key: VacancyStatus | 'all'; label: string }[] = [
-  { key: 'all',       label: 'Todas' },
-  { key: 'published', label: 'Publicadas' },
-  { key: 'draft',     label: 'Borrador' },
-  { key: 'filled',    label: 'Ocupadas' },
-  { key: 'closed',    label: 'Cerradas' },
-]
-
-const STATUS_COLORS: Record<string, string> = {
-  draft:     'bg-navy-light/10 text-navy-light/60',
-  published: 'bg-teal-deep/10 text-teal-deep',
-  filled:    'bg-navy/10 text-navy',
-  closed:    'bg-coral/10 text-coral',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Borrador', published: 'Publicada', filled: 'Ocupada', closed: 'Cerrada',
-}
+import { ApplyToVacancyButton } from '@/components/servers/ApplyToVacancyButton'
 
 export default function VacantesPage() {
-  const { areas: AREAS } = useOrg()
   const { hasRole } = useAuth()
-  const canImport = hasRole(...SERVICE_ADMIN_ROLES)
-  const [statusFilter, setStatusFilter] = useState<VacancyStatus | 'all'>('all')
-  const [areaFilter, setAreaFilter] = useState('all')
+  const isAdmin = hasRole(...SERVICE_ADMIN_ROLES) // ve acciones administrativas
 
-  // Vacantes con su conteo de aplicaciones EMBEBIDO (no se cargan todas las
-  // applications). El dataset es acotado (cientos) → paginación de la vista.
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const refetch = useCallback(() => {
-    setError(null)
-    fetch('/api/servers/vacancies')
-      .then(r => { if (!r.ok) throw new Error('Error cargando vacantes'); return r.json() })
+    setError(null); setLoading(true)
+    // ?published=1: solo puestos disponibles, abierto a cualquier miembro.
+    fetch('/api/servers/vacancies?published=1')
+      .then(r => { if (!r.ok) throw new Error('Error cargando puestos'); return r.json() })
       .then((d: DbVacancy[]) => setVacancies((Array.isArray(d) ? d : []).map(toDomainVacancy)))
       .catch(e => setError(e instanceof Error ? e.message : 'Error desconocido'))
+      .finally(() => setLoading(false))
   }, [])
   useEffect(() => { refetch() }, [refetch])
-  const MOCK_VACANCIES = vacancies
 
-  const published = MOCK_VACANCIES.filter(v => v.status === 'published').length
-  const draft     = MOCK_VACANCIES.filter(v => v.status === 'draft').length
-  const filled    = MOCK_VACANCIES.filter(v => v.status === 'filled').length
+  const [qPuesto, setQPuesto] = useState('')
+  const [committeeFilter, setCommitteeFilter] = useState('all')
+  const [areaFilter, setAreaFilter] = useState('all') // "ubicación" (área del comité)
+  const [open, setOpen] = useState<Set<string>>(new Set())
+
+  // Opciones de comité y ubicación: solo los que tienen al menos un puesto.
+  const committeeOptions = useMemo(() => {
+    const m = new Map<string, string>()
+    vacancies.forEach(v => m.set(v.committee_id, v.committee_name))
+    return Array.from(m, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+  }, [vacancies])
+  const areaOptions = useMemo(
+    () => Array.from(new Set(vacancies.map(v => v.area).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [vacancies],
+  )
 
   const filtered = useMemo(() => {
-    return MOCK_VACANCIES.filter(v => {
-      const matchStatus = statusFilter === 'all' || v.status === statusFilter
-      const matchArea   = areaFilter === 'all' || v.area === areaFilter
-      return matchStatus && matchArea
-    })
-  }, [MOCK_VACANCIES, statusFilter, areaFilter])
+    const q = qPuesto.trim().toLowerCase()
+    return vacancies.filter(v =>
+      (q === '' || v.title.toLowerCase().includes(q)) &&
+      (committeeFilter === 'all' || v.committee_id === committeeFilter) &&
+      (areaFilter === 'all' || v.area === areaFilter),
+    )
+  }, [vacancies, qPuesto, committeeFilter, areaFilter])
 
-  const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 15)
+  // Agrupar por comité para los acordeones.
+  const groups = useMemo(() => {
+    const m = new Map<string, { id: string; name: string; area: string; items: Vacancy[] }>()
+    for (const v of filtered) {
+      const g = m.get(v.committee_id) ?? { id: v.committee_id, name: v.committee_name, area: v.area, items: [] }
+      g.items.push(v)
+      m.set(v.committee_id, g)
+    }
+    return Array.from(m.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [filtered])
 
-  const areaOptions = [
-    { key: 'all', label: 'Todas las áreas' },
-    ...AREAS.map(a => ({ key: a.name, label: a.name })),
-  ]
+  function toggle(id: string) {
+    setOpen(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div
-        className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]"
-      >
+      <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
         <div>
-          <h1
-            className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]"
-          >
-            Puestos de Servicio
-          </h1>
+          <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Puestos de Servicio</h1>
           <p className="mt-1 text-sm text-white/70 font-body">
-            {published} publicadas · {draft} en borrador · {filled} ocupadas
+            {filtered.length} puesto{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          {canImport && (
-            <Link
-              href="/servidores/admin/importar"
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body"
-            >
-              <Upload size={14} />
-              Importar puestos
+        {isAdmin && (
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <Link href="/servidores/admin/importar" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body">
+              <Upload size={14} /> Importar
             </Link>
-          )}
-          <Link
-            href="/servidores/vacantes/nueva"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
-          >
-            <Plus size={14} />
-            Nuevo puesto de servicio
-          </Link>
-        </div>
+            <Link href="/servidores/vacantes/nueva" className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
+              <Plus size={14} /> Nuevo puesto
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <FilterChips
-          chips={STATUS_FILTERS}
-          activeKey={statusFilter}
-          onSelect={k => setStatusFilter(k as VacancyStatus | 'all')}
-          ariaLabel="Filtrar por estatus"
-        />
+      {/* Búsquedas: por puesto, por comité, por ubicación */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2 shadow-[var(--shadow-sm)]">
+          <Search size={16} className="text-navy-light/60 shrink-0" aria-hidden />
+          <input
+            value={qPuesto}
+            onChange={e => setQPuesto(e.target.value)}
+            placeholder="Buscar por puesto…"
+            aria-label="Buscar por puesto"
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/40 outline-none font-body min-w-0"
+          />
+        </div>
         <select
-          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          value={committeeFilter}
+          onChange={e => setCommitteeFilter(e.target.value)}
+          aria-label="Filtrar por comité"
+          className="rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
+        >
+          <option value="all">Todos los comités</option>
+          {committeeOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <select
           value={areaFilter}
           onChange={e => setAreaFilter(e.target.value)}
+          aria-label="Filtrar por ubicación"
+          className="rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
         >
-          {areaOptions.map(o => (
-            <option key={o.key} value={o.key}>{o.label}</option>
-          ))}
+          <option value="all">Todas las ubicaciones</option>
+          {areaOptions.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
       </div>
 
-      {/* Vacancy cards */}
+      {/* Acordeones por comité */}
       <div className="space-y-3">
-        {visible.map(v => {
-          const appCount = v.application_count ?? 0
-          const slotsLeft = v.slots_total - v.slots_filled
+        {loading ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-navy-light/60">
+            <div className="h-8 w-8 rounded-full border-2 border-coral/30 border-t-coral animate-spin" aria-hidden />
+            <p className="text-sm font-body">Cargando puestos…</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"><ErrorState message={error} onRetry={refetch} /></div>
+        ) : groups.length === 0 ? (
+          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+            <EmptyState icon={Users} title="No hay puestos con esos filtros" />
+          </div>
+        ) : groups.map(g => {
+          const isOpen = open.has(g.id)
           return (
-            <div
-              key={v.id}
-              className="rounded-2xl px-5 py-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1.5">
-                  <p
-                    className="text-base font-bold text-navy font-display tracking-[-0.01em]"
-                  >
-                    {v.title}
-                  </p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display"
-                    >
-                      {v.committee_name}
-                    </span>
-                    <span
-                      className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/60 font-display"
-                    >
-                      {v.area}
-                    </span>
-                    <span
-                      className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', STATUS_COLORS[v.status])}
-                    >
-                      {STATUS_LABELS[v.status]}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <p
-                className="text-[13px] text-navy-light/70 line-clamp-2 font-body"
+            <div key={g.id} className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
+              <button
+                onClick={() => toggle(g.id)}
+                aria-expanded={isOpen}
+                className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-surface-low transition-colors"
               >
-                {v.description}
-              </p>
-
-              <div className="flex items-center gap-4 flex-wrap">
-                <span className="text-[12px] text-navy-light/60 font-body">
-                  📅 {v.schedule}
-                </span>
-                <span className="text-[12px] text-navy-light/60 font-body">
-                  ⏱ {v.commitment}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between pt-1 border-t border-[var(--outline-variant)]">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <Users size={13} className="text-navy-light/60" />
-                    <span className="text-[12px] text-navy-light/60 font-body">
-                      {appCount} aplicacion{appCount !== 1 ? 'es' : ''}
-                    </span>
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-navy font-display truncate">{g.name}</p>
+                  <div className="mt-0.5 flex items-center gap-3 text-[12px] text-navy-light/60 font-body">
+                    {g.area && <span className="inline-flex items-center gap-1"><MapPin size={12} aria-hidden /> {g.area}</span>}
+                    <span>{g.items.length} puesto{g.items.length !== 1 ? 's' : ''} disponible{g.items.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <span className="text-[12px] text-navy-light/60 font-mono">
-                    {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}
-                  </span>
-                  {v.published_at && (
-                    <span className="text-[11px] text-navy-light/60 font-body">
-                      Publicada {new Date(v.published_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })}
-                    </span>
-                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/servidores/vacantes/${v.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
-                  >
-                    Ver aplicaciones
-                    <ChevronRight size={12} />
-                  </Link>
-                  <button
-                    className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
-                  >
-                    Editar
-                  </button>
-                  {v.status === 'published' && (
-                    <button
-                      className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
-                    >
-                      Cerrar
-                    </button>
-                  )}
+                <ChevronDown size={18} className={cn('shrink-0 text-navy-light/50 transition-transform', isOpen && 'rotate-180')} aria-hidden />
+              </button>
+
+              {isOpen && (
+                <div className="border-t border-[var(--outline-variant)] divide-y divide-[var(--outline-variant)]">
+                  {g.items.map(v => {
+                    const slotsLeft = v.slots_total - v.slots_filled
+                    return (
+                      <div key={v.id} className="p-5 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-base font-bold text-navy font-display tracking-[-0.01em]">{v.title}</p>
+                          <span className="shrink-0 rounded-full bg-surface-low px-2.5 py-1 text-[11px] text-navy-light/70 font-body">
+                            {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+
+                        {v.description && <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">{v.description}</p>}
+
+                        {v.functions.length > 0 && (
+                          <div>
+                            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display mb-1">¿Qué harás?</p>
+                            <ul className="space-y-0.5">
+                              {v.functions.map((f, i) => (
+                                <li key={i} className="flex items-start gap-1.5 text-[13px] text-navy-light/70 font-body">
+                                  <span className="text-coral mt-0.5" aria-hidden>•</span>{f}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {(v.schedule || v.commitment) && (
+                          <div className="flex items-center gap-4 flex-wrap text-[12px] text-navy-light/60 font-body">
+                            {v.schedule && <span className="inline-flex items-center gap-1"><Calendar size={12} aria-hidden /> {v.schedule}</span>}
+                            {v.commitment && <span className="inline-flex items-center gap-1"><Clock size={12} aria-hidden /> {v.commitment}</span>}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
+                          <ApplyToVacancyButton vacancyId={v.id} />
+                          {isAdmin && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link href={`/servidores/vacantes/${v.id}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body">
+                                <Eye size={12} aria-hidden /> Ver aplicaciones{v.application_count ? ` (${v.application_count})` : ''}
+                              </Link>
+                              <Link href={`/servidores/vacantes/${v.id}/editar`} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body">
+                                <Pencil size={12} aria-hidden /> Editar
+                              </Link>
+                              <CloseVacancyButton vacancyId={v.id} onClosed={refetch} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              </div>
+              )}
             </div>
           )
         })}
-
-        {filtered.length === 0 && (
-          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-            {error
-              ? <ErrorState message={error} onRetry={refetch} />
-              : <EmptyState icon={Users} title="No hay vacantes con ese filtro" />}
-          </div>
-        )}
-
-        {filtered.length > 0 && (
-          <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-            <LoadMoreFooter
-              shown={shown}
-              total={total}
-              hasMore={hasMore}
-              loading={false}
-              onLoadMore={loadMore}
-              noun="vacantes"
-              increment={15}
-            />
-          </div>
-        )}
       </div>
     </div>
+  )
+}
+
+// Cerrar puesto (solo admin). PUT status=closed; recarga la lista.
+function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClosed: () => void }) {
+  const [busy, setBusy] = useState(false)
+  async function close() {
+    if (busy || !confirm('¿Cerrar este puesto? Dejará de estar disponible para aplicar.')) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/servers/vacancies/${vacancyId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'closed' }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      onClosed()
+    } catch (e) {
+      console.error('No se pudo cerrar el puesto:', e)
+      setBusy(false)
+    }
+  }
+  return (
+    <button onClick={close} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
+      <XCircle size={12} aria-hidden /> {busy ? 'Cerrando…' : 'Cerrar'}
+    </button>
   )
 }
