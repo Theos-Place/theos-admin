@@ -101,12 +101,14 @@ export async function getServerMemberIds(): Promise<string[]> {
  *  sintaxis de filtro PostgREST (.or), donde comas/paréntesis inyectan. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-/** Cantidad de meses del criterio de asistencia activa. */
-export const ATTENDANCE_MONTHS = 6
+// Ventanas del criterio de asistencia activa — fuente única en @/lib/attendance
+// (módulo puro, importable desde cliente). Re-exportadas para los consumidores server.
+export { ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MONTHS_STUDIES } from '@/lib/attendance'
+import { ATTENDANCE_MONTHS_GENERAL } from '@/lib/attendance'
 
 /** Últimos N meses calendario COMPLETOS (YYYY-MM), excluyendo el mes en curso:
  *  incluirlo dejaría a todo el mundo afuera los primeros días de cada mes. */
-export function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS, now = new Date()): string[] {
+export function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS_GENERAL, now = new Date()): string[] {
   const out: string[] = []
   const d = new Date(now.getFullYear(), now.getMonth() - 1, 1) // mes anterior
   for (let i = 0; i < n; i++) {
@@ -116,24 +118,22 @@ export function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS, now = new Date()):
   return out
 }
 
-/** Criterio único de asistencia activa: dado el set de meses (YYYY-MM) con al
- *  menos un check-in de CHARLA, exige cobertura de los últimos ATTENDANCE_MONTHS
- *  meses completos. Lo usan el chip "Activo (asistencia)", el análisis de
- *  demanda, la elegibilidad de solicitudes y el icono Asistente del perfil. */
-export function attendanceMonthsSatisfyCriteria(months: Iterable<string>, now = new Date()): boolean {
-  const set = months instanceof Set ? months : new Set(months)
-  return lastCompleteMonthsKeys(ATTENDANCE_MONTHS, now).every((m) => set.has(m))
+/** Criterio de asistencia activa: dado el set de meses (YYYY-MM) con al menos un
+ *  check-in de CHARLA, exige cobertura de los últimos `months` meses completos.
+ *  `months` default = GENERAL (12); estudios pasa STUDIES (6). */
+export function attendanceMonthsSatisfyCriteria(monthsSet: Iterable<string>, months = ATTENDANCE_MONTHS_GENERAL, now = new Date()): boolean {
+  const set = monthsSet instanceof Set ? monthsSet : new Set(monthsSet)
+  return lastCompleteMonthsKeys(months, now).every((m) => set.has(m))
 }
 
-/** Asistencia activa: ≥1 check-in de CHARLA en cada uno de los últimos
- *  ATTENDANCE_MONTHS meses completos. Criterio único del sistema — lo usan el
- *  chip "Activo (asistencia)" de miembros, el análisis de demanda de estudios
- *  y la elegibilidad de solicitudes. Devuelve [] si falla — nunca lanza. */
-export async function getActiveAttendanceMemberIds(): Promise<string[]> {
+/** Ids de miembros con asistencia activa: ≥1 check-in de CHARLA en cada uno de
+ *  los últimos `months` meses completos. Default GENERAL (12); estudios pasa 6.
+ *  Devuelve [] si falla — nunca lanza. */
+export async function getActiveAttendanceMemberIds(months = ATTENDANCE_MONTHS_GENERAL): Promise<string[]> {
   try {
     const supabase = createAdminClient()
-    const months = lastCompleteMonthsKeys()
-    const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo
+    const monthsKeys = lastCompleteMonthsKeys(months)
+    const oldest = `${monthsKeys[monthsKeys.length - 1]}-01` // inicio del mes más viejo
     const byMember = new Map<string, Set<string>>()
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabase
@@ -157,7 +157,7 @@ export async function getActiveAttendanceMemberIds(): Promise<string[]> {
     }
     const out: string[] = []
     for (const [id, set] of byMember) {
-      if (attendanceMonthsSatisfyCriteria(set)) out.push(id)
+      if (attendanceMonthsSatisfyCriteria(set, months)) out.push(id)
     }
     return out
   } catch (e) {
@@ -328,10 +328,18 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         //   cualquiera   → suma de ambas
         // event_volunteers hoy está vacía, pero queda previsto para cuando se use.
         const campLike = c.camp ? c.camp.replace(/[%,()*\\]/g, '') : ''
+        // c.sedes trae CÓDIGOS de sede (el catálogo usa code como id); events.sede_id
+        // es uuid. Resolver code→uuid; si ninguno existe → resultado vacío (no 500).
+        let sedeUuids: string[] = []
+        if (c.sedes && c.sedes.length) {
+          const { data: sd } = await supabase.from('sedes').select('id, code').in('code', c.sedes)
+          sedeUuids = ((sd ?? []) as Array<{ id: string }>).map(s => s.id)
+          if (sedeUuids.length === 0) { res.include.push(new Set()); break }
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const applyEventFilters = (q: any) => {
           if (c.eventType) q = q.eq('events.event_type', c.eventType)
-          if (c.sedes && c.sedes.length) q = q.in('events.sede_id', c.sedes)
+          if (sedeUuids.length) q = q.in('events.sede_id', sedeUuids)
           if (campLike) q = q.ilike('events.title', `%${campLike}%`)
           return q
         }

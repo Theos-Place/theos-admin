@@ -14,7 +14,9 @@ import {
   Bookmark,
   Check,
   Users,
+  Info,
 } from 'lucide-react'
+import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
@@ -360,7 +362,8 @@ function MiembrosContent() {
     ? displayMembers
     : displayMembers.filter(m => selectedIds.has(m.id))
 
-  const activeFilterCount = filters.conditions.length
+  // Cuenta TODOS los filtros activos: avanzados + chips rápidos + búsqueda.
+  const activeFilterCount = filters.conditions.length + quickActiveCount + (searchActive ? 1 : 0)
 
   // Export: descarga la totalidad que coincide con búsqueda/chips (no solo lo cargado).
   async function fetchAllForExport(): Promise<Member[]> {
@@ -477,6 +480,11 @@ function MiembrosContent() {
                 )}
               >
                 {labelWithCount}
+                {key === 'activo' && (
+                  <span title={ATTENDANCE_GENERAL_TOOLTIP} aria-label={ATTENDANCE_GENERAL_TOOLTIP} className="ml-1 inline-flex align-[-2px] opacity-70">
+                    <Info size={13} strokeWidth={2} />
+                  </span>
+                )}
               </button>
             )
           })}
@@ -515,19 +523,6 @@ function MiembrosContent() {
           />
         </div>
       </div>
-
-      {/* ── Conteo de filtros activos · total real del servidor ── */}
-      {quickActiveCount > 0 && (
-        <p className="text-sm text-navy-light/60 font-body">
-          <span className="font-medium text-navy">
-            {quickActiveCount} {quickActiveCount === 1 ? 'filtro activo' : 'filtros activos'}
-          </span>
-          {' · '}
-          {resultTotal > displayMembers.length
-            ? `${displayMembers.length.toLocaleString('es-CR')} de ${resultTotal.toLocaleString('es-CR')} resultados`
-            : `${resultTotal.toLocaleString('es-CR')} resultados`}
-        </p>
-      )}
 
       {/* ── Advanced filters panel ── */}
       {filtersOpen && (

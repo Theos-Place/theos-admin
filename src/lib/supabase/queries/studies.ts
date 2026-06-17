@@ -423,11 +423,11 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     }
   }
 
-  // Compromisos: criterio único del sistema — asistencia = ≥1 check-in de
-  // charla en cada uno de los últimos ATTENDANCE_MONTHS meses completos.
-  const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
+  // Compromisos: asistencia = ≥1 check-in de charla por mes en los últimos
+  // ATTENDANCE_MONTHS_STUDIES (6) meses — ventana de ESTUDIOS.
+  const { getActiveAttendanceMemberIds, getServerMemberIds, ATTENDANCE_MONTHS_STUDIES } = await import('./members')
   const [attendanceIds, serverIds] = await Promise.all([
-    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
+    requirements.includes('asistencia') ? getActiveAttendanceMemberIds(ATTENDANCE_MONTHS_STUDIES) : Promise.resolve([]),
     requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
   ])
   const attendanceSet = new Set(attendanceIds)
@@ -703,10 +703,9 @@ const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
 export async function getEligibleStudiesForMember(memberId: string): Promise<MemberStudyEligibility> {
   const supabase = createAdminClient()
 
-  // Criterio único de asistencia: ≥1 check-in de charla en cada uno de los
-  // últimos ATTENDANCE_MONTHS meses completos — helpers centrales de members.ts.
-  const { attendanceMonthsSatisfyCriteria, lastCompleteMonthsKeys } = await import('./members')
-  const months = lastCompleteMonthsKeys()
+  // Asistencia ventana ESTUDIOS (6 meses): ≥1 check-in de charla por mes.
+  const { attendanceMonthsSatisfyCriteria, lastCompleteMonthsKeys, ATTENDANCE_MONTHS_STUDIES } = await import('./members')
+  const months = lastCompleteMonthsKeys(ATTENDANCE_MONTHS_STUDIES)
   const oldest = `${months[months.length - 1]}-01` // inicio del mes más viejo (fecha local)
 
   const [memberRes, enrRes, volRes, chkRes, plansRes] = await Promise.all([
@@ -751,7 +750,7 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const monthsWithCharla = new Set(
     ((chkRes.data ?? []) as Array<{ checked_in_at: string }>).map(c => c.checked_in_at.slice(0, 7)),
   )
-  const attendance_active = attendanceMonthsSatisfyCriteria(monthsWithCharla)
+  const attendance_active = attendanceMonthsSatisfyCriteria(monthsWithCharla, ATTENDANCE_MONTHS_STUDIES)
 
   const is_donor = Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor)
   const is_server = (volRes.data ?? []).length > 0
