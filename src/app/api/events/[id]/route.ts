@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { getEventById, updateEvent, deleteEvent, cancelEvent } from '@/lib/supabase/queries/events'
+import {
+  getEventById, updateEventScoped, deleteEventScoped, cancelEvent,
+  EventHasAttendanceError, type EventScope, type OccurrenceRef,
+} from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents } from '@/lib/events/form-mapper'
+
+/** Lee el alcance (all/future/single) y la ocurrencia del body, si vienen.
+ *  `occurrence_date` = YYYY-MM-DD en hora CR (lo calcula el cliente). */
+function readScope(body: Record<string, unknown>): { scope: EventScope; occurrence: OccurrenceRef | null } {
+  const scope = (['all', 'future', 'single'].includes(body?.scope as string) ? body.scope : 'all') as EventScope
+  const date = typeof body?.occurrence_date === 'string' ? body.occurrence_date : null
+  const start = typeof body?.occurrence_start === 'string' ? body.occurrence_start : null
+  return { scope, occurrence: date && start ? { date, start } : null }
+}
 
 export async function GET(
   _req: NextRequest,
@@ -26,18 +38,20 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
-    if (auth.res) return auth.res
+  const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+  if (auth.res) return auth.res
   try {
     const { id } = await params
     const body = await req.json()
+    const { scope, occurrence } = readScope(body)
     // Solo reemplazamos sub-eventos si el body los trae explícitamente.
     const subEvents = 'sub_events' in body ? formToSubEvents(body) : undefined
-    const event = await updateEvent(id, formToPartialWriteInput(body), subEvents)
+    const event = await updateEventScoped(id, scope, formToPartialWriteInput(body), subEvents, occurrence, auth.ctx.userId)
     return NextResponse.json(event)
   } catch (error) {
     console.error('PUT /api/events/[id]:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    const msg = (error as { message?: string })?.message ?? 'Error interno'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
@@ -60,17 +74,23 @@ export async function PATCH(
   }
 }
 
+// DELETE: elimina el evento. Body opcional: { scope, occurrence_date, occurrence_start }.
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
-    if (auth.res) return auth.res
+  const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+  if (auth.res) return auth.res
   try {
     const { id } = await params
-    await deleteEvent(id)
+    const body = await req.json().catch(() => ({}))
+    const { scope, occurrence } = readScope(body)
+    await deleteEventScoped(id, scope, occurrence)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof EventHasAttendanceError) {
+      return NextResponse.json({ error: error.message }, { status: 422 })
+    }
     console.error('DELETE /api/events/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

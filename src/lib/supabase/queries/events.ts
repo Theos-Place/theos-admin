@@ -36,6 +36,7 @@ export type DbEventEnriched = {
   is_active: boolean
   created_at: string
   updated_at: string
+  exceptions: Array<{ exception_date: string; override_event_id: string | null }>
   sub_events: Array<{ id: string; name: string; max_capacity: number }>
   registrations: Array<{
     member_id: string
@@ -75,6 +76,7 @@ export type EventFilters = {
 
 const SELECT = `
   *,
+  exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id),
   sub_events(id, name, max_capacity),
   registrations:event_registrations(
     member_id,
@@ -114,6 +116,7 @@ function normalize(row: Record<string, unknown>): DbEventEnriched {
 
   return {
     ...(row as DbEventEnriched),
+    exceptions: (row.exceptions ?? []) as DbEventEnriched['exceptions'],
     sub_events: (row.sub_events ?? []) as DbEventEnriched['sub_events'],
     registrations: (row.registrations ?? []) as DbEventEnriched['registrations'],
     volunteers,
@@ -136,7 +139,9 @@ export async function getEvents(filters: EventFilters = {}): Promise<{ events: D
   } = filters
 
   // select como string plano: el parser de tipos de supabase-js no soporta el ternario
-  const select: string = filters.light ? '*, sub_events(id, name, max_capacity)' : SELECT
+  const select: string = filters.light
+    ? '*, exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id), sub_events(id, name, max_capacity)'
+    : SELECT
   let query = supabase
     .from('events')
     .select(select, { count: 'exact' })
@@ -186,6 +191,7 @@ export type EventWriteInput = {
   is_recurring?: boolean
   recurrence_rule?: string | null
   recurrence_end?: string | null
+  parent_event_id?: string | null
   max_capacity?: number | null
   flyer_url?: string | null
   committee_id?: string | null
@@ -470,6 +476,169 @@ export async function cancelEvent(id: string, reason: string): Promise<void> {
 export async function deleteEvent(id: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('events').update({ is_active: false }).eq('id', id)
+  if (error) throw error
+}
+
+// ── Recurrentes: edición/eliminación por alcance (estilo Google Calendar) ──────
+
+export type EventScope = 'all' | 'future' | 'single'
+
+/** Datos de la ocurrencia sobre la que se actúa. `date` = YYYY-MM-DD en hora CR
+ *  (lo calcula el cliente, que conoce la zona); `start` = ISO de su inicio real. */
+export type OccurrenceRef = { date: string; start: string }
+
+export class EventHasAttendanceError extends Error {
+  constructor(msg = 'No se puede eliminar un evento que tiene check-ins o inscripciones registrados. Cancelalo en su lugar.') {
+    super(msg); this.name = 'EventHasAttendanceError'
+  }
+}
+
+/** ¿Cuántos check-ins + inscripciones tiene un evento (fila real)? */
+async function countAttendance(
+  supabase: ReturnType<typeof createAdminClient>,
+  eventId: string,
+): Promise<number> {
+  const [ch, rg] = await Promise.all([
+    supabase.from('event_checkins').select('id', { count: 'exact', head: true }).eq('event_id', eventId),
+    supabase.from('event_registrations').select('member_id', { count: 'exact', head: true }).eq('event_id', eventId),
+  ])
+  return (ch.count ?? 0) + (rg.count ?? 0)
+}
+
+/** Snapshot de un evento (DB) a campos escribibles, para clonar overrides / nuevos padres. */
+function toWriteInput(e: DbEventEnriched): EventWriteInput {
+  return {
+    title: e.title,
+    description: e.description,
+    event_type: e.event_type,
+    location: e.location,
+    location_url: e.location_url,
+    starts_at: e.starts_at,
+    ends_at: e.ends_at,
+    is_recurring: e.is_recurring,
+    recurrence_rule: e.recurrence_rule,
+    recurrence_end: e.recurrence_end,
+    max_capacity: e.max_capacity,
+    flyer_url: e.flyer_url,
+    committee_id: e.committee_id,
+    is_virtual: e.is_virtual,
+    virtual_url: e.virtual_url,
+    requires_registration: e.requires_registration,
+    requires_payment: e.requires_payment,
+    payment_amount: e.payment_amount,
+    requires_survey: e.requires_survey,
+    status: e.status,
+  }
+}
+
+function parentSubEvents(e: DbEventEnriched): SubEventInput[] {
+  return e.sub_events.map((s) => ({ name: s.name, max_capacity: s.max_capacity }))
+}
+
+/**
+ * Edita un evento recurrente según el alcance:
+ *  - all: actualiza el padre (toda la serie).
+ *  - future: pone UNTIL en el padre (termina antes de la ocurrencia) y crea un
+ *    nuevo padre desde esa fecha con la misma RRULE + los cambios.
+ *  - single: crea un evento puntual override con los cambios y registra la
+ *    excepción (override_event_id) para esa fecha.
+ */
+export async function updateEventScoped(
+  id: string,
+  scope: EventScope,
+  input: Partial<EventWriteInput>,
+  subEvents: SubEventInput[] | undefined,
+  occurrence: OccurrenceRef | null,
+  createdBy?: string | null,
+): Promise<DbEventEnriched> {
+  if (scope === 'all' || !occurrence) return updateEvent(id, input, subEvents)
+
+  const supabase = createAdminClient()
+  const parent = await getEventById(id)
+  if (!parent) throw new Error('Evento no encontrado')
+  const base = toWriteInput(parent)
+  const subs = subEvents ?? parentSubEvents(parent)
+
+  if (scope === 'single') {
+    const overrideInput: EventWriteInput = {
+      ...base, ...input,
+      is_recurring: false, recurrence_rule: null, recurrence_end: null,
+      parent_event_id: id,
+    }
+    const override = await createEvent(overrideInput, subs, createdBy)
+    const { error } = await supabase.from('event_exceptions').upsert(
+      { parent_event_id: id, exception_date: occurrence.date, override_event_id: override.id },
+      { onConflict: 'parent_event_id,exception_date' },
+    )
+    if (error) throw error
+    return override
+  }
+
+  // scope === 'future'
+  const until = new Date(new Date(occurrence.start).getTime() - 1000).toISOString()
+  const { error: upErr } = await supabase.from('events').update({ recurrence_end: until }).eq('id', id)
+  if (upErr) throw upErr
+  const newParentInput: EventWriteInput = {
+    ...base, ...input,
+    is_recurring: true,
+    recurrence_rule: input.recurrence_rule ?? parent.recurrence_rule,
+    recurrence_end: parent.recurrence_end ?? null, // conserva el fin original de la serie
+    parent_event_id: null,
+  }
+  return createEvent(newParentInput, subs, createdBy)
+}
+
+/**
+ * Elimina un evento recurrente según el alcance:
+ *  - all: borra el evento (cascade limpia hijos y excepciones). También borra
+ *    sus overrides. Bloquea si hay check-ins/inscripciones.
+ *  - future: pone UNTIL en el padre (sin crear nuevo padre).
+ *  - single: registra la excepción cancelada (override_event_id null); si había
+ *    un override, lo borra (bloquea si tenía asistencia).
+ * Para eventos no recurrentes usar scope 'all'.
+ */
+export async function deleteEventScoped(
+  id: string,
+  scope: EventScope,
+  occurrence: OccurrenceRef | null,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  if (scope === 'single' && occurrence) {
+    const { data: existing } = await supabase
+      .from('event_exceptions').select('override_event_id')
+      .eq('parent_event_id', id).eq('exception_date', occurrence.date).maybeSingle()
+    const prevOverride = (existing as { override_event_id: string | null } | null)?.override_event_id
+    if (prevOverride) {
+      if (await countAttendance(supabase, prevOverride) > 0) throw new EventHasAttendanceError()
+      await supabase.from('events').delete().eq('id', prevOverride)
+    }
+    const { error } = await supabase.from('event_exceptions').upsert(
+      { parent_event_id: id, exception_date: occurrence.date, override_event_id: null },
+      { onConflict: 'parent_event_id,exception_date' },
+    )
+    if (error) throw error
+    return
+  }
+
+  if (scope === 'future' && occurrence) {
+    const until = new Date(new Date(occurrence.start).getTime() - 1000).toISOString()
+    const { error } = await supabase.from('events').update({ recurrence_end: until }).eq('id', id)
+    if (error) throw error
+    return
+  }
+
+  // scope === 'all' (o evento no recurrente): borrado duro con guard de asistencia.
+  if (await countAttendance(supabase, id) > 0) throw new EventHasAttendanceError()
+  // Overrides de la serie (eventos puntuales hijos): borrarlos también, con guard.
+  const { data: overrides } = await supabase.from('events').select('id').eq('parent_event_id', id)
+  for (const o of ((overrides ?? []) as Array<{ id: string }>)) {
+    if (await countAttendance(supabase, o.id) > 0) throw new EventHasAttendanceError()
+  }
+  if (overrides && overrides.length > 0) {
+    await supabase.from('events').delete().in('id', (overrides as Array<{ id: string }>).map((o) => o.id))
+  }
+  const { error } = await supabase.from('events').delete().eq('id', id)
   if (error) throw error
 }
 

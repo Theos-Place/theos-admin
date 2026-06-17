@@ -646,6 +646,45 @@ export type Database = {
           },
         ]
       }
+      event_exceptions: {
+        Row: {
+          created_at: string | null
+          exception_date: string
+          id: string
+          override_event_id: string | null
+          parent_event_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          exception_date: string
+          id?: string
+          override_event_id?: string | null
+          parent_event_id: string
+        }
+        Update: {
+          created_at?: string | null
+          exception_date?: string
+          id?: string
+          override_event_id?: string | null
+          parent_event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_exceptions_override_event_id_fkey"
+            columns: ["override_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_exceptions_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
           event_id: string
@@ -808,6 +847,7 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string | null
+          virtual_url: string | null
         }
         Insert: {
           cancellation_reason?: string | null
@@ -839,6 +879,7 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string | null
+          virtual_url?: string | null
         }
         Update: {
           cancellation_reason?: string | null
@@ -870,6 +911,7 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string | null
+          virtual_url?: string | null
         }
         Relationships: [
           {

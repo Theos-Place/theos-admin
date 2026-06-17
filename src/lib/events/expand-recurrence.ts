@@ -18,6 +18,15 @@ type RecurringLike = {
   is_recurring: boolean
   recurrence_rule: string | null
   recurrence_end?: string | null
+  /** Fechas YYYY-MM-DD (hora CR) a excluir de la serie (EXDATE/override). */
+  exception_dates?: string[]
+}
+
+/** Fecha local (hora CR del navegador) → 'YYYY-MM-DD'. */
+function localYmd(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
 }
 
 export type Occurrence<T extends RecurringLike> = T & {
@@ -83,12 +92,15 @@ export function expandRecurring<T extends RecurringLike>(event: T, from: Date, t
     return []
   }
 
+  const excepted = new Set(event.exception_dates ?? [])
   try {
     return rule
       .between(toFakeUTC(from), toFakeUTC(to), true)
       .map(fromFakeUTC)
       // la instancia original ya está en la lista: no duplicarla
       .filter(d => d.getTime() !== realStart.getTime())
+      // EXDATE: ocurrencias canceladas o reemplazadas por un override
+      .filter(d => !excepted.has(localYmd(d)))
       .map(d => ({
         ...event,
         start_at: d.toISOString(),
@@ -102,31 +114,61 @@ export function expandRecurring<T extends RecurringLike>(event: T, from: Date, t
   }
 }
 
-/** Próxima ocurrencia (>= after) de un recurrente; null si no hay o la regla es inválida. */
+/** Próxima ocurrencia (>= after) de un recurrente; null si no hay o la regla es inválida.
+ *  Salta las fechas exceptuadas (canceladas/override). */
 export function nextOccurrence(event: RecurringLike, after: Date): Date | null {
   if (!event.is_recurring || !event.recurrence_rule) return null
+  const excepted = new Set(event.exception_dates ?? [])
   const realStart = new Date(event.start_at)
-  if (realStart >= after) return realStart
+  if (realStart >= after && !excepted.has(localYmd(realStart))) return realStart
   const until = event.recurrence_end
     ? new Date(event.recurrence_end)
     : new Date(after.getTime() + 366 * 86400000)
   const rule = parseRule(event.recurrence_rule, toFakeUTC(realStart), toFakeUTC(until))
   if (!rule) return null
   try {
-    const next = rule.after(toFakeUTC(after), true)
-    return next ? fromFakeUTC(next) : null
+    // Itera buscando la primera ocurrencia no exceptuada (límite defensivo).
+    let cursor = after
+    for (let i = 0; i < 200; i++) {
+      const next = rule.after(toFakeUTC(cursor), true)
+      if (!next) return null
+      const local = fromFakeUTC(next)
+      if (!excepted.has(localYmd(local))) return local
+      cursor = new Date(local.getTime() + 1000) // avanza 1s para no repetir
+    }
+    return null
   } catch {
     return null
   }
 }
 
-/** Etiqueta humana de la regla: "Cada martes", "Cada martes y jueves". */
+const POS_LABEL: Record<string, string> = {
+  '1': 'primer', '2': 'segundo', '3': 'tercer', '4': 'cuarto', '-1': 'último',
+}
+
+/** Etiqueta humana de la regla: "Cada martes", "El día 15 de cada mes",
+ *  "El segundo martes de cada mes". */
 export function recurrenceLabel(rule: string | null): string | null {
   if (!rule) return null
-  const custom = rule.trim().match(/^WEEKLY:([A-Z,]+)$/i)
-  const std = rule.trim().match(/BYDAY=([A-Z,]+)/i)
+  const r = rule.trim()
+  const isMonthly = /FREQ=MONTHLY/i.test(r) || /^MONTHLY:/i.test(r)
+
+  if (isMonthly) {
+    const byMonthDay = r.match(/BYMONTHDAY=(-?\d+)/i)
+    if (byMonthDay) return `El día ${byMonthDay[1]} de cada mes`
+    const byDayPos = r.match(/BYDAY=(-?\d)([A-Z]{2})/i)
+    if (byDayPos) {
+      const pos = POS_LABEL[byDayPos[1]] ?? `${byDayPos[1]}º`
+      const day = DAY_LABEL[byDayPos[2].toUpperCase()]
+      if (day) return `El ${pos} ${day} de cada mes`
+    }
+    return 'Cada mes'
+  }
+
+  const custom = r.match(/^WEEKLY:([A-Z,]+)$/i)
+  const std = r.match(/BYDAY=([A-Z,]+)/i)
   const dayPart = custom?.[1] ?? std?.[1]
-  if (!dayPart) return rule.toUpperCase().includes('WEEKLY') ? 'Cada semana' : null
+  if (!dayPart) return r.toUpperCase().includes('WEEKLY') ? 'Cada semana' : null
   const labels = dayPart.toUpperCase().split(',').map(d => DAY_LABEL[d.trim()]).filter(Boolean)
   if (!labels.length) return 'Cada semana'
   if (labels.length === 1) return `Cada ${labels[0]}`

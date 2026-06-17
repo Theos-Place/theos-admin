@@ -62,6 +62,9 @@ export type MockEvent = {
   recurrence_rule: string | null
   recurrence_end: string | null
   parent_event_id: string | null
+  /** Fechas (YYYY-MM-DD, hora CR) de ocurrencias exceptuadas de la serie: se
+   *  excluyen de la expansión (canceladas o reemplazadas por un override). */
+  exception_dates: string[]
   sub_events: SubEvent[]
   registrations: EventRegistration[]
   checkins: EventCheckin[]

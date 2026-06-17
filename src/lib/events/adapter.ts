@@ -32,6 +32,7 @@ export function toDomainEvent(db: DbEventEnriched): MockEvent {
     recurrence_rule: db.recurrence_rule,
     recurrence_end: db.recurrence_end,
     parent_event_id: db.parent_event_id,
+    exception_dates: (db.exceptions ?? []).map((e) => e.exception_date),
     flyer_url: db.flyer_url,
     cancellation_reason: db.cancellation_reason,
     is_active: db.is_active,
