@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { PlanInvitations } from '@/components/studies/PlanInvitations'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -331,6 +332,9 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
         </div>
       </div>
+
+      {/* ── Invitados (solo planes por invitación) ── */}
+      {view.requires_invitation && studyType.plan_id && <PlanInvitations planId={studyType.plan_id} />}
 
       {/* ── Grupos ── */}
       <div className="card">

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Lock, ChevronDown, ChevronUp, HeartHandshake } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
@@ -209,6 +210,7 @@ export function MemberParticipationTab({
       <div className="flex gap-2 flex-wrap">
         <StudyRequestActions memberId={memberId} />
         <FinanceRequestActions memberId={memberId} />
+        <InviteToStudyButton memberId={memberId} />
       </div>
 
       {/* Recomendaciones de cierres — solo roles de estudios/admin */}

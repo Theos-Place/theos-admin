@@ -9,6 +9,8 @@ export type EligibilityResult = {
   stage: string
   weeks: number
   is_eligible: boolean
+  /** El estudio es invitation_only y el miembro tiene invitación activa. */
+  by_invitation: boolean
   reasons_blocked: string[]
   reasons_met: string[]
   available_groups: EligibleGroup[]
@@ -35,6 +37,8 @@ export type MemberStudyProfile = {
   is_server: boolean
   /** Check-ins de charla en los últimos 6 meses (ventana de matrícula). */
   charla_count: number
+  /** Códigos de planes invitation_only con invitación ACTIVA para este miembro. */
+  invited_codes?: string[]
 }
 
 /** Asistencia mínima para MATRICULAR: 12 charlas en los últimos 6 meses.
@@ -78,9 +82,15 @@ export function computeEligibility(
   groups: StudyGroup[],
   profile: MemberStudyProfile,
 ): EligibilityResult[] {
-  return plans.map(study => {
+  const invitedCodes = new Set(profile.invited_codes ?? [])
+  return plans
+    // Invitation_only: ocultos por completo salvo invitación activa (A7).
+    .filter(study => !study.requires_invitation || invitedCodes.has(study.code))
+    .map(study => {
     const reasons_blocked: string[] = []
     const reasons_met: string[] = []
+    const by_invitation = !!study.requires_invitation && invitedCodes.has(study.code)
+    if (by_invitation) reasons_met.push('Estás invitado a este estudio ✓')
 
     // 1. Prerequisito
     if (study.prerequisite) {
@@ -156,6 +166,7 @@ export function computeEligibility(
       stage: study.stage,
       weeks: study.weeks,
       is_eligible,
+      by_invitation,
       reasons_blocked,
       reasons_met,
       available_groups,

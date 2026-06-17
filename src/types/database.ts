@@ -2942,6 +2942,75 @@ export type Database = {
           },
         ]
       }
+      study_invitations: {
+        Row: {
+          created_at: string | null
+          id: string
+          invited_by: string | null
+          member_id: string
+          notes: string | null
+          plan_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invited_by?: string | null
+          member_id: string
+          notes?: string | null
+          plan_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invited_by?: string | null
+          member_id?: string
+          notes?: string | null
+          plan_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_invitations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_invitations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_invitations_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_leaders: {
         Row: {
           availability_status: string | null

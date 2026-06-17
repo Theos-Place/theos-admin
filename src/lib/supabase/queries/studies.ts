@@ -622,6 +622,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   is_donor: boolean
   is_server: boolean
   charla_count: number
+  invited_codes: string[]
 }> {
   const supabase = createAdminClient()
   // charla_count: solo los últimos 6 meses — el criterio de matrícula es
@@ -629,7 +630,8 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   // (decisión 2026-06-11: 12 charlas en 6 meses vs cobertura mensual).
   const sixMonthsAgo = new Date()
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-  const [memberRes, enrRes, volRes, chkRes] = await Promise.all([
+  const { activeInvitationCodesForMember } = await import('./study-invitations')
+  const [memberRes, enrRes, volRes, chkRes, invitedCodes] = await Promise.all([
     supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
     supabase
       .from('study_enrollments')
@@ -642,6 +644,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
       .eq('member_id', memberId)
       .eq('events.event_type', 'charla')
       .gte('checked_in_at', sixMonthsAgo.toISOString()),
+    activeInvitationCodesForMember(memberId),
   ])
 
   const enrollments = (enrRes.data ?? []) as Array<{ status: string; study_groups: { plan: { code: string } | null } | null }>
@@ -658,6 +661,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     is_donor: Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor),
     is_server: (volRes.data ?? []).length > 0,
     charla_count: (chkRes.data ?? []).length,
+    invited_codes: invitedCodes,
   }
 }
 
@@ -708,9 +712,10 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
       .gte('checked_in_at', oldest),
     supabase
       .from('study_plans')
-      .select('id, code, name, level, prerequisite_code')
+      .select('id, code, name, level, prerequisite_code, requires_invitation')
       .eq('is_active', true)
       .eq('is_curricular', true)
+      .not('requires_invitation', 'is', true) // invitation_only no se solicita, se invita (A7)
       .order('code'),
   ])
 
@@ -1130,6 +1135,16 @@ export async function enrollMember(groupId: string, memberId: string): Promise<v
     .from('study_enrollments')
     .upsert({ group_id: groupId, member_id: memberId, status: 'enrolled' }, { onConflict: 'group_id,member_id' })
   if (error) throw error
+  // A7: si el grupo es de un plan invitation_only, consumir la invitación activa.
+  const { data: g } = await supabase
+    .from('study_groups')
+    .select('plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation)')
+    .eq('id', groupId).maybeSingle()
+  const plan = (g as { plan: { id: string; requires_invitation: boolean | null } | null } | null)?.plan
+  if (plan?.requires_invitation) {
+    const { markInvitationUsed } = await import('./study-invitations')
+    await markInvitationUsed(memberId, plan.id)
+  }
 }
 
 export async function withdrawMember(groupId: string, memberId: string, reason?: string): Promise<void> {

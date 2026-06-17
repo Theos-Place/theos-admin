@@ -471,6 +471,11 @@ function StudyCard({
                   Bloqueado
                 </span>
               )}
+              {result.by_invitation && (
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-coral/10 text-coral font-display">
+                  Por invitación
+                </span>
+              )}
             </div>
             <p className="mt-1 text-base font-bold text-navy leading-snug font-display">
               {result.study_name}
