@@ -61,6 +61,8 @@ export type StudyGroup = {
   current_week: number
   participants: GroupParticipant[]
   whatsapp_group_url: string | null
+  is_leader_training?: boolean
+  training_modality?: string | null
 }
 
 export type LeaderEvaluation = {

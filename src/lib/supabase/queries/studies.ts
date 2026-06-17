@@ -52,6 +52,8 @@ export type DbGroupEnriched = {
   status: 'en_matricula' | 'en_curso' | 'finalizado'
   current_week: number
   whatsapp_group_url: string | null
+  is_leader_training: boolean | null
+  training_modality: string | null
   enrollments: Array<{
     member_id: string
     status: 'enrolled' | 'waitlist' | 'completed' | 'dropped' | 'transferred'
@@ -267,6 +269,7 @@ export async function getStudyGroupsWithEnrollments(): Promise<DbGroupEnriched[]
 const GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  is_leader_training, training_modality,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
@@ -282,6 +285,7 @@ const GROUP_SELECT = `
 const LIST_GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  is_leader_training, training_modality,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
@@ -292,6 +296,7 @@ const LIST_GROUP_SELECT = `
 const LIST_GROUP_MEMBERS_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  is_leader_training, training_modality,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),

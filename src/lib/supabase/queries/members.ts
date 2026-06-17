@@ -1041,7 +1041,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         status: e.status,
       }
     })
-    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')) // más reciente primero (igual que eventos y donaciones)
   const currentEnrollment = enrollments
     .find(e => e.status === 'enrolled' && e.study_groups?.plan?.name)
   const currentStudy = currentEnrollment?.study_groups?.plan?.name ?? null

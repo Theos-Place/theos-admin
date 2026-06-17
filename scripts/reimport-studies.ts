@@ -26,6 +26,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { parse } from 'csv-parse/sync'
 import { createClient } from '@supabase/supabase-js'
+import { isPrecampana, qualifyLeadersForStudy } from './lib/leader-training'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const CONFIRM_DELETE = process.argv.includes('--confirm-delete')
@@ -159,18 +160,25 @@ async function main() {
   const pd: Record<string, string>[] = parse(readFileSync(PD_FILE, 'utf8'), { columns: true, bom: true, relax_quotes: true, relax_column_count: true, skip_empty_lines: true })
   console.log(`\nCSV: group_participants ${gp.length.toLocaleString('es-CR')} filas · process_detail ${pd.length.toLocaleString('es-CR')} filas`)
 
-  // ── process_detail: aprobados por código + cubetas de reprobado ──
-  const passByCode = new Map<string, Set<string>>()
-  const reproveNivel = new Set<string>(), reproveCap = new Set<string>()
+  // ── process_detail: aprobados (por código y por código+año) y reprobaciones
+  // por categoría+año. Las queues "Reprueba *" son GENÉRICAS (no dicen el estudio):
+  // solo se pueden ubicar contra un grupo real del mismo estudio Y AÑO. ──
+  const yearFromDue = (v: unknown): string => { const m = str(v).match(/^(\d{4})/); return m ? m[1] : '?' }
+  const passByCode = new Map<string, Set<string>>()          // code → inds (cualquier año)
+  const passByCodeYear = new Set<string>()                   // `${code}|${ind}|${year}`
+  const reproveNivelYears = new Map<string, Set<string>>()   // ind → años con Reprueba Nivel
+  const reproveCapYears = new Map<string, Set<string>>()     // ind → años con Reprueba Capacitación
   for (const r of pd) {
     const ind = extId(r['Ind ID']); if (!ind) continue
     const queue = str(r['Queue Name'])
-    if (queue === REPRUEBA_NIVEL) { reproveNivel.add(ind); continue }
-    if (queue === REPRUEBA_CAP) { reproveCap.add(ind); continue }
+    const y = yearFromDue(r['Due'])
+    if (queue === REPRUEBA_NIVEL) { (reproveNivelYears.get(ind) ?? reproveNivelYears.set(ind, new Set()).get(ind)!).add(y); continue }
+    if (queue === REPRUEBA_CAP) { (reproveCapYears.get(ind) ?? reproveCapYears.set(ind, new Set()).get(ind)!).add(y); continue }
     const code = QUEUE_MAP[queue]
     if (!code) continue
     let s = passByCode.get(code); if (!s) { s = new Set(); passByCode.set(code, s) }
     s.add(ind)
+    passByCodeYear.add(`${code}|${ind}|${y}`)
   }
 
   // ── Miembros: external_id → uuid + nombre (para match de dirigente) ──
@@ -178,8 +186,9 @@ async function main() {
   const extMap = new Map<string, { id: string; name: string }>()
   for (const m of members) if (m.external_id) extMap.set(String(m.external_id), { id: m.id, name: `${m.first_name} ${m.last_name}`.toLowerCase() })
 
-  const plans = await fetchAll<{ id: string; code: string | null; duration_weeks: number | null }>('study_plans', 'id, code, duration_weeks')
+  const plans = await fetchAll<{ id: string; code: string | null; duration_weeks: number | null; level: string }>('study_plans', 'id, code, duration_weeks, level')
   const planByCode = new Map(plans.filter(p => p.code).map(p => [p.code as string, p]))
+  const isCampaignCode = (code: string) => planByCode.get(code)?.level === 'campanas'
 
   // ── Agrupar filas por Group Name ──
   const byGroup = new Map<string, Record<string, string>[]>()
@@ -188,6 +197,7 @@ async function main() {
   type Built = {
     name: string; code: string; planId: string; starts_at: string | null; ends_at: string | null
     active: boolean; leaderId: string | null; coLeaderId: string | null
+    isLeaderTraining: boolean
     members: string[] // memberIds (Member status)
   }
   const built: Built[] = []
@@ -196,16 +206,21 @@ async function main() {
   const noMatch = new Set<string>()      // Ind IDs (Member) sin miembro en BD
 
   for (const [name, rows] of byGroup) {
-    const rawCode = codeFor(name)
+    // CAPACITACIÓN DE DIRIGENTES: "Precampaña" = Transformados para dirigentes
+    // (is_leader_training). Tiene prioridad sobre codeFor (el nombre matchearía
+    // /campa/ → CAMP). Todos sus Member quedan completados y capacitados para TRANS.
+    const leaderTraining = isPrecampana(name)
+    const rawCode = leaderTraining ? 'TRANS' : codeFor(name)
     const groupCode = rawCode ? groupCodeFor(rawCode) : null
     const plan = groupCode ? planByCode.get(groupCode) : undefined
     if (!rawCode || !groupCode || !plan) { noMapeo.push(name); continue }
     // DISALL ("Discípulos"/"Servidores" sin número) → 3 grupos (DIS1/2/3) con los
     // mismos miembros (el UNIQUE(group_id,member_id) impide 3 inscripciones en 1 grupo).
-    const groupCodes = enrollCodesFor(rawCode) // [code] o ['DIS1','DIS2','DIS3']
+    const groupCodes = leaderTraining ? ['TRANS'] : enrollCodesFor(rawCode)
 
     const start = parseStart(name)
-    const active = str(rows[0]['Group Active/Inactive']).toLowerCase() === 'active'
+    // Los grupos de capacitación de dirigentes son históricos → finalizados.
+    const active = !leaderTraining && str(rows[0]['Group Active/Inactive']).toLowerCase() === 'active'
 
     // dirigentes: status Leader, no org. Ordenar: nombre-en-grupo primero.
     const nameLc = name.toLowerCase()
@@ -238,7 +253,7 @@ async function main() {
       const p = planByCode.get(gc); if (!p) continue
       const end = start && p.duration_weeks ? addWeeks(start, p.duration_weeks) : null
       const gname = groupCodes.length > 1 ? `${name} · ${gc}` : name
-      built.push({ name: gname, code: gc, planId: p.id, starts_at: start, ends_at: end, active, leaderId, coLeaderId, members: memberArr })
+      built.push({ name: gname, code: gc, planId: p.id, starts_at: start, ends_at: end, active, leaderId, coLeaderId, isLeaderTraining: leaderTraining, members: memberArr })
     }
   }
 
@@ -267,22 +282,41 @@ async function main() {
   type Enroll = { group_id?: string; planId: string; member_id: string; status: string; enrolled_at: string | null; completed_at: string | null; dropped_at: string | null; drop_reason: string | null; notes: string | null; _built: Built }
   const byStatus: Record<string, number> = { completed: 0, dropped: 0, enrolled: 0 }
   const enrolls: Enroll[] = []
+  const locatedReproves = new Set<string>() // `${ext}|nivel|cap|${year}` con grupo+año que respalda
   for (const it of intents) {
     const g = it.built
     const ext = idToExt.get(it.memberId)
     const isPrimary = latestByKey.get(`${it.memberId}|${g.code}`) === g
     let status = 'enrolled', notes: string | null = null, dropped_at: string | null = null, completed_at: string | null = null, drop_reason: string | null = null
 
-    const passed = ext ? passByCode.get(g.code)?.has(ext) : false
-    const reproved = ext ? (isNivel(g.code) ? reproveNivel.has(ext) : reproveCap.has(ext)) : false
+    const passedEver = ext ? passByCode.get(g.code)?.has(ext) : false
+    const gYear = (g.starts_at ?? '').slice(0, 4) || '?'
+    const approvedThisYear = ext ? passByCodeYear.has(`${g.code}|${ext}|${gYear}`) : false
+    // Reprobación UBICADA: la persona tiene una "Reprueba" de la categoría del
+    // estudio en el MISMO año del grupo, y NO aprobó ese estudio ese año.
+    // Las CAMPAÑAS (level campanas) NO tienen cola de aprobación ni de reprobación
+    // propia en process_detail; una "Reprueba Capacitación" genérica es de otra
+    // capacitación, no de la campaña → nunca reprobar campañas por esta vía.
+    const reproveYears = ext && !isCampaignCode(g.code) ? (isNivel(g.code) ? reproveNivelYears.get(ext) : reproveCapYears.get(ext)) : undefined
+    const reproveLocated = !!ext && !!reproveYears && reproveYears.has(gYear) && !approvedThisYear && gYear !== '?'
+    if (reproveLocated && ext) locatedReproves.add(`${ext}|${isNivel(g.code) ? 'nivel' : 'cap'}|${gYear}`)
 
-    if (passed && isPrimary) { status = 'completed'; completed_at = g.ends_at ?? g.starts_at }
-    else if (reproved && isPrimary) { status = 'dropped'; dropped_at = g.starts_at; drop_reason = 'reprobó (process_detail)' }
+    if (g.isLeaderTraining) { status = 'completed'; completed_at = g.ends_at ?? g.starts_at; notes = 'capacitación de dirigentes (completado)' }
+    else if (passedEver) { status = 'completed'; completed_at = g.ends_at ?? g.starts_at } // aprobación tiene prioridad
+    else if (reproveLocated && isPrimary) { status = 'dropped'; dropped_at = g.starts_at; drop_reason = `reprobó ${g.code} ${gYear} (grupo+año)` }
     else if (!g.active) { status = 'completed'; completed_at = g.ends_at ?? g.starts_at; notes = 'completado sin registro de aprobación (grupo inactivo)' }
     else status = 'enrolled'
 
     byStatus[status] = (byStatus[status] ?? 0) + 1
     enrolls.push({ planId: g.planId, member_id: it.memberId, status, enrolled_at: g.starts_at, completed_at, dropped_at, drop_reason, notes, _built: g })
+  }
+
+  // ── Capacitación de dirigentes: completados → qualified_study_codes del plan ──
+  const trainingGroups = built.filter(g => g.isLeaderTraining)
+  const trainingByCode = new Map<string, Set<string>>() // code → memberIds completados
+  for (const g of trainingGroups) {
+    let s = trainingByCode.get(g.code); if (!s) { s = new Set(); trainingByCode.set(g.code, s) }
+    for (const mid of g.members) s.add(mid)
   }
 
   // ── Reporte de plan ──
@@ -296,8 +330,23 @@ async function main() {
   console.log(`  Inscripciones a crear:    ${enrolls.length.toLocaleString('es-CR')}  → completed ${byStatus.completed} · dropped ${byStatus.dropped} · enrolled ${byStatus.enrolled}`)
   console.log(`  Personas Member sin match: ${noMatch.size.toLocaleString('es-CR')}`)
   console.log(`  Casos ambiguos (mismo estudio en varios grupos): ${ambiguous.size.toLocaleString('es-CR')}`)
+  if (trainingGroups.length) {
+    const totalTrain = [...trainingByCode.values()].reduce((a, s) => a + s.size, 0)
+    console.log(`  Grupos de capacitación de dirigentes: ${trainingGroups.length} (${[...trainingByCode.keys()].join(',')}) · participantes a capacitar: ${totalTrain}`)
+    for (const [code, ids] of trainingByCode) {
+      const q = await qualifyLeadersForStudy(supabase, [...ids], code, true)
+      console.log(`    formación ${code}: nuevas ${q.nuevos} · actualizar ${q.actualizados} · ya capacitados ${q.yaCapacitados}`)
+    }
+  }
+
+  // ── Reprobaciones sin ubicar (sin grupo+año que las respalde) → revisión ──
+  const sinUbicar: string[] = []
+  for (const [ind, years] of reproveNivelYears) for (const y of years) if (!locatedReproves.has(`${ind}|nivel|${y}`)) sinUbicar.push(`${ind},"Reprueba Nivel 1 - 4",${y}`)
+  for (const [ind, years] of reproveCapYears) for (const y of years) if (!locatedReproves.has(`${ind}|cap|${y}`)) sinUbicar.push(`${ind},"Reprueba Capacitación",${y}`)
+  console.log(`  Reprobaciones ubicadas (grupo+año) → dropped: ${byStatus.dropped} · sin ubicar (a log): ${sinUbicar.length}`)
 
   // ── Reportes a archivo ──
+  writeCsv('reprobaciones-sin-ubicar.csv', 'ind_id,queue,anio', sinUbicar)
   writeCsv('reimport-grupos-sin-mapeo-estudio.csv', 'group_name', noMapeo.map(n => `"${n.replace(/"/g, '""')}"`))
   writeCsv('reimport-grupos-sin-dirigente.csv', 'group_name', built.filter(g => !g.leaderId).map(g => `"${g.name.replace(/"/g, '""')}"`))
   writeCsv('reimport-personas-sin-match.csv', 'ind_id', [...noMatch])
@@ -315,11 +364,15 @@ async function main() {
     for (;;) {
       const { data, error } = await supabase.from(t).select('id').limit(1000)
       if (error) { console.error(`  ✗ leyendo ${t}: ${error.message}`); process.exit(1) }
-      const chunk = (data ?? []).map((r: { id: string }) => r.id)
-      if (!chunk.length) break
-      const { error: dErr } = await supabase.from(t).delete().in('id', chunk)
-      if (dErr) { console.error(`  ✗ borrando ${t}: ${dErr.message}`); process.exit(1) }
-      removed += chunk.length
+      const ids = (data ?? []).map((r: { id: string }) => r.id)
+      if (!ids.length) break
+      // Borrar en sub-lotes de 200: un .in() con 1000 uuids revienta la URL.
+      for (let i = 0; i < ids.length; i += 200) {
+        const sub = ids.slice(i, i + 200)
+        const { error: dErr } = await supabase.from(t).delete().in('id', sub)
+        if (dErr) { console.error(`  ✗ borrando ${t}: ${dErr.message}`); process.exit(1) }
+        removed += sub.length
+      }
     }
     console.log(`  ✓ ${t} vaciada (${removed.toLocaleString('es-CR')})`)
   }
@@ -333,6 +386,7 @@ async function main() {
     const rows = chunk.map(g => ({
       plan_id: g.planId, name: g.name, leader_id: g.leaderId, co_leader_id: g.coLeaderId,
       starts_at: g.starts_at, ends_at: g.ends_at, status: g.active ? 'en_curso' : 'finalizado', current_week: 0,
+      is_leader_training: g.isLeaderTraining, training_modality: null,
     }))
     const { data, error } = await supabase.from('study_groups').insert(rows).select('id, name')
     if (error) { gErr += chunk.length; console.error(`  ✗ batch grupos ${i / 200 + 1}: ${error.message} — continuando…`); continue }
@@ -357,10 +411,18 @@ async function main() {
     if (eOk % 2000 < 200 || eOk >= rows.length - 200) console.log(`  ✓ inscripciones: ${eOk}/${rows.length}`)
   }
 
+  // ── Formación de dirigentes (capacitación) ──
+  let fNew = 0, fUpd = 0, fAlready = 0
+  for (const [code, ids] of trainingByCode) {
+    const q = await qualifyLeadersForStudy(supabase, [...ids], code, false)
+    fNew += q.nuevos; fUpd += q.actualizados; fAlready += q.yaCapacitados
+  }
+
   console.log('\n── Resumen ──')
   console.log(`  Grupos creados:        ${gOk.toLocaleString('es-CR')} (errores ${gErr})`)
   console.log(`  Inscripciones creadas: ${eOk.toLocaleString('es-CR')} (errores ${eErr})`)
   console.log(`    completed ${byStatus.completed} · dropped ${byStatus.dropped} · enrolled ${byStatus.enrolled}`)
+  if (trainingByCode.size) console.log(`  Formación de dirigentes: nuevas ${fNew} · actualizadas ${fUpd} · ya capacitados ${fAlready}`)
   console.log(`  Sin dirigente: ${built.filter(g => !g.leaderId).length} · sin mapeo: ${noMapeo.length} · sin match: ${noMatch.size}`)
 }
 

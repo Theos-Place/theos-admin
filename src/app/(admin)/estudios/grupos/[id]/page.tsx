@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { GroupStatusBadge, NoLeaderBadge } from '@/components/studies/GroupStatusBadge'
+import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
@@ -258,6 +258,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex items-center gap-2 flex-wrap">
               <StudyTypeBadge code={group.study_type_id} name={studyType?.name} size="md" />
               <GroupStatusBadge status={group.status} />
+              {group.is_leader_training && <LeaderTrainingBadge modality={group.training_modality} />}
               {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
             </div>
             <div className="flex flex-wrap gap-4 text-sm text-navy-light/60 font-body">

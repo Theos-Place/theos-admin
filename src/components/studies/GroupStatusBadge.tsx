@@ -9,6 +9,15 @@ const STATUS_CONFIG: Record<GroupStatus, { label: string; className: string }> =
   finalizado:   { label: 'Finalizado',   className: 'bg-surface-low text-navy-light/60' },
 }
 
+/** Chip: el grupo es una capacitación de dirigentes (is_leader_training = true). */
+export function LeaderTrainingBadge({ modality, className }: { modality?: string | null; className?: string }) {
+  return (
+    <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium font-display bg-coral/10 text-coral-deep', className)}>
+      Capacitación de dirigentes{modality ? ` · ${modality}` : ''}
+    </span>
+  )
+}
+
 /** Chip derivado: el grupo no tiene dirigente asignado (leader_id IS NULL).
  *  No es un estado guardado — desaparece al asignar dirigente. */
 export function NoLeaderBadge({ className }: { className?: string }) {

@@ -34,7 +34,8 @@ function formatAmount(n: number | null) {
 function studyStageColor(stage: string): string {
   if (stage === 'niveles') return 'bg-navy/10 text-navy'
   if (stage === 'inicial') return 'bg-teal-soft/30 text-teal-deep'
-  return 'bg-coral-soft/20 text-coral'
+  if (stage === 'campaña') return 'bg-purple-100 text-purple-700' // campañas = morado (consistente con StudyTypeBadge / plan)
+  return 'bg-coral-soft/20 text-coral' // intermedia
 }
 
 function SectionAccordion({

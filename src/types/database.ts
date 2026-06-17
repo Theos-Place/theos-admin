@@ -2763,6 +2763,7 @@ export type Database = {
           current_week: number | null
           ends_at: string | null
           id: string
+          is_leader_training: boolean | null
           leader_id: string | null
           location: string | null
           max_students: number | null
@@ -2774,6 +2775,7 @@ export type Database = {
           sede: string | null
           starts_at: string | null
           status: string | null
+          training_modality: string | null
           updated_at: string | null
           whatsapp_group_url: string | null
           zone: string | null
@@ -2784,6 +2786,7 @@ export type Database = {
           current_week?: number | null
           ends_at?: string | null
           id?: string
+          is_leader_training?: boolean | null
           leader_id?: string | null
           location?: string | null
           max_students?: number | null
@@ -2795,6 +2798,7 @@ export type Database = {
           sede?: string | null
           starts_at?: string | null
           status?: string | null
+          training_modality?: string | null
           updated_at?: string | null
           whatsapp_group_url?: string | null
           zone?: string | null
@@ -2805,6 +2809,7 @@ export type Database = {
           current_week?: number | null
           ends_at?: string | null
           id?: string
+          is_leader_training?: boolean | null
           leader_id?: string | null
           location?: string | null
           max_students?: number | null
@@ -2816,6 +2821,7 @@ export type Database = {
           sede?: string | null
           starts_at?: string | null
           status?: string | null
+          training_modality?: string | null
           updated_at?: string | null
           whatsapp_group_url?: string | null
           zone?: string | null

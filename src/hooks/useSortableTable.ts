@@ -60,6 +60,11 @@ function getSortValue(row: Record<string, unknown>, key: string): string {
     case 'service_area':
       return (row.service_history as { status: string; to: string | null; area?: string }[] | undefined)
         ?.find(s => s.status === 'activo' && s.to === null)?.area?.toLowerCase() ?? 'zzz'
+    case 'startYear':
+      // Historial de estudios: ordenar SOLO por año (sin mes/día). Desempate
+      // alfabético por nombre del estudio → determinístico, los estudios del
+      // mismo año no saltan de posición entre renders.
+      return `${String(row.startYear ?? 0).padStart(4, '0')}|${String(row.name ?? '').toLowerCase()}`
     case 'current_study':
       return String(row.current_study ?? 'zzz').toLowerCase()
     case 'seniority':

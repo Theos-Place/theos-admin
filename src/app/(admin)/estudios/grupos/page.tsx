@@ -9,7 +9,7 @@ import type { DbGroupListItem } from '@/lib/supabase/queries/studies'
 import { toDomainStudyGroup } from '@/lib/studies/adapter'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
-import { GroupStatusBadge, NoLeaderBadge } from '@/components/studies/GroupStatusBadge'
+import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge } from '@/components/studies/GroupStatusBadge'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
@@ -395,6 +395,7 @@ export default function GruposPage() {
                             <td key="status" className="px-4 py-3">
                               <span className="inline-flex items-center gap-1.5 flex-wrap">
                                 <GroupStatusBadge status={group.status} />
+                                {group.is_leader_training && <LeaderTrainingBadge modality={group.training_modality} />}
                                 {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
                               </span>
                             </td>
@@ -439,6 +440,7 @@ export default function GruposPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <StudyTypeBadge code={group.study_type_id} size="sm" />
                       <GroupStatusBadge status={group.status} />
+                      {group.is_leader_training && <LeaderTrainingBadge modality={group.training_modality} />}
                       {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
                     </div>
                     <p className="text-sm text-navy font-body truncate">
