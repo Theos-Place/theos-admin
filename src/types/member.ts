@@ -98,6 +98,8 @@ export type Member = {
   last_charla_checkin?: string | null
   /** Grupos activos donde es dirigente o co-dirigente. Solo viene del detalle. */
   led_groups?: Array<{ group_id: string; group_name: string; plan_code: string | null; plan_name: string | null }>
+  /** Todos los estudios dados como dirigente (cualquier estado) — D10. */
+  led_studies?: Array<{ group_id: string; group_name: string; plan_code: string | null; plan_name: string | null; role: 'Dirigente' | 'Co-dirigente'; status: string; date: string | null }>
   service_history: ServiceRecord[]
   family_members: FamilyEntry[]
   donations: DonationRecord[]

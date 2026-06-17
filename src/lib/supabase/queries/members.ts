@@ -856,6 +856,7 @@ export type DbMemberFull = DbMemberEnriched & {
   last_charla_checkin: string | null
   /** Grupos activos (en_matricula/en_curso) donde el miembro es dirigente o co-dirigente. */
   led_groups: Array<{ group_id: string; group_name: string; plan_code: string | null; plan_name: string | null }>
+  led_studies: Array<{ group_id: string; group_name: string; plan_code: string | null; plan_name: string | null; role: 'Dirigente' | 'Co-dirigente'; status: string; date: string | null }>
 }
 
 /** Devuelve un miembro con TODO su histórico relacionado. Para el detail view. */
@@ -892,7 +893,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
 
   // Grupos activos que la persona dirige (dos .eq en vez de .or() para no
   // interpolar el id de la URL en sintaxis PostgREST).
-  const ledGroupSelect = 'id, name, status, plan:study_plans(code, name)'
+  const ledGroupSelect = 'id, name, status, starts_at, plan:study_plans(code, name)'
   // 2. Queries en paralelo para histórico pesado
   const [
     checkinsRes,
@@ -950,17 +951,17 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       .eq('member_id', id)
       .order('submitted_at', { ascending: false }),
 
+    // TODOS los grupos liderados (cualquier estado): led_groups filtra los activos
+    // (D9) y led_studies los lista todos como dirigente (D10).
     supabase
       .from('study_groups')
       .select(ledGroupSelect)
-      .eq('leader_id', id)
-      .in('status', ['en_matricula', 'en_curso']),
+      .eq('leader_id', id),
 
     supabase
       .from('study_groups')
       .select(ledGroupSelect)
-      .eq('co_leader_id', id)
-      .in('status', ['en_matricula', 'en_curso']),
+      .eq('co_leader_id', id),
   ])
 
   if (checkinsRes.error)   throw checkinsRes.error
@@ -971,18 +972,34 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   if (leadsRes.error)      throw leadsRes.error
   if (coLeadsRes.error)    throw coLeadsRes.error
 
-  type LedGroupRow = { id: string; name: string | null; plan: { code: string | null; name: string | null } | null }
-  const ledGroups = [
-    ...((leadsRes.data ?? []) as LedGroupRow[]),
-    ...((coLeadsRes.data ?? []) as LedGroupRow[]),
-  ]
-    .filter((g, i, arr) => arr.findIndex(x => x.id === g.id) === i)
+  type LedGroupRow = { id: string; name: string | null; status: string; starts_at: string | null; plan: { code: string | null; name: string | null } | null }
+  const allLed = [
+    ...((leadsRes.data ?? []) as LedGroupRow[]).map(g => ({ ...g, role: 'Dirigente' as const })),
+    ...((coLeadsRes.data ?? []) as LedGroupRow[]).map(g => ({ ...g, role: 'Co-dirigente' as const })),
+  ].filter((g, i, arr) => arr.findIndex(x => x.id === g.id) === i)
+
+  // D9: estudios en curso que dirige (activos) para el resumen.
+  const ledGroups = allLed
+    .filter(g => g.status === 'en_matricula' || g.status === 'en_curso')
     .map(g => ({
       group_id: g.id,
       group_name: g.name ?? '',
       plan_code: g.plan?.code ?? null,
       plan_name: g.plan?.name ?? null,
     }))
+
+  // D10: TODOS los estudios dados como dirigente (cualquier estado) para el perfil.
+  const ledStudies = allLed
+    .map(g => ({
+      group_id: g.id,
+      group_name: g.name ?? '',
+      plan_code: g.plan?.code ?? null,
+      plan_name: g.plan?.name ?? null,
+      role: g.role,
+      status: g.status,
+      date: g.starts_at,
+    }))
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
 
   // Set de event_ids donde el miembro sirvió como voluntario
   const volunteerEventIds = new Set(
@@ -1209,6 +1226,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     attendance_active: attendanceMonthsSatisfyCriteria(charlaMonths),
     last_charla_checkin: lastCharlaCheckin,
     led_groups: ledGroups,
+    led_studies: ledStudies,
   }
 }
 

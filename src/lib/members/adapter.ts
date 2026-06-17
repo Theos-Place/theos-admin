@@ -165,5 +165,6 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
     attendance_active: db.attendance_active,
     last_charla_checkin: db.last_charla_checkin,
     led_groups: db.led_groups ?? [],
+    led_studies: db.led_studies ?? [],
   }
 }

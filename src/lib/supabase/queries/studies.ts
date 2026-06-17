@@ -1002,10 +1002,33 @@ export async function updatePlan(id: string, patch: Partial<PlanWriteInput>): Pr
 }
 
 // Grupos
+/** D1: al asignarle un grupo a un dirigente, pasa a activo. Nunca revierte a
+ *  inactivo automáticamente. Solo afecta study_leaders (la designación de estudios). */
+async function activateLeaders(
+  supabase: ReturnType<typeof createAdminClient>,
+  memberIds: Array<string | null | undefined>,
+): Promise<void> {
+  const ids = Array.from(new Set(memberIds.filter((x): x is string => !!x)))
+  for (const memberId of ids) {
+    const { data: existing } = await supabase
+      .from('study_leaders').select('id, availability_status').eq('member_id', memberId).maybeSingle()
+    const e = existing as { id: string; availability_status: string | null } | null
+    if (e) {
+      await supabase.from('study_leaders').update({
+        is_active: true,
+        availability_status: e.availability_status === 'inactive' ? 'assigned' : e.availability_status,
+      }).eq('member_id', memberId)
+    } else {
+      await supabase.from('study_leaders').insert({ member_id: memberId, is_active: true, availability_status: 'assigned' })
+    }
+  }
+}
+
 export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
   const { data, error } = await supabase.from('study_groups').insert(input as Insertable<'study_groups'>).select('id').single()
   if (error) throw error
+  await activateLeaders(supabase, [input.leader_id, input.co_leader_id])
   return data as { id: string }
 }
 
@@ -1013,6 +1036,10 @@ export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): 
   const supabase = createAdminClient()
   const { error } = await supabase.from('study_groups').update(patch).eq('id', id)
   if (error) throw error
+  // Solo activa si el patch trae una asignación de dirigente.
+  if ('leader_id' in patch || 'co_leader_id' in patch) {
+    await activateLeaders(supabase, [patch.leader_id, patch.co_leader_id])
+  }
 }
 
 /** Agrega un estudio al historial de un miembro SIN grupo (ej. estudios viejos,

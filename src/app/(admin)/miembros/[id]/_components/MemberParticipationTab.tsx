@@ -178,6 +178,7 @@ type Props = {
   revealDonations: boolean
   onToggleRevealDonations: () => void
   donationsCount: number
+  ledStudies?: Array<{ group_id: string; group_name: string; plan_code: string | null; plan_name: string | null; role: 'Dirigente' | 'Co-dirigente'; status: string; date: string | null }>
   onAddStudy?: () => void
 }
 
@@ -201,6 +202,7 @@ export function MemberParticipationTab({
   revealDonations,
   onToggleRevealDonations,
   donationsCount,
+  ledStudies = [],
   onAddStudy,
 }: Props) {
   const { studyTypes } = useStudyPlans()
@@ -212,6 +214,29 @@ export function MemberParticipationTab({
         <FinanceRequestActions memberId={memberId} />
         <InviteToStudyButton memberId={memberId} />
       </div>
+
+      {/* Estudios dados como dirigente (D10) */}
+      {ledStudies.length > 0 && (
+        <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
+          <h3 className="text-sm font-display font-extrabold text-navy mb-3">Estudios dados como dirigente</h3>
+          <div className="space-y-1.5">
+            {ledStudies.map(g => (
+              <div key={g.group_id} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-surface-low transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-navy truncate font-body">{g.plan_name ?? g.plan_code ?? g.group_name}</p>
+                  <p className="text-[11px] text-navy-light/60 font-body">
+                    {g.role}{g.date ? ` · ${formatDate(g.date)}` : ''}
+                  </p>
+                </div>
+                <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0 font-display',
+                  g.status === 'finalizado' ? 'bg-surface-low text-navy-light/60' : 'bg-teal-soft/30 text-teal-deep')}>
+                  {g.status === 'finalizado' ? 'Finalizado' : g.status === 'en_curso' ? 'En curso' : 'En matrícula'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recomendaciones de cierres — solo roles de estudios/admin */}
       <RecommendationsSection memberId={memberId} />

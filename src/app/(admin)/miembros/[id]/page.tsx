@@ -246,6 +246,7 @@ export default function MiembroDetailPage() {
           revealDonations={revealDonations}
           onToggleRevealDonations={() => setRevealDonations(r => !r)}
           donationsCount={member.donations.length}
+          ledStudies={member.led_studies ?? []}
           onAddStudy={() => setShowAddStudy(true)}
         />
       )}
