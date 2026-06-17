@@ -39,7 +39,7 @@ export function Step1Informacion({
   onFlyerDragOver,
   onFlyerRemove,
 }: Step1Props) {
-  const { allCommittees: ALL_COMMITTEES } = useOrg()
+  const { adminCommittees } = useOrg()
   const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
   return (
     <div className="card py-5 px-6 w-full">
@@ -96,8 +96,8 @@ export function Step1Informacion({
             onChange={e => onCommitteeChange(e.target.value)}
           >
             <option value="">Seleccionar comité...</option>
-            {ALL_COMMITTEES.map(c => (
-              <option key={c} value={c}>{c}</option>
+            {adminCommittees.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </div>

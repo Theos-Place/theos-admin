@@ -133,7 +133,7 @@ function RecurringSaveModal({
 
 export default function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
   const toast = useToast()
-  const { allCommittees: ALL_COMMITTEES } = useOrg()
+  const { adminCommittees } = useOrg()
   const { id } = use(params)
   const { event, loading } = useEvent(id)
   const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
@@ -148,6 +148,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [endDate, setEndDate] = useState(event ? event.end_at.split('T')[0] : '')
   const [endTime, setEndTime] = useState(event ? event.end_at.split('T')[1]?.slice(0, 5) : '')
   const [isVirtual, setIsVirtual] = useState(event?.is_virtual ?? false)
+  const [virtualLink, setVirtualLink] = useState(event?.virtual_url ?? '')
   const [location, setLocation] = useState(event?.location ?? '')
   const [isRecurring, setIsRecurring] = useState(event?.is_recurring ?? false)
   const [recurrenceRule, setRecurrenceRule] = useState<string | null>(event?.recurrence_rule ?? null)
@@ -178,6 +179,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setEndDate(event.end_at ? event.end_at.split('T')[0] : '')
     setEndTime(event.end_at ? (event.end_at.split('T')[1]?.slice(0, 5) ?? '') : '')
     setIsVirtual(event.is_virtual ?? false)
+    setVirtualLink(event.virtual_url ?? '')
     setLocation(event.location ?? '')
     setIsRecurring(event.is_recurring ?? false)
     setRecurrenceRule(event.recurrence_rule ?? null)
@@ -230,7 +232,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       name, event_type: selectedType, committee, description,
       start_date: startDate, start_time: startTime,
       end_date: endDate, end_time: endTime,
-      is_virtual: isVirtual, location,
+      is_virtual: isVirtual, virtual_link: virtualLink, location,
       is_recurring: isRecurring, recurrence_rule: recurrenceRule,
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
       requires_payment: requiresPayment, payment_amount: paymentAmount,
@@ -288,6 +290,11 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     )
   }
 
+  // El fin nunca puede ser anterior al inicio (fecha + hora).
+  const startTs = startDate ? new Date(`${startDate}T${startTime || '00:00'}`).getTime() : null
+  const endTs = endDate ? new Date(`${endDate}T${endTime || '00:00'}`).getTime() : null
+  const endBeforeStart = startTs !== null && endTs !== null && endTs < startTs
+
   return (
     <div className="max-w-2xl space-y-4">
       {showRecurringModal && (
@@ -329,7 +336,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </Link>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || endBeforeStart}
             className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {saving ? 'Guardando…' : 'Guardar cambios'}
@@ -373,7 +380,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           <div className="space-y-1">
             <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Comité</label>
             <select className={cn(inputCls, 'font-body')} value={committee} onChange={e => setCommittee(e.target.value)}>
-              {ALL_COMMITTEES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">Seleccionar comité...</option>
+              {adminCommittees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="space-y-1">
@@ -406,13 +414,18 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             </div>
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Fecha fin</label>
-              <input type="date" className={cn(inputCls, 'font-body')} value={endDate} onChange={e => setEndDate(e.target.value)} />
+              <input type="date" className={cn(inputCls, 'font-body', endBeforeStart && 'ring-1 ring-coral border-coral')} value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} />
             </div>
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Hora fin</label>
-              <input type="time" className={cn(inputCls, 'font-body')} value={endTime} onChange={e => setEndTime(e.target.value)} />
+              <input type="time" className={cn(inputCls, 'font-body', endBeforeStart && 'ring-1 ring-coral border-coral')} value={endTime} min={endDate && endDate === startDate ? startTime || undefined : undefined} onChange={e => setEndTime(e.target.value)} />
             </div>
           </div>
+          {endBeforeStart && (
+            <p className="text-[12px] text-coral font-body" role="alert">
+              La fecha y hora de fin no pueden ser anteriores a las de inicio.
+            </p>
+          )}
           <label className="flex items-center gap-3 cursor-pointer">
             <button type="button" role="switch" aria-checked={isVirtual} aria-label="Evento virtual" onClick={() => setIsVirtual(v => !v)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isVirtual ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isVirtual ? 'translate-x-4' : 'translate-x-0.5')} /></button>
             <span className="text-sm text-navy font-body">Virtual</span>
@@ -421,6 +434,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             <div className="space-y-1">
               <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Dirección</label>
               <input className={cn(inputCls, 'font-body')} value={location} onChange={e => setLocation(e.target.value)} />
+            </div>
+          )}
+          {isVirtual && (
+            <div className="space-y-1">
+              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Link de la reunión virtual (opcional)</label>
+              <input className={cn(inputCls, 'font-body')} placeholder="https://zoom.us/... o https://meet.google.com/..." value={virtualLink} onChange={e => setVirtualLink(e.target.value)} />
             </div>
           )}
           <div className="space-y-2">

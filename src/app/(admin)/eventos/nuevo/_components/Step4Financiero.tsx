@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { type EventType } from '@/data/event-config'
+import { useOrg } from '@/lib/org'
 import { inputCls, Toggle, SummaryRow, FieldLabel } from './shared'
 
 type SubEventInput = { id: string; name: string; max_capacity: string }
@@ -47,6 +48,8 @@ export function Step4Financiero({
   onPaymentAmountChange,
   onTogglePaymentMethod,
 }: Step4Props) {
+  const { adminCommittees } = useOrg()
+  const committeeName = adminCommittees.find(c => c.id === committee)?.name ?? committee
   return (
     <div className="space-y-4">
       {/* Pago */}
@@ -110,7 +113,7 @@ export function Step4Financiero({
         <div className="space-y-1">
           <SummaryRow label="Nombre" value={name || '—'} />
           <SummaryRow label="Tipo" value={selectedTypeName ?? '—'} />
-          <SummaryRow label="Comité" value={committee || '—'} />
+          <SummaryRow label="Comité" value={committeeName || '—'} />
           <SummaryRow
             label="Fecha inicio"
             value={

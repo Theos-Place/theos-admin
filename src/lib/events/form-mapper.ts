@@ -31,6 +31,7 @@ export function formToWriteInput(body: Record<string, unknown>): EventWriteInput
     location: (body.location as string) || null,
     location_url: (body.location_map_url as string) || null,
     is_virtual: Boolean(body.is_virtual),
+    virtual_url: (body.virtual_link as string) || null,
     is_recurring: Boolean(body.is_recurring),
     recurrence_rule: (body.recurrence_rule as string) || null,
     requires_registration: Boolean(body.requires_registration),
@@ -50,6 +51,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   const map: Record<string, keyof EventWriteInput> = {
     name: 'title', event_type: 'event_type', description: 'description', committee: 'committee_id',
     location: 'location', location_map_url: 'location_url', is_virtual: 'is_virtual',
+    virtual_link: 'virtual_url',
     is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule',
     requires_registration: 'requires_registration', max_capacity: 'max_capacity',
     requires_payment: 'requires_payment', payment_amount: 'payment_amount',

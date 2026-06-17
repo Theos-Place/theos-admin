@@ -1,4 +1,4 @@
-import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { EventType, EventStatus, EventPaymentStatus, AttendanceType } from '@/types/event'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
@@ -26,6 +26,7 @@ export type DbEventEnriched = {
   flyer_url: string | null
   committee_id: string | null
   is_virtual: boolean
+  virtual_url: string | null
   requires_registration: boolean
   requires_payment: boolean
   payment_amount: number | null
@@ -189,6 +190,7 @@ export type EventWriteInput = {
   flyer_url?: string | null
   committee_id?: string | null
   is_virtual?: boolean
+  virtual_url?: string | null
   requires_registration?: boolean
   requires_payment?: boolean
   payment_amount?: number | null
@@ -238,7 +240,7 @@ export async function updateEvent(
 ): Promise<DbEventEnriched> {
   const supabase = createAdminClient()
 
-  const { error } = await supabase.from('events').update(input).eq('id', id)
+  const { error } = await supabase.from('events').update(input as Updatable<'events'>).eq('id', id)
   if (error) throw error
 
   if (subEvents) {
@@ -359,9 +361,25 @@ export async function updateEventType(
 type VolunteerStatus = 'confirmed' | 'pending' | 'cancelled'
 
 /** Asigna un servidor (voluntario) a un evento. UNIQUE(event_id, member_id). */
-/** ¿El miembro es servidor ACTIVO del comité (o de una sub-área del comité)? */
-export async function memberServesCommittee(memberId: string, committeeId: string): Promise<boolean> {
+/**
+ * ¿El miembro es servidor ACTIVO del comité (o de una sub-área del comité)?
+ * `committee` es el NOMBRE del comité tal como se guarda en events.committee_id
+ * (el form lo llena con el nombre del área, no con su UUID). Se resuelve el
+ * nombre → área. Si el nombre no corresponde a ningún área no se puede validar
+ * → se permite (regla permisiva).
+ */
+export async function memberServesCommittee(memberId: string, committee: string): Promise<boolean> {
   const supabase = createAdminClient()
+  // events.committee_id ahora guarda el id del área-comité; históricos podrían
+  // traer el nombre. Se resuelve a id de área en ambos casos.
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(committee)
+  let committeeAreaId: string | null = isUuid ? committee : null
+  if (!committeeAreaId) {
+    const { data: area } = await supabase.from('areas').select('id').eq('name', committee).maybeSingle()
+    committeeAreaId = (area as { id: string } | null)?.id ?? null
+  }
+  if (!committeeAreaId) return true // no resoluble → no validable → permisivo
+
   const { data, error } = await supabase
     .from('volunteers')
     .select('id, position:service_positions!inner(area:areas!service_positions_area_id_fkey!inner(id, parent_id))')
@@ -369,7 +387,7 @@ export async function memberServesCommittee(memberId: string, committeeId: strin
     .eq('status', 'active')
   if (error) throw error
   return ((data ?? []) as Array<{ position: { area: { id: string; parent_id: string | null } | null } | null }>)
-    .some(v => { const a = v.position?.area; return !!a && (a.id === committeeId || a.parent_id === committeeId) })
+    .some(v => { const a = v.position?.area; return !!a && (a.id === committeeAreaId || a.parent_id === committeeAreaId) })
 }
 
 /** Error de validación: la persona no pertenece al comité organizador. */

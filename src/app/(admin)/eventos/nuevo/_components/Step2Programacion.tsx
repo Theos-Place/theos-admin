@@ -1,4 +1,5 @@
 import { ExternalLink } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { inputCls, Toggle, FieldLabel } from './shared'
 
@@ -8,6 +9,7 @@ interface Step2Props {
   end_date: string
   end_time: string
   is_virtual: boolean
+  virtual_link: string
   location: string
   location_map_url: string
   is_recurring: boolean
@@ -17,6 +19,7 @@ interface Step2Props {
   onEndDateChange: (v: string) => void
   onEndTimeChange: (v: string) => void
   onToggleVirtual: () => void
+  onVirtualLinkChange: (v: string) => void
   onLocationChange: (v: string) => void
   onLocationMapUrlChange: (v: string) => void
   onToggleRecurring: () => void
@@ -29,6 +32,7 @@ export function Step2Programacion({
   end_date,
   end_time,
   is_virtual,
+  virtual_link,
   location,
   location_map_url,
   is_recurring,
@@ -38,11 +42,16 @@ export function Step2Programacion({
   onEndDateChange,
   onEndTimeChange,
   onToggleVirtual,
+  onVirtualLinkChange,
   onLocationChange,
   onLocationMapUrlChange,
   onToggleRecurring,
   onRecurrenceRuleChange,
 }: Step2Props) {
+  // Validación: el fin nunca puede ser anterior al inicio (fecha + hora).
+  const startTs = start_date ? new Date(`${start_date}T${start_time || '00:00'}`).getTime() : null
+  const endTs = end_date ? new Date(`${end_date}T${end_time || '00:00'}`).getTime() : null
+  const endBeforeStart = startTs !== null && endTs !== null && endTs < startTs
   return (
     <div className="card py-5 px-6 w-full">
       <div className="card-title mb-5">Programación y ubicación</div>
@@ -72,8 +81,9 @@ export function Step2Programacion({
             <FieldLabel>Fecha fin</FieldLabel>
             <input
               type="date"
-              className={`${inputCls} font-body`}
+              className={cn(`${inputCls} font-body`, endBeforeStart && 'ring-1 ring-coral border-coral')}
               value={end_date}
+              min={start_date || undefined}
               onChange={e => onEndDateChange(e.target.value)}
             />
           </div>
@@ -81,12 +91,18 @@ export function Step2Programacion({
             <FieldLabel>Hora fin</FieldLabel>
             <input
               type="time"
-              className={`${inputCls} font-body`}
+              className={cn(`${inputCls} font-body`, endBeforeStart && 'ring-1 ring-coral border-coral')}
               value={end_time}
+              min={end_date && end_date === start_date ? start_time || undefined : undefined}
               onChange={e => onEndTimeChange(e.target.value)}
             />
           </div>
         </div>
+        {endBeforeStart && (
+          <p className="text-[12px] text-coral mt-2 font-body" role="alert">
+            La fecha y hora de fin no pueden ser anteriores a las de inicio.
+          </p>
+        )}
       </div>
 
       {/* Ubicación */}
@@ -121,6 +137,32 @@ export function Step2Programacion({
                 {location_map_url && (
                   <a
                     href={location_map_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                  >
+                    <ExternalLink size={13} />
+                    Probar
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {is_virtual && (
+          <div className="space-y-3 pl-14">
+            <div>
+              <FieldLabel>Link de la reunión virtual (opcional)</FieldLabel>
+              <div className="flex gap-2">
+                <input
+                  className={`${inputCls} font-body`}
+                  placeholder="https://zoom.us/... o https://meet.google.com/..."
+                  value={virtual_link}
+                  onChange={e => onVirtualLinkChange(e.target.value)}
+                />
+                {virtual_link && (
+                  <a
+                    href={virtual_link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"

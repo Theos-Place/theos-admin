@@ -51,6 +51,7 @@ export type MockEvent = {
   location: string
   location_map_url: string | null
   is_virtual: boolean
+  virtual_url: string | null
   requires_registration: boolean
   max_capacity: number
   requires_payment: boolean

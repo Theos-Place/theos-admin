@@ -9,6 +9,7 @@ import { CancellationModal } from '@/components/events/CancellationModal'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useOrg } from '@/lib/org'
 import { generateCSV } from '@/lib/export'
 import { Send, Download } from 'lucide-react'
 import { TOAST_MS } from '@/lib/constants'
@@ -82,6 +83,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     return { ...rawEvent, start_at: occStart.toISOString(), end_at: new Date(occStart.getTime() + durMs).toISOString() }
   }, [rawEvent, occParam])
   const { can } = usePermissions()
+  const { adminCommittees } = useOrg()
   // Gating de tabs: los miembros normales solo ven Información. encargado_eventos
   // (edit/export en eventos) ve check-in y reportes; gestión (inscripciones,
   // servidores, comunicaciones) requiere create → solo dirección/admin.
@@ -150,12 +152,15 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     return () => { alive = false; clearTimeout(t) }
   }, [searchQuery, showAssignModal])
 
+  // committee_id guarda el id del área-comité; service_history.committee es el
+  // nombre. Se resuelve el id → nombre para comparar.
+  const committeeName = adminCommittees.find(c => c.id === event?.committee_id)?.name ?? event?.committee_id
   const filteredMembers = useMemo(() => {
     if (!filterCommittee) return memberResults
     return memberResults.filter(m =>
-      m.service_history?.some(s => s.committee === event?.committee_id && s.status === 'activo'),
+      m.service_history?.some(s => s.committee === committeeName && s.status === 'activo'),
     )
-  }, [memberResults, filterCommittee, event?.committee_id])
+  }, [memberResults, filterCommittee, committeeName])
 
   if (!event) {
     return (

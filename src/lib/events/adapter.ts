@@ -21,6 +21,7 @@ export function toDomainEvent(db: DbEventEnriched): MockEvent {
     location: db.location ?? '',
     location_map_url: db.location_url,
     is_virtual: db.is_virtual,
+    virtual_url: db.virtual_url ?? null,
     requires_registration: db.requires_registration,
     max_capacity: db.max_capacity ?? 0,
     requires_payment: db.requires_payment,

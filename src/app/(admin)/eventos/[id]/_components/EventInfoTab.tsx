@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { Image as ImageIcon } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { cn } from '@/lib/utils'
+import { useOrg } from '@/lib/org'
 import type { MockEvent } from '@/data/event-config'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
 
@@ -26,6 +27,8 @@ export function EventInfoTab({
   onFlyerDragOver,
   onFlyerClear,
 }: Props) {
+  const { adminCommittees } = useOrg()
+  const committeeName = adminCommittees.find(c => c.id === event.committee_id)?.name ?? event.committee_id
   const startDate = new Date(event.start_at)
   const endDate = new Date(event.end_at)
 
@@ -37,7 +40,7 @@ export function EventInfoTab({
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-t-[var(--outline-variant)]">
           {[
             { label: 'Tipo', value: event.event_type },
-            { label: 'Comité', value: event.committee_id },
+            { label: 'Comité', value: committeeName },
             { label: 'Inicio', value: startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
             { label: 'Fin', value: endDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
             { label: 'Ubicación', value: event.location },
@@ -51,6 +54,19 @@ export function EventInfoTab({
             </div>
           ))}
         </div>
+        {event.is_virtual && event.virtual_url && (
+          <div className="space-y-0.5 pt-2 border-t border-t-[var(--outline-variant)]">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Link de la reunión</p>
+            <a
+              href={event.virtual_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-coral hover:underline break-all font-body"
+            >
+              {event.virtual_url}
+            </a>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

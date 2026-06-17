@@ -26,6 +26,7 @@ interface FormData {
   end_date: string
   end_time: string
   is_virtual: boolean
+  virtual_link: string
   location: string
   location_map_url: string
   is_recurring: boolean
@@ -66,6 +67,7 @@ export default function NuevoEventoPage() {
     end_date: '',
     end_time: '',
     is_virtual: false,
+    virtual_link: '',
     location: '',
     location_map_url: '',
     is_recurring: false,
@@ -117,7 +119,16 @@ export default function NuevoEventoPage() {
     reader.readAsDataURL(file)
   }
 
+  // El fin nunca puede ser anterior al inicio (fecha + hora).
+  function endBeforeStart(): boolean {
+    if (!form.start_date || !form.end_date) return false
+    const s = new Date(`${form.start_date}T${form.start_time || '00:00'}`).getTime()
+    const e = new Date(`${form.end_date}T${form.end_time || '00:00'}`).getTime()
+    return e < s
+  }
+
   function canProceed(): boolean {
+    if (step === 2 && endBeforeStart()) return false
     return missingForStep().length === 0
   }
 
@@ -234,7 +245,7 @@ export default function NuevoEventoPage() {
             )}
           </div>
         </div>
-        {step < STEPS_COUNT && !canProceed() && (
+        {step < STEPS_COUNT && !canProceed() && missingForStep().length > 0 && (
           <p className="text-[12px] text-navy-light/70 mt-1.5 text-right font-body" role="status">
             Para continuar, completá {missingForStep().join(' y ')}.
           </p>
@@ -277,6 +288,7 @@ export default function NuevoEventoPage() {
               end_date={form.end_date}
               end_time={form.end_time}
               is_virtual={form.is_virtual}
+              virtual_link={form.virtual_link}
               location={form.location}
               location_map_url={form.location_map_url}
               is_recurring={form.is_recurring}
@@ -286,6 +298,7 @@ export default function NuevoEventoPage() {
               onEndDateChange={v => set('end_date', v)}
               onEndTimeChange={v => set('end_time', v)}
               onToggleVirtual={() => set('is_virtual', !form.is_virtual)}
+              onVirtualLinkChange={v => set('virtual_link', v)}
               onLocationChange={v => set('location', v)}
               onLocationMapUrlChange={v => set('location_map_url', v)}
               onToggleRecurring={() => {
