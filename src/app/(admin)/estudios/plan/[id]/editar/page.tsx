@@ -87,6 +87,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
     req_donor:        studyType.req_donor,
     req_server:       studyType.req_server,
     req_attendee:     studyType.req_attendee,
+    req_bus:          studyType.req_bus ?? false,
     requires_grade:   studyType.requires_grade,
     requires_invitation: studyType.requires_invitation ?? false,
     auto_promote:     studyType.auto_promote,
@@ -114,6 +115,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
           requires_donor: form.req_donor,
           requires_server: form.req_server,
           requires_attendance: form.req_attendee,
+          requires_bus_talk: form.req_bus,
           requires_grade: form.requires_grade,
           requires_invitation: form.requires_invitation,
           auto_promote: form.auto_promote,
@@ -233,6 +235,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
           <Toggle checked={form.req_donor}      onChange={v => set('req_donor', v)}      label="Requiere ser donador" />
           <Toggle checked={form.req_server}     onChange={v => set('req_server', v)}     label="Requiere servir en un comité" />
           <Toggle checked={form.req_attendee}   onChange={v => set('req_attendee', v)}   label="Requiere asistencia regular a charlas" />
+          <Toggle checked={form.req_bus}        onChange={v => set('req_bus', v)}        label="Requiere haber asistido a la charla del Bus" />
           <Toggle checked={form.requires_grade} onChange={v => set('requires_grade', v)} label="Requiere calificación numérica" />
           <Toggle checked={form.requires_invitation} onChange={v => set('requires_invitation', v)} label="Requiere invitación" sublabel="Solo se puede ingresar por invitación (no abierto a inscripción libre)" />
           <Toggle checked={form.auto_promote}   onChange={v => set('auto_promote', v)}   label="Transición automática al siguiente nivel" sublabel="Al cerrar el grupo, pasar automáticamente al siguiente estudio" />

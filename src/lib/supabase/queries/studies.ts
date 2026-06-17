@@ -19,6 +19,7 @@ export type DbStudyPlan = {
   requires_payment: boolean
   requires_grade: boolean
   requires_server: boolean
+  requires_bus_talk: boolean
   auto_promote: boolean
   prerequisite_code: string | null
   next_study_code: string | null
@@ -920,6 +921,7 @@ export type PlanWriteInput = {
   requires_payment?: boolean
   requires_grade?: boolean
   requires_server?: boolean
+  requires_bus_talk?: boolean
   requires_invitation?: boolean
   auto_promote?: boolean
   prerequisite_code?: string | null

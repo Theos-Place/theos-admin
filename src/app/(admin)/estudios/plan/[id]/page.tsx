@@ -13,7 +13,7 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
-import { Archive, Pencil, Search, X } from 'lucide-react'
+import { Archive, Pencil, Search, X, Bus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 
 const PAGE_SIZE = 10
@@ -130,6 +130,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
     req_donor: studyType.req_donor,
     req_server: studyType.req_server,
     req_attendee: studyType.req_attendee,
+    req_bus: studyType.req_bus ?? false,
     requires_invitation: studyType.requires_invitation ?? false,
     level: studyType.difficulty,
     description: studyType.description,
@@ -308,13 +309,22 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           )}
 
           {/* Requisitos de compromiso */}
-          {(view.req_donor || view.req_server || view.req_attendee) && (
+          {(view.req_donor || view.req_server || view.req_attendee || view.req_bus) && (
             <div>
               <div className="st">Compromisos requeridos para matricular</div>
-              <div className="flex gap-2 flex-wrap mt-1.5">
+              <div className="flex gap-2 flex-wrap mt-1.5 items-center">
                 {view.req_donor    && <span className="badge b-donor">Ser donador activo</span>}
                 {view.req_server   && <span className="badge b-server">Servir en un comité</span>}
                 {view.req_attendee && <span className="badge b-study">Asistencia regular a charlas</span>}
+                {view.req_bus && (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 text-coral px-2.5 py-1 text-[12px] font-medium font-body"
+                    title="Haber asistido a la charla del Bus"
+                  >
+                    <Bus size={14} aria-hidden />
+                    Charla del Bus
+                  </span>
+                )}
               </div>
             </div>
           )}

@@ -39,6 +39,7 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
     req_donor: db.requires_donor,
     req_server: db.requires_server,
     req_attendee: db.requires_attendance,
+    req_bus: db.requires_bus_talk ?? false,
     is_archived: !db.is_active,
     is_curricular: db.is_curricular ?? true,
   }

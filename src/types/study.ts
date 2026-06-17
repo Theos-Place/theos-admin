@@ -22,6 +22,8 @@ export type StudyType = {
   req_donor: boolean
   req_server: boolean
   req_attendee: boolean
+  /** Compromiso: haber asistido a la charla del Bus (ícono bus + tooltip). */
+  req_bus?: boolean
   is_archived: boolean
   /** FALSE = charla introductoria (ej. BUS); fuera de análisis/matrícula/plan. */
   is_curricular?: boolean

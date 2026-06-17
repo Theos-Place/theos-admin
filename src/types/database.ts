@@ -3008,6 +3008,7 @@ export type Database = {
           next_study_code: string | null
           prerequisite_code: string | null
           requires_attendance: boolean | null
+          requires_bus_talk: boolean
           requires_donor: boolean | null
           requires_grade: boolean | null
           requires_invitation: boolean
@@ -3035,6 +3036,7 @@ export type Database = {
           next_study_code?: string | null
           prerequisite_code?: string | null
           requires_attendance?: boolean | null
+          requires_bus_talk?: boolean
           requires_donor?: boolean | null
           requires_grade?: boolean | null
           requires_invitation?: boolean
@@ -3062,6 +3064,7 @@ export type Database = {
           next_study_code?: string | null
           prerequisite_code?: string | null
           requires_attendance?: boolean | null
+          requires_bus_talk?: boolean
           requires_donor?: boolean | null
           requires_grade?: boolean | null
           requires_invitation?: boolean
