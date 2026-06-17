@@ -413,6 +413,10 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         else res.exclude.push(set)
         break
       }
+      case 'marital': {
+        res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id'))
+        break
+      }
       case 'form': {
         // Mismo contrato que el filtro client-side (useMemberFilters):
         // 'not_filled' excluye a quien tenga CUALQUIER respuesta al formulario

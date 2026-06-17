@@ -77,6 +77,7 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
     }
     case 'status': return c.value === 'active' ? m.is_active : !m.is_active
     case 'leader': return c.value === 'yes' ? m.es_dirigente : !m.es_dirigente
+    case 'marital': return m.marital_status === c.value
   }
 }
 

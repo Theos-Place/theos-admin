@@ -10,6 +10,7 @@ import { useSedes } from '@/lib/sedes'
 import { useOrg } from '@/lib/org'
 import { useForms } from '@/hooks/useForms'
 import { useEventTypes } from '@/hooks/useEventTypes'
+import { DatePicker } from '@/components/events/DatePicker'
 import type { FormTemplate } from '@/types/forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
 
@@ -75,12 +76,11 @@ function Sel({ value, onChange, children, className }: {
 function DateRange({ from, to, onFrom, onTo }: {
   from: string; to: string; onFrom: (v: string) => void; onTo: (v: string) => void
 }) {
+  // Mismo date picker de eventos (look Theos), consistente en todos los tabs.
   return (
-    <div className="flex gap-2">
-      <input type="date" value={from} onChange={e => onFrom(e.target.value)}
-        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
-      <input type="date" value={to} onChange={e => onTo(e.target.value)}
-        className="flex-1 min-w-0 rounded-xl bg-surface-low px-2 py-1.5 text-xs text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+    <div className="grid grid-cols-2 gap-2">
+      <DatePicker value={from} onChange={onFrom} placeholder="Desde" />
+      <DatePicker value={to} onChange={onTo} min={from || undefined} placeholder="Hasta" />
     </div>
   )
 }
@@ -535,10 +535,12 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
   const statusCond = conditions.find(c => c.type === 'status') as Extract<FilterCondition, { type: 'status' }> | undefined
   const leaderCond = conditions.find(c => c.type === 'leader') as Extract<FilterCondition, { type: 'leader' }> | undefined
   const ageCond    = conditions.find(c => c.type === 'age')    as Extract<FilterCondition, { type: 'age'    }> | undefined
+  const maritalCond = conditions.find(c => c.type === 'marital') as Extract<FilterCondition, { type: 'marital' }> | undefined
 
   const donorVal  = donorCond  ? donorCond.value  : 'any'
   const statusVal = statusCond ? statusCond.value : 'any'
   const leaderVal = leaderCond ? leaderCond.value : 'any'
+  const maritalVal = maritalCond ? maritalCond.value : 'any'
 
   const [ageMin, setAgeMin] = useState(ageCond?.min ?? '')
   const [ageMax, setAgeMax] = useState(ageCond?.max ?? '')
@@ -563,6 +565,21 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           <option value="any">Cualquiera</option>
           <option value="yes">Sí</option>
           <option value="no">No</option>
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Estado civil</Label>
+        <Sel value={maritalVal} onChange={v => {
+          if (maritalCond) removeCondition(maritalCond.id)
+          if (v !== 'any') addCondition({ group: 'marital', type: 'marital', value: v })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="Soltero/a">Soltero/a</option>
+          <option value="Casado/a">Casado/a</option>
+          <option value="Unión libre">Unión libre</option>
+          <option value="Divorciado/a">Divorciado/a</option>
+          <option value="Viudo/a">Viudo/a</option>
         </Sel>
       </div>
 

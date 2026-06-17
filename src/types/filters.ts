@@ -13,6 +13,7 @@ export type FilterCondition =
   | { id: number; group: 'age'; type: 'age'; min: string; max: string }
   | { id: number; group: 'status'; type: 'status'; value: 'active' | 'inactive' }
   | { id: number; group: 'leader'; type: 'leader'; value: 'yes' | 'no' }
+  | { id: number; group: 'marital'; type: 'marital'; value: string }
 
 export interface ConditionGroup {
   id: number
