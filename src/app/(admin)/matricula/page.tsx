@@ -476,6 +476,11 @@ function StudyCard({
                   Por invitación
                 </span>
               )}
+              {result.by_exception && (
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-teal-soft/40 text-teal-deep font-display">
+                  Excepción autorizada
+                </span>
+              )}
             </div>
             <p className="mt-1 text-base font-bold text-navy leading-snug font-display">
               {result.study_name}

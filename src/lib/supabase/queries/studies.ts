@@ -688,8 +688,9 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
 export type MemberStudyEligibility = {
   /** Inscripciones activas (para el dropdown de "grupo actual" en reubicación). */
   active_enrollments: Array<{ group_id: string; group_name: string; plan_code: string | null }>
-  /** Planes que el miembro puede solicitar: no llevados + prerequisito + compromisos. */
-  eligible_plans: Array<{ id: string; code: string; name: string; stage: string }>
+  /** Planes que el miembro puede solicitar: no llevados + prerequisito + compromisos.
+   *  `via_exception` = habilitado (total o parcialmente) por una excepción activa. */
+  eligible_plans: Array<{ id: string; code: string; name: string; stage: string; via_exception?: boolean }>
   /** Compromisos del miembro (para mensajes de la UI). */
   commitments: { is_donor: boolean; attendance_active: boolean; is_server: boolean }
 }
@@ -763,10 +764,21 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const is_donor = Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor)
   const is_server = (volRes.data ?? []).length > 0
 
-  const meetsStage = (stage: string): boolean => {
-    if (stage === 'inicial') return is_donor && attendance_active
-    if (stage === 'intermedia') return is_donor && attendance_active && is_server
-    if (stage === 'niveles') return attendance_active // niveles: solo asistencia
+  // Excepciones de matrícula activas (plan_id → requisitos perdonados).
+  const { activeExceptionsByPlanForMember } = await import('./study-exceptions')
+  const excByPlan = await activeExceptionsByPlanForMember(memberId)
+  const waivedFor = (planId: string) => {
+    const w = excByPlan.get(planId)
+    return (req: string) => !!w && (w.includes('all') || w.includes(req))
+  }
+
+  const meetsStage = (stage: string, waived: (req: string) => boolean): boolean => {
+    const donorOk = is_donor || waived('donor')
+    const attOk = attendance_active || waived('attendance')
+    const serverOk = is_server || waived('server')
+    if (stage === 'inicial') return donorOk && attOk
+    if (stage === 'intermedia') return donorOk && attOk && serverOk
+    if (stage === 'niveles') return attOk // niveles: solo asistencia
     return true // campañas: sin compromisos
   }
 
@@ -798,14 +810,17 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const eligible_plans = plans
     .filter(p => p.code)
     .map(p => ({ ...p, stage: ELIG_LEVEL_TO_STAGE[p.level] ?? p.level }))
-    .filter(p =>
-      !completed.has(p.code!) &&
-      !enrolledCodes.has(p.code!) &&
-      !completedDescendantOf(p.code!) &&
-      (!p.prerequisite_code || completed.has(p.prerequisite_code)) &&
-      meetsStage(p.stage),
-    )
-    .map(p => ({ id: p.id, code: p.code!, name: p.name, stage: p.stage }))
+    .filter(p => {
+      const waived = waivedFor(p.id)
+      return (
+        !completed.has(p.code!) &&
+        !enrolledCodes.has(p.code!) &&
+        !completedDescendantOf(p.code!) &&
+        (!p.prerequisite_code || completed.has(p.prerequisite_code) || waived('prerequisite')) &&
+        meetsStage(p.stage, waived)
+      )
+    })
+    .map(p => ({ id: p.id, code: p.code!, name: p.name, stage: p.stage, via_exception: excByPlan.has(p.id) }))
 
   return {
     active_enrollments,
@@ -1181,15 +1196,20 @@ export async function enrollMember(groupId: string, memberId: string): Promise<v
     .from('study_enrollments')
     .upsert({ group_id: groupId, member_id: memberId, status: 'enrolled' }, { onConflict: 'group_id,member_id' })
   if (error) throw error
-  // A7: si el grupo es de un plan invitation_only, consumir la invitación activa.
+  // Consumir invitación/excepción activa del plan del grupo al matricularse.
   const { data: g } = await supabase
     .from('study_groups')
     .select('plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation)')
     .eq('id', groupId).maybeSingle()
   const plan = (g as { plan: { id: string; requires_invitation: boolean | null } | null } | null)?.plan
-  if (plan?.requires_invitation) {
-    const { markInvitationUsed } = await import('./study-invitations')
-    await markInvitationUsed(memberId, plan.id)
+  if (plan?.id) {
+    if (plan.requires_invitation) {
+      const { markInvitationUsed } = await import('./study-invitations')
+      await markInvitationUsed(memberId, plan.id)
+    }
+    // Excepción de matrícula: marcarla usada (no-op si no hay activa).
+    const { markExceptionUsed } = await import('./study-exceptions')
+    await markExceptionUsed(memberId, plan.id)
   }
 }
 

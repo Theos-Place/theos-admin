@@ -11,6 +11,8 @@ export type EligibilityResult = {
   is_eligible: boolean
   /** El estudio es invitation_only y el miembro tiene invitación activa. */
   by_invitation: boolean
+  /** El miembro tiene una excepción de matrícula activa para este plan. */
+  by_exception: boolean
   reasons_blocked: string[]
   reasons_met: string[]
   available_groups: EligibleGroup[]
@@ -39,6 +41,9 @@ export type MemberStudyProfile = {
   charla_count: number
   /** Códigos de planes invitation_only con invitación ACTIVA para este miembro. */
   invited_codes?: string[]
+  /** Excepciones de matrícula activas: code → requisitos perdonados
+   *  ('donor'|'attendance'|'server'|'prerequisite' o 'all'). */
+  exceptions?: Record<string, string[]>
 }
 
 /** Asistencia mínima para MATRICULAR: 12 charlas en los últimos 6 meses.
@@ -92,11 +97,18 @@ export function computeEligibility(
     const by_invitation = !!study.requires_invitation && invitedCodes.has(study.code)
     if (by_invitation) reasons_met.push('Estás invitado a este estudio ✓')
 
+    // Excepción de matrícula activa: requisitos perdonados para este plan.
+    const waived = profile.exceptions?.[study.code]
+    const by_exception = !!waived && waived.length > 0
+    const isWaived = (req: string) => !!waived && (waived.includes('all') || waived.includes(req))
+
     // 1. Prerequisito
     if (study.prerequisite) {
       const prereqName = plans.find(s => s.code === study.prerequisite)?.name ?? study.prerequisite
       if (profile.completed_codes.includes(study.prerequisite)) {
         reasons_met.push(`Completaste ${prereqName}`)
+      } else if (isWaived('prerequisite')) {
+        reasons_met.push(`Prerequisito (${prereqName}) eximido por excepción ✓`)
       } else {
         reasons_blocked.push(`Necesitás completar ${prereqName} primero`)
       }
@@ -120,17 +132,20 @@ export function computeEligibility(
       reasons_blocked.push('Ya completaste un estudio más avanzado de esta cadena')
     }
 
-    // 4. Compromisos
+    // 4. Compromisos (cada uno puede eximirse por excepción)
     if (study.req_donor) {
       if (profile.is_donor) reasons_met.push('Sos donador activo ✓')
+      else if (isWaived('donor')) reasons_met.push('Requisito de donador eximido por excepción ✓')
       else reasons_blocked.push('Requiere ser donador activo de Theos')
     }
     if (study.req_server) {
       if (profile.is_server) reasons_met.push('Servís activamente en un comité ✓')
+      else if (isWaived('server')) reasons_met.push('Requisito de servidor eximido por excepción ✓')
       else reasons_blocked.push('Requiere servir activamente en un comité')
     }
     if (study.req_attendee) {
       if (profile.charla_count >= MATRICULA_MIN_CHARLAS) reasons_met.push('Asistís regularmente a las charlas ✓')
+      else if (isWaived('attendance')) reasons_met.push('Requisito de asistencia eximido por excepción ✓')
       else reasons_blocked.push(`Requiere asistencia regular: al menos ${MATRICULA_MIN_CHARLAS} charlas con check-in en los últimos 6 meses (llevás ${profile.charla_count})`)
     }
 
@@ -167,6 +182,7 @@ export function computeEligibility(
       weeks: study.weeks,
       is_eligible,
       by_invitation,
+      by_exception,
       reasons_blocked,
       reasons_met,
       available_groups,

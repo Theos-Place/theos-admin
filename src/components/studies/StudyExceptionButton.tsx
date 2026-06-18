@@ -1,0 +1,186 @@
+'use client'
+
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { ShieldCheck, X } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { useAuth } from '@/hooks/useAuth'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+
+type Exception = {
+  id: string; plan_code: string; plan_name: string
+  waived_requirements: string[]; reason: string | null
+  granted_by_name: string | null; status: string; created_at: string
+}
+
+const REQS: { key: string; label: string }[] = [
+  { key: 'donor', label: 'Donador activo' },
+  { key: 'attendance', label: 'Asistencia a charlas' },
+  { key: 'server', label: 'Servidor en comité' },
+  { key: 'prerequisite', label: 'Prerequisito (estudio previo)' },
+]
+const REQ_LABEL: Record<string, string> = {
+  ...Object.fromEntries(REQS.map(r => [r.key, r.label])), all: 'Todos los requisitos',
+}
+
+/** "Crear excepción de matrícula" en el perfil — solo roles de estudios. Exime a un
+ *  miembro de requisitos de un estudio para que se matricule él mismo. */
+export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: { memberId: string; memberName?: string }) {
+  const { hasRole, loaded } = useAuth()
+  const { studyTypes } = useStudyPlans()
+  const [open, setOpen] = useState(false)
+  const [list, setList] = useState<Exception[]>([])
+  const [planId, setPlanId] = useState('')
+  const [waiveAll, setWaiveAll] = useState(false)
+  const [waived, setWaived] = useState<Set<string>>(new Set())
+  const [reason, setReason] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Planes curriculares activos (la excepción es por plan específico).
+  const plans = useMemo(
+    () => studyTypes.filter(s => !s.is_archived && s.is_curricular !== false && s.plan_id),
+    [studyTypes],
+  )
+
+  const refetch = useCallback(() => {
+    fetch(`/api/studies/exceptions?member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: Exception[]) => setList(Array.isArray(d) ? d : []))
+      .catch(() => {})
+  }, [memberId])
+
+  useEffect(() => { if (open) refetch() }, [open, refetch])
+
+  if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return null
+
+  const activeList = list.filter(e => e.status === 'active')
+
+  async function submit() {
+    const reqs = waiveAll ? ['all'] : [...waived]
+    if (!planId || reqs.length === 0 || saving) return
+    setSaving(true); setError(null)
+    try {
+      const res = await fetch('/api/studies/exceptions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId, plan_id: planId, waived_requirements: reqs, reason: reason.trim() || null }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setPlanId(''); setWaiveAll(false); setWaived(new Set()); setReason('')
+      refetch()
+    } catch (e) {
+      console.error('No se pudo crear la excepción:', e)
+      setError('No se pudo crear la excepción. Intentá de nuevo.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function revoke(id: string) {
+    try {
+      const res = await fetch(`/api/studies/exceptions/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      refetch()
+    } catch (e) { console.error('No se pudo revocar:', e) }
+  }
+
+  function toggle(key: string) {
+    setWaived(prev => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n })
+  }
+  function close() { setOpen(false); setPlanId(''); setWaiveAll(false); setWaived(new Set()); setReason(''); setError(null) }
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy hover:bg-surface-low transition-colors font-body"
+      >
+        <ShieldCheck size={15} /> Crear excepción de matrícula
+      </button>
+
+      {open && (
+        <Modal onClose={close} titleId="excepcion-titulo" width={460}>
+          <div className="p-6 space-y-5">
+            <h3 id="excepcion-titulo" className="text-lg font-extrabold text-navy font-display">Excepciones de matrícula</h3>
+
+            {/* Excepciones activas */}
+            {activeList.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Activas</p>
+                {activeList.map(e => (
+                  <div key={e.id} className="flex items-start justify-between gap-3 rounded-xl bg-surface-low px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-navy font-body">{e.plan_code} — {e.plan_name}</p>
+                      <p className="text-[12px] text-navy-light/70 font-body">
+                        Exime: {e.waived_requirements.map(r => REQ_LABEL[r] ?? r).join(', ')}
+                      </p>
+                      {e.granted_by_name && <p className="text-[11px] text-navy-light/60 font-body">Otorgada por {e.granted_by_name}</p>}
+                    </div>
+                    <button onClick={() => revoke(e.id)} aria-label="Revocar excepción" className="shrink-0 rounded-lg p-1 text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors">
+                      <X size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Crear nueva */}
+            <div className="space-y-3 border-t border-[var(--outline-variant)] pt-4">
+              <p className="text-sm text-navy-light/60 font-body">
+                Eximí a {memberName} de requisitos de un estudio para que pueda matricularse.
+              </p>
+              <div className="space-y-1">
+                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Estudio</label>
+                <select
+                  value={planId}
+                  onChange={e => setPlanId(e.target.value)}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                >
+                  <option value="">Seleccionar estudio…</option>
+                  {plans.map(p => <option key={p.plan_id ?? p.code} value={p.plan_id ?? ''}>{p.code} — {p.name}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Requisitos a eximir</label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" className="accent-coral" checked={waiveAll} onChange={e => setWaiveAll(e.target.checked)} />
+                  <span className="text-[13px] text-navy font-body font-medium">Eximir de todos los requisitos</span>
+                </label>
+                {!waiveAll && REQS.map(r => (
+                  <label key={r.key} className="flex items-center gap-2 cursor-pointer pl-4">
+                    <input type="checkbox" className="accent-coral" checked={waived.has(r.key)} onChange={() => toggle(r.key)} />
+                    <span className="text-[13px] text-navy-light/80 font-body">{r.label}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Razón (opcional)</label>
+                <textarea
+                  value={reason}
+                  onChange={e => setReason(e.target.value)}
+                  rows={2}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none"
+                  placeholder="Motivo de la excepción…"
+                />
+              </div>
+
+              {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+              <div className="flex gap-2">
+                <button onClick={close} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cerrar</button>
+                <button
+                  onClick={submit}
+                  disabled={!planId || (!waiveAll && waived.size === 0) || saving}
+                  className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+                >
+                  {saving ? 'Creando…' : 'Crear excepción'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </>
+  )
+}

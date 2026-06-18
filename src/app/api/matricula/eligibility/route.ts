@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getStudyPlans, getStudyGroups, getMemberStudyProfile } from '@/lib/supabase/queries/studies'
+import { activeExceptionsByCodeForMember } from '@/lib/supabase/queries/study-exceptions'
 import { toDomainStudyType, toDomainStudyGroup } from '@/lib/studies/adapter'
 import { computeEligibility } from '@/lib/studies/eligibility'
 
@@ -14,16 +15,17 @@ export async function GET(req: NextRequest) {
     if (!memberId) {
       return NextResponse.json({ error: 'Se requiere member_id' }, { status: 400 })
     }
-    const [plans, groups, profile] = await Promise.all([
+    const [plans, groups, profile, exceptions] = await Promise.all([
       getStudyPlans(),
       getStudyGroups(),
       getMemberStudyProfile(memberId),
+      activeExceptionsByCodeForMember(memberId),
     ])
     const eligibility = computeEligibility(
       // Ni archivados ni charlas no curriculares (ej. BUS) se ofrecen en matrícula.
       plans.map(toDomainStudyType).filter(p => !p.is_archived && p.is_curricular !== false),
       groups.data.map(toDomainStudyGroup),
-      profile,
+      { ...profile, exceptions },
     )
     return NextResponse.json({ eligibility, profile })
   } catch (error) {

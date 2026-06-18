@@ -4,6 +4,7 @@ import { Lock, ChevronDown, ChevronUp, HeartHandshake } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
+import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
@@ -214,6 +215,7 @@ export function MemberParticipationTab({
         <StudyRequestActions memberId={memberId} />
         <FinanceRequestActions memberId={memberId} />
         <InviteToStudyButton memberId={memberId} />
+        <StudyExceptionButton memberId={memberId} />
       </div>
 
       {/* Recomendaciones de cierres — solo roles de estudios/admin */}
