@@ -175,6 +175,12 @@ function EventosContent() {
     }
   }
 
+  function handleToday() {
+    const d = new Date()
+    setCurrentMonth(d.getMonth())
+    setCurrentYear(d.getFullYear())
+  }
+
   // Calendario: todo el historial + ocurrencias virtuales de recurrentes del mes
   // visible (util compartido — misma expansión que lista, grid y público).
   const calendarMonthEvents = useMemo(
@@ -481,6 +487,11 @@ function EventosContent() {
           onDayClick={(ymd) => router.push(`/eventos/nuevo?date=${ymd}`)}
           onPrev={handlePrev}
           onNext={handleNext}
+          onPrevYear={() => setCurrentYear(y => y - 1)}
+          onNextYear={() => setCurrentYear(y => y + 1)}
+          onToday={handleToday}
+          onSetMonth={setCurrentMonth}
+          onSetYear={setCurrentYear}
         />
       )}
     </div>

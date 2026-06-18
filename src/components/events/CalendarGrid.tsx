@@ -23,6 +23,11 @@ interface CalendarGridProps {
   onDayClick?: (dateYmd: string) => void
   onPrev: () => void
   onNext: () => void
+  onPrevYear: () => void
+  onNextYear: () => void
+  onToday: () => void
+  onSetMonth: (month: number) => void
+  onSetYear: (year: number) => void
 }
 
 const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -45,9 +50,12 @@ type PopoverState =
   | { kind: 'event'; event: CalendarEvent; rect: DOMRect }
   | null
 
-export function CalendarGrid({ events, month, year, onEventClick, onDayClick, onPrev, onNext }: CalendarGridProps) {
+export function CalendarGrid({ events, month, year, onEventClick, onDayClick, onPrev, onNext, onPrevYear, onNextYear, onToday, onSetMonth, onSetYear }: CalendarGridProps) {
   const typeStyle = useEventTypeStyle()
   const today = new Date()
+  // Años del selector: 2020 → año siguiente al actual, incluyendo el visible.
+  const yearOptions: number[] = []
+  for (let y = Math.min(2020, year); y <= Math.max(today.getFullYear() + 1, year); y++) yearOptions.push(y)
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const [pop, setPop] = useState<PopoverState>(null)
@@ -89,24 +97,35 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
 
   return (
     <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
+      {/* Header — navegación: año « / mes ‹ / selectores mes+año / mes › / año » + Hoy */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-3 border-b border-[var(--outline-variant)]">
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          <button onClick={onPrevYear} aria-label="Año anterior" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display">«</button>
+          <button onClick={onPrev} aria-label="Mes anterior" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display">‹</button>
+          <select
+            value={month}
+            onChange={e => onSetMonth(Number(e.target.value))}
+            aria-label="Mes"
+            className="rounded-lg bg-surface-low px-2 py-1.5 text-sm font-medium text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          >
+            {MONTH_NAMES.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
+          <select
+            value={year}
+            onChange={e => onSetYear(Number(e.target.value))}
+            aria-label="Año"
+            className="rounded-lg bg-surface-low px-2 py-1.5 text-sm font-medium text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body tabular-nums"
+          >
+            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <button onClick={onNext} aria-label="Mes siguiente" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display">›</button>
+          <button onClick={onNextYear} aria-label="Año siguiente" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display">»</button>
+        </div>
         <button
-          onClick={onPrev}
-          className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display"
-          aria-label="Mes anterior"
+          onClick={onToday}
+          className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] font-medium text-navy-light hover:bg-coral/5 hover:text-coral hover:border-coral/30 transition-colors font-body"
         >
-          ‹
-        </button>
-        <h3 className="text-sm font-semibold text-navy font-display">
-          {MONTH_NAMES[month]} {year}
-        </h3>
-        <button
-          onClick={onNext}
-          className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/60 hover:text-navy transition-colors font-display"
-          aria-label="Mes siguiente"
-        >
-          ›
+          Hoy
         </button>
       </div>
 
