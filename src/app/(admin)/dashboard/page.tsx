@@ -519,8 +519,8 @@ export default function DashboardPage() {
             rows={[
               { label: 'En inscripción',          value: DASHBOARD_STATS.studies.open_registration },
               { label: 'Solicitudes abiertas',       value: DASHBOARD_STATS.studies.open_requests,    badge: 'yellow' },
-              { label: 'Por cerrar (30 días)',     value: DASHBOARD_STATS.studies.closing_soon },
-              { label: 'Grupos sin dirigente',     value: DASHBOARD_STATS.studies.without_leader,   badge: 'coral' },
+              { label: 'Por cerrar (30 días)',     value: DASHBOARD_STATS.studies.closing_soon, href: '/estudios/grupos?filter=closing_soon' },
+              { label: 'Grupos sin dirigente',     value: DASHBOARD_STATS.studies.without_leader,   badge: 'coral', href: '/estudios/grupos?filter=without_leader' },
             ]}
             href="/estudios/grupos" hrefLabel="Ver estudios →"
           />
@@ -623,8 +623,11 @@ export default function DashboardPage() {
           {isAdminOrDir && DASHBOARD_STATS.members.duplicates_suggested > 0 && (
             <AlertRow level="red" text={`${DASHBOARD_STATS.members.duplicates_suggested} perfiles duplicados sugeridos por el sistema`} href="/miembros/duplicados" />
           )}
+          {can('estudios', 'view') && DASHBOARD_STATS.studies.closing_soon > 0 && (
+            <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.closing_soon} grupos de estudio prontos a cerrar (próximos 30 días)`} href="/estudios/grupos?filter=closing_soon" />
+          )}
           {can('estudios', 'view') && DASHBOARD_STATS.studies.without_leader > 0 && (
-            <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.without_leader} grupos de estudio sin dirigente asignado`} href="/estudios/grupos" />
+            <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.without_leader} grupos de estudio sin dirigente asignado`} href="/estudios/grupos?filter=without_leader" />
           )}
           {can('servidores', 'view') && DASHBOARD_STATS.servers.pending_applications > 0 && (
             <AlertRow level="yellow" text={`${DASHBOARD_STATS.servers.pending_applications} aplicaciones de servicio sin revisar`} href="/servidores/aplicaciones" />

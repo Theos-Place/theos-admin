@@ -37,8 +37,9 @@ export async function GET(req: NextRequest) {
       day: searchParams.get('day') ?? undefined,
       search: searchParams.get('search') ?? undefined,
       noLeader: searchParams.get('no_leader') === '1' || undefined,
+      closingSoon: searchParams.get('closing_soon') === '1' || undefined,
     }
-    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.day || filters.search || filters.noLeader
+    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.day || filters.search || filters.noLeader || filters.closingSoon
 
     // ?all=1 → set COMPLETO filtrado (para el export, sin paginar).
     if (searchParams.get('all') === '1') {

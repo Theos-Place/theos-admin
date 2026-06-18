@@ -107,9 +107,11 @@ export default function GruposPage() {
   const [selectedDay, setSelectedDay] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
-  // Filtro "sin dirigente" — activable por deep-link desde la alerta del sistema
-  // (/estudios/grupos?sin_dirigente=1).
+  // Filtros activables por deep-link desde las alertas del dashboard:
+  //  ?filter=without_leader (o ?sin_dirigente=1) → sin dirigente
+  //  ?filter=closing_soon → prontos a cerrar (ends_at en los próximos 30 días)
   const [noLeaderOnly, setNoLeaderOnly] = useState(false)
+  const [closingSoonOnly, setClosingSoonOnly] = useState(false)
 
   // Debounce de 300ms para no re-filtrar la tabla en cada tecla.
   useEffect(() => {
@@ -117,10 +119,19 @@ export default function GruposPage() {
     return () => clearTimeout(t)
   }, [searchInput])
 
-  // Lee ?sin_dirigente=1 al montar (deep-link de la alerta "grupos sin dirigente").
+  // Deep-link de las alertas del dashboard. Para que el conteo del filtro coincida
+  // EXACTO con el de la alerta (que no filtra por estado), al entrar por estos
+  // links se limpia el filtro de estado (muestra todos los estados).
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('sin_dirigente') === '1') {
+    const p = new URLSearchParams(window.location.search)
+    const f = p.get('filter')
+    if (f === 'without_leader' || p.get('sin_dirigente') === '1') {
       setNoLeaderOnly(true)
+      setSelectedStatuses([])
+    }
+    if (f === 'closing_soon') {
+      setClosingSoonOnly(true)
+      setSelectedStatuses([])
     }
   }, [])
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<StudyGroup>[]>(
@@ -142,8 +153,9 @@ export default function GruposPage() {
     if (selectedDay)  u.set('day', selectedDay)
     if (search.trim()) u.set('search', search.trim())
     if (noLeaderOnly) u.set('no_leader', '1')
+    if (closingSoonOnly) u.set('closing_soon', '1')
     return u
-  }, [selectedStatuses, selectedType, selectedZone, selectedDay, search, noLeaderOnly])
+  }, [selectedStatuses, selectedType, selectedZone, selectedDay, search, noLeaderOnly, closingSoonOnly])
 
   const buildUrl = (page: number) => {
     const u = filterQS()
@@ -262,6 +274,15 @@ export default function GruposPage() {
                   aria-label="Quitar filtro sin dirigente"
                 >
                   Sin dirigente ✕
+                </button>
+              )}
+              {closingSoonOnly && (
+                <button
+                  onClick={() => setClosingSoonOnly(false)}
+                  className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium border border-coral/30 bg-coral/10 text-coral-deep transition-all font-display"
+                  aria-label="Quitar filtro prontos a cerrar"
+                >
+                  Prontos a cerrar (30 días) ✕
                 </button>
               )}
             </div>

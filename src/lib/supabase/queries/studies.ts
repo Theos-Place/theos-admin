@@ -175,6 +175,9 @@ export type GroupFilters = {
   search?: string | null
   /** Solo grupos sin dirigente asignado (leader_id null). */
   noLeader?: boolean
+  /** Solo grupos "prontos a cerrar": ends_at entre hoy y +30 días (mismo criterio
+   *  que el conteo del dashboard `closing_soon`). */
+  closingSoon?: boolean
 }
 
 /** Resuelve las partes de los filtros que viven en tablas relacionadas:
@@ -213,6 +216,9 @@ export async function getStudyGroups(
   const supabase = createAdminClient()
   const f = opts.filters ?? {}
   const { planId, searchOr } = await resolveGroupFilters(supabase, f)
+  // Ventana "prontos a cerrar": [hoy, hoy+30d] — idéntico al conteo del dashboard.
+  const closeFrom = new Date().toISOString().slice(0, 10)
+  const closeTo = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
 
   if (opts.page !== undefined || opts.pageSize !== undefined) {
     const page = Math.max(1, opts.page ?? 1)
@@ -226,6 +232,7 @@ export async function getStudyGroups(
     if (f.zone)  query = query.eq('zone', f.zone)
     if (f.day)   query = query.contains('schedule_days', [f.day])
     if (f.noLeader) query = query.is('leader_id', null)
+    if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo)
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
     const { data, error, count } = await query.range(from, from + pageSize - 1)
@@ -245,6 +252,7 @@ export async function getStudyGroups(
     if (f.zone)  query = query.eq('zone', f.zone)
     if (f.day)   query = query.contains('schedule_days', [f.day])
     if (f.noLeader) query = query.is('leader_id', null)
+    if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo)
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
     const { data, error } = await query.range(from, from + 999)
