@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { type MockEvent, eventTypeConfig } from '@/data/event-config'
+import { type MockEvent } from '@/data/event-config'
+import { useEventTypeStyle } from '@/hooks/useEventTypes'
 import { isPastEvent } from '@/lib/events/expand-recurrence'
 import { Popover } from '@/components/shared/Popover'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
@@ -22,23 +23,6 @@ interface CalendarGridProps {
   onDayClick?: (dateYmd: string) => void
   onPrev: () => void
   onNext: () => void
-}
-
-const DOT_BG: Record<string, string> = {
-  navy:   'bg-navy text-white',
-  teal:   'bg-teal-deep text-white',
-  coral:  'bg-coral text-white',
-  purple: 'bg-purple-700 text-white',
-  amber:  'bg-amber-500 text-white',
-}
-
-// Solo el color de fondo (para los puntos en mobile y la lista del día).
-const DOT_ONLY: Record<string, string> = {
-  navy:   'bg-navy',
-  teal:   'bg-teal-deep',
-  coral:  'bg-coral',
-  purple: 'bg-purple-700',
-  amber:  'bg-amber-500',
 }
 
 const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -62,6 +46,7 @@ type PopoverState =
   | null
 
 export function CalendarGrid({ events, month, year, onEventClick, onDayClick, onPrev, onNext }: CalendarGridProps) {
+  const typeStyle = useEventTypeStyle()
   const today = new Date()
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -173,18 +158,14 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                   {dayEvents.length > 0 && (
                     <div className="flex flex-wrap gap-1 px-0.5 sm:hidden">
                       {dayEvents.slice(0, 4).map(ev => {
-                        const config = eventTypeConfig(ev.event_type)
                         const past = isPastEvent(ev)
                         return (
                           <button
                             key={ev.occurrence_key ?? ev.id}
                             onClick={e => openEvent(ev, e)}
                             aria-label={past ? `${ev.name} (realizado)` : ev.name}
-                            className={cn(
-                              'h-1.5 w-1.5 rounded-full',
-                              DOT_ONLY[config.color] ?? 'bg-navy',
-                              past && 'opacity-40'
-                            )}
+                            className={cn('h-1.5 w-1.5 rounded-full', past && 'opacity-40')}
+                            style={{ backgroundColor: typeStyle(ev.event_type).color }}
                           />
                         )
                       })}
@@ -203,8 +184,6 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                   {/* sm+: etiquetas con nombre */}
                   <div className="hidden sm:block space-y-0.5">
                     {dayEvents.slice(0, 3).map(ev => {
-                      const config = eventTypeConfig(ev.event_type)
-                      const colorClass = DOT_BG[config.color] ?? 'bg-navy text-white'
                       const past = isPastEvent(ev)
                       return (
                         <button
@@ -212,10 +191,10 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                           onClick={e => openEvent(ev, e)}
                           title={past ? `${ev.name} — Realizado` : ev.name}
                           className={cn(
-                            'w-full text-left rounded px-1.5 py-0.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80 font-body',
-                            colorClass,
+                            'w-full text-left rounded px-1.5 py-0.5 text-[10px] font-medium truncate transition-opacity hover:opacity-80 font-body text-white',
                             past && 'opacity-75 hover:opacity-90'
                           )}
+                          style={{ backgroundColor: typeStyle(ev.event_type).color }}
                         >
                           {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                         </button>
@@ -248,7 +227,6 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
         >
           <ul className="space-y-0.5">
             {pop.events.map(ev => {
-              const config = eventTypeConfig(ev.event_type)
               const past = isPastEvent(ev)
               return (
                 <li key={ev.occurrence_key ?? ev.id}>
@@ -256,7 +234,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                     onClick={() => goToEvent(ev)}
                     className="w-full flex items-start gap-2.5 rounded-xl px-2.5 py-2 text-left hover:bg-surface-low transition-colors"
                   >
-                    <span className={cn('mt-1.5 h-2 w-2 rounded-full shrink-0', DOT_ONLY[config.color] ?? 'bg-navy', past && 'opacity-50')} />
+                    <span className={cn('mt-1.5 h-2 w-2 rounded-full shrink-0', past && 'opacity-50')} style={{ backgroundColor: typeStyle(ev.event_type).color }} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="text-[12px] text-navy-light/70 tabular-nums font-body shrink-0">{formatTime(ev.start_at)}</span>
@@ -268,7 +246,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                       <span className={cn('block text-[13px] font-medium font-body truncate', past ? 'text-navy-light/70' : 'text-navy')}>
                         {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                       </span>
-                      <span className="text-[11px] text-navy-light/60 font-body">{config.label}</span>
+                      <span className="text-[11px] text-navy-light/60 font-body">{typeStyle(ev.event_type).label}</span>
                     </span>
                     <ChevronRight size={15} className="text-navy-light/60 shrink-0 mt-1" />
                   </button>

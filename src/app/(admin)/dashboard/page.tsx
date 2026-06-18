@@ -338,7 +338,7 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {upcomingEvents.map(ev => (
                 <div key={ev.id} className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type] }} />
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type] ?? '#161440' }} />
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-medium text-navy truncate font-body">{ev.name}</div>
                     <div className="text-[11px] text-navy/70 font-body">
@@ -435,7 +435,7 @@ export default function DashboardPage() {
                 const pct = ev.max_capacity ? ev.registrations.length / ev.max_capacity : 0
                 return (
                   <div key={ev.id} className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
-                    <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: EVENT_TYPE_COLORS[ev.event_type] }} />
+                    <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: EVENT_TYPE_COLORS[ev.event_type] ?? '#161440' }} />
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-navy truncate font-body">{ev.name}</div>
                       <div className="text-[11px] text-navy/70 mt-0.5 font-body">

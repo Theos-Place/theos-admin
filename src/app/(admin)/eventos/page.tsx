@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
-import { useEventTypes } from '@/hooks/useEventTypes'
-import { eventTypeConfig, type EventType, type MockEvent } from '@/data/event-config'
+import { useEventTypes, useEventTypeStyle } from '@/hooks/useEventTypes'
+import { type EventType, type MockEvent } from '@/data/event-config'
 import { useEvents, useAllEventsLight } from '@/hooks/useEvents'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
@@ -72,6 +72,7 @@ function EventosContent() {
   const canCheckin = hasRole('encargado_eventos', 'direccion', 'admin')
   // Filtros de tipo desde la BD (no el mock): si se agrega un tipo, aparece solo.
   const eventTypes = useEventTypes()
+  const typeStyle = useEventTypeStyle()
   const typeFilters = useMemo(
     () => [{ key: 'all', label: 'Todos' }, ...eventTypes.map(t => ({ key: t.id, label: t.name }))],
     [eventTypes],
@@ -312,12 +313,7 @@ function EventosContent() {
               </thead>
               <tbody>
                 {visibleRows.map((event, idx) => {
-                  const config = eventTypeConfig(event.event_type)
-                  const dotColors: Record<string, string> = {
-                    navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
-                    purple: 'bg-purple-700', amber: 'bg-amber-500',
-                  }
-                  const dotColor = dotColors[config.color] ?? 'bg-navy'
+                  const typeColor = typeStyle(event.event_type).color
                   const startDate = new Date(event.start_at)
                   const past = isPastEvent(event)
                   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
@@ -335,7 +331,7 @@ function EventosContent() {
                           {event.flyer_url && (
                             <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-9 w-9 rounded-lg object-cover shrink-0" />
                           )}
-                          <span className={cn('h-2 w-2 rounded-full shrink-0', dotColor)} />
+                          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: typeColor }} />
                           <div className="min-w-0">
                             <span className="block text-sm font-medium text-navy truncate max-w-[200px] font-body">
                               {event.name}
@@ -382,12 +378,7 @@ function EventosContent() {
           {/* Mobile: tarjetas */}
           <ul className="md:hidden">
             {visibleRows.map((event, idx) => {
-              const config = eventTypeConfig(event.event_type)
-              const dotColors: Record<string, string> = {
-                navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
-                purple: 'bg-purple-700', amber: 'bg-amber-500',
-              }
-              const dotColor = dotColors[config.color] ?? 'bg-navy'
+              const typeColor = typeStyle(event.event_type).color
               const startDate = new Date(event.start_at)
               const past = isPastEvent(event)
               const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
@@ -401,7 +392,7 @@ function EventosContent() {
                   {event.flyer_url ? (
                     <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-10 w-10 rounded-lg object-cover shrink-0" />
                   ) : (
-                    <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', dotColor)} />
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: typeColor }} />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{event.name}</p>

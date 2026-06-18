@@ -2,26 +2,16 @@
 
 import Link from 'next/link'
 import { Calendar, Clock, MapPin, Repeat } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/types/event'
-import { eventTypeConfig } from '@/data/event-config'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
-
-// Fondo del placeholder (cuando el evento no tiene flyer) según el tipo.
-const PLACEHOLDER_BG: Record<string, string> = {
-  navy:   'bg-navy/10 text-navy',
-  teal:   'bg-teal-deep/10 text-teal-deep',
-  coral:  'bg-coral/10 text-coral',
-  purple: 'bg-purple-700/10 text-purple-700',
-  amber:  'bg-amber-500/15 text-amber-600',
-}
+import { useEventTypeStyle } from '@/hooks/useEventTypes'
 
 /** Card grande y visual de un evento para la vista Grid. */
 export function EventCard({ event }: { event: MockEvent }) {
-  const config = eventTypeConfig(event.event_type)
+  const typeColor = useEventTypeStyle()(event.event_type).color
   const past = isPastEvent(event)
   const start = new Date(event.start_at)
   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
@@ -47,7 +37,7 @@ export function EventCard({ event }: { event: MockEvent }) {
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <div className={cn('flex h-full w-full items-center justify-center', PLACEHOLDER_BG[config.color] ?? 'bg-navy/10 text-navy')}>
+          <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: typeColor + '1A', color: typeColor }}>
             <Calendar size={36} strokeWidth={1.5} />
           </div>
         )}
