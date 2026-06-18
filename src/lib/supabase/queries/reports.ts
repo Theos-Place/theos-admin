@@ -5,10 +5,19 @@ import { buildCharlaReport, type CharlaAggRow, type CharlaReport } from '@/lib/r
  *  (no check-ins crudos) y calcula las series para (año, sede) server-side. */
 export async function getCharlaAttendanceReport(opts: { year?: number; sede?: string } = {}): Promise<CharlaReport> {
   const supabase = createAdminClient()
-  // RPC creado en migración 070; aún no está en los tipos generados de Supabase.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase.rpc as any)('report_charla_attendance')
-  if (error) throw error
-  const rows = (data ?? []) as CharlaAggRow[]
+  // El RPC devuelve miles de filas (año × etiqueta × semana × mes). PostgREST
+  // corta cada respuesta en 1000 filas (db-max-rows), así que SIN paginar solo
+  // llegaban ~1000 de ~3000 → promedios mensuales subestimados (bug del 10x).
+  // Paginamos con .range() hasta agotar.
+  const rows: CharlaAggRow[] = []
+  for (let from = 0; ; from += 1000) {
+    // RPC creado en migración 070; aún no está en los tipos generados de Supabase.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('report_charla_attendance').range(from, from + 999)
+    if (error) throw error
+    const batch = (data ?? []) as CharlaAggRow[]
+    rows.push(...batch)
+    if (batch.length < 1000) break
+  }
   return buildCharlaReport(rows, opts)
 }
