@@ -32,16 +32,26 @@ function norm(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
-function splitCSVLine(line: string): string[] {
-  const out: string[] = []; let f = '', q = false
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i]
-    if (q) { if (c === '"') { if (line[i + 1] === '"') { f += '"'; i++ } else q = false } else f += c }
-    else if (c === '"') q = true
-    else if (c === ',') { out.push(f); f = '' }
-    else f += c
+// Parser CSV completo: respeta comillas y, sobre todo, los saltos de línea DENTRO
+// de un campo entrecomillado (descripciones/funciones multilínea) — antes se hacía
+// split por \n y cada celda multilínea partía la fila en dos ("dos filas por fila").
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = [], field = '', q = false
+  const pushField = () => { row.push(field.trim()); field = '' }
+  const pushRow = () => { pushField(); if (row.some(f => f !== '')) rows.push(row); row = [] }
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++ } else q = false }
+      else field += c
+    } else if (c === '"') q = true
+    else if (c === ',') pushField()
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; pushRow() }
+    else field += c
   }
-  out.push(f); return out.map(s => s.trim())
+  if (field !== '' || row.length) pushRow()
+  return rows
 }
 
 function parseDate(v: string): string | null {
@@ -88,9 +98,7 @@ function rowsFromAoa(aoa: string[][]): PreviewRow[] {
 
 async function parseFile(file: File): Promise<PreviewRow[]> {
   if (/\.csv$/i.test(file.name)) {
-    const text = await file.text()
-    const lines = text.split(/\r?\n/).filter(l => l.trim() !== '')
-    return rowsFromAoa(lines.map(splitCSVLine))
+    return rowsFromAoa(parseCSV(await file.text()))
   }
   const buf = await file.arrayBuffer()
   const XLSX = await import('xlsx')
@@ -238,20 +246,24 @@ export default function ImportarPuestosPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--outline-variant)]">
-                    {['Comité', 'Puesto', 'Ubicación', 'Cant.', 'Categoría', 'Destacado'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-display text-navy-light/60">{h}</th>
+                    {['Comité', 'Ubicación', 'Puesto', 'Cantidad', 'Descripción', 'Categoría', 'Funciones', 'Perfil', 'Expiración', 'Destacado'].map(h => (
+                      <th key={h} className="px-3 py-3 text-left text-[10px] uppercase tracking-widest font-display text-navy-light/60 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.slice(0, 100).map((r, i) => (
-                    <tr key={i} className="border-b border-[var(--outline-variant)]">
-                      <td className="px-4 py-2.5 text-[13px] text-navy font-body">{r.committee}</td>
-                      <td className="px-4 py-2.5 text-[13px] text-navy font-body">{r.title}</td>
-                      <td className="px-4 py-2.5 text-[12px] text-navy-light/70 font-body">{r.location || '—'}</td>
-                      <td className="px-4 py-2.5 text-[13px] text-navy font-body">{r.quantity}</td>
-                      <td className="px-4 py-2.5 text-[12px] text-navy-light/70 font-body">{r.study_requirement || '—'}</td>
-                      <td className="px-4 py-2.5 text-[12px] font-body">{r.is_featured ? 'Sí' : 'No'}</td>
+                    <tr key={i} className="border-b border-[var(--outline-variant)] align-top">
+                      <td className="px-3 py-2.5 text-[13px] text-navy font-body whitespace-nowrap">{r.committee}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body">{r.location || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy font-body">{r.title}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy font-body text-center">{r.quantity}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body max-w-[220px] truncate" title={r.description}>{r.description || '—'}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body whitespace-nowrap">{r.study_requirement || '—'}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body max-w-[220px] truncate" title={r.functions}>{r.functions || '—'}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body max-w-[180px] truncate" title={r.profile}>{r.profile || '—'}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body whitespace-nowrap">{r.expires_at || '—'}</td>
+                      <td className="px-3 py-2.5 text-[12px] font-body text-center">{r.is_featured ? 'Sí' : 'No'}</td>
                     </tr>
                   ))}
                 </tbody>
