@@ -183,7 +183,9 @@ function GlobalMemberSearch() {
   const [open, setOpen] = useState(false)
   const [searching, setSearching] = useState(false)
   const [highlight, setHighlight] = useState(0)
+  const [mobileOpen, setMobileOpen] = useState(false) // panel de búsqueda en mobile
   const boxRef = useRef<HTMLDivElement>(null)
+  const mobileInputRef = useRef<HTMLInputElement>(null)
 
   // Debounce de 300ms; mínimo 2 caracteres.
   useEffect(() => {
@@ -212,10 +214,16 @@ function GlobalMemberSearch() {
 
   function go(id: string) {
     setOpen(false)
+    setMobileOpen(false)
     setQ('')
     setResults([])
     router.push(`/miembros/${id}`)
   }
+
+  // Al abrir el panel mobile, enfocar el input.
+  useEffect(() => {
+    if (mobileOpen) mobileInputRef.current?.focus()
+  }, [mobileOpen])
 
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Escape') { setOpen(false); return }
@@ -228,63 +236,110 @@ function GlobalMemberSearch() {
     else if (e.key === 'Enter') { e.preventDefault(); const m = results[highlight]; if (m) go(m.id) }
   }
 
+  // Lista de resultados — reutilizada en el dropdown desktop y en el panel mobile.
+  const resultsList = (
+    searching ? (
+      <div className="flex items-center justify-center gap-2 px-4 py-4 text-[13px] text-navy-light/60 font-body">
+        <Loader2 size={14} className="animate-spin" /> Buscando…
+      </div>
+    ) : results.length === 0 ? (
+      <p className="px-4 py-4 text-center text-[13px] text-navy-light/60 font-body">
+        No se encontraron miembros
+      </p>
+    ) : (
+      <ul id="global-search-listbox" role="listbox" aria-label="Resultados de miembros" className="max-h-80 overflow-y-auto py-1">
+        {results.map((m, i) => (
+          <li key={m.id} role="option" id={`gms-opt-${m.id}`} aria-selected={i === highlight}>
+            <button
+              onClick={() => go(m.id)}
+              onMouseEnter={() => setHighlight(i)}
+              className={cn(
+                'flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors',
+                i === highlight ? 'bg-surface-low' : 'hover:bg-surface-low',
+              )}
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
+                {resultInitials(m)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm text-navy font-body">{m.first_name} {m.last_name}</span>
+                {m.cedula && <span className="text-[11px] text-navy-light/60 font-mono">{m.cedula}</span>}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    )
+  )
+
   return (
-    <div className="relative hidden sm:block" ref={boxRef}>
-      <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-56 lg:w-72 transition-all focus-within:ring-1 focus-within:ring-coral/30">
-        <Search size={16} className="text-navy-light/60 shrink-0" strokeWidth={1.75} />
-        <input
-          type="search"
-          role="combobox"
-          aria-label="Buscar miembro por nombre, cédula o correo"
-          aria-expanded={open}
-          aria-controls="global-search-listbox"
-          aria-autocomplete="list"
-          aria-activedescendant={open && results[highlight] ? `gms-opt-${results[highlight].id}` : undefined}
-          placeholder="Buscar miembro por nombre, cédula o correo..."
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          onFocus={() => { if (results.length || searching) setOpen(true) }}
-          onKeyDown={onKeyDown}
-          className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body font-light"
-        />
+    <>
+      {/* Desktop: input inline */}
+      <div className="relative hidden sm:block" ref={boxRef}>
+        <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-56 lg:w-72 transition-all focus-within:ring-1 focus-within:ring-coral/30">
+          <Search size={16} className="text-navy-light/60 shrink-0" strokeWidth={1.75} />
+          <input
+            type="search"
+            role="combobox"
+            aria-label="Buscar miembro por nombre, cédula o correo"
+            aria-expanded={open}
+            aria-controls="global-search-listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={open && results[highlight] ? `gms-opt-${results[highlight].id}` : undefined}
+            placeholder="Buscar miembro por nombre, cédula o correo..."
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            onFocus={() => { if (results.length || searching) setOpen(true) }}
+            onKeyDown={onKeyDown}
+            className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body font-light"
+          />
+        </div>
+
+        {open && (
+          <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 rounded-2xl overflow-hidden bg-surface-card shadow-card-lg border border-outline">
+            {resultsList}
+          </div>
+        )}
       </div>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 rounded-2xl overflow-hidden bg-surface-card shadow-card-lg border border-outline">
-          {searching ? (
-            <div className="flex items-center justify-center gap-2 px-4 py-4 text-[13px] text-navy-light/60 font-body">
-              <Loader2 size={14} className="animate-spin" /> Buscando…
+      {/* Mobile: botón de lupa que abre un panel de búsqueda */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        aria-label="Buscar miembro"
+        className="sm:hidden rounded-lg p-1.5 text-navy-light hover:bg-surface-low transition-colors"
+      >
+        <Search size={20} strokeWidth={1.75} />
+      </button>
+
+      {mobileOpen && (
+        <div className="sm:hidden fixed inset-0 z-50" role="dialog" aria-label="Buscar miembro">
+          {/* Fondo para cerrar al tocar fuera */}
+          <div className="absolute inset-0 bg-navy/20" onClick={() => setMobileOpen(false)} />
+          <div className="absolute left-2 right-2 top-2 rounded-2xl bg-surface-card shadow-card-lg border border-outline overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--outline-variant)]">
+              <Search size={18} className="text-navy-light/60 shrink-0" strokeWidth={1.75} />
+              <input
+                ref={mobileInputRef}
+                type="search"
+                aria-label="Buscar miembro por nombre, cédula o correo"
+                placeholder="Buscar por nombre, cédula o correo..."
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                onKeyDown={onKeyDown}
+                className="flex-1 bg-transparent text-sm text-navy placeholder-navy-light/50 outline-none font-body min-w-0"
+              />
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Cerrar búsqueda"
+                className="rounded-lg px-2 py-1 text-[13px] text-navy-light/60 hover:bg-surface-low transition-colors font-body shrink-0"
+              >
+                Cerrar
+              </button>
             </div>
-          ) : results.length === 0 ? (
-            <p className="px-4 py-4 text-center text-[13px] text-navy-light/60 font-body">
-              No se encontraron miembros
-            </p>
-          ) : (
-            <ul id="global-search-listbox" role="listbox" aria-label="Resultados de miembros" className="max-h-80 overflow-y-auto py-1">
-              {results.map((m, i) => (
-                <li key={m.id} role="option" id={`gms-opt-${m.id}`} aria-selected={i === highlight}>
-                  <button
-                    onClick={() => go(m.id)}
-                    onMouseEnter={() => setHighlight(i)}
-                    className={cn(
-                      'flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors',
-                      i === highlight ? 'bg-surface-low' : 'hover:bg-surface-low',
-                    )}
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-                      {resultInitials(m)}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm text-navy font-body">{m.first_name} {m.last_name}</span>
-                      {m.cedula && <span className="text-[11px] text-navy-light/60 font-mono">{m.cedula}</span>}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+            {q.trim().length >= 2 && resultsList}
+          </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

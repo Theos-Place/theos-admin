@@ -200,11 +200,11 @@ export default function NotificacionesPage() {
                       <Inbox size={18} className={n.read ? 'text-navy-light/60' : 'text-coral'} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={cn('text-sm font-body leading-snug', n.read ? 'text-navy-light/70' : 'text-navy font-semibold')}>
+                      <p className={cn('text-sm font-body leading-snug break-words', n.read ? 'text-navy-light/70' : 'text-navy font-semibold')}>
                         {n.title}
                       </p>
                       {n.body && (
-                        <p className="text-[13px] text-navy-light/70 font-body mt-0.5">{n.body}</p>
+                        <p className="text-[13px] text-navy-light/70 font-body mt-0.5 break-words">{n.body}</p>
                       )}
                       <p className="text-[11px] text-navy-light/60 font-body mt-1">{formatDateTime(n.created_at)}</p>
                     </div>

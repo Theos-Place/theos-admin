@@ -78,9 +78,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main content — offset for the fixed sidebar on desktop */}
-        <div className="lg:pl-60 flex flex-col min-h-screen">
+        <div className="lg:pl-60 flex flex-col min-h-screen min-w-0">
           <Topbar title={title} onMenuToggle={() => setSidebarOpen(true)} />
-          <main className="flex-1 p-4 lg:p-6">
+          {/* overflow-x-clip: ninguna página puede provocar scroll horizontal del
+              viewport en mobile; clip (no hidden) no crea contenedor de scroll, así
+              que no rompe los position:sticky internos (p. ej. la barra de editar). */}
+          <main className="flex-1 p-4 lg:p-6 min-w-0 overflow-x-clip">
             <ErrorBoundary>
               <ModuleGuard pathname={pathname}>
                 {children}

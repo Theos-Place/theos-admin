@@ -249,32 +249,91 @@ async function pagedIds(build: (q: any) => any, table: TableName, select: string
   return out
 }
 
-/** member_ids con inscripción en un plan (por code) con esos estados.
- *  Dos fuentes: inscripciones CON grupo (plan vía study_groups) e
- *  inscripciones SIN grupo (plan_id directo, migración 032 — así vino el
- *  histórico: ~19k completados sin grupo que el join !inner descartaba). */
-async function idsByEnrollment(planCode: string, statuses: string[]): Promise<Set<string>> {
+/** Base de fecha para el rango de un filtro de estudio:
+ *  - 'completion': fecha de finalización (graduación) del enrollment.
+ *  - 'start':      fecha de inicio (para "en progreso").
+ *  La fecha se resuelve con el mismo fallback que el perfil (study_history):
+ *  finalización = completed_at ?? fecha del grupo ?? enrolled_at;
+ *  inicio       = fecha del grupo ?? enrolled_at. */
+type EnrollDateBasis = 'completion' | 'start'
+type EnrollRange = { from: string | null; to: string | null; basis: EnrollDateBasis }
+
+/** Fila mínima de enrollment para resolver la fecha en memoria. */
+type EnrollDateRow = { member_id: string | null; completed_at: string | null; enrolled_at: string | null; group_starts: string | null }
+
+/** ¿La fecha resuelta del enrollment cae dentro del rango [from, to] (YYYY-MM-DD,
+ *  ambos inclusivos)? Sin rango → siempre true. */
+function enrollmentInRange(r: EnrollDateRow, range: EnrollRange | undefined): boolean {
+  if (!range || (!range.from && !range.to)) return true
+  const d = range.basis === 'start'
+    ? (r.group_starts ?? r.enrolled_at)
+    : (r.completed_at ?? r.group_starts ?? r.enrolled_at)
+  if (!d) return false // sin fecha resoluble → no entra a un filtro por fecha
+  const day = d.slice(0, 10)
+  if (range.from && day < range.from) return false
+  if (range.to && day > range.to) return false
+  return true
+}
+
+/** member_ids con inscripción en un plan (por code) con esos estados, opcionalmente
+ *  acotados a un rango de fecha que se evalúa contra el MISMO enrollment (fecha de
+ *  finalización o de inicio según `range.basis`) — no como un filtro de fecha
+ *  independiente.
+ *  Dos fuentes: inscripciones CON grupo (plan vía study_groups) e inscripciones
+ *  SIN grupo (plan_id directo, migración 032 — así vino el histórico: ~19k
+ *  completados sin grupo que el join !inner descartaba). */
+async function idsByEnrollment(planCode: string, statuses: string[], range?: EnrollRange): Promise<Set<string>> {
   const supabase = createAdminClient()
   const { data: plan } = await supabase
     .from('study_plans').select('id').eq('code', planCode).maybeSingle()
   const planId = (plan as { id: string } | null)?.id
 
-  const [viaGroup, direct] = await Promise.all([
-    pagedIds(
-      q => q.in('status', statuses).eq('grp.plan.code', planCode),
-      'study_enrollments',
-      'member_id, grp:study_groups!study_enrollments_group_id_fkey!inner(plan:study_plans!inner(code))',
-    ),
-    planId
-      ? pagedIds(
-          q => q.in('status', statuses).eq('plan_id', planId).is('group_id', null),
-          'study_enrollments',
-          'member_id',
-        )
-      : Promise.resolve(new Set<string>()),
-  ])
-  for (const id of direct) viaGroup.add(id)
-  return viaGroup
+  const out = new Set<string>()
+
+  // Fuente 1: enrollments CON grupo (la fecha del grupo es starts_at del grupo).
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('study_enrollments')
+      .select('member_id, completed_at, enrolled_at, grp:study_groups!study_enrollments_group_id_fkey!inner(starts_at, plan:study_plans!inner(code))')
+      .in('status', statuses)
+      .eq('grp.plan.code', planCode)
+      .order('id')
+      .range(from, from + 999)
+    if (error) throw error
+    const rows = (data ?? []) as unknown as Array<{ member_id: string | null; completed_at: string | null; enrolled_at: string | null; grp: { starts_at: string | null } | null }>
+    for (const r of rows) {
+      if (!r.member_id) continue
+      if (enrollmentInRange({ member_id: r.member_id, completed_at: r.completed_at, enrolled_at: r.enrolled_at, group_starts: r.grp?.starts_at ?? null }, range)) {
+        out.add(r.member_id)
+      }
+    }
+    if (rows.length < 1000) break
+  }
+
+  // Fuente 2: enrollments SIN grupo (plan_id directo); la fecha es del enrollment.
+  if (planId) {
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from('study_enrollments')
+        .select('member_id, completed_at, enrolled_at')
+        .in('status', statuses)
+        .eq('plan_id', planId)
+        .is('group_id', null)
+        .order('id')
+        .range(from, from + 999)
+      if (error) throw error
+      const rows = (data ?? []) as unknown as Array<{ member_id: string | null; completed_at: string | null; enrolled_at: string | null }>
+      for (const r of rows) {
+        if (!r.member_id) continue
+        if (enrollmentInRange({ member_id: r.member_id, completed_at: r.completed_at, enrolled_at: r.enrolled_at, group_starts: null }, range)) {
+          out.add(r.member_id)
+        }
+      }
+      if (rows.length < 1000) break
+    }
+  }
+
+  return out
 }
 
 /** Resuelve las condiciones avanzadas a sets de inclusión/exclusión. */
@@ -288,7 +347,12 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         const statuses = c.status === 'completed' ? ['completed']
           : c.status === 'in_progress' ? ['enrolled']
           : ['completed', 'enrolled']
-        res.include.push(await idsByEnrollment(c.study, statuses))
+        // El rango de fecha se evalúa contra el MISMO enrollment del plan: para
+        // "completado" → fecha de finalización; para "en progreso" → fecha de
+        // inicio. Así "Nivel 1 completado + rango" devuelve solo a quienes
+        // finalizaron Nivel 1 dentro del rango (no un filtro de fecha aparte).
+        const basis: EnrollDateBasis = c.status === 'in_progress' ? 'start' : 'completion'
+        res.include.push(await idsByEnrollment(c.study, statuses, { from: c.from, to: c.to, basis }))
         break
       }
       case 'service': {

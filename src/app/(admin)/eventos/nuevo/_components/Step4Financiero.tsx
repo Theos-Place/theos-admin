@@ -34,8 +34,8 @@ export function Step4Financiero({
             label="Evento con cobro"
           />
           {requires_payment && (
-            <div className="space-y-4 pl-14">
-              <div className="form-row">
+            <div className="space-y-4 pl-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <FieldLabel>Costo</FieldLabel>
                   <div className="relative">
