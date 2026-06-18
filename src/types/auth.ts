@@ -15,6 +15,7 @@ export type RoleId =
   | 'editor_perfiles'
   | 'miembro'
   | 'solo_lectura'
+  | 'reportes'
 
 export type Permission = {
   module: string

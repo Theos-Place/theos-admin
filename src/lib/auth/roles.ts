@@ -44,6 +44,15 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'reportes',
+    name: 'Reportes',
+    description: 'Acceso a todos los reportes del sistema',
+    color: '#7FB2D4',
+    permissions: [
+      { module: 'reportes', actions: ['view', 'export'], scope: 'all' },
+    ],
+  },
+  {
     id: 'editor_perfiles',
     name: 'Editor de Perfiles',
     description: 'Crear y editar perfiles de miembros',
