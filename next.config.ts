@@ -28,8 +28,12 @@ const securityHeaders = [
     value: 'strict-origin-when-cross-origin',
   },
   {
+    // camera=(self): el lector de QR del check-in necesita getUserMedia en el
+    // propio origen. Con camera=() el browser bloquea la cámara SIN mostrar el
+    // prompt de permiso (NotAllowedError silencioso). microphone/geolocation
+    // siguen bloqueados (sin uso).
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()',
+    value: 'camera=(self), microphone=(), geolocation=()',
   },
   // HSTS solo aplica sobre HTTPS (producción); el browser lo ignora en http://localhost.
   ...(process.env.NODE_ENV === 'production' ? [{

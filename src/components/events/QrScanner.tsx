@@ -17,6 +17,7 @@ export function QrScanner({ onResult, className }: { onResult: (text: string) =>
   onResultRef.current = onResult
   const [facing, setFacing] = useState<Facing>('environment')
   const [error, setError] = useState<string | null>(null)
+  const [retry, setRetry] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -39,13 +40,19 @@ export function QrScanner({ onResult, className }: { onResult: (text: string) =>
         )
       })
     return () => { cancelled = true; controlsRef.current?.stop(); controlsRef.current = null }
-  }, [facing])
+  }, [facing, retry])
 
   if (error) {
     return (
-      <div className={cn('flex flex-col items-center justify-center gap-3 rounded-2xl bg-white/5 p-6 text-center', className)}>
-        <CameraOff size={32} className="text-white/40" />
-        <p className="text-white/70 text-sm font-body">{error}</p>
+      <div className={cn('flex flex-col items-center justify-center gap-3 rounded-2xl bg-coral/5 border border-coral/20 p-6 text-center', className)}>
+        <CameraOff size={32} className="text-coral/70" />
+        <p className="text-navy text-sm font-medium font-body">{error}</p>
+        <button
+          onClick={() => { setError(null); setRetry(n => n + 1) }}
+          className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body min-h-[40px]"
+        >
+          Reintentar
+        </button>
       </div>
     )
   }
