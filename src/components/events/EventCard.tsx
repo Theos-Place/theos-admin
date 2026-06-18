@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Calendar, Clock, MapPin, Repeat } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/types/event'
-import { EVENT_TYPE_CONFIG } from '@/data/event-config'
+import { eventTypeConfig } from '@/data/event-config'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
@@ -21,7 +21,7 @@ const PLACEHOLDER_BG: Record<string, string> = {
 
 /** Card grande y visual de un evento para la vista Grid. */
 export function EventCard({ event }: { event: MockEvent }) {
-  const config = EVENT_TYPE_CONFIG[event.event_type]
+  const config = eventTypeConfig(event.event_type)
   const past = isPastEvent(event)
   const start = new Date(event.start_at)
   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null

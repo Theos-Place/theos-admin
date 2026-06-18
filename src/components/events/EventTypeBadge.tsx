@@ -1,10 +1,10 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { EVENT_TYPE_CONFIG, type EventType } from '@/data/event-config'
+import { eventTypeConfig } from '@/data/event-config'
 
 interface EventTypeBadgeProps {
-  type: EventType
+  type: string
   size?: 'sm' | 'md'
 }
 
@@ -25,7 +25,7 @@ const TEXT_COLORS: Record<string, string> = {
 }
 
 export function EventTypeBadge({ type, size = 'sm' }: EventTypeBadgeProps) {
-  const config = EVENT_TYPE_CONFIG[type]
+  const config = eventTypeConfig(type)
   const dotColor = DOT_COLORS[config.color] ?? 'bg-navy'
   const textColor = TEXT_COLORS[config.color] ?? 'text-navy'
   const dotSize = size === 'md' ? 'h-2.5 w-2.5' : 'h-2 w-2'

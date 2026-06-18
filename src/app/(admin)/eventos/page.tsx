@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
 import { useEventTypes } from '@/hooks/useEventTypes'
-import { EVENT_TYPE_CONFIG, type EventType, type MockEvent } from '@/data/event-config'
+import { eventTypeConfig, type EventType, type MockEvent } from '@/data/event-config'
 import { useEvents, useAllEventsLight } from '@/hooks/useEvents'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
@@ -312,7 +312,7 @@ function EventosContent() {
               </thead>
               <tbody>
                 {visibleRows.map((event, idx) => {
-                  const config = EVENT_TYPE_CONFIG[event.event_type]
+                  const config = eventTypeConfig(event.event_type)
                   const dotColors: Record<string, string> = {
                     navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
                     purple: 'bg-purple-700', amber: 'bg-amber-500',
@@ -382,7 +382,7 @@ function EventosContent() {
           {/* Mobile: tarjetas */}
           <ul className="md:hidden">
             {visibleRows.map((event, idx) => {
-              const config = EVENT_TYPE_CONFIG[event.event_type]
+              const config = eventTypeConfig(event.event_type)
               const dotColors: Record<string, string> = {
                 navy: 'bg-navy', teal: 'bg-teal-deep', coral: 'bg-coral',
                 purple: 'bg-purple-700', amber: 'bg-amber-500',

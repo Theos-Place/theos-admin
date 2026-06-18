@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { type MockEvent, EVENT_TYPE_CONFIG } from '@/data/event-config'
+import { type MockEvent, eventTypeConfig } from '@/data/event-config'
 import { isPastEvent } from '@/lib/events/expand-recurrence'
 import { Popover } from '@/components/shared/Popover'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
@@ -173,7 +173,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                   {dayEvents.length > 0 && (
                     <div className="flex flex-wrap gap-1 px-0.5 sm:hidden">
                       {dayEvents.slice(0, 4).map(ev => {
-                        const config = EVENT_TYPE_CONFIG[ev.event_type]
+                        const config = eventTypeConfig(ev.event_type)
                         const past = isPastEvent(ev)
                         return (
                           <button
@@ -203,7 +203,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                   {/* sm+: etiquetas con nombre */}
                   <div className="hidden sm:block space-y-0.5">
                     {dayEvents.slice(0, 3).map(ev => {
-                      const config = EVENT_TYPE_CONFIG[ev.event_type]
+                      const config = eventTypeConfig(ev.event_type)
                       const colorClass = DOT_BG[config.color] ?? 'bg-navy text-white'
                       const past = isPastEvent(ev)
                       return (
@@ -248,7 +248,7 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
         >
           <ul className="space-y-0.5">
             {pop.events.map(ev => {
-              const config = EVENT_TYPE_CONFIG[ev.event_type]
+              const config = eventTypeConfig(ev.event_type)
               const past = isPastEvent(ev)
               return (
                 <li key={ev.occurrence_key ?? ev.id}>
