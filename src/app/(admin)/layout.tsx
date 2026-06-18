@@ -23,6 +23,7 @@ const pageTitles: Record<string, string> = {
   '/finanzas':       'Finanzas',
   '/comunicaciones': 'Comunicaciones',
   '/formularios':    'Formularios',
+  '/reportes':       'Reportes',
 }
 
 function getTitle(pathname: string): string {
@@ -44,6 +45,7 @@ const MODULE_BY_PREFIX: Record<string, string> = {
   '/finanzas':       'finanzas',
   '/comunicaciones': 'comunicaciones',
   '/formularios':    'formularios',
+  '/reportes':       'reportes',
   '/accesos':        'accesos',
 }
 

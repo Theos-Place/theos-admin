@@ -90,6 +90,7 @@ export const ROLES: Role[] = [
     permissions: [
       { module: 'estudios', actions: ['view', 'edit'], scope: 'all' },
       { module: 'miembros', actions: ['view'],         scope: 'all' },
+      { module: 'reportes', actions: ['view', 'export'], scope: 'all' },
     ],
   },
   {
@@ -100,6 +101,7 @@ export const ROLES: Role[] = [
     permissions: [
       { module: 'estudios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'miembros', actions: ['view'],                             scope: 'all' },
+      { module: 'reportes', actions: ['view', 'export'],                   scope: 'all' },
     ],
   },
   {
@@ -121,6 +123,7 @@ export const ROLES: Role[] = [
     permissions: [
       { module: 'servidores', actions: ['view', 'create', 'edit'], scope: 'all' },
       { module: 'miembros',   actions: ['view'],                   scope: 'all' },
+      { module: 'reportes',   actions: ['view', 'export'],         scope: 'all' },
     ],
   },
   {
@@ -157,6 +160,7 @@ export const ROLES: Role[] = [
       { module: 'finanzas',       actions: ['view', 'export'],                   scope: 'all' },
       { module: 'comunicaciones', actions: ['view', 'create'],                   scope: 'all' },
       { module: 'formularios',    actions: ['view', 'create', 'edit'],           scope: 'all' },
+      { module: 'reportes',       actions: ['view', 'export'],                   scope: 'all' },
       // accesos: solo admin (decisión 2026-06-11; el mapa de privilegios no se expone a dirección)
     ],
   },

@@ -168,6 +168,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
+    { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
   ]
   // El padrón (listado de miembros) exige alcance más allá de 'own' — el rol
   // base 'miembro' ve su perfil, no el listado (espejo del guard de la API).
