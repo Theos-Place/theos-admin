@@ -14,7 +14,6 @@ import { MemberDigitalPass } from './_components/MemberDigitalPass'
 import { MemberPersonalTab } from './_components/MemberPersonalTab'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
-import { MemberWalletTab } from './_components/MemberWalletTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow } from './_components/MemberParticipationTab'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -278,7 +277,6 @@ export default function MiembroDetailPage() {
       {activeTab === 'pase' && (
         <div className="space-y-4">
           <MemberDigitalPass member={member} />
-          <MemberWalletTab member={member} />
         </div>
       )}
     </div>
