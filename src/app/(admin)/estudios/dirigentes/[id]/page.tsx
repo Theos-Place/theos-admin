@@ -62,9 +62,46 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
   )
 }
 
+/** Toggle manual de estado del dirigente (activo/inactivo). Regla existente: al
+ *  asignarle un grupo, un inactivo pasa a activo solo; este es el control manual. */
+function StatusToggle({ memberId, active, onChanged }: { memberId: string; active: boolean; onChanged: () => void }) {
+  const [saving, setSaving] = useState(false)
+  async function toggle() {
+    if (saving) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/studies/dirigentes/${memberId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !active }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      onChanged()
+    } catch (e) { console.error('No se pudo cambiar el estado:', e) }
+    finally { setSaving(false) }
+  }
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={active ? 'Desactivar dirigente' : 'Activar dirigente'}
+      onClick={toggle}
+      disabled={saving}
+      className="inline-flex items-center gap-2 disabled:opacity-50"
+    >
+      <span className={cn('relative h-5 w-9 rounded-full transition-colors', active ? 'bg-[#3DB97A]' : 'bg-navy-light/25')}>
+        <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', active ? 'translate-x-4' : 'translate-x-0.5')} />
+      </span>
+      <span className="text-[12px] text-navy-light/70 font-body">{active ? 'Activo' : 'Inactivo'}</span>
+    </button>
+  )
+}
+
 export default function DirigenteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { dirigentes, loading } = useDirigentes()
+  const { dirigentes, loading, refetch } = useDirigentes()
+  const { hasRole } = useAuth()
+  const canToggle = hasRole('admin', 'coordinador_dirigentes', 'coordinador_estudios')
   const d = dirigentes.find(x => x.member_id === id)
 
   if (loading) {
@@ -104,12 +141,16 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl text-navy font-display font-extrabold tracking-[-0.02em]">{d.member_name || 'Sin nombre'}</h1>
-              <span className={cn(
-                'rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body',
-                d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60',
-              )}>
-                {d.status === 'activo' ? 'Activo' : 'Inactivo'}
-              </span>
+              {canToggle ? (
+                <StatusToggle memberId={d.member_id} active={d.status === 'activo'} onChanged={refetch} />
+              ) : (
+                <span className={cn(
+                  'rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body',
+                  d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60',
+                )}>
+                  {d.status === 'activo' ? 'Activo' : 'Inactivo'}
+                </span>
+              )}
             </div>
             <p className="text-sm text-navy-light/60 font-body mt-1">
               {d.total_grupos} grupos liderados · {d.total_activos} activos · {totalStudents} estudiantes en total

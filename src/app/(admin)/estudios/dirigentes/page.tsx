@@ -6,11 +6,13 @@ import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { useAuth } from '@/hooks/useAuth'
+import { useRowSelection } from '@/hooks/useRowSelection'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
+import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
-import { Search, ChevronRight, Users, Plus } from 'lucide-react'
+import { Search, ChevronRight, Users, Plus, CheckCircle2, XCircle } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { getInitials } from '@/lib/format'
@@ -21,14 +23,25 @@ const ESTADO_FILTERS = [
   { key: 'inactivo', label: 'Inactivos' },
 ] as const
 
-function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
+function DirigenteRow({
+  d, selectable, selected, onToggleSelect, onOpen,
+}: {
+  d: Dirigente; selectable: boolean; selected: boolean
+  onToggleSelect: () => void; onOpen: () => void
+}) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-4 hover:shadow-[var(--shadow-lg)] transition-shadow"
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-xs font-display font-extrabold">
+    <div className={cn('flex items-center gap-3 px-3 sm:px-4 py-3 border-b border-[var(--outline-variant)] transition-colors', selected ? 'bg-coral/5' : 'hover:bg-surface-low')}>
+      {selectable && (
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          aria-label={`Seleccionar ${d.member_name}`}
+          className="accent-coral h-4 w-4 shrink-0"
+        />
+      )}
+      <button onClick={onOpen} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[11px] font-display font-extrabold">
           {getInitials(d.member_name) || '—'}
         </div>
         <div className="min-w-0 flex-1">
@@ -40,44 +53,23 @@ function DirigenteCard({ d, onClick }: { d: Dirigente; onClick: () => void }) {
             )}>
               {d.status === 'activo' ? 'Activo' : 'Inactivo'}
             </span>
+            {d.estudios_activos.length > 0 && (
+              <span className="rounded-full px-2 py-0.5 text-[10px] font-medium bg-coral/10 text-coral font-body">
+                Dando ahora
+              </span>
+            )}
           </div>
-          <p className="text-xs text-navy-light/60 font-body mt-0.5">
-            {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} liderado{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
+          <p className="text-xs text-navy-light/60 font-body mt-0.5 truncate">
+            {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
+            {d.estudios_activos.length > 0 && ` · ${d.estudios_activos.map(g => g.plan_code).slice(0, 3).join(', ')}`}
           </p>
         </div>
+        <span className="hidden sm:flex items-center gap-1 text-xs text-navy-light/60 font-body shrink-0">
+          <Users size={12} /> {d.estudios_activos.reduce((s, g) => s + g.students_count, 0)}
+        </span>
         <ChevronRight size={16} className="text-navy-light/60 shrink-0" />
-      </div>
-
-      {/* Estudios activos */}
-      {d.estudios_activos.length > 0 && (
-        <div className="mt-3 space-y-1.5">
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Dando ahora</p>
-          {d.estudios_activos.slice(0, 3).map(g => (
-            <div key={g.group_id} className="flex items-center gap-2 text-xs">
-              <StudyTypeBadge code={g.plan_code} size="sm" />
-              <span className="text-navy-light/60 font-body truncate flex-1">{g.group_name}</span>
-              <span className="flex items-center gap-0.5 text-navy-light/60 font-body shrink-0">
-                <Users size={11} /> {g.students_count}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Historial */}
-      {d.estudios_completados.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-1 items-center">
-          {[...new Set(d.estudios_completados.map(g => g.plan_code))].slice(0, 6).map(code => (
-            <StudyTypeBadge key={code} code={code} size="sm" />
-          ))}
-          <span className="text-[11px] text-navy-light/60 font-body">
-            · {d.estudios_completados.length} completado{d.estudios_completados.length === 1 ? '' : 's'}
-          </span>
-        </div>
-      ) : d.estudios_activos.length === 0 ? (
-        <p className="mt-3 text-[11px] text-navy-light/60 font-body">Sin estudios registrados</p>
-      ) : null}
-    </button>
+      </button>
+    </div>
   )
 }
 
@@ -87,12 +79,15 @@ export default function DirigentesPage() {
   const { studyTypes } = useStudyPlans()
   const { hasRole } = useAuth()
   const canAdd = hasRole('admin', 'coordinador_dirigentes')
+  const canBulk = hasRole('admin', 'coordinador_dirigentes', 'coordinador_estudios')
   const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
   const [tipo, setTipo] = useState('')
+  const [dandoAhora, setDandoAhora] = useState(false)
   const [query, setQuery] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [confirm, setConfirm] = useState<{ active: boolean; ids: string[] } | null>(null)
+  const [applying, setApplying] = useState(false)
 
-  // Tipos de estudio que algún dirigente ha dado (para el filtro).
   const tiposDados = useMemo(() => {
     const set = new Set<string>()
     dirigentes.forEach(d => d.estudios_habilitados.forEach(c => set.add(c)))
@@ -104,17 +99,41 @@ export default function DirigentesPage() {
     return dirigentes.filter(d => {
       if (estado !== 'todos' && d.status !== estado) return false
       if (tipo && !d.estudios_habilitados.includes(tipo)) return false
+      if (dandoAhora && d.estudios_activos.length === 0) return false
       if (q && !d.member_name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [dirigentes, estado, tipo, query])
+  }, [dirigentes, estado, tipo, dandoAhora, query])
 
   const counts = useMemo(() => ({
     activos: dirigentes.filter(d => d.status === 'activo').length,
     inactivos: dirigentes.filter(d => d.status === 'inactivo').length,
   }), [dirigentes])
 
-  const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 15)
+  const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
+
+  const filteredIds = useMemo(() => filtered.map(d => d.member_id), [filtered])
+  const sel = useRowSelection(filteredIds)
+  const nameById = useMemo(() => new Map(dirigentes.map(d => [d.member_id, d.member_name])), [dirigentes])
+
+  async function applyBulk() {
+    if (!confirm || applying) return
+    setApplying(true)
+    try {
+      const res = await fetch('/api/studies/dirigentes/bulk-status', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_ids: confirm.ids, active: confirm.active }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      sel.clear()
+      setConfirm(null)
+      refetch()
+    } catch (e) {
+      console.error('No se pudo aplicar el cambio masivo:', e)
+    } finally {
+      setApplying(false)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -151,6 +170,15 @@ export default function DirigentesPage() {
               {f.label}
             </button>
           ))}
+          <button
+            onClick={() => setDandoAhora(v => !v)}
+            className={cn(
+              'rounded-full px-3.5 py-1.5 text-sm transition-colors font-body',
+              dandoAhora ? 'bg-coral text-white' : 'bg-surface-low text-navy-light hover:bg-surface-container',
+            )}
+          >
+            Dando ahora
+          </button>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <select
@@ -174,6 +202,24 @@ export default function DirigentesPage() {
         </div>
       </div>
 
+      {/* Barra de acciones masivas */}
+      {canBulk && (
+        <BulkActionBar count={sel.count} noun={sel.count === 1 ? 'dirigente seleccionado' : 'dirigentes seleccionados'} onClear={sel.clear}>
+          <button
+            onClick={() => setConfirm({ active: true, ids: sel.selectedIds })}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 text-[13px] text-white hover:bg-white/25 transition-colors font-body"
+          >
+            <CheckCircle2 size={14} /> Activar
+          </button>
+          <button
+            onClick={() => setConfirm({ active: false, ids: sel.selectedIds })}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 text-[13px] text-white hover:bg-white/25 transition-colors font-body"
+          >
+            <XCircle size={14} /> Desactivar
+          </button>
+        </BulkActionBar>
+      )}
+
       {/* Lista */}
       {loading ? (
         <div className="py-16 text-center font-body">
@@ -184,9 +230,32 @@ export default function DirigentesPage() {
         <p className="py-12 text-center text-sm text-navy-light/60 font-body">Sin dirigentes para los filtros aplicados</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            {/* Encabezado: seleccionar todos */}
+            {canBulk && (
+              <div className="flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b border-[var(--outline-variant)] bg-surface-low/50">
+                <input
+                  type="checkbox"
+                  checked={sel.allSelected}
+                  ref={el => { if (el) el.indeterminate = sel.someSelected }}
+                  onChange={sel.toggleAll}
+                  aria-label="Seleccionar todos"
+                  className="accent-coral h-4 w-4 shrink-0"
+                />
+                <span className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
+                  {sel.count > 0 ? `${sel.count} de ${filtered.length}` : `Seleccionar todos (${filtered.length})`}
+                </span>
+              </div>
+            )}
             {visible.map(d => (
-              <DirigenteCard key={d.member_id} d={d} onClick={() => router.push(`/estudios/dirigentes/${d.member_id}`)} />
+              <DirigenteRow
+                key={d.member_id}
+                d={d}
+                selectable={canBulk}
+                selected={sel.isSelected(d.member_id)}
+                onToggleSelect={() => sel.toggle(d.member_id)}
+                onOpen={() => router.push(`/estudios/dirigentes/${d.member_id}`)}
+              />
             ))}
           </div>
           <LoadMoreFooter
@@ -196,13 +265,39 @@ export default function DirigentesPage() {
             loading={false}
             onLoadMore={loadMore}
             noun="dirigentes"
-            increment={15}
+            increment={25}
           />
         </>
       )}
 
       {showAdd && (
         <AddDirigenteModal onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); refetch() }} />
+      )}
+
+      {/* Confirmación de cambio masivo */}
+      {confirm && (
+        <Modal onClose={() => setConfirm(null)} titleId="confirm-bulk-title" width={400}>
+          <div className="p-6 space-y-4">
+            <h3 id="confirm-bulk-title" className="text-base font-bold text-navy font-display">
+              {confirm.active ? 'Activar dirigentes' : 'Desactivar dirigentes'}
+            </h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              {confirm.ids.length} dirigente{confirm.ids.length === 1 ? '' : 's'} pasará{confirm.ids.length === 1 ? '' : 'n'} a{' '}
+              <strong className="text-navy">{confirm.active ? 'activo' : 'inactivo'}</strong>.
+              {confirm.ids.length <= 8 && (
+                <span className="block mt-2 text-[12px] text-navy-light/60">
+                  {confirm.ids.map(id => nameById.get(id)).filter(Boolean).join(', ')}
+                </span>
+              )}
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setConfirm(null)} disabled={applying} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+              <button onClick={applyBulk} disabled={applying} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+                {applying ? 'Aplicando…' : `Sí, ${confirm.active ? 'activar' : 'desactivar'}`}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

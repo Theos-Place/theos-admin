@@ -945,6 +945,61 @@ export async function addDirigente(memberId: string, active: boolean): Promise<v
   }
 }
 
+/** Activa/desactiva manualmente a un dirigente (estado = servidor activo en el
+ *  Comité de Dirigentes). No pisa su config (zonas/estudios). Activar lo agrega
+ *  como voluntario activo del comité; desactivar pone su voluntariado en inactive. */
+export async function setDirigenteActive(memberId: string, active: boolean): Promise<void> {
+  const supabase = createAdminClient()
+
+  // study_leaders: actualizar estado sin tocar el resto (o crear si no existe).
+  const { data: existing } = await supabase
+    .from('study_leaders').select('member_id').eq('member_id', memberId).maybeSingle()
+  if (existing) {
+    const { error } = await supabase.from('study_leaders')
+      .update({ is_active: active, availability_status: active ? 'available' : 'inactive' })
+      .eq('member_id', memberId)
+    if (error) throw error
+  } else {
+    const { error } = await supabase.from('study_leaders').insert({
+      member_id: memberId, is_active: active,
+      availability_status: active ? 'available' : 'inactive',
+      zone_preference: [], qualified_study_codes: [],
+    })
+    if (error) throw error
+  }
+
+  const { data: area } = await supabase
+    .from('areas').select('id').eq('area_type', 'committee').ilike('name', 'Comité de Dirigentes').maybeSingle()
+  if (!area) return
+  const areaId = (area as { id: string }).id
+  const { data: positions } = await supabase
+    .from('service_positions').select('id').eq('area_id', areaId)
+  const posIds = ((positions ?? []) as Array<{ id: string }>).map(p => p.id)
+
+  if (active) {
+    const activePos = posIds[0]
+    if (activePos) {
+      const { error } = await supabase.from('volunteers').upsert(
+        { member_id: memberId, position_id: activePos, status: 'active' },
+        { onConflict: 'member_id,position_id' },
+      )
+      if (error) throw error
+    }
+  } else if (posIds.length > 0) {
+    const { error } = await supabase.from('volunteers')
+      .update({ status: 'inactive' })
+      .eq('member_id', memberId).in('position_id', posIds)
+    if (error) throw error
+  }
+}
+
+/** Cambio de estado masivo de dirigentes. Devuelve cuántos se procesaron. */
+export async function bulkSetDirigenteActive(memberIds: string[], active: boolean): Promise<number> {
+  let n = 0
+  for (const id of memberIds) { await setDirigenteActive(id, active); n++ }
+  return n
+}
+
 // ── Mutaciones ─────────────────────────────────────────────
 
 export type PlanWriteInput = {
