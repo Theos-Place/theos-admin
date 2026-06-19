@@ -125,7 +125,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [assignRecurring, setAssignRecurring] = useState(false)
   const [recurringGlobal, setRecurringGlobal] = useState(false)
   const [serverToast, setServerToast] = useState<string | null>(null)
-  const [openServerMenu, setOpenServerMenu] = useState<string | null>(null)
   const [flyerPreview, setFlyerPreview] = useState<string | null>(event?.flyer_url ?? null)
   const [flyerDragOver, setFlyerDragOver] = useState(false)
   const flyerInputRef = useRef<HTMLInputElement>(null)
@@ -313,7 +312,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   }
 
   async function removeBooking(memberId: string) {
-    setOpenServerMenu(null)
     try {
       const res = await fetch(`/api/events/${id}/volunteers/${memberId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -476,8 +474,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           isRecurring={event.is_recurring}
           recurringGlobal={recurringGlobal}
           onRecurringGlobalToggle={() => setRecurringGlobal(v => !v)}
-          openServerMenu={openServerMenu}
-          onServerMenuToggle={(bid) => setOpenServerMenu(openServerMenu === bid ? null : bid)}
           onRemoveBooking={removeBooking}
           showAssignModal={showAssignModal}
           onShowAssignModal={() => setShowAssignModal(true)}

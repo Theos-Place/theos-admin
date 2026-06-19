@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useUrlFilter, useUrlFlag } from '@/hooks/useUrlFilter'
 import {
@@ -15,6 +16,7 @@ import {
   Check,
   Users,
   Info,
+  Star,
 } from 'lucide-react'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -46,6 +48,22 @@ function calcularEdad(fechaNacimiento: string): number {
 
 function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
+}
+
+/** Indicador de dirigente: estrella clickeable al perfil de dirigente. Detiene
+ *  la propagación para no disparar la navegación de la fila al perfil de miembro. */
+function DirigenteLink({ id }: { id: string }) {
+  return (
+    <Link
+      href={`/estudios/dirigentes/${id}`}
+      onClick={e => e.stopPropagation()}
+      title="Ver perfil de dirigente"
+      aria-label="Ver perfil de dirigente"
+      className="inline-flex shrink-0 items-center justify-center h-5 w-5 rounded-full bg-navy/10 text-navy hover:bg-navy/15 transition-colors"
+    >
+      <Star size={11} strokeWidth={2} />
+    </Link>
+  )
 }
 
 const AVATAR_COLORS = [
@@ -730,7 +748,10 @@ function MiembrosContent() {
                                   {initials(member)}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
+                                    {member.is_dirigente && <DirigenteLink id={member.id} />}
+                                  </div>
                                   <p className="truncate text-xs text-navy-light/60 font-body">{member.email}</p>
                                 </div>
                               </div>
@@ -843,7 +864,10 @@ function MiembrosContent() {
                     {initials(member)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
+                      {member.is_dirigente && <DirigenteLink id={member.id} />}
+                    </div>
                     <p className="truncate text-xs text-navy-light/60 font-body">
                       {member.cedula ?? 'Sin cédula'}{member.email ? ` · ${member.email}` : ''}
                     </p>

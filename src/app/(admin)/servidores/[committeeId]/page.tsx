@@ -59,9 +59,6 @@ export default function CommitteeDetailPage() {
     [committee],
   )
 
-  // Server row menu
-  const [openMenu, setOpenMenu] = useState<string | null>(null)
-
   // Disconnect modal
   const [disconnectTarget, setDisconnectTarget] = useState<CommitteeServer | null>(null)
   const [disconnectReason, setDisconnectReason] = useState<DisconnectReason>('renuncia')
@@ -287,10 +284,6 @@ export default function CommitteeDetailPage() {
     }
   }
 
-  function handleMenuToggle(memberId: string) {
-    setOpenMenu(prev => prev === memberId ? null : memberId)
-  }
-
   function handleChangePositionOpen(member: CommitteeServer) {
     setChangePositionTarget(member)
     setNewPosition(member.position_id ?? '')
@@ -347,8 +340,6 @@ export default function CommitteeDetailPage() {
             onSearchChange={setSearch}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
-            openMenu={openMenu}
-            onMenuToggle={handleMenuToggle}
             onChangePosition={handleChangePositionOpen}
             onDisconnect={setDisconnectTarget}
             onAddServerClick={() => setAddServerOpen(true)}

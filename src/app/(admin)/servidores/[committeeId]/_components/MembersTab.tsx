@@ -1,8 +1,8 @@
 'use client'
 
-import Link from 'next/link'
-import { Plus, Search, MoreVertical, ExternalLink, Users } from 'lucide-react'
+import { Plus, Search, ExternalLink, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { RowActionsMenu } from '@/components/shared/RowActionsMenu'
 import type { CommitteeServer } from '@/types/server'
 import { cn } from '@/lib/utils'
 import { SortableHeader } from '@/components/shared/SortableHeader'
@@ -33,8 +33,6 @@ type Props = {
   onSearchChange: (value: string) => void
   statusFilter: StatusFilter
   onStatusFilterChange: (value: StatusFilter) => void
-  openMenu: string | null
-  onMenuToggle: (memberId: string) => void
   onChangePosition: (member: CommitteeServer) => void
   onDisconnect: (member: CommitteeServer) => void
   onAddServerClick: () => void
@@ -50,8 +48,6 @@ export function MembersTab({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
-  openMenu,
-  onMenuToggle,
   onChangePosition,
   onDisconnect,
   onAddServerClick,
@@ -149,45 +145,15 @@ export function MembersTab({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="relative">
-                      <button
-                        onClick={() => onMenuToggle(m.member_id)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors"
-                      >
-                        <MoreVertical size={14} />
-                      </button>
-                      {openMenu === m.member_id && (
-                        <div
-                          className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden shadow-lg bg-surface-card border border-[var(--outline-variant)]"
-                        >
-                          <Link
-                            href={`/miembros/${m.member_id}`}
-                            onClick={() => onMenuToggle(m.member_id)}
-                            className="flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
-                          >
-                            <ExternalLink size={13} />
-                            Ver perfil
-                          </Link>
-                          <button
-                            onClick={() => {
-                              onChangePosition(m)
-                              onMenuToggle(m.member_id)
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
-                          >
-                            Cambiar puesto
-                          </button>
-                          <button
-                            onClick={() => {
-                              onDisconnect(m)
-                              onMenuToggle(m.member_id)
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors font-body"
-                          >
-                            Desvincular
-                          </button>
-                        </div>
-                      )}
+                    <div className="flex justify-end">
+                      <RowActionsMenu
+                        label={`Acciones de ${m.name}`}
+                        actions={[
+                          { label: 'Ver perfil', icon: <ExternalLink size={13} />, href: `/miembros/${m.member_id}` },
+                          { label: 'Cambiar puesto', onClick: () => onChangePosition(m) },
+                          { label: 'Desvincular', onClick: () => onDisconnect(m), danger: true },
+                        ]}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -221,37 +187,15 @@ export function MembersTab({
               >
                 {m.status === 'active' ? 'Activo' : 'Inactivo'}
               </span>
-              <div className="relative shrink-0">
-                <button
-                  onClick={() => onMenuToggle(m.member_id)}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors"
-                >
-                  <MoreVertical size={14} />
-                </button>
-                {openMenu === m.member_id && (
-                  <div className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden shadow-lg bg-surface-card border border-[var(--outline-variant)]">
-                    <Link
-                      href={`/miembros/${m.member_id}`}
-                      onClick={() => onMenuToggle(m.member_id)}
-                      className="flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
-                    >
-                      <ExternalLink size={13} />
-                      Ver perfil
-                    </Link>
-                    <button
-                      onClick={() => { onChangePosition(m); onMenuToggle(m.member_id) }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
-                    >
-                      Cambiar puesto
-                    </button>
-                    <button
-                      onClick={() => { onDisconnect(m); onMenuToggle(m.member_id) }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors font-body"
-                    >
-                      Desvincular
-                    </button>
-                  </div>
-                )}
+              <div className="shrink-0">
+                <RowActionsMenu
+                  label={`Acciones de ${m.name}`}
+                  actions={[
+                    { label: 'Ver perfil', icon: <ExternalLink size={13} />, href: `/miembros/${m.member_id}` },
+                    { label: 'Cambiar puesto', onClick: () => onChangePosition(m) },
+                    { label: 'Desvincular', onClick: () => onDisconnect(m), danger: true },
+                  ]}
+                />
               </div>
             </li>
           ))}

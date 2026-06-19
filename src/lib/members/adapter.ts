@@ -63,6 +63,7 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
     current_study_week: enriched?.current_study_week ?? null,
     sede: enriched?.sede?.code ?? '',
     es_dirigente: esDirigente,
+    is_dirigente: enriched?.is_dirigente ?? esDirigente,
 
     // ── Service history: sólo el activo en list view (Fase 2b: historia completa) ──
     service_history: activeService

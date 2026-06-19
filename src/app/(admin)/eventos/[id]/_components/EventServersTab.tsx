@@ -1,6 +1,7 @@
-import { Check, Clock, X as XIcon, UserPlus, Search, Link2, MoreVertical, Send } from 'lucide-react'
+import { Check, Clock, X as XIcon, UserPlus, Search, Link2, Send } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { RowActionsMenu } from '@/components/shared/RowActionsMenu'
 import type { Member } from '@/types/member'
 import { cn } from '@/lib/utils'
 
@@ -40,8 +41,6 @@ type Props = {
   isRecurring: boolean
   recurringGlobal: boolean
   onRecurringGlobalToggle: () => void
-  openServerMenu: string | null
-  onServerMenuToggle: (id: string) => void
   onRemoveBooking: (id: string) => void
   showAssignModal: boolean
   onShowAssignModal: () => void
@@ -77,8 +76,6 @@ export function EventServersTab({
   isRecurring,
   recurringGlobal,
   onRecurringGlobalToggle,
-  openServerMenu,
-  onServerMenuToggle,
   onRemoveBooking,
   showAssignModal,
   onShowAssignModal,
@@ -175,31 +172,16 @@ export function EventServersTab({
                         )}
                       </div>
                     </div>
-                    <div className="relative shrink-0">
-                      <button
-                        onClick={() => onServerMenuToggle(b.id)}
-                        className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:bg-surface-card hover:text-navy transition-all"
-                      >
-                        <MoreVertical size={14} />
-                      </button>
-                      {openServerMenu === b.id && (
-                        <div
-                          className="absolute right-0 top-full mt-1 rounded-xl overflow-hidden w-36 z-20 bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
-                        >
-                          <button
-                            onClick={() => onServerMenuToggle(b.id)}
-                            className="w-full text-left px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
-                          >
-                            Cambiar rol
-                          </button>
-                          <button
-                            onClick={() => onRemoveBooking(b.id)}
-                            className="w-full text-left px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
-                          >
-                            Quitar
-                          </button>
-                        </div>
-                      )}
+                    <div className="shrink-0">
+                      <RowActionsMenu
+                        label={`Acciones de ${b.member_name}`}
+                        width={160}
+                        triggerClassName="hover:bg-surface-card"
+                        actions={[
+                          { label: 'Cambiar rol' },
+                          { label: 'Quitar', onClick: () => onRemoveBooking(b.id), danger: true },
+                        ]}
+                      />
                     </div>
                   </div>
                 ))}

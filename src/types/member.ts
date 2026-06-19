@@ -84,7 +84,10 @@ export type Member = {
   age: number
   tipos_evento: string[]
   comites: string[]
+  /** Dirigente activo (servidor activo en el comité Dirigentes). */
   es_dirigente: boolean
+  /** Tiene registro de dirigente (activo o inactivo) → mostrar indicador + link. */
+  is_dirigente: boolean
   estado_dirigente: 'activo' | 'en_descanso' | 'disponible' | null
   join_date: string
   medicamentos: string | null

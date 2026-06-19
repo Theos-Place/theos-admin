@@ -50,6 +50,9 @@ export type DbMemberEnriched = DbMember & {
   roles: MemberRole[]
   /** Sub-estado del rol 'dirigente' activo (null si no es dirigente). */
   estado_dirigente: 'activo' | 'en_descanso' | 'disponible' | null
+  /** Tiene registro de dirigente (fila en study_leaders) o está activo en el
+   *  comité Dirigentes. Incluye dirigentes inactivos. Join, no consulta por fila. */
+  is_dirigente: boolean
   is_server: boolean
   current_study: string | null
   current_study_week?: number | null
@@ -754,6 +757,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
         status,
         study_groups!study_enrollments_group_id_fkey(plan:study_plans(name))
       ),
+      study_leaders(member_id),
       event_checkins(checked_in_at)
     `,
       { count: 'exact' },
@@ -819,11 +823,18 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       checkins.map(c => (c.checked_in_at ?? '').slice(0, 7)).filter(Boolean),
     ))
 
+    // Dirigente = tiene registro en study_leaders (activo o inactivo) o está
+    // activo en el comité Dirigentes. Join, no consulta por fila.
+    const hasLeaderRecord = ((row.study_leaders as unknown[] | null)?.length ?? 0) > 0
+    const isDirigente = hasLeaderRecord
+      || /dirigente/i.test(activeVolunteer?.service_positions?.area?.name ?? '')
+
     return {
       ...(row as DbMember),
       sede,
       roles: activeRoles,
       estado_dirigente: estadoDirigente,
+      is_dirigente: isDirigente,
       is_server: volunteers.some(v => v.status === 'active'),
       current_study: currentStudy,
       completed_studies: completedStudies,
@@ -976,7 +987,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         status, completed_at, enrolled_at,
         study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks)),
         plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks)
-      )
+      ),
+      study_leaders(member_id)
     `)
     .eq('id', id)
     .maybeSingle()
@@ -1294,6 +1306,11 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     attendance_sede,
     roles: activeRoles,
     estado_dirigente: estadoDirigente,
+    // Dirigente = registro en study_leaders (activo/inactivo), lideró grupos, o
+    // está activo en el comité Dirigentes.
+    is_dirigente: ((memberRow.study_leaders as unknown[] | null)?.length ?? 0) > 0
+      || ledStudies.length > 0
+      || /dirigente/i.test(activeVolunteer?.service_positions?.area?.name ?? ''),
     is_server: volunteers.some(v => v.status === 'active'),
     current_study: currentStudy,
     current_study_week: currentStudyWeek,
