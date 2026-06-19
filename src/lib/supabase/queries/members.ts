@@ -203,16 +203,23 @@ export async function getMemberCounts(): Promise<MemberCounts> {
   return { total, donadores, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
 }
 
-/** Aplica búsqueda de texto sobre miembros: nombre, apellidos, cédula, teléfono y
- *  email. Tokeniza por espacios — cada palabra debe coincidir en algún campo (AND
- *  entre palabras), así "Juan Pérez" matchea nombre+apellido. */
+/** Quita acentos/diacríticos (NFD + corta los combining marks). */
+function stripAccents(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
+/** Aplica búsqueda de texto sobre miembros contra la columna normalizada
+ *  `search_text` (nombre+apellido+cédula+email+teléfono, sin acentos, minúscula).
+ *  Tokeniza por espacios — cada palabra debe aparecer (AND entre palabras), así
+ *  "Juan Pérez" matchea nombre+apellido. Insensible a tildes/ñ (buscar "munoz"
+ *  encuentra "Muñoz" y viceversa). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function applyMemberSearch<T extends { or: (f: string) => any }>(query: T, search: string): T {
+function applyMemberSearch<T extends { ilike: (col: string, pattern: string) => any }>(query: T, search: string): T {
   let q = query
   for (const tok of search.trim().split(/\s+/)) {
-    const s = tok.replace(/[%,().]/g, '')
+    const s = stripAccents(tok).toLowerCase().replace(/[%,()]/g, '')
     if (!s) continue
-    q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,cedula.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%`)
+    q = q.ilike('search_text', `%${s}%`)
   }
   return q
 }
