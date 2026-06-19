@@ -947,9 +947,10 @@ export async function addDirigente(memberId: string, active: boolean): Promise<v
   }
 }
 
-/** Activa/desactiva manualmente a un dirigente (estado = servidor activo en el
- *  Comité de Dirigentes). No pisa su config (zonas/estudios). Activar lo agrega
- *  como voluntario activo del comité; desactivar pone su voluntariado en inactive. */
+/** Activa/desactiva manualmente a un dirigente. Estado = servidor activo en el
+ *  Comité de Dirigentes. ACTIVAR: study_leaders.is_active + voluntario activo del
+ *  comité + rol 'dirigente'. DESACTIVAR: study_leaders inactivo + sale del comité
+ *  (voluntariado inactive) + se revoca el rol 'dirigente'. No pisa su config. */
 export async function setDirigenteActive(memberId: string, active: boolean): Promise<void> {
   const supabase = createAdminClient()
 
@@ -993,6 +994,11 @@ export async function setDirigenteActive(memberId: string, active: boolean): Pro
       .eq('member_id', memberId).in('position_id', posIds)
     if (error) throw error
   }
+
+  // Rol 'dirigente' en member_roles: se asigna al activar y se revoca al desactivar.
+  const { assignMemberRole, revokeMemberRole } = await import('./members')
+  if (active) await assignMemberRole(memberId, 'dirigente')
+  else await revokeMemberRole(memberId, 'dirigente')
 }
 
 /** Cambio de estado masivo de dirigentes. Devuelve cuántos se procesaron. */
