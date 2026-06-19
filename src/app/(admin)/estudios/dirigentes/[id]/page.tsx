@@ -9,6 +9,7 @@ import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
+import { Modal } from '@/components/shared/Modal'
 import { ChevronLeft, ExternalLink, Users, X, Pencil, Info } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 import { getInitials } from '@/lib/format'
@@ -63,12 +64,16 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
   )
 }
 
-/** Toggle manual de estado del dirigente (activo/inactivo). No permite desactivar
- *  a quien tiene un grupo en curso/abierto (punto 1): muestra ActiveWarningModal. */
-function StatusToggle({ memberId, active, onChanged }: { memberId: string; active: boolean; onChanged: () => void }) {
+/** Toggle manual de estado del dirigente (activo/inactivo). Pide confirmación
+ *  explicando el efecto (activar = agrega al Comité de Dirigentes + rol dirigente;
+ *  desactivar = lo saca del comité + quita el rol). No permite desactivar a quien
+ *  tiene un grupo en curso/abierto (punto 1): muestra ActiveWarningModal. */
+function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: string; memberName: string; active: boolean; onChanged: () => void }) {
   const [saving, setSaving] = useState(false)
   const [warn, setWarn] = useState(false)
-  async function toggle() {
+  const [confirm, setConfirm] = useState(false)
+  const who = memberName || 'este dirigente'
+  async function apply() {
     if (saving) return
     setSaving(true)
     try {
@@ -76,8 +81,9 @@ function StatusToggle({ memberId, active, onChanged }: { memberId: string; activ
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !active }),
       })
-      if (res.status === 409) { setWarn(true); return }
+      if (res.status === 409) { setConfirm(false); setWarn(true); return }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setConfirm(false)
       onChanged()
     } catch (e) { console.error('No se pudo cambiar el estado:', e) }
     finally { setSaving(false) }
@@ -90,12 +96,34 @@ function StatusToggle({ memberId, active, onChanged }: { memberId: string; activ
       message="Este dirigente tiene un grupo en curso o abierto. Cerrá o reasigná esos grupos antes de marcarlo inactivo."
       onClose={() => setWarn(false)}
     />
+    {confirm && (
+      <Modal onClose={() => setConfirm(false)} titleId="confirm-estado-title" width={400}>
+        <div className="p-6 space-y-4">
+          <h3 id="confirm-estado-title" className="text-base font-bold text-navy font-display">
+            {active ? 'Desactivar dirigente' : 'Activar dirigente'}
+          </h3>
+          <p className="text-sm text-navy-light/70 font-body leading-relaxed">
+            {active ? (
+              <>Al desactivar a <strong className="text-navy">{who}</strong> se lo va a <strong className="text-navy">quitar del Comité de Dirigentes</strong> y va a <strong className="text-navy">perder el rol de dirigente</strong>. Su historial de estudios se conserva.</>
+            ) : (
+              <>Al activar a <strong className="text-navy">{who}</strong> se lo va a <strong className="text-navy">agregar al Comité de Dirigentes</strong> y se le va a <strong className="text-navy">asignar el rol de dirigente</strong>.</>
+            )}
+          </p>
+          <div className="flex gap-2 pt-1">
+            <button onClick={() => setConfirm(false)} disabled={saving} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            <button onClick={apply} disabled={saving} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+              {saving ? 'Aplicando…' : (active ? 'Sí, desactivar' : 'Sí, activar')}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )}
     <button
       type="button"
       role="switch"
       aria-checked={active}
       aria-label={active ? 'Desactivar dirigente' : 'Activar dirigente'}
-      onClick={toggle}
+      onClick={() => setConfirm(true)}
       disabled={saving}
       className="inline-flex items-center gap-2 disabled:opacity-50"
     >
@@ -153,7 +181,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl text-navy font-display font-extrabold tracking-[-0.02em]">{d.member_name || 'Sin nombre'}</h1>
               {canToggle ? (
-                <StatusToggle memberId={d.member_id} active={d.status === 'activo'} onChanged={refetch} />
+                <StatusToggle memberId={d.member_id} memberName={d.member_name} active={d.status === 'activo'} onChanged={refetch} />
               ) : (
                 <span className={cn(
                   'rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body',

@@ -273,10 +273,14 @@ export default function DirigentesPage() {
             <h3 id="confirm-bulk-title" className="text-base font-bold text-navy font-display">
               {confirm.active ? 'Activar dirigentes' : 'Desactivar dirigentes'}
             </h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/70 font-body leading-relaxed">
               {confirm.ids.length} dirigente{confirm.ids.length === 1 ? '' : 's'} pasará{confirm.ids.length === 1 ? '' : 'n'} a{' '}
               <strong className="text-navy">{confirm.active ? 'activo' : 'inactivo'}</strong>.
-              {!confirm.active && <span className="block mt-1 text-[12px] text-navy-light/60">Los que tengan un grupo en curso/abierto se omitirán automáticamente.</span>}
+              {confirm.active ? (
+                <span className="block mt-1 text-[12px] text-navy-light/60">Se agregan al <strong>Comité de Dirigentes</strong> y se les asigna el <strong>rol de dirigente</strong>.</span>
+              ) : (
+                <span className="block mt-1 text-[12px] text-navy-light/60">Salen del <strong>Comité de Dirigentes</strong> y pierden el <strong>rol de dirigente</strong>. Los que tengan grupo en curso/abierto se omiten automáticamente.</span>
+              )}
             </p>
             <div className="flex gap-2 pt-1">
               <button onClick={() => setConfirm(null)} disabled={applying} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
