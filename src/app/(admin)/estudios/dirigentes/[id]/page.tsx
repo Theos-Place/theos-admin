@@ -112,7 +112,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
   const { id } = use(params)
   const { dirigentes, loading, refetch } = useDirigentes()
   const { hasRole } = useAuth()
-  const canToggle = hasRole('admin', 'coordinador_dirigentes', 'coordinador_estudios')
+  const canToggle = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   const d = dirigentes.find(x => x.member_id === id)
 
   if (loading) {
@@ -216,7 +216,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
   const { studyTypes, leaders } = useStudies()
   const { activeSedes: SEDES } = useSedes()
   const { hasRole } = useAuth()
-  const canEdit = hasRole('admin', 'coordinador_dirigentes')
+  const canEdit = hasRole('admin', 'direccion', 'coordinador_dirigentes')
 
   const leader = useMemo(() => leaders.find(l => l.member_id === memberId), [leaders, memberId])
   const [studies, setStudies] = useState<string[]>([])

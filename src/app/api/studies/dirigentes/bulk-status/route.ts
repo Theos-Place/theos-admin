@@ -7,7 +7,7 @@ import { bulkSetDirigenteActive, membersWithActiveGroups } from '@/lib/supabase/
 // Al DESACTIVAR, omite a los que tienen grupo en curso/abierto y los devuelve en
 // `skipped` (no se permite dejar inactivo a quien está dando un grupo).
 export async function POST(req: NextRequest) {
-  const auth = await requireRoles('admin', 'coordinador_dirigentes', 'coordinador_estudios')
+  const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   if (auth.res) return auth.res
   try {
     const body = await req.json() as { member_ids?: string[]; active?: boolean }

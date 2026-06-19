@@ -80,8 +80,8 @@ export default function DirigentesPage() {
   const { dirigentes, loading, refetch } = useDirigentes()
   const { studyTypes } = useStudyPlans()
   const { hasRole } = useAuth()
-  const canAdd = hasRole('admin', 'coordinador_dirigentes')
-  const canBulk = hasRole('admin', 'coordinador_dirigentes', 'coordinador_estudios')
+  const canAdd = hasRole('admin', 'direccion', 'coordinador_dirigentes')
+  const canBulk = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
   // Tres conceptos DISTINTOS, cada uno filtrable por tipo de estudio.
   const [dandoTipo, setDandoTipo] = useState('')      // grupo activo de ese estudio

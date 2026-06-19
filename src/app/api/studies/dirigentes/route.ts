@@ -15,7 +15,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireRoles('admin', 'coordinador_dirigentes')
+    const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes')
     if (auth.res) return auth.res
     const body = (await req.json()) as { member_id?: string; active?: boolean }
     if (!body.member_id) return NextResponse.json({ error: 'Falta member_id' }, { status: 400 })

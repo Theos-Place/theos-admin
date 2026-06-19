@@ -11,7 +11,7 @@ const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
 // GET: lista (solo coordinadores/admin). ?count=open devuelve solo el conteo.
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes')
+    const auth = await requireRoles('direccion', 'coordinador_estudios', 'coordinador_dirigentes')
     if (auth.res) return auth.res
 
     const { searchParams } = req.nextUrl

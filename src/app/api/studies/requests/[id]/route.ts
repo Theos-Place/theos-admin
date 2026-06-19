@@ -14,7 +14,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes')
+    const auth = await requireRoles('direccion', 'coordinador_estudios', 'coordinador_dirigentes')
     if (auth.res) return auth.res
     if (!auth.ctx.memberId) {
       return NextResponse.json({ error: 'Tu usuario no está vinculado a un perfil de miembro' }, { status: 409 })

@@ -7,7 +7,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles('admin', 'coordinador_dirigentes', 'coordinador_estudios')
+    const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
     if (auth.res) return auth.res
     const { id } = await params // member_id
     const body = (await req.json()) as { qualified_study_codes?: string[]; zone_preference?: string[]; active?: boolean }

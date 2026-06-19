@@ -161,16 +161,18 @@ export const ROLES: Role[] = [
     description: 'Todo el sistema excepto configuración técnica',
     color: '#29365C',
     permissions: [
+      // Todos los módulos del sistema, todas las acciones EXCEPTO delete.
+      // Excluido a propósito: 'accesos' (solo admin — el mapa de privilegios no se
+      // expone a dirección, decisión 2026-06-11). 'delete' queda solo para admin.
       { module: 'miembros',       actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'estudios',       actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'eventos',        actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'servidores',     actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'empleados',      actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
-      { module: 'finanzas',       actions: ['view', 'export'],                   scope: 'all' },
-      { module: 'comunicaciones', actions: ['view', 'create'],                   scope: 'all' },
-      { module: 'formularios',    actions: ['view', 'create', 'edit'],           scope: 'all' },
+      { module: 'finanzas',       actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
+      { module: 'comunicaciones', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
+      { module: 'formularios',    actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'reportes',       actions: ['view', 'export'],                   scope: 'all' },
-      // accesos: solo admin (decisión 2026-06-11; el mapa de privilegios no se expone a dirección)
     ],
   },
   {

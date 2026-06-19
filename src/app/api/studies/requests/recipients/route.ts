@@ -9,7 +9,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles('coordinador_estudios')
+    const auth = await requireRoles('direccion', 'coordinador_estudios')
     if (auth.res) return auth.res
     if (req.nextUrl.searchParams.get('eligible') === '1') {
       return NextResponse.json(await getEligibleCoordinators())
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireRoles('coordinador_estudios')
+    const auth = await requireRoles('direccion', 'coordinador_estudios')
     if (auth.res) return auth.res
     const body = await req.json()
     if (!body?.member_id) return NextResponse.json({ error: 'Se requiere member_id' }, { status: 400 })
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const auth = await requireRoles('coordinador_estudios')
+    const auth = await requireRoles('direccion', 'coordinador_estudios')
     if (auth.res) return auth.res
     const memberId = req.nextUrl.searchParams.get('member_id')
     if (!memberId) return NextResponse.json({ error: 'Se requiere member_id' }, { status: 400 })

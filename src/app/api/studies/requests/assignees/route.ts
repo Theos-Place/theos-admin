@@ -4,7 +4,7 @@ import { getEligibleCoordinators } from '@/lib/supabase/queries/study-requests'
 
 // GET: coordinadores de dirigentes activos, asignables a una solicitud.
 export async function GET() {
-  const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes')
+  const auth = await requireRoles('direccion', 'coordinador_estudios', 'coordinador_dirigentes')
   if (auth.res) return auth.res
   try {
     const all = await getEligibleCoordinators()

@@ -6,7 +6,7 @@ import { bulkUpdateLeaderStudies } from '@/lib/supabase/queries/studies'
 // formación o disponibilidad de varios dirigentes.
 // Body: { member_ids: string[], field: 'formation'|'availability', code: string, action: 'add'|'remove' }
 export async function POST(req: NextRequest) {
-  const auth = await requireRoles('admin', 'coordinador_dirigentes', 'coordinador_estudios')
+  const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   if (auth.res) return auth.res
   try {
     const body = await req.json() as { member_ids?: string[]; field?: string; code?: string; action?: string }
