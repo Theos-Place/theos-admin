@@ -154,6 +154,7 @@ export function toDomainStudyLeader(db: DbLeaderEnriched, ledGroups: StudyGroup[
     availability_status: AVAIL_MAP[db.availability_status] ?? 'available',
     is_active: db.is_active,
     qualified_studies: db.qualified_study_codes ?? [],
+    formation_studies: db.formation_study_codes ?? [],
     stats: {
       groups_led: ledGroups.length,
       avg_rating: Math.round(avgRating * 10) / 10,

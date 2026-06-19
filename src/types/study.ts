@@ -83,7 +83,10 @@ export type StudyLeader = {
   zone_preference: string[]
   availability_status: 'available' | 'assigned' | 'resting' | 'inactive'
   is_active: boolean
+  /** Disponibilidad: estudios que está dispuesto a dar ahora (qualified_study_codes). */
   qualified_studies: string[]
+  /** Formación: estudios para los que está capacitado (formation_study_codes). */
+  formation_studies: string[]
   stats: {
     groups_led: number
     avg_rating: number

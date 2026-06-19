@@ -25,9 +25,15 @@ export function useDirigentes() {
     [leaders],
   )
 
+  // Config por dirigente (formación + disponibilidad) desde study_leaders.
+  const config = useMemo(
+    () => new Map(leaders.map(l => [l.member_id, { formacion: l.formation_studies ?? [], disponibilidad: l.qualified_studies ?? [] }])),
+    [leaders],
+  )
+
   const dirigentes: Dirigente[] = useMemo(
-    () => buildDirigentes(groups, studyTypes, active, designated),
-    [groups, studyTypes, active, designated],
+    () => buildDirigentes(groups, studyTypes, active, designated, config),
+    [groups, studyTypes, active, designated, config],
   )
 
   return {

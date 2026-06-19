@@ -24,8 +24,12 @@ export type Dirigente = {
   member_id: string
   member_name: string
   status: DirigenteEstado
-  /** Códigos de estudio que el dirigente ha impartido (distintos). */
+  /** Códigos de estudio que el dirigente ha impartido (distintos, derivado de grupos). */
   estudios_habilitados: string[]
+  /** Formación: estudios para los que está capacitado (study_leaders, editable). */
+  formacion: string[]
+  /** Disponibilidad: estudios que está dispuesto a dar ahora (study_leaders). */
+  disponibilidad: string[]
   /** Grupos en curso ahora (en_matricula / en_curso). */
   estudios_activos: DirigenteGrupo[]
   /** Grupos finalizados que lideró. */
@@ -46,6 +50,8 @@ export function buildDirigentes(
   /** Designados manualmente (tabla study_leaders): aparecen aunque no hayan
    *  liderado grupos. Quedan INACTIVO salvo que estén en el comité activo. */
   designated: ActiveDirigente[] = [],
+  /** Config por dirigente (formación + disponibilidad), desde study_leaders. */
+  config: Map<string, { formacion: string[]; disponibilidad: string[] }> = new Map(),
 ): Dirigente[] {
   const planNames = new Map(plans.map(p => [p.code, p.name]))
   const planName = (code: string) => planNames.get(code) ?? code
@@ -97,6 +103,8 @@ export function buildDirigentes(
       member_name: name,
       status: activeMap.has(id) ? 'activo' : 'inactivo',
       estudios_habilitados: [...(acc?.codes ?? [])],
+      formacion: config.get(id)?.formacion ?? [],
+      disponibilidad: config.get(id)?.disponibilidad ?? [],
       estudios_activos: activos,
       estudios_completados: completados,
       total_grupos: completados.length + activos.length,

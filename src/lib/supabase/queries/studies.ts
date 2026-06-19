@@ -127,6 +127,7 @@ export type DbLeaderEnriched = {
   availability_status: 'available' | 'assigned' | 'resting' | 'inactive'
   is_active: boolean
   qualified_study_codes: string[] | null
+  formation_study_codes: string[] | null
   member: { first_name: string; last_name: string; is_donor: boolean } | null
   evaluations: Array<{
     id: string
@@ -874,12 +875,13 @@ export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
   const { data, error } = await supabase
     .from('study_leaders')
     .select(`
-      id, member_id, zone_preference, availability_status, is_active, qualified_study_codes,
+      id, member_id, zone_preference, availability_status, is_active, qualified_study_codes, formation_study_codes,
       member:members(first_name, last_name, is_donor),
       evaluations:leader_evaluations(id, group_id, score, evaluation_date, comments)
     `)
   if (error) throw error
-  return (data ?? []) as DbLeaderEnriched[]
+  // formation_study_codes (mig. 079) aún no está en los tipos generados.
+  return (data ?? []) as unknown as DbLeaderEnriched[]
 }
 
 /** Dirigentes ACTIVOS = servidores activos del comité "Comité de Dirigentes".
@@ -1069,26 +1071,71 @@ export async function updatePlan(id: string, patch: Partial<PlanWriteInput>): Pr
 }
 
 // Grupos
-/** D1: al asignarle un grupo a un dirigente, pasa a activo. Nunca revierte a
- *  inactivo automáticamente. Solo afecta study_leaders (la designación de estudios). */
+/** D1 / Punto 1: al asignarle un grupo a un dirigente, pasa a ACTIVO. La regla:
+ *  activo = voluntario activo del Comité de Dirigentes. Por eso, además de
+ *  study_leaders.is_active, se agrega al comité (igual que setDirigenteActive).
+ *  Nunca revierte a inactivo automáticamente. */
 async function activateLeaders(
-  supabase: ReturnType<typeof createAdminClient>,
+  _supabase: ReturnType<typeof createAdminClient>,
   memberIds: Array<string | null | undefined>,
 ): Promise<void> {
   const ids = Array.from(new Set(memberIds.filter((x): x is string => !!x)))
-  for (const memberId of ids) {
-    const { data: existing } = await supabase
-      .from('study_leaders').select('id, availability_status').eq('member_id', memberId).maybeSingle()
-    const e = existing as { id: string; availability_status: string | null } | null
-    if (e) {
-      await supabase.from('study_leaders').update({
-        is_active: true,
-        availability_status: e.availability_status === 'inactive' ? 'assigned' : e.availability_status,
-      }).eq('member_id', memberId)
-    } else {
-      await supabase.from('study_leaders').insert({ member_id: memberId, is_active: true, availability_status: 'assigned' })
-    }
+  for (const memberId of ids) await setDirigenteActive(memberId, true)
+}
+
+/** Miembros (de `ids`) que son leader o co-líder de un grupo en curso/abierto.
+ *  Para bloquear su desactivación (punto 1). */
+export async function membersWithActiveGroups(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set()
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_groups')
+    .select('leader_id, co_leader_id')
+    .in('status', ['en_matricula', 'en_curso'])
+  if (error) throw error
+  const idSet = new Set(ids)
+  const out = new Set<string>()
+  for (const g of (data ?? []) as Array<{ leader_id: string | null; co_leader_id: string | null }>) {
+    if (g.leader_id && idSet.has(g.leader_id)) out.add(g.leader_id)
+    if (g.co_leader_id && idSet.has(g.co_leader_id)) out.add(g.co_leader_id)
   }
+  return out
+}
+
+/** Bulk: agrega/quita un código de estudio a la FORMACIÓN o la DISPONIBILIDAD de
+ *  varios dirigentes. Crea la fila study_leaders si falta. */
+export async function bulkUpdateLeaderStudies(
+  memberIds: string[],
+  field: 'formation' | 'availability',
+  code: string,
+  action: 'add' | 'remove',
+): Promise<number> {
+  // formation_study_codes (mig. 079) y la key dinámica no están en los tipos
+  // generados → se castea el cliente.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any
+  const col = field === 'formation' ? 'formation_study_codes' : 'qualified_study_codes'
+  let n = 0
+  for (const memberId of memberIds) {
+    const { data: row } = await supabase
+      .from('study_leaders').select(`id, ${col}`).eq('member_id', memberId).maybeSingle()
+    const current = ((row as Record<string, unknown> | null)?.[col] as string[] | null) ?? []
+    const next = action === 'add'
+      ? (current.includes(code) ? current : [...current, code])
+      : current.filter((c: string) => c !== code)
+    if (row) {
+      const { error } = await supabase.from('study_leaders').update({ [col]: next }).eq('member_id', memberId)
+      if (error) throw error
+    } else if (action === 'add') {
+      const { error } = await supabase.from('study_leaders').insert({
+        member_id: memberId, is_active: false, availability_status: 'inactive',
+        zone_preference: [], qualified_study_codes: [], formation_study_codes: [], [col]: next,
+      })
+      if (error) throw error
+    }
+    n++
+  }
+  return n
 }
 
 export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {

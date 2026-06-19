@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { cn } from '@/lib/utils'
+import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { ChevronLeft, ExternalLink, Users, X, Pencil, Info } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 import { getInitials } from '@/lib/format'
@@ -62,10 +63,11 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
   )
 }
 
-/** Toggle manual de estado del dirigente (activo/inactivo). Regla existente: al
- *  asignarle un grupo, un inactivo pasa a activo solo; este es el control manual. */
+/** Toggle manual de estado del dirigente (activo/inactivo). No permite desactivar
+ *  a quien tiene un grupo en curso/abierto (punto 1): muestra ActiveWarningModal. */
 function StatusToggle({ memberId, active, onChanged }: { memberId: string; active: boolean; onChanged: () => void }) {
   const [saving, setSaving] = useState(false)
+  const [warn, setWarn] = useState(false)
   async function toggle() {
     if (saving) return
     setSaving(true)
@@ -74,12 +76,20 @@ function StatusToggle({ memberId, active, onChanged }: { memberId: string; activ
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !active }),
       })
+      if (res.status === 409) { setWarn(true); return }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       onChanged()
     } catch (e) { console.error('No se pudo cambiar el estado:', e) }
     finally { setSaving(false) }
   }
   return (
+    <>
+    <ActiveWarningModal
+      open={warn}
+      title="No se puede desactivar"
+      message="Este dirigente tiene un grupo en curso o abierto. Cerrá o reasigná esos grupos antes de marcarlo inactivo."
+      onClose={() => setWarn(false)}
+    />
     <button
       type="button"
       role="switch"
@@ -89,11 +99,12 @@ function StatusToggle({ memberId, active, onChanged }: { memberId: string; activ
       disabled={saving}
       className="inline-flex items-center gap-2 disabled:opacity-50"
     >
-      <span className={cn('relative h-5 w-9 rounded-full transition-colors', active ? 'bg-[#3DB97A]' : 'bg-navy-light/25')}>
-        <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', active ? 'translate-x-4' : 'translate-x-0.5')} />
+      <span className={cn('relative inline-block h-5 w-9 rounded-full transition-colors shrink-0', active ? 'bg-[#3DB97A]' : 'bg-navy-light/25')}>
+        <span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform', active ? 'translate-x-[18px]' : 'translate-x-0.5')} />
       </span>
       <span className="text-[12px] text-navy-light/70 font-body">{active ? 'Activo' : 'Inactivo'}</span>
     </button>
+    </>
   )
 }
 

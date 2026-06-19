@@ -7,9 +7,9 @@ import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { useAuth } from '@/hooks/useAuth'
 import { useRowSelection } from '@/hooks/useRowSelection'
-import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
+import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus, CheckCircle2, XCircle } from 'lucide-react'
@@ -22,6 +22,8 @@ const ESTADO_FILTERS = [
   { key: 'activo', label: 'Activos' },
   { key: 'inactivo', label: 'Inactivos' },
 ] as const
+
+type StudyBulk = { field: 'formation' | 'availability'; action: 'add' | 'remove' }
 
 function DirigenteRow({
   d, selectable, selected, onToggleSelect, onOpen,
@@ -81,29 +83,29 @@ export default function DirigentesPage() {
   const canAdd = hasRole('admin', 'coordinador_dirigentes')
   const canBulk = hasRole('admin', 'coordinador_dirigentes', 'coordinador_estudios')
   const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
-  const [tipo, setTipo] = useState('')
-  const [dandoAhora, setDandoAhora] = useState(false)
+  // Tres conceptos DISTINTOS, cada uno filtrable por tipo de estudio.
+  const [dandoTipo, setDandoTipo] = useState('')      // grupo activo de ese estudio
+  const [formadoTipo, setFormadoTipo] = useState('')  // capacitado/formado para darlo
+  const [dispTipo, setDispTipo] = useState('')        // disponible (dispuesto a darlo)
   const [query, setQuery] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [confirm, setConfirm] = useState<{ active: boolean; ids: string[] } | null>(null)
   const [applying, setApplying] = useState(false)
+  const [studyBulk, setStudyBulk] = useState<StudyBulk | null>(null)
+  const [skippedWarn, setSkippedWarn] = useState<string[] | null>(null)
 
-  const tiposDados = useMemo(() => {
-    const set = new Set<string>()
-    dirigentes.forEach(d => d.estudios_habilitados.forEach(c => set.add(c)))
-    return studyTypes.filter(t => set.has(t.code))
-  }, [dirigentes, studyTypes])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return dirigentes.filter(d => {
       if (estado !== 'todos' && d.status !== estado) return false
-      if (tipo && !d.estudios_habilitados.includes(tipo)) return false
-      if (dandoAhora && d.estudios_activos.length === 0) return false
+      if (dandoTipo && !d.estudios_activos.some(g => g.plan_code === dandoTipo)) return false
+      if (formadoTipo && !d.formacion.includes(formadoTipo)) return false
+      if (dispTipo && !d.disponibilidad.includes(dispTipo)) return false
       if (q && !d.member_name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [dirigentes, estado, tipo, dandoAhora, query])
+  }, [dirigentes, estado, dandoTipo, formadoTipo, dispTipo, query])
 
   const counts = useMemo(() => ({
     activos: dirigentes.filter(d => d.status === 'activo').length,
@@ -116,7 +118,7 @@ export default function DirigentesPage() {
   const sel = useRowSelection(filteredIds)
   const nameById = useMemo(() => new Map(dirigentes.map(d => [d.member_id, d.member_name])), [dirigentes])
 
-  async function applyBulk() {
+  async function applyBulkStatus() {
     if (!confirm || applying) return
     setApplying(true)
     try {
@@ -125,8 +127,10 @@ export default function DirigentesPage() {
         body: JSON.stringify({ member_ids: confirm.ids, active: confirm.active }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json() as { skipped?: string[] }
       sel.clear()
       setConfirm(null)
+      if (data.skipped && data.skipped.length > 0) setSkippedWarn(data.skipped)
       refetch()
     } catch (e) {
       console.error('No se pudo aplicar el cambio masivo:', e)
@@ -156,7 +160,7 @@ export default function DirigentesPage() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-3">
         <div className="flex flex-wrap gap-1.5">
           {ESTADO_FILTERS.map(f => (
             <button
@@ -170,26 +174,8 @@ export default function DirigentesPage() {
               {f.label}
             </button>
           ))}
-          <button
-            onClick={() => setDandoAhora(v => !v)}
-            className={cn(
-              'rounded-full px-3.5 py-1.5 text-sm transition-colors font-body',
-              dandoAhora ? 'bg-coral text-white' : 'bg-surface-low text-navy-light hover:bg-surface-container',
-            )}
-          >
-            Dando ahora
-          </button>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <select
-            value={tipo}
-            onChange={e => setTipo(e.target.value)}
-            className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body w-full sm:w-auto"
-          >
-            <option value="">Todos los estudios</option>
-            {tiposDados.map(t => <option key={t.code} value={t.code}>{t.code} — {t.name}</option>)}
-          </select>
-          <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
+          <div className="flex-1" />
+          <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-1.5 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
             <Search size={15} className="text-navy-light/60 shrink-0" />
             <input
               value={query}
@@ -200,11 +186,28 @@ export default function DirigentesPage() {
             />
           </div>
         </div>
+
+        {/* Tres filtros de estudio, etiquetados y separados (no se mezclan) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <StudyFilter label="Dando ahora" hint="Tiene un grupo en curso de ese estudio" value={dandoTipo} onChange={setDandoTipo} options={studyTypes} />
+          <StudyFilter label="Formado para darlo" hint="Capacitado para ese estudio (aunque no lo dé)" value={formadoTipo} onChange={setFormadoTipo} options={studyTypes} />
+          <StudyFilter label="Disponibilidad" hint="Dispuesto a dar ese estudio ahora" value={dispTipo} onChange={setDispTipo} options={studyTypes} />
+        </div>
       </div>
 
       {/* Barra de acciones masivas */}
       {canBulk && (
-        <BulkActionBar count={sel.count} noun={sel.count === 1 ? 'dirigente seleccionado' : 'dirigentes seleccionados'} onClear={sel.clear}>
+        <BulkActionBar
+          count={sel.count}
+          noun={sel.count === 1 ? 'dirigente seleccionado' : 'dirigentes seleccionados'}
+          onClear={sel.clear}
+          moreActions={[
+            { label: 'Formación: agregar estudio',    onClick: () => setStudyBulk({ field: 'formation', action: 'add' }) },
+            { label: 'Formación: quitar estudio',      onClick: () => setStudyBulk({ field: 'formation', action: 'remove' }) },
+            { label: 'Disponibilidad: agregar estudio', onClick: () => setStudyBulk({ field: 'availability', action: 'add' }) },
+            { label: 'Disponibilidad: quitar estudio',  onClick: () => setStudyBulk({ field: 'availability', action: 'remove' }) },
+          ]}
+        >
           <button
             onClick={() => setConfirm({ active: true, ids: sel.selectedIds })}
             className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 text-[13px] text-white hover:bg-white/25 transition-colors font-body"
@@ -231,7 +234,6 @@ export default function DirigentesPage() {
       ) : (
         <>
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-            {/* Encabezado: seleccionar todos */}
             {canBulk && (
               <div className="flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b border-[var(--outline-variant)] bg-surface-low/50">
                 <input
@@ -258,23 +260,13 @@ export default function DirigentesPage() {
               />
             ))}
           </div>
-          <LoadMoreFooter
-            shown={shown}
-            total={total}
-            hasMore={hasMore}
-            loading={false}
-            onLoadMore={loadMore}
-            noun="dirigentes"
-            increment={25}
-          />
+          <LoadMoreFooter shown={shown} total={total} hasMore={hasMore} loading={false} onLoadMore={loadMore} noun="dirigentes" increment={25} />
         </>
       )}
 
-      {showAdd && (
-        <AddDirigenteModal onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); refetch() }} />
-      )}
+      {showAdd && <AddDirigenteModal onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); refetch() }} />}
 
-      {/* Confirmación de cambio masivo */}
+      {/* Confirmación de cambio de estado masivo */}
       {confirm && (
         <Modal onClose={() => setConfirm(null)} titleId="confirm-bulk-title" width={400}>
           <div className="p-6 space-y-4">
@@ -284,22 +276,126 @@ export default function DirigentesPage() {
             <p className="text-sm text-navy-light/70 font-body">
               {confirm.ids.length} dirigente{confirm.ids.length === 1 ? '' : 's'} pasará{confirm.ids.length === 1 ? '' : 'n'} a{' '}
               <strong className="text-navy">{confirm.active ? 'activo' : 'inactivo'}</strong>.
-              {confirm.ids.length <= 8 && (
-                <span className="block mt-2 text-[12px] text-navy-light/60">
-                  {confirm.ids.map(id => nameById.get(id)).filter(Boolean).join(', ')}
-                </span>
-              )}
+              {!confirm.active && <span className="block mt-1 text-[12px] text-navy-light/60">Los que tengan un grupo en curso/abierto se omitirán automáticamente.</span>}
             </p>
             <div className="flex gap-2 pt-1">
               <button onClick={() => setConfirm(null)} disabled={applying} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
-              <button onClick={applyBulk} disabled={applying} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+              <button onClick={applyBulkStatus} disabled={applying} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
                 {applying ? 'Aplicando…' : `Sí, ${confirm.active ? 'activar' : 'desactivar'}`}
               </button>
             </div>
           </div>
         </Modal>
       )}
+
+      {/* Bulk de formación / disponibilidad */}
+      {studyBulk && (
+        <BulkStudiesModal
+          field={studyBulk.field}
+          action={studyBulk.action}
+          ids={sel.selectedIds}
+          options={studyTypes}
+          onClose={() => setStudyBulk(null)}
+          onDone={() => { setStudyBulk(null); sel.clear(); refetch() }}
+        />
+      )}
+
+      {/* Omitidos al desactivar (tenían grupo activo) */}
+      <ActiveWarningModal
+        open={!!skippedWarn}
+        title="Algunos no se desactivaron"
+        message={`${skippedWarn?.length ?? 0} dirigente(s) tienen un grupo en curso/abierto y se mantuvieron activos: ${(skippedWarn ?? []).map(id => nameById.get(id)).filter(Boolean).join(', ')}`}
+        onClose={() => setSkippedWarn(null)}
+      />
     </div>
+  )
+}
+
+// ─── Filtro de estudio etiquetado ───────────────────────────────────────────────
+function StudyFilter({
+  label, hint, value, onChange, options,
+}: {
+  label: string; hint: string; value: string; onChange: (v: string) => void
+  options: { code: string; name: string }[]
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display" title={hint}>{label}</p>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        aria-label={`${label} — ${hint}`}
+        className={cn(
+          'w-full rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-coral/30 font-body',
+          value ? 'bg-coral/10 text-coral-deep' : 'bg-surface-low text-navy',
+        )}
+      >
+        <option value="">Cualquiera</option>
+        {options.map(t => <option key={t.code} value={t.code}>{t.code} — {t.name}</option>)}
+      </select>
+    </div>
+  )
+}
+
+// ─── Modal: bulk de formación / disponibilidad ──────────────────────────────────
+function BulkStudiesModal({
+  field, action, ids, options, onClose, onDone,
+}: {
+  field: 'formation' | 'availability'; action: 'add' | 'remove'
+  ids: string[]; options: { code: string; name: string }[]
+  onClose: () => void; onDone: () => void
+}) {
+  const [code, setCode] = useState('')
+  const [saving, setSaving] = useState(false)
+  const fieldLabel = field === 'formation' ? 'la formación' : 'la disponibilidad'
+  const verb = action === 'add' ? 'agregará a' : 'quitará de'
+  const studyName = options.find(t => t.code === code)
+
+  async function submit() {
+    if (!code || saving) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/studies/dirigentes/bulk-studies', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_ids: ids, field, code, action }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      onDone()
+    } catch (e) { console.error('No se pudo aplicar:', e) }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <Modal onClose={onClose} titleId="bulk-studies-title" width={420}>
+      <div className="p-6 space-y-4">
+        <h3 id="bulk-studies-title" className="text-base font-bold text-navy font-display">
+          {action === 'add' ? 'Agregar' : 'Quitar'} estudio a {field === 'formation' ? 'la formación' : 'la disponibilidad'}
+        </h3>
+        <div className="space-y-1">
+          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Estudio</label>
+          <select
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          >
+            <option value="">Seleccionar estudio…</option>
+            {options.map(t => <option key={t.code} value={t.code}>{t.code} — {t.name}</option>)}
+          </select>
+        </div>
+        {code && (
+          <p className="text-[13px] text-navy-light/70 font-body rounded-xl bg-surface-low px-3 py-2.5">
+            Se {verb} {fieldLabel} de <strong className="text-navy">{ids.length}</strong> dirigente{ids.length === 1 ? '' : 's'} el estudio{' '}
+            <strong className="text-navy">{studyName ? `${studyName.code} — ${studyName.name}` : code}</strong>.
+          </p>
+        )}
+        <div className="flex gap-2 pt-1">
+          <button onClick={onClose} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+          <button onClick={submit} disabled={!code || saving} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+            {saving ? 'Aplicando…' : 'Aplicar'}
+          </button>
+        </div>
+      </div>
+    </Modal>
   )
 }
 
