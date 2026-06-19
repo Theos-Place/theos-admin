@@ -36,7 +36,10 @@ function normPhone(v: string | undefined): string | null {
   if (d.length === 8) return `${d.slice(0, 4)}-${d.slice(4)}`
   return d || null
 }
-function parseDate(v: string | undefined): string | null { const t = clean(v); const m = t.match(/^(\d{4})\/(\d{2})\/(\d{2})$/); return m ? `${m[1]}-${m[2]}-${m[3]}` : null }
+function parseDate(v: string | undefined): string | null { const t = clean(v); const m = t.match(/^(\d{4})\/(\d{2})\/(\d{2})/); return m ? `${m[1]}-${m[2]}-${m[3]}` : null }
+// created_at: fecha REAL de PCO ("Date Created"), a mediodía CR para que el
+// año/mes no se corra por zona horaria. Sin ella, omitimos (DB usa DEFAULT NOW()).
+function parseCreatedAt(v: string | undefined): string | undefined { const d = parseDate(v); return d ? `${d}T12:00:00-06:00` : undefined }
 const norm = (s: string) => s.replace(/[-\s]/g, '').toLowerCase()
 const G = (r: Record<string, string>, k: string) => r[k] ?? ''
 
@@ -76,6 +79,7 @@ for (const r of records) {
       sede_code: SEDE_MAP[clean(G(r, 'Custom Fields - Sede a la que asiste con mayor frecuencia'))] ?? null,
       is_active: !clean(G(r, 'Deceased')),
       external_id: ext || null,
+      created_at: parseCreatedAt(G(r, 'Date Created')),
     },
   })
 }

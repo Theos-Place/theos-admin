@@ -158,6 +158,11 @@ async function main() {
         first_name: mapped.first_name ?? '',
         last_name: mapped.last_name ?? '',
       }
+      // created_at = fecha REAL de PCO ("Date Created"), a mediodía CR para que el
+      // año/mes no se corra por zona horaria. Sin ella, la BD usa DEFAULT NOW()
+      // (lo que antes pegaba a todos los importados en la fecha del import).
+      const createdAt = toDateStr(row['Date Created'])
+      if (createdAt) insertRow.created_at = `${createdAt}T12:00:00-06:00`
       if (mapped.phone) insertRow.phone = mapped.phone
       if (mapped.birth_date) insertRow.birth_date = mapped.birth_date
       if (mapped.gender) insertRow.gender = mapped.gender
