@@ -7,6 +7,7 @@ import { useStudies } from '@/hooks/useStudies'
 import { useAuth } from '@/hooks/useAuth'
 import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
+import { groupCodesForDisplay, studySelectOptions, expandSelectionValue } from '@/lib/studies/study-grouping'
 import { cn } from '@/lib/utils'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
@@ -207,7 +208,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
               <SectionLabel text="Formación de estudios" tooltip="Estudios que el dirigente está capacitado para dar" />
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {d.estudios_habilitados.map(code => <StudyTypeBadge key={code} code={code} size="sm" />)}
+              <GroupedStudyBadges codes={d.estudios_habilitados} />
             </div>
           </div>
         )}
@@ -239,6 +240,27 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
   )
 }
 
+// Badges de estudios con N1–N4 colapsados en "Niveles" y DIS1–3 en "Discípulos"
+// (presentación). En edición, la X quita el grupo completo (todos sus códigos).
+function GroupedStudyBadges({ codes, editing, onRemove }: { codes: string[]; editing?: boolean; onRemove?: (codes: string[]) => void }) {
+  const badges = groupCodesForDisplay(codes, c => c)
+  return (
+    <>
+      {badges.map(b => b.value.startsWith('GRP:') ? (
+        <span key={b.value} className="inline-flex items-center gap-1 rounded-full bg-navy/[0.06] px-2.5 py-0.5 text-[11px] text-navy font-body font-semibold">
+          {b.label}
+          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/60 hover:text-coral"><X size={11} /></button>}
+        </span>
+      ) : (
+        <span key={b.value} className="inline-flex items-center gap-1">
+          <StudyTypeBadge code={b.codes[0]} size="sm" />
+          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/60 hover:text-coral"><X size={12} /></button>}
+        </span>
+      ))}
+    </>
+  )
+}
+
 // ─── Configuración editable del dirigente (estudios que imparte + zonas) ─────────
 function DirigenteConfigCard({ memberId }: { memberId: string }) {
   const { studyTypes, leaders } = useStudies()
@@ -263,8 +285,18 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
     setInit(true)
   }, [leaders, leader, init])
 
-  const addStudy = (code: string) => { if (code && !studies.includes(code)) { setStudies([...studies, code]); setSaved(false) } }
-  const removeStudy = (code: string) => { setStudies(studies.filter(c => c !== code)); setSaved(false) }
+  // Agregar/quitar acepta un value de opción (grupo 'GRP:*' o code) y opera sobre
+  // todos los códigos reales que representa — el modelo sigue por estudio individual.
+  const addStudy = (value: string) => {
+    if (!value) return
+    setStudies(prev => Array.from(new Set([...prev, ...expandSelectionValue(value)])))
+    setSaved(false)
+  }
+  const removeCodes = (codes: string[]) => {
+    const drop = new Set(codes)
+    setStudies(prev => prev.filter(c => !drop.has(c)))
+    setSaved(false)
+  }
   const addZone = (id: string) => { if (id && !zones.includes(id)) { setZones([...zones, id]); setSaved(false) } }
   const removeZone = (id: string) => { setZones(zones.filter(z => z !== id)); setSaved(false) }
 
@@ -307,12 +339,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
         <SectionLabel text="Disponibilidad de estudios" tooltip="Estudios que el dirigente está dispuesto a dar en este momento" />
         <div className="flex flex-wrap gap-1.5 items-center">
           {studies.length === 0 && <span className="text-xs text-navy-light/60 font-body">Ninguno</span>}
-          {studies.map(code => (
-            <span key={code} className="inline-flex items-center gap-1">
-              <StudyTypeBadge code={code} size="sm" />
-              {editing && <button onClick={() => removeStudy(code)} className="text-navy-light/60 hover:text-coral"><X size={12} /></button>}
-            </span>
-          ))}
+          <GroupedStudyBadges codes={studies} editing={editing} onRemove={removeCodes} />
         </div>
         {editing && (
           <select
@@ -321,8 +348,8 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
             className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body w-full sm:w-auto"
           >
             <option value="">+ Agregar estudio…</option>
-            {studyTypes.filter(t => !studies.includes(t.code)).map(t => (
-              <option key={t.code} value={t.code}>{t.code} — {t.name}</option>
+            {studySelectOptions(studyTypes).map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
         )}

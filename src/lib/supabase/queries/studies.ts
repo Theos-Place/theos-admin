@@ -1108,12 +1108,13 @@ export async function membersWithActiveGroups(ids: string[]): Promise<Set<string
   return out
 }
 
-/** Bulk: agrega/quita un código de estudio a la FORMACIÓN o la DISPONIBILIDAD de
- *  varios dirigentes. Crea la fila study_leaders si falta. */
+/** Bulk: agrega/quita uno o varios códigos de estudio a la FORMACIÓN o la
+ *  DISPONIBILIDAD de varios dirigentes (un grupo "Niveles"/"Discípulos" expande a
+ *  sus códigos). Crea la fila study_leaders si falta. */
 export async function bulkUpdateLeaderStudies(
   memberIds: string[],
   field: 'formation' | 'availability',
-  code: string,
+  codes: string[],
   action: 'add' | 'remove',
 ): Promise<number> {
   // formation_study_codes (mig. 079) y la key dinámica no están en los tipos
@@ -1121,14 +1122,15 @@ export async function bulkUpdateLeaderStudies(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any
   const col = field === 'formation' ? 'formation_study_codes' : 'qualified_study_codes'
+  const codeSet = new Set(codes)
   let n = 0
   for (const memberId of memberIds) {
     const { data: row } = await supabase
       .from('study_leaders').select(`id, ${col}`).eq('member_id', memberId).maybeSingle()
     const current = ((row as Record<string, unknown> | null)?.[col] as string[] | null) ?? []
     const next = action === 'add'
-      ? (current.includes(code) ? current : [...current, code])
-      : current.filter((c: string) => c !== code)
+      ? Array.from(new Set([...current, ...codes]))
+      : current.filter((c: string) => !codeSet.has(c))
     if (row) {
       const { error } = await supabase.from('study_leaders').update({ [col]: next }).eq('member_id', memberId)
       if (error) throw error

@@ -10,6 +10,7 @@ import { useRowSelection } from '@/hooks/useRowSelection'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
+import { studySelectOptions, expandSelectionValue, matchesStudyFilter } from '@/lib/studies/study-grouping'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus, CheckCircle2, XCircle } from 'lucide-react'
@@ -99,9 +100,9 @@ export default function DirigentesPage() {
     const q = query.trim().toLowerCase()
     return dirigentes.filter(d => {
       if (estado !== 'todos' && d.status !== estado) return false
-      if (dandoTipo && !d.estudios_activos.some(g => g.plan_code === dandoTipo)) return false
-      if (formadoTipo && !d.formacion.includes(formadoTipo)) return false
-      if (dispTipo && !d.disponibilidad.includes(dispTipo)) return false
+      if (dandoTipo && !matchesStudyFilter(d.estudios_activos.map(g => g.plan_code), dandoTipo)) return false
+      if (formadoTipo && !matchesStudyFilter(d.formacion, formadoTipo)) return false
+      if (dispTipo && !matchesStudyFilter(d.disponibilidad, dispTipo)) return false
       if (q && !d.member_name.toLowerCase().includes(q)) return false
       return true
     })
@@ -322,6 +323,7 @@ function StudyFilter({
   label: string; hint: string; value: string; onChange: (v: string) => void
   options: { code: string; name: string }[]
 }) {
+  const opts = studySelectOptions(options)
   return (
     <div className="space-y-1">
       <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display" title={hint}>{label}</p>
@@ -335,7 +337,7 @@ function StudyFilter({
         )}
       >
         <option value="">Cualquiera</option>
-        {options.map(t => <option key={t.code} value={t.code}>{t.code} — {t.name}</option>)}
+        {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
   )
@@ -351,17 +353,19 @@ function BulkStudiesModal({
 }) {
   const [code, setCode] = useState('')
   const [saving, setSaving] = useState(false)
+  const opts = studySelectOptions(options)
   const fieldLabel = field === 'formation' ? 'la formación' : 'la disponibilidad'
   const verb = action === 'add' ? 'agregará a' : 'quitará de'
-  const studyName = options.find(t => t.code === code)
+  const studyName = opts.find(o => o.value === code)
 
   async function submit() {
     if (!code || saving) return
+    const codes = expandSelectionValue(code)
     setSaving(true)
     try {
       const res = await fetch('/api/studies/dirigentes/bulk-studies', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_ids: ids, field, code, action }),
+        body: JSON.stringify({ member_ids: ids, field, codes, action }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       onDone()
@@ -383,13 +387,13 @@ function BulkStudiesModal({
             className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
           >
             <option value="">Seleccionar estudio…</option>
-            {options.map(t => <option key={t.code} value={t.code}>{t.code} — {t.name}</option>)}
+            {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         {code && (
           <p className="text-[13px] text-navy-light/70 font-body rounded-xl bg-surface-low px-3 py-2.5">
-            Se {verb} {fieldLabel} de <strong className="text-navy">{ids.length}</strong> dirigente{ids.length === 1 ? '' : 's'} el estudio{' '}
-            <strong className="text-navy">{studyName ? `${studyName.code} — ${studyName.name}` : code}</strong>.
+            Se {verb} {fieldLabel} de <strong className="text-navy">{ids.length}</strong> dirigente{ids.length === 1 ? '' : 's'}{' '}
+            <strong className="text-navy">{studyName?.label ?? code}</strong>.
           </p>
         )}
         <div className="flex gap-2 pt-1">
