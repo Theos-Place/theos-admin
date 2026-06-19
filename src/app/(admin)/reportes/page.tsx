@@ -10,8 +10,8 @@ type ReportTile = { href: string; title: string; description: string; icon: Luci
 const REPORTS: ReportTile[] = [
   {
     href: '/reportes/asistencia',
-    title: 'Control de Asistencia por Grupo',
-    description: 'Asistencia a charlas por sede y semana, promedios anuales y comparativos por año/mes.',
+    title: 'Crecimiento y Asistencia',
+    description: 'Personas nuevas por sede y mes, y asistencia a charlas por sede/semana con comparativos por año.',
     icon: BarChart2,
     ready: true,
   },

@@ -3,13 +3,15 @@ import { cn } from '@/lib/utils'
 /** Contenedor de gráfico reutilizable: título + subtítulo + área de gráfico con
  *  alto fijo. Maneja estado vacío. Compartido por todos los reportes. */
 export function ChartCard({
-  title, subtitle, empty, height = 300, className, children,
+  title, subtitle, empty, height = 300, className, footnote, children,
 }: {
   title: string
   subtitle?: string
   empty?: boolean
   height?: number
   className?: string
+  /** Nota al pie (p. ej. método de cálculo o aclaración de un dato). */
+  footnote?: React.ReactNode
   children: React.ReactNode
 }) {
   return (
@@ -24,6 +26,9 @@ export function ChartCard({
         </div>
       ) : (
         <div style={{ width: '100%', height }}>{children}</div>
+      )}
+      {!empty && footnote && (
+        <p className="mt-2.5 text-[11px] text-navy-light/60 font-body leading-snug">{footnote}</p>
       )}
     </div>
   )

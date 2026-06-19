@@ -17,7 +17,9 @@ export type AnnualCard = {
   /** % de cambio del promedio semanal vs el año anterior (null si no hay base). */
   changePct: number | null
 }
-export type WeeklyPoint = { week: number; total: number }
+/** `partial` = semana atípicamente baja (feriado / pocos días con charlas):
+ *  total < 50% de la mediana del año. Se marca para no leerla como caída real. */
+export type WeeklyPoint = { week: number; total: number; partial: boolean }
 export type SedeRank = { sede: string; total: number }
 /** Promedio semanal de cada mes (Ene–Dic) por año. `values[year]` = null si sin datos. */
 export type MonthlyPoint = { month: number; values: Record<number, number | null> }
@@ -93,11 +95,18 @@ export function buildCharlaReport(
   // ── Asistencia semanal (año seleccionado, sede filtrada) ──
   const weekTotals = new Map<number, number>()
   for (const r of filtered) if (r.yr === year) weekTotals.set(r.wk, (weekTotals.get(r.wk) ?? 0) + r.checkins)
-  let weekly: WeeklyPoint[] = []
+  const weekly: WeeklyPoint[] = []
   if (weekTotals.size > 0) {
     const wks = [...weekTotals.keys()]
     const min = Math.min(...wks), max = Math.max(...wks)
-    for (let w = min; w <= max; w++) weekly.push({ week: w, total: weekTotals.get(w) ?? 0 })
+    // Mediana de las semanas CON datos → umbral de "semana parcial" (50%).
+    const present = [...weekTotals.values()].filter(v => v > 0).sort((a, b) => a - b)
+    const median = present.length ? present[Math.floor(present.length / 2)] : 0
+    const partialThreshold = median * 0.5
+    for (let w = min; w <= max; w++) {
+      const total = weekTotals.get(w) ?? 0
+      weekly.push({ week: w, total, partial: median > 0 && total > 0 && total < partialThreshold })
+    }
   }
   const weeklyAvg = round1(weeklyAvgOf(year))
 
