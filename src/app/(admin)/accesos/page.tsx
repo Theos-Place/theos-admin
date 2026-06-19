@@ -266,28 +266,13 @@ export default function AccesosPage() {
                       </div>
                     </div>
                   </td>
-                  {/* Roles — excluye 'miembro' (es implícito) */}
+                  {/* Roles acumulados — los miembros sin roles extra se muestran como "Miembro" */}
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-1">
                       {(() => {
                         const extra = u.roles.filter(r => r !== 'miembro')
-                        if (extra.length === 0) {
-                          return (
-                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium text-navy-light/60 bg-navy/6 font-body">
-                              Solo acceso básico
-                            </span>
-                          )
-                        }
-                        return (
-                          <>
-                            {extra.slice(0, 2).map(rid => <RoleBadge key={rid} roleId={rid} small />)}
-                            {extra.length > 2 && (
-                              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium text-navy-light/60 bg-surface-low">
-                                +{extra.length - 2} más
-                              </span>
-                            )}
-                          </>
-                        )
+                        if (extra.length === 0) return <RoleBadge roleId="miembro" small />
+                        return extra.map(rid => <RoleBadge key={rid} roleId={rid} small />)
                       })()}
                     </div>
                   </td>
@@ -365,7 +350,7 @@ export default function AccesosPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-navy font-body">{u.member_name}</p>
                   <p className="truncate text-[12px] text-navy-light/60 font-body">
-                    {extra.length === 0 ? 'Solo acceso básico' : `${extra.length} rol${extra.length !== 1 ? 'es' : ''} · ${u.member_email}`}
+                    {extra.length === 0 ? 'Miembro' : extra.map(rid => ROLES.find(r => r.id === rid)?.name ?? rid).join(', ')}
                   </p>
                 </div>
                 <span
