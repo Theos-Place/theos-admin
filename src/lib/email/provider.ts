@@ -43,6 +43,11 @@ export function assertEmailConfigured(): void {
 export const FROM_EMAIL = process.env.SES_FROM_EMAIL ?? 'no-reply@theosplace.org'
 export const FROM_NAME = process.env.SES_FROM_NAME ?? 'Theos Place'
 
+// Configuration Set de SES: necesario para que SES dispare las notificaciones de
+// bounce/complaint a SNS. Sin este header (y sin el config set con event
+// destination en AWS), el webhook nunca recibe eventos. Configurable por env.
+const CONFIGURATION_SET = process.env.SES_CONFIGURATION_SET
+
 let _transport: nodemailer.Transporter | null = null
 function getTransport(): nodemailer.Transporter {
   if (_transport) return _transport
@@ -84,7 +89,10 @@ export async function sendEmail({ to, subject, html, fromName, headers }: SendEm
     to: to.name ? { name: to.name, address: to.email } : to.email,
     subject,
     html,
-    headers,
+    headers: {
+      ...(CONFIGURATION_SET ? { 'X-SES-CONFIGURATION-SET': CONFIGURATION_SET } : {}),
+      ...headers,
+    },
   })
   return { messageId: result.messageId ?? '' }
 }
