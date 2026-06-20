@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getDailyEmailsSent } from '@/lib/supabase/queries/communications'
-import { sendEmail, isBrevoConfigured, DAILY_LIMIT } from '@/lib/email/brevo'
+import { sendEmail, isEmailConfigured, DAILY_LIMIT } from '@/lib/email/provider'
 
 // GET: estado de la integración de email (configurada, límite, uso de hoy).
 export async function GET() {
@@ -9,9 +9,9 @@ export async function GET() {
     const auth = await requireRoles('comunicaciones', 'direccion')
     if (auth.res) return auth.res
     return NextResponse.json({
-      configured: isBrevoConfigured(),
+      configured: isEmailConfigured(),
       dailyLimit: DAILY_LIMIT,
-      sentToday: isBrevoConfigured() ? await getDailyEmailsSent() : 0,
+      sentToday: isEmailConfigured() ? await getDailyEmailsSent() : 0,
     })
   } catch (error) {
     console.error('GET /api/communications/email-status:', error)
@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
   try {
     const auth = await requireRoles('comunicaciones', 'direccion')
     if (auth.res) return auth.res
-    if (!isBrevoConfigured()) {
+    if (!isEmailConfigured()) {
       return NextResponse.json(
-        { error: 'Configurá Brevo primero en Configuración → Comunicaciones' },
+        { error: 'El proveedor de email (SES) no está configurado. Revisá las variables SES_* del servidor.' },
         { status: 400 },
       )
     }
@@ -35,10 +35,8 @@ export async function POST(req: NextRequest) {
 
     await sendEmail({
       to: { email },
-      fromName: 'Theos Place',
-      fromEmail: 'notificaciones@theosplace.org',
       subject: 'Email de prueba — Theos Admin',
-      html: '<p>Este es un email de prueba del sistema de comunicaciones de Theos Place. Si lo recibiste, Brevo está configurado correctamente. ✓</p>',
+      html: '<p>Este es un email de prueba del sistema de comunicaciones de Theos Place. Si lo recibiste, AWS SES está configurado correctamente. ✓</p>',
     })
     return NextResponse.json({ ok: true })
   } catch (error) {

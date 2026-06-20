@@ -18,7 +18,7 @@ type QueueStats = {
   pending: number
   failed: number
   lastScheduledDate: string | null
-  brevoConfigured: boolean
+  emailConfigured: boolean
   dailyLimit: number
   sentToday: number
 }
@@ -187,8 +187,8 @@ export default function ComunicacionDetallePage() {
                 <button
                   type="button"
                   onClick={() => runQueueAction(false)}
-                  disabled={processing || !queue.brevoConfigured}
-                  title={queue.brevoConfigured ? undefined : 'Configurá Brevo primero en Configuración → Comunicaciones'}
+                  disabled={processing || !queue.emailConfigured}
+                  title={queue.emailConfigured ? undefined : 'El proveedor de email (SES) no está configurado'}
                   className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:bg-navy-ink transition-colors disabled:opacity-50 font-body"
                 >
                   <Zap size={12} />

@@ -15,9 +15,9 @@ export async function POST(
     await sendBroadcast(id, recipients ?? [])
     return NextResponse.json({ ok: true })
   } catch (error) {
-    if (error instanceof Error && error.message === 'BREVO_NOT_CONFIGURED') {
+    if (error instanceof Error && error.message.startsWith('EMAIL_NOT_CONFIGURED')) {
       return NextResponse.json(
-        { error: 'Configurá Brevo primero en Configuración → Comunicaciones' },
+        { error: 'El proveedor de email (SES) no está configurado. Revisá las variables SES_* del servidor.' },
         { status: 400 },
       )
     }

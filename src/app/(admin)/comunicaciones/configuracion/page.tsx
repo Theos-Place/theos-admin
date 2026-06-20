@@ -323,7 +323,7 @@ export default function ConfiguracionPage() {
       {/* SMTP tab */}
       {tab === 'smtp' && (
         <div className="space-y-4">
-          <BrevoSection />
+          <EmailSection />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-navy-light/60 font-body">
               {smtpConfigs.length} cuenta{smtpConfigs.length !== 1 ? 's' : ''} configurada{smtpConfigs.length !== 1 ? 's' : ''}
@@ -588,11 +588,11 @@ export default function ConfiguracionPage() {
   )
 }
 
-/* ── Brevo (envío real de email) ──
-   La API key vive en la variable de entorno BREVO_API_KEY del servidor —
-   nunca en la BD. Acá solo se muestra el estado, el uso del día y un
-   botón de email de prueba. */
-function BrevoSection() {
+/* ── Email (AWS SES vía SMTP) ──
+   Las credenciales viven en variables de entorno del servidor (SES_SMTP_*,
+   SES_FROM_*), nunca en la BD. Acá solo se muestra el estado, el uso del día
+   y un botón de email de prueba. */
+function EmailSection() {
   const { user } = useAuth()
   const [status, setStatus] = useState<{ configured: boolean; dailyLimit: number; sentToday: number } | null>(null)
   const [testing, setTesting] = useState(false)
@@ -637,10 +637,10 @@ function BrevoSection() {
     <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-sm font-semibold text-navy font-body">Brevo — envío de email</p>
+          <p className="text-sm font-semibold text-navy font-body">Email — AWS SES (SMTP)</p>
           <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
-            Proveedor del envío real. La API key se configura en el servidor
-            (variable <code className="font-mono text-[11px]">BREVO_API_KEY</code>), nunca en la base de datos.
+            Proveedor del envío real. Las credenciales se configuran en el servidor
+            (variables <code className="font-mono text-[11px]">SES_SMTP_*</code> / <code className="font-mono text-[11px]">SES_FROM_*</code>), nunca en la base de datos.
           </p>
         </div>
         <span className={cn(
@@ -660,7 +660,7 @@ function BrevoSection() {
                 Hoy: <strong className="text-navy">{status.sentToday}</strong> / {status.dailyLimit} emails enviados
               </p>
               <p className="text-[11px] text-navy-light/60 font-body">
-                Límite diario: {status.dailyLimit} (env <code className="font-mono text-[10px]">BREVO_DAILY_LIMIT</code>)
+                Límite diario: {status.dailyLimit} (env <code className="font-mono text-[10px]">EMAIL_DAILY_LIMIT</code>)
               </p>
             </div>
             <div className="h-2 rounded-full bg-surface-low overflow-hidden">
@@ -696,7 +696,7 @@ function BrevoSection() {
       ) : (
         <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
           <p className="text-[13px] text-coral font-body">
-            Configurá la variable <code className="font-mono text-[11px]">BREVO_API_KEY</code> en el servidor
+            Configurá las variables <code className="font-mono text-[11px]">SES_SMTP_*</code> y <code className="font-mono text-[11px]">SES_FROM_*</code> en el servidor
             (Vercel → Settings → Environment Variables) para habilitar el envío de emails.
             Los envíos están bloqueados hasta entonces.
           </p>

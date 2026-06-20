@@ -1,0 +1,90 @@
+/**
+ * Proveedor de email del sistema: AWS SES vía SMTP (nodemailer, STARTTLS:587).
+ * Interfaz provider-neutral — el resto del sistema solo conoce sendEmail()/
+ * isEmailConfigured(); cambiar de proveedor no toca la cola ni los broadcasts.
+ *
+ * Variables de entorno (Vercel + Supabase Edge Function):
+ *   SES_SMTP_HOST, SES_SMTP_PORT, SES_SMTP_USER, SES_SMTP_PASSWORD,
+ *   SES_FROM_EMAIL (no-reply@theosplace.org), SES_FROM_NAME (Theos Place)
+ *
+ * Solo server-side (usa nodemailer). Nunca importar desde el cliente.
+ */
+import nodemailer from 'nodemailer'
+
+/** Token de error cuando no hay proveedor configurado (la UI lo traduce). */
+export const EMAIL_NOT_CONFIGURED = 'EMAIL_NOT_CONFIGURED'
+
+/** Techo diario de envío para la cola/rate-limiting (configurable). */
+export const DAILY_LIMIT = Number(process.env.EMAIL_DAILY_LIMIT ?? 5000)
+
+const SES_VARS = [
+  'SES_SMTP_HOST', 'SES_SMTP_PORT', 'SES_SMTP_USER', 'SES_SMTP_PASSWORD',
+  'SES_FROM_EMAIL', 'SES_FROM_NAME',
+] as const
+
+/** Variables SES que faltan (vacío = todo configurado). */
+function missingSesVars(): string[] {
+  return SES_VARS.filter(v => !process.env[v])
+}
+
+/** ¿Está el proveedor de email (SES) completamente configurado? */
+export function isEmailConfigured(): boolean {
+  return missingSesVars().length === 0
+}
+
+/** Lanza un error explícito si falta alguna variable SES (no fallar en silencio). */
+export function assertEmailConfigured(): void {
+  const missing = missingSesVars()
+  if (missing.length > 0) {
+    throw new Error(`${EMAIL_NOT_CONFIGURED}: faltan variables de entorno SES (${missing.join(', ')})`)
+  }
+}
+
+export const FROM_EMAIL = process.env.SES_FROM_EMAIL ?? 'no-reply@theosplace.org'
+export const FROM_NAME = process.env.SES_FROM_NAME ?? 'Theos Place'
+
+let _transport: nodemailer.Transporter | null = null
+function getTransport(): nodemailer.Transporter {
+  if (_transport) return _transport
+  assertEmailConfigured()
+  _transport = nodemailer.createTransport({
+    host: process.env.SES_SMTP_HOST,
+    port: Number(process.env.SES_SMTP_PORT ?? 587),
+    secure: false,        // 587 = STARTTLS (se promueve a TLS tras EHLO)
+    requireTLS: true,
+    auth: {
+      user: process.env.SES_SMTP_USER,
+      pass: process.env.SES_SMTP_PASSWORD,
+    },
+  })
+  return _transport
+}
+
+export type SendEmailInput = {
+  to: { email: string; name?: string }
+  subject: string
+  html: string
+  /** SES exige un remitente verificado; por defecto usa SES_FROM_*. Estos campos
+   *  se aceptan por compatibilidad pero el remitente real siempre es el verificado. */
+  fromName?: string
+  fromEmail?: string
+  /** Headers extra (p. ej. List-Unsubscribe en correos de marketing). */
+  headers?: Record<string, string>
+}
+
+/**
+ * Envía un email transaccional/marketing por SES SMTP. El remitente es siempre
+ * SES_FROM_EMAIL (identidad verificada); el `fromName` se puede personalizar.
+ */
+export async function sendEmail({ to, subject, html, fromName, headers }: SendEmailInput): Promise<{ messageId: string }> {
+  assertEmailConfigured()
+  const transport = getTransport()
+  const result = await transport.sendMail({
+    from: { name: fromName || FROM_NAME, address: FROM_EMAIL },
+    to: to.name ? { name: to.name, address: to.email } : to.email,
+    subject,
+    html,
+    headers,
+  })
+  return { messageId: result.messageId ?? '' }
+}

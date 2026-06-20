@@ -3,7 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import {
   processPendingEmails, retryFailedEmails, getBroadcastQueueStats,
 } from '@/lib/supabase/queries/communications'
-import { isBrevoConfigured } from '@/lib/email/brevo'
+import { isEmailConfigured } from '@/lib/email/provider'
 
 /** Autorizado si trae el CRON_SECRET (cron de Supabase) o una sesión con rol. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -38,9 +38,9 @@ export async function POST(
   try {
     const denied = await authorize(req)
     if (denied) return denied
-    if (!isBrevoConfigured()) {
+    if (!isEmailConfigured()) {
       return NextResponse.json(
-        { error: 'Configurá Brevo primero en Configuración → Comunicaciones' },
+        { error: 'El proveedor de email (SES) no está configurado. Revisá las variables SES_* del servidor.' },
         { status: 400 },
       )
     }

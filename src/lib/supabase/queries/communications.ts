@@ -9,7 +9,8 @@
  *     ON message_logs(status, scheduled_date, channel) WHERE status = 'pending';
  */
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
-import { sendEmail, isBrevoConfigured, DAILY_LIMIT } from '@/lib/email/brevo'
+import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
+import { withMarketingFooter, listUnsubscribeHeader } from '@/lib/email/footer'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
 
 export type DbBroadcast = {
@@ -171,6 +172,8 @@ export async function verifyConfig(id: string): Promise<void> {
 export type BroadcastWriteInput = {
   template_id?: string | null
   channel: CommunicationChannel
+  /** 'marketing' (respeta opt-out + lleva unsubscribe) | 'transactional'. Default marketing. */
+  kind?: 'marketing' | 'transactional'
   subject?: string | null
   body: string
   segment_label?: string | null
@@ -243,18 +246,62 @@ export function distributeEmailSchedule(
  * 1. Canal 'interna': inserta internal_notifications (campana) por destinatario
  *    y deja el log como 'sent' de una vez — sin correo ni configuración.
  * 2. Email: crea message_logs 'pending' con scheduled_date distribuida por días
- *    según el límite diario de Brevo (lo de hoy se procesa inmediatamente; el
+ *    según el límite diario de envío (lo de hoy se procesa inmediatamente; el
  *    resto lo recoge el cron diario).
  * 3. WhatsApp queda en 'pending' sin procesar (se integra después).
- * Lanza error claro si hay emails y Brevo no está configurado (antes de crear logs).
+ * Lanza error claro si hay emails y el proveedor (SES) no está configurado.
  */
+/** Resuelve el correo real (desde members) de los destinatarios email y excluye
+ *  a los bloqueados: bounced/complained siempre; opt-out solo si es marketing. */
+async function resolveEmailRecipients(
+  supabase: ReturnType<typeof createAdminClient>,
+  raw: Recipient[],
+  isMarketing: boolean,
+): Promise<Recipient[]> {
+  const ids = Array.from(new Set(raw.map(r => r.member_id).filter(Boolean))) as string[]
+  type MRow = { id: string; email: string | null; email_bounced: boolean; email_complained: boolean; newsletter_opt_out: boolean }
+  const byId = new Map<string, MRow>()
+  for (let i = 0; i < ids.length; i += 300) {
+    // Columnas nuevas (mig. 085) aún no están en los tipos generados.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from('members')
+      .select('id, email, email_bounced, email_complained, newsletter_opt_out')
+      .in('id', ids.slice(i, i + 300))
+    for (const m of (data ?? []) as MRow[]) byId.set(m.id, m)
+  }
+  const out: Recipient[] = []
+  for (const r of raw) {
+    const m = r.member_id ? byId.get(r.member_id) : null
+    const email = r.recipient && r.recipient.includes('@') ? r.recipient : (m?.email ?? '')
+    if (!email) continue                                   // sin correo → no se puede enviar
+    if (m?.email_bounced || m?.email_complained) continue  // rebote/queja → excluir siempre
+    if (isMarketing && m?.newsletter_opt_out) continue     // baja de newsletter → excluir en marketing
+    out.push({ ...r, recipient: email })
+  }
+  return out
+}
+
 export async function sendBroadcast(id: string, recipients: Recipient[]): Promise<void> {
   const supabase = createAdminClient()
 
-  const emailRecipients = recipients.filter(r => r.channel === 'email')
-  if (emailRecipients.length > 0 && !isBrevoConfigured()) {
-    throw new Error('BREVO_NOT_CONFIGURED')
+  const emailRecipientsRaw = recipients.filter(r => r.channel === 'email')
+  if (emailRecipientsRaw.length > 0 && !isEmailConfigured()) {
+    throw new Error(EMAIL_NOT_CONFIGURED)
   }
+
+  // Tipo de broadcast: marketing (respeta opt-out + bounced) vs transaccional.
+  // 'kind' (mig. 085) aún no está en los tipos generados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: bMeta } = await (supabase as any)
+    .from('message_broadcasts').select('kind').eq('id', id).single()
+  const isMarketing = (bMeta as { kind?: string } | null)?.kind !== 'transactional'
+
+  // Resolver el correo real de cada destinatario desde members (el cliente manda
+  // recipient vacío) y EXCLUIR a quienes no deben recibir:
+  //   · siempre: rebotados (email_bounced) y quejas (email_complained)
+  //   · marketing: además los que se dieron de baja (newsletter_opt_out)
+  const emailRecipients = await resolveEmailRecipients(supabase, emailRecipientsRaw, isMarketing)
 
   await supabase.from('message_broadcasts')
     .update({ status: 'sending', started_at: new Date().toISOString() })
@@ -317,7 +364,7 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   }
 
   await supabase.from('message_broadcasts')
-    .update({ total_recipients: recipients.length })
+    .update({ total_recipients: internalLogs.length + emailLogs.length + waLogs.length })
     .eq('id', id)
 
   // Procesar inmediatamente el batch de hoy.
@@ -371,14 +418,16 @@ export async function processPendingEmails(
   const supabase = createAdminClient()
   const today = todayStr()
 
-  const { data: broadcastRow, error: bErr } = await supabase
+  // 'kind' (mig. 085) aún no está en los tipos generados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: broadcastRow, error: bErr } = await (supabase as any)
     .from('message_broadcasts')
-    .select('subject, body, smtp_config_id, config:channel_configs!message_broadcasts_smtp_config_id_fkey(smtp_from_name, smtp_from_email)')
+    .select('subject, body, kind, smtp_config_id, config:channel_configs!message_broadcasts_smtp_config_id_fkey(smtp_from_name, smtp_from_email)')
     .eq('id', broadcastId)
     .single()
   if (bErr || !broadcastRow) throw new Error('Broadcast no encontrado')
   const broadcast = broadcastRow as {
-    subject: string | null; body: string
+    subject: string | null; body: string; kind?: string
     config: { smtp_from_name: string | null; smtp_from_email: string | null } | null
   }
 
@@ -434,34 +483,45 @@ export async function processPendingEmails(
     return { sent: 0, failed: 0 }
   }
 
-  // Nombres de los miembros en un solo query (no N+1).
+  // Nombre + token de baja de los miembros en un solo query (no N+1).
   const memberIds = Array.from(new Set(batch.map(l => l.member_id).filter(Boolean))) as string[]
   const names = new Map<string, string>()
+  const tokens = new Map<string, string>()
   if (memberIds.length) {
-    const { data: members } = await supabase
-      .from('members').select('id, first_name, last_name').in('id', memberIds)
-    for (const m of (members ?? []) as Array<{ id: string; first_name: string; last_name: string }>) {
+    // 'unsubscribe_token' (mig. 085) aún no está en los tipos generados.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: members } = await (supabase as any)
+      .from('members').select('id, first_name, last_name, unsubscribe_token').in('id', memberIds)
+    for (const m of (members ?? []) as Array<{ id: string; first_name: string; last_name: string; unsubscribe_token: string }>) {
       names.set(m.id, `${m.first_name} ${m.last_name}`.trim())
+      tokens.set(m.id, m.unsubscribe_token)
     }
   }
+
+  // Marketing → pie con baja (unsubscribe) + dirección física y header
+  // List-Unsubscribe. Transaccional → cuerpo tal cual, sin baja.
+  const isMarketing = broadcast.kind !== 'transactional'
 
   let sent = 0, failed = 0
   for (const log of batch) {
     const attempts = (log.attempts ?? 0) + 1
+    const token = log.member_id ? tokens.get(log.member_id) : undefined
+    const html = isMarketing && token ? withMarketingFooter(broadcast.body, token) : broadcast.body
+    const headers = isMarketing && token ? listUnsubscribeHeader(token) : undefined
     try {
       await sendEmail({
         to: { email: log.recipient, name: (log.member_id && names.get(log.member_id)) || log.recipient },
-        fromName: broadcast.config?.smtp_from_name ?? 'Theos Place',
-        fromEmail: broadcast.config?.smtp_from_email ?? 'notificaciones@theosplace.org',
+        fromName: broadcast.config?.smtp_from_name ?? undefined,
         subject: broadcast.subject ?? 'Mensaje de Theos Place',
-        html: broadcast.body,
+        html,
+        headers,
       })
       await supabase.from('message_logs')
         .update({ status: 'sent', sent_at: new Date().toISOString(), attempts, last_error: null })
         .eq('id', log.id)
       sent++
-      // Delay corto para no saturar la API de Brevo.
-      await new Promise(r => setTimeout(r, 200))
+      // Pausa corta entre envíos para no exceder el rate de SES.
+      await new Promise(r => setTimeout(r, 100))
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
       await supabase.from('message_logs')
@@ -495,7 +555,7 @@ export type QueueStats = {
   pending: number
   failed: number
   lastScheduledDate: string | null
-  brevoConfigured: boolean
+  emailConfigured: boolean
   dailyLimit: number
   sentToday: number
 }
@@ -517,7 +577,7 @@ export async function getBroadcastQueueStats(broadcastId: string): Promise<Queue
     pending: pendingDates.length,
     failed: logs.filter(l => l.status === 'failed' || l.status === 'bounced').length,
     lastScheduledDate: pendingDates.length ? pendingDates.sort().at(-1)! : null,
-    brevoConfigured: isBrevoConfigured(),
+    emailConfigured: isEmailConfigured(),
     dailyLimit: DAILY_LIMIT,
     sentToday: await getDailyEmailsSent(),
   }

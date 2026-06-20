@@ -10,6 +10,7 @@ import { MessagePreview } from '@/components/communications/MessagePreview'
 import { type RecipientState, type RecipientMode } from '@/components/communications/RecipientSelector'
 import { ChevronLeft, Send, Save, Check } from 'lucide-react'
 import { useToast } from '@/components/shared/Toast'
+import { cn } from '@/lib/utils'
 
 import { RecipientsSection } from './_components/RecipientsSection'
 import { ChannelSection } from './_components/ChannelSection'
@@ -70,9 +71,11 @@ function NuevaComunicacionContent() {
   const [isImported, setIsImported] = useState(initialSegmentLabel !== '' && initialMemberIds.length > 0)
   const [showExpandedList, setShowExpandedList] = useState(false)
 
-  // Mientras el correo (Brevo) no esté configurado, el canal por defecto es la
-  // alerta interna (decisión 2026-06-11).
+  // Canal por defecto: alerta interna (decisión 2026-06-11). Email ya envía por SES.
   const [channel, setChannel] = useState<CommunicationChannel>(reenviarMsg?.channel ?? 'interna')
+  // Tipo de correo: marketing/newsletter (lleva baja, respeta opt-out) vs
+  // transaccional (siempre se envía, sin baja). Solo aplica a email/both.
+  const [emailKind, setEmailKind] = useState<'marketing' | 'transactional'>('marketing')
   const [subject, setSubject] = useState(reenviarMsg?.subject ?? '')
   const [waBody, setWaBody] = useState(reenviarMsg?.channel !== 'email' ? (reenviarMsg?.body ?? '') : '')
   const [emailBody, setEmailBody] = useState(reenviarMsg?.channel !== 'whatsapp' ? (reenviarMsg?.body ?? '') : '')
@@ -146,6 +149,7 @@ function NuevaComunicacionContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channel,
+          kind: (channel === 'email' || channel === 'both') ? emailKind : 'transactional',
           subject: (channel === 'email' || channel === 'both' || channel === 'interna') ? (subject || null) : null,
           body: channel === 'email' ? emailBody : waBody,
           segment_label: recipients.label || null,
@@ -268,6 +272,31 @@ function NuevaComunicacionContent() {
             }}
             onOpenTemplateModal={() => setShowTemplateModal(true)}
           />
+
+          {(channel === 'email' || channel === 'both') && (
+            <div className="rounded-2xl bg-surface-card p-4 sm:p-5 shadow-[var(--shadow-md)] space-y-2">
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Tipo de correo</p>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  ['marketing', 'Newsletter / Marketing', 'Lleva link de baja y respeta a quienes se dieron de baja'],
+                  ['transactional', 'Transaccional', 'Aviso operativo; siempre se envía, sin link de baja'],
+                ] as const).map(([val, label, hint]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setEmailKind(val)}
+                    className={cn(
+                      'flex-1 min-w-[180px] text-left rounded-xl border p-3 transition-colors font-body',
+                      emailKind === val ? 'border-coral bg-coral/[0.06]' : 'border-[var(--outline-variant)] hover:bg-surface-low',
+                    )}
+                  >
+                    <span className={cn('block text-sm font-medium', emailKind === val ? 'text-coral' : 'text-navy')}>{label}</span>
+                    <span className="block text-[11px] text-navy-light/60 mt-0.5">{hint}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <ScheduleSection
             scheduled={scheduled}
