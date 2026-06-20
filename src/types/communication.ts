@@ -23,6 +23,7 @@ export type CommunicationMessage = {
     sent: number
     delivered: number
     failed: number
+    skipped: number
     whatsapp_sent: number
     email_sent: number
   }

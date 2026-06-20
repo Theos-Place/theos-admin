@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Search, X, Users, Filter, BookOpen, UsersRound } from 'lucide-react'
+import { Search, X, Users, Filter, BookOpen, UsersRound, Megaphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useSedes } from '@/lib/sedes'
 type MemberLite = { id: string; first_name: string; last_name: string; email: string | null }
 type EventLite = { id: string; name: string; status: string; registrations: { member_id: string }[] }
 // Shape del GET /api/studies/groups (solo lo que se usa acá).
@@ -18,7 +19,9 @@ type GroupLite = {
 const groupEnrolledIds = (g: GroupLite) =>
   Array.from(new Set(g.enrollments.filter(e => e.status === 'enrolled').map(e => e.member_id)))
 
-export type RecipientMode = 'filters' | 'manual' | 'group'
+export type RecipientMode = 'filters' | 'manual' | 'group' | 'audience'
+
+type AudiencePreset = 'all' | 'sede' | 'servidonantes'
 
 export type RecipientState = {
   mode: RecipientMode
@@ -41,6 +44,7 @@ interface Props {
 }
 
 const MODE_OPTIONS: { key: RecipientMode; label: string; icon: React.ElementType; description: string }[] = [
+  { key: 'audience', label: 'Audiencia', icon: Megaphone, description: 'Todos / por sede / servidonantes' },
   { key: 'filters', label: 'Filtros avanzados', icon: Filter, description: 'Usar el constructor de segmentos' },
   { key: 'manual',  label: 'Selección manual',  icon: Users,  description: 'Elegir 1-5 personas específicas' },
   { key: 'group',   label: 'Grupo existente',   icon: UsersRound, description: 'Evento, estudio o comité' },
@@ -53,6 +57,12 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   const [events, setEvents] = useState<EventLite[]>([])
 
   const [groups, setGroups] = useState<GroupLite[]>([])
+
+  // Modo "audiencia": preset + sedes seleccionadas + estado de carga del conteo.
+  const { activeSedes } = useSedes()
+  const [audPreset, setAudPreset] = useState<AudiencePreset>('all')
+  const [audSedes, setAudSedes] = useState<string[]>([])
+  const [audLoading, setAudLoading] = useState(false)
 
   // Carga de eventos y grupos de estudio reales (para el modo "grupo").
   useEffect(() => {
@@ -159,10 +169,40 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
     })
   }
 
+  // Resuelve la audiencia elegible (server-side) y la vuelca en manualMemberIds.
+  async function applyAudience(preset: AudiencePreset, sedes: string[]) {
+    setAudPreset(preset)
+    setAudSedes(sedes)
+    if (preset === 'sede' && sedes.length === 0) {
+      onChange({ ...value, manualMemberIds: [], count: 0, label: '' })
+      return
+    }
+    setAudLoading(true)
+    try {
+      const qs = new URLSearchParams({ type: preset })
+      if (preset === 'sede') qs.set('sedes', sedes.join(','))
+      const res = await fetch(`/api/communications/audience?${qs}`)
+      const d = res.ok ? await res.json() : { member_ids: [], count: 0 }
+      const label = preset === 'all' ? 'Todos los activos con email'
+        : preset === 'servidonantes' ? 'Servidonantes (sirven y donan)'
+        : `Sedes: ${sedes.join(', ')}`
+      onChange({ ...value, manualMemberIds: d.member_ids ?? [], count: d.count ?? 0, label })
+    } catch {
+      onChange({ ...value, manualMemberIds: [], count: 0, label: '' })
+    } finally {
+      setAudLoading(false)
+    }
+  }
+
+  function toggleAudSede(code: string) {
+    const next = audSedes.includes(code) ? audSedes.filter(c => c !== code) : [...audSedes, code]
+    applyAudience('sede', next)
+  }
+
   return (
     <div className="space-y-4">
       {/* Mode selector */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {MODE_OPTIONS.map(opt => (
           <button
             key={opt.key}
@@ -185,6 +225,51 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
       </div>
 
       {/* Mode content */}
+      {value.mode === 'audience' && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {([['all', 'Todos los activos'], ['sede', 'Por sede'], ['servidonantes', 'Servidonantes']] as [AudiencePreset, string][]).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => applyAudience(key, key === 'sede' ? audSedes : [])}
+                className={cn(
+                  'rounded-xl border p-3 text-left transition-colors',
+                  audPreset === key ? 'border-coral bg-coral/[0.06]' : 'border-[var(--outline-variant)] hover:bg-surface-low',
+                )}
+              >
+                <span className={cn('text-[13px] font-medium font-body', audPreset === key ? 'text-coral' : 'text-navy')}>{label}</span>
+              </button>
+            ))}
+          </div>
+
+          {audPreset === 'sede' && (
+            <div className="flex flex-wrap gap-1.5">
+              {activeSedes.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => toggleAudSede(s.id)}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-[12px] font-body transition-colors',
+                    audSedes.includes(s.id) ? 'bg-navy text-white' : 'bg-surface-low text-navy-light hover:bg-surface-container',
+                  )}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="rounded-xl bg-surface-low px-3 py-2.5 text-[12px] text-navy-light/70 font-body">
+            {audLoading ? 'Calculando elegibles…' : (
+              <>Destinatarios elegibles: <strong className="text-navy">{value.count.toLocaleString('es-CR')}</strong>{' '}
+              <span className="text-navy-light/50">(descuenta bajas, rebotes y quejas)</span></>
+            )}
+          </div>
+        </div>
+      )}
+
       {value.mode === 'filters' && (
         <div className="space-y-3">
           <button

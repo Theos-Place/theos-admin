@@ -22,6 +22,7 @@ export type DbBroadcast = {
   segment_label: string | null
   recipient_filter: unknown
   total_recipients: number
+  skipped_count: number
   created_by: string | null
   started_at: string | null
   completed_at: string | null
@@ -66,12 +67,13 @@ export async function getMessages(): Promise<DbBroadcast[]> {
     .from('message_broadcasts')
     .select(`
       id, subject, body, channel, status, segment_label, recipient_filter, total_recipients,
-      created_by, started_at, completed_at, created_at, smtp_config_id, whatsapp_config_id,
+      skipped_count, created_by, started_at, completed_at, created_at, smtp_config_id, whatsapp_config_id,
       logs:message_logs(channel, status)
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as DbBroadcast[]
+  // skipped_count (mig. 086) aún no está en los tipos generados de Supabase.
+  return (data ?? []) as unknown as DbBroadcast[]
 }
 
 export async function getTemplates(): Promise<DbTemplate[]> {
@@ -251,6 +253,68 @@ export function distributeEmailSchedule(
  * 3. WhatsApp queda en 'pending' sin procesar (se integra después).
  * Lanza error claro si hay emails y el proveedor (SES) no está configurado.
  */
+export type AudienceType = 'all' | 'sede' | 'servidonantes'
+
+/** Miembros ELEGIBLES para una campaña de marketing: activos, con email, sin
+ *  baja de newsletter ni rebote/queja. `type` acota la audiencia. Devuelve los
+ *  member_ids (para encolar) y el total. Paginado (PostgREST corta en 1000). */
+export async function getEligibleAudience(
+  type: AudienceType,
+  sedeCodes: string[] = [],
+): Promise<{ member_ids: string[]; count: number }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any
+
+  // Servidonantes: además de donante, debe ser servidor activo (volunteers).
+  let serverIds: Set<string> | null = null
+  if (type === 'servidonantes') {
+    const ids = new Set<string>()
+    for (let from = 0; ; from += 1000) {
+      const { data } = await supabase.from('volunteers')
+        .select('member_id').eq('status', 'active').order('member_id').range(from, from + 999)
+      const batch = (data ?? []) as Array<{ member_id: string | null }>
+      for (const v of batch) if (v.member_id) ids.add(v.member_id)
+      if (batch.length < 1000) break
+    }
+    serverIds = ids
+    if (serverIds.size === 0) return { member_ids: [], count: 0 }
+  }
+
+  // Sede: resolver códigos → uuids de sede_id.
+  let sedeUuids: string[] | null = null
+  if (type === 'sede') {
+    if (sedeCodes.length === 0) return { member_ids: [], count: 0 }
+    const { data: sd } = await supabase.from('sedes').select('id, code').in('code', sedeCodes)
+    sedeUuids = ((sd ?? []) as Array<{ id: string }>).map(s => s.id)
+    if (sedeUuids.length === 0) return { member_ids: [], count: 0 }
+  }
+
+  const out: string[] = []
+  for (let from = 0; ; from += 1000) {
+    let q = supabase.from('members')
+      .select('id')
+      .eq('is_active', true)
+      .eq('email_bounced', false)
+      .eq('email_complained', false)
+      .eq('newsletter_opt_out', false)
+      .not('email', 'is', null)
+      .neq('email', '')
+      .order('id')
+      .range(from, from + 999)
+    if (type === 'servidonantes') q = q.eq('is_donor', true)
+    if (sedeUuids) q = q.in('sede_id', sedeUuids)
+    const { data, error } = await q
+    if (error) throw error
+    const batch = (data ?? []) as Array<{ id: string }>
+    for (const m of batch) {
+      if (serverIds && !serverIds.has(m.id)) continue
+      out.push(m.id)
+    }
+    if (batch.length < 1000) break
+  }
+  return { member_ids: out, count: out.length }
+}
+
 /** Resuelve el correo real (desde members) de los destinatarios email y excluye
  *  a los bloqueados: bounced/complained siempre; opt-out solo si es marketing. */
 async function resolveEmailRecipients(
@@ -363,8 +427,15 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     if (error) throw error
   }
 
-  await supabase.from('message_broadcasts')
-    .update({ total_recipients: internalLogs.length + emailLogs.length + waLogs.length })
+  // Saltados = destinatarios email pedidos que se excluyeron (baja/rebote/queja).
+  const skipped = emailRecipientsRaw.length - emailRecipients.length
+  // skipped_count (mig. 086) aún no está en los tipos generados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).from('message_broadcasts')
+    .update({
+      total_recipients: internalLogs.length + emailLogs.length + waLogs.length,
+      skipped_count: skipped,
+    })
     .eq('id', id)
 
   // Procesar inmediatamente el batch de hoy.

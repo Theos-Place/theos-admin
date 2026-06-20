@@ -229,6 +229,11 @@ export default function ComunicacionDetallePage() {
             <span className={cn('inline-flex items-center gap-1.5', queue.failed > 0 ? 'text-coral font-medium' : 'text-navy-light/60')}>
               <XCircle size={13} /> {queue.failed.toLocaleString('es-CR')} fallidos
             </span>
+            {message.stats.skipped > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-navy-light/60" title="Excluidos por baja de newsletter, rebote o queja">
+                {message.stats.skipped.toLocaleString('es-CR')} saltados
+              </span>
+            )}
             {queue.pending > 0 && lastBatchLabel && (
               <span className="text-navy-light/60 ml-auto">
                 Completado el {lastBatchLabel}

@@ -4,7 +4,7 @@
  */
 
 // Dirección física del remitente (ajustar al domicilio legal real de Theos Place).
-export const EMAIL_PHYSICAL_ADDRESS = 'Theos Place · San José, Costa Rica'
+export const EMAIL_PHYSICAL_ADDRESS = 'Theos Place, San José, Costa Rica'
 
 /** URL de baja para un miembro, a partir de su unsubscribe_token. */
 export function unsubscribeUrl(token: string): string {

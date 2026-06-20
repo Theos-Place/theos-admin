@@ -314,6 +314,11 @@ export default function ComunicacionesPage() {
                             {msg.stats.failed} fallidos
                           </span>
                         )}
+                        {msg.stats.skipped > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[12px] text-navy-light/60 font-body">
+                            {msg.stats.skipped} saltados
+                          </span>
+                        )}
                         <span className="text-[12px] text-navy-light/60 font-body">
                           {getDeliveryRate(msg)}% entrega
                         </span>

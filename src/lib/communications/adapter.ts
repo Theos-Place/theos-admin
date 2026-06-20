@@ -11,6 +11,7 @@ export function toDomainMessage(db: DbBroadcast): CommunicationMessage {
     sent: logs.filter((l) => isOk(l.status)).length,
     delivered: logs.filter((l) => l.status === 'delivered').length,
     failed: logs.filter((l) => l.status === 'failed' || l.status === 'bounced').length,
+    skipped: db.skipped_count ?? 0,
     whatsapp_sent: logs.filter((l) => l.channel === 'whatsapp' && isOk(l.status)).length,
     email_sent: logs.filter((l) => l.channel === 'email' && isOk(l.status)).length,
   }
