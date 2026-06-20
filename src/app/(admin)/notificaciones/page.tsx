@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, AlertCircle, Info, AlertTriangle, ChevronRight, Inbox, CheckCheck } from 'lucide-react'
+import { Bell, AlertCircle, Info, AlertTriangle, ChevronRight, Inbox, CheckCheck, Trash2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
@@ -57,6 +57,35 @@ export default function NotificacionesPage() {
       notifyChanged()
     } catch {
       toast('No se pudieron marcar las notificaciones', 'error')
+    }
+  }
+
+  async function deleteSelected() {
+    const ids = [...selected]
+    if (ids.length === 0) return
+    setNotifications(prev => prev.filter(n => !selected.has(n.id)))
+    setSelected(new Set())
+    try {
+      await fetch('/api/notifications/internal/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      })
+      notifyChanged()
+    } catch {
+      toast('No se pudieron eliminar las notificaciones', 'error')
+    }
+  }
+
+  async function deleteOne(id: string) {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+    setSelected(prev => { const s = new Set(prev); s.delete(id); return s })
+    try {
+      const r = await fetch(`/api/notifications/internal/${id}`, { method: 'DELETE' })
+      if (!r.ok) throw new Error()
+      notifyChanged()
+    } catch {
+      toast('No se pudo eliminar la notificación', 'error')
     }
   }
 
@@ -162,14 +191,24 @@ export default function NotificacionesPage() {
                   Seleccionar todas
                   {selected.size > 0 && <span className="text-navy-light/60">· {selected.size} seleccionada{selected.size !== 1 ? 's' : ''}</span>}
                 </label>
-                <button
-                  onClick={markSelectedRead}
-                  disabled={selected.size === 0}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-50"
-                >
-                  <CheckCheck size={14} />
-                  Marcar como leídas
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={markSelectedRead}
+                    disabled={selected.size === 0}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-50"
+                  >
+                    <CheckCheck size={14} />
+                    Marcar como leídas
+                  </button>
+                  <button
+                    onClick={deleteSelected}
+                    disabled={selected.size === 0}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body disabled:opacity-50"
+                  >
+                    <Trash2 size={14} />
+                    Eliminar
+                  </button>
+                </div>
               </div>
 
               {notifications.map(n => (
@@ -212,6 +251,14 @@ export default function NotificacionesPage() {
                       {!n.read && <span className="h-2 w-2 rounded-full bg-coral" aria-label="No leída" />}
                       <ChevronRight size={16} className="text-navy-light/60" />
                     </div>
+                  </button>
+                  <button
+                    onClick={() => deleteOne(n.id)}
+                    aria-label={`Eliminar ${n.title}`}
+                    title="Eliminar"
+                    className="shrink-0 self-center rounded-lg p-2 text-navy-light/50 hover:bg-coral/5 hover:text-coral transition-colors"
+                  >
+                    <Trash2 size={15} />
                   </button>
                 </div>
               ))}

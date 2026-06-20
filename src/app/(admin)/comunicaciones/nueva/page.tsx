@@ -206,6 +206,8 @@ function NuevaComunicacionContent() {
       }
       setSending(false)
       setSent(true)
+      // Refresca la campana (si el envío incluye notificación interna a quien envía).
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('notifications:changed'))
     } catch (e) {
       setSending(false)
       toast(e instanceof Error && e.message ? e.message : 'No se pudo enviar la comunicación', 'error')
@@ -400,8 +402,6 @@ function NuevaComunicacionContent() {
         <ConfirmModal
           channel={channel}
           recipients={recipients}
-          waBody={waBody}
-          emailBody={emailBody}
           sending={sending}
           onConfirm={() => { setShowConfirmModal(false); handleSend() }}
           onClose={() => setShowConfirmModal(false)}

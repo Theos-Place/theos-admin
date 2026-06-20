@@ -45,12 +45,14 @@ export function NotificationsBell() {
 
   useEffect(() => {
     load()
-    // Refresca el conteo cuando se marcan leídas en otra parte (página de
-    // notificaciones) o al volver el foco a la pestaña.
+    // Refresca el conteo: al marcar/borrar en otra parte, al volver el foco, y
+    // por polling periódico (notificaciones nuevas llegan sin recargar).
     const onChanged = () => load()
+    const poll = setInterval(load, 60000)
     window.addEventListener('notifications:changed', onChanged)
     window.addEventListener('focus', onChanged)
     return () => {
+      clearInterval(poll)
       window.removeEventListener('notifications:changed', onChanged)
       window.removeEventListener('focus', onChanged)
     }

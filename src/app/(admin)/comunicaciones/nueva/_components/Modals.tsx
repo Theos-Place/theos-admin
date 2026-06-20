@@ -112,8 +112,6 @@ export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: T
 type ConfirmModalProps = {
   channel: CommunicationChannel
   recipients: RecipientState
-  waBody: string
-  emailBody: string
   sending: boolean
   onConfirm: () => void
   onClose: () => void
@@ -122,14 +120,10 @@ type ConfirmModalProps = {
 export function ConfirmModal({
   channel,
   recipients,
-  waBody,
-  emailBody,
   sending,
   onConfirm,
   onClose,
 }: ConfirmModalProps) {
-  const previewBody = channel === 'email' ? emailBody : waBody
-
   return (
     <Modal onClose={onClose} titleId="confirmar-envio" width={448}>
       <div>
@@ -152,11 +146,6 @@ export function ConfirmModal({
                 <span className="text-navy text-right">{recipients.label}</span>
               </div>
             )}
-          </div>
-
-          <div className="rounded-xl p-3 text-[12px] text-navy-light/70 leading-relaxed whitespace-pre-line bg-surface-low font-body">
-            {previewBody.replace(/\{nombre\}/g, 'Juan').slice(0, 120)}
-            {previewBody.length > 120 ? '...' : ''}
           </div>
 
           {recipients.count > 500 && (
