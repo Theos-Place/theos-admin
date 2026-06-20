@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
@@ -10,7 +10,9 @@ import { useRowSelection } from '@/hooks/useRowSelection'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
-import { studySelectOptions, expandSelectionValue, matchesStudyFilter } from '@/lib/studies/study-grouping'
+import { studySelectOptions, expandSelectionValue, matchesStudyFilter, groupCodesForDisplay } from '@/lib/studies/study-grouping'
+import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { ExportButton } from '@/components/shared/ExportButton'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus, CheckCircle2, XCircle } from 'lucide-react'
@@ -25,6 +27,10 @@ const ESTADO_FILTERS = [
 ] as const
 
 type StudyBulk = { field: 'formation' | 'availability'; action: 'add' | 'remove' }
+
+// Fila de exportación: el dirigente + contacto/sede que se enriquecen on-demand
+// al exportar (PII, no se carga en la lista).
+type DirigenteExportRow = Dirigente & { _email?: string; _phone?: string; _sede?: string }
 
 function DirigenteRow({
   d, selectable, selected, onToggleSelect, onOpen,
@@ -83,6 +89,7 @@ export default function DirigentesPage() {
   const { hasRole } = useAuth()
   const canAdd = hasRole('admin', 'direccion', 'coordinador_dirigentes')
   const canBulk = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
+  const canExport = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
   // Tres conceptos DISTINTOS, cada uno filtrable por tipo de estudio.
   const [dandoTipo, setDandoTipo] = useState('')      // grupo activo de ese estudio
@@ -119,6 +126,48 @@ export default function DirigentesPage() {
   const sel = useRowSelection(filteredIds)
   const nameById = useMemo(() => new Map(dirigentes.map(d => [d.member_id, d.member_name])), [dirigentes])
 
+  // ── Exportación a CSV/Excel con selección de columnas ──
+  // Estudios agrupados (Niveles/Discípulos) igual que la UI; múltiples separados por "; ".
+  const studyNameByCode = useMemo(() => new Map(studyTypes.map(t => [t.code, t.name])), [studyTypes])
+  const groupedLabels = useCallback((codes: string[]) =>
+    groupCodesForDisplay(Array.from(new Set(codes)), c => studyNameByCode.get(c) ?? c)
+      .map(b => b.label).join('; '),
+    [studyNameByCode],
+  )
+  const exportColumns = useMemo<ColumnDef<DirigenteExportRow>[]>(() => [
+    { key: 'nombre',         label: 'Nombre',         defaultVisible: true, alwaysVisible: true, exportValue: d => d.member_name || 'Sin nombre' },
+    { key: 'estado',         label: 'Estado',         defaultVisible: true, exportValue: d => d.status === 'activo' ? 'Activo' : 'Inactivo' },
+    { key: 'formacion',      label: 'Formación',      defaultVisible: true, exportValue: d => groupedLabels(d.formacion) },
+    { key: 'dando_ahora',    label: 'Dando ahora',    defaultVisible: true, exportValue: d => groupedLabels(d.estudios_activos.map(g => g.plan_code)) },
+    { key: 'disponibilidad', label: 'Disponibilidad', defaultVisible: true, exportValue: d => groupedLabels(d.disponibilidad) },
+    { key: 'grupos_activos', label: 'Grupos activos', defaultVisible: true, exportValue: d => String(d.total_activos) },
+    { key: 'grupos_totales', label: 'Grupos totales', defaultVisible: false, exportValue: d => String(d.total_grupos) },
+    { key: 'sede',           label: 'Sede',           defaultVisible: false, exportValue: d => d._sede ?? '' },
+    { key: 'email',          label: 'Correo',         defaultVisible: false, exportValue: d => d._email ?? '' },
+    { key: 'telefono',       label: 'Teléfono',       defaultVisible: false, exportValue: d => d._phone ?? '' },
+  ], [groupedLabels])
+  const [visibleColumns, setVisibleColumns] = useState<ColumnDef<DirigenteExportRow>[]>(
+    () => exportColumns.filter(c => c.defaultVisible),
+  )
+  // Enriquece con contacto/sede SOLO al exportar (PII on-demand, endpoint role-gated).
+  const fetchExportRows = useCallback(async (): Promise<DirigenteExportRow[]> => {
+    const ids = filtered.map(d => d.member_id)
+    let contact: Record<string, { email: string | null; phone: string | null; sede: string | null }> = {}
+    try {
+      const res = await fetch('/api/studies/dirigentes/contact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_ids: ids }),
+      })
+      if (res.ok) contact = (await res.json()).contact ?? {}
+    } catch { /* si falla, exporta sin contacto */ }
+    return filtered.map(d => ({
+      ...d,
+      _email: contact[d.member_id]?.email ?? '',
+      _phone: contact[d.member_id]?.phone ?? '',
+      _sede: contact[d.member_id]?.sede ?? '',
+    }))
+  }, [filtered])
+
   async function applyBulkStatus() {
     if (!confirm || applying) return
     setApplying(true)
@@ -150,14 +199,32 @@ export default function DirigentesPage() {
             {counts.activos} activos · {counts.inactivos} inactivos (con historial)
           </p>
         </div>
-        {canAdd && (
-          <button
-            onClick={() => setShowAdd(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body shrink-0"
-          >
-            <Plus size={14} /> Agregar dirigente
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {canExport && (
+            <>
+              <ColumnSelector<DirigenteExportRow>
+                columns={exportColumns}
+                storageKey="theos_columns_dirigentes"
+                onChange={setVisibleColumns}
+              />
+              <ExportButton<DirigenteExportRow>
+                data={filtered as DirigenteExportRow[]}
+                columns={visibleColumns}
+                allColumns={exportColumns}
+                filename="dirigentes-theos"
+                fetchData={fetchExportRows}
+              />
+            </>
+          )}
+          {canAdd && (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body shrink-0"
+            >
+              <Plus size={14} /> Agregar dirigente
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filtros */}

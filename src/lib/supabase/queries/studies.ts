@@ -1091,6 +1091,27 @@ async function activateLeaders(
 
 /** Miembros (de `ids`) que son leader o co-líder de un grupo en curso/abierto.
  *  Para bloquear su desactivación (punto 1). */
+/** Contacto + sede de un conjunto de miembros (para enriquecer la exportación de
+ *  dirigentes on-demand). PII → solo se llama desde el endpoint role-gated. */
+export type DirigenteContact = { email: string | null; phone: string | null; sede: string | null }
+export async function getDirigentesContact(ids: string[]): Promise<Record<string, DirigenteContact>> {
+  const out: Record<string, DirigenteContact> = {}
+  if (ids.length === 0) return out
+  const supabase = createAdminClient()
+  for (let i = 0; i < ids.length; i += 200) {
+    const slice = ids.slice(i, i + 200)
+    const { data, error } = await supabase
+      .from('members')
+      .select('id, email, phone, sede:sedes(code, name)')
+      .in('id', slice)
+    if (error) throw error
+    for (const r of (data ?? []) as Array<{ id: string; email: string | null; phone: string | null; sede: { name: string } | null }>) {
+      out[r.id] = { email: r.email, phone: r.phone, sede: r.sede?.name ?? null }
+    }
+  }
+  return out
+}
+
 export async function membersWithActiveGroups(ids: string[]): Promise<Set<string>> {
   if (ids.length === 0) return new Set()
   const supabase = createAdminClient()
