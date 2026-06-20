@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { createCheckin, deleteCheckin } from '@/lib/supabase/queries/events'
+import { createCheckin, deleteCheckin, getEventAttendeeIds } from '@/lib/supabase/queries/events'
+
+// GET: asistentes (member_ids con check-in) de un evento. Para elegir audiencia
+// en comunicaciones. Devuelve { count, member_ids }.
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRoles('comunicaciones', 'direccion', 'encargado_eventos')
+  if (auth.res) return auth.res
+  try {
+    const { id } = await params
+    const member_ids = await getEventAttendeeIds(id)
+    return NextResponse.json({ count: member_ids.length, member_ids })
+  } catch (error) {
+    console.error('GET /api/events/[id]/checkins:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
 
 // POST: registra un check-in. Body: { member_id?, guest_name?, sub_event_id?, method? }
 // El constraint checkin_member_or_guest exige member_id O guest_name.

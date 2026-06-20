@@ -5,7 +5,8 @@ import { Search, X, Users, Filter, BookOpen, UsersRound, Megaphone } from 'lucid
 import { cn } from '@/lib/utils'
 import { useSedes } from '@/lib/sedes'
 type MemberLite = { id: string; first_name: string; last_name: string; email: string | null }
-type EventLite = { id: string; name: string; status: string; registrations: { member_id: string }[] }
+// La audiencia de un evento son sus ASISTENTES (check-ins), no inscripciones.
+type EventLite = { id: string; title: string; status: string; starts_at: string }
 // Shape del GET /api/studies/groups (solo lo que se usa acá).
 type GroupLite = {
   id: string
@@ -63,11 +64,13 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   const [audPreset, setAudPreset] = useState<AudiencePreset>('all')
   const [audSedes, setAudSedes] = useState<string[]>([])
   const [audLoading, setAudLoading] = useState(false)
+  // Fuente de la audiencia de un evento: asistentes (check-in) o inscritos.
+  const [eventSource, setEventSource] = useState<'checkin' | 'registration'>('checkin')
 
   // Carga de eventos y grupos de estudio reales (para el modo "grupo").
   useEffect(() => {
     let alive = true
-    fetch('/api/events?pageSize=100')
+    fetch('/api/events?pageSize=100&light=1')
       .then(r => (r.ok ? r.json() : { events: [] }))
       .then(d => { if (alive) setEvents((d.events ?? []) as EventLite[]) })
       .catch(() => { if (alive) setEvents([]) })
@@ -140,18 +143,23 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
   // Al elegir evento/grupo se resuelven los member_id reales en
   // manualMemberIds: el envío encola exactamente esa lista (antes el modo
   // grupo mandaba el conteo pero cero destinatarios).
-  function setGroupEvent(eventId: string) {
+  async function setGroupEvent(eventId: string, source: 'checkin' | 'registration' = eventSource) {
     const event = events.find(e => e.id === eventId)
-    if (!event) return
-    const ids = Array.from(new Set(event.registrations.map(r => r.member_id).filter(Boolean)))
-    onChange({
-      ...value,
-      groupEntity: 'event',
-      groupId: eventId,
-      manualMemberIds: ids,
-      count: ids.length,
-      label: `Inscritos a "${event.name}"`,
-    })
+    if (!eventId || !event) {
+      onChange({ ...value, groupEntity: 'event', groupId: '', manualMemberIds: [], count: 0, label: '' })
+      return
+    }
+    const noun = source === 'checkin' ? 'Asistentes a' : 'Inscritos a'
+    const labelFor = (n: number) => `${noun} "${event.title}" (${n})`
+    // Estado intermedio mientras resuelve.
+    onChange({ ...value, groupEntity: 'event', groupId: eventId, manualMemberIds: [], count: 0, label: labelFor(0) })
+    try {
+      const url = source === 'checkin' ? `/api/events/${eventId}/checkins` : `/api/events/${eventId}/registrations`
+      const res = await fetch(url)
+      const d = res.ok ? await res.json() : { member_ids: [] }
+      const ids = (d.member_ids ?? []) as string[]
+      onChange({ ...value, groupEntity: 'event', groupId: eventId, manualMemberIds: ids, count: ids.length, label: labelFor(ids.length) })
+    } catch { /* deja 0 si falla */ }
   }
 
   function setGroupStudy(groupId: string) {
@@ -388,10 +396,28 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
               <option value="">Seleccionar evento...</option>
               {upcomingEvents.map(e => (
                 <option key={e.id} value={e.id}>
-                  {e.name} ({e.registrations.length} inscritos)
+                  {e.title}{e.starts_at ? ` · ${new Date(e.starts_at).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: '2-digit' })}` : ''}
                 </option>
               ))}
             </select>
+          )}
+
+          {value.groupEntity === 'event' && value.groupId && (
+            <div className="flex gap-2">
+              {([['checkin', 'Asistentes (check-in)'], ['registration', 'Inscritos']] as const).map(([src, label]) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => { setEventSource(src); setGroupEvent(value.groupId, src) }}
+                  className={cn(
+                    'flex-1 rounded-xl border px-3 py-2 text-[12px] font-body transition-colors',
+                    eventSource === src ? 'border-coral bg-coral/[0.06] text-coral' : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           )}
 
           {value.groupEntity === 'study_group' && (

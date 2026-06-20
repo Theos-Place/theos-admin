@@ -1,6 +1,9 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import type { CommunicationChannel, ChannelConfig } from '@/types/communication'
 import { cn } from '@/lib/utils'
-import { MessageCircle, Mail, Layers, Bell } from 'lucide-react'
+import { MessageCircle, Mail, Bell } from 'lucide-react'
 
 const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
 
@@ -8,10 +11,20 @@ type Props = {
   channel: CommunicationChannel
   setChannel: (c: CommunicationChannel) => void
   waConfig: ChannelConfig | undefined
-  smtpConfig: ChannelConfig | undefined
 }
 
-export function ChannelSection({ channel, setChannel, waConfig, smtpConfig }: Props) {
+export function ChannelSection({ channel, setChannel, waConfig }: Props) {
+  // Estado real de SES (env del servidor), no de channel_configs en BD.
+  const [email, setEmail] = useState<{ configured: boolean; fromEmail: string } | null>(null)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/communications/email-status')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setEmail({ configured: !!d.configured, fromEmail: d.fromEmail ?? '' }) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
+
   return (
     <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
       <p className={cn(SECTION_TITLE)}>
@@ -22,7 +35,6 @@ export function ChannelSection({ channel, setChannel, waConfig, smtpConfig }: Pr
           { key: 'interna',  label: 'Alerta interna', icon: Bell,          color: 'text-coral'       },
           { key: 'whatsapp', label: 'WhatsApp',       icon: MessageCircle, color: 'text-emerald-600' },
           { key: 'email',    label: 'Correo',         icon: Mail,          color: 'text-blue-600'    },
-          { key: 'both',     label: 'Ambos',          icon: Layers,        color: 'text-violet-600'  },
         ] as const).map(opt => (
           <button
             key={opt.key}
@@ -62,9 +74,9 @@ export function ChannelSection({ channel, setChannel, waConfig, smtpConfig }: Pr
           <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-surface-low">
             <Mail size={13} className="text-blue-600 shrink-0" />
             <p className="text-[12px] text-navy-light/60 font-body">
-              {smtpConfig
-                ? `${smtpConfig.name} · ${smtpConfig.smtp_from_email}`
-                : <span className="text-coral">Sin configuración SMTP activa</span>}
+              {email?.configured
+                ? `AWS SES${email.fromEmail ? ` · ${email.fromEmail}` : ''}`
+                : <span className="text-coral">El proveedor de email (SES) no está configurado</span>}
             </p>
           </div>
         )}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getDailyEmailsSent } from '@/lib/supabase/queries/communications'
-import { sendEmail, isEmailConfigured, DAILY_LIMIT } from '@/lib/email/provider'
+import { sendEmail, isEmailConfigured, DAILY_LIMIT, FROM_EMAIL } from '@/lib/email/provider'
 
 // GET: estado de la integración de email (configurada, límite, uso de hoy).
 export async function GET() {
@@ -10,6 +10,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json({
       configured: isEmailConfigured(),
+      fromEmail: FROM_EMAIL,
       dailyLimit: DAILY_LIMIT,
       sentToday: isEmailConfigured() ? await getDailyEmailsSent() : 0,
     })

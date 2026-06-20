@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { type CommunicationChannel } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
@@ -35,6 +35,8 @@ function insertAtCursor(ref: React.RefObject<HTMLTextAreaElement | null>, value:
 function NuevaComunicacionContent() {
   const searchParams = useSearchParams()
   const toast = useToast()
+  const router = useRouter()
+  const [savingDraft, setSavingDraft] = useState(false)
   const { templates: MOCK_TEMPLATES, messages: MOCK_MESSAGES, configs: MOCK_CHANNEL_CONFIGS } = useCommunications()
 
   const initialMode = (searchParams.get('mode') as RecipientMode) || 'filters'
@@ -121,7 +123,7 @@ function NuevaComunicacionContent() {
     if (channel === 'both') setPreviewChannel('whatsapp')
   }, [channel])
 
-  const smtpConfig = MOCK_CHANNEL_CONFIGS.find(c => c.type === 'smtp' && c.is_active && c.is_verified)
+  // Email: el envío usa SES por env (no channel_configs). WhatsApp pendiente.
   const waConfig = MOCK_CHANNEL_CONFIGS.find(c => c.type === 'whatsapp' && c.is_active && c.is_verified)
 
   const filteredTemplates = MOCK_TEMPLATES.filter(
@@ -135,6 +137,39 @@ function NuevaComunicacionContent() {
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
     if (tpl.channel === 'both') { setWaBody(tpl.body); setEmailBody(tpl.body); setSubject(tpl.subject) }
     setShowTemplateModal(false)
+  }
+
+  // Guarda como borrador (sin enviar): crea el broadcast en estado 'draft'.
+  async function saveDraft() {
+    if (savingDraft) return
+    if (!subject.trim() && !emailBody.trim() && !waBody.trim()) {
+      toast('Escribí un asunto o un mensaje antes de guardar', 'error')
+      return
+    }
+    setSavingDraft(true)
+    try {
+      const res = await fetch('/api/communications/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel,
+          kind: channel === 'email' ? emailKind : 'transactional',
+          subject: channel !== 'whatsapp' ? (subject || null) : null,
+          body: channel === 'email' ? emailBody : waBody,
+          segment_label: recipients.label || null,
+          total_recipients: recipients.count,
+          smtp_config_id: null,
+          whatsapp_config_id: null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      toast('Borrador guardado', 'success')
+      router.push('/comunicaciones')
+    } catch {
+      toast('No se pudo guardar el borrador', 'error')
+    } finally {
+      setSavingDraft(false)
+    }
   }
 
   async function handleSend() {
@@ -154,7 +189,7 @@ function NuevaComunicacionContent() {
           body: channel === 'email' ? emailBody : waBody,
           segment_label: recipients.label || null,
           total_recipients: recipients.count,
-          smtp_config_id: (channel === 'email' || channel === 'both') ? (smtpConfig?.id ?? null) : null,
+          smtp_config_id: null,
           whatsapp_config_id: (channel === 'whatsapp' || channel === 'both') ? (waConfig?.id ?? null) : null,
         }),
       })
@@ -248,7 +283,6 @@ function NuevaComunicacionContent() {
             channel={channel}
             setChannel={setChannel}
             waConfig={waConfig}
-            smtpConfig={smtpConfig}
           />
 
           <ContentSection
@@ -311,10 +345,12 @@ function NuevaComunicacionContent() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+              onClick={saveDraft}
+              disabled={savingDraft}
+              className="flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 border-[var(--outline-variant)] font-body"
             >
               <Save size={14} />
-              Guardar borrador
+              {savingDraft ? 'Guardando…' : 'Guardar borrador'}
             </button>
             <button
               type="button"

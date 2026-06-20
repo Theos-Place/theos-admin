@@ -168,6 +168,48 @@ export async function getEvents(filters: EventFilters = {}): Promise<{ events: D
   }
 }
 
+/** member_ids distintos que hicieron check-in a un evento (asistentes reales).
+ *  Para comunicaciones: la audiencia de un evento es quien ASISTIÓ (event_checkins),
+ *  no event_registrations (esa tabla no se usa). Paginado. */
+export async function getEventAttendeeIds(eventId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const ids = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('event_checkins')
+      .select('member_id')
+      .eq('event_id', eventId)
+      .not('member_id', 'is', null)
+      .order('member_id')
+      .range(from, from + 999)
+    if (error) throw error
+    const batch = (data ?? []) as Array<{ member_id: string | null }>
+    for (const r of batch) if (r.member_id) ids.add(r.member_id)
+    if (batch.length < 1000) break
+  }
+  return [...ids]
+}
+
+/** member_ids inscritos (event_registrations) a un evento. */
+export async function getEventRegistrationIds(eventId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const ids = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .select('member_id')
+      .eq('event_id', eventId)
+      .not('member_id', 'is', null)
+      .order('member_id')
+      .range(from, from + 999)
+    if (error) throw error
+    const batch = (data ?? []) as Array<{ member_id: string | null }>
+    for (const r of batch) if (r.member_id) ids.add(r.member_id)
+    if (batch.length < 1000) break
+  }
+  return [...ids]
+}
+
 /** Un evento por id, con todas sus relaciones. */
 export async function getEventById(id: string): Promise<DbEventEnriched | null> {
   const supabase = createAdminClient()

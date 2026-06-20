@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { createRegistration, registrationPricing, PaymentRequiredError } from '@/lib/supabase/queries/events'
+import { createRegistration, registrationPricing, getEventRegistrationIds, PaymentRequiredError } from '@/lib/supabase/queries/events'
 
-// GET: precio aplicable para inscribir a un miembro. ?member_id=<uuid>
+// GET: con ?member_id → precio aplicable para inscribir a ese miembro.
+//      sin member_id → lista de inscritos { count, member_ids } (audiencia comms).
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -12,7 +13,10 @@ export async function GET(
     if (auth.res) return auth.res
     const { id } = await params
     const memberId = req.nextUrl.searchParams.get('member_id')
-    if (!memberId) return NextResponse.json({ error: 'Falta member_id' }, { status: 400 })
+    if (!memberId) {
+      const member_ids = await getEventRegistrationIds(id)
+      return NextResponse.json({ count: member_ids.length, member_ids })
+    }
     const pricing = await registrationPricing(id, memberId)
     return NextResponse.json(pricing)
   } catch (error) {

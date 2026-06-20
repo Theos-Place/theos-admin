@@ -11,6 +11,7 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import { withMarketingFooter, listUnsubscribeHeader } from '@/lib/email/footer'
+import { applyVars } from '@/lib/communications/vars'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
 
 export type DbBroadcast = {
@@ -378,14 +379,25 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
       .from('message_broadcasts').select('subject, body').eq('id', id).single()
     if (bErr) throw bErr
     const broadcast = b as { subject: string | null; body: string }
+    // Nombre por miembro para la variable {nombre}.
+    const intIds = internalRecipients.map(r => r.member_id!).filter(Boolean)
+    const firstName = new Map<string, string>()
+    for (let i = 0; i < intIds.length; i += 300) {
+      const { data: ms } = await supabase.from('members')
+        .select('id, first_name').in('id', intIds.slice(i, i + 300))
+      for (const m of (ms ?? []) as Array<{ id: string; first_name: string }>) firstName.set(m.id, m.first_name)
+    }
     const { error: nErr } = await supabase.from('internal_notifications').insert(
-      internalRecipients.map(r => ({
-        recipient_member_id: r.member_id!,
-        type: 'broadcast',
-        title: broadcast.subject || 'Comunicado de Theos Place',
-        body: broadcast.body,
-        link: null,
-      })),
+      internalRecipients.map(r => {
+        const nombre = firstName.get(r.member_id!) ?? ''
+        return {
+          recipient_member_id: r.member_id!,
+          type: 'broadcast',
+          title: applyVars(broadcast.subject, { nombre }) || 'Comunicado de Theos Place',
+          body: applyVars(broadcast.body, { nombre }),
+          link: null,
+        }
+      }),
     )
     if (nErr) throw nErr
   }
@@ -557,6 +569,7 @@ export async function processPendingEmails(
   // Nombre + token de baja de los miembros en un solo query (no N+1).
   const memberIds = Array.from(new Set(batch.map(l => l.member_id).filter(Boolean))) as string[]
   const names = new Map<string, string>()
+  const firstNames = new Map<string, string>()
   const tokens = new Map<string, string>()
   if (memberIds.length) {
     // 'unsubscribe_token' (mig. 085) aún no está en los tipos generados.
@@ -565,6 +578,7 @@ export async function processPendingEmails(
       .from('members').select('id, first_name, last_name, unsubscribe_token').in('id', memberIds)
     for (const m of (members ?? []) as Array<{ id: string; first_name: string; last_name: string; unsubscribe_token: string }>) {
       names.set(m.id, `${m.first_name} ${m.last_name}`.trim())
+      firstNames.set(m.id, m.first_name ?? '')
       tokens.set(m.id, m.unsubscribe_token)
     }
   }
@@ -577,13 +591,17 @@ export async function processPendingEmails(
   for (const log of batch) {
     const attempts = (log.attempts ?? 0) + 1
     const token = log.member_id ? tokens.get(log.member_id) : undefined
-    const html = isMarketing && token ? withMarketingFooter(broadcast.body, token) : broadcast.body
+    const nombre = log.member_id ? (firstNames.get(log.member_id) ?? '') : ''
+    // Variables ({nombre}) + footer de marketing.
+    const body = applyVars(broadcast.body, { nombre })
+    const subject = applyVars(broadcast.subject ?? 'Mensaje de Theos Place', { nombre })
+    const html = isMarketing && token ? withMarketingFooter(body, token) : body
     const headers = isMarketing && token ? listUnsubscribeHeader(token) : undefined
     try {
       await sendEmail({
         to: { email: log.recipient, name: (log.member_id && names.get(log.member_id)) || log.recipient },
         fromName: broadcast.config?.smtp_from_name ?? undefined,
-        subject: broadcast.subject ?? 'Mensaje de Theos Place',
+        subject,
         html,
         headers,
       })
