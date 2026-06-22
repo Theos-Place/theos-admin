@@ -34,7 +34,9 @@ export type CommunicationMessage = {
 export type MessageTemplate = {
   id: string
   name: string
-  category: 'bienvenida' | 'recordatorio' | 'inscripcion' | 'cancelacion' | 'general'
+  /** Categoría libre. Conocidas: bienvenida, recordatorio, inscripcion,
+   *  cancelacion, general; se pueden crear nuevas desde la UI. */
+  category: string
   channel: CommunicationChannel
   subject: string
   body: string

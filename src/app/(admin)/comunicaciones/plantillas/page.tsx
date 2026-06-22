@@ -13,17 +13,9 @@ import { cn } from '@/lib/utils'
 import { Plus, FileText } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
+import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
 
-type CategoryFilter = 'all' | MessageTemplate['category']
-
-const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
-  { key: 'all',          label: 'Todas' },
-  { key: 'bienvenida',   label: 'Bienvenida' },
-  { key: 'recordatorio', label: 'Recordatorio' },
-  { key: 'inscripcion',  label: 'Inscripción' },
-  { key: 'cancelacion',  label: 'Cancelación' },
-  { key: 'general',      label: 'General' },
-]
+type CategoryFilter = 'all' | string
 
 const CHANNEL_FILTERS: { key: 'all' | CommunicationChannel; label: string }[] = [
   { key: 'all',       label: 'Canal: Todos' },
@@ -38,6 +30,12 @@ export default function PlantillasPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
   const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null)
+
+  // Filtros de categoría: conocidas + las que existan en las plantillas.
+  const categoryFilters = useMemo(() => {
+    const cats = [...new Set([...KNOWN_CATEGORIES, ...templates.map(t => t.category).filter(Boolean)])]
+    return [{ key: 'all' as CategoryFilter, label: 'Todas' }, ...cats.map(c => ({ key: c as CategoryFilter, label: categoryLabel(c) }))]
+  }, [templates])
 
   const filtered = useMemo(() => {
     return templates.filter(t => {
@@ -110,7 +108,7 @@ export default function PlantillasPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex gap-1.5 flex-wrap flex-1">
-          {CATEGORY_FILTERS.map(f => (
+          {categoryFilters.map(f => (
             <button
               key={f.key}
               type="button"

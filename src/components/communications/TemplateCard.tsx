@@ -3,23 +3,8 @@
 import { Copy, Edit, Trash2, Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChannelBadge } from './ChannelBadge'
+import { categoryLabel, categoryColor } from '@/lib/communications/categories'
 import type { MessageTemplate } from '@/data/communication-utils'
-
-const CATEGORY_LABELS: Record<MessageTemplate['category'], string> = {
-  bienvenida:  'Bienvenida',
-  recordatorio:'Recordatorio',
-  inscripcion: 'Inscripción',
-  cancelacion: 'Cancelación',
-  general:     'General',
-}
-
-const CATEGORY_COLORS: Record<MessageTemplate['category'], string> = {
-  bienvenida:  'bg-teal-soft/30 text-teal-deep',
-  recordatorio:'bg-amber-50 text-amber-700',
-  inscripcion: 'bg-blue-50 text-blue-700',
-  cancelacion: 'bg-coral/10 text-coral',
-  general:     'bg-navy/10 text-navy-light',
-}
 
 interface Props {
   template: MessageTemplate
@@ -44,9 +29,9 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
 
       {/* Category */}
       <span
-        className={cn('self-start rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', CATEGORY_COLORS[template.category])}
+        className={cn('self-start rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', categoryColor(template.category))}
       >
-        {CATEGORY_LABELS[template.category]}
+        {categoryLabel(template.category)}
       </span>
 
       {/* Body preview */}
