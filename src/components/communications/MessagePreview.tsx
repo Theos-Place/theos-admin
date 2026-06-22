@@ -8,9 +8,10 @@ interface Props {
   subject: string
   waBody: string
   emailBody: string
+  emailFormat?: 'text' | 'html'
 }
 
-export function MessagePreview({ channel, subject, waBody, emailBody }: Props) {
+export function MessagePreview({ channel, subject, waBody, emailBody, emailFormat = 'text' }: Props) {
   return (
     <div>
       {channel === 'interna' && (
@@ -49,7 +50,7 @@ export function MessagePreview({ channel, subject, waBody, emailBody }: Props) {
       )}
 
       {(channel === 'email' || channel === 'both') && (
-        <EmailPreview subject={subject} body={emailBody} />
+        <EmailPreview subject={subject} body={emailBody} format={emailFormat} />
       )}
     </div>
   )

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { WhatsAppPreview } from '@/components/communications/WhatsAppPreview'
 import { EmailPreview } from '@/components/communications/EmailPreview'
 import { VariableChips, AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
+import { FormatToggle } from '@/components/communications/FormatToggle'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
 import type { CommunicationChannel, MessageTemplate } from '@/types/communication'
@@ -42,6 +43,8 @@ export default function NuevaPlantillaPage() {
   const [subject, setSubject] = useState('')
   const [waBody, setWaBody] = useState('')
   const [emailBody, setEmailBody] = useState('')
+  // Formato del cuerpo del correo: texto plano (se escapa + nl2br al enviar) o HTML crudo.
+  const [emailFormat, setEmailFormat] = useState<'text' | 'html'>('text')
   const [saved, setSaved] = useState(false)
   const [previewChannel, setPreviewChannel] = useState<'whatsapp' | 'email'>('whatsapp')
 
@@ -61,6 +64,7 @@ export default function NuevaPlantillaPage() {
           channel,
           subject: (channel === 'email' || channel === 'both') ? (subject.trim() || null) : null,
           body: channel === 'email' ? emailBody : waBody,
+          body_format: emailFormat,
           is_active: true,
         }),
       })
@@ -163,16 +167,26 @@ export default function NuevaPlantillaPage() {
           {/* Email body */}
           {(channel === 'email' || channel === 'both') && (
             <div>
-              <label className={labelCls}>Cuerpo del correo</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className={cn(labelCls, 'mb-0')}>Cuerpo del correo</label>
+                <FormatToggle value={emailFormat} onChange={setEmailFormat} />
+              </div>
               <textarea
                 ref={emailRef}
-                rows={7}
-                className={cn(inputCls, 'resize-none')}
-                placeholder="Hola {nombre},&#10;&#10;..."
+                rows={emailFormat === 'html' ? 12 : 7}
+                className={cn(inputCls, 'resize-none', emailFormat === 'html' && 'font-mono text-[12px]')}
+                placeholder={emailFormat === 'html'
+                  ? '<p>Hola {nombre},</p>\n<p>...</p>'
+                  : 'Hola {nombre},&#10;&#10;...'}
                 value={emailBody}
                 onChange={e => setEmailBody(e.target.value)}
                 onFocus={() => setPreviewChannel('email')}
               />
+              <p className="mt-1 text-[11px] text-navy-light/60 font-body">
+                {emailFormat === 'html'
+                  ? 'Escribí HTML; se envía tal cual. Usá {nombre} para el nombre de la persona.'
+                  : 'Texto plano; los saltos de línea se respetan. Usá {nombre} para el nombre de la persona.'}
+              </p>
             </div>
           )}
 
@@ -253,7 +267,7 @@ export default function NuevaPlantillaPage() {
             <WhatsAppPreview fromName="Theos Place" body={waBody || 'El mensaje aparecerá aquí...'} />
           )}
           {(channel === 'email' || (channel === 'both' && previewChannel === 'email')) && (
-            <EmailPreview subject={subject} body={emailBody || 'El mensaje aparecerá aquí...'} />
+            <EmailPreview subject={subject} body={emailBody || 'El mensaje aparecerá aquí...'} format={emailFormat} />
           )}
         </div>
       </div>

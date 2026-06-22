@@ -45,8 +45,9 @@ export const FROM_NAME = process.env.SES_FROM_NAME ?? 'Theos Place'
 
 // Configuration Set de SES: necesario para que SES dispare las notificaciones de
 // bounce/complaint a SNS. Sin este header (y sin el config set con event
-// destination en AWS), el webhook nunca recibe eventos. Configurable por env.
-const CONFIGURATION_SET = process.env.SES_CONFIGURATION_SET
+// destination en AWS), el webhook nunca recibe eventos. SIEMPRE debe ir en cada
+// correo; el env solo permite apuntar a otro config set. Default: 'theos-default'.
+const CONFIGURATION_SET = process.env.SES_CONFIGURATION_SET || 'theos-default'
 
 let _transport: nodemailer.Transporter | null = null
 function getTransport(): nodemailer.Transporter {
@@ -90,7 +91,7 @@ export async function sendEmail({ to, subject, html, fromName, headers }: SendEm
     subject,
     html,
     headers: {
-      ...(CONFIGURATION_SET ? { 'X-SES-CONFIGURATION-SET': CONFIGURATION_SET } : {}),
+      'X-SES-CONFIGURATION-SET': CONFIGURATION_SET, // siempre: sin esto SES no publica bounces/complaints a SNS
       ...headers,
     },
   })

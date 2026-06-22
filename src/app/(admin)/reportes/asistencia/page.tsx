@@ -8,6 +8,7 @@ import {
 import { ReportShell } from '@/components/reportes/ReportShell'
 import { KpiCard } from '@/components/reportes/KpiCard'
 import { ChartCard } from '@/components/reportes/ChartCard'
+import { Tabs } from '@/components/shared/Tabs'
 import { ALL_SEDES, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 
@@ -33,6 +34,7 @@ export default function ReporteAsistenciaPage() {
   const [growth, setGrowth] = useState<GrowthReport | null>(null)
   const [year, setYear] = useState<number | null>(null)
   const [sede, setSede] = useState<string>(ALL_SEDES)
+  const [tab, setTab] = useState<'asistencia' | 'crecimiento'>('asistencia')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -109,157 +111,177 @@ export default function ReporteAsistenciaPage() {
         sede={report.sede}
         onSede={onSede}
       >
+        {/* Pestañas: separan las dos secciones del reporte para acortar la página. */}
+        <Tabs
+          tabs={[
+            { key: 'asistencia', label: 'Asistencia' },
+            { key: 'crecimiento', label: 'Crecimiento' },
+          ]}
+          active={tab}
+          onChange={k => setTab(k as 'asistencia' | 'crecimiento')}
+        />
+
         {/* ───────────────────────── Asistencia ───────────────────────── */}
-        {/* Cards de promedio anual — el año seleccionado se destaca (es el foco). */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-          {report.annualCards.map(c => (
-            <KpiCard
-              key={c.year}
-              label={`Promedio semanal ${c.year}`}
-              value={c.weeklyAvg}
-              sublabel={`${c.total.toLocaleString('es-CR')} check-ins`}
-              changePct={c.changePct}
-              highlight={c.year === report.year}
-            />
-          ))}
-        </div>
-
-        {/* Asistencia semanal */}
-        <ChartCard
-          title={`Asistencia semanal — ${report.year}`}
-          subtitle={`Total de check-ins de charla por semana (${sedeLabel}). Línea punteada = promedio del año.`}
-          empty={report.weekly.length === 0}
-          footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales de asistencia.' : undefined}
-        >
-          <ResponsiveContainer>
-            <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-              <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} label={{ value: 'Semana', position: 'insideBottom', offset: -2, fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
-                labelFormatter={(l) => `Semana ${l}`}
-              />
-              <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
-              <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}>
-                {report.weekly.map(w => <Cell key={w.week} fill={w.partial ? CORAL_SOFT : CORAL} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* Comparación por sede */}
-        <ChartCard
-          title={`Comparación por sede — ${report.year}`}
-          subtitle="Total de check-ins del año por sede. La sede seleccionada se resalta."
-          empty={report.sedeRanking.length === 0}
-          height={Math.max(220, report.sedeRanking.length * 32)}
-        >
-          <ResponsiveContainer>
-            <BarChart layout="vertical" data={report.sedeRanking} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Check-ins']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
-              <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
-                {report.sedeRanking.map(s => (
-                  <Cell key={s.sede} fill={report.sede !== ALL_SEDES && s.sede === report.sede ? CORAL : NAVY} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* Comparativo por año y mes */}
-        <ChartCard
-          title="Comparativo por año y mes"
-          subtitle={`Promedio semanal por mes — últimos ${report.monthlyYears.length} año(s) (${sedeLabel}).`}
-          empty={report.monthlyYears.length === 0}
-        >
-          <ResponsiveContainer>
-            <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-body)' }} />
-              {report.monthlyYears.map((y, i) => (
-                <Bar key={y} dataKey={String(y)} name={String(y)} fill={YEAR_COLORS[i % YEAR_COLORS.length]} radius={[3, 3, 0, 0]} maxBarSize={22} />
+        {tab === 'asistencia' && (
+          <div role="tabpanel" aria-label="Asistencia" className="space-y-5">
+            {/* Cards de promedio anual — el año seleccionado se destaca (es el foco). */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+              {report.annualCards.map(c => (
+                <KpiCard
+                  key={c.year}
+                  label={`Promedio semanal ${c.year}`}
+                  value={c.weeklyAvg}
+                  sublabel={`${c.total.toLocaleString('es-CR')} check-ins`}
+                  changePct={c.changePct}
+                  highlight={c.year === report.year}
+                />
               ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+            </div>
+
+            {/* Asistencia semanal — full width: tiene muchas barras (una por semana). */}
+            <ChartCard
+              title={`Asistencia semanal — ${report.year}`}
+              subtitle={`Total de check-ins de charla por semana (${sedeLabel}). Línea punteada = promedio del año.`}
+              empty={report.weekly.length === 0}
+              footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales de asistencia.' : undefined}
+            >
+              <ResponsiveContainer>
+                <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
+                  <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} label={{ value: 'Semana', position: 'insideBottom', offset: -2, fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
+                    labelFormatter={(l) => `Semana ${l}`}
+                  />
+                  <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
+                  <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}>
+                    {report.weekly.map(w => <Cell key={w.week} fill={w.partial ? CORAL_SOFT : CORAL} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            {/* Comparativos lado a lado en desktop. */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              {/* Comparación por sede */}
+              <ChartCard
+                title={`Comparación por sede — ${report.year}`}
+                subtitle="Total de check-ins del año por sede. La sede seleccionada se resalta."
+                empty={report.sedeRanking.length === 0}
+                height={Math.max(220, report.sedeRanking.length * 32)}
+              >
+                <ResponsiveContainer>
+                  <BarChart layout="vertical" data={report.sedeRanking} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Check-ins']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
+                    <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
+                      {report.sedeRanking.map(s => (
+                        <Cell key={s.sede} fill={report.sede !== ALL_SEDES && s.sede === report.sede ? CORAL : NAVY} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              {/* Comparativo por año y mes */}
+              <ChartCard
+                title="Comparativo por año y mes"
+                subtitle={`Promedio semanal por mes — últimos ${report.monthlyYears.length} año(s) (${sedeLabel}).`}
+                empty={report.monthlyYears.length === 0}
+              >
+                <ResponsiveContainer>
+                  <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-body)' }} />
+                    {report.monthlyYears.map((y, i) => (
+                      <Bar key={y} dataKey={String(y)} name={String(y)} fill={YEAR_COLORS[i % YEAR_COLORS.length]} radius={[3, 3, 0, 0]} maxBarSize={22} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+          </div>
+        )}
 
         {/* ───────────────────────── Crecimiento ───────────────────────── */}
-        <div className="pt-2 border-t border-[var(--outline-variant)]">
-          <h2 className="mt-4 text-base font-display font-extrabold text-navy tracking-[-0.01em]">Crecimiento — personas nuevas</h2>
-          <p className="text-[12px] text-navy-light/60 font-body mt-0.5">
-            Crecimiento <strong className="text-navy-light/80">bruto</strong> (solo altas, no se restan bajas). “Nuevo” = fecha de registro del perfil. Objetivo #1 del año: crecer en sedes.
-          </p>
-        </div>
+        {tab === 'crecimiento' && (
+          <div role="tabpanel" aria-label="Crecimiento" className="space-y-5">
+            <p className="text-[12px] text-navy-light/60 font-body">
+              Crecimiento <strong className="text-navy-light/80">bruto</strong> (solo altas, no se restan bajas). “Nuevo” = fecha de registro del perfil. Objetivo #1 del año: crecer en sedes.
+            </p>
 
-        {/* KPIs de crecimiento */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <KpiCard
-            label={`Personas nuevas ${growth.year}`}
-            value={growth.totalNew.toLocaleString('es-CR')}
-            sublabel="Crecimiento bruto"
-            changePct={growth.changePct}
-            highlight
-          />
-          <KpiCard
-            label="Sede con más nuevos"
-            value={topSede ? topSede.sede : '—'}
-            sublabel={topSede ? `${topSede.total.toLocaleString('es-CR')} personas` : 'Sin datos'}
-          />
-          <KpiCard
-            label="Sin sede"
-            value={sinSede.toLocaleString('es-CR')}
-            sublabel="No asistieron a charla"
-          />
-        </div>
+            {/* KPIs de crecimiento */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <KpiCard
+                label={`Personas nuevas ${growth.year}`}
+                value={growth.totalNew.toLocaleString('es-CR')}
+                sublabel="Crecimiento bruto"
+                changePct={growth.changePct}
+                highlight
+              />
+              <KpiCard
+                label="Sede con más nuevos"
+                value={topSede ? topSede.sede : '—'}
+                sublabel={topSede ? `${topSede.total.toLocaleString('es-CR')} personas` : 'Sin datos'}
+              />
+              <KpiCard
+                label="Sin sede"
+                value={sinSede.toLocaleString('es-CR')}
+                sublabel="No asistieron a charla"
+              />
+            </div>
 
-        {/* Crecimiento por sede */}
-        <ChartCard
-          title={`Personas nuevas por sede — ${growth.year}`}
-          subtitle="Cuántas personas nuevas se sumaron por sede. La sede seleccionada se resalta."
-          empty={growth.bySede.length === 0}
-          height={Math.max(220, growth.bySede.length * 32)}
-          footnote='La sede de cada persona es la de mayor asistencia a charlas (sede dominante). “Sin sede” = personas sin asistencia registrada. Basado en la fecha de registro del perfil.'
-        >
-          <ResponsiveContainer>
-            <BarChart layout="vertical" data={growth.bySede} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
-              <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
-                {growth.bySede.map(s => (
-                  <Cell key={s.sede} fill={growth.sede !== ALL_SEDES && s.sede === growth.sede ? CORAL : s.sede === NO_SEDE ? '#A9A8BE' : NAVY} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              {/* Crecimiento por sede */}
+              <ChartCard
+                title={`Personas nuevas por sede — ${growth.year}`}
+                subtitle="Cuántas personas nuevas se sumaron por sede. La sede seleccionada se resalta."
+                empty={growth.bySede.length === 0}
+                height={Math.max(220, growth.bySede.length * 32)}
+                footnote='La sede de cada persona es la de mayor asistencia a charlas (sede dominante). “Sin sede” = personas sin asistencia registrada. Basado en la fecha de registro del perfil.'
+              >
+                <ResponsiveContainer>
+                  <BarChart layout="vertical" data={growth.bySede} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
+                    <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
+                      {growth.bySede.map(s => (
+                        <Cell key={s.sede} fill={growth.sede !== ALL_SEDES && s.sede === growth.sede ? CORAL : s.sede === NO_SEDE ? '#A9A8BE' : NAVY} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
 
-        {/* Tendencia de nuevos por mes */}
-        <ChartCard
-          title={`Nuevos por mes — ${growth.year}`}
-          subtitle={`Ritmo de captación de personas nuevas (${sedeLabel}).`}
-          empty={growth.totalNew === 0}
-          footnote="Cuenta cada persona en el mes en que se registró su perfil."
-        >
-          <ResponsiveContainer>
-            <BarChart data={growthMonthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} />
-              <Bar dataKey="total" fill={CORAL} radius={[4, 4, 0, 0]} maxBarSize={28} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+              {/* Tendencia de nuevos por mes */}
+              <ChartCard
+                title={`Nuevos por mes — ${growth.year}`}
+                subtitle={`Ritmo de captación de personas nuevas (${sedeLabel}).`}
+                empty={growth.totalNew === 0}
+                footnote="Cuenta cada persona en el mes en que se registró su perfil."
+              >
+                <ResponsiveContainer>
+                  <BarChart data={growthMonthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} />
+                    <Bar dataKey="total" fill={CORAL} radius={[4, 4, 0, 0]} maxBarSize={28} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+          </div>
+        )}
       </ReportShell>
     </div>
   )

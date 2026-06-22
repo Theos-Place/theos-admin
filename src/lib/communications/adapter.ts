@@ -44,6 +44,7 @@ export function toDomainTemplate(db: DbTemplate): MessageTemplate {
     channel: db.channel,
     subject: db.subject ?? '',
     body: db.body,
+    body_format: db.body_format ?? 'html',
     variables: Array.isArray(db.variables) ? db.variables.map(String) : [],
     is_active: db.is_active,
     created_at: db.created_at,

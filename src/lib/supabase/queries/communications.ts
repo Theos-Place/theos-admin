@@ -11,6 +11,7 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import { withMarketingFooter, listUnsubscribeHeader } from '@/lib/email/footer'
+import { bodyToHtml } from '@/lib/email/render'
 import { applyVars } from '@/lib/communications/vars'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
 
@@ -40,6 +41,7 @@ export type DbTemplate = {
   channel: CommunicationChannel
   subject: string | null
   body: string
+  body_format: 'text' | 'html'
   variables: unknown
   is_active: boolean
   created_at: string
@@ -82,12 +84,13 @@ export async function getTemplates(): Promise<DbTemplate[]> {
   const { data, error } = await supabase
     .from('message_templates')
     .select(`
-      id, name, category, channel, subject, body, variables, is_active, created_at,
+      id, name, category, channel, subject, body, body_format, variables, is_active, created_at,
       broadcasts:message_broadcasts(id)
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as DbTemplate[]
+  // body_format (mig. 087) aún no está en los tipos generados de Supabase.
+  return (data ?? []) as unknown as DbTemplate[]
 }
 
 export async function getChannelConfigs(): Promise<DbChannelConfig[]> {
@@ -108,6 +111,7 @@ export type TemplateWriteInput = {
   channel: CommunicationChannel
   subject?: string | null
   body: string
+  body_format?: 'text' | 'html'
   variables?: unknown
   is_active?: boolean
 }
@@ -179,6 +183,7 @@ export type BroadcastWriteInput = {
   kind?: 'marketing' | 'transactional'
   subject?: string | null
   body: string
+  body_format?: 'text' | 'html'
   segment_label?: string | null
   recipient_filter?: unknown
   total_recipients?: number
@@ -505,12 +510,12 @@ export async function processPendingEmails(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: broadcastRow, error: bErr } = await (supabase as any)
     .from('message_broadcasts')
-    .select('subject, body, kind, smtp_config_id, config:channel_configs!message_broadcasts_smtp_config_id_fkey(smtp_from_name, smtp_from_email)')
+    .select('subject, body, body_format, kind, smtp_config_id, config:channel_configs!message_broadcasts_smtp_config_id_fkey(smtp_from_name, smtp_from_email)')
     .eq('id', broadcastId)
     .single()
   if (bErr || !broadcastRow) throw new Error('Broadcast no encontrado')
   const broadcast = broadcastRow as {
-    subject: string | null; body: string; kind?: string
+    subject: string | null; body: string; body_format?: 'text' | 'html'; kind?: string
     config: { smtp_from_name: string | null; smtp_from_email: string | null } | null
   }
 
@@ -592,10 +597,10 @@ export async function processPendingEmails(
     const attempts = (log.attempts ?? 0) + 1
     const token = log.member_id ? tokens.get(log.member_id) : undefined
     const nombre = log.member_id ? (firstNames.get(log.member_id) ?? '') : ''
-    // Variables ({nombre}) + footer de marketing.
-    const body = applyVars(broadcast.body, { nombre })
+    // Variables ({nombre}) → render a HTML según formato → footer de marketing.
+    const bodyHtml = bodyToHtml(applyVars(broadcast.body, { nombre }), broadcast.body_format ?? 'html')
     const subject = applyVars(broadcast.subject ?? 'Mensaje de Theos Place', { nombre })
-    const html = isMarketing && token ? withMarketingFooter(body, token) : body
+    const html = isMarketing && token ? withMarketingFooter(bodyHtml, token) : bodyHtml
     const headers = isMarketing && token ? listUnsubscribeHeader(token) : undefined
     try {
       await sendEmail({

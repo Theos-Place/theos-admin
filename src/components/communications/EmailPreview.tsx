@@ -5,9 +5,11 @@ interface Props {
   body: string
   fromName?: string
   previewName?: string
+  /** 'html' renderiza el código tal cual; 'text' (default) respeta saltos de línea. */
+  format?: 'text' | 'html'
 }
 
-export function EmailPreview({ subject, body, fromName = 'Theos Place', previewName = 'María' }: Props) {
+export function EmailPreview({ subject, body, fromName = 'Theos Place', previewName = 'María', format = 'text' }: Props) {
   const hydratedBody = body.replace(/\{nombre\}/g, previewName)
   const hydratedSubject = subject.replace(/\{nombre\}/g, previewName)
 
@@ -42,9 +44,16 @@ export function EmailPreview({ subject, body, fromName = 'Theos Place', previewN
         <div className="flex justify-center mb-5">
           <Image src="/logo-theos-white.png" alt="Theos Place" width={80} height={22} className="object-contain opacity-40" />
         </div>
-        <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-line font-body">
-          {hydratedBody}
-        </p>
+        {format === 'html' ? (
+          <div
+            className="text-[13px] leading-relaxed text-gray-700 font-body [&_a]:text-[#519DA2]"
+            dangerouslySetInnerHTML={{ __html: hydratedBody }}
+          />
+        ) : (
+          <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-line font-body">
+            {hydratedBody}
+          </p>
+        )}
         <div className="mt-6 pt-4 border-t text-center border-[#f0f0f0]">
           <p className="text-[11px] text-gray-400 font-body">
             Theos Place · theosplace.org

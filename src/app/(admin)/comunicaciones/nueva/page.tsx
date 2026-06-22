@@ -81,6 +81,8 @@ function NuevaComunicacionContent() {
   const [subject, setSubject] = useState(reenviarMsg?.subject ?? '')
   const [waBody, setWaBody] = useState(reenviarMsg?.channel !== 'email' ? (reenviarMsg?.body ?? '') : '')
   const [emailBody, setEmailBody] = useState(reenviarMsg?.channel !== 'whatsapp' ? (reenviarMsg?.body ?? '') : '')
+  // Formato del cuerpo del correo: texto plano (escapa + nl2br al enviar) o HTML crudo.
+  const [emailFormat, setEmailFormat] = useState<'text' | 'html'>('text')
   const [scheduled, setScheduled] = useState(false)
   const [scheduledAt, setScheduledAt] = useState('')
   const [timezone, setTimezone] = useState('America/Costa_Rica')
@@ -136,6 +138,8 @@ function NuevaComunicacionContent() {
     if (tpl.channel !== 'email') setWaBody(tpl.body)
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
     if (tpl.channel === 'both') { setWaBody(tpl.body); setEmailBody(tpl.body); setSubject(tpl.subject) }
+    const fmt = (tpl as { body_format?: 'text' | 'html' }).body_format
+    if (tpl.channel !== 'whatsapp' && fmt) setEmailFormat(fmt)
     setShowTemplateModal(false)
   }
 
@@ -156,6 +160,7 @@ function NuevaComunicacionContent() {
           kind: channel === 'email' ? emailKind : 'transactional',
           subject: channel !== 'whatsapp' ? (subject || null) : null,
           body: channel === 'email' ? emailBody : waBody,
+          body_format: emailFormat,
           segment_label: recipients.label || null,
           total_recipients: recipients.count,
           smtp_config_id: null,
@@ -187,6 +192,7 @@ function NuevaComunicacionContent() {
           kind: (channel === 'email' || channel === 'both') ? emailKind : 'transactional',
           subject: (channel === 'email' || channel === 'both' || channel === 'interna') ? (subject || null) : null,
           body: channel === 'email' ? emailBody : waBody,
+          body_format: emailFormat,
           segment_label: recipients.label || null,
           total_recipients: recipients.count,
           smtp_config_id: null,
@@ -295,6 +301,8 @@ function NuevaComunicacionContent() {
             setWaBody={setWaBody}
             emailBody={emailBody}
             setEmailBody={setEmailBody}
+            emailFormat={emailFormat}
+            setEmailFormat={setEmailFormat}
             previewChannel={previewChannel}
             setPreviewChannel={setPreviewChannel}
             waRef={waRef}
@@ -376,6 +384,7 @@ function NuevaComunicacionContent() {
             subject={subject}
             waBody={waBody || 'Tu mensaje aparecerá aquí...'}
             emailBody={emailBody || 'Tu mensaje aparecerá aquí...'}
+            emailFormat={emailFormat}
           />
         </div>
       </div>

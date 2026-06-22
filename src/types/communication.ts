@@ -38,6 +38,8 @@ export type MessageTemplate = {
   channel: CommunicationChannel
   subject: string
   body: string
+  /** 'text' = texto plano (se escapa + nl2br al enviar) | 'html' = código crudo. */
+  body_format: 'text' | 'html'
   variables: string[]
   is_active: boolean
   created_at: string
