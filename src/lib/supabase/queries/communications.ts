@@ -11,6 +11,7 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import { bodyToHtml } from '@/lib/email/render'
+import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { applyVars } from '@/lib/communications/vars'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
 
@@ -377,7 +378,13 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     .eq('id', id)
 
   // Canal interna: notificación en el sistema para cada destinatario con member_id.
-  const internalRecipients = recipients.filter(r => r.channel === 'interna' && r.member_id)
+  // Es un anuncio general → respeta el toggle "Mensajes del sistema" del miembro
+  // (las alertas operativas/seguridad usan inserts directos, no este broadcast).
+  const internalRecipientsRaw = recipients.filter(r => r.channel === 'interna' && r.member_id)
+  const internalAllowed = new Set(
+    await filterByNotifPref(supabase, internalRecipientsRaw.map(r => r.member_id!), 'mensajes_sistema'),
+  )
+  const internalRecipients = internalRecipientsRaw.filter(r => internalAllowed.has(r.member_id!))
   if (internalRecipients.length > 0) {
     const { data: b, error: bErr } = await supabase
       .from('message_broadcasts').select('subject, body').eq('id', id).single()
@@ -443,8 +450,10 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     if (error) throw error
   }
 
-  // Saltados = destinatarios email pedidos que se excluyeron (baja/rebote/queja).
-  const skipped = emailRecipientsRaw.length - emailRecipients.length
+  // Saltados = email excluidos (baja/rebote/queja) + internos que silenciaron
+  // "Mensajes del sistema".
+  const skipped = (emailRecipientsRaw.length - emailRecipients.length)
+    + (internalRecipientsRaw.length - internalRecipients.length)
   // skipped_count (mig. 086) aún no está en los tipos generados.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).from('message_broadcasts')
