@@ -54,7 +54,7 @@ function round1(n: number): number {
 /** Construye el payload del reporte para (año, sede) desde las filas agregadas. */
 export function buildCharlaReport(
   rawRows: CharlaAggRow[],
-  opts: { year?: number; sede?: string } = {},
+  opts: { year?: number; sede?: string; today?: Date } = {},
 ): CharlaReport {
   const rows = rawRows.map(r => ({ ...r, sede: sedeFromTitle(r.title) }))
 
@@ -128,10 +128,16 @@ export function buildCharlaReport(
     if (r.checkins > 0) e.weeks.add(r.wk)
     monthAgg.set(k, e)
   }
+  // Año en curso: no exponer meses futuros (sin datos reales) aunque hubiera
+  // filas mal fechadas; los años completos sí se muestran enteros.
+  const now = opts.today ?? new Date()
+  const curYear = now.getFullYear()
+  const curMonth = now.getMonth() + 1
   const monthly: MonthlyPoint[] = []
   for (let mo = 1; mo <= 12; mo++) {
     const values: Record<number, number | null> = {}
     for (const y of monthlyYears) {
+      if (y === curYear && mo > curMonth) { values[y] = null; continue }
       const e = monthAgg.get(`${y}-${mo}`)
       values[y] = e && e.weeks.size > 0 ? round1(e.total / e.weeks.size) : null
     }

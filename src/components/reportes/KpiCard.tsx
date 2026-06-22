@@ -23,11 +23,11 @@ export function KpiCard({
     )}>
       <p className={cn(
         'text-[11px] tracking-widest uppercase font-display',
-        highlight ? 'text-coral' : 'text-navy-light/60',
+        highlight ? 'text-coral' : 'text-navy-light/70',
       )}>{label}</p>
       <p className="mt-1.5 text-2xl font-extrabold text-navy tabular-nums font-display leading-none">{value}</p>
       <div className="mt-2 flex items-center justify-between gap-2">
-        {sublabel && <p className="text-[12px] text-navy-light/60 font-body">{sublabel}</p>}
+        {sublabel && <p className="text-[12px] text-navy-light/70 font-body">{sublabel}</p>}
         {changePct != null && (
           <span className={cn(
             'inline-flex items-center gap-0.5 text-[12px] font-medium font-body shrink-0',

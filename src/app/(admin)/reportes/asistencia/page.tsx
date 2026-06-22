@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, Legend, Cell,
 } from 'recharts'
 import { ReportShell } from '@/components/reportes/ReportShell'
@@ -14,6 +14,7 @@ import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 
 const NAVY = '#161440'
 const CORAL = '#EF5554'
+const CORAL_DIM = 'rgba(239,85,84,0.55)' // coral apagado: semanas no destacadas
 const CORAL_SOFT = '#F4B6B5' // coral claro: semanas parciales
 const TEAL = '#519DA2'
 // Color por posición de año en el comparativo (más viejo → más nuevo). El AÑO
@@ -91,6 +92,28 @@ export default function ReporteAsistenciaPage() {
   // Card de promedio semanal del año seleccionado (cambia con el pill).
   const selectedCard = report.annualCards.find(c => c.year === report.year)
 
+  // ── Asistencia semanal: semana a destacar + línea fantasma del año anterior ──
+  const isCurrentYear = report.year === new Date().getFullYear()
+  // Para el año en curso destacamos la última semana con datos (la "actual");
+  // para años cerrados, la semana pico del período.
+  const peakWeek = report.weekly.reduce<{ week: number; total: number } | null>(
+    (best, w) => (!best || w.total > best.total ? { week: w.week, total: w.total } : best), null)
+  const latestWeek = report.weekly.length ? report.weekly[report.weekly.length - 1].week : null
+  const highlightWeek = isCurrentYear ? latestWeek : peakWeek?.week ?? null
+  // Promedio semanal del año anterior (de las cards, ya filtrado por sede).
+  const prevYear = report.year - 1
+  const prevAvg = report.annualCards.find(c => c.year === prevYear)?.weeklyAvg ?? null
+  // Datos del gráfico semanal: cada punto lleva el promedio del año anterior
+  // (constante) para dibujar la línea fantasma y que aparezca en la leyenda.
+  const weeklyData = report.weekly.map(w => ({ ...w, prevAvg }))
+  // Intervalo de etiquetas del eje X: ~12 visibles como máximo (cada 2 / cada 4).
+  const xTickInterval = report.weekly.length > 28 ? 3 : 1
+
+  // ── Mini-KPIs (todo del payload actual, sin métricas nuevas) ──
+  const totalYear = selectedCard?.total ?? 0
+  const bestWeek = peakWeek?.total ?? 0
+  const sedeLeader = report.sedeRanking[0] ?? null
+
   // Datos de gráficos
   const monthlyData = report.monthly.map(m => {
     const row: Record<string, number | string | null> = { month: MONTHS[m.month - 1] }
@@ -112,6 +135,8 @@ export default function ReporteAsistenciaPage() {
         sedes={report.sedes}
         sede={report.sede}
         onSede={onSede}
+        sedeCounts={Object.fromEntries(report.sedeRanking.map(s => [s.sede, s.total]))}
+        totalCount={report.sedeRanking.reduce((acc, s) => acc + s.total, 0)}
       >
         {/* Pestañas: separan las dos secciones del reporte para acortar la página. */}
         <Tabs
@@ -126,10 +151,10 @@ export default function ReporteAsistenciaPage() {
         {/* ───────────────────────── Asistencia ───────────────────────── */}
         {tab === 'asistencia' && (
           <div role="tabpanel" aria-label="Asistencia" className="space-y-5">
-            {/* Una sola card de promedio semanal (la del año del pill) a la par del
-                gráfico: 1/5 la card, 4/5 el gráfico semanal. */}
+            {/* Card de promedio semanal (año del pill) + mini-KPIs a la izquierda
+                (1/5) y el gráfico semanal a la derecha (4/5). */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 space-y-3">
                 {selectedCard && (
                   <KpiCard
                     label={`Promedio semanal ${selectedCard.year}`}
@@ -139,29 +164,48 @@ export default function ReporteAsistenciaPage() {
                     highlight
                   />
                 )}
+                {/* Mini-KPIs compactos: aprovechan el espacio al lado del gráfico. */}
+                <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)] space-y-3">
+                  <MiniStat label="Total del año" value={totalYear.toLocaleString('es-CR')} />
+                  <MiniStat label="Mejor semana" value={bestWeek.toLocaleString('es-CR')} sub="check-ins" />
+                  <MiniStat label="Sede líder" value={sedeLeader ? sedeLeader.sede : '—'} sub={sedeLeader ? `${sedeLeader.total.toLocaleString('es-CR')} check-ins` : undefined} />
+                  <MiniStat
+                    label={`Vs. ${prevYear}`}
+                    value={selectedCard?.changePct != null ? `${selectedCard.changePct > 0 ? '+' : ''}${selectedCard.changePct}%` : '—'}
+                    tone={selectedCard?.changePct == null ? 'muted' : selectedCard.changePct >= 0 ? 'up' : 'down'}
+                  />
+                </div>
               </div>
               <div className="lg:col-span-4">
                 <ChartCard
                   title={`Asistencia semanal — ${report.year}`}
-                  subtitle={`Total de check-ins de charla por semana (${sedeLabel}). Línea punteada = promedio del año.`}
+                  subtitle={`Total de check-ins de charla por semana (${sedeLabel}). La barra resaltada es ${isCurrentYear ? 'la semana más reciente' : 'la semana pico'}; la línea punteada navy = promedio del año.`}
                   empty={report.weekly.length === 0}
                   footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales de asistencia.' : undefined}
                 >
                   <ResponsiveContainer>
-                    <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                    <ComposedChart data={weeklyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-                      <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} label={{ value: 'Semana', position: 'insideBottom', offset: -2, fontSize: 11 }} />
+                      <XAxis dataKey="week" interval={xTickInterval} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                       <Tooltip
                         contentStyle={tooltipStyle}
-                        formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
+                        formatter={(v, n, p) => n === 'prevAvg'
+                          ? [Number(v), `Prom. semanal ${prevYear}`]
+                          : [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
                         labelFormatter={(l) => `Semana ${l}`}
                       />
+                      <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-body)' }} />
                       <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
-                      <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}>
-                        {report.weekly.map(w => <Cell key={w.week} fill={w.partial ? CORAL_SOFT : CORAL} />)}
+                      <Bar dataKey="total" name={`Check-ins ${report.year}`} radius={[4, 4, 0, 0]} maxBarSize={28}>
+                        {weeklyData.map(w => (
+                          <Cell key={w.week} fill={w.partial ? CORAL_SOFT : w.week === highlightWeek ? CORAL : CORAL_DIM} />
+                        ))}
                       </Bar>
-                    </BarChart>
+                      {prevAvg != null && (
+                        <Line type="monotone" dataKey="prevAvg" name={`Prom. semanal ${prevYear}`} stroke={NAVY} strokeOpacity={0.5} strokeDasharray="4 4" strokeWidth={1.5} dot={false} legendType="line" />
+                      )}
+                    </ComposedChart>
                   </ResponsiveContainer>
                 </ChartCard>
               </div>
@@ -217,8 +261,8 @@ export default function ReporteAsistenciaPage() {
         {/* ───────────────────────── Crecimiento ───────────────────────── */}
         {tab === 'crecimiento' && (
           <div role="tabpanel" aria-label="Crecimiento" className="space-y-5">
-            <p className="text-[12px] text-navy-light/60 font-body">
-              Crecimiento <strong className="text-navy-light/80">bruto</strong> (solo altas, no se restan bajas). “Nuevo” = fecha de registro del perfil. Objetivo #1 del año: crecer en sedes.
+            <p className="text-[12px] text-navy-light/70 font-body">
+              Crecimiento <strong className="text-navy-light/90">bruto</strong> (solo altas, no se restan bajas). “Nuevo” = fecha de registro del perfil. Objetivo #1 del año: crecer en sedes.
             </p>
 
             {/* KPIs de crecimiento */}
@@ -287,6 +331,25 @@ export default function ReporteAsistenciaPage() {
           </div>
         )}
       </ReportShell>
+    </div>
+  )
+}
+
+/** Mini-KPI compacto para la columna lateral del gráfico semanal. */
+function MiniStat({ label, value, sub, tone = 'default' }: {
+  label: string
+  value: string
+  sub?: string
+  tone?: 'default' | 'up' | 'down' | 'muted'
+}) {
+  const valueColor = tone === 'up' ? 'text-teal-deep' : tone === 'down' ? 'text-coral' : tone === 'muted' ? 'text-navy-light/70' : 'text-navy'
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <p className="text-[11px] text-navy-light/70 font-body">{label}</p>
+      <p className={`text-sm font-extrabold tabular-nums font-display leading-none text-right ${valueColor}`}>
+        {value}
+        {sub && <span className="block text-[10px] font-normal text-navy-light/70 font-body mt-0.5">{sub}</span>}
+      </p>
     </div>
   )
 }
