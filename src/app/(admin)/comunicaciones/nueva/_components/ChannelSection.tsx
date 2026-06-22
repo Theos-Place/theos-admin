@@ -32,22 +32,29 @@ export function ChannelSection({ channel, setChannel, waConfig }: Props) {
       </p>
       <div className="flex gap-2">
         {([
-          { key: 'interna',  label: 'Alerta interna', icon: Bell,          color: 'text-coral'       },
-          { key: 'whatsapp', label: 'WhatsApp',       icon: MessageCircle, color: 'text-emerald-600' },
-          { key: 'email',    label: 'Correo',         icon: Mail,          color: 'text-blue-600'    },
+          { key: 'interna',  label: 'Alerta interna', icon: Bell,          color: 'text-coral',       disabled: false },
+          { key: 'email',    label: 'Correo',         icon: Mail,          color: 'text-blue-600',    disabled: false },
+          { key: 'whatsapp', label: 'WhatsApp',       icon: MessageCircle, color: 'text-emerald-600', disabled: true  },
         ] as const).map(opt => (
           <button
             key={opt.key}
             type="button"
-            onClick={() => setChannel(opt.key)}
+            disabled={opt.disabled}
+            onClick={() => { if (!opt.disabled) setChannel(opt.key) }}
+            aria-label={opt.disabled ? `${opt.label} (próximamente)` : opt.label}
             className={cn(
               'flex-1 flex flex-col items-center gap-1.5 rounded-xl border p-3 text-[12px] font-medium transition-all font-body',
-              channel === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/60 hover:text-navy'
+              opt.disabled
+                ? 'opacity-50 cursor-not-allowed text-navy-light/60'
+                : channel === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/60 hover:text-navy'
             )}
-            style={{ borderColor: channel === opt.key ? undefined : 'var(--outline-variant)' }}
+            style={{ borderColor: !opt.disabled && channel === opt.key ? undefined : 'var(--outline-variant)' }}
           >
-            <opt.icon size={16} className={channel === opt.key ? 'text-white' : opt.color} />
+            <opt.icon size={16} className={!opt.disabled && channel === opt.key ? 'text-white' : opt.color} />
             {opt.label}
+            {opt.disabled && (
+              <span className="text-[10px] font-normal text-navy-light/60 font-body">Próximamente</span>
+            )}
           </button>
         ))}
       </div>

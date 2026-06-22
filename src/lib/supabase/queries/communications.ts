@@ -10,7 +10,6 @@
  */
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
-import { withMarketingFooter, listUnsubscribeHeader } from '@/lib/email/footer'
 import { bodyToHtml } from '@/lib/email/render'
 import { applyVars } from '@/lib/communications/vars'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
@@ -588,27 +587,27 @@ export async function processPendingEmails(
     }
   }
 
-  // Marketing → pie con baja (unsubscribe) + dirección física y header
-  // List-Unsubscribe. Transaccional → cuerpo tal cual, sin baja.
-  const isMarketing = broadcast.kind !== 'transactional'
+  // Marketing → el helper inyecta pie de baja + header List-Unsubscribe (con token).
+  // Transaccional → cuerpo tal cual, sin baja. La lógica del pie vive en sendEmail.
+  const kind: 'marketing' | 'transactional' = broadcast.kind === 'transactional' ? 'transactional' : 'marketing'
 
   let sent = 0, failed = 0
   for (const log of batch) {
     const attempts = (log.attempts ?? 0) + 1
     const token = log.member_id ? tokens.get(log.member_id) : undefined
     const nombre = log.member_id ? (firstNames.get(log.member_id) ?? '') : ''
-    // Variables ({nombre}) → render a HTML según formato → footer de marketing.
+    // Variables ({nombre}) → render a HTML según formato. El pie de marketing lo
+    // agrega el helper sendEmail al enviar (nunca se persiste en el broadcast).
     const bodyHtml = bodyToHtml(applyVars(broadcast.body, { nombre }), broadcast.body_format ?? 'html')
     const subject = applyVars(broadcast.subject ?? 'Mensaje de Theos Place', { nombre })
-    const html = isMarketing && token ? withMarketingFooter(bodyHtml, token) : bodyHtml
-    const headers = isMarketing && token ? listUnsubscribeHeader(token) : undefined
     try {
       await sendEmail({
         to: { email: log.recipient, name: (log.member_id && names.get(log.member_id)) || log.recipient },
         fromName: broadcast.config?.smtp_from_name ?? undefined,
         subject,
-        html,
-        headers,
+        html: bodyHtml,
+        kind,
+        unsubscribeToken: token,
       })
       await supabase.from('message_logs')
         .update({ status: 'sent', sent_at: new Date().toISOString(), attempts, last_error: null })

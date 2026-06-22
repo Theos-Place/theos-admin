@@ -12,6 +12,7 @@ import { MemberHeader } from './_components/MemberHeader'
 import { MemberSummaryTab } from './_components/MemberSummaryTab'
 import { MemberDigitalPass } from './_components/MemberDigitalPass'
 import { MemberPersonalTab } from './_components/MemberPersonalTab'
+import { MemberEmailStatus } from './_components/MemberEmailStatus'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow } from './_components/MemberParticipationTab'
@@ -221,7 +222,10 @@ export default function MiembroDetailPage() {
 
       {/* TAB: Info Personal */}
       {activeTab === 'personal' && (
-        <MemberPersonalTab member={member} />
+        <div className="space-y-4">
+          <MemberPersonalTab member={member} />
+          <MemberEmailStatus memberId={member.id} />
+        </div>
       )}
 
       {/* TAB: Participación */}

@@ -66,7 +66,8 @@ function NotificacionesTab({ onSave }: { onSave: () => void }) {
     mensajes_sistema:       true,
     comunicaciones_masivas: false,
   })
-  const [canal, setCanal] = useState<'whatsapp' | 'email' | 'both'>('whatsapp')
+  // Por ahora solo correo: WhatsApp y Ambos quedan deshabilitados (próximamente).
+  const [canal, setCanal] = useState<'whatsapp' | 'email' | 'both'>('email')
   const [saving, setSaving] = useState(false)
 
   function toggle(key: keyof typeof prefs) {
@@ -114,21 +115,26 @@ function NotificacionesTab({ onSave }: { onSave: () => void }) {
         </p>
         <div className="flex gap-2">
           {([
-            { key: 'whatsapp', label: 'WhatsApp' },
-            { key: 'email',    label: 'Correo'   },
-            { key: 'both',     label: 'Ambos'    },
+            { key: 'email',    label: 'Correo',   disabled: false },
+            { key: 'whatsapp', label: 'WhatsApp', disabled: true  },
+            { key: 'both',     label: 'Ambos',    disabled: true  },
           ] as const).map(opt => (
             <button
               key={opt.key}
               type="button"
-              onClick={() => setCanal(opt.key)}
+              disabled={opt.disabled}
+              onClick={() => { if (!opt.disabled) setCanal(opt.key) }}
+              aria-label={opt.disabled ? `${opt.label} (próximamente)` : opt.label}
               className={cn(
-                'flex-1 rounded-xl border py-3 text-[13px] font-medium transition-all font-body',
-                canal === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/60 hover:text-navy'
+                'flex-1 flex flex-col items-center gap-0.5 rounded-xl border py-3 text-[13px] font-medium transition-all font-body',
+                opt.disabled
+                  ? 'opacity-50 cursor-not-allowed text-navy-light/60'
+                  : canal === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/60 hover:text-navy'
               )}
-              style={{ borderColor: canal === opt.key ? undefined : 'var(--outline-variant)' }}
+              style={{ borderColor: !opt.disabled && canal === opt.key ? undefined : 'var(--outline-variant)' }}
             >
               {opt.label}
+              {opt.disabled && <span className="text-[10px] font-normal text-navy-light/60">Próximamente</span>}
             </button>
           ))}
         </div>

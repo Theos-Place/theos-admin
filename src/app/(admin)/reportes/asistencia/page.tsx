@@ -88,6 +88,8 @@ export default function ReporteAsistenciaPage() {
 
   const sedeLabel = report.sede === ALL_SEDES ? 'todas las sedes' : report.sede
   const hasPartialWeek = report.weekly.some(w => w.partial)
+  // Card de promedio semanal del año seleccionado (cambia con el pill).
+  const selectedCard = report.annualCards.find(c => c.year === report.year)
 
   // Datos de gráficos
   const monthlyData = report.monthly.map(m => {
@@ -124,44 +126,46 @@ export default function ReporteAsistenciaPage() {
         {/* ───────────────────────── Asistencia ───────────────────────── */}
         {tab === 'asistencia' && (
           <div role="tabpanel" aria-label="Asistencia" className="space-y-5">
-            {/* Cards de promedio anual — el año seleccionado se destaca (es el foco). */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-              {report.annualCards.map(c => (
-                <KpiCard
-                  key={c.year}
-                  label={`Promedio semanal ${c.year}`}
-                  value={c.weeklyAvg}
-                  sublabel={`${c.total.toLocaleString('es-CR')} check-ins`}
-                  changePct={c.changePct}
-                  highlight={c.year === report.year}
-                />
-              ))}
-            </div>
-
-            {/* Asistencia semanal — full width: tiene muchas barras (una por semana). */}
-            <ChartCard
-              title={`Asistencia semanal — ${report.year}`}
-              subtitle={`Total de check-ins de charla por semana (${sedeLabel}). Línea punteada = promedio del año.`}
-              empty={report.weekly.length === 0}
-              footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales de asistencia.' : undefined}
-            >
-              <ResponsiveContainer>
-                <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-                  <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} label={{ value: 'Semana', position: 'insideBottom', offset: -2, fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
-                    labelFormatter={(l) => `Semana ${l}`}
+            {/* Una sola card de promedio semanal (la del año del pill) a la par del
+                gráfico: 1/5 la card, 4/5 el gráfico semanal. */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
+              <div className="lg:col-span-1">
+                {selectedCard && (
+                  <KpiCard
+                    label={`Promedio semanal ${selectedCard.year}`}
+                    value={selectedCard.weeklyAvg}
+                    sublabel={`${selectedCard.total.toLocaleString('es-CR')} check-ins`}
+                    changePct={selectedCard.changePct}
+                    highlight
                   />
-                  <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
-                  <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}>
-                    {report.weekly.map(w => <Cell key={w.week} fill={w.partial ? CORAL_SOFT : CORAL} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
+                )}
+              </div>
+              <div className="lg:col-span-4">
+                <ChartCard
+                  title={`Asistencia semanal — ${report.year}`}
+                  subtitle={`Total de check-ins de charla por semana (${sedeLabel}). Línea punteada = promedio del año.`}
+                  empty={report.weekly.length === 0}
+                  footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales de asistencia.' : undefined}
+                >
+                  <ResponsiveContainer>
+                    <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
+                      <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} label={{ value: 'Semana', position: 'insideBottom', offset: -2, fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
+                        labelFormatter={(l) => `Semana ${l}`}
+                      />
+                      <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
+                      <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}>
+                        {report.weekly.map(w => <Cell key={w.week} fill={w.partial ? CORAL_SOFT : CORAL} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </div>
+            </div>
 
             {/* Comparativos lado a lado en desktop. */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

@@ -10,6 +10,7 @@
  * Solo server-side (usa nodemailer). Nunca importar desde el cliente.
  */
 import nodemailer from 'nodemailer'
+import { withMarketingFooter, listUnsubscribeHeader } from '@/lib/email/footer'
 
 /** Token de error cuando no hay proveedor configurado (la UI lo traduce). */
 export const EMAIL_NOT_CONFIGURED = 'EMAIL_NOT_CONFIGURED'
@@ -74,24 +75,38 @@ export type SendEmailInput = {
    *  se aceptan por compatibilidad pero el remitente real siempre es el verificado. */
   fromName?: string
   fromEmail?: string
-  /** Headers extra (p. ej. List-Unsubscribe en correos de marketing). */
+  /** Tipo de correo. 'marketing' inyecta el pie de baja + header List-Unsubscribe
+   *  (requiere unsubscribeToken). 'transactional' (default) no lleva pie. */
+  kind?: 'marketing' | 'transactional'
+  /** Token de baja del destinatario. Sin él, aunque sea marketing, no se inyecta
+   *  pie (no podríamos generar el link de baja). */
+  unsubscribeToken?: string
+  /** Headers extra. El config set y el List-Unsubscribe los maneja el helper. */
   headers?: Record<string, string>
 }
 
 /**
- * Envía un email transaccional/marketing por SES SMTP. El remitente es siempre
- * SES_FROM_EMAIL (identidad verificada); el `fromName` se puede personalizar.
+ * Envía un email por SES SMTP. Centraliza la config de SES para que toda
+ * plantilla/campaña la herede sin configuración manual:
+ *  - X-SES-CONFIGURATION-SET en TODOS los envíos (bounces/complaints → SNS).
+ *  - Pie de baja + header List-Unsubscribe SOLO en marketing (con token).
+ * Las plantillas/broadcasts guardan SOLO el cuerpo; el pie se agrega acá, al
+ * enviar, nunca se persiste. El remitente es siempre SES_FROM_EMAIL (verificado).
  */
-export async function sendEmail({ to, subject, html, fromName, headers }: SendEmailInput): Promise<{ messageId: string }> {
+export async function sendEmail({ to, subject, html, fromName, kind, unsubscribeToken, headers }: SendEmailInput): Promise<{ messageId: string }> {
   assertEmailConfigured()
+  const isMarketing = kind === 'marketing' && !!unsubscribeToken
+  const finalHtml = isMarketing ? withMarketingFooter(html, unsubscribeToken!) : html
+  const marketingHeaders = isMarketing ? listUnsubscribeHeader(unsubscribeToken!) : undefined
   const transport = getTransport()
   const result = await transport.sendMail({
     from: { name: fromName || FROM_NAME, address: FROM_EMAIL },
     to: to.name ? { name: to.name, address: to.email } : to.email,
     subject,
-    html,
+    html: finalHtml,
     headers: {
       'X-SES-CONFIGURATION-SET': CONFIGURATION_SET, // siempre: sin esto SES no publica bounces/complaints a SNS
+      ...marketingHeaders,
       ...headers,
     },
   })
