@@ -56,15 +56,19 @@ export default function EstudiosPage() {
   const inProgressGroups    = useMemo(() => groups.filter(g => g.status === 'en_curso'), [groups])
   // Sin dirigente: flag derivado (leader_id null) sobre grupos no finalizados.
   const pendingLeaderGroups = useMemo(() => groups.filter(g => !g.leader_id && g.status !== 'finalizado'), [groups])
+  // Mismo criterio EXACTO que el conteo del dashboard (`closing_soon`) y que el
+  // filtro `closing_soon` del API de grupos: ends_at no nulo, entre hoy y +30
+  // días, CUALQUIER estado (no solo en curso). Así el número del box coincide con
+  // la lista al hacer clic. Comparación por fecha (slice 10) para evitar drift.
   const closingSoon = useMemo(() => {
-    const now = new Date()
-    const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-    return inProgressGroups.filter(g => {
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const in30Str = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
+    return groups.filter(g => {
       if (!g.end_date) return false
-      const end = new Date(g.end_date)
-      return end <= in30 && end >= now
+      const d = g.end_date.slice(0, 10)
+      return d >= todayStr && d <= in30Str
     })
-  }, [inProgressGroups])
+  }, [groups])
 
   return (
     <div className="space-y-6">
@@ -86,24 +90,33 @@ export default function EstudiosPage() {
           { label: 'Grupos en inscripción', value: openGroups.length,     icon: Users,        color: 'text-teal-deep' },
           { label: 'Grupos en curso',       value: inProgressGroups.length, icon: TrendingUp, color: 'text-navy' },
           { label: 'Solicitudes abiertas',  value: openRequests,          icon: Inbox,        color: 'text-amber-600' },
-          { label: 'Por cerrar (30 días)',  value: closingSoon.length,    icon: AlertTriangle, color: 'text-coral' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <div className="flex items-start justify-between">
-              <p
-                className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
-              >
-                {label}
-              </p>
-              <Icon size={16} className={color} />
-            </div>
-            <p
-              className={`mt-2 text-3xl font-bold font-display ${color}`}
+          { label: 'Por cerrar (30 días)',  value: closingSoon.length,    icon: AlertTriangle, color: 'text-coral', href: '/estudios/grupos?filter=closing_soon' },
+        ].map(({ label, value, icon: Icon, color, href }) => {
+          const inner = (
+            <>
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                  {label}
+                </p>
+                <Icon size={16} className={color} />
+              </div>
+              <p className={`mt-2 text-3xl font-bold font-display ${color}`}>{value}</p>
+            </>
+          )
+          return href ? (
+            <Link
+              key={label}
+              href={href}
+              className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] hover:bg-surface-low transition-colors block"
             >
-              {value}
-            </p>
-          </div>
-        ))}
+              {inner}
+            </Link>
+          ) : (
+            <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+              {inner}
+            </div>
+          )
+        })}
       </div>
 
       {/* Main grid */}
@@ -231,12 +244,15 @@ export default function EstudiosPage() {
                 </div>
               )}
               {closingSoon.length > 0 && (
-                <div className="flex items-start gap-2 rounded-xl bg-coral/5 px-3 py-2.5">
+                <Link
+                  href="/estudios/grupos?filter=closing_soon"
+                  className="flex items-start gap-2 rounded-xl bg-coral/5 px-3 py-2.5 hover:bg-coral/10 transition-colors"
+                >
                   <Clock size={14} className="text-coral mt-0.5 shrink-0" />
                   <p className="text-[12px] text-coral font-body">
                     <strong>{closingSoon.length}</strong> grupo{closingSoon.length > 1 ? 's' : ''} cierran en los próximos 30 días
                   </p>
-                </div>
+                </Link>
               )}
               {openRequests > 0 && (
                 <div className="flex items-start gap-2 rounded-xl bg-navy/5 px-3 py-2.5">
