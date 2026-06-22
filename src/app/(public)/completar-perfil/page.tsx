@@ -7,7 +7,6 @@ import { Check, Lock } from 'lucide-react'
 
 export default function CompletarPerfilPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [ready, setReady] = useState(false)
   const [hasSession, setHasSession] = useState(false)
   const [password, setPassword] = useState('')
@@ -17,8 +16,11 @@ export default function CompletarPerfilPage() {
   const [done, setDone] = useState(false)
 
   // El link de invitación trae los tokens en la URL; el client los procesa.
+  // El cliente se crea acá (no en el cuerpo) para que no corra en el prerender,
+  // donde no hay env vars de Supabase y el build fallaría.
   useEffect(() => {
     let alive = true
+    const supabase = createClient()
     supabase.auth.getSession().then(({ data }) => {
       if (alive) { setHasSession(!!data.session); setReady(true) }
     })
@@ -26,7 +28,7 @@ export default function CompletarPerfilPage() {
       if (alive) { setHasSession(!!session); setReady(true) }
     })
     return () => { alive = false; sub.subscription.unsubscribe() }
-  }, [supabase])
+  }, [])
 
   async function submit() {
     setError(null)
@@ -34,6 +36,7 @@ export default function CompletarPerfilPage() {
     if (password !== confirm) { setError('Las contraseñas no coinciden.'); return }
     setSaving(true)
     try {
+      const supabase = createClient()
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
       setDone(true)
