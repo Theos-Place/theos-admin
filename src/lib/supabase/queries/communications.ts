@@ -15,6 +15,7 @@ import { renderEmail } from '@/lib/email/baseLayout'
 import { unsubscribeUrl } from '@/lib/email/footer'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { applyVars } from '@/lib/communications/vars'
+import { ymdCR, todayCR } from '@/lib/format'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
 
 export type DbBroadcast = {
@@ -217,14 +218,18 @@ export async function createBroadcast(input: BroadcastWriteInput): Promise<{ id:
 
 export type Recipient = { member_id?: string | null; channel: 'whatsapp' | 'email' | 'interna'; recipient: string }
 
+// "Hoy" SIEMPRE en zona Costa Rica (UTC-6): el runtime corre en UTC y
+// `toISOString()` daría el día equivocado de noche, desfasando el rate limit
+// diario y las comparaciones de scheduled_date.
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0]
+  return todayCR()
 }
 
 /** Emails enviados hoy por todos los broadcasts (para el rate limit diario). */
 export async function getDailyEmailsSent(): Promise<number> {
   const supabase = createAdminClient()
-  const startOfDay = `${todayStr()}T00:00:00.000Z`
+  // Medianoche CR de hoy expresada en UTC (CR = UTC-6 → 00:00 CR = 06:00 UTC).
+  const startOfDay = `${todayStr()}T06:00:00.000Z`
   const { count, error } = await supabase
     .from('message_logs')
     .select('id', { count: 'exact', head: true })
@@ -246,7 +251,7 @@ export function distributeEmailSchedule(
   let remaining = total
   // Hoy: hasta lo disponible del día.
   const today = Math.min(remaining, Math.max(0, availableToday))
-  for (let i = 0; i < today; i++) dates.push(now.toISOString().split('T')[0])
+  for (let i = 0; i < today; i++) dates.push(ymdCR(now))
   remaining -= today
   // Días siguientes: bloques de dailyLimit.
   let dayOffset = 1
@@ -254,7 +259,7 @@ export function distributeEmailSchedule(
     const batch = Math.min(remaining, dailyLimit)
     const d = new Date(now)
     d.setDate(d.getDate() + dayOffset)
-    const ds = d.toISOString().split('T')[0]
+    const ds = ymdCR(d)
     for (let i = 0; i < batch; i++) dates.push(ds)
     remaining -= batch
     dayOffset++

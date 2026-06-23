@@ -3,6 +3,20 @@
 
 const LOCALE = 'es-CR'
 
+const CR_TZ = 'America/Costa_Rica'
+
+/** Fecha calendario (YYYY-MM-DD) de un Date en zona Costa Rica (UTC-6). El runtime
+ *  (Vercel) corre en UTC, así que `new Date().toISOString().split('T')[0]` da el
+ *  día equivocado entre las 18:00 y medianoche CR. `en-CA` formatea como YYYY-MM-DD. */
+export function ymdCR(date: Date = new Date()): string {
+  return date.toLocaleDateString('en-CA', { timeZone: CR_TZ })
+}
+
+/** "Hoy" en zona Costa Rica como YYYY-MM-DD. Ver [[ymdCR]]. */
+export function todayCR(): string {
+  return ymdCR()
+}
+
 /** Fecha corta: "5 may 2026". null/inválida → '—'. */
 export function formatDate(d: string | null | undefined): string {
   if (!d) return '—'

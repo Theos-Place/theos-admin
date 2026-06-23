@@ -7,7 +7,8 @@ import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
 import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
-import { formatDate, formatDateLong } from '@/lib/format'
+import { useToast } from '@/components/shared/Toast'
+import { formatDate, formatDateLong, todayCR } from '@/lib/format'
 
 function RoleBadge({ roleId }: { roleId: RoleId }) {
   const role = ROLES.find(r => r.id === roleId)
@@ -30,6 +31,7 @@ function avatarBg(id: string) {
 export default function AccesoDetailPage({ params }: { params: Promise<{ memberId: string }> }) {
   const { memberId } = use(params)
   const router = useRouter()
+  const toast = useToast()
 
   const [user, setUser]               = useState<UserAccess | null>(null)
   const [confirmAdd, setConfirmAdd]   = useState<RoleId | null>(null)
@@ -59,34 +61,50 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
   }
 
   async function handleRevoke(roleId: RoleId) {
+    // Optimista con rollback: guardamos el estado previo y lo restauramos si la
+    // persistencia falla (un cambio de permisos no debe confirmarse en falso).
+    const prevUser = user
+    const prevHistory = history
     setUser(prev => prev ? { ...prev, roles: prev.roles.filter(r => r !== roleId) } : prev)
     setHistory(prev => [
-      { date: new Date().toISOString().split('T')[0], actor: 'Admin Theos', action: 'revoked', role: roleId },
+      { date: todayCR(), actor: 'Admin Theos', action: 'revoked', role: roleId },
       ...prev,
     ])
     try {
-      await fetch(`/api/accesos/${memberId}/roles`, {
+      const res = await fetch(`/api/accesos/${memberId}/roles`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: roleId }),
       })
-    } catch { /* revertir queda a discreción; el optimista ya se aplicó */ }
+      if (!res.ok) throw new Error()
+    } catch {
+      setUser(prevUser)
+      setHistory(prevHistory)
+      toast('No se pudo revocar el rol. Intentá de nuevo.', 'error')
+    }
   }
 
   async function handleAddRole(roleId: RoleId) {
+    const prevUser = user
+    const prevHistory = history
     setUser(prev => prev ? { ...prev, roles: [...prev.roles, roleId], is_active: true } : prev)
     setHistory(prev => [
-      { date: new Date().toISOString().split('T')[0], actor: 'Admin Theos', action: 'assigned', role: roleId },
+      { date: todayCR(), actor: 'Admin Theos', action: 'assigned', role: roleId },
       ...prev,
     ])
     setConfirmAdd(null)
     try {
-      await fetch(`/api/accesos/${memberId}/roles`, {
+      const res = await fetch(`/api/accesos/${memberId}/roles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: roleId }),
       })
-    } catch { /* el optimista ya se aplicó */ }
+      if (!res.ok) throw new Error()
+    } catch {
+      setUser(prevUser)
+      setHistory(prevHistory)
+      toast('No se pudo asignar el rol. Intentá de nuevo.', 'error')
+    }
   }
 
   // 'miembro' es implícito — se excluye de toda la UI de gestión
