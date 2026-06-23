@@ -2257,6 +2257,7 @@ export type Database = {
       }
       message_templates: {
         Row: {
+          available_variables: Json | null
           body: string
           body_format: string
           category: string | null
@@ -2265,12 +2266,15 @@ export type Database = {
           created_by: string | null
           id: string
           is_active: boolean | null
+          is_system: boolean
           name: string
           subject: string | null
+          system_key: string | null
           updated_at: string | null
           variables: Json | null
         }
         Insert: {
+          available_variables?: Json | null
           body: string
           body_format?: string
           category?: string | null
@@ -2279,12 +2283,15 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean | null
+          is_system?: boolean
           name: string
           subject?: string | null
+          system_key?: string | null
           updated_at?: string | null
           variables?: Json | null
         }
         Update: {
+          available_variables?: Json | null
           body?: string
           body_format?: string
           category?: string | null
@@ -2293,8 +2300,10 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean | null
+          is_system?: boolean
           name?: string
           subject?: string | null
+          system_key?: string | null
           updated_at?: string | null
           variables?: Json | null
         }

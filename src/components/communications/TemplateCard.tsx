@@ -1,6 +1,6 @@
 'use client'
 
-import { Copy, Edit, Trash2, Send } from 'lucide-react'
+import { Copy, Edit, Trash2, Send, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChannelBadge } from './ChannelBadge'
 import { categoryLabel, categoryColor } from '@/lib/communications/categories'
@@ -27,12 +27,17 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
         <ChannelBadge channel={template.channel} size="sm" />
       </div>
 
-      {/* Category */}
-      <span
-        className={cn('self-start rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', categoryColor(template.category))}
-      >
-        {categoryLabel(template.category)}
-      </span>
+      {/* Category + marca de sistema */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', categoryColor(template.category))}>
+          {categoryLabel(template.category)}
+        </span>
+        {template.is_system && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[10px] font-semibold font-display">
+            <Lock size={9} /> Plantilla del sistema
+          </span>
+        )}
+      </div>
 
       {/* Body preview */}
       <p
@@ -71,17 +76,19 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
               Usar
             </button>
           )}
-          {onEdit && (
-            <button type="button" onClick={() => onEdit(template)} className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
+          {/* Las plantillas del sistema NO se editan (solo se clonan). */}
+          {onEdit && !template.is_system && (
+            <button type="button" onClick={() => onEdit(template)} title="Editar" aria-label="Editar" className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
               <Edit size={13} />
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={() => onDuplicate(template)} className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onDuplicate(template)} title="Clonar" aria-label="Clonar" className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
               <Copy size={13} />
             </button>
           )}
-          {onDelete && (
+          {/* Las plantillas del sistema NO se borran. */}
+          {onDelete && !template.is_system && (
             <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/5 transition-colors">
               <Trash2 size={13} />
             </button>

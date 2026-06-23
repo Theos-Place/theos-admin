@@ -30,6 +30,8 @@ export default function EditarPlantillaPage() {
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [notFound, setNotFound] = useState(false)
+  const [isSystem, setIsSystem] = useState(false)
+  const [systemVars, setSystemVars] = useState<string[]>([])
 
   // Carga inicial: precarga los datos de la plantilla una sola vez.
   useEffect(() => {
@@ -40,6 +42,8 @@ export default function EditarPlantillaPage() {
     setCategory(tpl.category || 'general')
     setSubject(tpl.subject || '')
     setEmailBody(tpl.body || '')
+    setIsSystem(tpl.is_system)
+    setSystemVars(tpl.available_variables ?? [])
     setCategories([...new Set([...KNOWN_CATEGORIES, ...templates.map(t => t.category).filter(Boolean)])])
     setLoaded(true)
   }, [loading, templates, id, loaded])
@@ -86,6 +90,20 @@ export default function EditarPlantillaPage() {
   if (!loaded) {
     return <div className="p-8 text-center text-navy-light/60 font-body">Cargando…</div>
   }
+  // Las plantillas del sistema (transaccionales) no se editan.
+  if (isSystem) {
+    return (
+      <div className="space-y-4 max-w-lg">
+        <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"><ChevronLeft size={15} /> Plantillas</Link>
+        <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)] space-y-2">
+          <p className="text-base font-bold text-navy font-display">Plantilla del sistema</p>
+          <p className="text-sm text-navy-light/70 font-body">
+            Esta es una plantilla transaccional del sistema y no se puede editar. Si necesitás una versión propia, cloná la plantilla desde el listado.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -131,14 +149,21 @@ export default function EditarPlantillaPage() {
           </div>
 
           <div className="rounded-xl p-3 bg-surface-low">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-semibold font-display mb-2">Variables (clic para copiar)</p>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-semibold font-display mb-2">
+              {isSystem ? 'Variables disponibles (clic para copiar)' : 'Variables (clic para copiar)'}
+            </p>
             <div className="flex flex-wrap gap-2">
-              {AVAILABLE_VARIABLES.map(v => (
-                <button key={v.key} type="button" onClick={() => copyVar(v.key)} title={v.description} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]">
-                  {copied === v.key ? '¡copiado!' : v.key}
+              {(isSystem ? systemVars.map(v => `{{${v}}}`) : AVAILABLE_VARIABLES.map(v => v.key)).map(token => (
+                <button key={token} type="button" onClick={() => copyVar(token)} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]">
+                  {copied === token ? '¡copiado!' : token}
                 </button>
               ))}
             </div>
+            {isSystem && (
+              <p className="mt-2 text-[11px] text-navy-light/60 font-body">
+                Plantilla del sistema: editá el contenido, pero mantené las variables {'{{...}}'} para que el envío automático las reemplace.
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3 pt-2 border-t border-[var(--outline-variant)]">

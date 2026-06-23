@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { enrollMember, withdrawMember, setEnrollmentGrade } from '@/lib/supabase/queries/studies'
+import { notifyEnrollment } from '@/lib/email/enrollment-notify'
 
 // POST: inscribe un miembro. Body: { member_id }
 export async function POST(
@@ -13,6 +14,8 @@ export async function POST(
     const { id } = await params
     const { member_id } = await req.json()
     await enrollMember(id, member_id)
+    // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
+    await notifyEnrollment(id, member_id)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
     console.error('POST enrollments:', error)

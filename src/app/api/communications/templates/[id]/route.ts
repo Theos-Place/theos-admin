@@ -13,6 +13,9 @@ export async function PUT(
     await updateTemplate(id, (await req.json()) as Partial<TemplateWriteInput>)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'SYSTEM_TEMPLATE_PROTECTED') {
+      return NextResponse.json({ error: 'Las plantillas del sistema no se pueden editar.' }, { status: 403 })
+    }
     console.error('PUT /api/communications/templates/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
@@ -29,6 +32,9 @@ export async function DELETE(
     await deleteTemplate(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'SYSTEM_TEMPLATE_PROTECTED') {
+      return NextResponse.json({ error: 'Las plantillas del sistema no se pueden eliminar.' }, { status: 403 })
+    }
     console.error('DELETE /api/communications/templates/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

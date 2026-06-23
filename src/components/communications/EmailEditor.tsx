@@ -64,6 +64,11 @@ export function EmailEditor({ value, onChange }: { value: string; onChange: (htm
     editor.chain().focus().extendMarkRange('link').setLink({ href: url.trim() }).run()
   }, [editor])
 
+  // REGLA DE IMÁGENES: toda imagen que se suba debe alojarse en el storage del
+  // sistema (Supabase Storage del proyecto, bucket público email-images, servido
+  // bajo el dominio admin.theosplace.org), NUNCA enlazada desde sitios externos
+  // de terceros (pueden caerse, bloquear hotlinking o cambiar el contenido). El
+  // logo embebido en las plantillas (base64/SVG) se deja como está.
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = '' // permite re-subir el mismo archivo

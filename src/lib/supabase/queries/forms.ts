@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { sendSystemEmail } from '@/lib/email/system-templates'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -248,5 +249,32 @@ export async function submitResponse(
     const { error: vErr } = await supabase.from('form_response_values').insert(values)
     if (vErr) throw vErr
   }
+
+  // Confirmación "form_completado" al remitente (best-effort, transaccional).
+  try {
+    let email = input.guest_email ?? null
+    let nombre = input.guest_name ?? ''
+    if (input.member_id) {
+      const { data: mem } = await supabase.from('members').select('first_name, last_name, email').eq('id', input.member_id).maybeSingle()
+      if (mem) { email = mem.email; nombre = `${mem.first_name ?? ''} ${mem.last_name ?? ''}`.trim() }
+    }
+    if (email) {
+      const { data: form } = await supabase.from('forms').select('title').eq('id', formId).maybeSingle()
+      await sendSystemEmail({
+        systemKey: 'form_completado',
+        to: { email, name: nombre },
+        data: {
+          nombre,
+          nombre_form: form?.title ?? 'el formulario',
+          id_respuesta: responseId,
+          fecha_envio: new Date().toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' }),
+          link_respuestas: process.env.NEXT_PUBLIC_SITE_URL ?? '',
+        },
+      })
+    }
+  } catch (e) {
+    console.warn('submitResponse form_completado email:', e)
+  }
+
   return { id: responseId }
 }

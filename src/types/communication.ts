@@ -44,6 +44,12 @@ export type MessageTemplate = {
   body_format: 'text' | 'html'
   variables: string[]
   is_active: boolean
+  /** Plantilla del sistema (transaccional): editable pero NO borrable. */
+  is_system: boolean
+  /** Clave con la que el código la busca (ej. 'bienvenida'). Marketing = null. */
+  system_key: string | null
+  /** Variables {{...}} que la plantilla acepta (para mostrarlas al editar). */
+  available_variables: string[]
   created_at: string
   used_count: number
 }

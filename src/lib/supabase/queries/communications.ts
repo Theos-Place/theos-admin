@@ -44,6 +44,9 @@ export type DbTemplate = {
   body_format: 'text' | 'html'
   variables: unknown
   is_active: boolean
+  is_system: boolean
+  system_key: string | null
+  available_variables: unknown
   created_at: string
   broadcasts: Array<{ id: string }>
 }
@@ -83,7 +86,8 @@ export async function getTemplates(): Promise<DbTemplate[]> {
   const { data, error } = await supabase
     .from('message_templates')
     .select(`
-      id, name, category, channel, subject, body, body_format, variables, is_active, created_at,
+      id, name, category, channel, subject, body, body_format, variables, is_active,
+      is_system, system_key, available_variables, created_at,
       broadcasts:message_broadcasts(id)
     `)
     .order('created_at', { ascending: false })
@@ -111,6 +115,7 @@ export type TemplateWriteInput = {
   body: string
   body_format?: 'text' | 'html'
   variables?: unknown
+  available_variables?: unknown
   is_active?: boolean
 }
 
@@ -121,14 +126,26 @@ export async function createTemplate(input: TemplateWriteInput): Promise<{ id: s
   return data as { id: string }
 }
 
+/** Actualiza una plantilla. Las del sistema (transaccionales) NO se editan. */
 export async function updateTemplate(id: string, patch: Partial<TemplateWriteInput>): Promise<void> {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('message_templates').update(patch as Updatable<'message_templates'>).eq('id', id)
+  const { data: tpl } = await supabase.from('message_templates').select('is_system').eq('id', id).maybeSingle()
+  if ((tpl as { is_system?: boolean } | null)?.is_system) {
+    throw new Error('SYSTEM_TEMPLATE_PROTECTED')
+  }
+  // No permitir mutar las marcas de sistema/canal vía update.
+  const { is_system: _i, system_key: _s, channel: _c, ...safe } = patch as Record<string, unknown>
+  const { error } = await supabase.from('message_templates').update(safe as Updatable<'message_templates'>).eq('id', id)
   if (error) throw error
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
   const supabase = createAdminClient()
+  // Las plantillas del sistema NO se borran (editable pero no borrable).
+  const { data: tpl } = await supabase.from('message_templates').select('is_system').eq('id', id).maybeSingle()
+  if ((tpl as { is_system?: boolean } | null)?.is_system) {
+    throw new Error('SYSTEM_TEMPLATE_PROTECTED')
+  }
   const { error } = await supabase.from('message_templates').delete().eq('id', id)
   if (error) throw error
 }

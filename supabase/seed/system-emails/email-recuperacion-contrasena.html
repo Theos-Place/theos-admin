@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperación de Contraseña – Theos Place</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #f4f4f0;
+      font-family: 'Montserrat', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrapper {
+      max-width: 620px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(22,20,64,0.10);
+    }
+
+    /* ---- HEADER ---- */
+    .header {
+      background-color: #161440;
+      padding: 40px 48px 36px;
+      text-align: center;
+      position: relative;
+    }
+
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+    }
+
+    .logo-text {
+      text-align: left;
+    }
+
+    .logo-theos {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    .logo-place {
+      font-size: 11px;
+      font-weight: 600;
+      color: #EF5554;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .header-tagline {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #70BDC2;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* ---- BODY ---- */
+    .body {
+      padding: 48px 48px 36px;
+    }
+
+    .greeting {
+      font-size: 22px;
+      font-weight: 700;
+      color: #161440;
+      margin-bottom: 16px;
+    }
+
+    .body p {
+      font-size: 15px;
+      color: #555;
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
+
+    /* ---- CODE BOX ---- */
+    .code-section {
+      margin: 32px 0;
+      text-align: center;
+    }
+
+    .code-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .code-box {
+      display: inline-block;
+      background: #f4f4f0;
+      border: 2px dashed #161440;
+      border-radius: 12px;
+      padding: 20px 40px;
+    }
+
+    .code-value {
+      font-size: 38px;
+      font-weight: 700;
+      color: #161440;
+      letter-spacing: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .code-validity {
+      font-size: 12px;
+      color: #EF5554;
+      font-weight: 600;
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ---- DIVIDER ---- */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+      margin: 32px 0;
+    }
+
+    /* ---- CTA BUTTON ---- */
+    .cta-wrapper {
+      text-align: center;
+      margin: 28px 0 8px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background-color: #EF5554;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 16px 40px;
+      border-radius: 50px;
+    }
+
+    .ignore-note {
+      font-size: 13px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 20px;
+      font-style: italic;
+    }
+
+    /* ---- DECORATIVE ICONS STRIP ---- */
+    .icons-strip {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      padding: 16px 0 4px;
+      opacity: 0.12;
+    }
+
+    .strip-icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    /* ---- FOOTER ---- */
+    .footer {
+      background-color: #161440;
+      padding: 28px 48px;
+      text-align: center;
+    }
+
+    .footer p {
+      font-size: 12px;
+      color: #70BDC2;
+      line-height: 1.8;
+    }
+
+    .footer a {
+      color: #70BDC2;
+      text-decoration: underline;
+    }
+
+    .footer-brand {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .footer-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 14px 0;
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 640px) {
+      .wrapper { margin: 0; border-radius: 0; }
+      .header, .body, .footer { padding-left: 24px; padding-right: 24px; }
+      .code-value { font-size: 28px; letter-spacing: 6px; }
+      .code-box { padding: 16px 24px; }
+      .greeting { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-logo">
+        <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8c3ZnIHZlcnNpb249IjEuMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogd2lkdGg9IjY2MS4wMDAwMDBwdCIgaGVpZ2h0PSIzMzcuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA2NjEuMDAwMDAwIDMzNy4wMDAwMDAiCiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBtZWV0Ij4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMC4wMDAwMDAsMzM3LjAwMDAwMCkgc2NhbGUoMC4xMDAwMDAsLTAuMTAwMDAwKSIKZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJub25lIj4KPHBhdGggZD0iTTIgMzIyMyBsMyAtMTM4IDIyOCAtMyAyMjcgLTIgMCAtODc1IDAgLTg3NiAxNDggMyAxNDcgMyAzIDg3MyAyCjg3MiAyMjUgMCAyMjUgMCAwIDE0MCAwIDE0MCAtNjA1IDAgLTYwNiAwIDMgLTEzN3oiLz4KPHBhdGggZD0iTTEzODAgMjM0NSBsMCAtMTAxNSAxNDAgMCAxMzkgMCAzIDQzMyBjMyA0MjAgNCA0MzMgMjUgNDc5IDI5IDY0CjEwNSAxMzUgMTgzIDE3MiA1OSAyOCA3NCAzMSAxNjUgMzEgODMgMCAxMDggLTQgMTUwIC0yMyA2MyAtMjkgMTI5IC05MiAxNjMKLTE1NyBsMjcgLTUwIDMgLTQ0MiAzIC00NDMgMTQwIDAgMTQwIDAgLTQgNDczIGMtNCA1MTggLTIgNTA0IC02OSA2MjkgLTYzCjExOSAtMTczIDIxNCAtMzA2IDI2NSAtNTQgMjEgLTkwIDI3IC0xODMgMzEgLTY4IDIgLTEzOCAwIC0xNjkgLTcgLTcyIC0xNQotMTc2IC01OCAtMjI3IC05MyBsLTQzIC0yOSAwIDM4MSAwIDM4MCAtMTQwIDAgLTE0MCAwIDAgLTEwMTV6Ii8+CjxwYXRoIGQ9Ik0zMzgzIDI3NDAgYy0xMzYgLTI1IC0yODMgLTEwNyAtMzc4IC0yMTMgLTY4IC03NiAtMTQwIC0yMTYgLTE2MAotMzEyIC0yMiAtMTA0IC0xOSAtMjg1IDUgLTM3OSA2MyAtMjQ2IDI0MCAtNDIyIDQ4OCAtNDgzIDEwNCAtMjYgMjk2IC0yMyAzOTcKNiA5OSAyOCAxOTUgNzggMjYxIDEzNSA1OCA1MSAxNjEgMTk0IDE0OCAyMDYgLTE3IDE1IC0yMDMgMTMwIC0yMTEgMTMwIC00IDAKLTM2IC0zMSAtNzAgLTY5IC0xMTMgLTEyNSAtMjMxIC0xNzkgLTM2NSAtMTY4IC0yMDIgMTcgLTM5MyAyMTAgLTQwNiA0MTAgLTgKMTMxIDMzIDIzMSAxMzkgMzM2IDE2MiAxNjAgMzkyIDE4NSA1NTAgNjAgMjIgLTE3IDM5IC0zNCAzOSAtMzkgMCAtNCAtMTI0Ci0xMDYgLTI3NCAtMjI3IC0xNTEgLTEyMCAtMjc1IC0yMjEgLTI3NSAtMjI2IC0xIC00IDM2IC01MCA4MCAtMTAxIGw4MiAtOTQKMjAxIDE2MCBjMTEwIDg4IDI3NiAyMTkgMzY4IDI5MSA5MSA3MyAxNjkgMTQxIDE3MiAxNTEgOCAzMCAtODEgMTc0IC0xNDkgMjQxCi03NCA3NCAtMTQ4IDExOCAtMjYyIDE1NyAtNzQgMjYgLTEwNSAzMSAtMjA3IDM0IC02NyAyIC0xNDQgLTEgLTE3MyAtNnoiLz4KPHBhdGggZD0iTTYwODkgMjczMiBjLTEwNiAtMzUgLTE5NCAtMTE0IC0yNDcgLTIyMiAtMjQgLTQ5IC0yNyAtNjYgLTI3IC0xNTUKMCAtODggNCAtMTA3IDI4IC0xNTYgNDIgLTg3IDg3IC0xMjkgMjcwIC0yNDkgMTg3IC0xMjMgMjExIC0xNDkgMjA0IC0yMTggLTEwCi05MSAtMTE1IC0xNDkgLTE5NSAtMTA4IC0zMCAxNiAtNDcgNDQgLTU3IDk0IGwtNyAzMiAtMTIzIDAgYy0xNDkgMCAtMTU0IC0zCi0xMzggLTg5IDI1IC0xMzAgMTA4IC0yMzYgMjMwIC0yOTMgNjAgLTI4IDc4IC0zMiAxNTMgLTMyIDExNSAwIDE4MCAyNiAyNjYKMTA2IDkyIDg2IDEyNyAxNjEgMTMyIDI4MyA2IDE0MCAtMjkgMjQxIC0xMTIgMzE5IC0xNyAxNiAtMTAzIDc3IC0xOTEgMTM2Ci04OSA2MCAtMTY3IDEyMCAtMTc1IDEzNCAtNDQgODQgMjcgMTg2IDEyMSAxNzMgNDggLTYgNzQgLTI4IDkwIC03MiAxMiAtMzIKMTMgLTMyIDkzIC0zOSAxMzAgLTEwIDE5NiAtOCAxOTYgNyAtMSAzNSAtMzAgMTMwIC01MyAxNjkgLTM2IDYyIC0xMTggMTM1Ci0xODUgMTY2IC03NiAzNCAtMTkyIDQwIC0yNzMgMTR6Ii8+CjxwYXRoIGQ9Ik00ODU1IDI2OTYgYy0yNDIgLTU2IC00MzQgLTI2MCAtNDkwIC01MTkgLTI1IC0xMTMgLTE3IC0yNzQgMTggLTM4MgoxMDQgLTMxOSA0MDcgLTUxMSA3MTAgLTQ1MSAxOTUgMzggMzU1IDE2NCA0NDcgMzUxIDQ5IDk4IDY5IDE3NCA3NiAyODUgMjEKMzE0IC0xNzMgNjEyIC00NTYgNzAxIC04NCAyNiAtMjI1IDMzIC0zMDUgMTV6IG0yNzggLTI0OSBjODAgLTM3IDE2MCAtMTE1CjIwMiAtMjAwIDE5IC0zOCAzNSAtODAgMzUgLTkzIGwwIC0yNCAtMzkxIDAgLTM5MSAwIDYgMjggYzE0IDU3IDY5IDE1NCAxMTUKMjAxIDExNCAxMTcgMjg0IDE1MiA0MjQgODh6IG0yMzcgLTU1OSBjMCAtMzYgLTUzIC0xMzkgLTk5IC0xODkgLTExNyAtMTMyCi0yODggLTE3MiAtNDQxIC0xMDMgLTEwMiA0NSAtMjA4IDE3NSAtMjM1IDI4NyBsLTcgMjcgMzkxIDAgMzkxIDAgMCAtMjJ6Ii8+CjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMC4wMDAwMDAsMzM3LjAwMDAwMCkgc2NhbGUoMC4xMDAwMDAsLTAuMTAwMDAwKSIKZmlsbD0iI0VGNTU1NCIgc3Ryb2tlPSJub25lIj4KPHBhdGggZD0iTTQ4MCA0OTYgbDAgLTQ1NiA0NSAwIDQ1IDAgMCAxNjQgMCAxNjQgMTkzIDQgYzIwOSA0IDIzNCAxMCAzMDYgNjcKMjAgMTYgNTAgNTMgNjcgODMgMjYgNDcgMjkgNjIgMjkgMTM4IDAgNzAgLTQgOTMgLTI0IDEzMCAtMzAgNTggLTc2IDEwNiAtMTI2CjEzMyAtMzcgMjEgLTU2IDIyIC0yODcgMjUgbC0yNDggMyAwIC00NTV6IG00ODcgMzQzIGMxMjEgLTU4IDE0NSAtMjE4IDQ4Ci0zMTUgLTU2IC01NiAtMTA2IC02NiAtMjk1IC02MiBsLTE0NSAzIC0zIDE5OCAtMiAxOTcgMTc3IDAgYzE1OSAwIDE4MSAtMgoyMjAgLTIxeiIvPgo8cGF0aCBkPSJNMTY1MCA0OTUgbDAgLTQ1NSAzMDUgMCAzMDUgMCAwIDQ1IDAgNDUgLTI1NSAwIC0yNTUgMCAwIDQxMCAwIDQxMAotNTAgMCAtNTAgMCAwIC00NTV6Ii8+CjxwYXRoIGQ9Ik0zMTExIDkyMyBjLTEzIC0yNyAtMzU5IC04NDUgLTM2OCAtODcwIC00IC0xMCAxMCAtMTMgNDggLTEzIGw1NCAwCjQ5IDEyMCBjMjggNjcgNTUgMTI1IDYyIDEzMSA3IDYgOTYgOCAyMjUgNyBsMjEzIC0zIDUzIC0xMjUgNTIgLTEyNSA1NCAtMyA1NQotMyAtMTMwIDMwOCBjLTcyIDE2OSAtMTU4IDM3MyAtMTkyIDQ1MyBsLTYxIDE0NSAtNTEgMyBjLTQ3IDMgLTUxIDEgLTYzIC0yNXoKbTE1MyAtMzE3IGM0OCAtMTE0IDg1IC0yMTAgODMgLTIxMiAtMiAtMyAtODMgLTMgLTE3OSAtMiBsLTE3NSAzIDgxIDE5NSBjNDUKMTA3IDg1IDIwNCA4OSAyMTQgNCAxMCA5IDE3IDExIDE1IDIgLTIgNDMgLTk4IDkwIC0yMTN6Ii8+CjxwYXRoIGQ9Ik00NDE0IDkzNiBjLTY1IC0yMSAtMTU5IC03NSAtMTk3IC0xMTQgLTIwOCAtMjE1IC0xNzEgLTU4NiA3NiAtNzQ0CjEzNiAtODcgMzc0IC05MyA1MDYgLTExIDgzIDUyIDE1NiAxMzUgMTc1IDIwMCA2IDE5IDIgMjMgLTMxIDMyIC01MiAxNSAtNTAKMTYgLTcyIC0yNyAtMjUgLTUwIC0xMDAgLTExOCAtMTU5IC0xNDUgLTM5IC0xOCAtNjUgLTIyIC0xNTcgLTIyIC0xMzEgMCAtMTc1CjE2IC0yNTYgOTIgLTExMyAxMDUgLTE1MCAyNjQgLTk5IDQxOCAyOCA4NCAxMDYgMTcyIDE4OCAyMTIgNTIgMjYgNjcgMjggMTY3CjI4IDkxIC0xIDExOCAtNCAxNTcgLTIyIDU5IC0yOCAxMzQgLTk1IDE1OSAtMTQ1IDE5IC0zNyAyMiAtMzggNTcgLTMyIDUzIDkKNTggMTggMzYgNjYgLTQxIDkyIC0xNzEgMTkxIC0yODUgMjE3IC02MSAxNCAtMjE1IDEyIC0yNjUgLTN6Ii8+CjxwYXRoIGQ9Ik01NDYwIDQ5NSBsMCAtNDU1IDMyMCAwIDMyMCAwIDAgNDUgMCA0NSAtMjc1IDAgLTI3NSAwIDIgMTYzIDMgMTYyCjI0MyAzIDI0MiAyIDAgNDUgMCA0NSAtMjQ1IDAgLTI0NSAwIDAgMTU1IDAgMTU1IDI3NSAwIDI3NSAwIDAgNDUgMCA0NSAtMzIwCjAgLTMyMCAwIDAgLTQ1NXoiLz4KPC9nPgo8L3N2Zz4=" alt="Theos Place" style="height:64px;width:auto;display:block;" />
+      </div>
+      <div class="header-tagline">disfrutá de una relación más cercana con Dios</div>
+    </div>
+
+    <!-- BODY -->
+    <div class="body">
+
+      <p class="greeting">Hola, {{nombre}} 👋</p>
+
+      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong>Theos Place</strong>. Usá el código a continuación para continuar con el proceso.</p>
+
+      <!-- CODE BOX -->
+      <div class="code-section">
+        <p class="code-label">Tu código de recuperación</p>
+        <div class="code-box">
+          <div class="code-value">{{codigo}}</div>
+          <div class="code-validity">⏱ Válido por 15 minutos</div>
+        </div>
+      </div>
+
+      <p>Ingresá este código en la pantalla de recuperación. Si no solicitaste este cambio, simplemente ignorá este correo — tu contraseña seguirá siendo la misma.</p>
+
+      <div class="divider"></div>
+
+      <p style="font-size:13px; color:#aaa;">Por razones de seguridad, este código solo puede usarse una vez y expira en 15 minutos. Si necesitás ayuda, escribinos a <a href="mailto:info@theosplace.org" style="color:#EF5554; text-decoration:none;">info@theosplace.org</a></p>
+
+      <!-- Decorative icons -->
+      <div class="icons-strip">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+          <circle cx="50" cy="50" r="40" stroke="#161440" stroke-width="8" fill="none"/>
+          <line x1="10" y1="50" x2="90" y2="50" stroke="#161440" stroke-width="8" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <p class="footer-brand">Theos Place</p>
+      <p>
+        <a href="https://theosplace.org">theosplace.org</a>
+      </p>
+      <div class="footer-divider"></div>
+      <p>Este mensaje fue enviado automáticamente. Por favor no respondas a este correo.<br>
+        © 2026 Theos Place. Todos los derechos reservados.
+      </p>
+    </div>
+
+  </div>
+
+</body>
+</html>
