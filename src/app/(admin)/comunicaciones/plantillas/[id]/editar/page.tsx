@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/communications/EmailPreview'
-import { EmailEditor } from '@/components/communications/EmailEditor'
+import { EmailEditor, isAdvancedHtml } from '@/components/communications/EmailEditor'
 import { AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
 import { useCommunications } from '@/hooks/useCommunications'
@@ -83,9 +83,14 @@ export default function EditarPlantillaPage() {
   // El preview SIEMPRE muestra el correo completo (layout base), igual que el envío:
   //  · sistema → variables {{...}} con valores de ejemplo;
   //  · marketing → con el pie de baja (como en el envío real).
+  // El editor visual de TipTap destruye HTML complejo: solo-HTML para plantillas
+  // del sistema Y para cualquier cuerpo con HTML avanzado (<style>, tablas, etc.).
+  const htmlOnly = isSystem || isAdvancedHtml(emailBody)
+  // Logo same-origin en el preview (la CSP de la app bloquea dominios externos
+  // dentro del iframe srcDoc); el envío real usa la URL absoluta por defecto.
   const previewBody = isSystem
-    ? renderEmail(renderTemplate(rawPreview, PREVIEW_SAMPLE))
-    : renderEmail(rawPreview, { unsubscribeUrl: '#' })
+    ? renderEmail(renderTemplate(rawPreview, PREVIEW_SAMPLE), { logoUrl: '/logo-theos-white.png' })
+    : renderEmail(rawPreview, { unsubscribeUrl: '#', logoUrl: '/logo-theos-white.png' })
 
   if (notFound) {
     return (
@@ -138,7 +143,7 @@ export default function EditarPlantillaPage() {
 
           <div>
             <label className={labelCls}>Cuerpo del correo</label>
-            <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={isSystem} />
+            <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={htmlOnly} />
             <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">El pie de baja se agrega solo al enviar como marketing.</p>
           </div>
 

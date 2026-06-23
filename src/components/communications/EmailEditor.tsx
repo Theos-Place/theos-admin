@@ -12,6 +12,16 @@ import {
 import { cn } from '@/lib/utils'
 
 /**
+ * ¿El HTML es "avanzado" (lo que el editor visual de TipTap destruiría)? Detecta
+ * bloques <style>, tablas, documentos completos, clases CSS, etc. Sirve para
+ * forzar el modo HTML-only en plantillas que NO son del sistema pero igual
+ * traen HTML complejo (ej. una plantilla de marketing pegada a mano).
+ */
+export function isAdvancedHtml(html: string): boolean {
+  return /<\s*(style|table|thead|tbody|tr|td|html|head|body|center|font)[\s>/]|<!doctype|class\s*=/i.test(html || '')
+}
+
+/**
  * Editor de email reutilizable (plantillas y campañas). Dos modos por pestañas:
  *  · Visual (WYSIWYG con TipTap) → HTML semántico limpio (sin clases), apto para
  *    correo: <p>, <strong>, <em>, <u>, <h1-3>, <ul>/<ol>, <a>, <img>, text-align inline.
@@ -44,7 +54,9 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false 
       Image.configure({ HTMLAttributes: { style: 'max-width:100%;height:auto' } }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
-    content: value || '',
+    // En htmlOnly NO le pasamos el HTML complejo a TipTap (ni para parsearlo):
+    // el contenido vive solo en el textarea, intacto.
+    content: htmlOnly ? '' : (value || ''),
     editorProps: {
       // Se edita con el MISMO look del correo: fuente del sistema, 14px, color
       // #333, ancho 600px centrado sobre blanco (igual que el iframe del preview).

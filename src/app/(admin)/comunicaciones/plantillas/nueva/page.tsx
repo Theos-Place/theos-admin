@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/communications/EmailPreview'
-import { EmailEditor } from '@/components/communications/EmailEditor'
+import { EmailEditor, isAdvancedHtml } from '@/components/communications/EmailEditor'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
@@ -78,7 +78,8 @@ export default function NuevaPlantillaPage() {
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
   // El preview muestra el correo completo (layout base + pie de baja), igual que el envío.
   const rawPreview = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
-  const previewBody = renderEmail(rawPreview, { unsubscribeUrl: '#' })
+  // Logo same-origin en el preview (CSP del iframe); el envío usa la URL absoluta.
+  const previewBody = renderEmail(rawPreview, { unsubscribeUrl: '#', logoUrl: '/logo-theos-white.png' })
 
   return (
     <div className="space-y-4">
@@ -149,7 +150,7 @@ export default function NuevaPlantillaPage() {
 
         <div>
           <label className={labelCls}>Cuerpo del correo</label>
-          <EmailEditor value={emailBody} onChange={setEmailBody} />
+          <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={isAdvancedHtml(emailBody)} />
           <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">
             Editá en modo Visual o pegá HTML. Mantené el HTML simple por compatibilidad con clientes de correo. El pie de baja se agrega solo al enviar como marketing.
           </p>

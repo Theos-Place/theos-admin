@@ -14,7 +14,7 @@ const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background-color: #f4f4f0; font-family: 'Montserrat', Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-  .wrapper { max-width: 620px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(22,20,64,0.10); }
+  .wrapper { max-width: 620px; margin: 40px auto 16px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(22,20,64,0.10); }
   .header { background-color: #161440; padding: 36px 48px; text-align: center; }
   .header img { height: auto; width: 160px; display: inline-block; }
   .body { padding: 48px 48px 36px; }
@@ -47,11 +47,15 @@ const STYLES = `
   .receipt-row:last-child { border-bottom: none; }
   .receipt-total { display: flex; justify-content: space-between; padding: 14px 0 0; font-size: 16px; font-weight: 700; color: #161440; }
   .icons-strip { display: flex; justify-content: center; align-items: center; gap: 18px; padding: 16px 0 4px; opacity: 0.12; }
-  .footer { background-color: #161440; padding: 28px 48px; text-align: center; }
-  .footer p { font-size: 12px; color: #70BDC2; line-height: 1.8; }
+  .footer { background-color: #161440; padding: 30px 48px; text-align: center; }
+  .footer p { font-size: 12px; color: #aeb9d4; line-height: 1.75; }
   .footer a { color: #70BDC2; text-decoration: underline; }
-  .footer-brand { font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
-  .footer-divider { height: 2px; width: 48px; margin: 14px auto; background: #EF5554; border-radius: 2px; }
+  .footer-divider { height: 2px; width: 40px; margin: 0 auto 16px; background: #EF5554; border-radius: 2px; }
+  .footer-legal { font-size: 11px; color: #8593b4; }
+  /* Baja FUERA del footer azul: bloque tenue sobre el fondo de la página. */
+  .subfooter { max-width: 620px; margin: 16px auto 40px; padding: 0 24px; text-align: center; }
+  .subfooter p { font-size: 12px; color: #8a8a82; line-height: 1.7; }
+  .subfooter a { color: #555; text-decoration: underline; font-weight: 600; }
   @media (max-width: 640px) {
     .wrapper { margin: 0; border-radius: 0; }
     .header, .body, .footer { padding-left: 24px; padding-right: 24px; }
@@ -61,19 +65,26 @@ const STYLES = `
   }
 `
 
+// URL absoluta del logo para el ENVÍO (los clientes de correo necesitan una URL
+// pública). En el PREVIEW se pasa una ruta same-origin ('/logo-theos-white.png')
+// vía opts.logoUrl, porque el iframe srcDoc hereda la CSP de la app (img-src
+// 'self') y en dev bloquearía un dominio externo.
 const LOGO_URL = 'https://admin.theosplace.org/logo-theos-white.png'
 
 /**
  * Envuelve el contenido del cuerpo en el cascarón completo del correo.
- * opts.unsubscribeUrl → agrega el pie de baja de marketing DENTRO del layout
+ * opts.unsubscribeUrl → agrega el pie de baja de marketing DENTRO del footer
  * (CAN-SPAM); las transaccionales no lo pasan.
+ * opts.logoUrl → sobreescribe la URL del logo (el preview usa una ruta local).
  */
-export function renderEmail(content: string, opts?: { unsubscribeUrl?: string }): string {
+export function renderEmail(content: string, opts?: { unsubscribeUrl?: string; logoUrl?: string }): string {
+  const logoUrl = opts?.logoUrl ?? LOGO_URL
   const baja = opts?.unsubscribeUrl
     ? `
-      <div class="footer-divider"></div>
-      <p>Recibís este correo porque sos parte de la comunidad de Theos Place. <a href="${opts.unsubscribeUrl}">Darme de baja</a>.</p>
-      <p style="color:#4a5a78">Theos Place, San José, Costa Rica</p>`
+  <div class="subfooter">
+    <p>Recibís este correo porque sos parte de la comunidad de Theos Place — San José, Costa Rica.<br />
+      <a href="${opts.unsubscribeUrl}">Cancelar suscripción</a></p>
+  </div>`
     : ''
   return `<!DOCTYPE html>
 <html lang="es">
@@ -86,18 +97,17 @@ export function renderEmail(content: string, opts?: { unsubscribeUrl?: string })
 <body>
   <div class="wrapper">
     <div class="header">
-      <img src="${LOGO_URL}" alt="Theos Place" />
+      <img src="${logoUrl}" alt="Theos Place" />
     </div>
     <div class="body">
 ${content}
     </div>
     <div class="footer">
-      <p class="footer-brand">Theos Place</p>
-      <p>¿Tenés alguna pregunta? Escribinos a <a href="mailto:info@theosplace.org">info@theosplace.org</a></p>
+      <p class="footer-contact">¿Tenés alguna pregunta? Escribinos a <a href="mailto:info@theosplace.org">info@theosplace.org</a></p>
       <div class="footer-divider"></div>
-      <p>© 2026 Theos Place · Este mensaje fue enviado automáticamente, por favor no respondas a este correo.</p>${baja}
+      <p class="footer-legal">© 2026 · Mensaje enviado automáticamente, por favor no respondas a este correo.</p>
     </div>
-  </div>
+  </div>${baja}
 </body>
 </html>`
 }

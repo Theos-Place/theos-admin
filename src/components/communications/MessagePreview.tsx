@@ -16,7 +16,11 @@ interface Props {
 
 export function MessagePreview({ channel, subject, waBody, emailBody, marketing = true }: Props) {
   // El correo se previsualiza envuelto en el layout base (mismo que el envío).
-  const emailDoc = renderEmail(emailBody, marketing ? { unsubscribeUrl: '#' } : undefined)
+  // Logo same-origin: la CSP de la app (img-src 'self') aplica al iframe srcDoc
+  // del preview y bloquearía un dominio externo en dev. El envío usa URL absoluta.
+  const emailDoc = renderEmail(emailBody, marketing
+    ? { unsubscribeUrl: '#', logoUrl: '/logo-theos-white.png' }
+    : { logoUrl: '/logo-theos-white.png' })
   return (
     <div>
       {channel === 'interna' && (
