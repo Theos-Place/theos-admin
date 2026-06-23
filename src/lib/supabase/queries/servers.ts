@@ -100,6 +100,22 @@ export type DbServicePosition = {
 
 // ── Queries ────────────────────────────────────────────────
 
+// El embed self-FK `parent:areas!parent_id` es POCO FIABLE en PostgREST: lo trata
+// como to-many y devuelve [] (no el padre), dejando el nombre del área padre en
+// blanco (ej. columna "Área" del export de servidores). Resolvemos el nombre del
+// padre con un mapa id→{name, parent_id} de toda la tabla areas.
+type AreaMapEntry = { name: string; parent_id: string | null }
+async function getAreaNameMap(
+  supabase: ReturnType<typeof createAdminClient>,
+): Promise<Map<string, AreaMapEntry>> {
+  const { data } = await supabase.from('areas').select('id, name, parent_id')
+  const map = new Map<string, AreaMapEntry>()
+  for (const a of (data ?? []) as Array<{ id: string; name: string; parent_id: string | null }>) {
+    map.set(a.id, { name: a.name, parent_id: a.parent_id })
+  }
+  return map
+}
+
 /** Comités (areas con area_type='committee') con líder y servidores. */
 export async function getCommittees(): Promise<DbCommittee[]> {
   const supabase = createAdminClient()
@@ -107,7 +123,6 @@ export async function getCommittees(): Promise<DbCommittee[]> {
     .from('areas')
     .select(`
       id, name, ideal_capacity, leader_id, parent_id,
-      parent:areas!parent_id(id, name),
       leader:members!areas_leader_id_fkey(first_name, last_name),
       positions:service_positions!service_positions_area_id_fkey(
         id, title,
@@ -121,7 +136,13 @@ export async function getCommittees(): Promise<DbCommittee[]> {
     .eq('is_active', true)
     .order('name', { ascending: true })
   if (error) throw error
-  return (data ?? []) as DbCommittee[]
+  const areaMap = await getAreaNameMap(supabase)
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    ...row,
+    parent: row.parent_id
+      ? { id: row.parent_id as string, name: areaMap.get(row.parent_id as string)?.name ?? '' }
+      : null,
+  })) as DbCommittee[]
 }
 
 export async function getVacancies(): Promise<DbVacancy[]> {
@@ -131,20 +152,38 @@ export async function getVacancies(): Promise<DbVacancy[]> {
     .select(`
       id, committee_id, title, position, description, functions, schedule, commitment,
       slots_total, slots_filled, status, published_at, created_at,
-      committee:areas!vacancies_committee_id_fkey(name, parent:areas!parent_id(name)),
+      committee:areas!vacancies_committee_id_fkey(name),
       applications:applications(count)
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as DbVacancy[]
+  const areaMap = await getAreaNameMap(supabase)
+  return (data ?? []).map((row: Record<string, unknown>) => {
+    const entry = row.committee_id ? areaMap.get(row.committee_id as string) : undefined
+    const parentName = entry?.parent_id ? areaMap.get(entry.parent_id)?.name ?? '' : ''
+    const committee = row.committee as { name: string } | null
+    return { ...row, committee: committee ? { name: committee.name, parent: { name: parentName } } : null }
+  }) as DbVacancy[]
 }
 
 const APPLICATION_SELECT = `
   id, vacancy_id, applicant_id, status, notes, applied_at, assigned_to,
-  vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name, parent:areas!parent_id(name))),
+  vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name)),
   applicant:members!applications_applicant_id_fkey(first_name, last_name),
   assignee:members!applications_assigned_to_fkey(first_name, last_name)
 `
+
+/** Resuelve el nombre del área padre del comité de cada aplicación (el embed
+ *  self-FK parent es poco fiable; ver getAreaNameMap). */
+function patchApplicationsAreas(rows: DbApplication[], areaMap: Map<string, AreaMapEntry>): DbApplication[] {
+  for (const row of rows) {
+    const committee = row.vacancy?.committee
+    if (!committee) continue
+    const parentId = areaMap.get(committee.id)?.parent_id
+    committee.parent = { name: parentId ? areaMap.get(parentId)?.name ?? '' : '' }
+  }
+  return rows
+}
 
 export async function getApplications(): Promise<DbApplication[]> {
   const supabase = createAdminClient()
@@ -153,7 +192,8 @@ export async function getApplications(): Promise<DbApplication[]> {
     .select(APPLICATION_SELECT)
     .order('applied_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as DbApplication[]
+  const areaMap = await getAreaNameMap(supabase)
+  return patchApplicationsAreas((data ?? []) as DbApplication[], areaMap)
 }
 
 export type ApplicationFilters = {
@@ -212,7 +252,8 @@ export async function getApplicationsPage(filters: ApplicationFilters = {}): Pro
 
   const { data, error, count } = await q
   if (error) throw error
-  return { rows: (data ?? []) as DbApplication[], total: count ?? 0 }
+  const areaMap = await getAreaNameMap(supabase)
+  return { rows: patchApplicationsAreas((data ?? []) as DbApplication[], areaMap), total: count ?? 0 }
 }
 
 /** Conteos globales de aplicaciones por estado (para los badges del header). */
