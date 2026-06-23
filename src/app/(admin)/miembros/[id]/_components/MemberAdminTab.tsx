@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ShieldCheck, Check } from 'lucide-react'
+import { ShieldCheck, Check, KeyRound, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
@@ -23,6 +23,8 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pwBusy, setPwBusy] = useState(false)
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   const loadAdmin = useCallback(() => {
     return fetch(`/api/members/${memberId}/admin-data`)
@@ -53,8 +55,50 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
     }
   }
 
+  async function sendPasswordReset() {
+    if (pwBusy) return
+    setPwBusy(true)
+    setPwMsg(null)
+    try {
+      const res = await fetch(`/api/members/${memberId}/password-reset`, { method: 'POST' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el correo.')
+      setPwMsg({ ok: true, text: 'Correo de restablecimiento enviado.' })
+    } catch (e) {
+      setPwMsg({ ok: false, text: e instanceof Error ? e.message : 'No se pudo enviar el correo.' })
+    } finally {
+      setPwBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
+      {/* Cuenta */}
+      <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
+        <div className="flex items-center gap-2 mb-3">
+          <KeyRound size={15} className="text-navy-light/70" />
+          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Cuenta</p>
+        </div>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <p className="text-[12px] text-navy-light/70 font-body flex-1 min-w-[200px]">
+            Envía al miembro un correo para restablecer su contraseña (link de Supabase Auth a su correo registrado).
+          </p>
+          <button
+            type="button"
+            onClick={sendPasswordReset}
+            disabled={pwBusy}
+            className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body shrink-0"
+          >
+            {pwBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><KeyRound size={14} /> Enviar correo de restablecer contraseña</>}
+          </button>
+        </div>
+        {pwMsg && (
+          <p className={`text-[12px] mt-2 font-body inline-flex items-center gap-1 ${pwMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+            {pwMsg.ok && <Check size={12} />}{pwMsg.text}
+          </p>
+        )}
+      </div>
+
       {/* Acciones de estudios (movidas desde Participación) */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display mb-3">Acciones de estudios</p>
