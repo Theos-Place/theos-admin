@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 const THETA_POSITIONS = [
   { top: '8%',  left:  '12%',  size: 120, opacity: 0.06 },
   { top: '15%', right: '8%',   size: 60,  opacity: 0.04 },
@@ -52,18 +54,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div
           className="relative z-[1] text-center px-12 max-w-[480px]"
         >
-          {/* Logo texto */}
-          <div className="mb-7">
-            <div
-              className="font-display text-[72px] font-extrabold text-white leading-[0.9] tracking-[-0.03em]"
-            >
-              Theos
-            </div>
-            <div
-              className="font-display text-[22px] font-extrabold text-teal tracking-[0.35em] mt-1"
-            >
-              PLACE
-            </div>
+          {/* Logo Theos Place */}
+          <div className="mb-7 flex justify-center">
+            <Image
+              src="/logo-theos-white.png"
+              alt="Theos Place"
+              width={2526}
+              height={1280}
+              priority
+              className="w-[280px] h-auto"
+            />
           </div>
 
           {/* Tagline */}
