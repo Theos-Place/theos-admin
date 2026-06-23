@@ -79,7 +79,7 @@ export default function NuevaPlantillaPage() {
   const previewBody = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
 
   return (
-    <div className="space-y-4 max-w-4xl">
+    <div className="space-y-4">
       {/* Header */}
       <div>
         <Link
@@ -94,7 +94,9 @@ export default function NuevaPlantillaPage() {
         </h1>
       </div>
 
-      {/* Datos + editor (ancho completo) */}
+      {/* Editor (izquierda) + preview al lado (derecha). Apila en pantallas chicas. */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_620px] gap-6 items-start">
+      {/* Datos + editor */}
       <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -191,10 +193,11 @@ export default function NuevaPlantillaPage() {
         </div>
       </div>
 
-      {/* Preview (ancho completo, el correo se centra a 600px) */}
-      <div className="space-y-2">
+      {/* Preview al lado (sticky en desktop); el correo se centra a 600px */}
+      <div className="space-y-2 xl:sticky xl:top-4">
         <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Vista previa</p>
         <EmailPreview subject={subject} body={previewBody} format="html" />
+      </div>
       </div>
     </div>
   )

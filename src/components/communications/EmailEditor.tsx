@@ -37,7 +37,12 @@ export function EmailEditor({ value, onChange }: { value: string; onChange: (htm
     ],
     content: value || '',
     editorProps: {
-      attributes: { class: 'prose-email focus:outline-none min-h-[260px] px-4 py-3' },
+      // Se edita con el MISMO look del correo: fuente del sistema, 14px, color
+      // #333, ancho 600px centrado sobre blanco (igual que el iframe del preview).
+      attributes: {
+        class: 'prose-email focus:outline-none min-h-[260px] py-5 px-5 mx-auto w-full max-w-[600px]',
+        style: "font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; color: #333;",
+      },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   })
@@ -129,7 +134,7 @@ export function EmailEditor({ value, onChange }: { value: string; onChange: (htm
             </button>
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={onPickImage} />
           </div>
-          <div className="max-h-[420px] overflow-auto [&_.ProseMirror]:break-words [&_.ProseMirror_img]:max-w-full [&_.ProseMirror_a]:text-teal-deep [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 text-sm text-navy font-body">
+          <div className="max-h-[460px] overflow-auto bg-white [&_.ProseMirror]:break-words [&_.ProseMirror_img]:max-w-full [&_.ProseMirror_a]:text-[#519DA2] [&_.ProseMirror_a]:underline [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:my-2 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:my-2 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:my-1.5 [&_.ProseMirror_p]:my-2 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:my-2 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:my-2">
             <EditorContent editor={editor} />
           </div>
           {uploadError && <p className="px-4 py-2 text-[12px] text-coral font-body border-t border-[var(--outline-variant)]">{uploadError}</p>}
