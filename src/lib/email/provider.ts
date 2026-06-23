@@ -10,7 +10,7 @@
  * Solo server-side (usa nodemailer). Nunca importar desde el cliente.
  */
 import nodemailer from 'nodemailer'
-import { withMarketingFooter, listUnsubscribeHeader } from '@/lib/email/footer'
+import { listUnsubscribeHeader } from '@/lib/email/footer'
 
 /** Token de error cuando no hay proveedor configurado (la UI lo traduce). */
 export const EMAIL_NOT_CONFIGURED = 'EMAIL_NOT_CONFIGURED'
@@ -86,24 +86,22 @@ export type SendEmailInput = {
 }
 
 /**
- * Envía un email por SES SMTP. Centraliza la config de SES para que toda
- * plantilla/campaña la herede sin configuración manual:
+ * Envía un email por SES SMTP. Centraliza la config de SES:
  *  - X-SES-CONFIGURATION-SET en TODOS los envíos (bounces/complaints → SNS).
- *  - Pie de baja + header List-Unsubscribe SOLO en marketing (con token).
- * Las plantillas/broadcasts guardan SOLO el cuerpo; el pie se agrega acá, al
- * enviar, nunca se persiste. El remitente es siempre SES_FROM_EMAIL (verificado).
+ *  - header List-Unsubscribe en marketing (con token).
+ * El `html` ya viene ENVUELTO en el layout base (renderEmail) por el caller, con
+ * el pie de baja dentro cuando es marketing — acá NO se modifica el HTML.
+ * El remitente es siempre SES_FROM_EMAIL (verificado).
  */
 export async function sendEmail({ to, subject, html, fromName, kind, unsubscribeToken, headers }: SendEmailInput): Promise<{ messageId: string }> {
   assertEmailConfigured()
-  const isMarketing = kind === 'marketing' && !!unsubscribeToken
-  const finalHtml = isMarketing ? withMarketingFooter(html, unsubscribeToken!) : html
-  const marketingHeaders = isMarketing ? listUnsubscribeHeader(unsubscribeToken!) : undefined
+  const marketingHeaders = kind === 'marketing' && unsubscribeToken ? listUnsubscribeHeader(unsubscribeToken) : undefined
   const transport = getTransport()
   const result = await transport.sendMail({
     from: { name: fromName || FROM_NAME, address: FROM_EMAIL },
     to: to.name ? { name: to.name, address: to.email } : to.email,
     subject,
-    html: finalHtml,
+    html,
     headers: {
       'X-SES-CONFIGURATION-SET': CONFIGURATION_SET, // siempre: sin esto SES no publica bounces/complaints a SNS
       ...marketingHeaders,

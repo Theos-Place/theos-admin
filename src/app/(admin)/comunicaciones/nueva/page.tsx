@@ -136,6 +136,8 @@ function NuevaComunicacionContent() {
     if (tpl.channel !== 'email') setWaBody(tpl.body)
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
     if (tpl.channel === 'both') { setWaBody(tpl.body); setEmailBody(tpl.body); setSubject(tpl.subject) }
+    // Plantilla transaccional → el tipo de correo arranca en Transaccional.
+    if (tpl.is_system || tpl.category === 'transaccional') setEmailKind('transactional')
     setShowTemplateModal(false)
   }
 
@@ -150,6 +152,7 @@ function NuevaComunicacionContent() {
     setChannel(tpl.channel)
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
     if (tpl.channel !== 'email') setWaBody(tpl.body)
+    if (tpl.is_system || tpl.category === 'transaccional') setEmailKind('transactional')
     setTplApplied(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tplApplied, MOCK_TEMPLATES])
@@ -386,7 +389,7 @@ function NuevaComunicacionContent() {
             subject={subject}
             waBody={waBody || 'Tu mensaje aparecerá aquí...'}
             emailBody={emailBody || 'Tu mensaje aparecerá aquí...'}
-            emailFormat="html"
+            marketing={emailKind === 'marketing'}
           />
         </div>
       </div>

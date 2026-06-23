@@ -9,6 +9,7 @@ import { AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
 import { useCommunications } from '@/hooks/useCommunications'
 import { renderEmail } from '@/lib/email/baseLayout'
+import { renderTemplate, PREVIEW_SAMPLE } from '@/lib/email/render-vars'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check, X } from 'lucide-react'
 
@@ -79,9 +80,12 @@ export default function EditarPlantillaPage() {
   const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
   const rawPreview = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
-  // Las del sistema guardan solo contenido → el preview lo envuelve en el layout
-  // base (documento completo con header/footer).
-  const previewBody = isSystem ? renderEmail(rawPreview) : rawPreview
+  // El preview SIEMPRE muestra el correo completo (layout base), igual que el envío:
+  //  · sistema → variables {{...}} con valores de ejemplo;
+  //  · marketing → con el pie de baja (como en el envío real).
+  const previewBody = isSystem
+    ? renderEmail(renderTemplate(rawPreview, PREVIEW_SAMPLE))
+    : renderEmail(rawPreview, { unsubscribeUrl: '#' })
 
   if (notFound) {
     return (
@@ -171,7 +175,7 @@ export default function EditarPlantillaPage() {
 
         <div className="space-y-2 xl:sticky xl:top-4">
           <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Vista previa</p>
-          <EmailPreview subject={subject} body={previewBody} format="html" fullDocument={isSystem} />
+          <EmailPreview subject={subject} body={previewBody} format="html" fullDocument />
         </div>
       </div>
     </div>

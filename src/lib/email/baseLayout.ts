@@ -63,8 +63,18 @@ const STYLES = `
 
 const LOGO_URL = 'https://admin.theosplace.org/logo-theos-white.png'
 
-/** Envuelve el contenido del cuerpo en el cascarón completo del correo. */
-export function renderEmail(content: string): string {
+/**
+ * Envuelve el contenido del cuerpo en el cascarón completo del correo.
+ * opts.unsubscribeUrl → agrega el pie de baja de marketing DENTRO del layout
+ * (CAN-SPAM); las transaccionales no lo pasan.
+ */
+export function renderEmail(content: string, opts?: { unsubscribeUrl?: string }): string {
+  const baja = opts?.unsubscribeUrl
+    ? `
+      <div class="footer-divider"></div>
+      <p>Recibís este correo porque sos parte de la comunidad de Theos Place. <a href="${opts.unsubscribeUrl}">Darme de baja</a>.</p>
+      <p style="color:#4a5a78">Theos Place, San José, Costa Rica</p>`
+    : ''
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -85,7 +95,7 @@ ${content}
       <p class="footer-brand">Theos Place</p>
       <p>¿Tenés alguna pregunta? Escribinos a <a href="mailto:info@theosplace.org">info@theosplace.org</a></p>
       <div class="footer-divider"></div>
-      <p>© 2026 Theos Place · Este mensaje fue enviado automáticamente, por favor no respondas a este correo.</p>
+      <p>© 2026 Theos Place · Este mensaje fue enviado automáticamente, por favor no respondas a este correo.</p>${baja}
     </div>
   </div>
 </body>

@@ -1,6 +1,7 @@
 import { Bell } from 'lucide-react'
 import { WhatsAppPreview } from './WhatsAppPreview'
 import { EmailPreview } from './EmailPreview'
+import { renderEmail } from '@/lib/email/baseLayout'
 import type { CommunicationChannel } from '@/types/communication'
 
 interface Props {
@@ -9,9 +10,13 @@ interface Props {
   waBody: string
   emailBody: string
   emailFormat?: 'text' | 'html'
+  /** Marketing → muestra el pie de baja en el preview (igual que el envío). */
+  marketing?: boolean
 }
 
-export function MessagePreview({ channel, subject, waBody, emailBody, emailFormat = 'text' }: Props) {
+export function MessagePreview({ channel, subject, waBody, emailBody, marketing = true }: Props) {
+  // El correo se previsualiza envuelto en el layout base (mismo que el envío).
+  const emailDoc = renderEmail(emailBody, marketing ? { unsubscribeUrl: '#' } : undefined)
   return (
     <div>
       {channel === 'interna' && (
@@ -50,7 +55,7 @@ export function MessagePreview({ channel, subject, waBody, emailBody, emailForma
       )}
 
       {(channel === 'email' || channel === 'both') && (
-        <EmailPreview subject={subject} body={emailBody} format={emailFormat} />
+        <EmailPreview subject={subject} body={emailDoc} format="html" fullDocument />
       )}
     </div>
   )

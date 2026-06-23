@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/communications/EmailPreview'
 import { EmailEditor } from '@/components/communications/EmailEditor'
+import { renderEmail } from '@/lib/email/baseLayout'
 import { AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
 import { cn } from '@/lib/utils'
@@ -75,8 +76,9 @@ export default function NuevaPlantillaPage() {
 
   const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-  // Cuerpo "vacío" para el preview placeholder.
-  const previewBody = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
+  // El preview muestra el correo completo (layout base + pie de baja), igual que el envío.
+  const rawPreview = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
+  const previewBody = renderEmail(rawPreview, { unsubscribeUrl: '#' })
 
   return (
     <div className="space-y-4">
@@ -196,7 +198,7 @@ export default function NuevaPlantillaPage() {
       {/* Preview al lado (sticky en desktop); el correo se centra a 600px */}
       <div className="space-y-2 xl:sticky xl:top-4">
         <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Vista previa</p>
-        <EmailPreview subject={subject} body={previewBody} format="html" />
+        <EmailPreview subject={subject} body={previewBody} format="html" fullDocument />
       </div>
       </div>
     </div>

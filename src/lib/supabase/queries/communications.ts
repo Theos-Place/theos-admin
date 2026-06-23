@@ -11,6 +11,8 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import { bodyToHtml } from '@/lib/email/render'
+import { renderEmail } from '@/lib/email/baseLayout'
+import { unsubscribeUrl } from '@/lib/email/footer'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { applyVars } from '@/lib/communications/vars'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
@@ -596,8 +598,8 @@ export async function processPendingEmails(
     }
   }
 
-  // Marketing → el helper inyecta pie de baja + header List-Unsubscribe (con token).
-  // Transaccional → cuerpo tal cual, sin baja. La lógica del pie vive en sendEmail.
+  // Marketing → el layout incluye el pie de baja (con token) + header List-Unsubscribe.
+  // Transaccional → sin baja. El contenido SIEMPRE se envuelve con el layout base.
   const kind: 'marketing' | 'transactional' = broadcast.kind === 'transactional' ? 'transactional' : 'marketing'
 
   let sent = 0, failed = 0
@@ -605,16 +607,17 @@ export async function processPendingEmails(
     const attempts = (log.attempts ?? 0) + 1
     const token = log.member_id ? tokens.get(log.member_id) : undefined
     const nombre = log.member_id ? (firstNames.get(log.member_id) ?? '') : ''
-    // Variables ({nombre}) → render a HTML según formato. El pie de marketing lo
-    // agrega el helper sendEmail al enviar (nunca se persiste en el broadcast).
+    // Variables ({nombre}) → HTML del cuerpo → envuelto en el layout base (mismo
+    // que el preview). Marketing lleva el pie de baja DENTRO del layout.
     const bodyHtml = bodyToHtml(applyVars(broadcast.body, { nombre }), broadcast.body_format ?? 'html')
+    const html = renderEmail(bodyHtml, kind === 'marketing' && token ? { unsubscribeUrl: unsubscribeUrl(token) } : undefined)
     const subject = applyVars(broadcast.subject ?? 'Mensaje de Theos Place', { nombre })
     try {
       await sendEmail({
         to: { email: log.recipient, name: (log.member_id && names.get(log.member_id)) || log.recipient },
         fromName: broadcast.config?.smtp_from_name ?? undefined,
         subject,
-        html: bodyHtml,
+        html,
         kind,
         unsubscribeToken: token,
       })
