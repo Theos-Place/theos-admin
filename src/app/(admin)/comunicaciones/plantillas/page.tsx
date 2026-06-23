@@ -161,7 +161,7 @@ export default function PlantillasPage() {
                 key={t.id}
                 template={t}
                 onUse={handleUse}
-                onEdit={() => {}}
+                onEdit={() => router.push(`/comunicaciones/plantillas/${t.id}/editar`)}
                 onDuplicate={handleDuplicate}
                 onDelete={setDeleteTarget}
               />

@@ -139,6 +139,21 @@ function NuevaComunicacionContent() {
     setShowTemplateModal(false)
   }
 
+  // "Usar plantilla" desde el listado llega como ?template=ID: precargar esa
+  // plantilla (canal + asunto + cuerpo) una sola vez, cuando ya cargaron.
+  const [tplApplied, setTplApplied] = useState(false)
+  useEffect(() => {
+    const tid = searchParams.get('template')
+    if (tplApplied || !tid || MOCK_TEMPLATES.length === 0) return
+    const tpl = MOCK_TEMPLATES.find(t => t.id === tid)
+    if (!tpl) return
+    setChannel(tpl.channel)
+    if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
+    if (tpl.channel !== 'email') setWaBody(tpl.body)
+    setTplApplied(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tplApplied, MOCK_TEMPLATES])
+
   // Guarda como borrador (sin enviar): crea el broadcast en estado 'draft'.
   async function saveDraft() {
     if (savingDraft) return
