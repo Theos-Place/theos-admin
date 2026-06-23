@@ -1,8 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // Excepciones de requisitos de matrícula (mismo patrón que study-invitations).
-// La tabla study_requirement_exceptions aún no está en los tipos generados de
-// Supabase → se castea el cliente en las llamadas. Migración 072.
+// Tabla study_requirement_exceptions (migración 072).
 
 export type WaivableRequirement = 'donor' | 'attendance' | 'server' | 'prerequisite' | 'all'
 
@@ -65,8 +64,7 @@ function toDomain(r: Embedded): StudyException {
 /** Excepciones de un miembro (todas; activas primero, recientes arriba). */
 export async function listExceptionsForMember(memberId: string): Promise<StudyException[]> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).from('study_requirement_exceptions')
+  const { data, error } = await supabase.from('study_requirement_exceptions')
     .select(SELECT).eq('member_id', memberId).order('created_at', { ascending: false })
   if (error) throw error
   return ((data ?? []) as Embedded[]).map(toDomain)
@@ -77,8 +75,7 @@ export async function listExceptionsForMember(memberId: string): Promise<StudyEx
  *  Para la elegibilidad de matrícula (computeEligibility trabaja por code). */
 export async function activeExceptionsByCodeForMember(memberId: string): Promise<Record<string, string[]>> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).from('study_requirement_exceptions')
+  const { data, error } = await supabase.from('study_requirement_exceptions')
     .select('waived_requirements, plan:study_plans!study_requirement_exceptions_plan_id_fkey(code)')
     .eq('member_id', memberId).eq('status', 'active')
   if (error) throw error
@@ -94,8 +91,7 @@ export async function activeExceptionsByCodeForMember(memberId: string): Promise
  *  (para getEligibleStudiesForMember, que trabaja por plan_id). */
 export async function activeExceptionsByPlanForMember(memberId: string): Promise<Map<string, string[]>> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).from('study_requirement_exceptions')
+  const { data, error } = await supabase.from('study_requirement_exceptions')
     .select('plan_id, waived_requirements').eq('member_id', memberId).eq('status', 'active')
   if (error) throw error
   const m = new Map<string, string[]>()
@@ -110,8 +106,7 @@ export async function createException(input: {
   member_id: string; plan_id: string; waived_requirements: string[]; reason?: string | null; granted_by?: string | null
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).from('study_requirement_exceptions')
+  const { data, error } = await supabase.from('study_requirement_exceptions')
     .upsert({
       member_id: input.member_id,
       plan_id: input.plan_id,
@@ -129,8 +124,7 @@ export async function createException(input: {
 /** Revoca una excepción (status = revoked). */
 export async function revokeException(id: string): Promise<void> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any).from('study_requirement_exceptions')
+  const { error } = await supabase.from('study_requirement_exceptions')
     .update({ status: 'revoked', revoked_at: new Date().toISOString() }).eq('id', id)
   if (error) throw error
 }
@@ -138,8 +132,7 @@ export async function revokeException(id: string): Promise<void> {
 /** Marca como usada la excepción activa de (member, plan) — al matricularse. No falla si no hay. */
 export async function markExceptionUsed(memberId: string, planId: string): Promise<void> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any).from('study_requirement_exceptions')
+  const { error } = await supabase.from('study_requirement_exceptions')
     .update({ status: 'used' }).eq('member_id', memberId).eq('plan_id', planId).eq('status', 'active')
   if (error) throw error
 }

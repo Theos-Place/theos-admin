@@ -266,8 +266,7 @@ export async function getEligibleAudience(
   type: AudienceType,
   sedeCodes: string[] = [],
 ): Promise<{ member_ids: string[]; count: number }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createAdminClient() as any
+  const supabase = createAdminClient()
 
   // Servidonantes: además de donante, debe ser servidor activo (volunteers).
   let serverIds: Set<string> | null = null

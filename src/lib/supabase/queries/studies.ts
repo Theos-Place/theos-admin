@@ -1138,28 +1138,34 @@ export async function bulkUpdateLeaderStudies(
   codes: string[],
   action: 'add' | 'remove',
 ): Promise<number> {
-  // formation_study_codes (mig. 079) y la key dinámica no están en los tipos
-  // generados → se castea el cliente.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createAdminClient() as any
+  const supabase = createAdminClient()
   const col = field === 'formation' ? 'formation_study_codes' : 'qualified_study_codes'
   const codeSet = new Set(codes)
   let n = 0
   for (const memberId of memberIds) {
     const { data: row } = await supabase
-      .from('study_leaders').select(`id, ${col}`).eq('member_id', memberId).maybeSingle()
-    const current = ((row as Record<string, unknown> | null)?.[col] as string[] | null) ?? []
+      .from('study_leaders')
+      .select('id, qualified_study_codes, formation_study_codes')
+      .eq('member_id', memberId).maybeSingle()
+    const current = (row?.[col] as string[] | null) ?? []
     const next = action === 'add'
       ? Array.from(new Set([...current, ...codes]))
       : current.filter((c: string) => !codeSet.has(c))
     if (row) {
-      const { error } = await supabase.from('study_leaders').update({ [col]: next }).eq('member_id', memberId)
+      const patch = col === 'formation_study_codes'
+        ? { formation_study_codes: next }
+        : { qualified_study_codes: next }
+      const { error } = await supabase.from('study_leaders').update(patch).eq('member_id', memberId)
       if (error) throw error
     } else if (action === 'add') {
-      const { error } = await supabase.from('study_leaders').insert({
+      const base = {
         member_id: memberId, is_active: false, availability_status: 'inactive',
-        zone_preference: [], qualified_study_codes: [], formation_study_codes: [], [col]: next,
-      })
+        zone_preference: [], qualified_study_codes: [] as string[], formation_study_codes: [] as string[],
+      }
+      const patch = col === 'formation_study_codes'
+        ? { ...base, formation_study_codes: next }
+        : { ...base, qualified_study_codes: next }
+      const { error } = await supabase.from('study_leaders').insert(patch)
       if (error) throw error
     }
     n++
