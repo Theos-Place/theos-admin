@@ -1,0 +1,149 @@
+'use client'
+
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Image from '@tiptap/extension-image'
+import TextAlign from '@tiptap/extension-text-align'
+import {
+  Bold, Italic, Underline as UnderlineIcon, Heading1, Heading2, Heading3,
+  List, ListOrdered, Link2, Link2Off, ImageIcon, AlignLeft, AlignCenter, AlignRight, Loader2,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+/**
+ * Editor de email reutilizable (plantillas y campañas). Dos modos por pestañas:
+ *  · Visual (WYSIWYG con TipTap) → HTML semántico limpio (sin clases), apto para
+ *    correo: <p>, <strong>, <em>, <u>, <h1-3>, <ul>/<ol>, <a>, <img>, text-align inline.
+ *  · HTML → textarea con el código crudo (pegar/editar HTML directo).
+ * La fuente de verdad es el string HTML (value/onChange). El pie de baja NO va
+ * acá: lo inyecta el envío de marketing.
+ */
+export function EmailEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+  const [mode, setMode] = useState<'visual' | 'html'>('visual')
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const editor = useEditor({
+    immediatelyRender: false, // Next SSR
+    extensions: [
+      // StarterKit v3 ya incluye Underline y Link (no agregarlos aparte).
+      StarterKit.configure({
+        link: { openOnClick: false, HTMLAttributes: { rel: 'noopener', style: 'color:#519DA2' } },
+      }),
+      Image.configure({ HTMLAttributes: { style: 'max-width:100%;height:auto' } }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    ],
+    content: value || '',
+    editorProps: {
+      attributes: { class: 'prose-email focus:outline-none min-h-[260px] px-4 py-3' },
+    },
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+  })
+
+  // Al volver a Visual desde HTML, sincronizar el contenido editado como crudo.
+  useEffect(() => {
+    if (mode === 'visual' && editor && editor.getHTML() !== value) {
+      editor.commands.setContent(value || '', { emitUpdate: false })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
+
+  const addLink = useCallback(() => {
+    if (!editor) return
+    const prev = editor.getAttributes('link').href as string | undefined
+    const url = window.prompt('URL del enlace (https://…)', prev ?? 'https://')
+    if (url === null) return
+    if (url.trim() === '') { editor.chain().focus().extendMarkRange('link').unsetLink().run(); return }
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url.trim() }).run()
+  }, [editor])
+
+  async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // permite re-subir el mismo archivo
+    if (!file || !editor) return
+    setUploadError(null)
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/communications/upload-image', { method: 'POST', body: fd })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.url) throw new Error(data?.error || 'No se pudo subir la imagen')
+      editor.chain().focus().setImage({ src: data.url }).run()
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'No se pudo subir la imagen')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const btn = (active: boolean) => cn(
+    'inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors',
+    active ? 'bg-navy text-white' : 'text-navy-light/70 hover:bg-surface-low',
+  )
+
+  return (
+    <div className="rounded-2xl border border-[var(--outline-variant)] overflow-hidden bg-surface-card">
+      {/* Tabs Visual / HTML */}
+      <div className="flex border-b border-[var(--outline-variant)] bg-surface-low/50">
+        {(['visual', 'html'] as const).map(m => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={mode === m}
+            onClick={() => setMode(m)}
+            className={cn('px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors',
+              mode === m ? 'border-coral text-navy font-semibold' : 'border-transparent text-navy-light/60 hover:text-navy')}
+          >
+            {m === 'visual' ? 'Visual' : 'HTML'}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'visual' ? (
+        <>
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[var(--outline-variant)]">
+            <button type="button" aria-label="Negrita" title="Negrita" className={btn(!!editor?.isActive('bold'))} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold size={15} /></button>
+            <button type="button" aria-label="Cursiva" title="Cursiva" className={btn(!!editor?.isActive('italic'))} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic size={15} /></button>
+            <button type="button" aria-label="Subrayado" title="Subrayado" className={btn(!!editor?.isActive('underline'))} onClick={() => editor?.chain().focus().toggleUnderline().run()}><UnderlineIcon size={15} /></button>
+            <span className="mx-1 h-5 w-px bg-[var(--outline-variant)]" />
+            <button type="button" aria-label="Título 1" title="Título 1" className={btn(!!editor?.isActive('heading', { level: 1 }))} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}><Heading1 size={15} /></button>
+            <button type="button" aria-label="Título 2" title="Título 2" className={btn(!!editor?.isActive('heading', { level: 2 }))} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 size={15} /></button>
+            <button type="button" aria-label="Título 3" title="Título 3" className={btn(!!editor?.isActive('heading', { level: 3 }))} onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}><Heading3 size={15} /></button>
+            <span className="mx-1 h-5 w-px bg-[var(--outline-variant)]" />
+            <button type="button" aria-label="Lista con viñetas" title="Viñetas" className={btn(!!editor?.isActive('bulletList'))} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List size={15} /></button>
+            <button type="button" aria-label="Lista numerada" title="Numerada" className={btn(!!editor?.isActive('orderedList'))} onClick={() => editor?.chain().focus().toggleOrderedList().run()}><ListOrdered size={15} /></button>
+            <span className="mx-1 h-5 w-px bg-[var(--outline-variant)]" />
+            <button type="button" aria-label="Alinear a la izquierda" title="Izquierda" className={btn(!!editor?.isActive({ textAlign: 'left' }))} onClick={() => editor?.chain().focus().setTextAlign('left').run()}><AlignLeft size={15} /></button>
+            <button type="button" aria-label="Centrar" title="Centro" className={btn(!!editor?.isActive({ textAlign: 'center' }))} onClick={() => editor?.chain().focus().setTextAlign('center').run()}><AlignCenter size={15} /></button>
+            <button type="button" aria-label="Alinear a la derecha" title="Derecha" className={btn(!!editor?.isActive({ textAlign: 'right' }))} onClick={() => editor?.chain().focus().setTextAlign('right').run()}><AlignRight size={15} /></button>
+            <span className="mx-1 h-5 w-px bg-[var(--outline-variant)]" />
+            <button type="button" aria-label="Enlace" title="Enlace" className={btn(!!editor?.isActive('link'))} onClick={addLink}><Link2 size={15} /></button>
+            <button type="button" aria-label="Quitar enlace" title="Quitar enlace" className={btn(false)} onClick={() => editor?.chain().focus().unsetLink().run()} disabled={!editor?.isActive('link')}><Link2Off size={15} /></button>
+            <button type="button" aria-label="Insertar imagen" title="Imagen" className={btn(false)} onClick={() => fileRef.current?.click()} disabled={uploading}>
+              {uploading ? <Loader2 size={15} className="animate-spin" /> : <ImageIcon size={15} />}
+            </button>
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={onPickImage} />
+          </div>
+          <div className="max-h-[420px] overflow-auto [&_.ProseMirror]:break-words [&_.ProseMirror_img]:max-w-full [&_.ProseMirror_a]:text-teal-deep [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 text-sm text-navy font-body">
+            <EditorContent editor={editor} />
+          </div>
+          {uploadError && <p className="px-4 py-2 text-[12px] text-coral font-body border-t border-[var(--outline-variant)]">{uploadError}</p>}
+        </>
+      ) : (
+        <textarea
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          rows={16}
+          spellCheck={false}
+          placeholder="<p>Hola {nombre},</p>"
+          className="w-full max-w-full resize-y bg-surface-card px-4 py-3 text-[12px] font-mono text-navy outline-none block overflow-auto"
+        />
+      )}
+    </div>
+  )
+}

@@ -1,7 +1,7 @@
 import { type RefObject } from 'react'
 import type { CommunicationChannel } from '@/types/communication'
 import { VariableChips } from '@/components/communications/VariableChips'
-import { FormatToggle } from '@/components/communications/FormatToggle'
+import { EmailEditor } from '@/components/communications/EmailEditor'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 
@@ -15,12 +15,9 @@ type Props = {
   setWaBody: (v: string) => void
   emailBody: string
   setEmailBody: (v: string) => void
-  emailFormat: 'text' | 'html'
-  setEmailFormat: (v: 'text' | 'html') => void
   previewChannel: 'whatsapp' | 'email'
   setPreviewChannel: (c: 'whatsapp' | 'email') => void
   waRef: RefObject<HTMLTextAreaElement | null>
-  emailRef: RefObject<HTMLTextAreaElement | null>
   onInsertVariable: (v: string) => void
   onOpenTemplateModal: () => void
 }
@@ -33,12 +30,9 @@ export function ContentSection({
   setWaBody,
   emailBody,
   setEmailBody,
-  emailFormat,
-  setEmailFormat,
   previewChannel,
   setPreviewChannel,
   waRef,
-  emailRef,
   onInsertVariable,
   onOpenTemplateModal,
 }: Props) {
@@ -98,36 +92,20 @@ export function ContentSection({
       )}
 
       {(channel === 'email' || channel === 'both') && (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] text-navy-light/60 font-body">
-              Cuerpo del correo
-            </p>
-            <FormatToggle value={emailFormat} onChange={setEmailFormat} />
-          </div>
-          <textarea
-            ref={emailRef}
-            rows={emailFormat === 'html' ? 10 : 6}
-            className={cn(
-              'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body',
-              emailFormat === 'html' && 'font-mono text-[12px]',
-            )}
-            placeholder={emailFormat === 'html'
-              ? '<p>Hola {nombre},</p>\n<p>Tu mensaje aquí...</p>'
-              : 'Hola {nombre},&#10;&#10;Tu mensaje aquí...'}
-            value={emailBody}
-            onChange={e => setEmailBody(e.target.value)}
-            onFocus={() => setPreviewChannel('email')}
-          />
+        <div className="space-y-1.5" onFocusCapture={() => setPreviewChannel('email')}>
+          <p className="text-[11px] text-navy-light/60 font-body">Cuerpo del correo</p>
+          <EmailEditor value={emailBody} onChange={setEmailBody} />
           <p className="text-[11px] text-navy-light/60 font-body">
-            {emailFormat === 'html'
-              ? 'Se envía como HTML tal cual lo escribís.'
-              : 'Texto plano; los saltos de línea se respetan al enviar.'}
+            Editá en Visual o pegá HTML. El pie de baja se agrega solo al enviar como marketing.
           </p>
         </div>
       )}
 
-      <VariableChips onInsert={onInsertVariable} />
+      {/* Las variables se insertan en el cuerpo de WhatsApp/alerta; en el correo
+          se escriben directamente (o se copian). */}
+      {(channel === 'whatsapp' || channel === 'both' || channel === 'interna') && (
+        <VariableChips onInsert={onInsertVariable} />
+      )}
     </div>
   )
 }

@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Image from 'next/image'
 
 interface Props {
@@ -9,9 +12,32 @@ interface Props {
   format?: 'text' | 'html'
 }
 
+/** Documento HTML aislado para el iframe del preview. El cuerpo del email se
+ *  centra a 600px (ancho realista de un correo) y se resetea el margen. */
+function srcDocFor(html: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html,body{margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#333;background:#fff;font-size:14px;line-height:1.5;word-wrap:break-word}
+  .wrap{max-width:600px;margin:0 auto;padding:20px}
+  img{max-width:100%;height:auto}
+  a{color:#519DA2}
+</style></head>
+<body><div class="wrap">${html}</div></body></html>`
+}
+
 export function EmailPreview({ subject, body, fromName = 'Theos Place', previewName = 'María', format = 'text' }: Props) {
   const hydratedBody = body.replace(/\{nombre\}/g, previewName)
   const hydratedSubject = subject.replace(/\{nombre\}/g, previewName)
+  const [frameH, setFrameH] = useState(420)
+
+  function onFrameLoad(e: React.SyntheticEvent<HTMLIFrameElement>) {
+    try {
+      const doc = e.currentTarget.contentDocument
+      if (doc?.body) setFrameH(Math.min(1200, Math.max(240, doc.body.scrollHeight + 8)))
+    } catch { /* sandbox: ignorar */ }
+  }
 
   return (
     <div className="rounded-2xl overflow-hidden border border-[var(--outline-variant)] bg-white">
@@ -39,27 +65,30 @@ export function EmailPreview({ subject, body, fromName = 'Theos Place', previewN
         </div>
       </div>
 
-      {/* Email body */}
-      <div className="px-5 py-5">
-        <div className="flex justify-center mb-5">
-          <Image src="/logo-theos-white.png" alt="Theos Place" width={80} height={22} className="object-contain opacity-40" />
-        </div>
-        {format === 'html' ? (
-          <div
-            className="text-[13px] leading-relaxed text-gray-700 font-body [&_a]:text-[#519DA2]"
-            dangerouslySetInnerHTML={{ __html: hydratedBody }}
-          />
-        ) : (
-          <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-line font-body">
+      {format === 'html' ? (
+        // HTML SIEMPRE en iframe aislado: el CSS del correo no puede filtrarse y
+        // romper la app, y se ve a ancho real. sandbox sin scripts (seguro).
+        <iframe
+          title="Vista previa del correo"
+          srcDoc={srcDocFor(hydratedBody)}
+          onLoad={onFrameLoad}
+          sandbox="allow-same-origin"
+          className="w-full border-0 bg-white block"
+          style={{ height: frameH }}
+        />
+      ) : (
+        <div className="px-5 py-5">
+          <div className="flex justify-center mb-5">
+            <Image src="/logo-theos-white.png" alt="Theos Place" width={80} height={22} className="object-contain opacity-40" />
+          </div>
+          <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-line font-body break-words">
             {hydratedBody}
           </p>
-        )}
-        <div className="mt-6 pt-4 border-t text-center border-[#f0f0f0]">
-          <p className="text-[11px] text-gray-400 font-body">
-            Theos Place · theosplace.org
-          </p>
+          <div className="mt-6 pt-4 border-t text-center border-[#f0f0f0]">
+            <p className="text-[11px] text-gray-400 font-body">Theos Place · theosplace.org</p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
