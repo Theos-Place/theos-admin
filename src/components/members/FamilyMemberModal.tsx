@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Search, UserCheck, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { calcAge } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
 
 // Draft de un integrante de familia, reutilizable en alta de miembro y check-in.
@@ -13,15 +14,6 @@ export type FamilyDraft =
 const RELATIONS = ['Cónyuge', 'Hijo/a', 'Padre', 'Madre', 'Hermano/a', 'Otro']
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0'
-
-function calcAge(dateStr: string): number {
-  const birth = new Date(dateStr)
-  const today = new Date()
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
-}
 
 type Found = { id: string; first_name: string; last_name: string; cedula: string | null; photo_url?: string | null }
 

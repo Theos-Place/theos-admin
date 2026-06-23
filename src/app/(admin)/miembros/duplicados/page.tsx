@@ -7,6 +7,7 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
+import { calcAge } from '@/lib/format'
 import { ChevronLeft, Users } from 'lucide-react'
 import { initialsFromParts } from '@/lib/format'
 
@@ -45,18 +46,9 @@ function fmtDate(iso: string | null) {
   const d = new Date(iso)
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }
-function age(birth: string | null): number | null {
-  if (!birth) return null
-  const d = new Date(birth), t = new Date()
-  let a = t.getFullYear() - d.getFullYear()
-  const m = t.getMonth() - d.getMonth()
-  if (m < 0 || (m === 0 && t.getDate() < d.getDate())) a--
-  return a
-}
 function birthLabel(m: DupMember) {
   if (!m.birth_date) return '—'
-  const a = age(m.birth_date)
-  return `${fmtDate(m.birth_date)}${a !== null ? ` (${a} años)` : ''}`
+  return `${fmtDate(m.birth_date)} (${calcAge(m.birth_date)} años)`
 }
 function initials(m: DupMember) {
   return initialsFromParts(m.first_name, m.last_name)

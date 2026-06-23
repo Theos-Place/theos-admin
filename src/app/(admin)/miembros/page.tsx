@@ -36,16 +36,7 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
-import { initialsFromParts } from '@/lib/format'
-
-function calcularEdad(fechaNacimiento: string): number {
-  const hoy = new Date()
-  const nac = new Date(fechaNacimiento)
-  let edad = hoy.getFullYear() - nac.getFullYear()
-  const m = hoy.getMonth() - nac.getMonth()
-  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
-  return edad
-}
+import { initialsFromParts, calcAge } from '@/lib/format'
 
 function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -130,7 +121,7 @@ const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'age', label: 'Edad', defaultVisible: true,
-    exportValue: m => m.birth_date ? String(calcularEdad(m.birth_date)) : '',
+    exportValue: m => m.birth_date ? String(calcAge(m.birth_date)) : '',
   },
   {
     key: 'email', label: 'Correo', defaultVisible: false,
@@ -771,7 +762,7 @@ function MiembrosContent() {
                         case 'age':
                           return (
                             <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap font-mono text-[12px]">
-                              {member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'}
+                              {member.birth_date ? `${calcAge(member.birth_date)} años` : '—'}
                             </td>
                           )
                         case 'status':

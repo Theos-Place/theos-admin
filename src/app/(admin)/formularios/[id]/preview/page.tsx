@@ -12,26 +12,18 @@ import type { Member } from '@/types/member'
 import { PublicField } from '@/components/forms/PublicField'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
+import { calcAge } from '@/lib/format'
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, User, Pencil } from 'lucide-react'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // ─── Personal data helpers ─────────────────────────────────────────────────────
 
-function calcularEdad(birthDate: string): number {
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
-}
-
 function getMemberFieldValue(member: Partial<Member>, key: string): string {
   switch (key) {
     case 'full_name':               return `${member.first_name} ${member.last_name}`
     case 'cedula':                  return member.cedula || '—'
-    case 'age':                     return member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'
+    case 'age':                     return member.birth_date ? `${calcAge(member.birth_date)} años` : '—'
     case 'gender':                  return member.gender === 'M' ? 'Masculino' : member.gender === 'F' ? 'Femenino' : 'No indica'
     case 'marital_status':          return member.marital_status || '—'
     case 'phone':                   return member.phone || '—'

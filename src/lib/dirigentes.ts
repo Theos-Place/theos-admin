@@ -10,6 +10,20 @@ import type { StudyGroup, StudyType } from '@/types/study'
 
 export type DirigenteEstado = 'activo' | 'inactivo'
 
+/** ¿El nombre de un comité/área corresponde a dirigentes? Fuente única del regex
+ *  que estaba repetido en el adapter, las queries de miembros y la vista de comité.
+ *  `excludeAdministrativo` deja fuera el comité administrativo de dirigentes (no es
+ *  el comité de dirigentes de estudios). */
+export function esComiteDirigentes(
+  name: string | null | undefined,
+  opts?: { excludeAdministrativo?: boolean },
+): boolean {
+  const n = name ?? ''
+  if (!/dirigente/i.test(n)) return false
+  if (opts?.excludeAdministrativo && /administrativo/i.test(n)) return false
+  return true
+}
+
 export type DirigenteGrupo = {
   plan_code: string
   plan_name: string

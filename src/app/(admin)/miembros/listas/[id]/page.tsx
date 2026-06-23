@@ -15,16 +15,7 @@ import {
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
-import { initialsFromParts } from '@/lib/format'
-
-function calcularEdad(fechaNacimiento: string): number {
-  const hoy = new Date()
-  const nac = new Date(fechaNacimiento)
-  let edad = hoy.getFullYear() - nac.getFullYear()
-  const m = hoy.getMonth() - nac.getMonth()
-  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
-  return edad
-}
+import { initialsFromParts, calcAge } from '@/lib/format'
 
 function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -49,7 +40,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'age', label: 'Edad', defaultVisible: true,
-    exportValue: m => m.birth_date ? String(calcularEdad(m.birth_date)) : '',
+    exportValue: m => m.birth_date ? String(calcAge(m.birth_date)) : '',
   },
   {
     key: 'email', label: 'Correo', defaultVisible: false,
@@ -329,7 +320,7 @@ export default function ListaDetailPage() {
                   <p className="truncate text-sm text-navy font-body">{member.first_name} {member.last_name}</p>
                   <p className="truncate text-xs text-navy-light/60 font-mono">
                     {member.cedula ?? 'Sin cédula'}
-                    {member.birth_date ? ` · ${calcularEdad(member.birth_date)} años` : ''}
+                    {member.birth_date ? ` · ${calcAge(member.birth_date)} años` : ''}
                   </p>
                 </div>
                 <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
@@ -398,7 +389,7 @@ export default function ListaDetailPage() {
                         case 'age':
                           return (
                             <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap font-mono text-[12px]">
-                              {member.birth_date ? `${calcularEdad(member.birth_date)} años` : '—'}
+                              {member.birth_date ? `${calcAge(member.birth_date)} años` : '—'}
                             </td>
                           )
                         case 'status':

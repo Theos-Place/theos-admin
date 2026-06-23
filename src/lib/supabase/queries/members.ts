@@ -3,6 +3,7 @@ import type { MemberRole } from '@/types/member'
 import type { FilterCondition } from '@/types/filters'
 import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
+import { esComiteDirigentes } from '@/lib/dirigentes'
 import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
@@ -832,7 +833,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     // activo en el comité Dirigentes. Join, no consulta por fila.
     const hasLeaderRecord = ((row.study_leaders as unknown[] | null)?.length ?? 0) > 0
     const isDirigente = hasLeaderRecord
-      || /dirigente/i.test(activeVolunteer?.service_positions?.area?.name ?? '')
+      || esComiteDirigentes(activeVolunteer?.service_positions?.area?.name)
 
     return {
       ...(row as DbMember),
@@ -1317,7 +1318,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     // está activo en el comité Dirigentes.
     is_dirigente: ((memberRow.study_leaders as unknown[] | null)?.length ?? 0) > 0
       || ledStudies.length > 0
-      || /dirigente/i.test(activeVolunteer?.service_positions?.area?.name ?? ''),
+      || esComiteDirigentes(activeVolunteer?.service_positions?.area?.name),
     is_server: volunteers.some(v => v.status === 'active'),
     current_study: currentStudy,
     current_study_week: currentStudyWeek,

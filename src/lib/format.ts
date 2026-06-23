@@ -17,6 +17,18 @@ export function todayCR(): string {
   return ymdCR()
 }
 
+/** Edad en años cumplidos a partir de la fecha de nacimiento. 0 si falta/ inválida. */
+export function calcAge(birthDate: string | null | undefined): number {
+  if (!birthDate) return 0
+  const nac = new Date(birthDate)
+  if (isNaN(nac.getTime())) return 0
+  const hoy = new Date()
+  let edad = hoy.getFullYear() - nac.getFullYear()
+  const m = hoy.getMonth() - nac.getMonth()
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--
+  return edad
+}
+
 /** Fecha corta: "5 may 2026". null/inválida → '—'. */
 export function formatDate(d: string | null | undefined): string {
   if (!d) return '—'

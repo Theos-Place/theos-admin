@@ -11,6 +11,7 @@ import { useSortableTable } from '@/hooks/useSortableTable'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { type FlatServer, SERVER_COLUMNS } from '@/lib/servers/columns'
+import { esComiteDirigentes } from '@/lib/dirigentes'
 import { CommitteeHeader } from './_components/CommitteeHeader'
 import { MembersTab } from './_components/MembersTab'
 import { VacanciesTab } from './_components/VacanciesTab'
@@ -38,7 +39,7 @@ export default function CommitteeDetailPage() {
   )
   // El comité de Dirigentes (de estudios) muestra una pestaña extra con el
   // resumen de estudios de cada servidor.
-  const isDirigentes = !!committee && /dirigentes/i.test(committee.name) && !/administrativo/i.test(committee.name)
+  const isDirigentes = !!committee && esComiteDirigentes(committee.name, { excludeAdministrativo: true })
 
   const [tab, setTab] = useState<Tab>('miembros')
   const [search, setSearch] = useState('')

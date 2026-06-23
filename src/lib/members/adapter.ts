@@ -5,16 +5,8 @@
 
 import type { DbMember, DbMemberEnriched, DbMemberFull } from '@/lib/supabase/queries/members'
 import type { Member, ServiceRecord } from '@/types/member'
-
-function calcAge(birthDate: string | null): number {
-  if (!birthDate) return 0
-  const today = new Date()
-  const nac = new Date(birthDate)
-  let age = today.getFullYear() - nac.getFullYear()
-  const m = today.getMonth() - nac.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < nac.getDate())) age--
-  return age
-}
+import { calcAge } from '@/lib/format'
+import { esComiteDirigentes } from '@/lib/dirigentes'
 
 /** Convierte un `DbMemberEnriched` a `Member`. Acepta también un `DbMember` plano
  *  (usa defaults para los campos derivados que faltan). */
@@ -24,7 +16,7 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
   const activeService = enriched?.active_service ?? null
   // Dirigente activo = servidor activo en el comité Dirigentes (misma fuente
   // de verdad que lib/dirigentes), no el rol de acceso 'dirigente'.
-  const esDirigente = /dirigente/i.test(enriched?.active_service?.committee ?? '')
+  const esDirigente = esComiteDirigentes(enriched?.active_service?.committee)
 
   return {
     // ── Pasamos directo desde Supabase ──
@@ -161,7 +153,7 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
     family_members: familyMembers,
     tipos_evento: tiposEvento,
     comites,
-    es_dirigente: comites.some(c => /dirigente/i.test(c)),
+    es_dirigente: comites.some(c => esComiteDirigentes(c)),
     wallet_pass_status: db.wallet_pass_id ? 'active' : 'not_generated',
     attendance_active: db.attendance_active,
     last_charla_checkin: db.last_charla_checkin,
