@@ -23,8 +23,11 @@ export type GrowthReport = {
   year: number               // año seleccionado
   sede: string               // sede seleccionada o 'all'
   totalNew: number           // nuevos del año seleccionado (respeta filtro de sede)
-  prevTotal: number          // nuevos del año anterior (mismo filtro)
+  prevTotal: number          // nuevos del año anterior completo (mismo filtro)
   changePct: number | null   // % vs año anterior (null si no hay base)
+  /** El año seleccionado está en curso → changePct compara MISMO período
+   *  (ene–mes actual) contra el año anterior, no año completo. */
+  partialPeriod: boolean
   bySede: GrowthBySede[]     // nuevos por sede en el año (TODAS las sedes, para comparar)
   monthly: GrowthMonth[]     // nuevos por mes del año (respeta filtro de sede)
 }
@@ -36,7 +39,7 @@ function round1(n: number): number {
 /** Construye el payload del reporte de crecimiento para (año, sede). */
 export function buildGrowthReport(
   rawRows: GrowthAggRow[],
-  opts: { year?: number; sede?: string } = {},
+  opts: { year?: number; sede?: string; today?: Date } = {},
 ): GrowthReport {
   // Mapea cada fila a su sede canónica ("Sin sede" si no asistió a charlas).
   const rows = rawRows.map(r => ({
@@ -56,9 +59,18 @@ export function buildGrowthReport(
   // ── Total del año (y año previo) respetando el filtro de sede ──
   const totalOfYear = (y: number) =>
     rows.filter(r => r.yr === y && bySedeMatch(r)).reduce((s, r) => s + r.n, 0)
+  const totalUpToMonth = (y: number, maxMo: number) =>
+    rows.filter(r => r.yr === y && bySedeMatch(r) && r.mo <= maxMo).reduce((s, r) => s + r.n, 0)
   const totalNew = totalOfYear(year)
   const prevTotal = totalOfYear(year - 1)
-  const changePct = prevTotal > 0 ? round1(((totalNew - prevTotal) / prevTotal) * 100) : null
+
+  // Delta vs año anterior. Si el año seleccionado está EN CURSO, comparar mismo
+  // período (ene–mes actual) contra ene–mismo mes del año anterior: comparar un
+  // año parcial contra uno completo daría una caída engañosa.
+  const now = opts.today ?? new Date()
+  const partialPeriod = year === now.getFullYear()
+  const prevComparable = partialPeriod ? totalUpToMonth(year - 1, now.getMonth() + 1) : prevTotal
+  const changePct = prevComparable > 0 ? round1(((totalNew - prevComparable) / prevComparable) * 100) : null
 
   // ── Nuevos por sede (año seleccionado, TODAS las sedes para comparar) ──
   const sedeTotals = new Map<string, number>()
@@ -73,5 +85,5 @@ export function buildGrowthReport(
   const monthly: GrowthMonth[] = []
   for (let mo = 1; mo <= 12; mo++) monthly.push({ month: mo, total: monthTotals.get(mo) ?? 0 })
 
-  return { years, year, sede, totalNew, prevTotal, changePct, bySede, monthly }
+  return { years, year, sede, totalNew, prevTotal, changePct, partialPeriod, bySede, monthly }
 }

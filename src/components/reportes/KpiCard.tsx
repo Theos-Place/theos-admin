@@ -1,10 +1,10 @@
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 /** Card KPI reutilizable: valor grande + subtítulo + cambio % opcional (flecha/color).
  *  Compartido por todos los reportes. */
 export function KpiCard({
-  label, value, sublabel, changePct, highlight,
+  label, value, sublabel, changePct, highlight, info,
 }: {
   label: string
   value: string | number
@@ -12,6 +12,8 @@ export function KpiCard({
   changePct?: number | null
   /** Destaca la card (p. ej. el año seleccionado, que es el foco). */
   highlight?: boolean
+  /** Texto de ayuda: muestra un ícono de info con tooltip al lado del label. */
+  info?: string
 }) {
   const up = changePct != null && changePct > 0
   const down = changePct != null && changePct < 0
@@ -22,9 +24,16 @@ export function KpiCard({
       highlight ? 'bg-coral/[0.06] ring-2 ring-coral/40' : 'bg-surface-card',
     )}>
       <p className={cn(
-        'text-[11px] tracking-widest uppercase font-display',
+        'text-[11px] tracking-widest uppercase font-display flex items-center gap-1',
         highlight ? 'text-coral' : 'text-navy-light/70',
-      )}>{label}</p>
+      )}>
+        {label}
+        {info && (
+          <span tabIndex={0} title={info} aria-label={info} className="cursor-help text-navy-light/50 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80">
+            <Info size={12} />
+          </span>
+        )}
+      </p>
       <p className="mt-1.5 text-2xl font-extrabold text-navy tabular-nums font-display leading-none">{value}</p>
       <div className="mt-2 flex items-center justify-between gap-2">
         {sublabel && <p className="text-[12px] text-navy-light/70 font-body">{sublabel}</p>}

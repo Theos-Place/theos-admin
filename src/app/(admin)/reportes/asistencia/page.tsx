@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  ResponsiveContainer, BarChart, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, Legend, Cell,
 } from 'recharts'
 import { ReportShell } from '@/components/reportes/ReportShell'
@@ -100,12 +100,7 @@ export default function ReporteAsistenciaPage() {
     (best, w) => (!best || w.total > best.total ? { week: w.week, total: w.total } : best), null)
   const latestWeek = report.weekly.length ? report.weekly[report.weekly.length - 1].week : null
   const highlightWeek = isCurrentYear ? latestWeek : peakWeek?.week ?? null
-  // Promedio semanal del año anterior (de las cards, ya filtrado por sede).
   const prevYear = report.year - 1
-  const prevAvg = report.annualCards.find(c => c.year === prevYear)?.weeklyAvg ?? null
-  // Datos del gráfico semanal: cada punto lleva el promedio del año anterior
-  // (constante) para dibujar la línea fantasma y que aparezca en la leyenda.
-  const weeklyData = report.weekly.map(w => ({ ...w, prevAvg }))
   // Intervalo de etiquetas del eje X: ~12 visibles como máximo (cada 2 / cada 4).
   const xTickInterval = report.weekly.length > 28 ? 3 : 1
 
@@ -123,6 +118,13 @@ export default function ReporteAsistenciaPage() {
   const growthMonthlyData = growth.monthly.map(m => ({ month: MONTHS[m.month - 1], total: m.total }))
   const topSede = growth.bySede.find(s => s.sede !== NO_SEDE)
   const sinSede = growth.bySede.find(s => s.sede === NO_SEDE)?.total ?? 0
+  const growthTotal = growth.bySede.reduce((acc, s) => acc + s.total, 0)
+  const sinSedePct = growthTotal > 0 ? Math.round((sinSede / growthTotal) * 1000) / 10 : 0
+  // "Sin sede" es una categoría especial: va al final del gráfico, no entre sedes.
+  const bySedeOrdered = [
+    ...growth.bySede.filter(s => s.sede !== NO_SEDE),
+    ...growth.bySede.filter(s => s.sede === NO_SEDE),
+  ]
 
   return (
     <div className={loading ? 'opacity-60 transition-opacity pointer-events-none' : 'transition-opacity'}>
@@ -150,10 +152,10 @@ export default function ReporteAsistenciaPage() {
 
         {/* ───────────────────────── Asistencia ───────────────────────── */}
         {tab === 'asistencia' && (
-          <div role="tabpanel" aria-label="Asistencia" className="space-y-5">
+          <div role="tabpanel" aria-label="Asistencia" className="space-y-3">
             {/* Card de promedio semanal (año del pill) + mini-KPIs a la izquierda
                 (1/5) y el gráfico semanal a la derecha (4/5). */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
               <div className="lg:col-span-1 space-y-3">
                 {selectedCard && (
                   <KpiCard
@@ -165,7 +167,7 @@ export default function ReporteAsistenciaPage() {
                   />
                 )}
                 {/* Mini-KPIs compactos: aprovechan el espacio al lado del gráfico. */}
-                <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)] space-y-3">
+                <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)] space-y-2.5">
                   <MiniStat label="Total del año" value={totalYear.toLocaleString('es-CR')} />
                   <MiniStat label="Mejor semana" value={bestWeek.toLocaleString('es-CR')} sub="check-ins" />
                   <MiniStat label="Sede líder" value={sedeLeader ? sedeLeader.sede : '—'} sub={sedeLeader ? `${sedeLeader.total.toLocaleString('es-CR')} check-ins` : undefined} />
@@ -179,46 +181,41 @@ export default function ReporteAsistenciaPage() {
               <div className="lg:col-span-4">
                 <ChartCard
                   title={`Asistencia semanal — ${report.year}`}
-                  subtitle={`Total de check-ins de charla por semana (${sedeLabel}). La barra resaltada es ${isCurrentYear ? 'la semana más reciente' : 'la semana pico'}; la línea punteada navy = promedio del año.`}
+                  subtitle={`Check-ins por semana (${sedeLabel}). Línea punteada navy = promedio del año.`}
                   empty={report.weekly.length === 0}
-                  footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales de asistencia.' : undefined}
+                  height={230}
+                  footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales.' : undefined}
                 >
                   <ResponsiveContainer>
-                    <ComposedChart data={weeklyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                    <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
                       <XAxis dataKey="week" interval={xTickInterval} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                       <Tooltip
                         contentStyle={tooltipStyle}
-                        formatter={(v, n, p) => n === 'prevAvg'
-                          ? [Number(v), `Prom. semanal ${prevYear}`]
-                          : [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
+                        formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
                         labelFormatter={(l) => `Semana ${l}`}
                       />
-                      <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-body)' }} />
                       <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
-                      <Bar dataKey="total" name={`Check-ins ${report.year}`} radius={[4, 4, 0, 0]} maxBarSize={28}>
-                        {weeklyData.map(w => (
+                      <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}>
+                        {report.weekly.map(w => (
                           <Cell key={w.week} fill={w.partial ? CORAL_SOFT : w.week === highlightWeek ? CORAL : CORAL_DIM} />
                         ))}
                       </Bar>
-                      {prevAvg != null && (
-                        <Line type="monotone" dataKey="prevAvg" name={`Prom. semanal ${prevYear}`} stroke={NAVY} strokeOpacity={0.5} strokeDasharray="4 4" strokeWidth={1.5} dot={false} legendType="line" />
-                      )}
-                    </ComposedChart>
+                    </BarChart>
                   </ResponsiveContainer>
                 </ChartCard>
               </div>
             </div>
 
             {/* Comparativos lado a lado en desktop. */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {/* Comparación por sede */}
               <ChartCard
                 title={`Comparación por sede — ${report.year}`}
-                subtitle="Total de check-ins del año por sede. La sede seleccionada se resalta."
+                subtitle="Check-ins del año por sede. La sede seleccionada se resalta."
                 empty={report.sedeRanking.length === 0}
-                height={Math.max(220, report.sedeRanking.length * 32)}
+                height={Math.max(180, report.sedeRanking.length * 26)}
               >
                 <ResponsiveContainer>
                   <BarChart layout="vertical" data={report.sedeRanking} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
@@ -240,6 +237,8 @@ export default function ReporteAsistenciaPage() {
                 title="Comparativo por año y mes"
                 subtitle={`Promedio semanal por mes — últimos ${report.monthlyYears.length} año(s) (${sedeLabel}).`}
                 empty={report.monthlyYears.length === 0}
+                height={210}
+                footnote="El mes en curso es un promedio de las semanas completas hasta hoy."
               >
                 <ResponsiveContainer>
                   <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -260,7 +259,7 @@ export default function ReporteAsistenciaPage() {
 
         {/* ───────────────────────── Crecimiento ───────────────────────── */}
         {tab === 'crecimiento' && (
-          <div role="tabpanel" aria-label="Crecimiento" className="space-y-5">
+          <div role="tabpanel" aria-label="Crecimiento" className="space-y-3">
             <p className="text-[12px] text-navy-light/70 font-body">
               Crecimiento <strong className="text-navy-light/90">bruto</strong> (solo altas, no se restan bajas). “Nuevo” = fecha de registro del perfil. Objetivo #1 del año: crecer en sedes.
             </p>
@@ -270,7 +269,7 @@ export default function ReporteAsistenciaPage() {
               <KpiCard
                 label={`Personas nuevas ${growth.year}`}
                 value={growth.totalNew.toLocaleString('es-CR')}
-                sublabel="Crecimiento bruto"
+                sublabel={growth.partialPeriod ? `Bruto · vs. mismo período ${growth.year - 1}` : 'Crecimiento bruto'}
                 changePct={growth.changePct}
                 highlight
               />
@@ -282,27 +281,28 @@ export default function ReporteAsistenciaPage() {
               <KpiCard
                 label="Sin sede"
                 value={sinSede.toLocaleString('es-CR')}
-                sublabel="No asistieron a charla"
+                sublabel={`${sinSedePct}% del total · sin asistencia a charlas`}
+                info="Personas sin asistencia a charlas registrada. Probablemente ingresaron por estudios bíblicos sin haber asistido a charlas. No es un error de datos."
               />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {/* Crecimiento por sede */}
               <ChartCard
                 title={`Personas nuevas por sede — ${growth.year}`}
-                subtitle="Cuántas personas nuevas se sumaron por sede. La sede seleccionada se resalta."
+                subtitle="Personas nuevas por sede. La sede seleccionada se resalta."
                 empty={growth.bySede.length === 0}
-                height={Math.max(220, growth.bySede.length * 32)}
-                footnote='La sede de cada persona es la de mayor asistencia a charlas (sede dominante). “Sin sede” = personas sin asistencia registrada. Basado en la fecha de registro del perfil.'
+                height={Math.max(180, bySedeOrdered.length * 26)}
+                footnote='Sede = la de mayor asistencia a charlas. “Sin sede” (al final) = sin asistencia registrada.'
               >
                 <ResponsiveContainer>
-                  <BarChart layout="vertical" data={growth.bySede} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                  <BarChart layout="vertical" data={bySedeOrdered} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
                     <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                     <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
                     <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
-                      {growth.bySede.map(s => (
+                      {bySedeOrdered.map(s => (
                         <Cell key={s.sede} fill={growth.sede !== ALL_SEDES && s.sede === growth.sede ? CORAL : s.sede === NO_SEDE ? '#A9A8BE' : NAVY} />
                       ))}
                     </Bar>
@@ -315,6 +315,7 @@ export default function ReporteAsistenciaPage() {
                 title={`Nuevos por mes — ${growth.year}`}
                 subtitle={`Ritmo de captación de personas nuevas (${sedeLabel}).`}
                 empty={growth.totalNew === 0}
+                height={210}
                 footnote="Cuenta cada persona en el mes en que se registró su perfil."
               >
                 <ResponsiveContainer>
