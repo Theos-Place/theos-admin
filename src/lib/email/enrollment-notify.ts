@@ -10,7 +10,7 @@ const DAY_LABEL: Record<string, string> = { L: 'Lunes', M: 'Martes', X: 'Miérco
 
 function fmtDate(iso: string | null): string {
   if (!iso) return 'por confirmar'
-  try { return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' }) } catch { return iso }
+  try { return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Costa_Rica' }) } catch { return iso }
 }
 function fullName(m: { first_name?: string | null; last_name?: string | null } | null): string {
   return m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : ''

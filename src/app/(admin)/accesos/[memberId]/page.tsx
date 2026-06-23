@@ -1,27 +1,12 @@
 'use client'
 
 import { useState, use, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
 import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/lib/auth/roles'
-import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
-import { formatDate, formatDateLong, todayCR } from '@/lib/format'
-
-function RoleBadge({ roleId }: { roleId: RoleId }) {
-  const role = ROLES.find(r => r.id === roleId)
-  if (!role) return null
-  return (
-    <span
-      className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-      style={{ background: `${role.color}18`, color: role.color, border: `1px solid ${role.color}30` }}
-    >
-      {role.name}
-    </span>
-  )
-}
+import { formatDate, todayCR } from '@/lib/format'
 
 const AVATAR_COLORS = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949', '#3DB97A']
 function avatarBg(id: string) {
@@ -30,7 +15,6 @@ function avatarBg(id: string) {
 
 export default function AccesoDetailPage({ params }: { params: Promise<{ memberId: string }> }) {
   const { memberId } = use(params)
-  const router = useRouter()
   const toast = useToast()
 
   const [user, setUser]               = useState<UserAccess | null>(null)

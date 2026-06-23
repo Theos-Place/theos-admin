@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return 'Nunca'
@@ -28,8 +29,10 @@ function timeAgo(dateStr: string | null): string {
 
 export default function ListasGuardadasPage() {
   const router = useRouter()
+  const toast = useToast()
 
   const [lists, setLists]         = useState<MemberList[]>([])
+  const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [openMenu, setOpenMenu]   = useState<string | null>(null)
@@ -42,7 +45,13 @@ export default function ListasGuardadasPage() {
     try {
       const res = await fetch('/api/member-lists')
       if (res.ok) setLists(await res.json())
-    } catch (err) { console.error('No se pudieron cargar las listas:', err) }
+      else toast('No se pudieron cargar las listas.', 'error')
+    } catch (err) {
+      console.error('No se pudieron cargar las listas:', err)
+      toast('No se pudieron cargar las listas.', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
   useEffect(() => { loadLists() }, [])
 
@@ -70,22 +79,30 @@ export default function ListasGuardadasPage() {
   async function confirmDelete() {
     if (!deleteTarget) return
     try {
-      await fetch(`/api/member-lists/${deleteTarget.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/member-lists/${deleteTarget.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
       await loadLists()
-    } catch (err) { console.error('No se pudo eliminar la lista:', err) }
+    } catch (err) {
+      console.error('No se pudo eliminar la lista:', err)
+      toast('No se pudo eliminar la lista. Intentá de nuevo.', 'error')
+    }
     setDeleteTarget(null)
   }
 
   async function handleRefresh(id: string) {
     setOpenMenu(null)
     try {
-      await fetch(`/api/member-lists/${id}`, {
+      const res = await fetch(`/api/member-lists/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ last_used_at: new Date().toISOString() }),
       })
+      if (!res.ok) throw new Error()
       await loadLists()
-    } catch (err) { console.error('No se pudo actualizar la lista:', err) }
+    } catch (err) {
+      console.error('No se pudo actualizar la lista:', err)
+      toast('No se pudo actualizar la lista.', 'error')
+    }
   }
 
   function openEdit(id: string) {
@@ -101,13 +118,17 @@ export default function ListasGuardadasPage() {
     if (!editTarget || !editName.trim()) return
     const tags = editTags.split(',').map(t => t.trim()).filter(Boolean)
     try {
-      await fetch(`/api/member-lists/${editTarget}`, {
+      const res = await fetch(`/api/member-lists/${editTarget}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editName.trim(), tags }),
       })
+      if (!res.ok) throw new Error()
       await loadLists()
-    } catch (err) { console.error('No se pudo guardar la lista:', err) }
+    } catch (err) {
+      console.error('No se pudo guardar la lista:', err)
+      toast('No se pudo guardar la lista. Intentá de nuevo.', 'error')
+    }
     setEditTarget(null)
   }
 
@@ -130,7 +151,7 @@ export default function ListasGuardadasPage() {
             Listas guardadas
           </h1>
           <p className="mt-1 text-sm text-navy-light/60 font-body">
-            {lists.length} lista{lists.length !== 1 ? 's' : ''} · Segmentos para comunicaciones y reportes
+            {loading ? '—' : lists.length} lista{lists.length !== 1 ? 's' : ''} · Segmentos para comunicaciones y reportes
           </p>
         </div>
         <Link
@@ -179,7 +200,11 @@ export default function ListasGuardadasPage() {
       </div>
 
       {/* Grid */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] py-16 text-center">
+          <p className="text-sm text-navy-light/60 font-body">Cargando listas…</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
           <EmptyState
             icon={Bookmark}

@@ -17,6 +17,7 @@ import {
   Users,
   Info,
   Star,
+  AlertTriangle,
 } from 'lucide-react'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -338,7 +339,7 @@ function MiembrosContent() {
 
       const tags = saveListTags.split(',').map(t => t.trim()).filter(Boolean)
       const segLabel = buildSegmentLabel(filters.conditions, showDonors, showServers)
-      await fetch('/api/member-lists', {
+      const res = await fetch('/api/member-lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -352,12 +353,16 @@ function MiembrosContent() {
           tags,
         }),
       })
+      if (!res.ok) throw new Error()
       setSaveListOpen(false)
       setSaveListName('')
       setSaveListDesc('')
       setSaveListTags('')
       setSaveListDynamic(true)
       showToast('saved')
+    } catch {
+      // No confirmar en falso: si el guardado falla, avisarle a la persona.
+      showToast('error')
     } finally {
       setSavingList(false)
     }
@@ -1015,6 +1020,14 @@ function MiembrosContent() {
           >
             Ver mis listas →
           </button>
+        </div>
+      )}
+      {toast === 'error' && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-2xl bg-navy shadow-[0_20px_48px_rgba(22,20,64,0.30)]">
+          <AlertTriangle size={15} className="text-coral shrink-0" strokeWidth={2.5} />
+          <p className="text-[13px] text-white font-body">
+            No se pudo guardar la lista. Intentá de nuevo.
+          </p>
         </div>
       )}
     </div>

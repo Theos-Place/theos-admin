@@ -267,7 +267,7 @@ export async function submitResponse(
           nombre,
           nombre_form: form?.title ?? 'el formulario',
           id_respuesta: responseId,
-          fecha_envio: new Date().toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' }),
+          fecha_envio: new Date().toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Costa_Rica' }),
           link_respuestas: process.env.NEXT_PUBLIC_SITE_URL ?? '',
         },
       })

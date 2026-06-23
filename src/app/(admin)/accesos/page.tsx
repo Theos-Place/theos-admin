@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Search, UserPlus, Check, AlertTriangle, ChevronDown } from 'lucide-react'
+import { Shield, Search, UserPlus, Check, AlertTriangle } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { ROLES, type RoleId, type UserAccess } from '@/lib/auth/roles'
