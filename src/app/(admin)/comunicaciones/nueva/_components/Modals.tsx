@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import type { CommunicationChannel, MessageTemplate, CommunicationMessage } from '@/types/communication'
 import type { MemberList } from '@/types/member-list'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
@@ -70,20 +73,44 @@ type TemplateModalProps = {
   onClose: () => void
 }
 
+function norm(s: string): string {
+  return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
+}
+
 export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: TemplateModalProps) {
+  const [q, setQ] = useState('')
+  const term = norm(q)
+  const visible = term
+    ? filteredTemplates.filter(t =>
+        norm(t.name).includes(term) || norm(t.subject ?? '').includes(term) || norm(t.category ?? '').includes(term))
+    : filteredTemplates
+
   return (
     <Modal onClose={onClose} titleId="seleccionar-plantilla" width={512}>
       <div>
         <div className="px-5 py-4 border-b border-[var(--outline-variant)]">
           <p id="seleccionar-plantilla" className="text-sm font-bold text-navy font-display">Seleccionar plantilla</p>
         </div>
-        <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-          {filteredTemplates.length === 0 ? (
+        <div className="px-4 pt-3 pb-2">
+          <div className="relative">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+            <input
+              className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              placeholder="Buscar plantilla..."
+              aria-label="Buscar plantilla"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              autoFocus
+            />
+          </div>
+        </div>
+        <div className="px-4 pb-4 space-y-2 max-h-96 overflow-y-auto">
+          {visible.length === 0 ? (
             <p className="text-sm text-navy-light/60 py-4 text-center font-body">
-              No hay plantillas para este canal.
+              {term ? 'Sin coincidencias.' : 'No hay plantillas para este canal.'}
             </p>
           ) : (
-            filteredTemplates.map(tpl => (
+            visible.map(tpl => (
               <button
                 key={tpl.id}
                 type="button"

@@ -1,6 +1,6 @@
 import { type RefObject } from 'react'
 import type { CommunicationChannel } from '@/types/communication'
-import { VariableChips } from '@/components/communications/VariableChips'
+import { VariableChips, AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { EmailEditor } from '@/components/communications/EmailEditor'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
@@ -94,7 +94,7 @@ export function ContentSection({
       {(channel === 'email' || channel === 'both') && (
         <div className="space-y-1.5" onFocusCapture={() => setPreviewChannel('email')}>
           <p className="text-[11px] text-navy-light/60 font-body">Cuerpo del correo</p>
-          <EmailEditor value={emailBody} onChange={setEmailBody} />
+          <EmailEditor value={emailBody} onChange={setEmailBody} variables={AVAILABLE_VARIABLES} />
           <p className="text-[11px] text-navy-light/60 font-body">
             Editá en Visual o pegá HTML. El pie de baja se agrega solo al enviar como marketing.
           </p>

@@ -281,7 +281,7 @@ function NuevaComunicacionContent() {
       </div>
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_620px] gap-6 items-start">
         {/* Left: Editor */}
         <div className="space-y-5">
 
@@ -377,7 +377,7 @@ function NuevaComunicacionContent() {
         </div>
 
         {/* Right: Preview */}
-        <div className="space-y-3 lg:sticky lg:top-4">
+        <div className="space-y-3 xl:sticky xl:top-4">
           <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
             Vista previa
           </p>

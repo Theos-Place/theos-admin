@@ -19,11 +19,17 @@ import { cn } from '@/lib/utils'
  * La fuente de verdad es el string HTML (value/onChange). El pie de baja NO va
  * acá: lo inyecta el envío de marketing.
  */
-export function EmailEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+export function EmailEditor({ value, onChange, variables = [] }: {
+  value: string
+  onChange: (html: string) => void
+  /** Variables insertables (ej. [{ key: '{nombre}' }]) — botones que las meten en el cuerpo. */
+  variables?: Array<{ key: string; description?: string }>
+}) {
   const [mode, setMode] = useState<'visual' | 'html'>('visual')
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const htmlRef = useRef<HTMLTextAreaElement>(null)
 
   const editor = useEditor({
     immediatelyRender: false, // Next SSR
@@ -89,6 +95,22 @@ export function EmailEditor({ value, onChange }: { value: string; onChange: (htm
     }
   }
 
+  // Inserta una variable ({nombre}) en el cuerpo: en visual usa el editor; en
+  // HTML, en la posición del cursor del textarea.
+  function insertVariable(token: string) {
+    if (mode === 'visual') {
+      editor?.chain().focus().insertContent(token).run()
+      return
+    }
+    const el = htmlRef.current
+    if (!el) { onChange(value + token); return }
+    const s = el.selectionStart ?? value.length
+    const e = el.selectionEnd ?? s
+    const next = value.slice(0, s) + token + value.slice(e)
+    onChange(next)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(s + token.length, s + token.length) })
+  }
+
   const btn = (active: boolean) => cn(
     'inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors',
     active ? 'bg-navy text-white' : 'text-navy-light/70 hover:bg-surface-low',
@@ -146,6 +168,7 @@ export function EmailEditor({ value, onChange }: { value: string; onChange: (htm
         </>
       ) : (
         <textarea
+          ref={htmlRef}
           value={value}
           onChange={e => onChange(e.target.value)}
           rows={16}
@@ -153,6 +176,24 @@ export function EmailEditor({ value, onChange }: { value: string; onChange: (htm
           placeholder="<p>Hola {nombre},</p>"
           className="w-full max-w-full resize-y bg-surface-card px-4 py-3 text-[12px] font-mono text-navy outline-none block overflow-auto"
         />
+      )}
+
+      {/* Variables insertables: clic → se mete en el cuerpo (en el cursor). */}
+      {variables.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-[var(--outline-variant)] bg-surface-low/40">
+          <span className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mr-1">Insertar variable</span>
+          {variables.map(v => (
+            <button
+              key={v.key}
+              type="button"
+              title={v.description}
+              onClick={() => insertVariable(v.key)}
+              className="rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
+            >
+              {v.key}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )
