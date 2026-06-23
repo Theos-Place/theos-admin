@@ -28,9 +28,9 @@ const supabase = createClient(
 
 const DIR = join(process.cwd(), 'supabase', 'seed', 'system-emails')
 
+// NOTA: 'bienvenida' y 'recuperacion_contrasena' NO van acá — las maneja Supabase
+// Auth (panel → Authentication → Emails), no el sistema de plantillas (mig 094).
 const TEMPLATES: Array<{ key: string; name: string; subject: string; file: string; vars: string[] }> = [
-  { key: 'bienvenida', name: 'Bienvenida', subject: '¡Bienvenido a Theos Place!', file: 'email-bienvenida-theos.html', vars: ['nombre'] },
-  { key: 'recuperacion_contrasena', name: 'Recuperación de contraseña', subject: 'Recuperá tu contraseña', file: 'email-recuperacion-contrasena.html', vars: ['nombre', 'codigo'] },
   { key: 'form_asignado', name: 'Formulario asignado', subject: 'Tenés un formulario pendiente', file: 'theos_email_01_form_asignado.html', vars: ['nombre', 'nombre_proceso', 'nombre_form', 'fecha_limite', 'asignado_por', 'link_form'] },
   { key: 'form_completado', name: 'Formulario completado', subject: 'Recibimos tus respuestas', file: 'theos_email_02_form_completado.html', vars: ['nombre', 'nombre_form', 'id_respuesta', 'fecha_envio', 'link_respuestas'] },
   { key: 'matricula_estudiante', name: 'Matrícula confirmada (estudiante)', subject: 'Tu matrícula fue confirmada', file: 'theos_email_03_matricula_estudiante.html', vars: ['nombre', 'nombre_capacitacion', 'fecha_inicio', 'dias', 'hora', 'lugar', 'dirigentes'] },

@@ -8,8 +8,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/provider'
 
+// 'bienvenida' y 'recuperacion_contrasena' las maneja Supabase Auth, no acá.
 export type SystemTemplateKey =
-  | 'bienvenida' | 'recuperacion_contrasena'
   | 'form_asignado' | 'form_completado'
   | 'matricula_estudiante' | 'matricula_dirigente' | 'inicio_capacitacion'
 
@@ -47,8 +47,6 @@ export function renderTemplate(html: string, data: TemplateData): string {
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */
 const FALLBACK: Record<string, { subject: string; html: string }> = {
-  bienvenida: { subject: '¡Bienvenido a Theos Place!', html: '<p>¡Hola {{nombre}}! Te damos la bienvenida a Theos Place.</p>' },
-  recuperacion_contrasena: { subject: 'Recuperá tu contraseña', html: '<p>Hola {{nombre}}, tu código de recuperación es: <strong>{{codigo}}</strong>.</p>' },
   form_asignado: { subject: 'Tenés un formulario pendiente', html: '<p>Hola {{nombre}}, te asignaron el formulario "{{nombre_form}}". <a href="{{link_form}}">Completarlo</a>.</p>' },
   form_completado: { subject: 'Recibimos tus respuestas', html: '<p>Hola {{nombre}}, recibimos tus respuestas del formulario "{{nombre_form}}".</p>' },
   matricula_estudiante: { subject: 'Tu matrícula fue confirmada', html: '<p>Hola {{nombre}}, tu matrícula en "{{nombre_capacitacion}}" fue confirmada. Inicia el {{fecha_inicio}}.</p>' },
