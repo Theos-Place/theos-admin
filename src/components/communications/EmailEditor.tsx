@@ -19,13 +19,16 @@ import { cn } from '@/lib/utils'
  * La fuente de verdad es el string HTML (value/onChange). El pie de baja NO va
  * acá: lo inyecta el envío de marketing.
  */
-export function EmailEditor({ value, onChange, variables = [] }: {
+export function EmailEditor({ value, onChange, variables = [], htmlOnly = false }: {
   value: string
   onChange: (html: string) => void
   /** Variables insertables (ej. [{ key: '{nombre}' }]) — botones que las meten en el cuerpo. */
   variables?: Array<{ key: string; description?: string }>
+  /** true = solo modo HTML (sin pestaña Visual): para HTML complejo que el editor
+   *  visual destruiría (plantillas del sistema). */
+  htmlOnly?: boolean
 }) {
-  const [mode, setMode] = useState<'visual' | 'html'>('visual')
+  const [mode, setMode] = useState<'visual' | 'html'>(htmlOnly ? 'html' : 'visual')
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -118,9 +121,9 @@ export function EmailEditor({ value, onChange, variables = [] }: {
 
   return (
     <div className="rounded-2xl border border-[var(--outline-variant)] overflow-hidden bg-surface-card">
-      {/* Tabs Visual / HTML */}
+      {/* Tabs Visual / HTML (en htmlOnly solo HTML) */}
       <div className="flex border-b border-[var(--outline-variant)] bg-surface-low/50">
-        {(['visual', 'html'] as const).map(m => (
+        {(htmlOnly ? ['html'] as const : ['visual', 'html'] as const).map(m => (
           <button
             key={m}
             type="button"
@@ -135,7 +138,13 @@ export function EmailEditor({ value, onChange, variables = [] }: {
         ))}
       </div>
 
-      {mode === 'visual' ? (
+      {htmlOnly && (
+        <p className="px-3 py-2 text-[12px] text-navy-light/70 font-body bg-amber-50 border-b border-[var(--outline-variant)]">
+          Esta plantilla usa HTML avanzado. Editá el contenido en modo código para conservar el formato.
+        </p>
+      )}
+
+      {!htmlOnly && mode === 'visual' ? (
         <>
           {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[var(--outline-variant)]">

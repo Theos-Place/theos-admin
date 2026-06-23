@@ -7,6 +7,7 @@
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/provider'
+import { renderEmail } from '@/lib/email/baseLayout'
 
 // 'bienvenida' y 'recuperacion_contrasena' las maneja Supabase Auth, no acá.
 export type SystemTemplateKey =
@@ -85,7 +86,9 @@ export async function sendSystemEmail(opts: {
   try {
     const tpl = await getSystemTemplate(opts.systemKey)
     const subject = renderTemplate(tpl.subject, opts.data)
-    const html = renderTemplate(tpl.html, opts.data)
+    // El html_body es SOLO el contenido; se envuelve con el layout base (head+
+    // header+footer) para producir el correo completo.
+    const html = renderEmail(renderTemplate(tpl.html, opts.data))
     await sendEmail({ to: opts.to, subject, html, kind: 'transactional', fromName: opts.fromName })
     return { ok: true }
   } catch (e) {

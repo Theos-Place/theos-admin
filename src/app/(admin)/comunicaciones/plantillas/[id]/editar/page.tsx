@@ -8,6 +8,7 @@ import { EmailEditor } from '@/components/communications/EmailEditor'
 import { AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
 import { useCommunications } from '@/hooks/useCommunications'
+import { renderEmail } from '@/lib/email/baseLayout'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check, X } from 'lucide-react'
 
@@ -77,7 +78,10 @@ export default function EditarPlantillaPage() {
 
   const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-  const previewBody = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
+  const rawPreview = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
+  // Las del sistema guardan solo contenido → el preview lo envuelve en el layout
+  // base (documento completo con header/footer).
+  const previewBody = isSystem ? renderEmail(rawPreview) : rawPreview
 
   if (notFound) {
     return (
@@ -89,20 +93,6 @@ export default function EditarPlantillaPage() {
   }
   if (!loaded) {
     return <div className="p-8 text-center text-navy-light/60 font-body">Cargando…</div>
-  }
-  // Las plantillas del sistema (transaccionales) no se editan.
-  if (isSystem) {
-    return (
-      <div className="space-y-4 max-w-lg">
-        <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"><ChevronLeft size={15} /> Plantillas</Link>
-        <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)] space-y-2">
-          <p className="text-base font-bold text-navy font-display">Plantilla del sistema</p>
-          <p className="text-sm text-navy-light/70 font-body">
-            Esta es una plantilla transaccional del sistema y no se puede editar. Si necesitás una versión propia, cloná la plantilla desde el listado.
-          </p>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -144,7 +134,7 @@ export default function EditarPlantillaPage() {
 
           <div>
             <label className={labelCls}>Cuerpo del correo</label>
-            <EmailEditor value={emailBody} onChange={setEmailBody} />
+            <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={isSystem} />
             <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">El pie de baja se agrega solo al enviar como marketing.</p>
           </div>
 
@@ -181,7 +171,7 @@ export default function EditarPlantillaPage() {
 
         <div className="space-y-2 xl:sticky xl:top-4">
           <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Vista previa</p>
-          <EmailPreview subject={subject} body={previewBody} format="html" />
+          <EmailPreview subject={subject} body={previewBody} format="html" fullDocument={isSystem} />
         </div>
       </div>
     </div>

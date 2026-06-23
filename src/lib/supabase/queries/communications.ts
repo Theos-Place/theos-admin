@@ -126,14 +126,10 @@ export async function createTemplate(input: TemplateWriteInput): Promise<{ id: s
   return data as { id: string }
 }
 
-/** Actualiza una plantilla. Las del sistema (transaccionales) NO se editan. */
+/** Actualiza una plantilla. Las del sistema SÍ se editan (contenido), pero no se
+ *  pueden mutar sus marcas (is_system/system_key) ni el canal. */
 export async function updateTemplate(id: string, patch: Partial<TemplateWriteInput>): Promise<void> {
   const supabase = createAdminClient()
-  const { data: tpl } = await supabase.from('message_templates').select('is_system').eq('id', id).maybeSingle()
-  if ((tpl as { is_system?: boolean } | null)?.is_system) {
-    throw new Error('SYSTEM_TEMPLATE_PROTECTED')
-  }
-  // No permitir mutar las marcas de sistema/canal vía update.
   const { is_system: _i, system_key: _s, channel: _c, ...safe } = patch as Record<string, unknown>
   const { error } = await supabase.from('message_templates').update(safe as Updatable<'message_templates'>).eq('id', id)
   if (error) throw error

@@ -10,6 +10,9 @@ interface Props {
   previewName?: string
   /** 'html' renderiza el código tal cual; 'text' (default) respeta saltos de línea. */
   format?: 'text' | 'html'
+  /** true = `body` ya es un documento HTML completo (layout incluido): el iframe
+   *  lo usa tal cual, sin envolverlo en el wrapper de 600px. */
+  fullDocument?: boolean
 }
 
 /** Documento HTML aislado para el iframe del preview. El cuerpo del email se
@@ -27,7 +30,7 @@ function srcDocFor(html: string): string {
 <body><div class="wrap">${html}</div></body></html>`
 }
 
-export function EmailPreview({ subject, body, fromName = 'Theos Place', previewName = 'María', format = 'text' }: Props) {
+export function EmailPreview({ subject, body, fromName = 'Theos Place', previewName = 'María', format = 'text', fullDocument = false }: Props) {
   const hydratedBody = body.replace(/\{nombre\}/g, previewName)
   const hydratedSubject = subject.replace(/\{nombre\}/g, previewName)
   const [frameH, setFrameH] = useState(420)
@@ -70,7 +73,7 @@ export function EmailPreview({ subject, body, fromName = 'Theos Place', previewN
         // romper la app, y se ve a ancho real. sandbox sin scripts (seguro).
         <iframe
           title="Vista previa del correo"
-          srcDoc={srcDocFor(hydratedBody)}
+          srcDoc={fullDocument ? hydratedBody : srcDocFor(hydratedBody)}
           onLoad={onFrameLoad}
           sandbox="allow-same-origin"
           className="w-full border-0 bg-white block"

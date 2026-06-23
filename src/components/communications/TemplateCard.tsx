@@ -76,8 +76,7 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
               Usar
             </button>
           )}
-          {/* Las plantillas del sistema NO se editan (solo se clonan). */}
-          {onEdit && !template.is_system && (
+          {onEdit && (
             <button type="button" onClick={() => onEdit(template)} title="Editar" aria-label="Editar" className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
               <Edit size={13} />
             </button>
