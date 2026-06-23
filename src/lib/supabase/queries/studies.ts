@@ -196,7 +196,9 @@ async function resolveGroupFilters(
 
   let searchOr: string | null = null
   if (f.search && f.search.trim()) {
-    const like = `%${f.search.trim()}%`
+    // Sanitizar metacaracteres de PostgREST (.,()%*\) antes de interpolar en .or()
+    // — mismo criterio que finance.ts y servers.ts (evita filter injection).
+    const like = `%${f.search.trim().replace(/[%,().*\\]/g, '')}%`
     const { data: members } = await supabase
       .from('members').select('id')
       .or(`first_name.ilike.${like},last_name.ilike.${like}`)

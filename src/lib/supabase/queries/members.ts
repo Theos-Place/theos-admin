@@ -2,6 +2,7 @@ import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
 import type { FilterCondition } from '@/types/filters'
 import { getInitials } from '@/lib/format'
+import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
 import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
@@ -742,8 +743,8 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
 
   // is_server: inner join a volunteers activos (evita listas de ids enormes en la URL).
   const volunteersEmbed = is_server
-    ? `volunteers!inner(status, start_date, service_positions(title, area:areas!service_positions_area_id_fkey(name, parent:areas!parent_id(name))))`
-    : `volunteers(status, start_date, service_positions(title, area:areas!service_positions_area_id_fkey(name, parent:areas!parent_id(name))))`
+    ? `volunteers!inner(status, start_date, service_positions(title, area:areas!service_positions_area_id_fkey(id, name)))`
+    : `volunteers(status, start_date, service_positions(title, area:areas!service_positions_area_id_fkey(id, name)))`
 
   let query = supabase
     .from('members')
@@ -781,6 +782,10 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
 
   if (error) throw error
 
+  // Área padre del comité de servicio: resuelta vía mapa (el embed parent del
+  // self-FK no es fiable en PostgREST).
+  const areaMap = await getAreaNameMap(supabase)
+
   // ─── Aplanar las relaciones a un shape simple ───
   // Supabase devuelve arrays para todas las relaciones. Las agrupamos / pickeamos acá.
   const enriched: DbMemberEnriched[] = (data ?? []).map((row: Record<string, unknown>) => {
@@ -794,7 +799,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       start_date: string | null
       service_positions: {
         title: string
-        area: { name: string; parent: { name: string } | null } | null
+        area: { id: string; name: string } | null
       } | null
     }> | null) ?? []
     const enrollments = (row.study_enrollments as Array<{
@@ -843,9 +848,9 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
         ? {
             position: activeVolunteer.service_positions.title,
             committee: activeVolunteer.service_positions.area?.name ?? '',
-            area: activeVolunteer.service_positions.area?.parent?.name
-              ?? activeVolunteer.service_positions.area?.name
-              ?? '',
+            area: parentAreaName(areaMap, activeVolunteer.service_positions.area?.id)
+              || activeVolunteer.service_positions.area?.name
+              || '',
             from: activeVolunteer.start_date,
           }
         : null,
@@ -980,7 +985,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         end_date,
         service_positions(
           title,
-          area:areas!service_positions_area_id_fkey(name, parent:areas!parent_id(name))
+          area:areas!service_positions_area_id_fkey(id, name)
         )
       ),
       study_enrollments(
@@ -1123,7 +1128,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     end_date: string | null
     service_positions: {
       title: string
-      area: { name: string; parent: { name: string } | null } | null
+      area: { id: string; name: string } | null
     } | null
   }>
   type PlanEmbed = { code: string | null; name: string | null; duration_weeks: number | null } | null
@@ -1185,14 +1190,16 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     }
   })
 
+  // Área padre del comité: resuelta vía mapa (el embed parent no es fiable).
+  const areaMap = await getAreaNameMap(supabase)
   const service_history: DbService[] = volunteers
     .filter(v => v.service_positions)
     .map(v => ({
       position: v.service_positions!.title,
       committee: v.service_positions!.area?.name ?? '',
-      area: v.service_positions!.area?.parent?.name
-        ?? v.service_positions!.area?.name
-        ?? '',
+      area: parentAreaName(areaMap, v.service_positions!.area?.id)
+        || v.service_positions!.area?.name
+        || '',
       from: v.start_date,
       to: v.end_date,
       status: v.status,
@@ -1320,9 +1327,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       ? {
           position: activeVolunteer.service_positions.title,
           committee: activeVolunteer.service_positions.area?.name ?? '',
-          area: activeVolunteer.service_positions.area?.parent?.name
-            ?? activeVolunteer.service_positions.area?.name
-            ?? '',
+          area: parentAreaName(areaMap, activeVolunteer.service_positions.area?.id)
+            || activeVolunteer.service_positions.area?.name
+            || '',
           from: activeVolunteer.start_date,
         }
       : null,

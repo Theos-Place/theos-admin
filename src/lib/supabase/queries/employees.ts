@@ -1,4 +1,5 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
 import type { ContractType, VacationRecordType, VacationRecordStatus, DocumentType } from '@/types/employee'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -69,7 +70,7 @@ export async function getEmployees(): Promise<DbEmployee[]> {
       id, member_id, position_id, contract_type, start_date, end_date, salary, status,
       vacation_days_total, vacation_days_used, notes,
       member:members(first_name, last_name, email),
-      position:paid_positions(name, committee:areas!paid_positions_committee_id_fkey(name, parent:areas!parent_id(name))),
+      position:paid_positions(name, committee:areas!paid_positions_committee_id_fkey(id, name)),
       salary_changes(change_date, previous_salary, new_salary, reason, approved_by),
       position_records(position_name, start_date, end_date, contract_type),
       vacation_records(id, type, start_date, end_date, days, status, notes),
@@ -77,6 +78,12 @@ export async function getEmployees(): Promise<DbEmployee[]> {
     `)
     .order('start_date', { ascending: false })
   if (error) throw error
+  // Resolver el área padre del comité con el mapa (el embed parent no es fiable).
+  const areaMap = await getAreaNameMap(supabase)
+  for (const row of (data ?? []) as Array<{ position?: { committee?: { id: string; name: string; parent?: { name: string } | null } | null } | null }>) {
+    const committee = row.position?.committee
+    if (committee) committee.parent = { name: parentAreaName(areaMap, committee.id) }
+  }
   return (data ?? []) as DbEmployee[]
 }
 
@@ -86,10 +93,14 @@ export async function getPaidPositions(): Promise<DbPaidPosition[]> {
     .from('paid_positions')
     .select(`
       id, name, committee_id, description, contract_type, salary_min, salary_max, is_active, created_at,
-      committee:areas!paid_positions_committee_id_fkey(name, parent:areas!parent_id(name))
+      committee:areas!paid_positions_committee_id_fkey(id, name)
     `)
     .order('name', { ascending: true })
   if (error) throw error
+  const areaMap = await getAreaNameMap(supabase)
+  for (const row of (data ?? []) as Array<{ committee?: { id: string; name: string; parent?: { name: string } | null } | null }>) {
+    if (row.committee) row.committee.parent = { name: parentAreaName(areaMap, row.committee.id) }
+  }
   return (data ?? []) as DbPaidPosition[]
 }
 

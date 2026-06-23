@@ -398,9 +398,12 @@ export async function importDonations(
   // 1. Resolver cédulas → member_id en un solo query.
   const cedulas = Array.from(new Set(rows.map((r) => r.cedula).filter(Boolean))) as string[]
   const cedulaToId = new Map<string, string>()
-  if (cedulas.length > 0) {
+  // Un import puede traer miles de cédulas; trocear el .in() en lotes evita una
+  // URL gigante (414/500), igual que en communications.ts y studies.ts.
+  for (let i = 0; i < cedulas.length; i += 300) {
+    const slice = cedulas.slice(i, i + 300)
     const { data: members, error: mErr } = await supabase
-      .from('members').select('id, cedula').in('cedula', cedulas)
+      .from('members').select('id, cedula').in('cedula', slice)
     if (mErr) throw mErr
     for (const m of (members ?? []) as Array<{ id: string; cedula: string }>) {
       cedulaToId.set(m.cedula, m.id)
