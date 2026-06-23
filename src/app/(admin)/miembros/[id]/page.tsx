@@ -6,26 +6,32 @@ import { notFound } from 'next/navigation'
 import { useMember } from '@/hooks/useMember'
 import { useStudies } from '@/hooks/useStudies'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { useAuth } from '@/hooks/useAuth'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { MemberHeader } from './_components/MemberHeader'
 import { MemberSummaryTab } from './_components/MemberSummaryTab'
 import { MemberDigitalPass } from './_components/MemberDigitalPass'
 import { MemberPersonalTab } from './_components/MemberPersonalTab'
 import { MemberEmailStatus } from './_components/MemberEmailStatus'
+import { MemberSpiritualTab } from './_components/MemberSpiritualTab'
+import { MemberAdminTab } from './_components/MemberAdminTab'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow } from './_components/MemberParticipationTab'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const TABS = [
+type TabDef = { id: string; label: string }
+const BASE_TABS: TabDef[] = [
   { id: 'resumen', label: 'Resumen' },
   { id: 'personal', label: 'Info Personal' },
   { id: 'participacion', label: 'Participación' },
   { id: 'familia', label: 'Familia' },
-  { id: 'pase', label: 'Pase Digital' },
 ]
+const PASE_TAB: TabDef = { id: 'pase', label: 'Pase Digital' }
 
 const LOAD_MORE = 10
 
@@ -57,9 +63,16 @@ export default function MiembroDetailPage() {
 
   const { member, loading, notFound: isNotFound, error, refetch } = useMember(id || undefined)
   const { studyTypes } = useStudyPlans()
+  const { hasRole, member: viewer } = useAuth()
+
+  const isStudyAdmin = hasRole(...STUDY_ADMIN_ROLES)
+  const isOwnProfile = !!viewer?.id && viewer.id === id
+  const canDeactivate = hasRole('admin', 'comunicaciones')
 
   const [activeTab, setActiveTab] = useState('resumen')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showDeactivate, setShowDeactivate] = useState(false)
+  const [deactivating, setDeactivating] = useState(false)
   const [revealDonations, setRevealDonations] = useState(false)
   const [showAddStudy, setShowAddStudy] = useState(false)
   const [showMerge, setShowMerge] = useState(false)
@@ -73,6 +86,25 @@ export default function MiembroDetailPage() {
 
   function changeTab(tab: string) {
     setActiveTab(tab)
+  }
+
+  async function handleDeactivate() {
+    if (deactivating) return
+    setDeactivating(true)
+    try {
+      const res = await fetch(`/api/members/${id}/deactivate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'baja_manual' }),
+      })
+      if (!res.ok) throw new Error()
+      setShowDeactivate(false)
+      refetch()
+    } catch {
+      // se mantiene el modal abierto; el botón se rehabilita
+    } finally {
+      setDeactivating(false)
+    }
   }
 
   function toggleSection(key: keyof typeof openSections) {
@@ -169,6 +201,16 @@ export default function MiembroDetailPage() {
     )
   }
 
+  // Tabs visibles según rol y propiedad del perfil:
+  //  · Espiritual → el propio miembro o roles administrativos.
+  //  · Administrativo → SOLO roles administrativos (el miembro nunca lo ve).
+  const visibleTabs: TabDef[] = [
+    ...BASE_TABS,
+    ...(isOwnProfile || isStudyAdmin ? [{ id: 'espiritual', label: 'Espiritual' }] : []),
+    ...(isStudyAdmin ? [{ id: 'administrativo', label: 'Administrativo' }] : []),
+    PASE_TAB,
+  ]
+
   return (
     <div className="space-y-4">
       {/* ── Header Card ── */}
@@ -179,7 +221,8 @@ export default function MiembroDetailPage() {
         menuOpen={menuOpen}
         onMenuToggle={() => setMenuOpen(o => !o)}
         onMenuClose={() => setMenuOpen(false)}
-        onDeactivate={() => setMenuOpen(false)}
+        canDeactivate={canDeactivate}
+        onDeactivate={() => { setMenuOpen(false); setShowDeactivate(true) }}
         onMerge={() => { setMenuOpen(false); setShowMerge(true) }}
       />
 
@@ -188,7 +231,7 @@ export default function MiembroDetailPage() {
         className="sticky top-0 z-10 rounded-2xl bg-surface-card overflow-x-auto shadow-[var(--shadow-md)]"
       >
         <div className="flex min-w-max">
-          {TABS.map(tab => (
+          {visibleTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => changeTab(tab.id)}
@@ -277,12 +320,34 @@ export default function MiembroDetailPage() {
         <MemberFamilyTab member={member} />
       )}
 
+      {/* TAB: Espiritual (propio miembro o roles administrativos) */}
+      {activeTab === 'espiritual' && (isOwnProfile || isStudyAdmin) && (
+        <MemberSpiritualTab memberId={member.id} />
+      )}
+
+      {/* TAB: Administrativo (solo roles administrativos) */}
+      {activeTab === 'administrativo' && isStudyAdmin && (
+        <MemberAdminTab memberId={member.id} />
+      )}
+
       {/* TAB: Pase Digital */}
       {activeTab === 'pase' && (
         <div className="space-y-4">
           <MemberDigitalPass member={member} />
         </div>
       )}
+
+      {/* Confirmación de baja del miembro (admin / comunicaciones) */}
+      <DeleteConfirmModal
+        open={showDeactivate}
+        title="Dar de baja al miembro"
+        description={`Se desactivará el perfil de ${member.first_name} ${member.last_name}: quedará inaccesible y la persona será removida de sus roles activos. El historial se conserva. Escribí «desactivar» para confirmar.`}
+        keyword="desactivar"
+        confirmLabel="Dar de baja"
+        loading={deactivating}
+        onConfirm={handleDeactivate}
+        onCancel={() => setShowDeactivate(false)}
+      />
     </div>
   )
 }

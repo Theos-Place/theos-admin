@@ -171,10 +171,3 @@ export type StudyRequestWriteInput = {
   proposed_schedule?: string | null
   reason: string
 }
-
-export type NotificationRecipient = {
-  id: string
-  member_id: string
-  member_name: string
-  created_at: string
-}

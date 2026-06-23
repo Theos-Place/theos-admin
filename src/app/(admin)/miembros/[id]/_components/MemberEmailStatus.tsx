@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { Mail, AlertTriangle, MailCheck, MailX } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { formatDate } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 type Status = {
   subscribed: boolean
@@ -35,7 +37,9 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
       .finally(() => setLoading(false))
   }, [memberId])
 
-  useEffect(() => { if (canManage) load() }, [canManage, load])
+  // Carga siempre: los gestores y el PROPIO miembro pueden leer el estado.
+  // (un tercero sin permiso recibe 403 y el componente no se pinta).
+  useEffect(() => { load() }, [load])
 
   async function act(action: 'subscribe' | 'unsubscribe' | 'clear_flags') {
     if (busy) return
@@ -56,7 +60,9 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
     }
   }
 
-  if (!loaded || !canManage) return null
+  if (!loaded) return null
+  // Sin estado tras cargar (p. ej. 403 de un tercero sin permiso): no se pinta.
+  if (!loading && !status) return null
 
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
@@ -69,8 +75,32 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
 
       {loading ? (
         <div className="h-16 rounded-xl bg-surface-low animate-pulse" />
-      ) : error && !status ? (
-        <p className="text-sm text-coral font-body">{error}</p>
+      ) : status && !canManage ? (
+        /* Vista del PROPIO miembro: solo lectura + nota (edita en Configuración). */
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-medium font-body',
+              status.subscribed ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/70',
+            )}>
+              <span className={cn('h-1.5 w-1.5 rounded-full', status.subscribed ? 'bg-teal-deep' : 'bg-navy-light/40')} />
+              {status.subscribed ? 'Suscrito' : 'Dado de baja'}
+            </span>
+            {!status.subscribed && status.opted_out_at && (
+              <span className="text-[12px] text-navy-light/60 font-body">desde {formatDate(status.opted_out_at)}</span>
+            )}
+            {status.bounced && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[11px] font-medium font-body"><AlertTriangle size={11} /> Correo rebotado</span>
+            )}
+            {status.complained && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral px-2 py-0.5 text-[11px] font-medium font-body"><AlertTriangle size={11} /> Marcó como spam</span>
+            )}
+          </div>
+          <p className="text-[12px] text-navy-light/70 font-body">
+            Para cambiar tu suscripción a correos, andá a{' '}
+            <Link href="/configuracion" className="text-coral hover:underline">Configuración → Notificaciones</Link>.
+          </p>
+        </div>
       ) : status ? (
         <div className="space-y-4">
           {/* Estado de suscripción */}

@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Lock, ChevronDown, ChevronUp, HeartHandshake } from 'lucide-react'
+import { Lock, ChevronDown, ChevronUp } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
@@ -70,72 +69,6 @@ function SectionAccordion({
         )}
       </button>
       {open && <div className="bg-surface-card">{children}</div>}
-    </div>
-  )
-}
-
-const REC_LABEL: Record<string, string> = {
-  oracion: 'Oración',
-  servicio: 'Servicio',
-  dirigente: 'Dirigente',
-}
-const REC_BADGE: Record<string, string> = {
-  oracion: 'bg-navy/10 text-navy',
-  servicio: 'bg-teal-soft/30 text-teal-deep',
-  dirigente: 'bg-coral-soft/20 text-coral',
-}
-
-type Recommendation = {
-  id: string
-  recommended_for: 'oracion' | 'servicio' | 'dirigente'
-  justification: string | null
-  recommended_by_name: string | null
-  group_name: string | null
-  created_at: string
-}
-
-/** Recomendaciones de cierres de estudio. El endpoint exige roles de
- *  estudios/admin: para el rol miembro responde 403 y la sección no se pinta. */
-function RecommendationsSection({ memberId }: { memberId: string }) {
-  const [recs, setRecs] = useState<Recommendation[] | null>(null)
-
-  useEffect(() => {
-    let alive = true
-    fetch(`/api/members/${memberId}/recommendations`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && Array.isArray(d)) setRecs(d) })
-      .catch(() => {})
-    return () => { alive = false }
-  }, [memberId])
-
-  if (!recs || recs.length === 0) return null
-
-  return (
-    <div className="rounded-xl overflow-hidden border border-[var(--outline-variant)]">
-      <div className="flex items-center gap-2 px-4 py-3.5 bg-surface-card">
-        <HeartHandshake size={15} className="text-coral" strokeWidth={1.75} />
-        <span className="text-sm font-medium text-navy font-display font-extrabold">
-          Recomendaciones
-        </span>
-      </div>
-      <ul className="divide-y divide-[var(--outline-variant)] bg-surface-card">
-        {recs.map(r => (
-          <li key={r.id} className="px-4 py-3 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', REC_BADGE[r.recommended_for])}>
-                {REC_LABEL[r.recommended_for]}
-              </span>
-              <span className="text-[11px] text-navy-light/60 font-body">
-                {r.recommended_by_name ? `por ${r.recommended_by_name}` : 'recomendación del cierre'}
-                {r.group_name ? ` · ${r.group_name}` : ''} · {formatDate(r.created_at)}
-              </span>
-            </div>
-            {r.justification && (
-              <p className="text-[13px] text-navy-light/70 font-body">{r.justification}</p>
-            )}
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
@@ -217,9 +150,6 @@ export function MemberParticipationTab({
         <InviteToStudyButton memberId={memberId} />
         <StudyExceptionButton memberId={memberId} />
       </div>
-
-      {/* Recomendaciones de cierres — solo roles de estudios/admin */}
-      <RecommendationsSection memberId={memberId} />
 
       {/* Historial de estudios */}
       <SectionAccordion

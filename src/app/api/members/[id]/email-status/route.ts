@@ -19,11 +19,18 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRoles('comunicaciones', 'direccion')
+  // Lectura: gestores (comunicaciones/dirección/admin) o el PROPIO miembro
+  // (solo-lectura de su estado, lo muestra su perfil). Editar sigue siendo POST
+  // solo para gestores.
+  const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
+    const isManager = auth.ctx.roles.some(r => ['comunicaciones', 'direccion', 'admin'].includes(r))
+    if (!isManager && auth.ctx.memberId !== id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
     // Columnas nuevas (mig. 085) aún no están en los tipos generados de Supabase.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = createAdminClient() as any

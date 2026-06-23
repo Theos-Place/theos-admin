@@ -20,7 +20,6 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type {
   StudyRequest, StudyRequestWriteInput, StudyRequestStatus, StudyRequestType,
-  NotificationRecipient,
 } from '@/types/study'
 import type { InternalNotification, InternalNotificationType } from '@/types/notification'
 
@@ -283,39 +282,25 @@ export async function assignStudyRequest(
 
 // ── Destinatarios de notificaciones ─────────────────────────────────────────
 
-export async function getNotificationRecipients(): Promise<NotificationRecipient[]> {
+const STUDY_NOTIFY_ROLES = ['coordinador_estudios', 'coordinador_dirigentes', 'admin'] as const
+
+/** member_id de TODOS los miembros activos con rol activo de coordinación de
+ *  estudios/dirigentes o admin. Deduplicado: si tiene varios de esos roles,
+ *  aparece una sola vez. Es la audiencia automática de las notificaciones de
+ *  solicitudes de estudio (reemplaza la lista manual). */
+export async function getStudyNotificationRecipients(): Promise<string[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
-    .from('study_notification_recipients')
-    .select('id, member_id, created_at, member:members(first_name, last_name)')
-    .order('created_at')
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
+    .in('role', STUDY_NOTIFY_ROLES as unknown as string[])
+    .eq('is_active', true)
   if (error) throw error
-  return ((data ?? []) as Array<{
-    id: string; member_id: string; created_at: string
-    member: { first_name: string | null; last_name: string | null } | null
-  }>).map(r => ({
-    id: r.id,
-    member_id: r.member_id,
-    member_name: fullName(r.member),
-    created_at: r.created_at,
-  }))
-}
-
-export async function addNotificationRecipient(memberId: string): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase
-    .from('study_notification_recipients')
-    .upsert({ member_id: memberId }, { onConflict: 'member_id' })
-  if (error) throw error
-}
-
-export async function removeNotificationRecipient(memberId: string): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase
-    .from('study_notification_recipients')
-    .delete()
-    .eq('member_id', memberId)
-  if (error) throw error
+  const ids = new Set<string>()
+  for (const r of (data ?? []) as Array<{ member_id: string; member: { is_active: boolean } | null }>) {
+    if (r.member?.is_active) ids.add(r.member_id)
+  }
+  return Array.from(ids)
 }
 
 /** Miembros elegibles como destinatarios: con rol activo de coordinación/admin. */
@@ -347,24 +332,12 @@ const NOTIF_META: Record<StudyRequestType, { type: InternalNotificationType; tit
   study_interest: { type: 'study_interest_request', title: 'Nuevo interés en estudio' },
 }
 
-/** Crea una notificación por cada destinatario. Decisión 2026-06-11: las
- *  solicitudes notifican a TODOS los coordinadores de estudios activos, además
- *  de la lista configurable (study_notification_recipients). Best-effort. */
+/** Crea una notificación por cada destinatario. Audiencia automática: TODOS los
+ *  miembros con rol activo coordinador_estudios / coordinador_dirigentes / admin
+ *  (deduplicados). Best-effort. */
 export async function notifyRecipientsOfRequest(req: StudyRequest): Promise<void> {
   const supabase = createAdminClient()
-  const configured = await getNotificationRecipients()
-
-  const { data: coordRows, error: cErr } = await supabase
-    .from('member_roles')
-    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
-    .eq('role', 'coordinador_estudios')
-    .eq('is_active', true)
-  if (cErr) console.warn('notifyRecipientsOfRequest (coordinadores):', cErr.message)
-  const coordinators = ((coordRows ?? []) as Array<{
-    member_id: string; member: { is_active: boolean } | null
-  }>).filter(r => r.member?.is_active).map(r => r.member_id)
-
-  const memberIds = Array.from(new Set([...configured.map(r => r.member_id), ...coordinators]))
+  const memberIds = await getStudyNotificationRecipients()
   if (memberIds.length === 0) return
   const meta = NOTIF_META[req.request_type]
   const rows = memberIds.map(memberId => ({

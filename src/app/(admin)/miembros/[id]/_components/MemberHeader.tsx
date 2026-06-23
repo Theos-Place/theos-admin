@@ -79,6 +79,8 @@ type Props = {
   menuOpen: boolean
   onMenuToggle: () => void
   onMenuClose: () => void
+  /** Solo admin/comunicaciones pueden dar de baja al miembro. */
+  canDeactivate?: boolean
   onDeactivate: () => void
   onMerge: () => void
 }
@@ -90,6 +92,7 @@ export function MemberHeader({
   menuOpen,
   onMenuToggle,
   onMenuClose,
+  canDeactivate = false,
   onDeactivate,
   onMerge,
 }: Props) {
@@ -195,12 +198,14 @@ export function MemberHeader({
               <div
                 className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-surface-card py-1 z-20 shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
               >
-                <button
-                  onClick={onDeactivate}
-                  className="w-full px-4 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low transition-colors font-body"
-                >
-                  Desactivar perfil
-                </button>
+                {canDeactivate && (
+                  <button
+                    onClick={onDeactivate}
+                    className="w-full px-4 py-2 text-left text-sm text-coral hover:bg-coral/5 transition-colors font-body"
+                  >
+                    Dar de baja al miembro
+                  </button>
+                )}
                 <button
                   onClick={onMerge}
                   className="w-full px-4 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low transition-colors font-body"
