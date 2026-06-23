@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail } from 'lucide-react'
-import { MOCK_RECOVERY_DELAY_MS } from '@/lib/constants'
+import { createClient } from '@/lib/supabase/client'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -17,6 +17,7 @@ export default function RecuperarPage() {
   const [emailErr, setEmailErr] = useState('')
   const [loading, setLoading]   = useState(false)
   const [sent, setSent]         = useState(false)
+  const [error, setError]       = useState('')
 
   function validate() {
     if (!email.trim()) { setEmailErr('Ingresá tu correo electrónico'); return false }
@@ -29,9 +30,22 @@ export default function RecuperarPage() {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
-    await new Promise(r => setTimeout(r, MOCK_RECOVERY_DELAY_MS))
-    setLoading(false)
-    setSent(true)
+    setError('')
+    try {
+      const supabase = createClient()
+      // El link del correo redirige a la página donde se pone la nueva contraseña.
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/recuperar/nueva-contrasena`,
+      })
+      // Por seguridad NO se revela si el correo existe: ante un fallo de red sí
+      // mostramos error genérico, pero el caso normal es confirmación neutral.
+      if (err && err.status && err.status >= 500) throw err
+      setSent(true)
+    } catch {
+      setError('No pudimos enviar el correo. Revisá tu conexión e intentá de nuevo.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (sent) {
@@ -128,6 +142,13 @@ export default function RecuperarPage() {
             </p>
           )}
         </div>
+
+        {error && (
+          <p className="flex items-center gap-1.5 text-[12px] text-coral font-body">
+            <AlertCircle size={12} className="shrink-0" />
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
