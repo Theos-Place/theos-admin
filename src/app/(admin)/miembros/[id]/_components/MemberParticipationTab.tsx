@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { Lock, ChevronDown, ChevronUp } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
-import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
-import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
@@ -143,12 +141,11 @@ export function MemberParticipationTab({
   const { studyTypes } = useStudyPlans()
   return (
     <div className="space-y-3">
-      {/* Solicitudes de estudios y finanzas — disponibles para cualquier rol */}
+      {/* Solicitudes de estudios y finanzas — disponibles para cualquier rol.
+          (Invitar a estudio y excepción de matrícula viven en el tab Administrativo.) */}
       <div className="flex gap-2 flex-wrap">
         <StudyRequestActions memberId={memberId} />
         <FinanceRequestActions memberId={memberId} />
-        <InviteToStudyButton memberId={memberId} />
-        <StudyExceptionButton memberId={memberId} />
       </div>
 
       {/* Historial de estudios */}

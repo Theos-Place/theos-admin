@@ -111,20 +111,31 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
 
   return (
     <>
+      {/* Beca y devolución deshabilitadas por ahora (próximamente). */}
       <div className="flex gap-2 flex-wrap">
         <button
+          type="button"
+          disabled
           onClick={() => open('scholarship')}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy font-body hover:bg-navy/10 transition-colors"
+          title="Próximamente"
+          aria-label="Solicitar beca (próximamente)"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy-light/50 font-body opacity-50 cursor-not-allowed"
         >
           <GraduationCap size={13} />
           Solicitar beca
+          <span className="text-[10px]">· Próximamente</span>
         </button>
         <button
+          type="button"
+          disabled
           onClick={() => open('refund')}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy font-body hover:bg-navy/10 transition-colors"
+          title="Próximamente"
+          aria-label="Solicitar devolución (próximamente)"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy-light/50 font-body opacity-50 cursor-not-allowed"
         >
           <RotateCcw size={13} />
           Solicitar devolución
+          <span className="text-[10px]">· Próximamente</span>
         </button>
       </div>
 

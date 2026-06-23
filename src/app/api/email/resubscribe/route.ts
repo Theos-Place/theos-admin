@@ -15,9 +15,7 @@ export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
   if (!token) return emailPublicPage('Link inválido', 'El enlace no es válido.')
   try {
-    // Columnas nuevas (mig. 085) aún no están en los tipos generados de Supabase.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const { data: rows, error: selErr } = await supabase
       .from('members')
       .select('id, email_bounced, email_complained')

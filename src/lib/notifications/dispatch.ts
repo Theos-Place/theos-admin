@@ -31,9 +31,7 @@ export async function filterByNotifPref(
   const muted = new Set<string>()
   for (let i = 0; i < memberIds.length; i += 300) {
     const slice = memberIds.slice(i, i + 300)
-    // member_notification_prefs (mig. 089) aún no está en los tipos generados.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('member_notification_prefs')
       .select(`member_id, ${category}`)
       .in('member_id', slice)

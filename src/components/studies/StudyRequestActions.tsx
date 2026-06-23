@@ -165,7 +165,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
         </button>
         <button
           onClick={() => open('study_interest')}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white font-body hover:bg-coral-deep transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy font-body hover:bg-navy/10 transition-colors"
         >
           <BookOpen size={13} />
           Me interesa un estudio

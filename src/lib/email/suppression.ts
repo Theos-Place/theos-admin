@@ -9,9 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 type Kind = 'bounced' | 'complained'
 
 async function markEmail(email: string, kind: Kind): Promise<void> {
-  // Columnas nuevas (mig. 085) aún no están en los tipos generados de Supabase.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createAdminClient() as any
+  const supabase = createAdminClient()
   const addr = email.trim().toLowerCase()
   if (!addr) return
   const now = new Date().toISOString()
@@ -38,8 +36,7 @@ export function markEmailBounced(email: string): Promise<void> {
 /** Queja de spam: marca y, además, da de baja del newsletter. */
 export async function markEmailComplained(email: string): Promise<void> {
   await markEmail(email, 'complained')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createAdminClient() as any
+  const supabase = createAdminClient()
   await supabase.from('members')
     .update({ newsletter_opt_out: true, newsletter_opt_out_at: new Date().toISOString() })
     .ilike('email', email.trim().toLowerCase())

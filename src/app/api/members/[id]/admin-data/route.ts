@@ -19,9 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
   if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
   try {
-    // Tablas nuevas (mig. 091) aún no están en los tipos generados de Supabase.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('member_admin_data')
       .select('approved_to_lead_studies, approved_to_lead_studies_at, approver:members!member_admin_data_approved_to_lead_studies_by_fkey(first_name, last_name)')
@@ -61,9 +59,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (typeof body.approved_to_lead_studies !== 'boolean') {
       return NextResponse.json({ error: 'Valor inválido' }, { status: 400 })
     }
-    // Tablas nuevas (mig. 091) aún no están en los tipos generados de Supabase.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const { error } = await supabase.from('member_admin_data').upsert({
       member_id: id,
       approved_to_lead_studies: body.approved_to_lead_studies,

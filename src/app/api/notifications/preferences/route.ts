@@ -30,9 +30,7 @@ export async function GET() {
   const memberId = auth.ctx.memberId
   if (!memberId) return NextResponse.json({ error: 'Sin perfil de miembro' }, { status: 404 })
   try {
-    // Columnas nuevas (mig. 085/089) aún no están en los tipos generados.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const [{ data: prefsRow }, { data: member }] = await Promise.all([
       supabase.from('member_notification_prefs')
         .select('recordatorios_eventos, grupo_estudio, mensajes_sistema, canal_preferido')
@@ -41,7 +39,9 @@ export async function GET() {
         .select('newsletter_opt_out, email_bounced, email_complained')
         .eq('id', memberId).maybeSingle(),
     ])
-    const prefs: Prefs = prefsRow ? { ...DEFAULTS, ...prefsRow } : DEFAULTS
+    const prefs: Prefs = prefsRow
+      ? { ...DEFAULTS, ...prefsRow, canal_preferido: (prefsRow.canal_preferido as Prefs['canal_preferido']) ?? DEFAULTS.canal_preferido }
+      : DEFAULTS
     return NextResponse.json({
       ...prefs,
       email_subscribed: !member?.newsletter_opt_out,
@@ -61,11 +61,14 @@ export async function PUT(req: NextRequest) {
   if (!memberId) return NextResponse.json({ error: 'Sin perfil de miembro' }, { status: 404 })
   try {
     const body = (await req.json().catch(() => ({}))) as Partial<Prefs> & { email_subscribed?: boolean }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
 
     // 1) Toggles internos + canal → member_notification_prefs (upsert).
-    const patch: Record<string, unknown> = { member_id: memberId, updated_at: new Date().toISOString() }
+    const patch: {
+      member_id: string; updated_at: string
+      recordatorios_eventos?: boolean; grupo_estudio?: boolean; mensajes_sistema?: boolean
+      canal_preferido?: 'email' | 'whatsapp' | 'ambos'
+    } = { member_id: memberId, updated_at: new Date().toISOString() }
     if (typeof body.recordatorios_eventos === 'boolean') patch.recordatorios_eventos = body.recordatorios_eventos
     if (typeof body.grupo_estudio === 'boolean') patch.grupo_estudio = body.grupo_estudio
     if (typeof body.mensajes_sistema === 'boolean') patch.mensajes_sistema = body.mensajes_sistema

@@ -64,7 +64,10 @@ export async function getAlerts(): Promise<ActiveAlert[]> {
   const results = await Promise.all(
     ALERT_DEFS.map(async def => {
       try {
-        let q: any = supabase.from(def.table).select('*', { count: 'exact', head: true })
+        // def.table es una unión de nombres de tabla; fijar un literal evita que
+        // TS expanda toda la unión (instanciación excesiva) — el valor real es
+        // el de def.table en runtime. q queda 'any' a propósito (acceso dinámico).
+        let q: any = supabase.from(def.table as 'members').select('*', { count: 'exact', head: true })
         if (def.filter) q = q.eq(def.filter.column, def.filter.value)
         if (def.refine) q = def.refine(q)
         const { count, error } = await q

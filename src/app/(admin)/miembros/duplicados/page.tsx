@@ -371,7 +371,19 @@ export default function DuplicadosPage() {
       )}
 
       {merging && (
-        <MergeModal pair={merging} onClose={() => setMerging(null)} onMerged={() => { setMerging(null); load() }} />
+        <MergeModal
+          pair={merging}
+          onClose={() => setMerging(null)}
+          onMerged={() => {
+            const mergedKey = pairKey(merging)
+            setMerging(null)
+            // El par fusionado ya no es candidato (el secundario quedó inactivo):
+            // se quita de inmediato y luego se refresca contra la BD.
+            setPairs(prev => prev.filter(x => pairKey(x) !== mergedKey))
+            toast('Miembros fusionados correctamente', 'success')
+            load()
+          }}
+        />
       )}
     </div>
   )

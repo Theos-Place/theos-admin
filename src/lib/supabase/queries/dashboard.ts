@@ -11,8 +11,10 @@ async function count(
   table: TableName,
   build: (q: any) => any = (q) => q,
 ): Promise<number> {
+  // table es una unión de nombres de tabla; fijar un literal evita que TS expanda
+  // toda la unión (instanciación excesiva). El valor real es el de `table` en runtime.
   const { count: c, error } = await build(
-    supabase.from(table).select('*', { count: 'exact', head: true }),
+    supabase.from(table as 'members').select('*', { count: 'exact', head: true }),
   )
   if (error) throw error
   return c ?? 0

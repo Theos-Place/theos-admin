@@ -1614,6 +1614,59 @@ export type Database = {
           },
         ]
       }
+      member_admin_data: {
+        Row: {
+          approved_to_lead_studies: boolean
+          approved_to_lead_studies_at: string | null
+          approved_to_lead_studies_by: string | null
+          member_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_to_lead_studies?: boolean
+          approved_to_lead_studies_at?: string | null
+          approved_to_lead_studies_by?: string | null
+          member_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_to_lead_studies?: boolean
+          approved_to_lead_studies_at?: string | null
+          approved_to_lead_studies_by?: string | null
+          member_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_admin_data_approved_to_lead_studies_by_fkey"
+            columns: ["approved_to_lead_studies_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_admin_data_approved_to_lead_studies_by_fkey"
+            columns: ["approved_to_lead_studies_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_admin_data_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_admin_data_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_lists: {
         Row: {
           created_at: string
@@ -1672,6 +1725,48 @@ export type Database = {
             foreignKeyName: "member_lists_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_notification_prefs: {
+        Row: {
+          canal_preferido: string
+          grupo_estudio: boolean
+          member_id: string
+          mensajes_sistema: boolean
+          recordatorios_eventos: boolean
+          updated_at: string
+        }
+        Insert: {
+          canal_preferido?: string
+          grupo_estudio?: boolean
+          member_id: string
+          mensajes_sistema?: boolean
+          recordatorios_eventos?: boolean
+          updated_at?: string
+        }
+        Update: {
+          canal_preferido?: string
+          grupo_estudio?: boolean
+          member_id?: string
+          mensajes_sistema?: boolean
+          recordatorios_eventos?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_notification_prefs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_notification_prefs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
             referencedRelation: "vw_asistentes"
             referencedColumns: ["id"]
           },
@@ -1808,6 +1903,45 @@ export type Database = {
           },
         ]
       }
+      member_spiritual_data: {
+        Row: {
+          baptism_date: string | null
+          baptism_place: string | null
+          member_id: string
+          spiritual_gifts: string | null
+          updated_at: string
+        }
+        Insert: {
+          baptism_date?: string | null
+          baptism_place?: string | null
+          member_id: string
+          spiritual_gifts?: string | null
+          updated_at?: string
+        }
+        Update: {
+          baptism_date?: string | null
+          baptism_place?: string | null
+          member_id?: string
+          spiritual_gifts?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_spiritual_data_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_spiritual_data_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           address: string | null
@@ -1823,6 +1957,10 @@ export type Database = {
           deactivation_reason: string | null
           district: string | null
           email: string | null
+          email_bounced: boolean | null
+          email_bounced_at: string | null
+          email_complained: boolean | null
+          email_complained_at: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           external_id: string | null
@@ -1835,12 +1973,16 @@ export type Database = {
           last_name: string
           marital_status: string | null
           medications: string | null
+          newsletter_opt_out: boolean | null
+          newsletter_opt_out_at: string | null
           occupation: string | null
           phone: string | null
           photo_url: string | null
           province: string | null
+          search_text: string | null
           sede_id: string | null
           smart_link_token: string | null
+          unsubscribe_token: string
           updated_at: string | null
           wallet_pass_id: string | null
           workplace: string | null
@@ -1859,6 +2001,10 @@ export type Database = {
           deactivation_reason?: string | null
           district?: string | null
           email?: string | null
+          email_bounced?: boolean | null
+          email_bounced_at?: string | null
+          email_complained?: boolean | null
+          email_complained_at?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           external_id?: string | null
@@ -1871,12 +2017,16 @@ export type Database = {
           last_name: string
           marital_status?: string | null
           medications?: string | null
+          newsletter_opt_out?: boolean | null
+          newsletter_opt_out_at?: string | null
           occupation?: string | null
           phone?: string | null
           photo_url?: string | null
           province?: string | null
+          search_text?: string | null
           sede_id?: string | null
           smart_link_token?: string | null
+          unsubscribe_token?: string
           updated_at?: string | null
           wallet_pass_id?: string | null
           workplace?: string | null
@@ -1895,6 +2045,10 @@ export type Database = {
           deactivation_reason?: string | null
           district?: string | null
           email?: string | null
+          email_bounced?: boolean | null
+          email_bounced_at?: string | null
+          email_complained?: boolean | null
+          email_complained_at?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           external_id?: string | null
@@ -1907,12 +2061,16 @@ export type Database = {
           last_name?: string
           marital_status?: string | null
           medications?: string | null
+          newsletter_opt_out?: boolean | null
+          newsletter_opt_out_at?: string | null
           occupation?: string | null
           phone?: string | null
           photo_url?: string | null
           province?: string | null
+          search_text?: string | null
           sede_id?: string | null
           smart_link_token?: string | null
+          unsubscribe_token?: string
           updated_at?: string | null
           wallet_pass_id?: string | null
           workplace?: string | null
@@ -1930,16 +2088,19 @@ export type Database = {
       message_broadcasts: {
         Row: {
           body: string
+          body_format: string
           channel: string
           completed_at: string | null
           created_at: string | null
           created_by: string | null
           failed_count: number | null
           id: string
+          kind: string
           recipient_filter: Json | null
           scheduled_at: string | null
           segment_label: string | null
           sent_count: number | null
+          skipped_count: number | null
           smtp_config_id: string | null
           started_at: string | null
           status: string | null
@@ -1951,16 +2112,19 @@ export type Database = {
         }
         Insert: {
           body: string
+          body_format?: string
           channel: string
           completed_at?: string | null
           created_at?: string | null
           created_by?: string | null
           failed_count?: number | null
           id?: string
+          kind?: string
           recipient_filter?: Json | null
           scheduled_at?: string | null
           segment_label?: string | null
           sent_count?: number | null
+          skipped_count?: number | null
           smtp_config_id?: string | null
           started_at?: string | null
           status?: string | null
@@ -1972,16 +2136,19 @@ export type Database = {
         }
         Update: {
           body?: string
+          body_format?: string
           channel?: string
           completed_at?: string | null
           created_at?: string | null
           created_by?: string | null
           failed_count?: number | null
           id?: string
+          kind?: string
           recipient_filter?: Json | null
           scheduled_at?: string | null
           segment_label?: string | null
           sent_count?: number | null
+          skipped_count?: number | null
           smtp_config_id?: string | null
           started_at?: string | null
           status?: string | null
@@ -2091,6 +2258,7 @@ export type Database = {
       message_templates: {
         Row: {
           body: string
+          body_format: string
           category: string | null
           channel: string
           created_at: string | null
@@ -2104,6 +2272,7 @@ export type Database = {
         }
         Insert: {
           body: string
+          body_format?: string
           category?: string | null
           channel: string
           created_at?: string | null
@@ -2117,6 +2286,7 @@ export type Database = {
         }
         Update: {
           body?: string
+          body_format?: string
           category?: string | null
           channel?: string
           created_at?: string | null
@@ -3015,6 +3185,7 @@ export type Database = {
         Row: {
           availability_status: string | null
           created_at: string | null
+          formation_study_codes: string[]
           id: string
           is_active: boolean | null
           member_id: string
@@ -3025,6 +3196,7 @@ export type Database = {
         Insert: {
           availability_status?: string | null
           created_at?: string | null
+          formation_study_codes?: string[]
           id?: string
           is_active?: boolean | null
           member_id: string
@@ -3035,6 +3207,7 @@ export type Database = {
         Update: {
           availability_status?: string | null
           created_at?: string | null
+          formation_study_codes?: string[]
           id?: string
           is_active?: boolean | null
           member_id?: string
@@ -3052,39 +3225,6 @@ export type Database = {
           },
           {
             foreignKeyName: "study_leaders_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: true
-            referencedRelation: "vw_asistentes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      study_notification_recipients: {
-        Row: {
-          created_at: string | null
-          id: string
-          member_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          member_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          member_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "study_notification_recipients_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: true
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "study_notification_recipients_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: true
             referencedRelation: "vw_asistentes"
@@ -3346,6 +3486,78 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_requirement_exceptions: {
+        Row: {
+          created_at: string | null
+          granted_by: string | null
+          id: string
+          member_id: string
+          plan_id: string
+          reason: string | null
+          revoked_at: string | null
+          status: string
+          waived_requirements: string[]
+        }
+        Insert: {
+          created_at?: string | null
+          granted_by?: string | null
+          id?: string
+          member_id: string
+          plan_id: string
+          reason?: string | null
+          revoked_at?: string | null
+          status?: string
+          waived_requirements?: string[]
+        }
+        Update: {
+          created_at?: string | null
+          granted_by?: string | null
+          id?: string
+          member_id?: string
+          plan_id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          status?: string
+          waived_requirements?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_requirement_exceptions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_requirement_exceptions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_requirement_exceptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_requirement_exceptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_requirement_exceptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -3683,13 +3895,34 @@ export type Database = {
           reasons: string[]
         }[]
       }
+      immutable_unaccent: { Args: { "": string }; Returns: string }
       merge_members: {
         Args: { dup_id: string; keep_id: string; soft?: boolean }
         Returns: undefined
       }
       payment_stats: { Args: never; Returns: Json }
+      prune_audit_log: { Args: never; Returns: undefined }
       refresh_donor_flags: { Args: never; Returns: undefined }
       refresh_member_sedes: { Args: never; Returns: undefined }
+      report_charla_attendance: {
+        Args: never
+        Returns: {
+          checkins: number
+          mo: number
+          title: string
+          wk: number
+          yr: number
+        }[]
+      }
+      report_member_growth: {
+        Args: never
+        Returns: {
+          created_mo: number
+          created_yr: number
+          new_members: number
+          title: string
+        }[]
+      }
       study_dashboard_stats: {
         Args: never
         Returns: {

@@ -75,7 +75,6 @@ export async function getMessages(): Promise<DbBroadcast[]> {
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  // skipped_count (mig. 086) aún no está en los tipos generados de Supabase.
   return (data ?? []) as unknown as DbBroadcast[]
 }
 
@@ -89,7 +88,6 @@ export async function getTemplates(): Promise<DbTemplate[]> {
     `)
     .order('created_at', { ascending: false })
   if (error) throw error
-  // body_format (mig. 087) aún no está en los tipos generados de Supabase.
   return (data ?? []) as unknown as DbTemplate[]
 }
 
@@ -332,9 +330,7 @@ async function resolveEmailRecipients(
   type MRow = { id: string; email: string | null; email_bounced: boolean; email_complained: boolean; newsletter_opt_out: boolean }
   const byId = new Map<string, MRow>()
   for (let i = 0; i < ids.length; i += 300) {
-    // Columnas nuevas (mig. 085) aún no están en los tipos generados.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('members')
       .select('id, email, email_bounced, email_complained, newsletter_opt_out')
       .in('id', ids.slice(i, i + 300))
@@ -361,9 +357,7 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   }
 
   // Tipo de broadcast: marketing (respeta opt-out + bounced) vs transaccional.
-  // 'kind' (mig. 085) aún no está en los tipos generados.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: bMeta } = await (supabase as any)
+  const { data: bMeta } = await supabase
     .from('message_broadcasts').select('kind').eq('id', id).single()
   const isMarketing = (bMeta as { kind?: string } | null)?.kind !== 'transactional'
 
@@ -454,9 +448,7 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   // "Mensajes del sistema".
   const skipped = (emailRecipientsRaw.length - emailRecipients.length)
     + (internalRecipientsRaw.length - internalRecipients.length)
-  // skipped_count (mig. 086) aún no está en los tipos generados.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any).from('message_broadcasts')
+  await supabase.from('message_broadcasts')
     .update({
       total_recipients: internalLogs.length + emailLogs.length + waLogs.length,
       skipped_count: skipped,
@@ -514,9 +506,7 @@ export async function processPendingEmails(
   const supabase = createAdminClient()
   const today = todayStr()
 
-  // 'kind' (mig. 085) aún no está en los tipos generados.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: broadcastRow, error: bErr } = await (supabase as any)
+  const { data: broadcastRow, error: bErr } = await supabase
     .from('message_broadcasts')
     .select('subject, body, body_format, kind, smtp_config_id, config:channel_configs!message_broadcasts_smtp_config_id_fkey(smtp_from_name, smtp_from_email)')
     .eq('id', broadcastId)
@@ -585,9 +575,7 @@ export async function processPendingEmails(
   const firstNames = new Map<string, string>()
   const tokens = new Map<string, string>()
   if (memberIds.length) {
-    // 'unsubscribe_token' (mig. 085) aún no está en los tipos generados.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: members } = await (supabase as any)
+    const { data: members } = await supabase
       .from('members').select('id, first_name, last_name, unsubscribe_token').in('id', memberIds)
     for (const m of (members ?? []) as Array<{ id: string; first_name: string; last_name: string; unsubscribe_token: string }>) {
       names.set(m.id, `${m.first_name} ${m.last_name}`.trim())

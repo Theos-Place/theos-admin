@@ -1,25 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { HeartHandshake, ShieldCheck, Loader2, Check } from 'lucide-react'
+import { ShieldCheck, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
-
-const REC_LABEL: Record<string, string> = { oracion: 'Oración', servicio: 'Servicio', dirigente: 'Dirigente' }
-const REC_BADGE: Record<string, string> = {
-  oracion: 'bg-navy/10 text-navy',
-  servicio: 'bg-teal-soft/30 text-teal-deep',
-  dirigente: 'bg-coral-soft/20 text-coral',
-}
-
-type Recommendation = {
-  id: string
-  recommended_for: 'oracion' | 'servicio' | 'dirigente'
-  justification: string | null
-  recommended_by_name: string | null
-  group_name: string | null
-  created_at: string
-}
+import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
+import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
+import { MemberRecommendations } from './MemberRecommendations'
 
 type AdminData = {
   approved_to_lead_studies: boolean
@@ -29,10 +16,9 @@ type AdminData = {
 }
 
 /** Tab "Administrativo": SOLO roles administrativos (el miembro nunca lo ve, ni
- *  el tab ni los datos). Consolida las recomendaciones de cierres de estudio
- *  (antes en Participación) + el control "Aprobado para dar estudios". */
+ *  el tab ni los datos). Acciones de estudios + "Aprobado para dar estudios" +
+ *  recomendaciones de cierres (todas). */
 export function MemberAdminTab({ memberId }: { memberId: string }) {
-  const [recs, setRecs] = useState<Recommendation[] | null>(null)
   const [admin, setAdmin] = useState<AdminData | null>(null)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -45,15 +31,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       .catch(() => setError('No se pudieron cargar los datos administrativos.'))
   }, [memberId])
 
-  useEffect(() => {
-    let alive = true
-    fetch(`/api/members/${memberId}/recommendations`)
-      .then(r => (r.ok ? r.json() : []))
-      .then(d => { if (alive && Array.isArray(d)) setRecs(d) })
-      .catch(() => { if (alive) setRecs([]) })
-    loadAdmin()
-    return () => { alive = false }
-  }, [memberId, loadAdmin])
+  useEffect(() => { loadAdmin() }, [loadAdmin])
 
   async function toggleApproved() {
     if (!admin || busy || !admin.can_edit) return
@@ -75,12 +53,17 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
     }
   }
 
-  // Recomendaciones para dar estudios (dirigente) primero; luego el resto.
-  const dirigenteRecs = (recs ?? []).filter(r => r.recommended_for === 'dirigente')
-  const otherRecs = (recs ?? []).filter(r => r.recommended_for !== 'dirigente')
-
   return (
     <div className="space-y-4">
+      {/* Acciones de estudios (movidas desde Participación) */}
+      <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
+        <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display mb-3">Acciones de estudios</p>
+        <div className="flex gap-2 flex-wrap">
+          <InviteToStudyButton memberId={memberId} />
+          <StudyExceptionButton memberId={memberId} />
+        </div>
+      </div>
+
       {/* Aprobado para dar estudios */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
@@ -118,35 +101,8 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
         {error && <p className="text-[12px] text-coral mt-2 font-body">{error}</p>}
       </div>
 
-      {/* Recomendaciones (consolidadas, antes en Participación) */}
-      <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
-        <div className="flex items-center gap-2 mb-3">
-          <HeartHandshake size={15} className="text-coral" />
-          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Recomendaciones de cierres de estudio</p>
-        </div>
-        {recs === null ? (
-          <div className="h-16 rounded-xl bg-surface-low animate-pulse" />
-        ) : recs.length === 0 ? (
-          <p className="text-[13px] text-navy-light/60 font-body">Sin recomendaciones registradas.</p>
-        ) : (
-          <ul className="space-y-2.5">
-            {[...dirigenteRecs, ...otherRecs].map(r => (
-              <li key={r.id} className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', REC_BADGE[r.recommended_for])}>
-                    {REC_LABEL[r.recommended_for]}
-                  </span>
-                  <span className="text-[11px] text-navy-light/60 font-body">
-                    {r.recommended_by_name ? `por ${r.recommended_by_name}` : 'recomendación del cierre'}
-                    {r.group_name ? ` · ${r.group_name}` : ''} · {formatDate(r.created_at)}
-                  </span>
-                </div>
-                {r.justification && <p className="text-[13px] text-navy-light/70 font-body">{r.justification}</p>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* Recomendaciones (todas, para roles administrativos) */}
+      <MemberRecommendations memberId={memberId} />
     </div>
   )
 }

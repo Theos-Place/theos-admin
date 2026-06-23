@@ -1293,6 +1293,31 @@ export type MemberRecommendation = {
 
 /** Recomendaciones de un miembro (cierres de estudio). Solo para roles de
  *  estudios/admin — el guard vive en la ruta API. */
+/** ¿El dirigente (dirigenteMemberId) dirige —actual o históricamente— un grupo
+ *  donde el miembro (targetMemberId) es/fue estudiante? Cubre grupos de cualquier
+ *  estado (histórico): leadership por leader_id o co_leader_id. Se usa para que un
+ *  dirigente solo vea recomendaciones de SUS miembros. */
+export async function dirigenteLeadsMember(dirigenteMemberId: string, targetMemberId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  // Grupos que dirige (leader o co-leader), cualquier estado.
+  const { data: groups, error: gErr } = await supabase
+    .from('study_groups')
+    .select('id')
+    .or(`leader_id.eq.${dirigenteMemberId},co_leader_id.eq.${dirigenteMemberId}`)
+  if (gErr) throw gErr
+  const groupIds = (groups ?? []).map(g => (g as { id: string }).id)
+  if (groupIds.length === 0) return false
+  // ¿El miembro es/fue estudiante de alguno de esos grupos?
+  const { data: enr, error: eErr } = await supabase
+    .from('study_enrollments')
+    .select('id')
+    .eq('member_id', targetMemberId)
+    .in('group_id', groupIds)
+    .limit(1)
+  if (eErr) throw eErr
+  return (enr ?? []).length > 0
+}
+
 export async function getMemberRecommendations(memberId: string): Promise<MemberRecommendation[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase

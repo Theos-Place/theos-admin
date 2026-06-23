@@ -1367,8 +1367,15 @@ export async function mergeMembers(
 ): Promise<void> {
   const supabase = createAdminClient()
 
-  // Merge campo-por-campo: actualizar el perfil principal con los valores elegidos
-  // y sellar field_updated_at de los campos modificados con la fecha actual.
+  // 1) La FUSIÓN es lo crítico y atómico (RPC). Va PRIMERO: si falla, no se tocó
+  //    nada. Solo este error es un fallo real de fusión que el front debe mostrar.
+  const { error } = await supabase.rpc('merge_members', { keep_id: keepId, dup_id: dupId, soft: opts?.soft ?? false })
+  if (error) throw error
+
+  // 2) Valores elegidos campo-por-campo para el principal (cosmético, en una
+  //    request aparte que no es transaccional con el RPC). La fusión YA ocurrió:
+  //    si esto falla NO es un fallo de fusión — se loguea y se continúa, para no
+  //    mostrarle al admin un "falló" cuando en realidad fusionó.
   if (opts?.fields && Object.keys(opts.fields).length > 0) {
     const { data: cur } = await supabase
       .from('members').select('field_updated_at').eq('id', keepId).maybeSingle()
@@ -1377,11 +1384,8 @@ export async function mergeMembers(
     for (const k of Object.keys(opts.fields)) stamp[k] = now
     const { error: uErr } = await supabase
       .from('members').update({ ...opts.fields, field_updated_at: stamp }).eq('id', keepId)
-    if (uErr) throw uErr
+    if (uErr) console.error('mergeMembers: fusión OK, pero falló el update de campos del principal:', uErr.message)
   }
-
-  const { error } = await supabase.rpc('merge_members', { keep_id: keepId, dup_id: dupId, soft: opts?.soft ?? false })
-  if (error) throw error
 }
 
 export type DuplicateMember = {

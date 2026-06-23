@@ -20,9 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
   try {
-    // Tablas nuevas (mig. 091) aún no están en los tipos generados de Supabase.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('member_spiritual_data')
       .select('baptism_date, baptism_place, spiritual_gifts')
@@ -48,9 +46,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = (await req.json().catch(() => ({}))) as {
       baptism_date?: string | null; baptism_place?: string | null; spiritual_gifts?: string | null
     }
-    // Tablas nuevas (mig. 091) aún no están en los tipos generados de Supabase.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const { error } = await supabase.from('member_spiritual_data').upsert({
       member_id: id,
       baptism_date: body.baptism_date || null,

@@ -31,9 +31,7 @@ export async function GET(
     if (!isManager && auth.ctx.memberId !== id) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
-    // Columnas nuevas (mig. 085) aún no están en los tipos generados de Supabase.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('members')
       .select('newsletter_opt_out, newsletter_opt_out_at, email_bounced, email_bounced_at, email_complained, email_complained_at')
@@ -67,12 +65,14 @@ export async function POST(
     if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
     const { action } = (await req.json().catch(() => ({}))) as { action?: string }
 
-    // Columnas nuevas (mig. 085) aún no están en los tipos generados de Supabase.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const now = new Date().toISOString()
 
-    let patch: Record<string, unknown>
+    let patch: {
+      newsletter_opt_out?: boolean; newsletter_opt_out_at?: string | null
+      email_bounced?: boolean; email_bounced_at?: string | null
+      email_complained?: boolean; email_complained_at?: string | null
+    }
     if (action === 'subscribe') {
       patch = { newsletter_opt_out: false, newsletter_opt_out_at: null }
     } else if (action === 'unsubscribe') {

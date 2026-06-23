@@ -18,6 +18,7 @@ import { MemberPersonalTab } from './_components/MemberPersonalTab'
 import { MemberEmailStatus } from './_components/MemberEmailStatus'
 import { MemberSpiritualTab } from './_components/MemberSpiritualTab'
 import { MemberAdminTab } from './_components/MemberAdminTab'
+import { MemberRecommendations } from './_components/MemberRecommendations'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow } from './_components/MemberParticipationTab'
@@ -66,6 +67,7 @@ export default function MiembroDetailPage() {
   const { hasRole, member: viewer } = useAuth()
 
   const isStudyAdmin = hasRole(...STUDY_ADMIN_ROLES)
+  const isDirigente = hasRole('dirigente')
   const isOwnProfile = !!viewer?.id && viewer.id === id
   const canDeactivate = hasRole('admin', 'comunicaciones')
 
@@ -273,6 +275,7 @@ export default function MiembroDetailPage() {
 
       {/* TAB: Participación */}
       {activeTab === 'participacion' && (
+        <div className="space-y-3">
         <MemberParticipationTab
           memberId={member.id}
           openSections={openSections}
@@ -296,6 +299,12 @@ export default function MiembroDetailPage() {
           ledStudies={member.led_studies ?? []}
           onAddStudy={() => setShowAddStudy(true)}
         />
+        {/* Dirigente sin rol administrativo: recomendaciones SOLO de sus miembros
+            (el backend filtra; vacío → no se pinta). No ve el resto del tab Admin. */}
+        {isDirigente && !isStudyAdmin && (
+          <MemberRecommendations memberId={member.id} hideWhenEmpty />
+        )}
+        </div>
       )}
 
       {showAddStudy && (
