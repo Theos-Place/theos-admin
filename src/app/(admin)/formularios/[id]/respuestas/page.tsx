@@ -204,7 +204,7 @@ export default function RespuestasPage() {
           {/* Individual responses table */}
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="px-5 py-4 border-b flex items-center justify-between border-[var(--outline-variant)]">
-              <p className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                 Respuestas individuales
               </p>
             </div>
@@ -215,7 +215,7 @@ export default function RespuestasPage() {
                     {['Miembro', 'Fecha de envío', ''].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display"
+                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                       >
                         {h}
                       </th>
@@ -322,7 +322,7 @@ export default function RespuestasPage() {
 
                 return (
                   <div key={f.id} className="space-y-1">
-                    <p className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+                    <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                       {f.label}
                     </p>
                     <p className="text-sm text-navy leading-relaxed font-body">

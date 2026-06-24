@@ -52,7 +52,7 @@ export function StepDocuments({
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Resumen del contrato
         </p>
@@ -94,7 +94,7 @@ export function StepDocuments({
           ].map(({ label, value }) => (
             <div key={label}>
               <p
-                className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display"
+                className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display"
               >
                 {label}
               </p>
@@ -123,7 +123,7 @@ export function StepDocuments({
       >
         <div className="flex items-center justify-between">
           <p
-            className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+            className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
           >
             Documentos requeridos
           </p>
@@ -205,7 +205,7 @@ export function StepDocuments({
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Documentos adicionales
         </p>

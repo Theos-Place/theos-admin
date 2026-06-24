@@ -168,7 +168,7 @@ export default function FormulariosPage() {
           { label: 'Promedio respuestas',       value: stats.avg,                color: 'text-navy' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
               {label}
             </p>
             <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>

@@ -196,7 +196,7 @@ export default function AplicacionesPage() {
                 {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', 'Responsable', ''].map(h => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display"
+                    className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                   >
                     {h}
                   </th>

@@ -381,7 +381,7 @@ function NuevaComunicacionContent() {
 
         {/* Right: Preview */}
         <div className="space-y-3 xl:sticky xl:top-4">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
             Vista previa
           </p>
           <MessagePreview

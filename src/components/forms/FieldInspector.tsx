@@ -124,7 +124,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
     const GROUPS = ['Identificación', 'Contacto', 'Emergencia', 'Trabajo', 'Salud'] as const
     return (
       <div className="p-4 space-y-4">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Datos personales del miembro
         </p>
 
@@ -149,7 +149,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* Fields grouped */}
         {GROUPS.map(group => (
           <div key={group}>
-            <p className="text-[10px] font-bold uppercase tracking-widests text-navy-light/60 mb-2 font-display">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-navy-light/60 mb-2 font-display">
               {group}
             </p>
             <div className="space-y-0.5">
@@ -195,17 +195,17 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
   if (field.type === 'page_break') {
     return (
       <div className="space-y-4 p-4">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Bloque / Página
         </p>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
             Título de la página
           </label>
           <input className={inputCls} placeholder="ej. Información de emergencia" value={field.label} onChange={e => set('label', e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
             Descripción (opcional)
           </label>
           <textarea
@@ -224,15 +224,15 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
   if (field.type === 'section') {
     return (
       <div className="space-y-4 p-4">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Separador de sección
         </p>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Título</label>
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Título</label>
           <input className={inputCls} value={field.label} onChange={e => set('label', e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Texto de ayuda</label>
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Texto de ayuda</label>
           <input className={inputCls} value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
         </div>
       </div>
@@ -284,7 +284,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {activeSection === 'general' && (
           <div className="p-4 space-y-3">
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+              <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                 Etiqueta / Pregunta <span className="text-coral">*</span>
               </label>
               <textarea
@@ -296,13 +296,13 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Texto de ayuda</label>
+              <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Texto de ayuda</label>
               <input className={inputCls} placeholder="Aparece debajo del campo" value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
             </div>
 
             {(field.type === 'text' || field.type === 'textarea' || field.type === 'number') && (
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Placeholder</label>
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Placeholder</label>
                 <input className={inputCls} value={field.placeholder ?? ''} onChange={e => set('placeholder', e.target.value || undefined)} />
               </div>
             )}
@@ -325,7 +325,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* OPTIONS */}
         {activeSection === 'options' && showOptions && (
           <div className="p-4 space-y-3">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Opciones</p>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Opciones</p>
             <div className="space-y-2">
               {(field.options ?? []).map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -355,9 +355,9 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* SCALE */}
         {activeSection === 'scale' && showScale && (
           <div className="p-4 space-y-3">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Escala</p>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Escala</p>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Rango</label>
+              <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Rango</label>
               <div className="flex gap-2">
                 {([[1, 5], [1, 10]] as const).map(([min, max]) => (
                   <button
@@ -374,11 +374,11 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Etiq. mínimo</label>
+                <label className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Etiq. mínimo</label>
                 <input className={inputCls} placeholder="Ej: Muy malo" value={field.scale_min_label ?? ''} onChange={e => set('scale_min_label', e.target.value || undefined)} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Etiq. máximo</label>
+                <label className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Etiq. máximo</label>
                 <input className={inputCls} placeholder="Ej: Excelente" value={field.scale_max_label ?? ''} onChange={e => set('scale_max_label', e.target.value || undefined)} />
               </div>
             </div>
@@ -388,7 +388,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* LOGIC */}
         {activeSection === 'logic' && (
           <div className="p-4 space-y-4">
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
               Lógica condicional
             </p>
 

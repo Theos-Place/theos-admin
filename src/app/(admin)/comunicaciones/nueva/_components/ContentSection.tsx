@@ -5,7 +5,7 @@ import { EmailEditor } from '@/components/communications/EmailEditor'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/60 font-display'
 
 type Props = {
   channel: CommunicationChannel

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { Check, X, List } from 'lucide-react'
 import type { CommunicationMessage } from '@/types/communication'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/60 font-display'
 const PREVIEW_COUNT = 20
 
 type Props = {

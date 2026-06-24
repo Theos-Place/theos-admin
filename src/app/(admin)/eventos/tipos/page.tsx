@@ -70,7 +70,7 @@ function TypeModal({
 
         {/* Name */}
         <div className="space-y-1.5">
-          <label className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
             Nombre *
           </label>
           <input
@@ -83,7 +83,7 @@ function TypeModal({
 
         {/* Description */}
         <div className="space-y-1.5">
-          <label className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
             Descripción
           </label>
           <input
@@ -96,7 +96,7 @@ function TypeModal({
 
         {/* Color */}
         <div className="space-y-2">
-          <label className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
             Color
           </label>
           <div className="flex flex-wrap gap-2">
@@ -145,7 +145,7 @@ function TypeModal({
 
         {/* Icon */}
         <div className="space-y-2">
-          <label className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
             Ícono
           </label>
           <div className="grid grid-cols-6 gap-1.5">

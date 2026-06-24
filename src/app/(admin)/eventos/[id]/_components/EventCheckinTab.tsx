@@ -68,7 +68,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
             const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
             return (
               <div key={se.id} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{se.name}</p>
+                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{se.name}</p>
                 <p className="mt-1 text-3xl font-extrabold text-navy tabular-nums font-display">{seCheckins}</p>
                 <CapacityBar current={seCheckins} max={se.max_capacity} />
               </div>
@@ -85,7 +85,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-4 py-3 border-b border-b-[var(--outline-variant)]">
-          <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">Check-ins registrados</p>
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Check-ins registrados</p>
         </div>
         {event.checkins.length === 0 ? (
           <EmptyState icon={QrCode} title="Aún no hay check-ins registrados" />

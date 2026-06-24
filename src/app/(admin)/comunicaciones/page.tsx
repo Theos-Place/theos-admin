@@ -140,7 +140,7 @@ export default function ComunicacionesPage() {
         ].map(({ label, value, color, icon: Icon }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                 {label}
               </p>
               <Icon size={14} className={color} />
@@ -182,7 +182,7 @@ export default function ComunicacionesPage() {
 
       {/* Activity chart */}
       <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 mb-4 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-4 font-display">
           Actividad — últimos 7 días
         </p>
         <div className="flex items-end gap-2 h-20">

@@ -51,7 +51,7 @@ export function StepContractForm({
       {/* Puesto */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Puesto <span className="text-coral">*</span>
         </label>
@@ -83,7 +83,7 @@ export function StepContractForm({
       {/* Tipo de contrato */}
       <div className="space-y-2">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Tipo de contrato
         </label>
@@ -110,7 +110,7 @@ export function StepContractForm({
       {/* Salario */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Salario mensual <span className="text-coral">*</span>
         </label>
@@ -143,7 +143,7 @@ export function StepContractForm({
       {/* Fecha de inicio */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Fecha de inicio <span className="text-coral">*</span>
         </label>
@@ -158,7 +158,7 @@ export function StepContractForm({
       {/* Notas */}
       <div className="space-y-1">
         <label
-          className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display"
+          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
         >
           Notas internas
         </label>

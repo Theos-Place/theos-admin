@@ -255,7 +255,7 @@ export default function ListaDetailPage() {
       <div
         className="rounded-2xl px-5 py-4 space-y-1 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Filtros que generaron esta lista
         </p>
         <p className="text-sm text-navy font-body">

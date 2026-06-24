@@ -82,7 +82,7 @@ export default function PuestoDetailPage() {
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-center gap-2">
-          <p className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
             Rango salarial aprobado
           </p>
           <Lock size={11} className="text-navy-light/60" />
@@ -104,7 +104,7 @@ export default function PuestoDetailPage() {
       <div
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+        <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
           Persona asignada
         </p>
         {assigned ? (

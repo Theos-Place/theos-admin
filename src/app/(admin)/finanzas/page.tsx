@@ -174,7 +174,7 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <ArrowLeftRight size={16} className={`${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`} />
-              <p className="text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">Devoluciones pend.</p>
+              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Devoluciones pend.</p>
             </div>
             <div className="flex items-center gap-2">
               <p className={`text-4xl font-extrabold font-display ${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`}>

@@ -14,7 +14,7 @@ export function TabContrato({ employee, onOpenRaiseModal }: TabContratoProps) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Historial salarial</p>
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Historial salarial</p>
         {employee.status === 'active' && (
           <button
             type="button"
@@ -34,7 +34,7 @@ export function TabContrato({ employee, onOpenRaiseModal }: TabContratoProps) {
 
       {employee.position_history.length > 0 && (
         <div className="pt-4 border-t border-[var(--outline-variant)] space-y-3">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Historial de puestos</p>
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Historial de puestos</p>
           {employee.position_history.map((p, i) => (
             <div key={i} className="flex items-start gap-3 rounded-xl p-3 bg-surface-low">
               <div className="h-7 w-7 rounded-lg bg-navy/10 flex items-center justify-center shrink-0 mt-0.5">

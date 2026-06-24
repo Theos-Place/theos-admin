@@ -84,7 +84,7 @@ export function DisconnectModal({
           )}
 
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Fecha efectiva de salida
             </label>
             <input

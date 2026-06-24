@@ -229,13 +229,13 @@ export default function VacanteDetailPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <p className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
                 Horario
               </p>
               <p className="text-sm text-navy font-body">{vacancy.schedule}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
                 Compromiso
               </p>
               <p className="text-sm text-navy font-body">{vacancy.commitment}</p>
@@ -284,7 +284,7 @@ export default function VacanteDetailPage() {
                       {['Aplicante', 'Fecha', 'Estado', ''].map(h => (
                         <th
                           key={h}
-                          className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display"
+                          className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                         >
                           {h}
                         </th>
@@ -386,7 +386,7 @@ export default function VacanteDetailPage() {
                 {/* Service history */}
                 {selectedApp.service_history.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+                    <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                       Historial de servicio
                     </p>
                     {selectedApp.service_history.map((h, i) => (
@@ -404,7 +404,7 @@ export default function VacanteDetailPage() {
 
                 {/* Internal notes */}
                 <div className="space-y-1.5">
-                  <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+                  <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                     Notas internas
                   </p>
                   <textarea
@@ -451,7 +451,7 @@ export default function VacanteDetailPage() {
               <strong>{vacancy.position}</strong> en {vacancy.committee_name}.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
                 Fecha de inicio
               </label>
               <input
@@ -518,7 +518,7 @@ export default function VacanteDetailPage() {
               {rejectModal.applicant_name} será marcado como no seleccionado para este puesto.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
                 Motivo (opcional)
               </label>
               <textarea

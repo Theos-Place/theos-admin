@@ -911,7 +911,7 @@ function MiembrosContent() {
 
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                   Nombre de la lista *
                 </label>
                 <input
@@ -923,7 +923,7 @@ function MiembrosContent() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                   Descripción (opcional)
                 </label>
                 <input
@@ -934,7 +934,7 @@ function MiembrosContent() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                   Tags (separados por coma)
                 </label>
                 <input
@@ -946,7 +946,7 @@ function MiembrosContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
                   Tipo de lista
                 </label>
                 {[

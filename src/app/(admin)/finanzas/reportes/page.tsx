@@ -167,7 +167,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Estado'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -215,7 +215,7 @@ export default function ReportesPage() {
                 { label: 'Devuelto', value: refundedPayments.reduce((s, p) => s + p.amount, 0), color: '#519DA2' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                  <p className="text-[10px] uppercase tracking-widests mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
+                  <p className="text-[10px] uppercase tracking-widest mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
                   <p className="text-lg font-extrabold font-display" style={{ color }}>
                     <AmountDisplay amount={value} defaultHidden={false} />
                   </p>
@@ -229,7 +229,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Entidad', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -272,7 +272,7 @@ export default function ReportesPage() {
             {/* Top months */}
             {topMonths.length > 0 && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[11px] uppercase tracking-widests mb-4 font-display text-[rgba(22,20,64,0.60)]">
+                <p className="text-[11px] uppercase tracking-widest mb-4 font-display text-[rgba(22,20,64,0.60)]">
                   Top meses {yearFilter}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -295,7 +295,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Mes', 'Total donaciones', 'Donadores únicos', ''].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>

@@ -101,7 +101,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/60' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{label}</p>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{label}</p>
             <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>{value}</p>
           </div>
         ))}
@@ -136,7 +136,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
             <thead>
               <tr>
                 {['Nombre', 'Fecha inscripción', 'Pago', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{h}</th>
                 ))}
               </tr>
             </thead>

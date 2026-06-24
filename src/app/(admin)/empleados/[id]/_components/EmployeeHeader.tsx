@@ -57,7 +57,7 @@ export function EmployeeHeader({ employee, id, onTerminate }: EmployeeHeaderProp
           { label: 'Antigüedad', value: calcularAntiguedad(employee.start_date) },
         ].map(({ label, value }) => (
           <div key={label}>
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">{label}</p>
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">{label}</p>
             <p className="text-[13px] text-navy mt-0.5 font-body">{value}</p>
           </div>
         ))}

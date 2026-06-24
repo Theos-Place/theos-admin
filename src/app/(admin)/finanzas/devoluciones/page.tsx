@@ -119,12 +119,12 @@ export default function DevolucionesPage() {
             { label: 'Completadas',   value: stats.completed,  color: '#3DB97A' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
+              <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               <p className="text-4xl font-extrabold font-display" style={{ color }}>{value}</p>
             </div>
           ))}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">Total devuelto</p>
+            <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Total devuelto</p>
             <p className="text-xl font-extrabold font-display text-navy">
               <AmountDisplay amount={stats.totalAmount} defaultHidden={false} />
             </p>
@@ -146,7 +146,7 @@ export default function DevolucionesPage() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Estado', 'Solicitada', 'Procesada'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">
+                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}
@@ -224,7 +224,7 @@ export default function DevolucionesPage() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Motivo', 'Estado', 'Solicitada', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">
+                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}
@@ -336,12 +336,12 @@ export default function DevolucionesPage() {
                 Devolución de <strong>₡{completeTarget.amount.toLocaleString('es-CR')}</strong> a <strong>{completeTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[11px] uppercase tracking-widests mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>
+                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>
                 <input type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-widests mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Número de confirmación</label>
+                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Número de confirmación</label>
                 <input type="text" value={completionConf} onChange={e => setCompletionConf(e.target.value)}
                   placeholder="ej. SINPE-2026-05-DV-99123"
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
@@ -371,7 +371,7 @@ export default function DevolucionesPage() {
                 Rechazando devolución de <strong>{rejectTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[11px] uppercase tracking-widests mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Motivo del rechazo</label>
+                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Motivo del rechazo</label>
                 <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                   rows={3} placeholder="Explicá el motivo..."
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy" />

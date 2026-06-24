@@ -135,7 +135,7 @@ export default function AccesosPage() {
           { label: 'Último acceso',              value: formatDate(latestLogin),  color: 'text-navy', isText: true },
         ].map(({ label, value, color, isText }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-card">
-            <p className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-2 font-display">{label}</p>
+            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-2 font-display">{label}</p>
             <p className={cn('font-extrabold', isText ? 'text-2xl' : 'text-4xl', color, 'font-display')}>
               {value}
             </p>
@@ -145,7 +145,7 @@ export default function AccesosPage() {
 
       {/* Referencia de roles (al inicio, antes de la lista de usuarios) */}
       <div>
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 mb-3 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-3 font-display">
           Referencia de roles
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -237,7 +237,7 @@ export default function AccesosPage() {
                 {['Miembro', 'Roles', 'Otorgado por', 'Desde', 'Último login', 'Estado', ''].map(h => (
                   <th
                     key={h}
-                    className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests text-navy-light/60 font-display whitespace-nowrap"
+                    className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest text-navy-light/60 font-display whitespace-nowrap"
                   >
                     {h}
                   </th>

@@ -309,7 +309,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           <div className="p-3 space-y-4">
             {FIELD_GROUPS.map(group => (
               <div key={group.label} className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widests font-semibold text-navy-light/60 px-1 mb-2 font-display">
+                <p className="text-[9px] uppercase tracking-widest font-semibold text-navy-light/60 px-1 mb-2 font-display">
                   {group.label}
                 </p>
                 <div className="grid grid-cols-2 gap-1 md:grid-cols-1">
@@ -448,7 +448,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 })
                 return sections.map((section, si) => (
                   <div key={si} className="space-y-1">
-                    <p className="text-[11px] font-bold text-navy-light/60 uppercase tracking-widests font-display">
+                    <p className="text-[11px] font-bold text-navy-light/60 uppercase tracking-widest font-display">
                       📄 {section.pageLabel}
                     </p>
                     <div className="ml-3 border-l space-y-0.5 pl-3 border-[var(--outline-variant)]">

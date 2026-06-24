@@ -20,7 +20,7 @@ export function VariableChips({ onInsert, available }: Props) {
 
   return (
     <div className="space-y-2">
-      <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+      <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
         Variables disponibles
       </p>
       <div className="flex flex-wrap gap-1.5">

@@ -83,15 +83,15 @@ export default function BecasPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">Becas activas</p>
+            <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Becas activas</p>
             <p className="text-4xl font-extrabold font-display text-[#3DB97A]">{activeCount}</p>
           </div>
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">Usadas</p>
+            <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Usadas</p>
             <p className="text-4xl font-extrabold font-display text-teal-deep">{usedCount}</p>
           </div>
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widests mb-2 font-display text-[rgba(22,20,64,0.60)]">Total descontado</p>
+            <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Total descontado</p>
             <p className="text-xl font-extrabold font-display text-navy">
               <AmountDisplay amount={totalDiscounted} defaultHidden={false} />
             </p>
@@ -139,7 +139,7 @@ export default function BecasPage() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Entidad', 'Tipo descuento', 'Valor', 'Monto final', 'Estado', 'Creada por', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widests font-display text-[rgba(22,20,64,0.60)]">
+                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}

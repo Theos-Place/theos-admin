@@ -391,7 +391,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Tipo</label>
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Tipo</label>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {activeEventTypes.map(t => {
                 const Icon = ICON_MAP[t.icon] ?? Mic
@@ -414,12 +414,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Comités organizadores</label>
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Comités organizadores</label>
             <CommitteeMultiSelect value={committeeIds} onChange={setCommitteeIds} />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Descripción</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Descripción</label>
               <span className="text-[10px] text-navy-light/60 font-mono">{description.length}/500</span>
             </div>
             <textarea
@@ -438,19 +438,19 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Fecha inicio</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Fecha inicio</label>
               <DatePicker value={startDate} onChange={setStartDate} />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Hora inicio</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Hora inicio</label>
               <TimePicker value={startTime} onChange={setStartTime} />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Fecha fin</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Fecha fin</label>
               <DatePicker value={endDate} onChange={setEndDate} min={startDate || undefined} error={endBeforeStart} />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Hora fin</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Hora fin</label>
               <TimePicker value={endTime} onChange={setEndTime} error={endBeforeStart} min={endDate && endDate === startDate ? startTime || undefined : undefined} />
             </div>
           </div>
@@ -465,13 +465,13 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </label>
           {!isVirtual && (
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Dirección</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Dirección</label>
               <input className={cn(inputCls, 'font-body')} value={location} onChange={e => setLocation(e.target.value)} />
             </div>
           )}
           {isVirtual && (
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Link de la reunión virtual (opcional)</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Link de la reunión virtual (opcional)</label>
               <input className={cn(inputCls, 'font-body')} placeholder="https://zoom.us/... o https://meet.google.com/..." value={virtualLink} onChange={e => setVirtualLink(e.target.value)} />
             </div>
           )}
@@ -532,11 +532,11 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           {requiresRegistration && (
             <div className="space-y-2 pl-1">
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Capacidad máxima</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Capacidad máxima</label>
                 <input type="number" className={cn(inputCls, 'font-body')} value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Prerrequisito</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Prerrequisito</label>
                 <select className={cn(inputCls, 'font-body')}>
                   <option value="">Sin prerrequisito</option>
                   <option value="member">Ser miembro activo</option>
@@ -559,14 +559,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           {requiresPayment && (
             <div className="space-y-3 pl-1">
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Costo</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Costo</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
                   <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">Costo para servidores (opcional)</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Costo para servidores (opcional)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
                   <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} placeholder="Igual al costo" value={serverPrice} onChange={e => setServerPrice(e.target.value)} disabled={!serversPay} />

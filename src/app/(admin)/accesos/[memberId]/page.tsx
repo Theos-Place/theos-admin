@@ -136,7 +136,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
 
       {/* Roles actuales */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Roles actuales
         </p>
 
@@ -177,7 +177,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
       {/* Agregar roles */}
       {availableRoles.length > 0 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
             Agregar rol
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -221,7 +221,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
 
       {/* Historial */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Historial de cambios
         </p>
         {history.length === 0 ? (

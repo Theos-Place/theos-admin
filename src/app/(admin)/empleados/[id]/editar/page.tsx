@@ -154,7 +154,7 @@ export default function EditarEmpleadoPage() {
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
         {/* Info no editable */}
         <div className="rounded-xl p-4 space-y-1 bg-surface-low">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Persona</p>
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Persona</p>
           <p className="text-sm font-semibold text-navy font-display">{employee.member_name}</p>
           <p className="text-[12px] text-navy-light/60 font-body">
             Inicio: {new Date(employee.start_date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -163,7 +163,7 @@ export default function EditarEmpleadoPage() {
 
         {/* Email */}
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
             Correo de contacto
           </label>
           <input
@@ -176,7 +176,7 @@ export default function EditarEmpleadoPage() {
 
         {/* Puesto */}
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
             Puesto
           </label>
           <select
@@ -194,7 +194,7 @@ export default function EditarEmpleadoPage() {
 
         {/* Tipo de contrato */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
             Tipo de contrato
           </label>
           <div className="flex gap-4">
@@ -216,7 +216,7 @@ export default function EditarEmpleadoPage() {
         {/* Días de vacaciones (solo planilla) */}
         {contractType === 'planilla' && (
           <div className="space-y-1">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Días de vacaciones por año
             </label>
             <input
@@ -233,7 +233,7 @@ export default function EditarEmpleadoPage() {
         {/* Notas */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Notas internas
             </label>
             <span className="text-[10px] text-navy-light/60 font-mono">

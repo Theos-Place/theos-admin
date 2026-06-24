@@ -64,7 +64,7 @@ export function ModalVacaciones({
           <>
             <h2 id="modal-vacaciones" className="text-base font-bold text-navy font-display">Registrar solicitud</h2>
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Tipo</label>
+              <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Tipo</label>
               <select
                 className={cn(inputCls, 'font-body')}
                 value={vacType}
@@ -77,7 +77,7 @@ export function ModalVacaciones({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Desde</label>
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Desde</label>
                 <input
                   type="date"
                   className={cn(inputCls, 'font-body')}
@@ -86,7 +86,7 @@ export function ModalVacaciones({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Hasta</label>
+                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Hasta</label>
                 <input
                   type="date"
                   className={cn(inputCls, 'font-body')}
@@ -104,7 +104,7 @@ export function ModalVacaciones({
               </div>
             )}
             <div className="space-y-1">
-              <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Notas</label>
+              <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Notas</label>
               <textarea
                 className={cn(inputCls, 'resize-none font-body')}
                 rows={2}

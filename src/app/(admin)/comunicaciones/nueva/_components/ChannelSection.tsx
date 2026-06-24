@@ -5,7 +5,7 @@ import type { CommunicationChannel, ChannelConfig } from '@/types/communication'
 import { cn } from '@/lib/utils'
 import { MessageCircle, Mail, Bell } from 'lucide-react'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/60 font-display'
 
 type Props = {
   channel: CommunicationChannel

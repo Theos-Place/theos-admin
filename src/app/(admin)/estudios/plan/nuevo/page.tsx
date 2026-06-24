@@ -182,7 +182,7 @@ export default function NuevoTipoPage() {
 
       {/* Información básica */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+        <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
           Información básica
         </h2>
 
@@ -221,7 +221,7 @@ export default function NuevoTipoPage() {
 
       {/* Prerequisitos */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+        <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
           Prerequisitos
         </h2>
 
@@ -262,7 +262,7 @@ export default function NuevoTipoPage() {
 
       {/* Configuración */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h2 className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+        <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
           Configuración
         </h2>
 

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
 
-const SECTION_TITLE = 'text-[10px] uppercase tracking-widests text-navy-light/60 font-display'
+const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/60 font-display'
 
 const TIMEZONES = [
   { value: 'America/Costa_Rica', label: 'Costa Rica (GMT-6)' },

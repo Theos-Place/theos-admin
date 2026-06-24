@@ -50,7 +50,7 @@ export function DeliveryStats({ message }: Props) {
             <div className={cn('h-8 w-8 rounded-lg flex items-center justify-center mb-3', bg)}>
               <Icon size={16} className={color} />
             </div>
-            <p className="text-[10px] uppercase tracking-widests text-navy-light/60 mb-1 font-display">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-1 font-display">
               {label}
             </p>
             <p className={cn('text-2xl font-extrabold tabular-nums font-display', color)}>
@@ -63,7 +63,7 @@ export function DeliveryStats({ message }: Props) {
       {/* Progress bars */}
       {stats.total > 0 && (
         <div className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
             Distribución de entrega
           </p>
           <div className="space-y-2.5">

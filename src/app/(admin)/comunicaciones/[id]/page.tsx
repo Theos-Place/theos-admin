@@ -249,7 +249,7 @@ export default function ComunicacionDetallePage() {
 
       {/* Message content */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
           Contenido del mensaje
         </p>
         {message.subject && (
@@ -279,7 +279,7 @@ export default function ComunicacionDetallePage() {
       {/* Recipients table */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-5 py-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-[var(--outline-variant)]">
-          <p className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
             Destinatarios ({recipTotal})
           </p>
           <div className="flex gap-1">
@@ -303,7 +303,7 @@ export default function ComunicacionDetallePage() {
             <thead>
               <tr>
                 {['Miembro', 'Canal', 'Estado', 'Entrega'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widests uppercase text-navy-light/60 font-display">
+                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                     {h}
                   </th>
                 ))}

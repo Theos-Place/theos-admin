@@ -52,7 +52,7 @@ export function EventInfoTab({
             { label: 'Capacidad', value: event.max_capacity != null ? `${event.max_capacity} personas` : 'Sin límite' },
           ].map(({ label, value }) => (
             <div key={label} className="space-y-0.5">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">{label}</p>
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{label}</p>
               <p className="text-sm text-navy font-body">{value}</p>
             </div>
           ))}
@@ -75,7 +75,7 @@ export function EventInfoTab({
       <div className="space-y-4">
         {event.sub_events.length > 0 && (
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <h3 className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-3 font-display">Sub-eventos</h3>
+            <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display">Sub-eventos</h3>
             <div className="space-y-2">
               {event.sub_events.map(se => {
                 const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
@@ -91,7 +91,7 @@ export function EventInfoTab({
         )}
 
         <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">Configuración</h3>
+          <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Configuración</h3>
           {[
             { label: 'Recurrente', value: event.is_recurring ? event.recurrence_rule ?? 'Sí' : 'No' },
             { label: 'Encuesta', value: event.requires_survey ? 'Requerida' : 'No' },
@@ -106,7 +106,7 @@ export function EventInfoTab({
 
         {/* Flyer */}
         <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <h3 className="text-[10px] tracking-widests uppercase text-navy-light/60 font-display">Flyer / Banner</h3>
+          <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Flyer / Banner</h3>
           <input
             ref={flyerInputRef}
             type="file"

@@ -158,7 +158,7 @@ export default function NuevoPuestoPage() {
         {/* Descripción */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Descripción de funciones
             </label>
             <span className="text-[10px] text-navy-light/60 font-mono">
@@ -177,7 +177,7 @@ export default function NuevoPuestoPage() {
 
         {/* Tipo de contrato */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
             Tipo de contrato
           </label>
           <div className="flex gap-4">
@@ -199,7 +199,7 @@ export default function NuevoPuestoPage() {
         {/* Rango salarial */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <label className="text-[11px] tracking-widests uppercase text-navy-light/60 font-display">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Rango salarial aprobado
             </label>
             <span

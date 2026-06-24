@@ -115,7 +115,7 @@ export default function NuevaBecaPage() {
 
           {/* 1. Member search */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
+            <label className="text-[11px] uppercase tracking-widest mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               1. Miembro
             </label>
             {selectedMember ? (
@@ -143,7 +143,7 @@ export default function NuevaBecaPage() {
 
           {/* 2. Entity type */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
+            <label className="text-[11px] uppercase tracking-widest mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               2. Tipo de entidad
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -158,7 +158,7 @@ export default function NuevaBecaPage() {
 
           {/* 3. Entity search */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
+            <label className="text-[11px] uppercase tracking-widest mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               3. {entityType === 'event' ? 'Evento' : 'Grupo'}
             </label>
             {selectedEntity ? (
@@ -218,7 +218,7 @@ export default function NuevaBecaPage() {
 
           {/* 4. Discount type */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
+            <label className="text-[11px] uppercase tracking-widest mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               4. Tipo de descuento
             </label>
             <div className="grid grid-cols-2 gap-2 mb-4">
@@ -298,7 +298,7 @@ export default function NuevaBecaPage() {
 
           {/* 6. Notes */}
           <div>
-            <label className="text-[11px] uppercase tracking-widests mb-2 block font-display text-[rgba(22,20,64,0.60)]">
+            <label className="text-[11px] uppercase tracking-widest mb-2 block font-display text-[rgba(22,20,64,0.60)]">
               Notas (opcional)
             </label>
             <textarea

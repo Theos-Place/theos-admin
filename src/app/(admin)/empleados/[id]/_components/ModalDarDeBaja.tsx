@@ -42,7 +42,7 @@ export function ModalDarDeBaja({
           </p>
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
             Escribí "<span className="font-semibold text-navy">{memberName}</span>" para confirmar
           </label>
           <input
@@ -53,7 +53,7 @@ export function ModalDarDeBaja({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Fecha de baja</label>
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Fecha de baja</label>
           <input
             type="date"
             className={cn(inputCls, 'font-body')}
@@ -62,7 +62,7 @@ export function ModalDarDeBaja({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-widests text-navy-light/60 font-display">Motivo</label>
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Motivo</label>
           <textarea
             className={cn(inputCls, 'resize-none font-body')}
             rows={2}

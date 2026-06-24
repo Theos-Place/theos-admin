@@ -56,7 +56,7 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Balance de vacaciones</p>
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Balance de vacaciones</p>
           <p className="text-[13px] text-navy font-body">
             <span className="font-semibold">{vacDiasDisponibles}</span> días disponibles de <span className="font-semibold">{employee.vacation_days_total}</span>
           </p>
@@ -80,7 +80,7 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
 
       {employee.vacation_records.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-widests text-navy-light/60 font-display">Registros</p>
+          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Registros</p>
           {employee.vacation_records.map(v => (
             <div
               key={v.id}

@@ -526,7 +526,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Gauge tasa de asistencia */}
             <div className="rounded-2xl p-5 flex flex-col items-center bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-4 self-start font-display">
+              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-4 self-start font-display">
                 Tasa de asistencia
               </p>
               <svg viewBox="0 0 100 60" className="w-40 h-24">
@@ -553,7 +553,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             {/* Ingresos */}
             {event.requires_payment && event.payment_amount && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[10px] tracking-widests uppercase text-navy-light/60 mb-3 font-display">
+                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display">
                   Ingresos estimados
                 </p>
                 <p className="text-4xl font-extrabold text-navy tabular-nums font-display">

@@ -166,7 +166,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Timeline */}
         <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
-          <p className="text-[11px] uppercase tracking-widests mb-5 font-display text-[rgba(22,20,64,0.60)]">
+          <p className="text-[11px] uppercase tracking-widest mb-5 font-display text-[rgba(22,20,64,0.60)]">
             Línea de tiempo
           </p>
           <div className="relative">
