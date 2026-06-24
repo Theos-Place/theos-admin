@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { canManageCommittee } from '@/lib/auth/committee-scope'
 import { getVacancies, createVacancy, type VacancyWriteInput } from '@/lib/supabase/queries/servers'
 
 export async function GET(req: NextRequest) {
@@ -23,10 +23,16 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const auth = await requireRoles(...SERVICE_ADMIN_ROLES, 'lider_comite')
-    if (auth.res) return auth.res
+  const auth = await requireRoles() // autenticado; el permiso real es por comité (abajo)
+  if (auth.res) return auth.res
   try {
-    const vacancy = await createVacancy((await req.json()) as VacancyWriteInput)
+    const input = (await req.json()) as VacancyWriteInput
+    // El coordinador/líder solo puede solicitar para comités que gestiona; los
+    // roles administrativos globales, para cualquiera.
+    if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, input.committee_id))) {
+      return NextResponse.json({ error: 'No podés crear vacantes para este comité.' }, { status: 403 })
+    }
+    const vacancy = await createVacancy(input)
     return NextResponse.json(vacancy, { status: 201 })
   } catch (error) {
     console.error('POST /api/servers/vacancies:', error)

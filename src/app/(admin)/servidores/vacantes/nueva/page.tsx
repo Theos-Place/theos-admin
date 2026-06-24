@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useServers } from '@/hooks/useServers'
@@ -13,8 +13,23 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 function NuevaVacanteContent() {
   const params = useSearchParams()
   const preselectedCommittee = params.get('comite') ?? ''
-  const { committees } = useServers()
+  const { committees: allCommittees } = useServers()
   const toast = useToast()
+
+  // El coordinador/líder solo puede solicitar para comités que gestiona; los
+  // roles administrativos globales, para cualquiera.
+  const [scope, setScope] = useState<{ all: boolean; ids: string[] } | null>(null)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/servers/manageable-committees')
+      .then(r => (r.ok ? r.json() : { all: false, ids: [] }))
+      .then(d => { if (alive) setScope(d) })
+      .catch(() => { if (alive) setScope({ all: false, ids: [] }) })
+    return () => { alive = false }
+  }, [])
+  const committees = scope && !scope.all
+    ? allCommittees.filter(c => scope.ids.includes(c.id))
+    : allCommittees
 
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)

@@ -137,6 +137,35 @@ export async function getCommittees(): Promise<DbCommittee[]> {
   })) as DbCommittee[]
 }
 
+/** Comités (area_type='committee') que un miembro puede gestionar para solicitar
+ *  vacantes/puestos: los que coordina directamente (areas.leader_id = memberId) y
+ *  los que cuelgan de un ÁREA que lidera (parent_id ∈ áreas con leader_id = memberId).
+ *  Los roles administrativos globales (admin/dirección/encargado_staff/coord.
+ *  servidores) no se limitan por acá — eso se decide en el route. */
+export async function getManageableCommitteeIds(memberId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data: led, error } = await supabase
+    .from('areas').select('id, area_type').eq('leader_id', memberId)
+  if (error) throw error
+  const rows = (led ?? []) as Array<{ id: string; area_type: 'area' | 'committee' }>
+  const direct = rows.filter(r => r.area_type === 'committee').map(r => r.id)
+  const ledAreas = rows.filter(r => r.area_type === 'area').map(r => r.id)
+  let children: string[] = []
+  if (ledAreas.length) {
+    const { data: kids } = await supabase
+      .from('areas').select('id').eq('area_type', 'committee').in('parent_id', ledAreas)
+    children = ((kids ?? []) as Array<{ id: string }>).map(r => r.id)
+  }
+  return [...new Set([...direct, ...children])]
+}
+
+/** Comité (area_id) de una vacante — para verificar permiso de gestión. */
+export async function getVacancyCommitteeId(vacancyId: string): Promise<string | null> {
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('vacancies').select('committee_id').eq('id', vacancyId).maybeSingle()
+  return (data as { committee_id: string | null } | null)?.committee_id ?? null
+}
+
 export async function getVacancies(): Promise<DbVacancy[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
