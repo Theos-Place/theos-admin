@@ -3030,6 +3030,7 @@ export type Database = {
           schedule_days: string[] | null
           schedule_time: string | null
           sede: string | null
+          start_notified_at: string | null
           starts_at: string | null
           status: string | null
           training_modality: string | null
@@ -3053,6 +3054,7 @@ export type Database = {
           schedule_days?: string[] | null
           schedule_time?: string | null
           sede?: string | null
+          start_notified_at?: string | null
           starts_at?: string | null
           status?: string | null
           training_modality?: string | null
@@ -3076,6 +3078,7 @@ export type Database = {
           schedule_days?: string[] | null
           schedule_time?: string | null
           sede?: string | null
+          start_notified_at?: string | null
           starts_at?: string | null
           status?: string | null
           training_modality?: string | null

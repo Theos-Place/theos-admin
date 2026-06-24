@@ -76,5 +76,22 @@ Deno.serve(async (req) => {
     console.error('leader-absence-check:', e)
   }
 
-  return new Response(JSON.stringify({ processed: totalSent, failed: totalFailed, absenceCheck }), { status: 200 })
+  // Verificación diaria: grupos de estudio que arrancan pronto → recordatorio
+  // "inicio_capacitacion" a sus estudiantes. Anti-duplicado (start_notified_at)
+  // vive en el app (/api/studies/start-reminders), protegido con el CRON_SECRET.
+  let startReminders: unknown = null
+  try {
+    const res = await fetch(
+      `${Deno.env.get('NEXT_PUBLIC_SITE_URL')}/api/studies/start-reminders`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Deno.env.get('CRON_SECRET')}` },
+      },
+    )
+    startReminders = await res.json()
+  } catch (e) {
+    console.error('start-reminders:', e)
+  }
+
+  return new Response(JSON.stringify({ processed: totalSent, failed: totalFailed, absenceCheck, startReminders }), { status: 200 })
 })
