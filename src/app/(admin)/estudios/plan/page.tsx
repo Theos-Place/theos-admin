@@ -19,15 +19,6 @@ function formatCost(cost: number) {
   return `₡${cost.toLocaleString('es-CR')}`
 }
 
-function getLevelColor(level: string): string {
-  switch (level) {
-    case 'Básico':     return 'rgba(112,189,194,.15)'
-    case 'Intermedio': return 'rgba(22,20,64,.07)'
-    case 'Avanzado':   return 'rgba(239,85,84,.1)'
-    default:           return 'var(--surface-low)'
-  }
-}
-
 function StageLabel({ children, color }: { children: React.ReactNode; color: 'navy' | 'teal' | 'coral' | 'purple' }) {
   const styles = {
     navy:   'bg-navy/10 text-navy',
@@ -140,17 +131,22 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
         </div>
       )}
 
-      {/* Nivel (dificultad) */}
-      {study.difficulty && (
-        <div className="mt-2">
-          <span
-            className="text-[10px] py-0.5 px-2 rounded-full font-semibold font-display"
-            style={{ background: getLevelColor(study.difficulty) }}
-          >
-            {study.difficulty}
-          </span>
-        </div>
-      )}
+      {/* Etapa del estudio (no la dificultad: confundía mostrando "Intermedio"/
+          "Avanzado" sobre estudios de etapa inicial/intermedia). */}
+      {(() => {
+        const STAGE_TAG: Record<string, { label: string; cls: string }> = {
+          niveles:    { label: 'Niveles',    cls: 'bg-navy/8 text-navy-light' },
+          inicial:    { label: 'Inicial',    cls: 'bg-teal-soft/30 text-teal-deep' },
+          intermedia: { label: 'Intermedia', cls: 'bg-coral/10 text-coral' },
+          'campaña':  { label: 'Abiertas a todo público', cls: 'bg-[rgba(155,127,212,0.15)] text-[#7c5cc4]' },
+        }
+        const t = STAGE_TAG[study.stage]
+        return t ? (
+          <div className="mt-2">
+            <span className={cn('text-[10px] py-0.5 px-2 rounded-full font-semibold font-display', t.cls)}>{t.label}</span>
+          </div>
+        ) : null
+      })()}
 
       {/* Botón editar — solo administración */}
       {canManage && (
@@ -423,12 +419,12 @@ export default function PlanDeEstudiosPage() {
           </div>
         </div>
 
-        <StageDivider label="Campañas — abiertas a toda la iglesia, sin prerrequisito" />
+        <StageDivider label="Campañas — abiertas a todo público" />
 
         {/* ── Campañas ── */}
         <div>
           <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
-            Campañas · Sin prerrequisito
+            Campañas · Abiertas a todo público
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {campana.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
