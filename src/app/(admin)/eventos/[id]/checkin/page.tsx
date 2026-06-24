@@ -33,11 +33,11 @@ function scanFeedback(ok: boolean) {
 }
 
 const AVATAR_COLORS: Record<string, string> = {
-  A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',
-  F: 'bg-coral', G: 'bg-teal-deep', H: 'bg-navy', I: 'bg-purple-700', J: 'bg-amber-500',
-  K: 'bg-coral', L: 'bg-teal-deep', M: 'bg-navy', N: 'bg-purple-700', O: 'bg-amber-500',
-  P: 'bg-coral', Q: 'bg-teal-deep', R: 'bg-navy', S: 'bg-purple-700', T: 'bg-amber-500',
-  U: 'bg-coral', V: 'bg-teal-deep', W: 'bg-navy', X: 'bg-purple-700', Y: 'bg-amber-500', Z: 'bg-coral',
+  A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-navy-light', E: 'bg-coral-deep',
+  F: 'bg-coral', G: 'bg-teal-deep', H: 'bg-navy', I: 'bg-navy-light', J: 'bg-coral-deep',
+  K: 'bg-coral', L: 'bg-teal-deep', M: 'bg-navy', N: 'bg-navy-light', O: 'bg-coral-deep',
+  P: 'bg-coral', Q: 'bg-teal-deep', R: 'bg-navy', S: 'bg-navy-light', T: 'bg-coral-deep',
+  U: 'bg-coral', V: 'bg-teal-deep', W: 'bg-navy', X: 'bg-navy-light', Y: 'bg-coral-deep', Z: 'bg-coral',
 }
 
 function avatarColor(name: string) {
@@ -393,7 +393,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
           {/* Búsqueda manual */}
           <input
-            className="w-full rounded-2xl bg-surface-card px-5 py-4 text-base text-navy placeholder-navy-light/40 outline-none focus:ring-2 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
+            className="w-full rounded-2xl bg-surface-card px-5 py-4 text-base text-navy placeholder-navy-light/60 outline-none focus:ring-2 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
             placeholder="Buscar por nombre o cédula…"
             aria-label="Buscar por nombre o cédula"
             value={query}
@@ -764,8 +764,10 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
     }
   }
 
-  const fieldCls = 'w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-coral/40'
+  const fieldCls = 'w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-coral/40'
   const fieldStyle = { background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-body)' } as const
+  const labelStyle = { fontFamily: 'var(--font-body)' } as const
+  const labelCls = 'text-[11px] text-white/70 block'
 
   return (
     <Modal onClose={onClose} titleId="new-person-title" width={448} tone="dark">
@@ -774,30 +776,30 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[11px] text-white/70" style={fieldStyle}>Nombre *</label>
-            <input className={fieldCls} style={fieldStyle} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Nombre" />
+            <label htmlFor="np-first" className={labelCls} style={labelStyle}>Nombre *</label>
+            <input id="np-first" className={fieldCls} style={fieldStyle} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Nombre" />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-white/70" style={fieldStyle}>Apellidos *</label>
-            <input className={fieldCls} style={fieldStyle} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Apellidos" />
+            <label htmlFor="np-last" className={labelCls} style={labelStyle}>Apellidos *</label>
+            <input id="np-last" className={fieldCls} style={fieldStyle} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Apellidos" />
           </div>
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] text-white/70" style={fieldStyle}>Teléfono</label>
-          <input className={fieldCls} style={fieldStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="8888-8888" />
+          <label htmlFor="np-phone" className={labelCls} style={labelStyle}>Teléfono</label>
+          <input id="np-phone" className={fieldCls} style={fieldStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="8888-8888" />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] text-white/70" style={fieldStyle}>Correo</label>
-          <input type="email" className={fieldCls} style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
+          <label htmlFor="np-email" className={labelCls} style={labelStyle}>Correo</label>
+          <input id="np-email" type="email" className={fieldCls} style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[11px] text-white/70" style={fieldStyle}>Cédula</label>
-            <input className={fieldCls} style={fieldStyle} value={cedula} onChange={e => setCedula(e.target.value)} placeholder="1-2345-6789" />
+            <label htmlFor="np-cedula" className={labelCls} style={labelStyle}>Cédula</label>
+            <input id="np-cedula" className={fieldCls} style={fieldStyle} value={cedula} onChange={e => setCedula(e.target.value)} placeholder="1-2345-6789" />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-white/70" style={fieldStyle}>Fecha de nacimiento</label>
-            <input type="date" className={fieldCls} style={fieldStyle} value={birthDate} onChange={e => setBirthDate(e.target.value)} />
+            <label htmlFor="np-birth" className={labelCls} style={labelStyle}>Fecha de nacimiento</label>
+            <input id="np-birth" type="date" className={fieldCls} style={fieldStyle} value={birthDate} onChange={e => setBirthDate(e.target.value)} />
           </div>
         </div>
 

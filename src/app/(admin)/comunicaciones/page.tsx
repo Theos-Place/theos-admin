@@ -163,7 +163,7 @@ export default function ComunicacionesPage() {
             Ver formularios <ChevronRight size={12} />
           </Link>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: 'Activos', value: formStats.active, Icon: FileText, color: 'text-navy' },
             { label: 'Total', value: formStats.total, Icon: ClipboardList, color: 'text-navy-light/70' },
@@ -228,6 +228,7 @@ export default function ComunicacionesPage() {
             {/* Filters */}
             <div className="flex flex-wrap gap-3">
               <select
+                aria-label="Filtrar por canal"
                 className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                 value={channelFilter}
                 onChange={e => setChannelFilter(e.target.value as ChannelFilter)}
@@ -238,6 +239,7 @@ export default function ComunicacionesPage() {
                 <option value="both">Ambos</option>
               </select>
               <select
+                aria-label="Filtrar por estado"
                 className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value as StatusFilter)}
@@ -250,6 +252,7 @@ export default function ComunicacionesPage() {
               <div className="flex items-center gap-2">
                 <input
                   type="date"
+                  aria-label="Desde"
                   className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
                   value={dateFrom}
                   onChange={e => setDateFrom(e.target.value)}
@@ -257,6 +260,7 @@ export default function ComunicacionesPage() {
                 <span className="text-navy-light/60 text-sm">—</span>
                 <input
                   type="date"
+                  aria-label="Hasta"
                   className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
                   value={dateTo}
                   onChange={e => setDateTo(e.target.value)}
