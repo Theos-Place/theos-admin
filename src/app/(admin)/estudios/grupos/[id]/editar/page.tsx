@@ -8,6 +8,8 @@ import { useToast } from '@/components/shared/Toast'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
+import { Combobox, type ComboValue } from '@/components/shared/Combobox'
+import { resolveZoneCode } from '@/lib/zones'
 import { cn } from '@/lib/utils'
 import { ChevronLeft } from 'lucide-react'
 import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
@@ -65,7 +67,9 @@ function EditarForm({ group, studyType, refetch }: {
   const toast = useToast()
   const { activeSedes: SEDES } = useSedes()
 
-  const [zone, setZone] = useState(group.zone ?? '')
+  const [zone, setZone] = useState<ComboValue>(
+    group.zone ? { kind: 'existing', value: group.zone, label: sedeLabel(group.zone) } : { kind: 'empty' },
+  )
   const [days, setDays] = useState<string[]>(group.schedule_days ?? [])
   const [time, setTime] = useState(group.schedule_time ?? '')
   const [location, setLocation] = useState(group.location ?? '')
@@ -87,13 +91,14 @@ function EditarForm({ group, studyType, refetch }: {
     setSaving(true)
     setError(null)
     try {
+      const zoneCode = await resolveZoneCode(zone)
       const res = await fetch(`/api/studies/groups/${group.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           leader_id: leaderId || null,
           co_leader_id: coLeaderId || null,
-          zone: zone || null,
+          zone: zoneCode,
           schedule_days: days,
           schedule_time: time || null,
           location: location || null,
@@ -186,10 +191,15 @@ function EditarForm({ group, studyType, refetch }: {
           {/* Zona */}
           <div className="col-span-2 space-y-1">
             <label className={labelCls}>Zona</label>
-            <select className={inputCls} value={zone} onChange={e => setZone(e.target.value)}>
-              <option value="">Sin zona</option>
-              {SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+            <Combobox
+              ariaLabel="Zona"
+              items={SEDES.map(s => ({ value: s.id, label: s.name }))}
+              value={zone}
+              onChange={setZone}
+              allowEmpty
+              emptyLabel="Sin zona"
+              placeholder="Buscar zona o escribir una nueva…"
+            />
           </div>
 
           {/* Días */}

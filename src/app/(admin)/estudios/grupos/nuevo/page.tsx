@@ -5,9 +5,11 @@ import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
 import { useDirigentes } from '@/hooks/useDirigentes'
-import { sedeLabel, useSedes } from '@/lib/sedes'
+import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
+import { Combobox, type ComboValue } from '@/components/shared/Combobox'
+import { resolveZoneCode } from '@/lib/zones'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import type { GroupStatus } from '@/types/study'
@@ -26,7 +28,6 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 
 type Step1 = {
   study_type_id: string
-  zone: string
   age_from: string
   age_to: string
   days: string[]
@@ -44,9 +45,10 @@ export default function NuevoGrupoPage() {
   const { dirigentes } = useDirigentes()
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
+  // Zona: "Todas las zonas" se modela como un item existente con value 'all'.
+  const [zoneSel, setZoneSel] = useState<ComboValue>({ kind: 'existing', value: 'all', label: 'Todas las zonas' })
   const [step1, setStep1] = useState<Step1>({
     study_type_id: '',
-    zone: 'all',
     age_from: '',
     age_to: '',
     days: [],
@@ -86,15 +88,20 @@ export default function NuevoGrupoPage() {
     if (!studyType) return
     setSubmitting(true)
     try {
+      // Resolver la zona: 'all'/vacío → null (todas); existente → su code; nueva →
+      // crear la sede (dedup server-side) y usar su code.
+      const isAll = zoneSel.kind === 'empty' || (zoneSel.kind === 'existing' && zoneSel.value === 'all')
+      const zoneCode = isAll ? null : await resolveZoneCode(zoneSel)
+      const zoneName = isAll ? 'Todas las zonas' : zoneSel.label
       const res = await fetch('/api/studies/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           study_type_id: studyType.code,
-          name: `${studyType.code} — ${step1.zone && step1.zone !== 'all' ? sedeLabel(step1.zone) : 'Todas las zonas'}`,
+          name: `${studyType.code} — ${zoneName}`,
           leader_id: leaderData?.member_id ?? null,
           co_leader_id: coLeaderData?.member_id ?? null,
-          zone: step1.zone && step1.zone !== 'all' ? step1.zone : null,
+          zone: zoneCode,
           schedule_days: step1.days,
           schedule_time: step1.time || null,
           location: step1.location || null,
@@ -222,14 +229,13 @@ export default function NuevoGrupoPage() {
               <label className="text-[11px] text-navy-light/60 font-display">
                 Zona *
               </label>
-              <select
-                className={inputCls}
-                value={step1.zone}
-                onChange={e => setS1('zone', e.target.value)}
-              >
-                <option value="all">Todas las zonas</option>
-                {SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              <Combobox
+                ariaLabel="Zona"
+                items={[{ value: 'all', label: 'Todas las zonas' }, ...SEDES.map(s => ({ value: s.id, label: s.name }))]}
+                value={zoneSel}
+                onChange={setZoneSel}
+                placeholder="Buscar zona o escribir una nueva…"
+              />
             </div>
 
             <div className="space-y-1">
@@ -344,17 +350,14 @@ export default function NuevoGrupoPage() {
           </div>
 
           <div className="flex flex-col items-end gap-1.5 pt-2">
-            {(!step1.study_type_id || !step1.zone) && (
+            {!step1.study_type_id && (
               <p className="text-[12px] text-navy-light/70 font-body" role="status">
-                Para continuar, seleccioná {[
-                  !step1.study_type_id && 'el tipo de estudio',
-                  !step1.zone && 'la zona',
-                ].filter(Boolean).join(' y ')}.
+                Para continuar, seleccioná el tipo de estudio.
               </p>
             )}
             <button
               onClick={() => setStep(2)}
-              disabled={!step1.study_type_id || !step1.zone}
+              disabled={!step1.study_type_id}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               Siguiente →
@@ -467,7 +470,7 @@ export default function NuevoGrupoPage() {
               </div>
               <div>
                 <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Zona</p>
-                <p className="text-navy font-body">{step1.zone ? sedeLabel(step1.zone) : '—'}</p>
+                <p className="text-navy font-body">{zoneSel.kind === 'empty' ? '—' : zoneSel.label}</p>
               </div>
               <div>
                 <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Días</p>
