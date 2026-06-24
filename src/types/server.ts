@@ -26,6 +26,12 @@ export type CommitteePosition = {
   title: string
   /** Servidores con status active u on_leave en este puesto. */
   active_count?: number
+  /** Campos descriptivos (importados de puestos_mapa_2026). Funciones/perfil traen
+   *  bullets • y saltos de línea — renderizar con white-space: pre-line. */
+  description?: string | null
+  functions?: string | null
+  profile?: string | null
+  study_requirement?: string | null
 }
 
 export type CommitteeData = {

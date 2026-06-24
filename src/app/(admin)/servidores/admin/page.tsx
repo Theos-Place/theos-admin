@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit2, X, AlertTriangle, ChevronRight, LayoutGrid, Trash2, Upload } from 'lucide-react'
+import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, Upload } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
@@ -11,6 +11,7 @@ import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { CommitteePosition } from '@/types/server'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 
@@ -289,12 +290,72 @@ function PositionModal({
   )
 }
 
+/** Edición enfocada de los campos descriptivos de un puesto (título, nivel de
+ *  estudio, descripción, funciones, perfil). Solo envía estos campos (PUT parcial)
+ *  para no tocar ubicación/cantidad/expiración/destacado. */
+type PosDescFields = { title: string; study_requirement: string; description: string; functions: string; profile: string }
+function PositionEditModal({
+  initial, onSave, onClose,
+}: {
+  initial: { title: string; study_requirement?: string | null; description?: string | null; functions?: string | null; profile?: string | null }
+  onSave: (data: PosDescFields) => void
+  onClose: () => void
+}) {
+  const [f, setF] = useState<PosDescFields>({
+    title: initial.title ?? '',
+    study_requirement: initial.study_requirement ?? '',
+    description: initial.description ?? '',
+    functions: initial.functions ?? '',
+    profile: initial.profile ?? '',
+  })
+  const set = <K extends keyof PosDescFields>(k: K, v: PosDescFields[K]) => setF(p => ({ ...p, [k]: v }))
+  const valid = f.title.trim().length > 0
+  return (
+    <Modal onClose={onClose} titleId="pos-edit-title" width={520}>
+      <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+        <h2 id="pos-edit-title" className="text-base font-bold text-navy font-display">Editar puesto</h2>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Nombre del puesto *</label>
+          <input autoFocus aria-label="Nombre del puesto" className={inputCls} value={f.title} onChange={e => set('title', e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Nivel de estudio</label>
+          <input aria-label="Nivel de estudio" className={inputCls} placeholder="Ej. Discípulos 2" value={f.study_requirement} onChange={e => set('study_requirement', e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Descripción</label>
+          <textarea aria-label="Descripción" className={cn(inputCls, 'resize-y')} rows={2} value={f.description} onChange={e => set('description', e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Funciones (una por línea, con •)</label>
+          <textarea aria-label="Funciones" className={cn(inputCls, 'resize-y font-mono text-[12px]')} rows={8} value={f.functions} onChange={e => set('functions', e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Perfil (una por línea, con •)</label>
+          <textarea aria-label="Perfil" className={cn(inputCls, 'resize-y font-mono text-[12px]')} rows={8} value={f.profile} onChange={e => set('profile', e.target.value)} />
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button disabled={!valid}
+            onClick={() => onSave({ ...f, title: f.title.trim() })}
+            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body">
+            Guardar cambios
+          </button>
+          <button onClick={onClose} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ServidoresAdminPage() {
   const { hasRole, loaded } = useAuth()
   const { adminAreas, adminCommittees, refetch: refetchOrg } = useOrg()
   const { committees: serverCommittees, refetch: refetchServers } = useServers()
+  const toast = useToast()
 
   // Áreas reales (tipo area) para el dropdown de "área base" del puesto.
   const [baseAreas, setBaseAreas] = useState<{ id: string; name: string }[]>([])
@@ -339,6 +400,34 @@ export default function ServidoresAdminPage() {
   const [commModal,   setCommModal]   = useState<CommModal>({ open: false, editing: null })
   const [deactTarget, setDeactTarget] = useState<DeactTarget>(null)
   const [posModalFor, setPosModalFor] = useState<string | null>(null)   // committee id
+  const [expandedPos, setExpandedPos] = useState<Set<string>>(new Set()) // puestos con detalle abierto
+  const [editPos, setEditPos] = useState<CommitteePosition | null>(null) // edición de campos descriptivos
+  function togglePos(id: string) {
+    setExpandedPos(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s })
+  }
+  async function savePositionDesc(data: { title: string; study_requirement: string; description: string; functions: string; profile: string }) {
+    const target = editPos
+    setEditPos(null)
+    if (!target) return
+    try {
+      const res = await fetch(`/api/servers/positions/${target.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title,
+          study_requirement: data.study_requirement || null,
+          description: data.description || null,
+          functions: data.functions || null,
+          profile: data.profile || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      await refetchServers()
+      toast('Puesto actualizado', 'success')
+    } catch {
+      toast('No se pudo guardar el puesto.', 'error')
+    }
+  }
   // Eliminación: usa los modales compartidos. confirmState para borrar con palabra
   // "eliminar"; warn cuando hay servidores activos y se bloquea.
   const [confirmState, setConfirmState] = useState<{ title: string; description: string; run: () => Promise<void> } | null>(null)
@@ -577,6 +666,10 @@ export default function ServidoresAdminPage() {
       )}
       {posModalFor && (
         <PositionModal areas={baseAreas} onSave={createPosition} onClose={() => setPosModalFor(null)} />
+      )}
+
+      {editPos && (
+        <PositionEditModal initial={editPos} onSave={savePositionDesc} onClose={() => setEditPos(null)} />
       )}
       <DeleteConfirmModal
         open={!!confirmState}
@@ -885,23 +978,67 @@ export default function ServidoresAdminPage() {
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto py-1.5">
-                {selectedCommPositions.map((p, i) => (
-                  <div
-                    key={p.id}
-                    className={cn('group flex items-center gap-2 px-5 py-2.5 hover:bg-surface-low transition-colors',
-                      i < selectedCommPositions.length - 1 && 'border-b border-[var(--outline-variant)]')}
-                  >
-                    <span className="flex-1 text-[13px] text-navy font-body">{p.title}</span>
-                    <button
-                      onClick={() => requestDeletePosition(p)}
-                      className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
-                      title="Eliminar puesto"
-                      aria-label={`Eliminar puesto ${p.title}`}
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                {selectedCommPositions.map((p, i) => {
+                  const open = expandedPos.has(p.id)
+                  const hasDetail = !!(p.description || p.functions || p.profile || p.study_requirement)
+                  return (
+                  <div key={p.id} className={cn(i < selectedCommPositions.length - 1 && 'border-b border-[var(--outline-variant)]')}>
+                    <div className="group flex items-center gap-2 px-5 py-2.5 hover:bg-surface-low transition-colors">
+                      <button
+                        onClick={() => togglePos(p.id)}
+                        className="flex flex-1 items-center gap-2 text-left min-w-0"
+                        aria-expanded={open}
+                        aria-label={`${open ? 'Ocultar' : 'Ver'} detalle de ${p.title}`}
+                      >
+                        {hasDetail
+                          ? (open ? <ChevronDown size={14} className="text-navy-light/50 shrink-0" /> : <ChevronRight size={14} className="text-navy-light/50 shrink-0" />)
+                          : <span className="w-3.5 shrink-0" />}
+                        <span className="flex-1 text-[13px] text-navy font-body truncate">{p.title}</span>
+                        {p.study_requirement && (
+                          <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep font-body">{p.study_requirement}</span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setEditPos(p)}
+                        className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-navy/5 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Editar puesto" aria-label={`Editar puesto ${p.title}`}
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => requestDeletePosition(p)}
+                        className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Eliminar puesto" aria-label={`Eliminar puesto ${p.title}`}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                    {open && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-surface-low/40">
+                        {p.description && (
+                          <div>
+                            <p className={labelCls}>Descripción</p>
+                            <p className="text-[13px] text-navy-light/80 font-body mt-0.5">{p.description}</p>
+                          </div>
+                        )}
+                        {p.functions && (
+                          <div>
+                            <p className={labelCls}>Funciones</p>
+                            <p className="text-[13px] text-navy-light/80 font-body mt-0.5 whitespace-pre-line leading-relaxed">{p.functions}</p>
+                          </div>
+                        )}
+                        {p.profile && (
+                          <div>
+                            <p className={labelCls}>Perfil</p>
+                            <p className="text-[13px] text-navy-light/80 font-body mt-0.5 whitespace-pre-line leading-relaxed">{p.profile}</p>
+                          </div>
+                        )}
+                        {!hasDetail && <p className="text-[12px] text-navy-light/50 font-body">Sin información descriptiva.</p>}
+                      </div>
+                    )}
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

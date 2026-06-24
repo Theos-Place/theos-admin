@@ -16,6 +16,10 @@ export type DbCommittee = {
   positions: Array<{
     id: string
     title: string
+    description: string | null
+    functions: string | null
+    profile: string | null
+    study_requirement: string | null
     volunteers: Array<{
       member_id: string
       status: 'active' | 'inactive' | 'on_leave' | 'pending'
@@ -110,7 +114,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
       id, name, ideal_capacity, leader_id, parent_id,
       leader:members!areas_leader_id_fkey(first_name, last_name),
       positions:service_positions!service_positions_area_id_fkey(
-        id, title,
+        id, title, description, functions, profile, study_requirement,
         volunteers(
           member_id, status, start_date,
           member:members(first_name, last_name, email, phone, birth_date)

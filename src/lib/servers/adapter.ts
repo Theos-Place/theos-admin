@@ -51,6 +51,10 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
       id: p.id,
       title: p.title,
       active_count: p.volunteers.filter((v) => v.status === 'active' || v.status === 'on_leave').length,
+      description: p.description,
+      functions: p.functions,
+      profile: p.profile,
+      study_requirement: p.study_requirement,
     })),
     open_vacancies: openVacancies,
   }
