@@ -42,6 +42,10 @@ export type DbMember = {
   deactivated_at: string | null
   sede_id: string | null
   field_updated_at: Record<string, string> | null
+  /** Enlace a la cuenta de Supabase Auth (null = sin cuenta de acceso). */
+  auth_user_id: string | null
+  /** Espejo de auth.users.email_confirmed_at (mig 096). Null = sin activar/sin cuenta. */
+  account_confirmed_at: string | null
   created_at: string
   updated_at: string
 }
@@ -438,6 +442,17 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
       }
       case 'marital': {
         res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id'))
+        break
+      }
+      case 'account': {
+        // Estado de cuenta de Auth, derivado de columnas denormalizadas (mig 096):
+        //  none → sin usuario de Auth; unconfirmed → con usuario, sin confirmar;
+        //  active → confirmado (account_confirmed_at no nulo).
+        res.include.push(await pagedIds(q => {
+          if (c.value === 'none') return q.is('auth_user_id', null)
+          if (c.value === 'active') return q.not('account_confirmed_at', 'is', null)
+          return q.not('auth_user_id', 'is', null).is('account_confirmed_at', null) // unconfirmed
+        }, 'members', 'member_id:id', 'id'))
         break
       }
       case 'created': {

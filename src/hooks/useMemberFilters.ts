@@ -85,6 +85,7 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
       if (c.to && d > c.to) return false
       return true
     }
+    case 'account': return m.account_state === c.value
   }
 }
 

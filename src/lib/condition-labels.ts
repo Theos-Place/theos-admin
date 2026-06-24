@@ -36,6 +36,8 @@ export function conditionLabel(c: FilterCondition): string {
     case 'status': return c.value === 'active' ? 'Perfil activo' : 'Perfil inactivo'
     case 'leader': return c.value === 'yes' ? 'Dirigente' : 'No dirigente'
     case 'marital': return `Estado civil: ${c.value}`
+    case 'account':
+      return c.value === 'none' ? 'Sin cuenta' : c.value === 'unconfirmed' ? 'Cuenta sin activar' : 'Cuenta activada'
     case 'created':
       if (c.from && c.to) return `Creado ${c.from} – ${c.to}`
       if (c.from) return `Creado desde ${c.from}`

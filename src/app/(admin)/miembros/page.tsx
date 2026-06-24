@@ -36,7 +36,7 @@ import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
 import { calcAge } from '@/lib/format'
 import {
-  initials, DirigenteLink, avatarColor, QUICK_CHIPS, MEMBER_COLUMNS, buildSegmentLabel,
+  initials, DirigenteLink, avatarColor, QUICK_CHIPS, MEMBER_COLUMNS, buildSegmentLabel, AccountBadge,
 } from './_members-columns'
 import { SaveListModal } from './_save-list-modal'
 
@@ -692,6 +692,7 @@ function MiembrosContent() {
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] text-coral font-body">Donador</span>}
+                    <AccountBadge state={member.account_state} />
                     <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
                       {member.is_active ? 'Activo' : 'Inactivo'}
                     </span>

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ShieldCheck, Check, KeyRound, Loader2 } from 'lucide-react'
+import { ShieldCheck, Check, KeyRound, Loader2, Mail, UserCheck, UserX, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
 import { MemberRecommendations } from './MemberRecommendations'
@@ -13,6 +13,14 @@ type AdminData = {
   approved_at: string | null
   approved_by_name: string | null
   can_edit: boolean
+}
+
+type AccountStatus = {
+  state: 'none' | 'unconfirmed' | 'active'
+  linked: boolean
+  email: string | null
+  email_confirmed_at: string | null
+  last_sign_in_at: string | null
 }
 
 /** Tab "Administrativo": SOLO roles administrativos (el miembro nunca lo ve, ni
@@ -25,6 +33,37 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
   const [error, setError] = useState<string | null>(null)
   const [pwBusy, setPwBusy] = useState(false)
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [account, setAccount] = useState<AccountStatus | null>(null)
+  const [accountLoading, setAccountLoading] = useState(true)
+  const [resendBusy, setResendBusy] = useState(false)
+  const [resendMsg, setResendMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    setAccountLoading(true)
+    fetch(`/api/members/${memberId}/account-status`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((d: AccountStatus) => { if (alive) setAccount(d) })
+      .catch(() => { if (alive) setAccount(null) })
+      .finally(() => { if (alive) setAccountLoading(false) })
+    return () => { alive = false }
+  }, [memberId])
+
+  async function resendActivation() {
+    if (resendBusy) return
+    setResendBusy(true)
+    setResendMsg(null)
+    try {
+      const res = await fetch(`/api/members/${memberId}/resend-activation`, { method: 'POST' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo reenviar el correo.')
+      setResendMsg({ ok: true, text: `Correo de activación reenviado a ${data?.email ?? account?.email ?? 'su correo'}.` })
+    } catch (e) {
+      setResendMsg({ ok: false, text: e instanceof Error ? e.message : 'No se pudo reenviar el correo.' })
+    } finally {
+      setResendBusy(false)
+    }
+  }
 
   const loadAdmin = useCallback(() => {
     return fetch(`/api/members/${memberId}/admin-data`)
@@ -73,29 +112,83 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Cuenta */}
+      {/* Cuenta y acceso */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
           <KeyRound size={15} className="text-navy-light/70" />
-          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Cuenta</p>
+          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Cuenta y acceso</p>
         </div>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <p className="text-[12px] text-navy-light/70 font-body flex-1 min-w-[200px]">
-            Envía al miembro un correo para restablecer su contraseña (link de Supabase Auth a su correo registrado).
-          </p>
-          <button
-            type="button"
-            onClick={sendPasswordReset}
-            disabled={pwBusy}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body shrink-0"
-          >
-            {pwBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><KeyRound size={14} /> Enviar correo de restablecer contraseña</>}
-          </button>
-        </div>
-        {pwMsg && (
-          <p className={`text-[12px] mt-2 font-body inline-flex items-center gap-1 ${pwMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
-            {pwMsg.ok && <Check size={12} />}{pwMsg.text}
-          </p>
+
+        {accountLoading ? (
+          <p className="text-[12px] text-navy-light/60 font-body inline-flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" /> Consultando estado de la cuenta…</p>
+        ) : !account || account.state === 'none' ? (
+          <div className="inline-flex items-center gap-2 rounded-full bg-surface-low px-3 py-1.5">
+            <UserX size={14} className="text-navy-light/60" />
+            <span className="text-[12px] text-navy-light/70 font-body">Este miembro no tiene cuenta de acceso.</span>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Indicador de estado */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {account.state === 'active' ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-[12px] font-medium text-teal-deep font-body">
+                  <UserCheck size={13} /> Cuenta activada
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[12px] font-medium text-amber-700 font-body">
+                  <Clock size={13} /> Cuenta sin activar
+                </span>
+              )}
+              {account.email && (
+                <span className="inline-flex items-center gap-1.5 text-[12px] text-navy-light/70 font-body">
+                  <Mail size={13} className="text-navy-light/50" /> {account.email}
+                </span>
+              )}
+            </div>
+
+            {/* Detalle de fechas */}
+            <div className="text-[11px] text-navy-light/60 font-body space-y-0.5">
+              {account.state === 'active' && account.email_confirmed_at && (
+                <p>Activada el {formatDate(account.email_confirmed_at)}</p>
+              )}
+              {account.last_sign_in_at
+                ? <p>Último acceso: {formatDateTime(account.last_sign_in_at)}</p>
+                : account.state === 'active' && <p>Sin accesos registrados todavía.</p>}
+            </div>
+
+            {/* Acciones */}
+            <div className="flex items-center gap-2 flex-wrap pt-1">
+              {account.state === 'unconfirmed' && (
+                <button
+                  type="button"
+                  onClick={resendActivation}
+                  disabled={resendBusy}
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
+                >
+                  {resendBusy ? <><Loader2 size={14} className="animate-spin" /> Reenviando…</> : <><Mail size={14} /> Reenviar correo de activación</>}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={sendPasswordReset}
+                disabled={pwBusy}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
+              >
+                {pwBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><KeyRound size={14} /> Enviar enlace de restablecer contraseña</>}
+              </button>
+            </div>
+
+            {resendMsg && (
+              <p className={`text-[12px] font-body inline-flex items-center gap-1 ${resendMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+                {resendMsg.ok && <Check size={12} />}{resendMsg.text}
+              </p>
+            )}
+            {pwMsg && (
+              <p className={`text-[12px] font-body inline-flex items-center gap-1 ${pwMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+                {pwMsg.ok && <Check size={12} />}{pwMsg.text}
+              </p>
+            )}
+          </div>
         )}
       </div>
 

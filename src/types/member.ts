@@ -51,6 +51,8 @@ export type Member = {
   photo_url: string | null
   is_donor: boolean
   is_active: boolean
+  /** Estado de la cuenta de acceso (Supabase Auth): sin cuenta / sin activar / activada. */
+  account_state: 'none' | 'unconfirmed' | 'active'
   deactivation_reason: string | null
   deactivated_at: string | null
   created_at: string

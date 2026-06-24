@@ -1944,6 +1944,7 @@ export type Database = {
       }
       members: {
         Row: {
+          account_confirmed_at: string | null
           address: string | null
           allergies: string | null
           auth_user_id: string | null
@@ -1988,6 +1989,7 @@ export type Database = {
           workplace: string | null
         }
         Insert: {
+          account_confirmed_at?: string | null
           address?: string | null
           allergies?: string | null
           auth_user_id?: string | null
@@ -2032,6 +2034,7 @@ export type Database = {
           workplace?: string | null
         }
         Update: {
+          account_confirmed_at?: string | null
           address?: string | null
           allergies?: string | null
           auth_user_id?: string | null

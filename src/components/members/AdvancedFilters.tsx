@@ -536,11 +536,13 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
   const leaderCond = conditions.find(c => c.type === 'leader') as Extract<FilterCondition, { type: 'leader' }> | undefined
   const ageCond    = conditions.find(c => c.type === 'age')    as Extract<FilterCondition, { type: 'age'    }> | undefined
   const maritalCond = conditions.find(c => c.type === 'marital') as Extract<FilterCondition, { type: 'marital' }> | undefined
+  const accountCond = conditions.find(c => c.type === 'account') as Extract<FilterCondition, { type: 'account' }> | undefined
 
   const donorVal  = donorCond  ? donorCond.value  : 'any'
   const statusVal = statusCond ? statusCond.value : 'any'
   const leaderVal = leaderCond ? leaderCond.value : 'any'
   const maritalVal = maritalCond ? maritalCond.value : 'any'
+  const accountVal = accountCond ? accountCond.value : 'any'
 
   const [ageMin, setAgeMin] = useState(ageCond?.min ?? '')
   const [ageMax, setAgeMax] = useState(ageCond?.max ?? '')
@@ -615,6 +617,19 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           <option value="any">Cualquiera</option>
           <option value="yes">Sí</option>
           <option value="no">No</option>
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Estado de cuenta</Label>
+        <Sel value={accountVal} onChange={v => {
+          if (accountCond) removeCondition(accountCond.id)
+          if (v !== 'any') addCondition({ group: 'account', type: 'account', value: v as 'none' | 'unconfirmed' | 'active' })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="none">Sin cuenta</option>
+          <option value="unconfirmed">Sin activar</option>
+          <option value="active">Activada</option>
         </Sel>
       </div>
 

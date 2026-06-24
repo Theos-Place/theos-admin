@@ -1,7 +1,7 @@
 // Columnas, constantes y helpers de presentación del padrón. Extraído de
 // miembros/page.tsx (auditoría 2026-06: archivos gigantes). Sin estado.
 import Link from 'next/link'
-import { Star } from 'lucide-react'
+import { Star, UserCheck, UserX, Clock } from 'lucide-react'
 import { type Member } from '@/types/member'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import type { FilterCondition } from '@/types/filters'
@@ -49,6 +49,25 @@ const GENDER_LABELS: Record<string, string> = {
   M: 'Masculino', F: 'Femenino', otro: 'No indica',
 }
 
+/** Texto del estado de cuenta para tooltips/export. */
+export const ACCOUNT_STATE_LABEL: Record<Member['account_state'], string> = {
+  none: 'Sin cuenta', unconfirmed: 'Sin activar', active: 'Activada',
+}
+
+/** Badge compacto del estado de cuenta de acceso (Auth). Tres estados. */
+export function AccountBadge({ state }: { state: Member['account_state'] }) {
+  const cfg = {
+    active:      { Icon: UserCheck, cls: 'bg-teal-soft/30 text-teal-deep', label: 'Activada' },
+    unconfirmed: { Icon: Clock,     cls: 'bg-amber-100 text-amber-700',    label: 'Sin activar' },
+    none:        { Icon: UserX,     cls: 'bg-surface-low text-navy-light/60', label: 'Sin cuenta' },
+  }[state]
+  return (
+    <span title={`Cuenta de acceso: ${cfg.label}`} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium font-body ${cfg.cls}`}>
+      <cfg.Icon size={11} /> {cfg.label}
+    </span>
+  )
+}
+
 export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   {
     key: 'name', label: 'Nombre', defaultVisible: true, alwaysVisible: true,
@@ -71,6 +90,11 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   {
     key: 'status', label: 'Estado', defaultVisible: false,
     exportValue: m => m.is_active ? 'Activo' : 'Inactivo',
+  },
+  {
+    key: 'account_state', label: 'Cuenta', defaultVisible: true, exportable: true,
+    render: m => <AccountBadge state={m.account_state} />,
+    exportValue: m => ACCOUNT_STATE_LABEL[m.account_state],
   },
   {
     key: 'is_donor', label: 'Donador', defaultVisible: false,
@@ -150,6 +174,9 @@ export function buildSegmentLabel(conditions: FilterCondition[], showDonors: boo
         break
       case 'status':
         parts.push(c.value === 'active' ? 'Activos' : 'Inactivos')
+        break
+      case 'account':
+        parts.push(c.value === 'none' ? 'Sin cuenta' : c.value === 'unconfirmed' ? 'Cuenta sin activar' : 'Cuenta activada')
         break
       default:
         parts.push(c.type)
