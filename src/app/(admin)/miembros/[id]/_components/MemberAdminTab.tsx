@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ShieldCheck, Check, KeyRound, Loader2, Mail, UserCheck, UserX, Clock } from 'lucide-react'
+import { ShieldCheck, Check, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
@@ -37,17 +37,36 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
   const [accountLoading, setAccountLoading] = useState(true)
   const [resendBusy, setResendBusy] = useState(false)
   const [resendMsg, setResendMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [createBusy, setCreateBusy] = useState(false)
+  const [createMsg, setCreateMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
-  useEffect(() => {
-    let alive = true
+  const loadAccount = useCallback(() => {
     setAccountLoading(true)
-    fetch(`/api/members/${memberId}/account-status`)
+    return fetch(`/api/members/${memberId}/account-status`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then((d: AccountStatus) => { if (alive) setAccount(d) })
-      .catch(() => { if (alive) setAccount(null) })
-      .finally(() => { if (alive) setAccountLoading(false) })
-    return () => { alive = false }
+      .then((d: AccountStatus) => setAccount(d))
+      .catch(() => setAccount(null))
+      .finally(() => setAccountLoading(false))
   }, [memberId])
+
+  useEffect(() => { loadAccount() }, [loadAccount])
+
+  async function createAccount() {
+    if (createBusy) return
+    setCreateBusy(true)
+    setCreateMsg(null)
+    try {
+      const res = await fetch(`/api/members/${memberId}/create-account`, { method: 'POST' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo crear la cuenta.')
+      setCreateMsg({ ok: true, text: `Cuenta creada y correo de activación enviado a ${data?.email ?? account?.email ?? 'su correo'}.` })
+      await loadAccount()
+    } catch (e) {
+      setCreateMsg({ ok: false, text: e instanceof Error ? e.message : 'No se pudo crear la cuenta.' })
+    } finally {
+      setCreateBusy(false)
+    }
+  }
 
   async function resendActivation() {
     if (resendBusy) return
@@ -122,9 +141,33 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
         {accountLoading ? (
           <p className="text-[12px] text-navy-light/60 font-body inline-flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" /> Consultando estado de la cuenta…</p>
         ) : !account || account.state === 'none' ? (
-          <div className="inline-flex items-center gap-2 rounded-full bg-surface-low px-3 py-1.5">
-            <UserX size={14} className="text-navy-light/60" />
-            <span className="text-[12px] text-navy-light/70 font-body">Este miembro no tiene cuenta de acceso.</span>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-surface-low px-3 py-1.5">
+              <UserX size={14} className="text-navy-light/60" />
+              <span className="text-[12px] text-navy-light/70 font-body">Este miembro no tiene cuenta de acceso.</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={createAccount}
+                disabled={createBusy || !account?.email}
+                title={!account?.email ? 'El miembro no tiene correo registrado.' : undefined}
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+              >
+                {createBusy ? <><Loader2 size={14} className="animate-spin" /> Creando…</> : <><UserPlus size={14} /> Crear cuenta de acceso</>}
+              </button>
+              {!account?.email && (
+                <span className="text-[11px] text-navy-light/60 font-body">Requiere un correo registrado en el perfil.</span>
+              )}
+            </div>
+            <p className="text-[11px] text-navy-light/60 font-body">
+              Crea el usuario de acceso y le envía el correo de activación (Supabase Auth) a su correo registrado.
+            </p>
+            {createMsg && (
+              <p className={`text-[12px] font-body inline-flex items-center gap-1 ${createMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+                {createMsg.ok && <Check size={12} />}{createMsg.text}
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
