@@ -227,6 +227,17 @@ export default function VacanteDetailPage() {
             </ul>
           </div>
 
+          {vacancy.position_profile && (
+            <div className="space-y-2">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                Perfil
+              </p>
+              <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
+                {vacancy.position_profile}
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
@@ -240,6 +251,14 @@ export default function VacanteDetailPage() {
               </p>
               <p className="text-sm text-navy font-body">{vacancy.commitment}</p>
             </div>
+            {vacancy.position_study_requirement && (
+              <div className="space-y-1">
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                  Nivel requerido
+                </p>
+                <p className="text-sm text-navy font-body">{vacancy.position_study_requirement}</p>
+              </div>
+            )}
           </div>
 
         </div>

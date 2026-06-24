@@ -65,14 +65,9 @@ function StudyCardCompact({ study }: { study: StudyType }) {
       <p className="text-xs text-navy leading-snug font-medium font-body">
         {study.name}
       </p>
-      <div className="flex items-center justify-between mt-0.5">
+      <div className="mt-0.5">
         <span className="text-[10px] text-navy-light/60 font-body">
           {study.weeks} sem.
-        </span>
-        <span
-          className={cn('text-[10px] font-medium', study.cost === 0 ? 'text-teal-deep/70' : 'text-navy-light/60', 'font-body')}
-        >
-          {formatCost(study.cost)}
         </span>
       </div>
     </Link>

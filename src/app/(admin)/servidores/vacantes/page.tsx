@@ -87,7 +87,7 @@ export default function VacantesPage() {
               <Upload size={14} /> Importar
             </Link>
             <Link href="/servidores/vacantes/nueva" className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
-              <Plus size={14} /> Nuevo puesto
+              <Plus size={14} /> Nueva vacante
             </Link>
           </div>
         )}

@@ -78,6 +78,8 @@ export function toDomainVacancy(db: DbVacancy): Vacancy {
     published_at: db.published_at,
     created_at: db.created_at,
     application_count: Array.isArray(db.applications) ? (db.applications[0]?.count ?? 0) : 0,
+    position_profile: db.pos?.profile ?? null,
+    position_study_requirement: db.pos?.study_requirement ?? null,
   }
 }
 

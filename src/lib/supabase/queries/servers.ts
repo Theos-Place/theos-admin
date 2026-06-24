@@ -32,7 +32,10 @@ export type DbCommittee = {
 export type DbVacancy = {
   id: string
   committee_id: string
+  position_id: string | null
   committee: { name: string; parent: { name: string } | null } | null
+  /** Perfil y nivel requerido del puesto enlazado (solo lectura en la vacante). */
+  pos: { profile: string | null; study_requirement: string | null } | null
   title: string
   position: string | null
   description: string | null
@@ -139,9 +142,10 @@ export async function getVacancies(): Promise<DbVacancy[]> {
   const { data, error } = await supabase
     .from('vacancies')
     .select(`
-      id, committee_id, title, position, description, functions, schedule, commitment,
+      id, committee_id, position_id, title, position, description, functions, schedule, commitment,
       slots_total, slots_filled, status, published_at, created_at,
       committee:areas!vacancies_committee_id_fkey(name),
+      pos:service_positions!vacancies_position_id_fkey(profile, study_requirement),
       applications:applications(count)
     `)
     .order('created_at', { ascending: false })
