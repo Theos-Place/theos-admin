@@ -34,8 +34,9 @@ export type DbVacancy = {
   committee_id: string
   position_id: string | null
   committee: { name: string; parent: { name: string } | null } | null
-  /** Perfil y nivel requerido del puesto enlazado (solo lectura en la vacante). */
-  pos: { profile: string | null; study_requirement: string | null } | null
+  /** Contenido del puesto enlazado (descripción/funciones/perfil/nivel): la vacante
+   *  los MUESTRA pero no los edita — viven en el puesto. */
+  pos: { description: string | null; functions: string | null; profile: string | null; study_requirement: string | null } | null
   title: string
   position: string | null
   description: string | null
@@ -47,6 +48,10 @@ export type DbVacancy = {
   status: 'draft' | 'published' | 'filled' | 'closed'
   published_at: string | null
   created_at: string
+  expires_at: string | null
+  location: string | null
+  notes: string | null
+  is_featured: boolean | null
   /** Conteo embebido de aplicaciones (PostgREST aggregate). */
   applications?: { count: number }[]
 }
@@ -172,9 +177,9 @@ export async function getVacancies(): Promise<DbVacancy[]> {
     .from('vacancies')
     .select(`
       id, committee_id, position_id, title, position, description, functions, schedule, commitment,
-      slots_total, slots_filled, status, published_at, created_at,
+      slots_total, slots_filled, status, published_at, created_at, expires_at, location, notes, is_featured,
       committee:areas!vacancies_committee_id_fkey(name),
-      pos:service_positions!vacancies_position_id_fkey(profile, study_requirement),
+      pos:service_positions!vacancies_position_id_fkey(description, functions, profile, study_requirement),
       applications:applications(count)
     `)
     .order('created_at', { ascending: false })
@@ -343,6 +348,10 @@ export type VacancyWriteInput = {
   commitment?: string | null
   slots_total?: number
   status?: 'draft' | 'published' | 'filled' | 'closed'
+  expires_at?: string | null
+  location?: string | null
+  notes?: string | null
+  is_featured?: boolean
 }
 
 // Vacantes
@@ -733,5 +742,94 @@ export async function removeVolunteer(positionId: string, memberId: string): Pro
     .update({ status: 'inactive', end_date: new Date().toISOString().slice(0, 10) })
     .eq('position_id', positionId)
     .eq('member_id', memberId)
+  if (error) throw error
+}
+
+// ── Solicitudes de puesto nuevo (position_requests) ──────────────────────────
+export type DbPositionRequest = {
+  id: string
+  committee_id: string
+  committee: { name: string } | null
+  title: string
+  description: string | null
+  functions: string | null
+  profile: string | null
+  study_requirement: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  requested_by: string | null
+  requester: { first_name: string; last_name: string } | null
+  reviewed_at: string | null
+  created_at: string
+}
+
+export type PositionRequestInput = {
+  committee_id: string
+  title: string
+  description?: string | null
+  functions?: string | null
+  profile?: string | null
+  study_requirement?: string | null
+  requested_by?: string | null
+}
+
+/** Crea una solicitud de puesto nuevo (estado 'pending'; NO crea el puesto). */
+export async function createPositionRequest(input: PositionRequestInput): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('position_requests').insert({
+    committee_id: input.committee_id,
+    title: input.title,
+    description: input.description ?? null,
+    functions: input.functions ?? null,
+    profile: input.profile ?? null,
+    study_requirement: input.study_requirement ?? null,
+    requested_by: input.requested_by ?? null,
+    status: 'pending',
+  }).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+export async function getPositionRequests(status?: 'pending' | 'approved' | 'rejected'): Promise<DbPositionRequest[]> {
+  const supabase = createAdminClient()
+  let q = supabase.from('position_requests').select(`
+    id, committee_id, title, description, functions, profile, study_requirement, status, requested_by, reviewed_at, created_at,
+    committee:areas!position_requests_committee_id_fkey(name),
+    requester:members!position_requests_requested_by_fkey(first_name, last_name)
+  `).order('created_at', { ascending: false })
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  return (data ?? []) as unknown as DbPositionRequest[]
+}
+
+/** Aprueba la solicitud: crea el puesto en el catálogo y marca la solicitud. */
+export async function approvePositionRequest(id: string, reviewerId: string | null): Promise<{ position_id: string }> {
+  const supabase = createAdminClient()
+  const { data: reqRow, error: e1 } = await supabase.from('position_requests')
+    .select('committee_id, title, description, functions, profile, study_requirement, status').eq('id', id).maybeSingle()
+  if (e1) throw e1
+  const req = reqRow as { committee_id: string; title: string; description: string | null; functions: string | null; profile: string | null; study_requirement: string | null; status: string } | null
+  if (!req) throw new Error('Solicitud no encontrada')
+  if (req.status !== 'pending') throw new Error('La solicitud ya fue resuelta')
+  const { id: positionId } = await createServicePosition({
+    area_id: req.committee_id,
+    title: req.title,
+    description: req.description,
+    functions: req.functions,
+    profile: req.profile,
+    study_requirement: req.study_requirement,
+  })
+  const { error: e2 } = await supabase.from('position_requests').update({
+    status: 'approved', reviewed_by: reviewerId, reviewed_at: new Date().toISOString(), created_position_id: positionId,
+  }).eq('id', id)
+  if (e2) throw e2
+  return { position_id: positionId }
+}
+
+export async function rejectPositionRequest(id: string, reviewerId: string | null): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('position_requests').update({
+    status: 'rejected', reviewed_by: reviewerId, reviewed_at: new Date().toISOString(),
+  }).eq('id', id)
   if (error) throw error
 }

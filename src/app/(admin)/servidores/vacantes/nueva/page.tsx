@@ -2,16 +2,18 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useServers } from '@/hooks/useServers'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-react'
+import { ChevronLeft, Check, FilePlus2 } from 'lucide-react'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
+const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60 font-display'
 
 function NuevaVacanteContent() {
   const params = useSearchParams()
+  const router = useRouter()
   const preselectedCommittee = params.get('comite') ?? ''
   const { committees: allCommittees } = useServers()
   const toast = useToast()
@@ -31,30 +33,26 @@ function NuevaVacanteContent() {
     ? allCommittees.filter(c => scope.ids.includes(c.id))
     : allCommittees
 
-  const [step, setStep] = useState(1)
-  const [submitted, setSubmitted] = useState(false)
-  const [published, setPublished] = useState(false)
-  const [saving, setSaving]   = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-
-  // Step 1 — solicitud interna
   const [committeeId, setCommitteeId] = useState(preselectedCommittee)
   const [positionId, setPositionId]   = useState('')
   const [slots, setSlots]             = useState('1')
-  const [justification, setJustification] = useState('')
-
-  // Step 2 — publicación
-  const [title, setTitle]         = useState('')
-  const [description, setDesc]    = useState('')
-  const [functions, setFunctions] = useState<string[]>([''])
-  const [schedule, setSchedule]   = useState('')
-  const [commitment, setCommitment] = useState('')
+  const [schedule, setSchedule]       = useState('')
+  const [commitment, setCommitment]   = useState('')
+  const [expiresAt, setExpiresAt]     = useState('')
+  const [location, setLocation]       = useState('')
+  const [notes, setNotes]             = useState('')
+  const [featured, setFeatured]       = useState(false)
+  const [saving, setSaving]           = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+  const [done, setDone]               = useState(false)
 
   const selectedCommittee = committees.find(c => c.id === committeeId)
-  const position = selectedCommittee?.positions?.find(p => p.id === positionId)?.title ?? ''
+  const selectedPosition = selectedCommittee?.positions?.find(p => p.id === positionId) ?? null
 
-  async function handleSubmit(status: 'draft' | 'published') {
-    if (saving) return
+  const valid = committeeId !== '' && positionId !== '' && Number(slots) >= 1
+
+  async function submit() {
+    if (!valid || saving || !selectedPosition) return
     setSaving(true)
     setError(null)
     try {
@@ -63,352 +61,150 @@ function NuevaVacanteContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           committee_id: committeeId,
-          position_id: positionId || null,
-          position,
-          title: title.trim() || position,
-          description: description.trim() || null,
-          functions: functions.map(f => f.trim()).filter(Boolean),
+          position_id: positionId,
+          position: selectedPosition.title,
+          title: selectedPosition.title,
+          // La descripción/funciones/perfil NO se mandan: viven en el puesto y la
+          // publicación pública las toma de ahí.
+          slots_total: Math.max(1, Number(slots) || 1),
           schedule: schedule.trim() || null,
           commitment: commitment.trim() || null,
-          slots_total: Math.max(1, Number(slots) || 1),
-          status,
+          expires_at: expiresAt || null,
+          location: location.trim() || null,
+          notes: notes.trim() || null,
+          is_featured: featured,
+          status: 'published',
         }),
       })
-      if (!res.ok) throw new Error('No se pudo guardar la vacante')
-      toast(status === 'published' ? 'Puesto publicado' : 'Borrador guardado', 'success')
-      setPublished(true)
+      if (!res.ok) {
+        const b = await res.json().catch(() => null)
+        throw new Error(b?.error || 'No se pudo crear la vacante')
+      }
+      setDone(true)
+      toast('Vacante solicitada', 'success')
+      setTimeout(() => router.push('/servidores/vacantes'), 1200)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
-      setError(msg)
-      toast(msg, 'error')
-    } finally {
-      setSaving(false)
+      setError(msg); toast(msg, 'error'); setSaving(false)
     }
   }
 
-  function addFunction() {
-    setFunctions(prev => [...prev, ''])
-  }
-
-  function updateFunction(idx: number, val: string) {
-    setFunctions(prev => prev.map((f, i) => i === idx ? val : f))
-  }
-
-  function removeFunction(idx: number) {
-    setFunctions(prev => prev.filter((_, i) => i !== idx))
-  }
-
-  function canStep1() {
-    return committeeId !== '' && positionId !== '' && Number(slots) >= 1
-  }
-
-  if (published) {
+  if (done) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <div className="text-center space-y-4">
-          <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
-            <Check size={24} className="text-teal-deep" />
-          </div>
-          <p className="text-xl font-bold text-navy font-display">
-            Puesto guardado
-          </p>
-          <p className="text-sm text-navy-light/60 font-body">
-            Las publicadas quedan disponibles para que los miembros apliquen; los borradores los podés editar luego.
-          </p>
-          <Link
-            href="/servidores/vacantes"
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2 font-body"
-          >
-            Ver todas las vacantes
-          </Link>
+        <div className="text-center space-y-3">
+          <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto"><Check size={24} className="text-teal-deep" /></div>
+          <p className="text-xl font-bold text-navy font-display">Vacante solicitada</p>
+          <p className="text-sm text-navy-light/60 font-body">Quedó publicada para que los miembros apliquen.</p>
         </div>
       </div>
     )
   }
 
-  if (submitted && step === 2) {
-    return (
-      <div className="max-w-2xl space-y-4">
-        {/* Top bar */}
-        <div
-          className="rounded-2xl px-5 py-3 flex items-center justify-between gap-3 bg-surface-card shadow-[var(--shadow-md)]"
-        >
-          <div className="flex items-center gap-3">
-            <Link
-              href="/servidores/vacantes"
-              className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
-            >
-              <ChevronLeft size={16} />
-              Puestos de Servicio
-            </Link>
-            <span className="text-navy-light/60">|</span>
-            <span className="text-sm font-semibold text-navy font-display">
-              Preparar publicación
-            </span>
-          </div>
-        </div>
-
-        {/* Banner solicitud */}
-        <div
-          className="rounded-2xl px-5 py-4 bg-surface-card shadow-[var(--shadow-md)]"
-        >
-          <p className="text-[11px] tracking-widest uppercase text-navy-light/60 mb-1 font-display">
-            Solicitud interna
-          </p>
-          <p className="text-sm font-semibold text-navy font-display">
-            {selectedCommittee?.name} · {position} · {slots} cupo{Number(slots) !== 1 ? 's' : ''}
-          </p>
-          {justification && (
-            <p className="text-[12px] text-navy-light/60 mt-1 font-body">
-              {justification}
-            </p>
-          )}
-        </div>
-
-        {/* Formulario de publicación */}
-        <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-              Título de la publicación
-            </label>
-            <input
-              className={inputCls}
-              placeholder="Ej: ¡Únete al equipo de bienvenida!"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-                Descripción pública
-              </label>
-              <span className="text-[10px] text-navy-light/60 font-mono">
-                {description.length}/500
-              </span>
-            </div>
-            <textarea
-              className={cn(inputCls, 'resize-none')}
-              rows={4}
-              maxLength={500}
-              placeholder="Describe el puesto de forma atractiva..."
-              value={description}
-              onChange={e => setDesc(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-              Funciones principales
-            </label>
-            {functions.map((f, idx) => (
-              <div key={idx} className="flex gap-2 items-center">
-                <span className="text-[11px] text-navy-light/60 shrink-0 w-4 font-mono">
-                  {idx + 1}.
-                </span>
-                <input
-                  className={inputCls}
-                  placeholder={`Función ${idx + 1}...`}
-                  value={f}
-                  onChange={e => updateFunction(idx, e.target.value)}
-                />
-                {functions.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeFunction(idx)}
-                    className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addFunction}
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-            >
-              <Plus size={12} />
-              Agregar función
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-                Horario
-              </label>
-              <input
-                className={inputCls}
-                placeholder="Ej: Domingos 8am – 12pm"
-                value={schedule}
-                onChange={e => setSchedule(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-                Compromiso esperado
-              </label>
-              <input
-                className={inputCls}
-                placeholder="Ej: 2 domingos al mes"
-                value={commitment}
-                onChange={e => setCommitment(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setSubmitted(false)}
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
-          >
-            <ChevronLeft size={14} />
-            Volver
-          </button>
-          <div className="flex-1" />
-          <button
-            type="button"
-            onClick={() => handleSubmit('draft')}
-            disabled={saving}
-            className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
-          >
-            Guardar como borrador
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSubmit('published')}
-            disabled={saving || !title.trim() || !description.trim()}
-            className={cn(
-              'rounded-full px-4 py-2 text-sm text-white transition-colors font-body',
-              !saving && title.trim() && description.trim()
-                ? 'bg-coral hover:bg-coral-deep'
-                : 'bg-navy-light/20 cursor-not-allowed'
-            )}
-          >
-            {saving ? 'Guardando...' : 'Publicar puesto'}
-          </button>
-        </div>
-
-        {error && (
-          <p className="text-sm text-coral text-right font-body">
-            {error}
-          </p>
-        )}
-      </div>
-    )
-  }
-
-  // Step 1 — solicitud interna
   return (
     <div className="max-w-2xl space-y-4">
-      {/* Top bar */}
-      <div
-        className="sticky top-0 z-10 rounded-2xl px-5 py-3 flex items-center justify-between gap-3 bg-surface-card shadow-[var(--shadow-md)]"
-      >
-        <div className="flex items-center gap-3">
-          <Link
-            href="/servidores/vacantes"
-            className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
-          >
-            <ChevronLeft size={16} />
-            Puestos de Servicio
-          </Link>
-          <span className="text-navy-light/60">|</span>
-          <span className="text-sm font-semibold text-navy font-display">
-            Solicitar puesto
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => { setSubmitted(true); setStep(2) }}
-          disabled={!canStep1()}
-          className={cn(
-            'inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[12px] text-white transition-colors font-body',
-            canStep1() ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
-          )}
-        >
-          Enviar solicitud
-          <ChevronRight size={13} />
-        </button>
+      <div className="flex items-center gap-3">
+        <Link href="/servidores/vacantes" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body">
+          <ChevronLeft size={16} /> Puestos de Servicio
+        </Link>
+        <span className="text-navy-light/60">|</span>
+        <span className="text-sm font-semibold text-navy font-display">Solicitar vacante</span>
       </div>
 
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-            Comité
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className={labelCls}>Comité</label>
+            <select className={inputCls} value={committeeId} onChange={e => { setCommitteeId(e.target.value); setPositionId('') }}>
+              <option value="">Seleccionar comité…</option>
+              {committees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Puesto</label>
+            <select className={inputCls} value={positionId} onChange={e => setPositionId(e.target.value)} disabled={!selectedCommittee}>
+              <option value="">{selectedCommittee ? 'Seleccionar puesto…' : 'Elegí un comité primero'}</option>
+              {selectedCommittee?.positions?.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Contenido del puesto (solo lectura): viene del catálogo, no se edita acá. */}
+        {selectedPosition && (
+          <div className="rounded-xl bg-surface-low p-4 space-y-3">
+            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Del puesto (no editable)</p>
+            {selectedPosition.study_requirement && (
+              <p className="text-[12px] text-navy-light/80 font-body"><span className="font-semibold text-navy">Nivel:</span> {selectedPosition.study_requirement}</p>
+            )}
+            {selectedPosition.description && (
+              <div><p className="text-[11px] font-semibold text-navy font-display">Descripción</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line">{selectedPosition.description}</p></div>
+            )}
+            {selectedPosition.functions && (
+              <div><p className="text-[11px] font-semibold text-navy font-display">Funciones</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{selectedPosition.functions}</p></div>
+            )}
+            {selectedPosition.profile && (
+              <div><p className="text-[11px] font-semibold text-navy font-display">Perfil</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{selectedPosition.profile}</p></div>
+            )}
+            {!selectedPosition.description && !selectedPosition.functions && !selectedPosition.profile && (
+              <p className="text-[12px] text-navy-light/60 font-body">Este puesto no tiene descripción/funciones/perfil cargados. Editalo en Administración de servidores si querés completarlo.</p>
+            )}
+          </div>
+        )}
+
+        {/* Datos propios de la vacante */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className={labelCls}>Cupos necesarios</label>
+            <input type="number" min={1} className={inputCls} value={slots} onChange={e => setSlots(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Ubicación / sede</label>
+            <input className={inputCls} placeholder="Sede / lugar (opcional)" value={location} onChange={e => setLocation(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Horario</label>
+            <input className={inputCls} placeholder="Ej. Domingos 8am–12pm" value={schedule} onChange={e => setSchedule(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Compromiso esperado</label>
+            <input className={inputCls} placeholder="Ej. 2 domingos al mes" value={commitment} onChange={e => setCommitment(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Expira</label>
+            <input type="date" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+          </div>
+          <label className="flex items-center gap-2 pb-1 self-end cursor-pointer">
+            <input type="checkbox" className="accent-coral" checked={featured} onChange={e => setFeatured(e.target.checked)} />
+            <span className="text-sm text-navy font-body">Destacada</span>
           </label>
-          <select
-            className={inputCls}
-            value={committeeId}
-            onChange={e => { setCommitteeId(e.target.value); setPositionId('') }}
-          >
-            <option value="">Seleccionar comité...</option>
-            {committees.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-            Puesto
-          </label>
-          <select
-            className={inputCls}
-            value={positionId}
-            onChange={e => setPositionId(e.target.value)}
-            disabled={!selectedCommittee}
-          >
-            <option value="">
-              {selectedCommittee ? 'Seleccionar puesto...' : 'Elegí un comité primero'}
-            </option>
-            {selectedCommittee?.positions?.map(p => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
+          <label className={labelCls}>Justificación / notas internas (opcional)</label>
+          <textarea className={cn(inputCls, 'resize-none')} rows={3} placeholder="¿Por qué se necesita?" value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
 
-        <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-            Número de servidores necesarios
-          </label>
-          <input
-            type="number"
-            min={1}
-            className={inputCls}
-            placeholder="1"
-            value={slots}
-            onChange={e => setSlots(e.target.value)}
-          />
-        </div>
+        {error && <p className="text-sm text-coral font-body">{error}</p>}
 
-        <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-            Justificación / notas internas
-          </label>
-          <textarea
-            className={cn(inputCls, 'resize-none')}
-            rows={4}
-            placeholder="¿Por qué se necesita este puesto? ¿Qué impacto tendrá en el comité?"
-            value={justification}
-            onChange={e => setJustification(e.target.value)}
-          />
+        <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--outline-variant)]">
+          <button type="button" onClick={submit} disabled={!valid || saving}
+            className={cn('rounded-full px-5 py-2.5 text-sm text-white transition-colors font-body', valid && !saving ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed')}>
+            {saving ? 'Solicitando…' : 'Solicitar vacante'}
+          </button>
         </div>
       </div>
+
+      <p className="text-[12px] text-navy-light/60 font-body flex items-center gap-1.5">
+        <FilePlus2 size={13} /> ¿El puesto no existe todavía?{' '}
+        <Link href="/servidores/puestos/solicitar" className="text-coral hover:underline">Solicitá un puesto nuevo</Link>.
+      </p>
     </div>
   )
 }
 
 export default function NuevaVacantePage() {
   return (
-    <Suspense fallback={
-      <div className="p-10 text-center text-[var(--fg-muted)]">Cargando...</div>
-    }>
+    <Suspense fallback={<div className="p-10 text-center text-[var(--fg-muted)]">Cargando…</div>}>
       <NuevaVacanteContent />
     </Suspense>
   )

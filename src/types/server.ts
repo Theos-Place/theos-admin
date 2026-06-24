@@ -67,9 +67,16 @@ export type Vacancy = {
   /** Conteo de aplicaciones de la vacante (embebido en la query, no se cargan
    *  todas las applications). Ausente en datos mock → tratar como 0. */
   application_count?: number
-  /** Perfil y nivel requerido del puesto enlazado (solo lectura). */
+  /** Contenido del puesto enlazado (solo lectura; la publicación pública usa esto). */
+  position_description?: string | null
+  position_functions?: string | null
   position_profile?: string | null
   position_study_requirement?: string | null
+  /** Logística propia de la vacante. */
+  expires_at?: string | null
+  location?: string | null
+  notes?: string | null
+  is_featured?: boolean
 }
 
 export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected'

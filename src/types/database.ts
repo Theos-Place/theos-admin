@@ -2545,6 +2545,100 @@ export type Database = {
           },
         ]
       }
+      position_requests: {
+        Row: {
+          committee_id: string
+          created_at: string | null
+          created_position_id: string | null
+          description: string | null
+          functions: string | null
+          id: string
+          profile: string | null
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          study_requirement: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          committee_id: string
+          created_at?: string | null
+          created_position_id?: string | null
+          description?: string | null
+          functions?: string | null
+          id?: string
+          profile?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          study_requirement?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          committee_id?: string
+          created_at?: string | null
+          created_position_id?: string | null
+          description?: string | null
+          functions?: string | null
+          id?: string
+          profile?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          study_requirement?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "position_requests_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_requests_created_position_id_fkey"
+            columns: ["created_position_id"]
+            isOneToOne: false
+            referencedRelation: "service_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       refunds: {
         Row: {
           amount: number
@@ -3653,8 +3747,12 @@ export type Database = {
           committee_id: string
           created_at: string | null
           description: string | null
+          expires_at: string | null
           functions: string[] | null
           id: string
+          is_featured: boolean
+          location: string | null
+          notes: string | null
           position: string | null
           position_id: string | null
           published_at: string | null
@@ -3670,8 +3768,12 @@ export type Database = {
           committee_id: string
           created_at?: string | null
           description?: string | null
+          expires_at?: string | null
           functions?: string[] | null
           id?: string
+          is_featured?: boolean
+          location?: string | null
+          notes?: string | null
           position?: string | null
           position_id?: string | null
           published_at?: string | null
@@ -3687,8 +3789,12 @@ export type Database = {
           committee_id?: string
           created_at?: string | null
           description?: string | null
+          expires_at?: string | null
           functions?: string[] | null
           id?: string
+          is_featured?: boolean
+          location?: string | null
+          notes?: string | null
           position?: string | null
           position_id?: string | null
           published_at?: string | null

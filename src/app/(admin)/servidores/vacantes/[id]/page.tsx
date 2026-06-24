@@ -204,28 +204,43 @@ export default function VacanteDetailPage() {
       {/* Tab: Descripción */}
       {tab === 'descripcion' && (
         <div className="space-y-5 py-4 px-[22px]">
-          <div className="space-y-2">
-            <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-              Descripción
-            </p>
-            <p className="text-sm text-navy leading-relaxed font-body">
-              {vacancy.description}
-            </p>
-          </div>
+          {/* Descripción y funciones vienen del PUESTO (no de la vacante). Para
+              vacantes viejas que tenían texto propio, se usa ese como fallback. */}
+          {(vacancy.position_description || vacancy.description) && (
+            <div className="space-y-2">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                Descripción
+              </p>
+              <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
+                {vacancy.position_description || vacancy.description}
+              </p>
+            </div>
+          )}
 
-          <div className="space-y-2">
-            <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-              Funciones principales
-            </p>
-            <ul className="space-y-1.5">
-              {vacancy.functions.map((f, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-coral shrink-0" />
-                  <span className="text-sm text-navy font-body">{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {vacancy.position_functions ? (
+            <div className="space-y-2">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                Funciones principales
+              </p>
+              <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
+                {vacancy.position_functions}
+              </p>
+            </div>
+          ) : vacancy.functions.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                Funciones principales
+              </p>
+              <ul className="space-y-1.5">
+                {vacancy.functions.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-coral shrink-0" />
+                    <span className="text-sm text-navy font-body">{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {vacancy.position_profile && (
             <div className="space-y-2">

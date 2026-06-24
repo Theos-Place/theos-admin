@@ -8,7 +8,7 @@ import { toDomainVacancy } from '@/lib/servers/adapter'
 import { useAuth } from '@/hooks/useAuth'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
-import { Plus, Users, ChevronDown, Upload, Search, MapPin, Clock, Calendar, Pencil, XCircle, Eye } from 'lucide-react'
+import { Plus, Users, ChevronDown, Upload, Search, MapPin, Clock, Calendar, Pencil, XCircle, Eye, FilePlus2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { ApplyToVacancyButton } from '@/components/servers/ApplyToVacancyButton'
@@ -16,6 +16,8 @@ import { ApplyToVacancyButton } from '@/components/servers/ApplyToVacancyButton'
 export default function VacantesPage() {
   const { hasRole } = useAuth()
   const isAdmin = hasRole(...SERVICE_ADMIN_ROLES) // ve acciones administrativas
+  // Coordinadores de comité también pueden solicitar (el backend valida el comité).
+  const canRequest = hasRole(...SERVICE_ADMIN_ROLES, 'lider_comite')
 
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -81,14 +83,23 @@ export default function VacantesPage() {
             {filtered.length} puesto{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
           </p>
         </div>
-        {isAdmin && (
+        {(isAdmin || canRequest) && (
           <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-            <Link href="/servidores/admin/importar" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body">
-              <Upload size={14} /> Importar
-            </Link>
-            <Link href="/servidores/vacantes/nueva" className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
-              <Plus size={14} /> Nueva vacante
-            </Link>
+            {isAdmin && (
+              <Link href="/servidores/admin/importar" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body">
+                <Upload size={14} /> Importar
+              </Link>
+            )}
+            {canRequest && (
+              <>
+                <Link href="/servidores/puestos/solicitar" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body">
+                  <FilePlus2 size={14} /> Solicitar puesto nuevo
+                </Link>
+                <Link href="/servidores/vacantes/nueva" className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
+                  <Plus size={14} /> Solicitar vacante
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

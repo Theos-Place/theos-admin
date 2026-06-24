@@ -12,6 +12,7 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { CommitteePosition } from '@/types/server'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { PositionRequestsSection } from './_PositionRequests'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 
@@ -705,6 +706,9 @@ export default function ServidoresAdminPage() {
           <Upload size={14} /> Importar puestos
         </a>
       </div>
+
+      {/* Solicitudes de puesto nuevo pendientes (Flujo 2) — Staff/admin las aprueba. */}
+      <PositionRequestsSection />
 
       {/* Paneles: áreas · comités · (puestos cuando hay comité seleccionado) */}
       <div className={cn('grid gap-4', selectedComm ? 'lg:grid-cols-[240px_minmax(0,1fr)_minmax(0,1fr)]' : 'lg:grid-cols-[300px_1fr]')}>
