@@ -2,35 +2,52 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Lock } from 'lucide-react'
+import { Check, Lock, Mail, AlertTriangle } from 'lucide-react'
 
+// Primer ingreso: el usuario llega desde el correo de invitación de Supabase Auth
+// con los tokens en el FRAGMENTO (#access_token=…&type=invite). El fragmento no se
+// manda al servidor, así que la sesión se procesa SOLO del lado del cliente
+// (getSession + onAuthStateChange). Acá fija su contraseña por primera vez.
+// La misma página sirve para recovery (reset) si el link llega con type=recovery.
 export default function CompletarPerfilPage() {
   const router = useRouter()
   const [ready, setReady] = useState(false)
   const [hasSession, setHasSession] = useState(false)
+  const [email, setEmail] = useState<string | null>(null)
+  const [isRecovery, setIsRecovery] = useState(false)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  // El link de invitación trae los tokens en la URL; el client los procesa.
-  // El cliente se crea acá (no en el cuerpo) para que no corra en el prerender,
-  // donde no hay env vars de Supabase y el build fallaría.
+  // El tipo de link (invite vs recovery) viaja en el fragmento → cambia el mensaje.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+    if (params.get('type') === 'recovery') setIsRecovery(true)
+  }, [])
+
+  // El client procesa los tokens del fragmento y establece la sesión temporal.
+  // Se crea dentro del effect para no correr en el prerender (sin env vars).
   useEffect(() => {
     let alive = true
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data }) => {
-      if (alive) { setHasSession(!!data.session); setReady(true) }
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (alive) { setHasSession(!!session); setReady(true) }
-    })
+    function apply(session: { user?: { email?: string | null } } | null) {
+      if (!alive) return
+      setHasSession(!!session)
+      setEmail(session?.user?.email ?? null)
+      setReady(true)
+    }
+    supabase.auth.getSession().then(({ data }) => apply(data.session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => apply(session))
     return () => { alive = false; sub.subscription.unsubscribe() }
   }, [])
 
-  async function submit() {
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
     setError(null)
     if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return }
     if (password !== confirm) { setError('Las contraseñas no coinciden.'); return }
@@ -38,79 +55,111 @@ export default function CompletarPerfilPage() {
     try {
       const supabase = createClient()
       const { error } = await supabase.auth.updateUser({ password })
-      if (error) throw error
+      if (error) {
+        // Mensaje real de Supabase (contraseña débil/filtrada, link expirado, etc.).
+        setError(error.message || 'No se pudo guardar la contraseña.')
+        setSaving(false)
+        return
+      }
       setDone(true)
-      setTimeout(() => router.push('/dashboard'), 1500)
-    } catch (err) {
-      console.error('No se pudo guardar la contraseña:', err)
-      setError('No se pudo guardar la contraseña. Pedí un nuevo link e intentá de nuevo.')
-    } finally {
+      setTimeout(() => router.push('/dashboard'), 1600)
+    } catch {
+      setError('No se pudo guardar la contraseña. El enlace pudo expirar; pedí uno nuevo.')
       setSaving(false)
     }
   }
 
+  const title = isRecovery ? 'Restablecé tu contraseña' : '¡Bienvenido a Theos Place!'
+  const subtitle = isRecovery
+    ? 'Elegí una nueva contraseña para tu cuenta.'
+    : 'Creá tu contraseña para activar tu cuenta.'
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-surface-low">
-      <div className="w-full max-w-sm rounded-3xl bg-white p-7 space-y-5 shadow-[var(--shadow-lg)]">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
-            Completá tu perfil
-          </h1>
-          <p className="text-sm text-navy-light/60 font-body">
-            Creá una contraseña para acceder a tu cuenta de Theos Place.
-          </p>
+      <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-lg)]">
+        {/* Header de marca */}
+        <div className="bg-navy px-7 pt-8 pb-7 text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-theos-white.png" alt="Theos Place" className="mx-auto h-9 w-auto" />
         </div>
 
-        {!ready ? (
-          <p className="text-sm text-navy-light/60 py-6 text-center font-body">Cargando…</p>
-        ) : done ? (
-          <div className="py-6 text-center space-y-3">
-            <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
-              <Check size={26} className="text-teal-deep" />
+        <div className="p-7 space-y-5">
+          {!ready ? (
+            <p className="text-sm text-navy-light/60 py-6 text-center font-body">Verificando tu enlace…</p>
+          ) : done ? (
+            <div className="py-6 text-center space-y-3">
+              <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
+                <Check size={26} className="text-teal-deep" />
+              </div>
+              <p className="text-base font-bold text-navy font-display">¡Cuenta activada!</p>
+              <p className="text-sm text-navy-light/70 font-body">Tu contraseña quedó guardada. Te estamos llevando al inicio…</p>
             </div>
-            <p className="text-sm text-navy font-body">¡Listo! Tu contraseña quedó guardada.</p>
-          </div>
-        ) : !hasSession ? (
-          <p className="text-sm text-coral py-4 font-body">
-            Este link no es válido o ya expiró. Pedí una nueva invitación.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Contraseña</label>
-              <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+          ) : !hasSession ? (
+            <div className="py-2 space-y-4 text-center">
+              <div className="h-14 w-14 rounded-full bg-coral/10 flex items-center justify-center mx-auto">
+                <AlertTriangle size={24} className="text-coral" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-bold text-navy font-display">Enlace inválido o expirado</p>
+                <p className="text-sm text-navy-light/70 font-body">
+                  Este enlace expiró o ya no es válido. Pedile a un administrador que te reenvíe la invitación.
+                </p>
+              </div>
+              <Link href="/login" className="inline-block text-sm text-coral hover:text-coral-deep font-body font-medium">
+                Ir al inicio de sesión →
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-1">
+                <h1 className="text-xl font-extrabold text-navy font-display tracking-[-0.02em]">{title}</h1>
+                <p className="text-sm text-navy-light/70 font-body">{subtitle}</p>
+              </div>
+
+              {email && (
+                <div className="flex items-center gap-2 rounded-2xl bg-surface-low px-3 py-2.5">
+                  <Mail size={15} className="shrink-0 text-navy-light/60" />
+                  <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{email}</span>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Contraseña nueva</label>
+                <div className="relative">
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full rounded-2xl border pl-9 pr-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 border-[var(--outline-variant)] font-body"
+                    placeholder="Mínimo 8 caracteres"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Repetir contraseña</label>
                 <input
                   type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full rounded-2xl border pl-9 pr-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 border-[var(--outline-variant)] font-body"
-                  placeholder="Mínimo 8 caracteres"
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  className="w-full rounded-2xl border px-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 border-[var(--outline-variant)] font-body"
+                  placeholder="Repetí la contraseña"
                 />
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Repetir contraseña</label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                className="w-full rounded-2xl border px-4 py-3 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-coral/30 border-[var(--outline-variant)] font-body"
-                placeholder="Repetí la contraseña"
-              />
-            </div>
 
-            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+              {error && <p className="text-[12px] text-coral font-body">{error}</p>}
 
-            <button
-              onClick={submit}
-              disabled={saving}
-              className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
-            >
-              {saving ? 'Guardando…' : 'Guardar contraseña'}
-            </button>
-          </div>
-        )}
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+              >
+                {saving ? 'Guardando…' : isRecovery ? 'Guardar contraseña' : 'Activar mi cuenta'}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   )
