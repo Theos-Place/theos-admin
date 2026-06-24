@@ -20,7 +20,6 @@ import {
 } from 'lucide-react'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { Modal } from '@/components/shared/Modal'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { useMembers } from '@/hooks/useMembers'
 import { toDomainMember } from '@/lib/members/adapter'
@@ -39,6 +38,7 @@ import { calcAge } from '@/lib/format'
 import {
   initials, DirigenteLink, avatarColor, QUICK_CHIPS, MEMBER_COLUMNS, buildSegmentLabel,
 } from './_members-columns'
+import { SaveListModal } from './_save-list-modal'
 
 
 function MiembrosContent() {
@@ -725,98 +725,17 @@ function MiembrosContent() {
       </div>
       {/* ── Guardar lista modal ── */}
       {saveListOpen && (
-        <Modal onClose={() => setSaveListOpen(false)} titleId="guardar-lista-title" width={384}>
-          <div className="p-6 space-y-4">
-            <p id="guardar-lista-title" className="text-base font-bold text-navy font-display">
-              Guardar lista de miembros
-            </p>
-
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-                  Nombre de la lista *
-                </label>
-                <input
-                  autoFocus
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                  placeholder="Ej. Donadores Heredia..."
-                  value={saveListName}
-                  onChange={e => setSaveListName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-                  Descripción (opcional)
-                </label>
-                <input
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                  placeholder="Para qué sirve esta lista..."
-                  value={saveListDesc}
-                  onChange={e => setSaveListDesc(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-                  Tags (separados por coma)
-                </label>
-                <input
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                  placeholder="donadores, heredia..."
-                  value={saveListTags}
-                  onChange={e => setSaveListTags(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-                  Tipo de lista
-                </label>
-                {[
-                  { val: true,  label: 'Dinámica', desc: 'Se recalcula con los filtros actuales cada vez que la abrís' },
-                  { val: false, label: 'Snapshot', desc: `Guarda los ${resultTotal.toLocaleString('es-CR')} miembros exactos de ahora` },
-                ].map(opt => (
-                  <button
-                    key={String(opt.val)}
-                    type="button"
-                    onClick={() => setSaveListDynamic(opt.val)}
-                    className={`flex items-start gap-3 w-full text-left rounded-xl border p-3 transition-all ${saveListDynamic === opt.val ? 'border-navy bg-navy/4' : 'border-outline'}`}
-                  >
-                    <div className={cn('mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0', saveListDynamic === opt.val ? 'border-coral bg-coral' : 'border-navy-light/30')}>
-                      {saveListDynamic === opt.val && <Check size={9} className="text-white" strokeWidth={3} />}
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-medium text-navy font-body">{opt.label}</p>
-                      <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">{opt.desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div
-              className="rounded-xl px-3 py-2.5 text-[12px] text-navy-light/60 bg-surface-low font-body"
-            >
-              Resumen: <strong className="text-navy">{resultTotal.toLocaleString('es-CR')} miembros</strong>
-              {' · '}{buildSegmentLabel(filters.conditions, showDonors, showServers)}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSaveListOpen(false)}
-                className="flex-1 rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSaveList}
-                disabled={!saveListName.trim() || savingList}
-                className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
-              >
-                {savingList ? 'Obteniendo miembros…' : 'Guardar lista'}
-              </button>
-            </div>
-          </div>
-        </Modal>
+        <SaveListModal
+          name={saveListName} onName={setSaveListName}
+          desc={saveListDesc} onDesc={setSaveListDesc}
+          tags={saveListTags} onTags={setSaveListTags}
+          dynamic={saveListDynamic} onDynamic={setSaveListDynamic}
+          saving={savingList}
+          total={resultTotal}
+          summaryLabel={buildSegmentLabel(filters.conditions, showDonors, showServers)}
+          onClose={() => setSaveListOpen(false)}
+          onSave={handleSaveList}
+        />
       )}
 
       {/* ── Toast ── */}
