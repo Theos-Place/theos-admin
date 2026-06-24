@@ -6,6 +6,7 @@ import { DayPicker } from 'react-day-picker'
 import { es } from 'react-day-picker/locale'
 import { Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toYmdLocal } from '@/lib/format'
 import 'react-day-picker/style.css'
 
 interface DatePickerProps {
@@ -26,12 +27,6 @@ function ymdToDate(s: string): Date | undefined {
   const [y, m, d] = s.split('-').map(Number)
   if (!y || !m || !d) return undefined
   return new Date(y, m - 1, d)
-}
-
-function dateToYmd(d: Date): string {
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${day}`
 }
 
 function labelOf(d: Date | undefined): string {
@@ -107,7 +102,7 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
             selected={selected}
             defaultMonth={selected}
             disabled={minDate ? { before: minDate } : undefined}
-            onSelect={(d) => { if (d) { onChange(dateToYmd(d)); setOpen(false) } }}
+            onSelect={(d) => { if (d) { onChange(toYmdLocal(d)); setOpen(false) } }}
           />
         </div>,
         document.body,

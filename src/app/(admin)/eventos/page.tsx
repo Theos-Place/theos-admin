@@ -19,6 +19,7 @@ import { CalendarGrid } from '@/components/events/CalendarGrid'
 import { recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
+import { downloadBlob } from '@/lib/export'
 import { Plus, Calendar, Download, Code, ExternalLink, Repeat } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { CheckSquare } from 'lucide-react'
@@ -54,13 +55,7 @@ function downloadAllEventsICS(events: MockEvent[]) {
     'END:VCALENDAR',
   ].join('\r\n')
 
-  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `theos-eventos-${new Date().toISOString().split('T')[0]}.ics`
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadBlob(ics, `theos-eventos-${new Date().toISOString().split('T')[0]}.ics`, 'text/calendar;charset=utf-8')
 }
 
 function EventosContent() {

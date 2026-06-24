@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { Modal } from '@/components/shared/Modal'
-import { getInitials } from '@/lib/format'
+import { getInitials, toYmdLocal } from '@/lib/format'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -305,8 +305,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     ? ''
     : eventDate.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   // ¿Se está registrando en una fecha distinta a la del evento? (registro tardío)
-  const ymdLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  const dateMismatch = !isNaN(eventDate.getTime()) && ymdLocal(eventDate) !== ymdLocal(new Date())
+  const dateMismatch = !isNaN(eventDate.getTime()) && toYmdLocal(eventDate) !== toYmdLocal(new Date())
 
   return (
     <div className="min-h-screen bg-surface-low flex flex-col font-body">

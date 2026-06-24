@@ -7,6 +7,7 @@ import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
+import { downloadBlob } from '@/lib/export'
 import { Repeat } from 'lucide-react'
 import type { MockEvent } from '@/data/event-config'
 
@@ -43,13 +44,7 @@ function downloadICS(event: Event, withRRule: boolean) {
     'END:VEVENT',
     'END:VCALENDAR',
   ]
-  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${event.name.replace(/\s+/g, '-')}.ics`
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadBlob(lines.join('\r\n'), `${event.name.replace(/\s+/g, '-')}.ics`, 'text/calendar;charset=utf-8')
 }
 
 type Props = {

@@ -7,9 +7,8 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
-import { calcAge } from '@/lib/format'
+import { calcAge, formatDateNumeric, initialsFromParts } from '@/lib/format'
 import { ChevronLeft, Users } from 'lucide-react'
-import { initialsFromParts } from '@/lib/format'
 
 type DupMember = {
   id: string; first_name: string; last_name: string
@@ -41,14 +40,9 @@ const LEVEL = {
   bajo:  { label: 'Baja coincidencia',  cls: 'text-navy-light/60 bg-surface-low' },
 }
 
-function fmtDate(iso: string | null) {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
-}
 function birthLabel(m: DupMember) {
   if (!m.birth_date) return '—'
-  return `${fmtDate(m.birth_date)} (${calcAge(m.birth_date)} años)`
+  return `${formatDateNumeric(m.birth_date)} (${calcAge(m.birth_date)} años)`
 }
 function initials(m: DupMember) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -68,7 +62,7 @@ function MemberMini({ m }: { m: DupMember }) {
         <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Email</dt><dd className="text-navy-light/70 truncate">{m.email ?? '—'}</dd></div>
         <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Teléfono</dt><dd className="text-navy-light/70 truncate">{m.phone ?? '—'}</dd></div>
         <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Nacimiento</dt><dd className="text-navy-light/70 truncate">{birthLabel(m)}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Creado</dt><dd className="text-navy-light/70 truncate">{fmtDate(m.created_at)}</dd></div>
+        <div className="flex gap-1"><dt className="text-navy-light/60 w-16 shrink-0">Creado</dt><dd className="text-navy-light/70 truncate">{formatDateNumeric(m.created_at)}</dd></div>
       </dl>
     </div>
   )
@@ -91,13 +85,13 @@ const MERGE_FIELDS: { key: keyof DupMember; label: string }[] = [
 function fieldDisplay(m: DupMember, key: keyof DupMember): string {
   const v = m[key]
   if (v === null || v === undefined || v === '') return '—'
-  if (key === 'birth_date') return fmtDate(v as string)
+  if (key === 'birth_date') return formatDateNumeric(v as string)
   if (key === 'photo_url') return 'Foto cargada'
   return String(v)
 }
 function fieldEditedLabel(m: DupMember, key: string): string | null {
   const ts = m.field_updated_at?.[key]
-  return ts ? `editado ${fmtDate(ts)}` : null
+  return ts ? `editado ${formatDateNumeric(ts)}` : null
 }
 /** Selección por defecto: el valor editado más recientemente; si solo uno tiene
  *  valor, ese; si ninguno, 'a'. */

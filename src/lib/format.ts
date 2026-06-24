@@ -17,6 +17,13 @@ export function todayCR(): string {
   return ymdCR()
 }
 
+/** Fecha calendario (YYYY-MM-DD) de un Date en hora LOCAL del navegador. Para
+ *  inputs/comparaciones de fecha en componentes cliente (en CR, local = CR).
+ *  Para lógica server-side usá [[ymdCR]], que fuerza la zona CR. */
+export function toYmdLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 /** Edad en años cumplidos a partir de la fecha de nacimiento. 0 si falta/ inválida. */
 export function calcAge(birthDate: string | null | undefined): number {
   if (!birthDate) return 0

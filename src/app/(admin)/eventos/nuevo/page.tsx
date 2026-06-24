@@ -6,6 +6,7 @@ import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { type EventType } from '@/data/event-config'
+import { toYmdLocal } from '@/lib/format'
 import { useEventTypes } from '@/hooks/useEventTypes'
 import { StepSidebar } from './_components/StepSidebar'
 import { Step1Informacion } from './_components/Step1Informacion'
@@ -48,10 +49,6 @@ interface FormData {
 const STEPS_COUNT = 4
 
 // ── Defaults de fecha/hora para agilizar la creación ──────────────────────────
-function todayYmd(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 /** Hora actual redondeada hacia arriba a la siguiente media hora (HH:mm). */
 function nextHalfHour(): string {
   const d = new Date()
@@ -85,7 +82,7 @@ function NuevoEventoForm() {
   const toast = useToast()
   // Fecha precargada al venir del clic en una celda del calendario (?date=YYYY-MM-DD).
   const dateParam = useSearchParams().get('date')
-  const initialDate = dateParam || todayYmd()
+  const initialDate = dateParam || toYmdLocal(new Date())
   const initialStart = nextHalfHour()
   // Marca si el usuario tocó la hora/fecha final (para no sobreescribir el default +1h).
   const [endTouched, setEndTouched] = useState(false)

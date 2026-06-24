@@ -11,6 +11,7 @@ import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { generateCSV } from '@/lib/export'
 
 function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   if (!form) return
@@ -18,20 +19,13 @@ function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   const headers = ['Miembro', 'Fecha', ...dataFields.map(f => f.label)]
   const rows = responses.map(r => [
     r.member_name,
-    new Date(r.submitted_at).toLocaleDateString('es-CR'),
+    new Date(r.submitted_at).toLocaleDateString('es-CR', { timeZone: 'America/Costa_Rica' }),
     ...dataFields.map(f => {
       const ans = r.answers[f.id]
       return Array.isArray(ans) ? ans.join(', ') : String(ans ?? '')
     }),
   ])
-  const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${form.name.replace(/\s+/g, '-')}-respuestas.csv`
-  link.click()
-  URL.revokeObjectURL(url)
+  generateCSV(headers, rows, `${form.name.replace(/\s+/g, '-')}-respuestas`)
 }
 
 export default function RespuestasPage() {
