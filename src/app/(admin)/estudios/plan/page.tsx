@@ -409,7 +409,7 @@ export default function PlanDeEstudiosPage() {
         {/* ── Etapa Inicial ── */}
         <div className="mb-1">
           <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
-            Etapa Inicial — ₡15,000 · Requiere asistir a charlas
+            Etapa Inicial · Requiere asistir a charlas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {inicial.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
@@ -421,7 +421,7 @@ export default function PlanDeEstudiosPage() {
         {/* ── Etapa Intermedia ── */}
         <div className="mb-1">
           <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
-            Etapa Intermedia — ₡20,000 · Requiere donador + servidor + charlas
+            Etapa Intermedia · Requiere donador + servidor + charlas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {intermedia.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
@@ -433,7 +433,7 @@ export default function PlanDeEstudiosPage() {
         {/* ── Campañas ── */}
         <div>
           <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
-            Campañas — ₡25,000 · Sin prerrequisito
+            Campañas · Sin prerrequisito
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {campana.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}

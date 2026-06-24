@@ -24,10 +24,22 @@ export function toYmdLocal(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
+
+/** Parsea una fecha respetando las fechas PURAS (YYYY-MM-DD, columnas `date`) como
+ *  locales — `new Date('1990-05-15')` las interpreta como medianoche UTC y en CR
+ *  (UTC-6) retroceden un día. Los timestamps con hora se parsean normal. */
+function parseFlexibleDate(d: string): Date {
+  if (DATE_ONLY_RE.test(d)) {
+    return new Date(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10)))
+  }
+  return new Date(d)
+}
+
 /** Edad en años cumplidos a partir de la fecha de nacimiento. 0 si falta/ inválida. */
 export function calcAge(birthDate: string | null | undefined): number {
   if (!birthDate) return 0
-  const nac = new Date(birthDate)
+  const nac = parseFlexibleDate(birthDate)
   if (isNaN(nac.getTime())) return 0
   const hoy = new Date()
   let edad = hoy.getFullYear() - nac.getFullYear()
@@ -39,7 +51,7 @@ export function calcAge(birthDate: string | null | undefined): number {
 /** Fecha corta: "5 may 2026". null/inválida → '—'. */
 export function formatDate(d: string | null | undefined): string {
   if (!d) return '—'
-  const date = new Date(d)
+  const date = parseFlexibleDate(d)
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -47,7 +59,7 @@ export function formatDate(d: string | null | undefined): string {
 /** Fecha con mes completo: "5 de mayo de 2026" (es-CR usa "5 de mayo de 2026"). null → '—'. */
 export function formatDateLong(d: string | null | undefined): string {
   if (!d) return '—'
-  const date = new Date(d)
+  const date = parseFlexibleDate(d)
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })
 }
@@ -55,7 +67,7 @@ export function formatDateLong(d: string | null | undefined): string {
 /** Fecha numérica: "05/05/2026". null → '—'. */
 export function formatDateNumeric(d: string | null | undefined): string {
   if (!d) return '—'
-  const date = new Date(d)
+  const date = parseFlexibleDate(d)
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }

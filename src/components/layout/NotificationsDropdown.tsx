@@ -144,15 +144,17 @@ export function NotificationsBell() {
               </button>
             ))}
 
-            {/* Alertas del sistema */}
+            {/* Alertas del sistema. Navegación IMPERATIVA (no <Link>): el onClick
+                hace setOpen(false), que desmonta el dropdown en el mismo clic y
+                abortaba la navegación declarativa del <Link>. */}
             {alerts.map(a => {
               const cfg = TYPE_CONFIG[a.type]
               return (
-                <Link
+                <button
                   key={a.id}
-                  href={a.url}
-                  onClick={() => setOpen(false)}
-                  className="flex items-start gap-3 px-4 py-3.5 hover:bg-surface-low transition-colors border-b last:border-b-0 border-outline"
+                  type="button"
+                  onClick={() => { setOpen(false); router.push(a.url) }}
+                  className="flex w-full items-start gap-3 px-4 py-3.5 text-left hover:bg-surface-low transition-colors border-b last:border-b-0 border-outline"
                 >
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: cfg.bg }}>
                     <cfg.Icon size={14} style={{ color: cfg.color }} />
@@ -160,7 +162,7 @@ export function NotificationsBell() {
                   <p className="flex-1 text-[13px] leading-snug text-navy font-body">
                     {a.message}
                   </p>
-                </Link>
+                </button>
               )
             })}
           </div>
