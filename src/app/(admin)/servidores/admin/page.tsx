@@ -707,7 +707,7 @@ export default function ServidoresAdminPage() {
       </div>
 
       {/* Paneles: áreas · comités · (puestos cuando hay comité seleccionado) */}
-      <div className={cn('grid gap-4', selectedComm ? 'lg:grid-cols-[260px_1fr_320px]' : 'lg:grid-cols-[300px_1fr]')}>
+      <div className={cn('grid gap-4', selectedComm ? 'lg:grid-cols-[240px_minmax(0,0.85fr)_minmax(0,1.4fr)]' : 'lg:grid-cols-[300px_1fr]')}>
 
         {/* ── Left: areas ─────────────────────────────────────────── */}
         <div
