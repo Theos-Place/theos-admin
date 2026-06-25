@@ -419,12 +419,12 @@ export default function PlanDeEstudiosPage() {
           </div>
         </div>
 
-        <StageDivider label="Campañas — abiertas a todo público" />
+        <StageDivider label="Abiertas a todo público" />
 
         {/* ── Campañas ── */}
         <div>
           <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
-            Campañas · Abiertas a todo público
+            Campañas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {campana.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
