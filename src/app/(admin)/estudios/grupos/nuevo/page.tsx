@@ -301,18 +301,6 @@ export default function NuevoGrupoPage() {
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
-                Ubicación exacta
-              </label>
-              <input
-                className={inputCls}
-                placeholder="Edificio Meridiano, Escazú"
-                value={step1.location}
-                onChange={e => setS1('location', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
                 Capacidad máxima
               </label>
               <input
@@ -321,6 +309,18 @@ export default function NuevoGrupoPage() {
                 className={inputCls}
                 value={step1.capacity}
                 onChange={e => setS1('capacity', e.target.value)}
+              />
+            </div>
+
+            <div className="col-span-1 sm:col-span-2 space-y-1">
+              <label className="text-[11px] text-navy-light/60 font-display">
+                Ubicación exacta
+              </label>
+              <input
+                className={inputCls}
+                placeholder="Edificio Meridiano, Escazú"
+                value={step1.location}
+                onChange={e => setS1('location', e.target.value)}
               />
             </div>
 
