@@ -9,6 +9,7 @@ import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
+import { TimePicker } from '@/components/events/TimePicker'
 import { resolveZoneCode } from '@/lib/zones'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
@@ -142,9 +143,11 @@ export default function NuevoGrupoPage() {
     )
   }
 
-  const niveles = studyTypes.filter(s => s.stage === 'niveles')
-  const inicial = studyTypes.filter(s => s.stage === 'inicial')
-  const intermedia = studyTypes.filter(s => s.stage === 'intermedia')
+  // Solo tipos activos: no se pueden crear grupos de estudios desactivados.
+  const activeTypes = studyTypes.filter(s => !s.is_archived)
+  const niveles = activeTypes.filter(s => s.stage === 'niveles')
+  const inicial = activeTypes.filter(s => s.stage === 'inicial')
+  const intermedia = activeTypes.filter(s => s.stage === 'intermedia')
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -291,12 +294,7 @@ export default function NuevoGrupoPage() {
               <label className="text-[11px] text-navy-light/60 font-display">
                 Horario preferido
               </label>
-              <input
-                className={inputCls}
-                placeholder="7:30pm"
-                value={step1.time}
-                onChange={e => setS1('time', e.target.value)}
-              />
+              <TimePicker value={step1.time} onChange={v => setS1('time', v)} placeholder="Hora" />
             </div>
 
             <div className="col-span-2 space-y-1">

@@ -147,13 +147,16 @@ export type DbGroupListItem = Omit<DbGroupEnriched, 'enrollments'> & {
 }
 
 type RawListGroup = Omit<DbGroupEnriched, 'enrollments'> & {
-  enrollments: Array<{ status: DbGroupEnriched['enrollments'][number]['status'] }>
+  enrollments: Array<{ member_id: string; status: DbGroupEnriched['enrollments'][number]['status'] }>
 }
 
 // Misma agrupación que mapParticipantStatus del adapter de dominio.
 function toListItem(g: RawListGroup): DbGroupListItem {
   const counts = { enrolled: 0, pending: 0, withdrawn: 0 }
   for (const e of g.enrollments) {
+    // La capacidad es de ESTUDIANTES: el dirigente/co-dirigente no cuenta aunque
+    // tenga inscripción en su propio grupo.
+    if (e.member_id === g.leader_id || e.member_id === g.co_leader_id) continue
     if (e.status === 'enrolled' || e.status === 'completed') counts.enrolled++
     else if (e.status === 'waitlist') counts.pending++
     else counts.withdrawn++ // dropped | transferred
@@ -310,7 +313,7 @@ const LIST_GROUP_SELECT = `
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
-  enrollments:study_enrollments!study_enrollments_group_id_fkey(status)
+  enrollments:study_enrollments!study_enrollments_group_id_fkey(member_id, status)
 `
 
 // Igual al anterior pero con member_id, para getStudyGroupsWithEnrollments.
