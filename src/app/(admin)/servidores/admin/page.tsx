@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
 import { useAuth } from '@/hooks/useAuth'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { SERVICE_ADMIN_ROLES, STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { CommitteePosition } from '@/types/server'
 import { Modal } from '@/components/shared/Modal'
@@ -699,12 +699,23 @@ export default function ServidoresAdminPage() {
             {activeCount} área{activeCount !== 1 ? 's' : ''} activa{activeCount !== 1 ? 's' : ''} · {activeCommCount} comités activos
           </p>
         </div>
-        <a
-          href="/servidores/admin/importar"
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body shrink-0"
-        >
-          <Upload size={14} /> Importar puestos
-        </a>
+        {/* Importar: solo admin + coordinación de staff (puntos 4 y 6). */}
+        {hasRole('admin', ...STAFF_IMPORT_ROLES) && (
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <a
+              href="/servidores/admin/importar"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              <Upload size={14} /> Importar puestos
+            </a>
+            <a
+              href="/servidores/admin/importar-vacantes"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              <Upload size={14} /> Importar vacantes
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Solicitudes de puesto nuevo pendientes (Flujo 2) — Staff/admin las aprueba. */}

@@ -6,35 +6,28 @@ import { CloudUpload, Download, Check, CheckCircle2, AlertCircle, ArrowLeft, Che
 import { useAuth } from '@/hooks/useAuth'
 import { STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
-import { generateCSV } from '@/lib/export'
 
 type PreviewRow = {
+  area: string
   committee: string
+  position: string
+  slots: number
   location: string
-  title: string
-  quantity: number
-  description: string
-  study_requirement: string
-  functions: string
-  profile: string
+  schedule: string
+  commitment: string
   expires_at: string | null
   is_featured: boolean
 }
 
 type ImportResult = {
   inserted: number
-  duplicates: number
-  unmatched: Array<{ row: number; committee: string; title: string }>
+  errors: Array<{ row: number; reason: string }>
 }
 
-// Normaliza para comparar headers sin tildes ni mayúsculas.
 function norm(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
-// Parser CSV completo: respeta comillas y, sobre todo, los saltos de línea DENTRO
-// de un campo entrecomillado (descripciones/funciones multilínea) — antes se hacía
-// split por \n y cada celda multilínea partía la fila en dos ("dos filas por fila").
 function parseCSV(text: string): string[][] {
   const rows: string[][] = []
   let row: string[] = [], field = '', q = false
@@ -57,7 +50,6 @@ function parseCSV(text: string): string[][] {
 function parseDate(v: string): string | null {
   const s = v.trim()
   if (!s) return null
-  // dd/mm/yyyy o dd-mm-yyyy
   const m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/)
   if (m) {
     const [, d, mo, y] = m
@@ -70,30 +62,28 @@ function parseDate(v: string): string | null {
 
 const TRUEY = new Set(['si', 'sí', 'true', 'x', '1', 'yes', 'verdadero'])
 
-// Convierte una matriz [header, ...filas] al formato de filas previsualizadas.
 function rowsFromAoa(aoa: string[][]): PreviewRow[] {
   if (aoa.length === 0) return []
   const header = aoa[0].map(norm)
   const idx = (...names: string[]) => header.findIndex(h => names.some(n => h.includes(n)))
-  const ci = idx('comite'), li = idx('ubicaci'), ti = idx('puesto', 'titulo', 'nombre'),
-    qi = idx('cantidad'), di = idx('descrip'), ri = idx('categor', 'requisit'),
-    fi = idx('funcion'), pi = idx('perfil'), ei = idx('expira', 'vence'), fe = idx('destacad')
+  const ai = idx('area', 'área'), ci = idx('comite', 'comité'), ti = idx('puesto', 'titulo', 'nombre'),
+    qi = idx('cupo', 'cantidad'), li = idx('ubicaci', 'sede'), si = idx('horario'),
+    coi = idx('compromiso'), ei = idx('expira', 'vence'), fe = idx('destacad')
   const at = (cols: string[], i: number) => (i >= 0 ? (cols[i] ?? '').trim() : '')
   return aoa.slice(1)
     .filter(cols => cols.some(c => (c ?? '').trim() !== ''))
     .map(cols => ({
+      area: at(cols, ai),
       committee: at(cols, ci),
+      position: at(cols, ti),
+      slots: Math.max(1, Number(at(cols, qi).replace(/[^\d]/g, '')) || 1),
       location: at(cols, li),
-      title: at(cols, ti),
-      quantity: Math.max(1, Number(at(cols, qi).replace(/[^\d]/g, '')) || 1),
-      description: at(cols, di),
-      study_requirement: at(cols, ri),
-      functions: at(cols, fi),
-      profile: at(cols, pi),
+      schedule: at(cols, si),
+      commitment: at(cols, coi),
       expires_at: parseDate(at(cols, ei)),
       is_featured: TRUEY.has(norm(at(cols, fe))),
     }))
-    .filter(r => r.title && r.committee)
+    .filter(r => r.area || r.committee || r.position)
 }
 
 async function parseFile(file: File): Promise<PreviewRow[]> {
@@ -108,7 +98,7 @@ async function parseFile(file: File): Promise<PreviewRow[]> {
   return rowsFromAoa(aoa)
 }
 
-export default function ImportarPuestosPage() {
+export default function ImportarVacantesPage() {
   const router = useRouter()
   const { hasRole, loaded } = useAuth()
   const [step, setStep] = useState<1 | 2 | 3>(1)
@@ -126,22 +116,11 @@ export default function ImportarPuestosPage() {
     setStep(2)
   }
 
-  function downloadTemplate() {
-    generateCSV(
-      ['comite', 'ubicacion', 'puesto', 'cantidad', 'descripcion', 'categoria', 'funciones', 'perfil', 'expiracion', 'destacado'],
-      [
-        ['PRO OESTE', 'Edificio Meridiano Escazú', 'Colaborador de Finanzas', '2', 'Administramos y cuidamos el dinero confiado a Theos', 'Discípulos 1', 'Agradeciendo a cada persona que dona, registrando aportes y conciliando cuentas', 'Honradas y ordenadas', '2026-07-07', 'TRUE'],
-        ['ANTARES', 'Plaza Antares, San Pedro', 'Anfitrión de Bienvenida', '4', 'Recibe y orienta a los asistentes', 'N4 completado', 'Saludar, orientar, repartir material', 'Persona extrovertida y servicial', '2026-12-31', 'FALSE'],
-      ],
-      'plantilla-puestos',
-    )
-  }
-
   async function handleConfirmImport() {
     if (importing || rows.length === 0) return
     setImporting(true)
     try {
-      const res = await fetch('/api/servers/positions/import', {
+      const res = await fetch('/api/servers/vacancies/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rows }),
@@ -170,7 +149,7 @@ export default function ImportarPuestosPage() {
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl text-white font-display font-extrabold">Importar puestos</h1>
+            <h1 className="text-xl text-white font-display font-extrabold">Importar vacantes</h1>
             <p className="text-[12px] text-white/70 mt-0.5 font-body">{fileName || 'Cargá el archivo .xlsx o .csv'}</p>
           </div>
         </div>
@@ -206,25 +185,25 @@ export default function ImportarPuestosPage() {
               <CloudUpload size={32} className="text-teal-deep" />
             </div>
             <div className="text-center">
-              <p className="text-base font-bold font-display text-navy">Subí el archivo de puestos</p>
+              <p className="text-base font-bold font-display text-navy">Subí el archivo de vacantes</p>
               <p className="text-sm mt-1 font-body text-navy-light/60">.xlsx o .csv — hacé clic para seleccionar</p>
               <p className="text-[11px] mt-2 text-navy-light/70 font-body">
-                Columnas: comité, ubicación, puesto, cantidad, descripción, categoría, funciones, perfil, expiración, destacado
+                Columnas: área, comité, puesto, cupos, ubicación, horario, compromiso, expiración, destacado
               </p>
             </div>
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
           </div>
           <div className="flex flex-col items-center gap-2">
-            <button
-              onClick={downloadTemplate}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium border border-[var(--outline-variant)] text-navy font-body"
+            <a
+              href="/api/servers/vacancies/import-template"
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium border border-[var(--outline-variant)] text-navy font-body hover:bg-surface-low transition-colors"
             >
-              <Download size={15} /> Descargar plantilla CSV
-            </button>
+              <Download size={15} /> Descargar plantilla Excel
+            </a>
             <p className="text-[11px] text-navy-light/70 font-body text-center max-w-md">
-              <strong>categoria</strong> = nivel de estudio requerido ·{' '}
-              <strong>expiracion</strong> = fecha YYYY-MM-DD ·{' '}
-              <strong>destacado</strong> = TRUE/FALSE. El comité se matchea por nombre contra los comités de la BD.
+              La plantilla trae las <strong>áreas, comités y puestos actuales</strong> con listas
+              desplegables en cascada (Área → Comité → Puesto). La vacante hereda descripción/funciones/perfil
+              del puesto. <strong>destacado</strong> = Sí/No · <strong>expiración</strong> = YYYY-MM-DD.
             </p>
           </div>
         </div>
@@ -237,7 +216,7 @@ export default function ImportarPuestosPage() {
             <CheckCircle2 size={20} className="text-navy shrink-0" />
             <div>
               <p className="text-xl font-extrabold font-display text-navy">{rows.length}</p>
-              <p className="text-[11px] font-body text-navy-light/60">puestos válidos en el archivo (con comité y puesto)</p>
+              <p className="text-[11px] font-body text-navy-light/60">filas en el archivo · se validan al importar</p>
             </div>
           </div>
 
@@ -246,7 +225,7 @@ export default function ImportarPuestosPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--outline-variant)]">
-                    {['Comité', 'Ubicación', 'Puesto', 'Cantidad', 'Descripción', 'Categoría', 'Funciones', 'Perfil', 'Expiración', 'Destacado'].map(h => (
+                    {['Área', 'Comité', 'Puesto', 'Cupos', 'Ubicación', 'Horario', 'Compromiso', 'Expiración', 'Destacado'].map(h => (
                       <th key={h} className="px-3 py-3 text-left text-[10px] uppercase tracking-widest font-display text-navy-light/60 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -254,14 +233,13 @@ export default function ImportarPuestosPage() {
                 <tbody>
                   {rows.slice(0, 100).map((r, i) => (
                     <tr key={i} className="border-b border-[var(--outline-variant)] align-top">
-                      <td className="px-3 py-2.5 text-[13px] text-navy font-body whitespace-nowrap">{r.committee}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy font-body whitespace-nowrap">{r.area || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy font-body whitespace-nowrap">{r.committee || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy font-body">{r.position || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy font-body text-center">{r.slots}</td>
                       <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body">{r.location || '—'}</td>
-                      <td className="px-3 py-2.5 text-[13px] text-navy font-body">{r.title}</td>
-                      <td className="px-3 py-2.5 text-[13px] text-navy font-body text-center">{r.quantity}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body max-w-[220px] truncate" title={r.description}>{r.description || '—'}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body whitespace-nowrap">{r.study_requirement || '—'}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body max-w-[220px] truncate" title={r.functions}>{r.functions || '—'}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body max-w-[180px] truncate" title={r.profile}>{r.profile || '—'}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body">{r.schedule || '—'}</td>
+                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body">{r.commitment || '—'}</td>
                       <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body whitespace-nowrap">{r.expires_at || '—'}</td>
                       <td className="px-3 py-2.5 text-[12px] font-body text-center">{r.is_featured ? 'Sí' : 'No'}</td>
                     </tr>
@@ -271,7 +249,7 @@ export default function ImportarPuestosPage() {
             </div>
             {rows.length > 100 && (
               <p className="px-4 py-3 text-[12px] text-navy-light/60 font-body border-t border-[var(--outline-variant)]">
-                Mostrando 100 de {rows.length}. Se importarán todas.
+                Mostrando 100 de {rows.length}. Se validan e importan todas.
               </p>
             )}
           </div>
@@ -282,7 +260,7 @@ export default function ImportarPuestosPage() {
               disabled={importing || rows.length === 0}
               className="rounded-full px-6 py-2.5 text-sm text-white font-medium bg-coral disabled:opacity-50 font-body"
             >
-              {importing ? 'Importando…' : `Importar ${rows.length} puestos`}
+              {importing ? 'Importando…' : `Importar ${rows.length} vacantes`}
             </button>
           </div>
         </div>
@@ -291,11 +269,10 @@ export default function ImportarPuestosPage() {
       {/* Step 3 — Result */}
       {step === 3 && result && (
         <div className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { label: 'Insertados', count: result.inserted, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)' },
-              { label: 'Duplicados (omitidos)', count: result.duplicates, color: '#E9B949', bg: 'rgba(233,185,73,0.12)' },
-              { label: 'Sin comité', count: result.unmatched.length, color: '#EF5554', bg: 'rgba(239,85,84,0.10)' },
+              { label: 'Importadas', count: result.inserted, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)' },
+              { label: 'Filas con error (no importadas)', count: result.errors.length, color: '#EF5554', bg: 'rgba(239,85,84,0.10)' },
             ].map(({ label, count, color, bg }) => (
               <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: bg }}>
                 <p className="text-2xl font-extrabold font-display" style={{ color }}>{count}</p>
@@ -304,27 +281,26 @@ export default function ImportarPuestosPage() {
             ))}
           </div>
 
-          {result.unmatched.length > 0 && (
+          {result.errors.length > 0 && (
             <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
               <div className="px-4 py-3 border-b border-[var(--outline-variant)] flex items-center gap-2">
                 <AlertCircle size={15} className="text-coral" />
-                <p className="text-[12px] font-semibold text-navy font-body">Filas sin comité (revisá el nombre contra los comités de la BD)</p>
+                <p className="text-[12px] font-semibold text-navy font-body">Filas rechazadas — corregilas en el Excel y volvé a importar</p>
               </div>
-              <div className="overflow-x-auto max-h-72 overflow-y-auto">
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
-                      {['Fila', 'Comité del archivo', 'Puesto'].map(h => (
+                      {['Fila', 'Motivo'].map(h => (
                         <th key={h} className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest font-display text-navy-light/60">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {result.unmatched.map((u, i) => (
+                    {result.errors.map((u, i) => (
                       <tr key={i} className="border-b border-[var(--outline-variant)]">
-                        <td className="px-4 py-2 text-[12px] text-navy-light/70 font-body">{u.row}</td>
-                        <td className="px-4 py-2 text-[13px] text-coral font-body">{u.committee || '—'}</td>
-                        <td className="px-4 py-2 text-[13px] text-navy font-body">{u.title}</td>
+                        <td className="px-4 py-2 text-[12px] text-navy-light/70 font-body whitespace-nowrap">Fila {u.row}</td>
+                        <td className="px-4 py-2 text-[13px] text-navy font-body">{u.reason}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -338,9 +314,9 @@ export default function ImportarPuestosPage() {
               className="rounded-full border px-5 py-2.5 text-sm border-[var(--outline-variant)] text-navy-light font-body">
               Importar otro archivo
             </button>
-            <button onClick={() => router.push('/servidores/admin')}
+            <button onClick={() => router.push('/servidores/vacantes')}
               className="rounded-full px-5 py-2.5 text-sm text-white bg-navy font-body">
-              Volver a mantenimiento
+              Ver vacantes
             </button>
           </div>
         </div>

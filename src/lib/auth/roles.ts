@@ -17,6 +17,12 @@ export const SERVICE_ADMIN_ROLES: RoleId[] = [
   'encargado_staff', 'coordinador_servidores', 'direccion', 'admin',
 ]
 
+/** "Coordinación de staff": roles que pueden IMPORTAR puestos/vacantes y solicitar
+ *  puestos nuevos para cualquier comité. Subconjunto de SERVICE_ADMIN_ROLES que
+ *  EXCLUYE 'direccion' a propósito (decisión 2026-06-25: la importación y la
+ *  solicitud global son de staff, no de dirección). 'admin' pasa siempre aparte. */
+export const STAFF_IMPORT_ROLES: RoleId[] = ['encargado_staff', 'coordinador_servidores']
+
 /** Roles que operan el check-in y los reportes de eventos (ver detalle, hacer
  *  check-in, exportar). Reutilizar en guards de UI (usePermissions/hasRole) y de
  *  API (requireRoles) de eventos/check-in/reportes. */

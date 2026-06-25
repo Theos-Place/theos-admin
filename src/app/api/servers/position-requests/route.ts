@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
-import { canManageCommittee } from '@/lib/auth/committee-scope'
+import { SERVICE_ADMIN_ROLES, STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createPositionRequest, getPositionRequests, type PositionRequestInput } from '@/lib/supabase/queries/servers'
+import { createPositionRequest, getPositionRequests, getManageableCommitteeIds, type PositionRequestInput } from '@/lib/supabase/queries/servers'
 
 // GET: lista de solicitudes de puesto nuevo (default: pendientes). Solo Staff/admin.
 export async function GET(req: NextRequest) {
@@ -28,8 +27,18 @@ export async function POST(req: NextRequest) {
     if (!input?.committee_id || !input?.title?.trim()) {
       return NextResponse.json({ error: 'Comité y nombre del puesto son obligatorios.' }, { status: 400 })
     }
-    if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, input.committee_id))) {
-      return NextResponse.json({ error: 'No podés solicitar puestos para este comité.' }, { status: 403 })
+    // Permiso (puntos 1): solo admin + coordinación de staff (cualquier comité), o
+    // coordinadores/líderes de comité (solo los comités que gestionan). Dirección
+    // queda fuera salvo que lidere un comité.
+    const isStaffGlobal = auth.ctx.roles.includes('admin') || auth.ctx.roles.some(r => STAFF_IMPORT_ROLES.includes(r))
+    if (!isStaffGlobal) {
+      const manageable = auth.ctx.memberId ? await getManageableCommitteeIds(auth.ctx.memberId) : []
+      if (manageable.length === 0) {
+        return NextResponse.json({ error: 'No tenés permiso para solicitar puestos nuevos.' }, { status: 403 })
+      }
+      if (!manageable.includes(input.committee_id)) {
+        return NextResponse.json({ error: 'No podés solicitar puestos para este comité.' }, { status: 403 })
+      }
     }
     const { id } = await createPositionRequest({ ...input, requested_by: auth.ctx.memberId })
 

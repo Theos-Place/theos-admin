@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useServers } from '@/hooks/useServers'
+import { useAuth } from '@/hooks/useAuth'
+import { STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Check, Clock } from 'lucide-react'
+import { ChevronLeft, Clock } from 'lucide-react'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60 font-display'
@@ -15,8 +18,11 @@ function SolicitarPuestoContent() {
   const params = useSearchParams()
   const router = useRouter()
   const { committees: allCommittees } = useServers()
+  const { hasRole, loaded } = useAuth()
   const toast = useToast()
 
+  // Alcance: roles administrativos globales (cualquier comité) o coordinadores/
+  // líderes de comité (solo los suyos). El backend revalida.
   const [scope, setScope] = useState<{ all: boolean; ids: string[] } | null>(null)
   useEffect(() => {
     let alive = true
@@ -26,10 +32,21 @@ function SolicitarPuestoContent() {
       .catch(() => { if (alive) setScope({ all: false, ids: [] }) })
     return () => { alive = false }
   }, [])
-  const committees = scope && !scope.all
-    ? allCommittees.filter(c => scope.ids.includes(c.id))
-    : allCommittees
 
+  // Comités que el usuario puede usar (los suyos, o todos si es staff global).
+  const committees = useMemo(
+    () => (scope && !scope.all ? allCommittees.filter(c => scope.ids.includes(c.id)) : allCommittees),
+    [scope, allCommittees],
+  )
+
+  // Áreas que tienen al menos un comité disponible (para la cascada).
+  const areas = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const c of committees) if (c.area_code) m.set(c.area_code, c.area || 'Sin área')
+    return [...m].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name))
+  }, [committees])
+
+  const [areaCode, setAreaCode] = useState('')
   const [committeeId, setCommitteeId] = useState(params.get('comite') ?? '')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -40,7 +57,26 @@ function SolicitarPuestoContent() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  const valid = committeeId !== '' && title.trim().length > 0
+  // Comités del área elegida.
+  const committeesOfArea = useMemo(
+    () => committees.filter(c => c.area_code === areaCode).sort((a, b) => a.name.localeCompare(b.name)),
+    [committees, areaCode],
+  )
+
+  // Si vino un comité por query (?comite=), preseleccionar su área.
+  useEffect(() => {
+    if (!committeeId || areaCode) return
+    const c = committees.find(x => x.id === committeeId)
+    if (c?.area_code) setAreaCode(c.area_code)
+  }, [committeeId, areaCode, committees])
+
+  // Cambiar de área resetea el comité (evita combinaciones incoherentes).
+  function onAreaChange(code: string) {
+    setAreaCode(code)
+    setCommitteeId('')
+  }
+
+  const valid = areaCode !== '' && committeeId !== '' && title.trim().length > 0
 
   async function submit() {
     if (!valid || saving) return
@@ -67,6 +103,17 @@ function SolicitarPuestoContent() {
     }
   }
 
+  // Gate de acceso (punto 1): admin + coordinación de staff, o quien gestione un comité.
+  const canStaff = hasRole('admin', ...STAFF_IMPORT_ROLES)
+  if (!loaded || scope === null) {
+    return (
+      <div className="flex items-center justify-center min-h-60">
+        <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+      </div>
+    )
+  }
+  if (!canStaff && scope.ids.length === 0) return <AccessDenied />
+
   if (done) {
     return (
       <div className="flex items-center justify-center min-h-60">
@@ -80,7 +127,7 @@ function SolicitarPuestoContent() {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Link href="/servidores/vacantes" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body">
           <ChevronLeft size={16} /> Puestos de Servicio
@@ -95,20 +142,29 @@ function SolicitarPuestoContent() {
         </p>
       </div>
 
-      <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="rounded-2xl p-5 sm:p-6 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
+        {/* Cascada: Área → Comité → (nombre del puesto, libre porque es nuevo) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1">
-            <label className={labelCls}>Comité</label>
-            <select className={inputCls} value={committeeId} onChange={e => setCommitteeId(e.target.value)}>
-              <option value="">Seleccionar comité…</option>
-              {committees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            <label className={labelCls}>Área</label>
+            <select className={inputCls} value={areaCode} onChange={e => onAreaChange(e.target.value)}>
+              <option value="">Seleccionar área…</option>
+              {areas.map(a => <option key={a.code} value={a.code}>{a.name}</option>)}
             </select>
           </div>
           <div className="space-y-1">
-            <label className={labelCls}>Nombre del puesto</label>
-            <input className={inputCls} placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} />
+            <label className={labelCls}>Comité</label>
+            <select className={inputCls} value={committeeId} onChange={e => setCommitteeId(e.target.value)} disabled={!areaCode}>
+              <option value="">{areaCode ? 'Seleccionar comité…' : 'Elegí un área primero'}</option>
+              {committeesOfArea.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Nombre del puesto nuevo</label>
+            <input className={inputCls} placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} disabled={!committeeId} />
           </div>
         </div>
+
         <div className="space-y-1">
           <label className={labelCls}>Nivel de estudio requerido</label>
           <input className={inputCls} placeholder="Ej. Discípulos 2" value={studyReq} onChange={e => setStudyReq(e.target.value)} />
@@ -117,13 +173,15 @@ function SolicitarPuestoContent() {
           <label className={labelCls}>Descripción</label>
           <textarea className={cn(inputCls, 'resize-y')} rows={2} value={description} onChange={e => setDescription(e.target.value)} />
         </div>
-        <div className="space-y-1">
-          <label className={labelCls}>Funciones (una por línea, con •)</label>
-          <textarea className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={functions} onChange={e => setFunctions(e.target.value)} />
-        </div>
-        <div className="space-y-1">
-          <label className={labelCls}>Perfil (una por línea, con •)</label>
-          <textarea className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={profile} onChange={e => setProfile(e.target.value)} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className={labelCls}>Funciones (una por línea, con •)</label>
+            <textarea className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={functions} onChange={e => setFunctions(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Perfil (una por línea, con •)</label>
+            <textarea className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={profile} onChange={e => setProfile(e.target.value)} />
+          </div>
         </div>
 
         {error && <p className="text-sm text-coral font-body">{error}</p>}
