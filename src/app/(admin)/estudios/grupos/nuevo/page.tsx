@@ -53,7 +53,7 @@ export default function NuevoGrupoPage() {
     age_from: '',
     age_to: '',
     days: [],
-    time: '',
+    time: '19:00', // 7:00 p.m. por defecto
     location: '',
     capacity: '10',
     start_date: '',
@@ -230,7 +230,7 @@ export default function NuevoGrupoPage() {
               </select>
             </div>
 
-            <div className="col-span-2 space-y-1">
+            <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Zona *
               </label>
@@ -268,7 +268,7 @@ export default function NuevoGrupoPage() {
               />
             </div>
 
-            <div className="col-span-2 space-y-1">
+            <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Días preferidos
               </label>
@@ -292,14 +292,14 @@ export default function NuevoGrupoPage() {
               </div>
             </div>
 
-            <div className="col-span-2 space-y-1">
+            <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Horario preferido
               </label>
               <TimePicker value={step1.time} onChange={v => setS1('time', v)} placeholder="Hora" />
             </div>
 
-            <div className="col-span-2 space-y-1">
+            <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Ubicación exacta
               </label>
@@ -336,7 +336,7 @@ export default function NuevoGrupoPage() {
               />
             </div>
 
-            <div className="col-span-2 space-y-1">
+            <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Fecha límite de inscripción (opcional)
               </label>

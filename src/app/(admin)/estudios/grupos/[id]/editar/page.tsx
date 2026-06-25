@@ -227,19 +227,19 @@ function EditarForm({ group, studyType, refetch }: {
             </div>
           </div>
 
-          {/* Horario */}
-          <div className="space-y-1">
-            <label className={labelCls}>Horario</label>
-            <input className={inputCls} placeholder="7:30pm" value={time} onChange={e => setTime(e.target.value)} />
+          {/* Capacidad + Horario: mitad y mitad. */}
+          <div className="col-span-2 grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className={labelCls}>Capacidad máxima</label>
+              <input type="number" min={1} className={inputCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className={labelCls}>Horario</label>
+              <input className={inputCls} placeholder="7:30pm" value={time} onChange={e => setTime(e.target.value)} />
+            </div>
           </div>
 
-          {/* Capacidad */}
-          <div className="space-y-1">
-            <label className={labelCls}>Capacidad máxima</label>
-            <input type="number" min={1} className={inputCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
-          </div>
-
-          {/* Rango de edad (opcional): filtra a quién se le ofrece en matrícula. */}
+          {/* Rango de edad (opcional): filtra a quién se le ofrece en matrícula. Mitad y mitad. */}
           <div className="col-span-2 grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className={labelCls}>Edad desde</label>
