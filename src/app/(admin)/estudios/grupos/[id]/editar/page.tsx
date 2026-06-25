@@ -74,6 +74,8 @@ function EditarForm({ group, studyType, refetch }: {
   const [time, setTime] = useState(group.schedule_time ?? '')
   const [location, setLocation] = useState(group.location ?? '')
   const [capacity, setCapacity] = useState(group.max_capacity ? String(group.max_capacity) : '')
+  const [ageMin, setAgeMin] = useState(group.age_min != null ? String(group.age_min) : '')
+  const [ageMax, setAgeMax] = useState(group.age_max != null ? String(group.age_max) : '')
   const [startDate, setStartDate] = useState(group.start_date?.slice(0, 10) ?? '')
   const [endDate, setEndDate] = useState(group.end_date?.slice(0, 10) ?? '')
   const [leaderId, setLeaderId] = useState(group.leader_id ?? '')
@@ -103,6 +105,8 @@ function EditarForm({ group, studyType, refetch }: {
           schedule_time: time || null,
           location: location || null,
           max_students: capacity ? Number(capacity) : null,
+          age_min: ageMin ? Number(ageMin) : null,
+          age_max: ageMax ? Number(ageMax) : null,
           starts_at: startDate || null,
           ends_at: endDate || null,
           whatsapp_group_url: waUrl || null,
@@ -233,6 +237,18 @@ function EditarForm({ group, studyType, refetch }: {
           <div className="space-y-1">
             <label className={labelCls}>Capacidad máxima</label>
             <input type="number" min={1} className={inputCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
+          </div>
+
+          {/* Rango de edad (opcional): filtra a quién se le ofrece en matrícula. */}
+          <div className="col-span-2 grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className={labelCls}>Edad desde</label>
+              <input type="number" min={0} className={inputCls} placeholder="Sin mínimo" value={ageMin} onChange={e => setAgeMin(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className={labelCls}>Edad hasta</label>
+              <input type="number" min={0} className={inputCls} placeholder="Sin máximo" value={ageMax} onChange={e => setAgeMax(e.target.value)} />
+            </div>
           </div>
 
           {/* Ubicación */}
