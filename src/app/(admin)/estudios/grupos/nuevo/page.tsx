@@ -292,14 +292,14 @@ export default function NuevoGrupoPage() {
               </div>
             </div>
 
-            <div className="col-span-1 sm:col-span-2 space-y-1">
+            <div className="col-span-1 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Horario preferido
               </label>
               <TimePicker value={step1.time} onChange={v => setS1('time', v)} placeholder="Hora" />
             </div>
 
-            <div className="col-span-1 sm:col-span-2 space-y-1">
+            <div className="col-span-1 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Capacidad máxima
               </label>
@@ -336,7 +336,7 @@ export default function NuevoGrupoPage() {
               />
             </div>
 
-            <div className="col-span-1 sm:col-span-2 space-y-1">
+            <div className="col-span-1 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Fecha límite de inscripción (opcional)
               </label>
