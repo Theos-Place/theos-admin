@@ -42,8 +42,10 @@ export type MemberStudyProfile = {
   /** Códigos de planes invitation_only con invitación ACTIVA para este miembro. */
   invited_codes?: string[]
   /** Excepciones de matrícula activas: code → requisitos perdonados
-   *  ('donor'|'attendance'|'server'|'prerequisite' o 'all'). */
+   *  ('donor'|'attendance'|'server'|'prerequisite'|'age' o 'all'). */
   exceptions?: Record<string, string[]>
+  /** Edad del miembro (para filtrar grupos con rango de edad). null = sin fecha. */
+  member_age?: number | null
 }
 
 /** Asistencia mínima para MATRICULAR: 12 charlas en los últimos 6 meses.
@@ -155,7 +157,12 @@ export function computeEligibility(
       ? groups
           .filter(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length
-            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity
+            // Rango de edad del grupo: solo se ofrece si la edad del miembro encaja
+            // (salvo excepción por edad, o si no tenemos la edad del miembro).
+            const ageOk = isWaived('age') || profile.member_age == null
+              || ((g.age_min == null || profile.member_age >= g.age_min)
+                && (g.age_max == null || profile.member_age <= g.age_max))
+            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity && ageOk
           })
           .map(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length

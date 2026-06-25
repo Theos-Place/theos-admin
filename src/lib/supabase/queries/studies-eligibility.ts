@@ -1,6 +1,7 @@
 // Perfil académico y elegibilidad de matrícula de un miembro. Extraído de
 // studies.ts (auditoría 2026-06: archivos gigantes). Re-exportado por studies.ts.
 import { createAdminClient } from '@/lib/supabase/admin'
+import { calcAge } from '@/lib/format'
 
 /** Perfil académico de un miembro para calcular elegibilidad de matrícula.
  *  Devuelve los CÓDIGOS de plan (no nombres) y los compromisos reales. */
@@ -11,6 +12,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   is_server: boolean
   charla_count: number
   invited_codes: string[]
+  member_age: number | null
 }> {
   const supabase = createAdminClient()
   // charla_count: solo los últimos 6 meses — el criterio de matrícula es
@@ -20,7 +22,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
   const { activeInvitationCodesForMember } = await import('./study-invitations')
   const [memberRes, enrRes, volRes, chkRes, invitedCodes] = await Promise.all([
-    supabase.from('members').select('is_donor').eq('id', memberId).maybeSingle(),
+    supabase.from('members').select('is_donor, birth_date').eq('id', memberId).maybeSingle(),
     supabase
       .from('study_enrollments')
       .select('status, study_groups!study_enrollments_group_id_fkey(plan:study_plans(code)), plan_direct:study_plans!study_enrollments_plan_id_fkey(code)')
@@ -46,6 +48,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     .map(e => e.status === 'enrolled' ? codeOf(e) : null)
     .find(Boolean) ?? null
 
+  const birth = (memberRes.data as { birth_date?: string | null } | null)?.birth_date ?? null
   return {
     completed_codes,
     current_code,
@@ -53,6 +56,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     is_server: (volRes.data ?? []).length > 0,
     charla_count: (chkRes.data ?? []).length,
     invited_codes: invitedCodes,
+    member_age: birth ? calcAge(birth) : null,
   }
 }
 

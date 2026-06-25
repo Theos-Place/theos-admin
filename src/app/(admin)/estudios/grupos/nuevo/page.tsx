@@ -107,6 +107,8 @@ export default function NuevoGrupoPage() {
           schedule_time: step1.time || null,
           location: step1.location || null,
           max_students: step1.capacity ? Number(step1.capacity) : null,
+          age_min: step1.age_from ? Number(step1.age_from) : null,
+          age_max: step1.age_to ? Number(step1.age_to) : null,
           starts_at: step1.start_date || null,
           status: initialStatus,
         }),
@@ -150,7 +152,7 @@ export default function NuevoGrupoPage() {
   const intermedia = activeTypes.filter(s => s.stage === 'intermedia')
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="w-full space-y-6">
       {/* Back */}
       <Link
         href="/estudios/grupos"
@@ -205,8 +207,8 @@ export default function NuevoGrupoPage() {
             Paso 1 — Configuración
           </h2>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Tipo de estudio *
               </label>
@@ -461,7 +463,7 @@ export default function NuevoGrupoPage() {
           </h2>
 
           <div className="rounded-xl p-4 space-y-3 bg-surface-low">
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
               <div>
                 <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Tipo</p>
                 <StudyTypeBadge code={studyType?.code ?? ''} name={studyType?.name} size="sm" />

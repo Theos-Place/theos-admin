@@ -103,6 +103,8 @@ export function toDomainStudyGroup(db: DbGroupForDomain): StudyGroup {
     schedule_time: db.schedule_time ?? '',
     location: db.location ?? '',
     max_capacity: db.max_students ?? 0,
+    age_min: db.age_min ?? null,
+    age_max: db.age_max ?? null,
     start_date: db.starts_at ?? '',
     end_date: db.ends_at,
     status: db.status,

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star } from 'lucide-react'
 
 type ParticipantResult = {
@@ -69,7 +70,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       rec_justification: '',
     }))
   )
-  const [confirmText, setConfirmText] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [closed, setClosed] = useState(false)
   const [triedNext, setTriedNext] = useState(false)
 
@@ -85,10 +86,9 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   const reprobados = results.filter(r => r.status_result === 'reprobado').length
   const retirados = results.filter(r => r.status_result === 'retirado').length
   const autoPromotable = studyType?.auto_promote && studyType?.next_study_id
-  const canClose = confirmText === 'CERRAR'
 
   async function handleClose() {
-    if (!canClose) return
+    if (submitting) return
     setSubmitting(true)
     try {
       const payload = results
@@ -374,18 +374,13 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </div>
           </div>
 
-          {/* Confirmation input */}
-          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-sm text-navy-light/70 mb-3 font-body">
-              Para confirmar el cierre, escribe{' '}
-              <strong className="text-navy font-mono">CERRAR</strong> en el campo:
+          {/* Advertencia: el cierre es irreversible. */}
+          <div className="rounded-2xl p-5 bg-coral/5 border border-coral/20 flex items-start gap-3">
+            <AlertTriangle size={18} className="text-coral mt-0.5 shrink-0" />
+            <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">
+              Estás a punto de cerrar este grupo. Esta acción es <strong className="text-navy">definitiva y no se puede deshacer</strong>:
+              se registrarán las calificaciones y recomendaciones, y el grupo quedará finalizado.
             </p>
-            <input
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-mono"
-              placeholder="CERRAR"
-              value={confirmText}
-              onChange={e => setConfirmText(e.target.value)}
-            />
           </div>
 
           <div className="flex justify-between">
@@ -397,15 +392,26 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
               ← Atrás
             </button>
             <button
-              onClick={handleClose}
-              disabled={!canClose || submitting}
+              onClick={() => setConfirmOpen(true)}
+              disabled={submitting}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
-              {submitting ? 'Cerrando...' : 'Confirmar cierre'}
+              {submitting ? 'Cerrando...' : 'Cerrar grupo'}
             </button>
           </div>
         </div>
       )}
+
+      <DeleteConfirmModal
+        open={confirmOpen}
+        keyword="cerrar"
+        confirmLabel="Cerrar grupo"
+        loading={submitting}
+        title="Cerrar grupo de estudio"
+        description="Esta acción es definitiva y no se puede deshacer: se registrarán las calificaciones y recomendaciones, y el grupo quedará finalizado."
+        onConfirm={handleClose}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   )
 }

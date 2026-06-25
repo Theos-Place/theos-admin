@@ -18,6 +18,7 @@ const REQS: { key: string; label: string }[] = [
   { key: 'attendance', label: 'Asistencia a charlas' },
   { key: 'server', label: 'Servidor en comité' },
   { key: 'prerequisite', label: 'Prerequisito (estudio previo)' },
+  { key: 'age', label: 'Rango de edad del grupo' },
 ]
 const REQ_LABEL: Record<string, string> = {
   ...Object.fromEntries(REQS.map(r => [r.key, r.label])), all: 'Todos los requisitos',

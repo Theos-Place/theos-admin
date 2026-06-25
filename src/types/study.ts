@@ -57,6 +57,9 @@ export type StudyGroup = {
   schedule_time: string
   location: string
   max_capacity: number
+  /** Rango de edad del grupo (opcional). En matrícula filtra por edad del miembro. */
+  age_min: number | null
+  age_max: number | null
   start_date: string
   end_date: string | null
   status: GroupStatus

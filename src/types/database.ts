@@ -3112,6 +3112,8 @@ export type Database = {
       }
       study_groups: {
         Row: {
+          age_max: number | null
+          age_min: number | null
           co_leader_id: string | null
           created_at: string | null
           current_week: number | null
@@ -3136,6 +3138,8 @@ export type Database = {
           zone: string | null
         }
         Insert: {
+          age_max?: number | null
+          age_min?: number | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
@@ -3160,6 +3164,8 @@ export type Database = {
           zone?: string | null
         }
         Update: {
+          age_max?: number | null
+          age_min?: number | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
