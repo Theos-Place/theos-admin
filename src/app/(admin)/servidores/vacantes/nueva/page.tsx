@@ -102,7 +102,7 @@ function NuevaVacanteContent() {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Link href="/servidores/vacantes" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body">
           <ChevronLeft size={16} /> Puestos de Servicio
@@ -152,7 +152,7 @@ function NuevaVacanteContent() {
         )}
 
         {/* Datos propios de la vacante */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1">
             <label className={labelCls}>Cupos necesarios</label>
             <input type="number" min={1} className={inputCls} value={slots} onChange={e => setSlots(e.target.value)} />
