@@ -52,20 +52,22 @@ export function ScheduleSection({
         </button>
       </div>
       {scheduled && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-navy-light/60 shrink-0" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] text-navy-light/60 font-body flex items-center gap-1.5">
+              <Clock size={13} className="text-navy-light/60 shrink-0" /> Fecha y hora
+            </label>
             <input
               type="datetime-local"
-              className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
               value={scheduledAt}
               onChange={e => setScheduledAt(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 pl-6">
-            <p className="text-[11px] text-navy-light/60 shrink-0 font-body">Zona horaria:</p>
+          <div className="space-y-1">
+            <label className="text-[11px] text-navy-light/60 font-body">Zona horaria</label>
             <select
-              className="flex-1 rounded-xl bg-surface-low px-3 py-1.5 text-[12px] text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={timezone}
               onChange={e => setTimezone(e.target.value)}
             >
