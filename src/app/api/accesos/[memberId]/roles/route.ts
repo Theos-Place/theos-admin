@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assignMemberRole, revokeMemberRole } from '@/lib/supabase/queries/members'
 import { requireRoles } from '@/lib/auth/guard'
+import { ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 
-const VALID_ROLES = new Set([
-  'admin', 'direccion', 'finanzas', 'encargado_staff', 'coordinador_estudios',
-  'coordinador_dirigentes', 'lider_comite', 'comunicaciones', 'dirigente',
-  'editor_perfiles', 'miembro', 'solo_lectura',
-])
+// Derivado de ROLES para que nunca se desincronice con los roles reales del sistema.
+const VALID_ROLES = new Set(ROLES.map(r => r.id))
 
 // POST: asigna un rol al miembro. Body: { role }
 export async function POST(
