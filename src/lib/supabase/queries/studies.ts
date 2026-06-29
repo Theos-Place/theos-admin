@@ -522,6 +522,17 @@ export async function setDirigenteActive(memberId: string, active: boolean): Pro
   const { assignMemberRole, revokeMemberRole } = await import('./members')
   if (active) await assignMemberRole(memberId, 'dirigente')
   else await revokeMemberRole(memberId, 'dirigente')
+
+  // Regla de negocio: todo dirigente está aprobado para dar estudios. Al activar
+  // prendemos el flag; al desactivar NO lo tocamos (es independiente y puede
+  // aplicar a no-dirigentes — se gestiona aparte con el toggle manual).
+  if (active) {
+    const { error } = await supabase.from('member_admin_data').upsert(
+      { member_id: memberId, approved_to_lead_studies: true, approved_to_lead_studies_at: new Date().toISOString() },
+      { onConflict: 'member_id' },
+    )
+    if (error) throw error
+  }
 }
 
 /** Cambio de estado masivo de dirigentes. Devuelve cuántos se procesaron. */
