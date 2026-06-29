@@ -77,7 +77,7 @@ export default function NuevoPuestoPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       {/* Top bar */}
       <div
         className="sticky top-0 z-10 rounded-2xl px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-surface-card shadow-[var(--shadow-md)]"
@@ -121,38 +121,39 @@ export default function NuevoPuestoPage() {
       )}
 
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
-        {/* Nombre */}
-        <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-            Nombre del puesto <span className="text-coral">*</span>
-          </label>
-          <input
-            className={cn(inputCls, 'font-body')}
-            placeholder="Ej: Coordinador de Estudios Bíblicos"
-            value={name}
-            onChange={e => setName(e.target.value)}
-          />
-        </div>
+        {/* Nombre + Comité */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              Nombre del puesto <span className="text-coral">*</span>
+            </label>
+            <input
+              className={cn(inputCls, 'font-body')}
+              placeholder="Ej: Coordinador de Estudios Bíblicos"
+              value={name}
+              onChange={e => setName(e.target.value)}
+            />
+          </div>
 
-        {/* Comité */}
-        <div className="space-y-1">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-            Comité asociado <span className="text-coral">*</span>
-          </label>
-          <select
-            className={cn(inputCls, 'font-body')}
-            value={committee}
-            onChange={e => setCommittee(e.target.value)}
-          >
-            <option value="">Seleccionar comité...</option>
-            {AREAS.map(area => (
-              <optgroup key={area.code} label={area.name}>
-                {area.committees.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          <div className="space-y-1">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              Comité asociado <span className="text-coral">*</span>
+            </label>
+            <select
+              className={cn(inputCls, 'font-body')}
+              value={committee}
+              onChange={e => setCommittee(e.target.value)}
+            >
+              <option value="">Seleccionar comité...</option>
+              {AREAS.map(area => (
+                <optgroup key={area.code} label={area.name}>
+                  {area.committees.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Descripción */}
@@ -175,59 +176,60 @@ export default function NuevoPuestoPage() {
           />
         </div>
 
-        {/* Tipo de contrato */}
-        <div className="space-y-2">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-            Tipo de contrato
-          </label>
-          <div className="flex gap-4">
-            {([['planilla', 'Planilla'], ['servicios_profesionales', 'Servicios profesionales']] as const).map(([val, label]) => (
-              <label key={val} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  className="accent-coral"
-                  value={val}
-                  checked={contractType === val}
-                  onChange={() => setContractType(val)}
-                />
-                <span className="text-sm text-navy font-body">{label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Rango salarial */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
+        {/* Tipo de contrato + Rango salarial */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-2">
             <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
-              Rango salarial aprobado
+              Tipo de contrato
             </label>
-            <span
-              className="rounded-full bg-navy/10 px-2 py-0.5 text-[9px] font-semibold text-navy-light/60 font-display"
-            >
-              Confidencial
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
-              <input
-                type="number"
-                className={cn(inputCls, 'pl-7 font-body')}
-                placeholder="Desde"
-                value={salaryMin}
-                onChange={e => setSalaryMin(e.target.value)}
-              />
+            <div className="flex gap-4">
+              {([['planilla', 'Planilla'], ['servicios_profesionales', 'Servicios profesionales']] as const).map(([val, label]) => (
+                <label key={val} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    className="accent-coral"
+                    value={val}
+                    checked={contractType === val}
+                    onChange={() => setContractType(val)}
+                  />
+                  <span className="text-sm text-navy font-body">{label}</span>
+                </label>
+              ))}
             </div>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
-              <input
-                type="number"
-                className={cn(inputCls, 'pl-7 font-body')}
-                placeholder="Hasta"
-                value={salaryMax}
-                onChange={e => setSalaryMax(e.target.value)}
-              />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                Rango salarial aprobado
+              </label>
+              <span
+                className="rounded-full bg-navy/10 px-2 py-0.5 text-[9px] font-semibold text-navy-light/60 font-display"
+              >
+                Confidencial
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
+                <input
+                  type="number"
+                  className={cn(inputCls, 'pl-7 font-body')}
+                  placeholder="Desde"
+                  value={salaryMin}
+                  onChange={e => setSalaryMin(e.target.value)}
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
+                <input
+                  type="number"
+                  className={cn(inputCls, 'pl-7 font-body')}
+                  placeholder="Hasta"
+                  value={salaryMax}
+                  onChange={e => setSalaryMax(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </div>

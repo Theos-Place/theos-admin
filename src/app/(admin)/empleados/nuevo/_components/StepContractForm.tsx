@@ -107,52 +107,55 @@ export function StepContractForm({
         </div>
       </div>
 
-      {/* Salario */}
-      <div className="space-y-1">
-        <label
-          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
-        >
-          Salario mensual <span className="text-coral">*</span>
-        </label>
-        <div className="relative">
-          <span
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono"
+      {/* Salario + Fecha de inicio */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Salario */}
+        <div className="space-y-1">
+          <label
+            className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
           >
-            ₡
-          </span>
+            Salario mensual <span className="text-coral">*</span>
+          </label>
+          <div className="relative">
+            <span
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono"
+            >
+              ₡
+            </span>
+            <input
+              type="number"
+              className={cn(inputCls, 'pl-7 font-body')}
+              placeholder="0"
+              value={salary}
+              onChange={e => onSalaryChange(e.target.value)}
+            />
+          </div>
+          {salaryOutOfRange && selectedPosition && (
+            <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-1">
+              <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-[12px] text-amber-700 font-body">
+                El salario está fuera del rango aprobado para este puesto{selectedPosition.salary_min != null && selectedPosition.salary_max != null
+                  ? ` (₡${selectedPosition.salary_min.toLocaleString('es-CR')} — ₡${selectedPosition.salary_max.toLocaleString('es-CR')})`
+                  : ''}. Se requiere aprobación adicional.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Fecha de inicio */}
+        <div className="space-y-1">
+          <label
+            className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
+          >
+            Fecha de inicio <span className="text-coral">*</span>
+          </label>
           <input
-            type="number"
-            className={cn(inputCls, 'pl-7 font-body')}
-            placeholder="0"
-            value={salary}
-            onChange={e => onSalaryChange(e.target.value)}
+            type="date"
+            className={cn(inputCls, 'font-body')}
+            value={startDate}
+            onChange={e => onStartDateChange(e.target.value)}
           />
         </div>
-        {salaryOutOfRange && selectedPosition && (
-          <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-1">
-            <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[12px] text-amber-700 font-body">
-              El salario está fuera del rango aprobado para este puesto{selectedPosition.salary_min != null && selectedPosition.salary_max != null
-                ? ` (₡${selectedPosition.salary_min.toLocaleString('es-CR')} — ₡${selectedPosition.salary_max.toLocaleString('es-CR')})`
-                : ''}. Se requiere aprobación adicional.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Fecha de inicio */}
-      <div className="space-y-1">
-        <label
-          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
-        >
-          Fecha de inicio <span className="text-coral">*</span>
-        </label>
-        <input
-          type="date"
-          className={cn(inputCls, 'font-body')}
-          value={startDate}
-          onChange={e => onStartDateChange(e.target.value)}
-        />
       </div>
 
       {/* Notas */}

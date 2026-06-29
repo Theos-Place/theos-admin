@@ -176,7 +176,7 @@ export default function NuevoEmpleadoPage() {
         : []
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       <TopBar
         step={step}
         totalSteps={STEPS.length}
