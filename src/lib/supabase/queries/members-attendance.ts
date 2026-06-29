@@ -2,11 +2,11 @@
 // Extraído de members.ts (auditoría 2026-06: archivos gigantes). Re-exportado
 // por members.ts para no tocar a los consumidores.
 import { createAdminClient } from '@/lib/supabase/admin'
-import { ATTENDANCE_MONTHS_GENERAL } from '@/lib/attendance'
+import { ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MIN_CHARLAS_GENERAL } from '@/lib/attendance'
 
 // Ventanas del criterio — fuente única en @/lib/attendance (módulo puro, importable
 // desde cliente). Re-exportadas para los consumidores server.
-export { ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MONTHS_STUDIES } from '@/lib/attendance'
+export { ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MONTHS_STUDIES, ATTENDANCE_MIN_CHARLAS_GENERAL } from '@/lib/attendance'
 
 /** Últimos N meses calendario COMPLETOS (YYYY-MM), excluyendo el mes en curso:
  *  incluirlo dejaría a todo el mundo afuera los primeros días de cada mes. */
@@ -28,15 +28,22 @@ export function attendanceMonthsSatisfyCriteria(monthsSet: Iterable<string>, mon
   return lastCompleteMonthsKeys(months, now).every((m) => set.has(m))
 }
 
-/** Ids de miembros con asistencia activa: ≥1 check-in de CHARLA en cada uno de
- *  los últimos `months` meses completos. Default GENERAL (12); estudios pasa 6.
+/** Ids de miembros con asistencia activa. Dos modos según `minCount`:
+ *   · CONTEO (general): pasá `minCount` → ≥ `minCount` check-ins de CHARLA en los
+ *     últimos `months` meses completos (≈1 por mes). Usado por la lista/chip.
+ *   · COBERTURA (estudios): sin `minCount` → ≥1 check-in en CADA uno de los
+ *     últimos `months` meses. Usado por demanda de estudios.
  *  Devuelve [] si falla — nunca lanza. */
-export async function getActiveAttendanceMemberIds(months = ATTENDANCE_MONTHS_GENERAL): Promise<string[]> {
+export async function getActiveAttendanceMemberIds(
+  months = ATTENDANCE_MONTHS_GENERAL,
+  minCount?: number,
+): Promise<string[]> {
   try {
     const supabase = createAdminClient()
     const monthsKeys = lastCompleteMonthsKeys(months)
     const oldest = `${monthsKeys[monthsKeys.length - 1]}-01` // inicio del mes más viejo
-    const byMember = new Map<string, Set<string>>()
+    const byMemberMonths = new Map<string, Set<string>>() // cobertura
+    const byMemberCount = new Map<string, number>()        // conteo
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabase
         .from('event_checkins')
@@ -51,15 +58,21 @@ export async function getActiveAttendanceMemberIds(months = ATTENDANCE_MONTHS_GE
       }
       for (const r of (data ?? []) as Array<{ member_id: string | null; checked_in_at: string | null }>) {
         if (!r?.member_id || !r?.checked_in_at) continue
-        const mo = r.checked_in_at.slice(0, 7)
-        if (!byMember.has(r.member_id)) byMember.set(r.member_id, new Set())
-        byMember.get(r.member_id)!.add(mo)
+        if (minCount != null) {
+          byMemberCount.set(r.member_id, (byMemberCount.get(r.member_id) ?? 0) + 1)
+        } else {
+          const mo = r.checked_in_at.slice(0, 7)
+          if (!byMemberMonths.has(r.member_id)) byMemberMonths.set(r.member_id, new Set())
+          byMemberMonths.get(r.member_id)!.add(mo)
+        }
       }
       if ((data ?? []).length < 1000) break
     }
     const out: string[] = []
-    for (const [id, set] of byMember) {
-      if (attendanceMonthsSatisfyCriteria(set, months)) out.push(id)
+    if (minCount != null) {
+      for (const [id, n] of byMemberCount) if (n >= minCount) out.push(id)
+    } else {
+      for (const [id, set] of byMemberMonths) if (attendanceMonthsSatisfyCriteria(set, months)) out.push(id)
     }
     return out
   } catch (e) {

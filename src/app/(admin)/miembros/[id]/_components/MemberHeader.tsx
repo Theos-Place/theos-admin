@@ -34,13 +34,13 @@ function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
 
 function MemberActivityIcons({ member }: { member: Member }) {
   // Flag calculado en el servidor con el criterio único del sistema
-  // (≥1 check-in de charla por mes, últimos 6 meses completos).
+  // (≥6 check-ins de charla en los últimos 6 meses completos, ≈1 por mes).
   const attendanceActive = member.attendance_active ?? false
   const studyingActive = !!member.current_study
   const committee = member.comites?.[0]
   const attendanceTooltip = member.last_charla_checkin
     ? `Asistencia activa · último check-in ${formatDate(member.last_charla_checkin)}`
-    : 'Asistencia activa (últimos 6 meses)'
+    : 'Asistencia activa (≥6 charlas en 6 meses)'
   return (
     <div className="mt-3 flex items-center gap-5">
       <ActivityIcon active={member.is_donor} icon={Heart} label="Donador" activeColor="text-coral" tooltip="Donador" />
