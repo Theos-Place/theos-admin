@@ -46,7 +46,9 @@ export type CommitteeData = {
   open_vacancies: number
 }
 
-export type VacancyStatus = 'draft' | 'published' | 'filled' | 'closed'
+export type VacancyStatus =
+  | 'draft' | 'published' | 'filled' | 'closed'
+  | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado'
 
 export type Vacancy = {
   id: string
@@ -95,8 +97,6 @@ export type Application = {
   applied_at: string
   status: ApplicationStatus
   notes: string
-  assigned_to?: string | null
-  assignee_name?: string | null
   service_history: Array<{ committee: string; position: string; period: string }>
 }
 

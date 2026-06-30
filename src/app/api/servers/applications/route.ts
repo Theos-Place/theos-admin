@@ -20,9 +20,8 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') ?? undefined
     const statusParam = searchParams.get('status')
     const committeeId = searchParams.get('committee') ?? undefined
-    const assignedTo = searchParams.get('assigned_to') ?? undefined
     const status = (['pending', 'reviewing', 'approved', 'rejected'] as const).find(s => s === statusParam)
-    const hasFilter = !!(search || status || committeeId || assignedTo)
+    const hasFilter = !!(search || status || committeeId)
 
     // Sin paginación ni filtros: array completo (back-compat para useServers).
     if (rawPage === null && rawPageSize === null && !hasFilter) {
@@ -30,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
 
     const filters: ApplicationFilters = {
-      search, status, committeeId, assignedTo,
+      search, status, committeeId,
       page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
       pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
     }

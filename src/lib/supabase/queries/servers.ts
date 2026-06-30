@@ -45,7 +45,7 @@ export type DbVacancy = {
   commitment: string | null
   slots_total: number
   slots_filled: number
-  status: 'draft' | 'published' | 'filled' | 'closed'
+  status: 'draft' | 'published' | 'filled' | 'closed' | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado'
   published_at: string | null
   created_at: string
   expires_at: string | null
@@ -65,8 +65,6 @@ export type DbApplication = {
   status: 'pending' | 'reviewing' | 'approved' | 'rejected'
   notes: string | null
   applied_at: string
-  assigned_to: string | null
-  assignee: { first_name: string; last_name: string } | null
 }
 
 export type DbCommitteeGoal = {
@@ -194,10 +192,9 @@ export async function getVacancies(): Promise<DbVacancy[]> {
 }
 
 const APPLICATION_SELECT = `
-  id, vacancy_id, applicant_id, status, notes, applied_at, assigned_to,
+  id, vacancy_id, applicant_id, status, notes, applied_at,
   vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name)),
-  applicant:members!applications_applicant_id_fkey(first_name, last_name),
-  assignee:members!applications_assigned_to_fkey(first_name, last_name)
+  applicant:members!applications_applicant_id_fkey(first_name, last_name)
 `
 
 /** Resuelve el nombre del área padre del comité de cada aplicación (el embed
@@ -227,8 +224,6 @@ export type ApplicationFilters = {
   search?: string
   status?: 'pending' | 'reviewing' | 'approved' | 'rejected'
   committeeId?: string
-  /** member_id del responsable, o 'unassigned' para las sin asignar. */
-  assignedTo?: string
   page?: number
   pageSize?: number
 }
@@ -272,8 +267,6 @@ export async function getApplicationsPage(filters: ApplicationFilters = {}): Pro
     .order('applied_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
   if (filters.status) q = q.eq('status', filters.status)
-  if (filters.assignedTo === 'unassigned') q = q.is('assigned_to', null)
-  else if (filters.assignedTo) q = q.eq('assigned_to', filters.assignedTo)
   if (committeeVacancyIds) q = q.in('vacancy_id', committeeVacancyIds)
   if (searchOr) q = q.or(searchOr)
 
@@ -423,47 +416,49 @@ export async function createApplication(input: {
   if (error) throw error
 }
 
-/** Cambia el estado de una aplicación. Al aprobar, si la vacante tiene posición
- *  asociada, crea el volunteer e incrementa slots_filled. */
+/** Cambia el estado de una aplicación. Al APROBAR, todo (estado + activación del
+ *  servidor + slots_filled) ocurre en una sola transacción vía la función
+ *  approve_applications (5b): reactiva sin duplicar y NO dispara correos. */
 export async function setApplicationStatus(
   id: string,
   status: 'pending' | 'reviewing' | 'approved' | 'rejected',
 ): Promise<void> {
   const supabase = createAdminClient()
-
   if (status === 'approved') {
-    const { data: app, error: aErr } = await supabase
-      .from('applications')
-      .select('applicant_id, vacancy:vacancies(id, position_id, slots_filled)')
-      .eq('id', id)
-      .single()
-    if (aErr) throw aErr
-
-    const row = app as {
-      applicant_id: string
-      vacancy: { id: string; position_id: string | null; slots_filled: number } | Array<{ id: string; position_id: string | null; slots_filled: number }> | null
-    }
-    const vac = Array.isArray(row.vacancy) ? row.vacancy[0] ?? null : row.vacancy
-    const applicantId = row.applicant_id
-
-    if (vac?.position_id) {
-      const { error: vErr } = await supabase
-        .from('volunteers')
-        .upsert(
-          { member_id: applicantId, position_id: vac.position_id, status: 'active' },
-          { onConflict: 'member_id,position_id' },
-        )
-      if (vErr) throw vErr
-      const { error: sErr } = await supabase
-        .from('vacancies')
-        .update({ slots_filled: (vac.slots_filled ?? 0) + 1 })
-        .eq('id', vac.id)
-      if (sErr) throw sErr
-    }
+    // RPC fuera de los tipos generados (migración 103) → cast localizado.
+    const { error } = await supabase.rpc('approve_applications' as never, { app_ids: [id] } as never)
+    if (error) throw error
+    return
   }
-
   const { error } = await supabase.from('applications').update({ status }).eq('id', id)
   if (error) throw error
+}
+
+/** Aprueba varias aplicaciones a la vez (bulk, 5b). Cada aprobación activa al
+ *  aplicante como servidor del puesto/comité de su vacante, en una sola
+ *  transacción. Devuelve cuántos servidores se activaron. No dispara correos. */
+export async function approveApplications(ids: string[]): Promise<{ activated: number }> {
+  if (ids.length === 0) return { activated: 0 }
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('approve_applications' as never, { app_ids: ids } as never)
+  if (error) throw error
+  return { activated: typeof data === 'number' ? data : 0 }
+}
+
+/** Cambia el estado de varias vacantes (solicitud de cupos) a la vez (bulk, punto 6).
+ *  No toca aplicaciones ni servidores — es el flujo de la solicitud de cupos. */
+export async function setVacanciesStatus(
+  ids: string[],
+  status: 'enviado_lider' | 'aprobado' | 'denegado',
+): Promise<{ updated: number }> {
+  if (ids.length === 0) return { updated: 0 }
+  const supabase = createAdminClient()
+  const { error, count } = await supabase
+    .from('vacancies')
+    .update({ status }, { count: 'exact' })
+    .in('id', ids)
+  if (error) throw error
+  return { updated: count ?? ids.length }
 }
 
 /** Coordinadores de servidores activos (candidatos para asignar aplicaciones). */
@@ -482,61 +477,6 @@ export async function getServiceCoordinators(): Promise<Array<{ member_id: strin
   }
   return [...byId].map(([member_id, member_name]) => ({ member_id, member_name }))
     .sort((a, b) => a.member_name.localeCompare(b.member_name))
-}
-
-/** Asigna (o reasigna) el responsable de una aplicación: setea assigned_to,
- *  registra historial y notifica al asignado. Si assigneeMemberId === changedBy
- *  es "Tomar" (auto-asignarse). null = quitar responsable. */
-export async function assignApplication(
-  id: string,
-  assigneeMemberId: string | null,
-  changedBy: string | null,
-): Promise<void> {
-  const supabase = createAdminClient()
-
-  const { data: before } = await supabase
-    .from('applications')
-    .select('assigned_to, status, applicant:members!applications_applicant_id_fkey(first_name, last_name), vacancy:vacancies(title)')
-    .eq('id', id)
-    .maybeSingle()
-  const prev = before as {
-    assigned_to: string | null
-    status: string
-    applicant: { first_name: string; last_name: string } | null
-    vacancy: { title: string } | null
-  } | null
-
-  const { error } = await supabase.from('applications').update({ assigned_to: assigneeMemberId }).eq('id', id)
-  if (error) throw error
-
-  // Historial (best-effort).
-  let assigneeName = ''
-  if (assigneeMemberId) {
-    const { data: m } = await supabase.from('members').select('first_name, last_name').eq('id', assigneeMemberId).maybeSingle()
-    const mm = m as { first_name: string; last_name: string } | null
-    assigneeName = mm ? `${mm.first_name} ${mm.last_name}`.trim() : ''
-  }
-  await supabase.from('application_status_history').insert({
-    application_id: id,
-    from_status: prev?.status ?? null,
-    to_status: prev?.status ?? null,
-    assigned_to: assigneeMemberId,
-    changed_by: changedBy,
-    notes: assigneeMemberId ? `Asignada a ${assigneeName}` : 'Responsable removido',
-  })
-
-  // Notificación interna al asignado (no si se auto-asignó).
-  if (assigneeMemberId && assigneeMemberId !== changedBy) {
-    const applicantName = prev?.applicant ? `${prev.applicant.first_name} ${prev.applicant.last_name}`.trim() : 'un aplicante'
-    const vacTitle = prev?.vacancy?.title ?? 'una vacante'
-    await supabase.from('internal_notifications').insert({
-      recipient_member_id: assigneeMemberId,
-      type: 'application_assigned',
-      title: 'Te asignaron una aplicación de servicio',
-      body: `Aplicación de ${applicantName} para ${vacTitle}`,
-      link: `/servidores/aplicaciones?app=${id}`,
-    })
-  }
 }
 
 // Metas de comité
