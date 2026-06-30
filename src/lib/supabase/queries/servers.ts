@@ -347,7 +347,7 @@ export type VacancyWriteInput = {
   schedule?: string | null
   commitment?: string | null
   slots_total?: number
-  status?: 'draft' | 'published' | 'filled' | 'closed'
+  status?: 'draft' | 'published' | 'filled' | 'closed' | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado'
   expires_at?: string | null
   location?: string | null
   notes?: string | null
@@ -361,6 +361,40 @@ export async function createVacancy(input: VacancyWriteInput): Promise<{ id: str
   const { data, error } = await supabase.from('vacancies').insert(row).select('id').single()
   if (error) throw error
   return data as { id: string }
+}
+
+/** Crea las vacantes de una solicitud (carrito del comité): una vacante por
+ *  puesto con `slots_total = cantidad` y estado 'creado'. Devuelve filas creadas
+ *  y total de cupos. Ignora ítems con cantidad <= 0. */
+export async function createVacancyRequests(
+  committeeId: string,
+  items: Array<{ position_id: string; quantity: number }>,
+): Promise<{ rows: number; slots: number }> {
+  const supabase = createAdminClient()
+  const valid = items.filter(i => i.position_id && Number(i.quantity) > 0)
+  if (valid.length === 0) return { rows: 0, slots: 0 }
+
+  const { data: positions, error: pErr } = await supabase
+    .from('service_positions').select('id, title, area_id').in('id', valid.map(i => i.position_id))
+  if (pErr) throw pErr
+  const posById = new Map(
+    ((positions ?? []) as Array<{ id: string; title: string; area_id: string }>).map(p => [p.id, p]),
+  )
+  // Defensa: el puesto debe pertenecer al comité indicado.
+  const rows = valid
+    .filter(i => posById.get(i.position_id)?.area_id === committeeId)
+    .map(i => ({
+      committee_id: committeeId,
+      position_id: i.position_id,
+      title: posById.get(i.position_id)!.title,
+      slots_total: Math.floor(Number(i.quantity)),
+      status: 'creado' as const,
+    }))
+  if (rows.length === 0) return { rows: 0, slots: 0 }
+
+  const { error } = await supabase.from('vacancies').insert(rows)
+  if (error) throw error
+  return { rows: rows.length, slots: rows.reduce((s, r) => s + r.slots_total, 0) }
 }
 
 export async function updateVacancy(id: string, patch: Partial<VacancyWriteInput>): Promise<void> {

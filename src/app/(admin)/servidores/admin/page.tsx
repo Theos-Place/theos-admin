@@ -194,103 +194,6 @@ function DeactivateConfirm({
     </Modal>
   )
 }
-
-// ─── Position modal (Cambio 3) ──────────────────────────────────────────────────
-
-export type PositionFormData = {
-  title: string
-  description: string
-  location: string
-  quantity: number
-  study_requirement: string
-  functions: string
-  profile: string
-  expires_at: string
-  is_featured: boolean
-  base_area_id: string
-}
-
-function PositionModal({
-  areas, onSave, onClose,
-}: {
-  areas: { id: string; name: string }[]
-  onSave: (data: PositionFormData) => void
-  onClose: () => void
-}) {
-  const [f, setF] = useState<PositionFormData>({
-    title: '', description: '', location: '', quantity: 1, study_requirement: '',
-    functions: '', profile: '', expires_at: '', is_featured: false, base_area_id: '',
-  })
-  const set = <K extends keyof PositionFormData>(k: K, v: PositionFormData[K]) => setF(p => ({ ...p, [k]: v }))
-  const valid = f.title.trim().length > 0
-
-  return (
-    <Modal onClose={onClose} titleId="position-modal-title" width={448}>
-      <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-        <h2 id="position-modal-title" className="text-base font-bold text-navy font-display">Nuevo puesto</h2>
-        <div className="space-y-1.5">
-          <label className={labelCls}>Nombre del puesto *</label>
-          <input autoFocus aria-label="Nombre del puesto" className={inputCls}
-            placeholder="Ej. Colaborador de Bienvenida" value={f.title} onChange={e => set('title', e.target.value)} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Ubicación</label>
-            <input aria-label="Ubicación" className={inputCls} placeholder="Sede / lugar" value={f.location} onChange={e => set('location', e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className={labelCls}>Cantidad</label>
-            <input type="number" min={1} aria-label="Cantidad" className={inputCls} value={f.quantity} onChange={e => set('quantity', Math.max(1, Number(e.target.value) || 1))} />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className={labelCls}>Área base</label>
-          <select className={inputCls} value={f.base_area_id} onChange={e => set('base_area_id', e.target.value)}>
-            <option value="">Sin área base</option>
-            {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <label className={labelCls}>Requisito de estudio (categoría)</label>
-          <input aria-label="Requisito de estudio" className={inputCls} placeholder="Ej. N4 completado" value={f.study_requirement} onChange={e => set('study_requirement', e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className={labelCls}>Descripción</label>
-          <textarea aria-label="Descripción del puesto" className={cn(inputCls, 'resize-none')} rows={2} value={f.description} onChange={e => set('description', e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className={labelCls}>Funciones</label>
-          <textarea aria-label="Funciones" className={cn(inputCls, 'resize-none')} rows={2} value={f.functions} onChange={e => set('functions', e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className={labelCls}>Perfil</label>
-          <textarea aria-label="Perfil" className={cn(inputCls, 'resize-none')} rows={2} value={f.profile} onChange={e => set('profile', e.target.value)} />
-        </div>
-        <div className="grid grid-cols-2 gap-3 items-end">
-          <div className="space-y-1.5">
-            <label className={labelCls}>Expiración</label>
-            <input type="date" aria-label="Expiración" className={inputCls} value={f.expires_at} onChange={e => set('expires_at', e.target.value)} />
-          </div>
-          <label className="flex items-center gap-2 pb-2 cursor-pointer">
-            <input type="checkbox" className="accent-coral" checked={f.is_featured} onChange={e => set('is_featured', e.target.checked)} />
-            <span className="text-sm text-navy font-body">Destacado</span>
-          </label>
-        </div>
-        <div className="flex gap-2 pt-1">
-          <button disabled={!valid}
-            onClick={() => onSave({ ...f, title: f.title.trim() })}
-            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body">
-            Crear puesto
-          </button>
-          <button onClick={onClose} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </Modal>
-  )
-}
-
 /** Edición enfocada de los campos descriptivos de un puesto (título, nivel de
  *  estudio, descripción, funciones, perfil). Solo envía estos campos (PUT parcial)
  *  para no tocar ubicación/cantidad/expiración/destacado. */
@@ -358,17 +261,6 @@ export default function ServidoresAdminPage() {
   const { committees: serverCommittees, refetch: refetchServers } = useServers()
   const toast = useToast()
 
-  // Áreas reales (tipo area) para el dropdown de "área base" del puesto.
-  const [baseAreas, setBaseAreas] = useState<{ id: string; name: string }[]>([])
-  useEffect(() => {
-    let alive = true
-    fetch('/api/servers/areas')
-      .then(r => (r.ok ? r.json() : []))
-      .then((d: Array<{ id: string; name: string }>) => { if (alive) setBaseAreas((Array.isArray(d) ? d : []).map(a => ({ id: a.id, name: a.name }))) })
-      .catch(() => {})
-    return () => { alive = false }
-  }, [])
-
   // Conteo real de servidores activos por comité (id de área-comité).
   const activeByCommittee = useMemo(() => {
     const m: Record<string, number> = {}
@@ -400,7 +292,6 @@ export default function ServidoresAdminPage() {
   const [areaModal,   setAreaModal]   = useState<AreaModal>({ open: false, editing: null })
   const [commModal,   setCommModal]   = useState<CommModal>({ open: false, editing: null })
   const [deactTarget, setDeactTarget] = useState<DeactTarget>(null)
-  const [posModalFor, setPosModalFor] = useState<string | null>(null)   // committee id
   const [expandedPos, setExpandedPos] = useState<Set<string>>(new Set()) // puestos con detalle abierto
   const [editPos, setEditPos] = useState<CommitteePosition | null>(null) // edición de campos descriptivos
   function togglePos(id: string) {
@@ -498,34 +389,6 @@ export default function ServidoresAdminPage() {
         await refetchServers()
       },
     })
-  }
-
-  // ── Puestos (service_positions) ──────────────────────────────────────────────
-  async function createPosition(data: PositionFormData) {
-    if (!posModalFor) return
-    const areaId = posModalFor
-    setPosModalFor(null)
-    try {
-      const res = await fetch('/api/servers/positions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          area_id: areaId,
-          title: data.title,
-          description: data.description || null,
-          location: data.location || null,
-          quantity: data.quantity,
-          study_requirement: data.study_requirement || null,
-          functions: data.functions || null,
-          profile: data.profile || null,
-          expires_at: data.expires_at || null,
-          is_featured: data.is_featured,
-          base_area_id: data.base_area_id || null,
-        }),
-      })
-      if (!res.ok) throw new Error()
-      await refetchServers()
-    } catch { /* sin cambios si falla */ }
   }
 
   // ── Eliminar puesto (Cambio 3): bloquea si hay servidores active/on_leave ──
@@ -665,10 +528,6 @@ export default function ServidoresAdminPage() {
           onCancel={() => setDeactTarget(null)}
         />
       )}
-      {posModalFor && (
-        <PositionModal areas={baseAreas} onSave={createPosition} onClose={() => setPosModalFor(null)} />
-      )}
-
       {editPos && (
         <PositionEditModal initial={editPos} onSave={savePositionDesc} onClose={() => setEditPos(null)} />
       )}
@@ -699,15 +558,10 @@ export default function ServidoresAdminPage() {
             {activeCount} área{activeCount !== 1 ? 's' : ''} activa{activeCount !== 1 ? 's' : ''} · {activeCommCount} comités activos
           </p>
         </div>
-        {/* Importar: solo admin + coordinación de staff (puntos 4 y 6). */}
+        {/* Importar vacantes: solo admin + coordinación de staff. La importación de
+            PUESTOS se eliminó (el catálogo se mantiene como está en la BD). */}
         {hasRole('admin', ...STAFF_IMPORT_ROLES) && (
           <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-            <a
-              href="/servidores/admin/importar"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-            >
-              <Upload size={14} /> Importar puestos
-            </a>
             <a
               href="/servidores/admin/importar-vacantes"
               className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
@@ -968,13 +822,6 @@ export default function ServidoresAdminPage() {
                 </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={() => setPosModalFor(selectedComm.id)}
-                  className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[12px] font-medium transition-colors font-body"
-                >
-                  <Plus size={12} />
-                  Nuevo
-                </button>
                 <button onClick={() => setSelectedCommId(null)} className="text-navy-light/60 hover:text-navy p-1" title="Cerrar" aria-label="Cerrar panel de puestos">
                   <X size={16} />
                 </button>
@@ -987,9 +834,6 @@ export default function ServidoresAdminPage() {
                 <p className="text-sm text-navy-light/60 font-body">
                   Este comité no tiene puestos
                 </p>
-                <button onClick={() => setPosModalFor(selectedComm.id)} className="text-[12px] text-coral hover:underline font-body">
-                  Crear el primero
-                </button>
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto py-1.5">

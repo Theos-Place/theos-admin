@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
-import {
-  getServicePositions, createServicePosition, type ServicePositionWriteInput,
-} from '@/lib/supabase/queries/servers'
+import { NextResponse } from 'next/server'
+import { requireModuleView } from '@/lib/auth/guard'
+import { getServicePositions } from '@/lib/supabase/queries/servers'
 
 // GET: lista de puestos (con comité, área base y conteo de servidores).
+// La creación e importación de puestos se eliminó de la UI (rediseño de vacantes):
+// el catálogo de puestos se mantiene como está en la BD.
 export async function GET() {
   try {
     const auth = await requireModuleView('servidores')
@@ -13,19 +12,6 @@ export async function GET() {
     return NextResponse.json(await getServicePositions())
   } catch (error) {
     console.error('GET /api/servers/positions:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
-  }
-}
-
-// POST: crea un puesto con el formato real (ubicación, cantidad, requisito, etc.).
-export async function POST(req: NextRequest) {
-  const auth = await requireRoles(...SERVICE_ADMIN_ROLES)
-  if (auth.res) return auth.res
-  try {
-    const pos = await createServicePosition((await req.json()) as ServicePositionWriteInput)
-    return NextResponse.json(pos, { status: 201 })
-  } catch (error) {
-    console.error('POST /api/servers/positions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

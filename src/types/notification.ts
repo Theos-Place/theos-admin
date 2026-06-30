@@ -12,6 +12,11 @@ export type InternalNotificationType =
   | 'leader_absent_alert'
   | 'broadcast'
   | 'finance_request_assigned'
+  // Servidores:
+  | 'position_request'
+  | 'application_assigned'
+  | 'vacancy_request_sent'
+  | 'vacancy_request_new'
 
 export type InternalNotification = {
   id: string
