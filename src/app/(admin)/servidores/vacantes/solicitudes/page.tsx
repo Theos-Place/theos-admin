@@ -162,7 +162,7 @@ export default function SolicitudesVacantesPage() {
               className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-40 font-body"
             >
               {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-              Exportar aplicantes{sel.count > 0 ? ` (${sel.count})` : ''}
+              {sel.count > 0 ? `Exportar aplicantes (${sel.count})` : `Exportar todo (${filtered.length})`}
             </button>
           </div>
         )}
@@ -249,7 +249,7 @@ export default function SolicitudesVacantesPage() {
                     <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{r.slots_total}</td>
                     <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">
                       {r.application_count > 0 ? (
-                        <Link href={`/servidores/vacantes/${r.id}`} className="text-coral hover:underline">{r.application_count}</Link>
+                        <Link href={`/servidores/vacantes/${r.id}`} className="text-navy underline underline-offset-2 hover:text-coral-deep">{r.application_count}</Link>
                       ) : '0'}
                     </td>
                     <td className="px-4 py-3">
