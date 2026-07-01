@@ -20,8 +20,10 @@ const SECTIONS: { id: string; title: string }[] = [
   { id: 'privacidad', title: '4. Política de Privacidad y tratamiento de datos' },
   { id: 'menores', title: '5. Datos de personas menores de edad' },
   { id: 'comunicaciones', title: '6. Comunicaciones' },
-  { id: 'cambios', title: '7. Cambios a estos términos' },
-  { id: 'contacto', title: '8. Contacto' },
+  { id: 'propiedad', title: '7. Propiedad intelectual' },
+  { id: 'disponibilidad', title: '8. Disponibilidad y limitación de responsabilidad' },
+  { id: 'cambios', title: '9. Cambios a estos términos' },
+  { id: 'contacto', title: '10. Contacto' },
 ]
 
 export default function TerminosPage() {
@@ -226,8 +228,31 @@ export default function TerminosPage() {
             </p>
           </section>
 
+          <section id="propiedad">
+            <h2>7. Propiedad intelectual</h2>
+            <p>
+              El sistema, su software, su diseño, la marca «Theos Place» y los contenidos propios de la
+              Asociación son de titularidad de Asociación Theos Place o de sus licenciantes. El acceso al
+              sistema no transfiere ningún derecho sobre ellos; queda prohibida su copia, distribución,
+              modificación o ingeniería inversa sin autorización. La información que cada persona registra en
+              el sistema sigue siendo suya, conforme a la Política de Privacidad de la Sección 4.
+            </p>
+          </section>
+
+          <section id="disponibilidad">
+            <h2>8. Disponibilidad y limitación de responsabilidad</h2>
+            <p>
+              El sistema se ofrece «tal cual» y «según disponibilidad». La Asociación procura mantenerlo
+              operativo y seguro, pero no garantiza que esté disponible de forma ininterrumpida ni libre de
+              errores. En la medida permitida por la ley, la Asociación no será responsable por daños
+              indirectos o incidentales derivados del uso o la imposibilidad de uso del sistema. Nada en esta
+              sección limita los derechos que la legislación de Costa Rica reconoce a la persona titular de los
+              datos.
+            </p>
+          </section>
+
           <section id="cambios">
-            <h2>7. Cambios a estos términos</h2>
+            <h2>9. Cambios a estos términos</h2>
             <p>
               La Asociación puede actualizar estos Términos y Condiciones y esta Política de Privacidad cuando sea
               necesario. La fecha de última actualización, indicada al inicio de esta página, refleja la versión
@@ -237,7 +262,7 @@ export default function TerminosPage() {
           </section>
 
           <section id="contacto">
-            <h2>8. Contacto</h2>
+            <h2>10. Contacto</h2>
             <p>
               Para consultas sobre estos términos, sobre el tratamiento de tus datos o para ejercer tus derechos,
               contactá a:
