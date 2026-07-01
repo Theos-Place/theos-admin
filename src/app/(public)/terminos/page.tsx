@@ -6,8 +6,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Términos y Condiciones y Política de Privacidad · Theos Place',
-  description: 'Términos y Condiciones y Política de Privacidad de Asociación Theos Place.',
+  title: 'Términos y Condiciones y Política de Privacidad · Theos',
+  description: 'Términos y Condiciones y Política de Privacidad de Theos.',
 }
 
 // Fecha de última actualización (versión vigente). Actualizar al cambiar el contenido.
@@ -32,7 +32,7 @@ export default function TerminosPage() {
       {/* Barra superior con logo */}
       <header className="border-b border-[var(--outline-variant)] bg-surface-card">
         <div className="mx-auto max-w-3xl px-5 py-4 flex items-center justify-between gap-4">
-          <Link href="/" className="inline-flex items-center" aria-label="Theos Place — inicio">
+          <Link href="/" className="inline-flex items-center" aria-label="Theos — inicio">
             <Image
               src="/logo-theos-original.png"
               alt="Theos Place"
@@ -53,7 +53,7 @@ export default function TerminosPage() {
         <h1 className="text-2xl sm:text-3xl font-extrabold text-navy font-display tracking-[-0.02em] leading-tight">
           Términos y Condiciones y Política de Privacidad
         </h1>
-        <p className="mt-2 text-sm text-navy-light/70 font-body">Asociación Theos Place</p>
+        <p className="mt-2 text-sm text-navy-light/70 font-body">Theos</p>
         <p className="mt-1 text-[13px] text-navy-light/60 font-body">
           Última actualización: {LAST_UPDATED}
         </p>
@@ -85,13 +85,13 @@ export default function TerminosPage() {
           <section id="introduccion">
             <h2>1. Introducción y aceptación</h2>
             <p>
-              Este documento regula el uso del sistema de gestión de <strong className="text-navy">Asociación
-              Theos Place</strong> (en adelante, «Theos Place», «la Asociación» o «el sistema»). El acceso y uso
-              del sistema implican la aceptación plena de estos Términos y Condiciones y de la Política de
-              Privacidad aquí descrita. Si no estás de acuerdo con ellos, no debés utilizar el sistema.
+              Este documento regula el uso del sistema de gestión de <strong className="text-navy">Theos</strong>
+              {' '}(en adelante, «Theos» o «el sistema»). El acceso y uso del sistema implican la aceptación plena
+              de estos Términos y Condiciones y de la Política de Privacidad aquí descrita. Si no estás de acuerdo
+              con ellos, no debés utilizar el sistema.
             </p>
             <p>
-              El responsable del sistema y del tratamiento de los datos personales es Asociación Theos Place,
+              El responsable del sistema y del tratamiento de los datos personales es Theos,
               a quien podés contactar en <a href="mailto:info@theosplace.org">info@theosplace.org</a>.
             </p>
           </section>
@@ -100,10 +100,10 @@ export default function TerminosPage() {
             <h2>2. Uso del sistema</h2>
             <p>
               El sistema es una herramienta interna para la gestión de la membresía, los estudios, los eventos
-              y las actividades de la Asociación. Al usarlo, te comprometés a:
+              y las actividades de Theos. Al usarlo, te comprometés a:
             </p>
             <ul>
-              <li>Utilizar el sistema de buena fe y para los fines propios de la Asociación.</li>
+              <li>Utilizar el sistema de buena fe y para los fines propios de Theos.</li>
               <li>No compartir tus credenciales de acceso con terceros.</li>
               <li>No intentar accesos no autorizados, ni vulnerar la seguridad del sistema o de otras cuentas.</li>
               <li>
@@ -121,7 +121,7 @@ export default function TerminosPage() {
             <h2>3. Cuentas y acceso</h2>
             <p>
               Cada persona usuaria es responsable de la actividad realizada desde su cuenta. Debés resguardar tu
-              contraseña, elegir una contraseña segura y notificar de inmediato a la Asociación ante cualquier uso
+              contraseña, elegir una contraseña segura y notificar de inmediato a Theos ante cualquier uso
               no autorizado o sospecha de compromiso de tu cuenta, escribiendo a{' '}
               <a href="mailto:info@theosplace.org">info@theosplace.org</a>.
             </p>
@@ -130,7 +130,7 @@ export default function TerminosPage() {
           <section id="privacidad">
             <h2>4. Política de Privacidad y tratamiento de datos personales</h2>
             <p>
-              La Asociación trata datos personales conforme a la <strong className="text-navy">Ley N.° 8968,
+              Theos trata datos personales conforme a la <strong className="text-navy">Ley N.° 8968,
               Ley de Protección de la Persona frente al tratamiento de sus datos personales</strong> de Costa
               Rica, y su reglamento.
             </p>
@@ -148,7 +148,7 @@ export default function TerminosPage() {
 
             <h3>Finalidad del tratamiento</h3>
             <ul>
-              <li>Gestionar la membresía y el vínculo de las personas con la Asociación.</li>
+              <li>Gestionar la membresía y el vínculo de las personas con Theos.</li>
               <li>Comunicar información relevante sobre actividades, estudios y eventos.</li>
               <li>Organizar y coordinar estudios, grupos, eventos y el servicio voluntario.</li>
             </ul>
@@ -156,15 +156,15 @@ export default function TerminosPage() {
             <h3>Base legal y consentimiento</h3>
             <p>
               El tratamiento se fundamenta en el consentimiento de la persona titular y en el interés legítimo de
-              la Asociación para gestionar su membresía y actividades. Para los datos sensibles se requiere
+              Theos para gestionar su membresía y actividades. Para los datos sensibles se requiere
               consentimiento informado, que podés retirar en cualquier momento.
             </p>
 
             <h3>Con quién se comparte</h3>
             <p>
-              La Asociación <strong className="text-navy">no vende ni cede tus datos a terceros</strong> con
+              Theos <strong className="text-navy">no vende ni cede tus datos a terceros</strong> con
               fines comerciales. Los datos pueden ser procesados por proveedores de servicios tecnológicos
-              (por ejemplo, alojamiento del sistema y envío de correos) que actúan por cuenta de la Asociación
+              (por ejemplo, alojamiento del sistema y envío de correos) que actúan por cuenta de Theos
               y bajo obligaciones de confidencialidad y seguridad.
             </p>
 
@@ -179,7 +179,7 @@ export default function TerminosPage() {
 
             <h3>Seguridad de los datos</h3>
             <p>
-              La Asociación adopta medidas técnicas y organizativas razonables para proteger los datos personales
+              Theos adopta medidas técnicas y organizativas razonables para proteger los datos personales
               frente a accesos no autorizados, pérdida o alteración. Ningún sistema es completamente infalible,
               pero trabajamos para mantener niveles de seguridad adecuados.
             </p>
@@ -194,7 +194,7 @@ export default function TerminosPage() {
             <ul>
               <li>
                 Los datos de menores reciben <strong className="text-navy">protección especial</strong> y se
-                utilizan únicamente para los fines de la membresía y las actividades de la Asociación.
+                utilizan únicamente para los fines de la membresía y las actividades de Theos.
               </li>
               <li>
                 Los padres, madres o representantes legales pueden solicitar el acceso, la rectificación o la
@@ -207,7 +207,7 @@ export default function TerminosPage() {
           <section id="comunicaciones">
             <h2>6. Comunicaciones</h2>
             <p>
-              La Asociación puede enviarte dos tipos de comunicaciones:
+              Theos puede enviarte dos tipos de comunicaciones:
             </p>
             <ul>
               <li>
@@ -231,8 +231,8 @@ export default function TerminosPage() {
           <section id="propiedad">
             <h2>7. Propiedad intelectual</h2>
             <p>
-              El sistema, su software, su diseño, la marca «Theos Place» y los contenidos propios de la
-              Asociación son de titularidad de Asociación Theos Place o de sus licenciantes. El acceso al
+              El sistema, su software, su diseño, la marca «Theos» y los contenidos propios de Theos son de
+              su titularidad o de sus licenciantes. El acceso al
               sistema no transfiere ningún derecho sobre ellos; queda prohibida su copia, distribución,
               modificación o ingeniería inversa sin autorización. La información que cada persona registra en
               el sistema sigue siendo suya, conforme a la Política de Privacidad de la Sección 4.
@@ -242,9 +242,9 @@ export default function TerminosPage() {
           <section id="disponibilidad">
             <h2>8. Disponibilidad y limitación de responsabilidad</h2>
             <p>
-              El sistema se ofrece «tal cual» y «según disponibilidad». La Asociación procura mantenerlo
+              El sistema se ofrece «tal cual» y «según disponibilidad». Theos procura mantenerlo
               operativo y seguro, pero no garantiza que esté disponible de forma ininterrumpida ni libre de
-              errores. En la medida permitida por la ley, la Asociación no será responsable por daños
+              errores. En la medida permitida por la ley, Theos no será responsable por daños
               indirectos o incidentales derivados del uso o la imposibilidad de uso del sistema. Nada en esta
               sección limita los derechos que la legislación de Costa Rica reconoce a la persona titular de los
               datos.
@@ -254,7 +254,7 @@ export default function TerminosPage() {
           <section id="cambios">
             <h2>9. Cambios a estos términos</h2>
             <p>
-              La Asociación puede actualizar estos Términos y Condiciones y esta Política de Privacidad cuando sea
+              Theos puede actualizar estos Términos y Condiciones y esta Política de Privacidad cuando sea
               necesario. La fecha de última actualización, indicada al inicio de esta página, refleja la versión
               vigente. El uso continuado del sistema tras una actualización implica la aceptación de la versión
               vigente.
@@ -268,7 +268,7 @@ export default function TerminosPage() {
               contactá a:
             </p>
             <p className="mt-2 text-navy">
-              <strong>Asociación Theos Place</strong><br />
+              <strong>Theos</strong><br />
               <a href="mailto:info@theosplace.org">info@theosplace.org</a>
             </p>
           </section>
@@ -276,7 +276,7 @@ export default function TerminosPage() {
 
         {/* Pie */}
         <footer className="mt-12 border-t border-[var(--outline-variant)] pt-6 text-[13px] text-navy-light/60 font-body flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>© {new Date().getFullYear()} Asociación Theos Place</span>
+          <span>© {new Date().getFullYear()} Theos</span>
           <Link href="/login" className="hover:text-navy transition-colors">Volver a ingresar</Link>
         </footer>
       </main>
