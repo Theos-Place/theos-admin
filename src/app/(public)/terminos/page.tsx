@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Términos y Condiciones y Política de Privacidad · Theos',
+  title: 'Términos y Condiciones y Política de Privacidad · Theos Place',
   description: 'Términos y Condiciones y Política de Privacidad de Theos.',
 }
 
@@ -32,7 +32,7 @@ export default function TerminosPage() {
       {/* Barra superior con logo */}
       <header className="border-b border-[var(--outline-variant)] bg-surface-card">
         <div className="mx-auto max-w-3xl px-5 py-4 flex items-center justify-between gap-4">
-          <Link href="/" className="inline-flex items-center" aria-label="Theos — inicio">
+          <Link href="/" className="inline-flex items-center" aria-label="Theos Place — inicio">
             <Image
               src="/logo-theos-original.png"
               alt="Theos Place"
