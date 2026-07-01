@@ -892,7 +892,7 @@ export default function ServidoresAdminPage() {
                             <p className="text-[13px] text-navy-light/80 font-body mt-0.5 whitespace-pre-line leading-relaxed">{p.profile}</p>
                           </div>
                         )}
-                        {!hasDetail && <p className="text-[12px] text-navy-light/50 font-body">Sin información descriptiva.</p>}
+                        {!hasDetail && <p className="text-[12px] text-navy-light/70 font-body">Sin información descriptiva.</p>}
                       </div>
                     )}
                   </div>
