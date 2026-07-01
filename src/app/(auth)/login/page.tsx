@@ -426,8 +426,8 @@ export default function LoginPage() {
       </p>
 
       {/* Legal */}
-      <p className="mt-6 text-center text-[12px] text-navy-light/50 font-body">
-        <Link href="/terminos" className="hover:text-navy-light transition-colors">
+      <p className="mt-6 text-center text-[13px] text-navy-light/70 font-body">
+        <Link href="/terminos" className="hover:text-navy transition-colors">
           Términos y Condiciones y Política de Privacidad
         </Link>
       </p>
