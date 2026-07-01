@@ -427,6 +427,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <LogOut size={14} className="shrink-0" />
             Cerrar sesión
           </button>
+          <Link
+            href="/terminos"
+            className="mt-1 block px-3 text-[11px] text-white/40 hover:text-white/70 transition-colors font-body"
+          >
+            Términos y Condiciones
+          </Link>
         </div>
       </aside>
     </>
