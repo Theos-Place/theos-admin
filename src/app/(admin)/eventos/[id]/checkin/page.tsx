@@ -355,7 +355,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
       {/* Contenido */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4">
+        <div className="max-w-6xl w-full mx-auto p-4 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
+            {/* Columna izquierda: acciones (escanear + buscar) */}
+            <div className="space-y-4">
           {/* Aviso: registro en fecha distinta a la del evento */}
           {dateMismatch && (
             <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-start gap-2.5" role="alert">
@@ -463,7 +466,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               )}
             </div>
           ) : null}
+            </div>
 
+            {/* Columna derecha: registrados */}
+            <div className="space-y-4">
           {/* Lista de registrados */}
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
             <div className="px-4 py-3 border-b border-[var(--outline-variant)] flex items-center justify-between gap-3">
@@ -502,6 +508,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 )}
               </div>
             ))}
+          </div>
+            </div>
           </div>
         </div>
       </div>
