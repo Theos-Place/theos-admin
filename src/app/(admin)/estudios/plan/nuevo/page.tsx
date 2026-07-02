@@ -157,7 +157,7 @@ export default function NuevoTipoPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
@@ -180,14 +180,15 @@ export default function NuevoTipoPage() {
         </p>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       {/* Información básica */}
-      <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+      <div className="lg:col-span-2 rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
           Información básica
         </h2>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="sm:col-span-2 lg:col-span-2 space-y-1">
             <label className="text-[11px] text-navy-light/60 font-display">Nombre *</label>
             <input className={inputCls} placeholder="Ej. Discípulos 4" value={form.nombre} onChange={e => set('nombre', e.target.value)} />
           </div>
@@ -207,7 +208,7 @@ export default function NuevoTipoPage() {
             </select>
           </div>
 
-          <div className="col-span-2 space-y-1">
+          <div className="sm:col-span-2 lg:col-span-3 space-y-1">
             <label className="text-[11px] text-navy-light/60 font-display">Descripción</label>
             <textarea className={cn(inputCls, 'resize-none')} rows={3} placeholder="Describe el contenido y objetivo del estudio..." value={form.descripcion} onChange={e => set('descripcion', e.target.value)} />
           </div>
@@ -288,6 +289,7 @@ export default function NuevoTipoPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {/* Actions */}

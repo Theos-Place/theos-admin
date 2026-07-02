@@ -43,7 +43,7 @@ export default function SeguridadPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
 
       {/* Header */}
       <div>
@@ -55,10 +55,12 @@ export default function SeguridadPage() {
         </p>
       </div>
 
-      <PasswordCard onSave={showToast} />
-      <PasskeysCard onSave={showToast} />
-      <TotpCard onSave={showToast} />
-      <SessionsCard onSave={showToast} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <PasswordCard onSave={showToast} />
+        <PasskeysCard onSave={showToast} />
+        <TotpCard onSave={showToast} />
+        <SessionsCard onSave={showToast} />
+      </div>
 
       {/* Toast */}
       {toast && (

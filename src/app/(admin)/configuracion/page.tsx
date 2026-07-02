@@ -33,7 +33,7 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
 
       {/* Header */}
       <div>
@@ -145,6 +145,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
   return (
     <form onSubmit={handleSave} className="space-y-5">
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
       {/* Toggles */}
       <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-card">
         <p className="text-[10px] uppercase tracking-widest text-navy-light/70 font-display">
@@ -209,6 +210,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
             </button>
           ))}
         </div>
+      </div>
       </div>
 
       <button

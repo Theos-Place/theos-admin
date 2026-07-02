@@ -326,7 +326,7 @@ export default function NuevoMiembroPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
       <div className="mb-6">
         <h1

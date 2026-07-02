@@ -292,7 +292,7 @@ export default function DashboardPage() {
   // ── Simplified member view ──────────────────────────────────────────────────
   if (isMember) {
     return (
-      <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-3xl mx-auto space-y-6">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         <div className="bg-navy rounded-2xl px-6 py-6 text-white relative overflow-hidden">
           {HEADER_THETAS.map((p) => (
             <div key={p.id} className="absolute" style={{ top: p.top, left: p.left, right: p.right }}>
@@ -309,47 +309,49 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-          <div className="text-lg font-bold text-navy mb-4 font-display">
-            Mi perfil
-          </div>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-coral flex items-center justify-center text-white font-bold text-lg font-display">
-              {user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2) ?? 'U'}
-            </div>
-            <div>
-              <div className="font-semibold text-navy font-body">{user?.name ?? 'Usuario'}</div>
-              <div className="text-[12px] text-navy/70 font-body">{user?.email}</div>
-            </div>
-          </div>
-          {user?.member_id && (
-            <Link href={`/miembros/${user.member_id}`}
-              className="inline-flex items-center gap-1 text-[12px] font-medium text-coral font-body">
-              Ver mi perfil completo <ChevronRight size={13} />
-            </Link>
-          )}
-        </div>
-
-        {upcomingEvents.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
             <div className="text-lg font-bold text-navy mb-4 font-display">
-              Próximos eventos
+              Mi perfil
             </div>
-            <div className="space-y-3">
-              {upcomingEvents.map(ev => (
-                <div key={ev.id} className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type] ?? '#161440' }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium text-navy truncate font-body">{ev.name}</div>
-                    <div className="text-[11px] text-navy/70 font-body">
-                      {formatShortDate(ev.start_at)} · {formatEventTime(ev.start_at)}
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-coral flex items-center justify-center text-white font-bold text-lg font-display">
+                {user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2) ?? 'U'}
+              </div>
+              <div>
+                <div className="font-semibold text-navy font-body">{user?.name ?? 'Usuario'}</div>
+                <div className="text-[12px] text-navy/70 font-body">{user?.email}</div>
+              </div>
+            </div>
+            {user?.member_id && (
+              <Link href={`/miembros/${user.member_id}`}
+                className="inline-flex items-center gap-1 text-[12px] font-medium text-coral font-body">
+                Ver mi perfil completo <ChevronRight size={13} />
+              </Link>
+            )}
+          </div>
+
+          {upcomingEvents.length > 0 && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
+              <div className="text-lg font-bold text-navy mb-4 font-display">
+                Próximos eventos
+              </div>
+              <div className="space-y-3">
+                {upcomingEvents.map(ev => (
+                  <div key={ev.id} className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type] ?? '#161440' }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-medium text-navy truncate font-body">{ev.name}</div>
+                      <div className="text-[11px] text-navy/70 font-body">
+                        {formatShortDate(ev.start_at)} · {formatEventTime(ev.start_at)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     )
   }

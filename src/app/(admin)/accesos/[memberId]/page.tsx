@@ -96,7 +96,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
   const availableRoles = ROLES.filter(r => r.id !== 'miembro' && !user.roles.includes(r.id))
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
 
       {/* Back */}
       <Link
@@ -134,6 +134,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
         </Link>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       {/* Roles actuales */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
         <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
@@ -218,6 +219,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
           </div>
         </div>
       )}
+      </div>
 
       {/* Historial */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">

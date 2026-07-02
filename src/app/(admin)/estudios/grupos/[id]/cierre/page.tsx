@@ -145,7 +145,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   }
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="space-y-5">
       <Link
         href={`/estudios/grupos/${group.id}`}
         className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"

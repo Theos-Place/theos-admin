@@ -91,7 +91,7 @@ export default function NuevaBecaPage() {
 
   return (
     <FinanceGuard>
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-6">
 
         {/* Header */}
         <div
@@ -111,7 +111,8 @@ export default function NuevaBecaPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl p-6 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 rounded-2xl p-6 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
 
           {/* 1. Member search */}
           <div>
@@ -265,9 +266,34 @@ export default function NuevaBecaPage() {
             )}
           </div>
 
-          {/* 5. Calculator */}
-          {selectedEntity && (
-            <div className="rounded-xl overflow-hidden border border-[rgba(22,20,64,0.10)]">
+          {/* 6. Notes */}
+          <div>
+            <label className="text-[11px] uppercase tracking-widest mb-2 block font-display text-[rgba(22,20,64,0.60)]">
+              Notas (opcional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Motivo de la beca, observaciones..."
+              rows={3}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy"
+            />
+          </div>
+
+          {/* Submit */}
+          <button
+            onClick={handleCreate}
+            disabled={!selectedMember || !selectedEntity || saving}
+            className="w-full rounded-full py-3 text-sm text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-coral font-body"
+          >
+            {saving ? 'Creando...' : 'Crear beca'}
+          </button>
+        </div>
+
+        {/* Resultado: calculadora en vivo del descuento */}
+        <div className="lg:sticky lg:top-6">
+          {selectedEntity ? (
+            <div className="rounded-2xl overflow-hidden border border-[rgba(22,20,64,0.10)] bg-surface-card shadow-[var(--shadow-md)]">
               <div className="px-5 py-4 space-y-2 bg-[rgba(22,20,64,0.03)]">
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-[rgba(22,20,64,0.55)]">Costo original:</span>
@@ -294,30 +320,14 @@ export default function NuevaBecaPage() {
                 </div>
               )}
             </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed p-6 text-center border-[var(--outline-variant)] bg-surface-card">
+              <p className="text-[13px] text-navy/60 font-body">
+                Seleccioná un evento o grupo para ver el cálculo del descuento.
+              </p>
+            </div>
           )}
-
-          {/* 6. Notes */}
-          <div>
-            <label className="text-[11px] uppercase tracking-widest mb-2 block font-display text-[rgba(22,20,64,0.60)]">
-              Notas (opcional)
-            </label>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Motivo de la beca, observaciones..."
-              rows={3}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy"
-            />
-          </div>
-
-          {/* Submit */}
-          <button
-            onClick={handleCreate}
-            disabled={!selectedMember || !selectedEntity || saving}
-            className="w-full rounded-full py-3 text-sm text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-coral font-body"
-          >
-            {saving ? 'Creando...' : 'Crear beca'}
-          </button>
+        </div>
         </div>
       </div>
 

@@ -332,7 +332,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const endBeforeStart = startTs !== null && endTs !== null && endTs < startTs
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       {showRecurringModal && (
         <RecurringSaveModal
           registrationCount={event.registrations.length}
@@ -380,6 +380,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
       {/* Sección 1 */}
       <Section id="info" title="① Información principal" open={openSections.has('info')} onToggle={() => toggleSection('info')}>
         <div className="space-y-4">
@@ -581,6 +582,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           )}
         </div>
       </Section>
+      </div>
     </div>
   )
 }

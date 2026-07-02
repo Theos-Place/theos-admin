@@ -116,7 +116,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="max-w-xl space-y-5">
+    <div className="space-y-5">
       <Link
         href={`/estudios/grupos/${id}`}
         className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
@@ -139,96 +139,103 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         </p>
       </div>
 
-      {/* Session info & counter */}
-      <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
-            >
-              Sesión {sessionNum} de {studyType?.weeks ?? '?'}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <p
-                className="text-2xl font-bold text-coral font-display"
-              >
-                {presentCount} / {enrolled.length}
-              </p>
-              <p className="text-[11px] text-navy-light/60 font-body">presentes</p>
-            </div>
-            <button
-              onClick={markAll}
-              className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-            >
-              <Users size={14} /> Marcar todos presentes
-            </button>
+      {/* Herramienta de una acción: lista a la izquierda, resumen + notas a la derecha. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+
+        {/* Participant list */}
+        <div className="lg:col-span-2 rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          <div className="divide-y border-[var(--outline-variant)]">
+            {enrolled.map(p => {
+              const present = attendance[p.member_id] ?? false
+              return (
+                <div
+                  key={p.member_id}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-surface-low transition-colors"
+                >
+                  <div className="h-8 w-8 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
+                    {getInitials(p.member_name)}
+                  </div>
+                  <span
+                    className="flex-1 text-sm text-navy font-body"
+                  >
+                    {p.member_name}
+                  </span>
+                  <button
+                    onClick={() => setAttendance(prev => ({ ...prev, [p.member_id]: !prev[p.member_id] }))}
+                    className={cn(
+                      'rounded-full px-4 py-1.5 text-[12px] font-medium transition-all',
+                      present
+                        ? 'bg-teal-deep text-white'
+                        : 'bg-surface-low text-navy-light/60 hover:bg-surface-card',
+                      'font-display',
+                    )}
+                  >
+                    {present ? 'Presente' : 'Ausente'}
+                  </button>
+                </div>
+              )
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Participant list */}
-      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        <div className="divide-y border-[var(--outline-variant)]">
-          {enrolled.map(p => {
-            const present = attendance[p.member_id] ?? false
-            return (
-              <div
-                key={p.member_id}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-surface-low transition-colors"
-              >
-                <div className="h-8 w-8 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
-                  {getInitials(p.member_name)}
+        {/* Panel: sesión, contador, notas y guardado */}
+        <div className="space-y-5 lg:sticky lg:top-6">
+          {/* Session info & counter */}
+          <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p
+                  className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+                >
+                  Sesión {sessionNum} de {studyType?.weeks ?? '?'}
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <p
+                    className="text-2xl font-bold text-coral font-display"
+                  >
+                    {presentCount} / {enrolled.length}
+                  </p>
+                  <p className="text-[11px] text-navy-light/60 font-body">presentes</p>
                 </div>
-                <span
-                  className="flex-1 text-sm text-navy font-body"
-                >
-                  {p.member_name}
-                </span>
                 <button
-                  onClick={() => setAttendance(prev => ({ ...prev, [p.member_id]: !prev[p.member_id] }))}
-                  className={cn(
-                    'rounded-full px-4 py-1.5 text-[12px] font-medium transition-all',
-                    present
-                      ? 'bg-teal-deep text-white'
-                      : 'bg-surface-low text-navy-light/60 hover:bg-surface-card',
-                    'font-display',
-                  )}
+                  onClick={markAll}
+                  className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                 >
-                  {present ? 'Presente' : 'Ausente'}
+                  <Users size={14} /> Marcar todos presentes
                 </button>
               </div>
-            )
-          })}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-1">
+            <label
+              className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
+            >
+              Notas de la sesión
+            </label>
+            <textarea
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
+              rows={3}
+              placeholder="Temas tratados, observaciones del grupo, etc."
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+            />
+          </div>
+
+          {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+          >
+            {saving ? 'Guardando…' : 'Guardar asistencia'}
+          </button>
         </div>
       </div>
-
-      {/* Notes */}
-      <div className="space-y-1">
-        <label
-          className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
-        >
-          Notas de la sesión
-        </label>
-        <textarea
-          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
-          rows={3}
-          placeholder="Temas tratados, observaciones del grupo, etc."
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-        />
-      </div>
-
-      {error && <p className="text-[12px] text-coral font-body">{error}</p>}
-
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
-      >
-        {saving ? 'Guardando…' : 'Guardar asistencia'}
-      </button>
     </div>
   )
 }

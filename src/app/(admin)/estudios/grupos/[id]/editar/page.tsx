@@ -128,7 +128,7 @@ function EditarForm({ group, studyType, refetch }: {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       <Link
         href={`/estudios/grupos/${group.id}`}
         className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
