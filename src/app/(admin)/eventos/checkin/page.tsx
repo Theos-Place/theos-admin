@@ -49,7 +49,7 @@ export default function CheckinPickerPage() {
   if (!canCheckin) return null
 
   return (
-    <div className="space-y-5 max-w-xl mx-auto">
+    <div className="space-y-5">
       {/* Header */}
       <div className="rounded-2xl bg-navy px-5 py-5 shadow-[var(--shadow-md)]">
         <Link href="/eventos" className="inline-flex items-center gap-1 text-[12px] text-white/60 hover:text-white mb-2 font-body">
@@ -86,41 +86,43 @@ export default function CheckinPickerPage() {
       )}
 
       {/* Lista */}
-      <div className="space-y-2.5">
-        {loading ? (
-          <p className="px-1 py-8 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
-        ) : results.length === 0 ? (
-          <div className="rounded-2xl bg-surface-card p-8 text-center shadow-[var(--shadow-md)]">
-            <p className="text-sm text-navy-light/60 font-body">
-              {q ? 'Ningún evento con ese nombre.' : 'No hay eventos de hoy en ventana de check-in. Buscá por nombre para registros de otro día.'}
-            </p>
-          </div>
-        ) : results.map(ev => {
-          const status = (ev as { checkin_status?: CheckinStatus }).checkin_status
-          return (
-            <button
-              key={(ev as { occurrence_key?: string }).occurrence_key ?? ev.id}
-              onClick={() => router.push(checkinHref(ev))}
-              className="w-full text-left rounded-2xl bg-surface-card px-4 py-4 shadow-[var(--shadow-md)] flex items-center justify-between gap-3 active:bg-surface-low transition-colors min-h-[64px]"
-            >
-              <div className="min-w-0">
-                <p className="text-base text-navy font-body truncate">{ev.name}</p>
-                <p className="text-[12px] text-navy-light/60 font-body mt-0.5">
-                  {new Date(ev.start_at).toLocaleString('es-CR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {status && (
-                  <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium font-display', STATUS_STYLE[status])}>
-                    {CHECKIN_STATUS_LABEL[status]}
-                  </span>
-                )}
-                <ChevronRight size={18} className="text-navy-light/40" />
-              </div>
-            </button>
-          )
-        })}
-      </div>
+      {loading ? (
+        <p className="px-1 py-8 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
+      ) : results.length === 0 ? (
+        <div className="rounded-2xl bg-surface-card p-8 text-center shadow-[var(--shadow-md)]">
+          <p className="text-sm text-navy-light/60 font-body">
+            {q ? 'Ningún evento con ese nombre.' : 'No hay eventos de hoy en ventana de check-in. Buscá por nombre para registros de otro día.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {results.map(ev => {
+            const status = (ev as { checkin_status?: CheckinStatus }).checkin_status
+            return (
+              <button
+                key={(ev as { occurrence_key?: string }).occurrence_key ?? ev.id}
+                onClick={() => router.push(checkinHref(ev))}
+                className="w-full text-left rounded-2xl bg-surface-card px-4 py-4 shadow-[var(--shadow-md)] flex items-center justify-between gap-3 active:bg-surface-low hover:shadow-[var(--shadow-lg)] transition-all min-h-[64px]"
+              >
+                <div className="min-w-0">
+                  <p className="text-base text-navy font-body truncate">{ev.name}</p>
+                  <p className="text-[12px] text-navy-light/60 font-body mt-0.5">
+                    {new Date(ev.start_at).toLocaleString('es-CR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {status && (
+                    <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-medium font-display', STATUS_STYLE[status])}>
+                      {CHECKIN_STATUS_LABEL[status]}
+                    </span>
+                  )}
+                  <ChevronRight size={18} className="text-navy-light/40" />
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
