@@ -185,6 +185,8 @@ export default function PlanDeEstudiosPage() {
   const { hasRole } = useAuth()
   // Acceso de gestión = roles de estudios (detalle de grupos, crear/editar).
   const canManage = hasRole(...STUDY_ADMIN_ROLES)
+  // Editar el tipo de estudio: solo coordinación de estudios, dirección y admin.
+  const canEdit = hasRole('coordinador_estudios', 'direccion', 'admin')
   // Dirigente referente (mentor_id) resuelto a nombre por la query de planes.
   const mentorName = (s: StudyType) => s.mentor_name ?? null
   // Archivados (descontinuados) al final de su categoría.
@@ -343,14 +345,24 @@ export default function PlanDeEstudiosPage() {
                     <CommitmentIcons donor={s.req_donor} server={s.req_server} charlas={s.req_attendee} size={13} />
                   </td>
                   <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                    {canManage && (
-                      <Link
-                        href={`/estudios/plan/${s.id}`}
-                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-                      >
-                        Ver
-                      </Link>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {canManage && (
+                        <Link
+                          href={`/estudios/plan/${s.id}`}
+                          className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                        >
+                          Ver
+                        </Link>
+                      )}
+                      {canEdit && (
+                        <Link
+                          href={`/estudios/plan/${s.code}/editar`}
+                          className="rounded-lg px-2.5 py-1 text-[11px] text-coral border border-coral/30 hover:bg-coral/5 transition-colors font-body"
+                        >
+                          Editar
+                        </Link>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
