@@ -14,10 +14,19 @@ import {
   FOLLETO_STATES, FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState,
   levelLabel, type FolletoState,
 } from '@/lib/studies/folletos'
+import { FOLLETO_TIPO_LABEL, FOLLETO_TIPO_BADGE, type FolletoTipo } from '@/lib/studies/bloques'
 
 const STATUS_FILTERS: { key: FolletoState | 'all'; label: string }[] = [
   { key: 'all', label: 'Todos' },
   ...FOLLETO_STATES.map(s => ({ key: s, label: FOLLETO_STATE_LABEL[s] })),
+]
+
+const TIPO_FILTERS: { key: FolletoTipo | 'all'; label: string }[] = [
+  { key: 'all', label: 'Todos los tipos' },
+  { key: 'cierre', label: 'Cierre' },
+  { key: 'preapertura_preliminar', label: 'Preliminar' },
+  { key: 'preapertura_confirmacion', label: 'Confirmación' },
+  { key: 'preapertura_final', label: 'Final' },
 ]
 
 function fmtDate(iso: string | null): string {
@@ -35,6 +44,7 @@ export default function FolletosPage() {
   const [loading, setLoading] = useState(true)
   const [sedeFilter, setSedeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<FolletoState | 'all'>('all')
+  const [tipoFilter, setTipoFilter] = useState<FolletoTipo | 'all'>('all')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<FolletoState | null>(null)
@@ -55,8 +65,9 @@ export default function FolletosPage() {
   )
   const filtered = useMemo(() => rows.filter(r =>
     (sedeFilter === 'all' || r.sede === sedeFilter) &&
-    (statusFilter === 'all' || r.status === statusFilter),
-  ), [rows, sedeFilter, statusFilter])
+    (statusFilter === 'all' || r.status === statusFilter) &&
+    (tipoFilter === 'all' || r.tipo === tipoFilter),
+  ), [rows, sedeFilter, statusFilter, tipoFilter])
 
   const sel = useRowSelection(filtered.map(r => r.id))
 
@@ -110,6 +121,14 @@ export default function FolletosPage() {
           <option value="all">Todas las sedes</option>
           {sedeOptions.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
+        <select
+          value={tipoFilter}
+          onChange={e => setTipoFilter(e.target.value as FolletoTipo | 'all')}
+          aria-label="Filtrar por tipo"
+          className="w-full sm:w-auto rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
+        >
+          {TIPO_FILTERS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+        </select>
         <div className="flex gap-1.5 flex-wrap">
           {STATUS_FILTERS.map(f => (
             <button
@@ -162,7 +181,7 @@ export default function FolletosPage() {
                       />
                     </th>
                   )}
-                  {['Grupo origen', 'Nivel destino', 'Cantidad', 'Sede', 'Fecha estimada', 'Estado', ''].map(h => (
+                  {['Tipo', 'Origen', 'Cantidad', 'Sede', 'Fecha estimada', 'Estado', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -174,14 +193,19 @@ export default function FolletosPage() {
                     <tr key={r.id} className={cn('transition-colors', sel.isSelected(r.id) ? 'bg-coral/5' : idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
                       {canEdit && (
                         <td className="px-4 py-3">
-                          <input type="checkbox" className="accent-coral" aria-label={`Seleccionar folleto ${levelLabel(r.target_level_code)}`} checked={sel.isSelected(r.id)} onChange={() => sel.toggle(r.id)} />
+                          <input type="checkbox" className="accent-coral" aria-label={`Seleccionar folleto ${r.sede ?? ''}`} checked={sel.isSelected(r.id)} onChange={() => sel.toggle(r.id)} />
                         </td>
                       )}
-                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                        {r.source_group?.name ?? '—'}
-                        {r.source_plan_code && <span className="text-navy-light/50"> · {levelLabel(r.source_plan_code)}</span>}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', FOLLETO_TIPO_BADGE[(r.tipo as FolletoTipo)] ?? '')}>
+                          {FOLLETO_TIPO_LABEL[(r.tipo as FolletoTipo)] ?? r.tipo}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium text-navy font-body whitespace-nowrap">{levelLabel(r.target_level_code)}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
+                        {r.tipo === 'cierre'
+                          ? <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/50"> · → {levelLabel(r.target_level_code)}</span>}</>
+                          : (r.bloque?.nombre ?? '—')}
+                      </td>
                       <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[13px]">{r.quantity}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.sede ?? '—'}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body whitespace-nowrap">{fmtDate(r.available_at)}</td>

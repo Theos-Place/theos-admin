@@ -93,5 +93,22 @@ Deno.serve(async (req) => {
     console.error('start-reminders:', e)
   }
 
-  return new Response(JSON.stringify({ processed: totalSent, failed: totalFailed, absenceCheck, startReminders }), { status: 200 })
+  // Verificación diaria: hitos de bloques de capacitación (preapertura −3sem / −2sem
+  // / cierre de matrícula) → reportes de folletos por sede + notificación/correo a
+  // quienes tienen el permiso folletos. Anti-duplicado por bloque/hito vive en el app.
+  let folletoBlocks: unknown = null
+  try {
+    const res = await fetch(
+      `${Deno.env.get('NEXT_PUBLIC_SITE_URL')}/api/cron/folleto-blocks`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Deno.env.get('CRON_SECRET')}` },
+      },
+    )
+    folletoBlocks = await res.json()
+  } catch (e) {
+    console.error('folleto-blocks:', e)
+  }
+
+  return new Response(JSON.stringify({ processed: totalSent, failed: totalFailed, absenceCheck, startReminders, folletoBlocks }), { status: 200 })
 })

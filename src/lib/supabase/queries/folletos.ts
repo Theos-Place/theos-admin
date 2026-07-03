@@ -14,16 +14,19 @@ export type DbFolletoRequest = {
   id: string
   source_group_id: string | null
   source_plan_code: string | null
-  target_level_code: string
+  target_level_code: string | null
   quantity: number
   sede: string | null
   close_date: string
   available_at: string
   status: FolletoState
+  tipo: string
+  bloque_id: string | null
   confirmed_by: string | null
   confirmed_at: string | null
   created_at: string
   source_group: { name: string | null } | null
+  bloque: { nombre: string } | null
 }
 
 /** Ids de rol que otorgan el módulo 'folletos' (derivado de ROLES, no hardcodeado). */
@@ -86,19 +89,21 @@ export async function createFolletoRequest(input: {
   return data as { id: string }
 }
 
-export async function getFolletoRequests(filters: { sede?: string; status?: FolletoState } = {}): Promise<DbFolletoRequest[]> {
+export async function getFolletoRequests(filters: { sede?: string; status?: FolletoState; tipo?: string } = {}): Promise<DbFolletoRequest[]> {
   const supabase = looseClient()
   let q = supabase
     .from('folleto_requests')
-    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, confirmed_by, confirmed_at, created_at, source_group:study_groups(name)')
+    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, source_group:study_groups(name), bloque:capacitacion_bloques(nombre)')
     .order('created_at', { ascending: false })
   if (filters.sede) q = q.eq('sede', filters.sede)
   if (filters.status) q = q.eq('status', filters.status)
+  if (filters.tipo) q = q.eq('tipo', filters.tipo)
   const { data, error } = await q
   if (error) throw error
   return (data ?? []).map((row: Record<string, unknown>) => ({
     ...row,
     source_group: Array.isArray(row.source_group) ? (row.source_group[0] ?? null) : row.source_group,
+    bloque: Array.isArray(row.bloque) ? (row.bloque[0] ?? null) : row.bloque,
   })) as DbFolletoRequest[]
 }
 

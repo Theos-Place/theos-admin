@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
     const sede = req.nextUrl.searchParams.get('sede') ?? undefined
     const statusParam = req.nextUrl.searchParams.get('status') ?? undefined
     const status = statusParam && isFolletoState(statusParam) ? statusParam : undefined
-    return NextResponse.json(await getFolletoRequests({ sede: sede || undefined, status }))
+    const tipo = req.nextUrl.searchParams.get('tipo') ?? undefined
+    return NextResponse.json(await getFolletoRequests({ sede: sede || undefined, status, tipo: tipo || undefined }))
   } catch (error) {
     console.error('GET /api/studies/folletos:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

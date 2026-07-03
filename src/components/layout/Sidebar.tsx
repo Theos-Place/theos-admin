@@ -36,6 +36,7 @@ import {
   Shield,
   Bell,
   Wrench,
+  CalendarRange,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -139,10 +140,19 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     ...(canViewDuplicados ? [{ href: '/miembros/duplicados', label: 'Duplicados', icon: Users }] : []),
   ]
 
-  const estudiosSub: SubItem[] = ESTUDIOS_SUB.map(s =>
-    s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s)
-  const finanzasSub: SubItem[] = FINANZAS_SUB.map(s =>
-    s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s)
+  const estudiosSub: SubItem[] = [
+    ...ESTUDIOS_SUB.map(s => s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s),
+    // Bloques de capacitación: solo coordinador de estudios y admin.
+    ...(userRoles.some(r => ['coordinador_estudios', 'admin'].includes(r))
+      ? [{ href: '/estudios/bloques', label: 'Bloques', icon: CalendarRange }] : []),
+    // Folletos: quienes tienen el permiso folletos (dentro del módulo Estudios).
+    ...(can('folletos', 'view') ? [{ href: '/estudios/folletos', label: 'Folletos', icon: FileText }] : []),
+  ]
+  const finanzasSub: SubItem[] = [
+    ...FINANZAS_SUB.map(s => s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s),
+    // Revisión de pagos: quienes tienen el permiso revision_pagos (dentro de Finanzas).
+    ...(can('revision_pagos', 'view') ? [{ href: '/pagos/revision', label: 'Revisión de pagos', icon: CreditCard }] : []),
+  ]
 
   // Mantenimiento de áreas/comités/puestos: solo para roles de admin de servidores.
   const canServiceAdmin = userRoles.some(r => SERVICE_ADMIN.includes(r))
@@ -169,13 +179,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
-    { href: '/estudios/folletos', label: 'Folletos',    icon: FileText,        subs: [],                 module: 'folletos' },
-    { href: '/pagos/revision', label: 'Revisión de pagos', icon: CreditCard,   subs: [],                 module: 'revision_pagos' },
   ]
   // El padrón (listado de miembros) exige alcance más allá de 'own' — el rol
   // base 'miembro' ve su perfil, no el listado (espejo del guard de la API).
-  const NAV = ALL_NAV.filter(m => !m.module || (can(m.module, 'view')
-    && (m.href !== '/miembros' || getScope('miembros') !== 'own')))
+  // Estudios/Finanzas también se muestran si el usuario tiene un permiso que vive
+  // adentro (folletos → Estudios; revision_pagos → Finanzas), aunque no tenga el módulo.
+  const NAV = ALL_NAV.filter(m => {
+    if (!m.module) return true
+    if (m.href === '/estudios') return can('estudios', 'view') || can('folletos', 'view')
+    if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view')
+    if (m.href === '/miembros') return can('miembros', 'view') && getScope('miembros') !== 'own'
+    return can(m.module, 'view')
+  })
 
   // Item destacado de Check-in (encargado_eventos, dirección, admin). Para el
   // encargado_eventos puro es el ítem MÁS prominente (arriba de todo).
