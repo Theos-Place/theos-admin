@@ -1,7 +1,12 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { bloqueMilestones, MILESTONE_TO_TIPO, type BloqueMilestone } from '@/lib/studies/bloques'
+import { bloqueMilestones, MILESTONE_TO_TIPO, bloqueEstadoActual, type BloqueMilestone, type BloqueEstado } from '@/lib/studies/bloques'
+
+/** Hoy en zona America/Costa_Rica (YYYY-MM-DD). */
+function crToday(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date())
+}
 
 // capacitacion_bloques y las columnas nuevas de folleto_requests no están en los
 // tipos generados → cliente laxo.
@@ -15,7 +20,7 @@ export type DbBloque = {
   anio: number
   fecha_apertura: string
   fecha_cierre_matricula: string
-  estado: 'activo' | 'archivado'
+  estado: BloqueEstado
   preliminar_sent_at: string | null
   confirmacion_sent_at: string | null
   final_sent_at: string | null
@@ -31,23 +36,34 @@ export async function getBloques(): Promise<DbBloque[]> {
     .select('id, nombre, anio, fecha_apertura, fecha_cierre_matricula, estado, preliminar_sent_at, confirmacion_sent_at, final_sent_at, created_at')
     .order('fecha_apertura', { ascending: false })
   if (error) throw error
-  return (data ?? []) as DbBloque[]
+  const today = crToday()
+  // Estado SIEMPRE derivado de fechas (autoritativo); ignora el valor almacenado.
+  return ((data ?? []) as DbBloque[]).map(b => ({
+    ...b, estado: bloqueEstadoActual(b.fecha_apertura, b.fecha_cierre_matricula, today),
+  }))
 }
 
 export async function createBloque(input: {
   nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
 }): Promise<{ id: string }> {
   const supabase = looseClient()
-  const { data, error } = await supabase.from('capacitacion_bloques').insert(input).select('id').single()
+  const estado = bloqueEstadoActual(input.fecha_apertura, input.fecha_cierre_matricula, crToday())
+  const { data, error } = await supabase.from('capacitacion_bloques').insert({ ...input, estado }).select('id').single()
   if (error) throw error
   return data as { id: string }
 }
 
+// El estado NO se setea a mano — se deriva de las fechas. El patch solo permite
+// nombre/año/fechas; el estado se recalcula acá según las fechas resultantes.
 export async function updateBloque(id: string, patch: Partial<{
-  nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string; estado: 'activo' | 'archivado'
+  nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
 }>): Promise<void> {
   const supabase = looseClient()
-  const { error } = await supabase.from('capacitacion_bloques').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id)
+  const row: Record<string, unknown> = { ...patch, updated_at: new Date().toISOString() }
+  if (patch.fecha_apertura && patch.fecha_cierre_matricula) {
+    row.estado = bloqueEstadoActual(patch.fecha_apertura, patch.fecha_cierre_matricula, crToday())
+  }
+  const { error } = await supabase.from('capacitacion_bloques').update(row).eq('id', id)
   if (error) throw error
 }
 
@@ -87,14 +103,23 @@ export type MilestoneResult = {
 export async function processBloqueMilestones(todayIso: string): Promise<MilestoneResult[]> {
   const supabase = looseClient()
   const results: MilestoneResult[] = []
+  // Todos los bloques: el match de fecha del hito + el dedup (_sent_at) controlan
+  // qué dispara. (El estado es derivado; ya no se filtra por él.)
   const { data: bloques } = await supabase
     .from('capacitacion_bloques')
-    .select('id, nombre, fecha_apertura, fecha_cierre_matricula, preliminar_sent_at, confirmacion_sent_at, final_sent_at')
-    .eq('estado', 'activo')
+    .select('id, nombre, fecha_apertura, fecha_cierre_matricula, estado, preliminar_sent_at, confirmacion_sent_at, final_sent_at')
   const list = (bloques ?? []) as Array<{
-    id: string; nombre: string; fecha_apertura: string; fecha_cierre_matricula: string
+    id: string; nombre: string; fecha_apertura: string; fecha_cierre_matricula: string; estado: string
     preliminar_sent_at: string | null; confirmacion_sent_at: string | null; final_sent_at: string | null
   }>
+
+  // Recalcular el estado almacenado (cache) a diario según fechas.
+  for (const b of list) {
+    const derived = bloqueEstadoActual(b.fecha_apertura, b.fecha_cierre_matricula, todayIso)
+    if (derived !== b.estado) {
+      await supabase.from('capacitacion_bloques').update({ estado: derived }).eq('id', b.id)
+    }
+  }
 
   const sentCol: Record<BloqueMilestone, 'preliminar_sent_at' | 'confirmacion_sent_at' | 'final_sent_at'> = {
     preliminar: 'preliminar_sent_at', confirmacion: 'confirmacion_sent_at', final: 'final_sent_at',

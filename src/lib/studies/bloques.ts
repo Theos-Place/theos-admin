@@ -50,6 +50,30 @@ export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
   preapertura_final: 'bg-coral/10 text-coral',
 }
 
+// ── Estado derivado de fechas (no manual) ────────────────────────────────────
+export type BloqueEstado = 'en_apertura' | 'activo' | 'archivado'
+
+/** Vigencia del bloque: inicio = primer hito (apertura − 3 semanas); fin = cierre
+ *  de matrícula. Estado según hoy (YYYY-MM-DD, zona CR) contra ese rango. */
+export function bloqueEstadoActual(aperturaIso: string, cierreIso: string, todayIso: string): BloqueEstado {
+  const inicio = addDays(aperturaIso, -21)
+  if (todayIso < inicio) return 'en_apertura'
+  if (todayIso > cierreIso) return 'archivado'
+  return 'activo'
+}
+
+export const BLOQUE_ESTADO_LABEL: Record<BloqueEstado, string> = {
+  en_apertura: 'En apertura',
+  activo: 'Activo',
+  archivado: 'Archivado',
+}
+
+export const BLOQUE_ESTADO_BADGE: Record<BloqueEstado, string> = {
+  en_apertura: 'bg-amber-50 text-amber-700',
+  activo: 'bg-teal-soft/30 text-teal-deep',
+  archivado: 'bg-navy-light/10 text-navy-light/60',
+}
+
 /** Tres bloques sugeridos por defecto para un año (ene/may/sep — fechas editables). */
 export function suggestedBlocksForYear(year: number): Array<{ nombre: string; fecha_apertura: string; fecha_cierre_matricula: string }> {
   const roman = ['I', 'II', 'III']
