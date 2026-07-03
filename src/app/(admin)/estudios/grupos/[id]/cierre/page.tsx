@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -8,7 +8,8 @@ import { useGroup } from '@/hooks/useGroup'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
-import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star } from 'lucide-react'
+import { isFolletoEligible, nextLevelCode, levelLabel } from '@/lib/studies/folletos'
+import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, FileText } from 'lucide-react'
 
 type ParticipantResult = {
   member_id: string
@@ -87,6 +88,19 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   const retirados = results.filter(r => r.status_result === 'retirado').length
   const autoPromotable = studyType?.auto_promote && studyType?.next_study_id
 
+  // Folletos: solo para N1/N2/N3 y Discípulos 1/2, y solo si hay aprobados.
+  const folletoTarget = nextLevelCode(group.study_type_id)
+  const showFolletos = isFolletoEligible(group.study_type_id) && aprobados > 0
+  const [sendFolletos, setSendFolletos] = useState(true)
+  const [folletoSede, setFolletoSede] = useState('')
+  useEffect(() => {
+    if (!isFolletoEligible(group.study_type_id)) return
+    fetch(`/api/studies/groups/${group.id}/leader-sede`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d?.sede) setFolletoSede(d.sede) })
+      .catch(() => {})
+  }, [group.id, group.study_type_id])
+
   async function handleClose() {
     if (submitting) return
     setSubmitting(true)
@@ -110,7 +124,10 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       const res = await fetch(`/api/studies/groups/${group.id}/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ results: payload }),
+        body: JSON.stringify({
+          results: payload,
+          folleto: showFolletos ? { send: sendFolletos, sede: folletoSede.trim() } : undefined,
+        }),
       })
       if (!res.ok) throw new Error('Error en el cierre de estudio')
       setClosed(true)
@@ -373,6 +390,58 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
               )}
             </div>
           </div>
+
+          {/* Folletos del siguiente nivel (solo N1/N2/N3 y Discípulos 1/2 con aprobados) */}
+          {showFolletos && folletoTarget && (
+            <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] space-y-3">
+              <div className="flex items-start gap-2">
+                <FileText size={16} className="text-coral mt-0.5 shrink-0" />
+                <p className="text-sm text-navy-light/80 font-body">
+                  <strong className="text-navy">{aprobados}</strong> persona{aprobados !== 1 ? 's' : ''} aprobó y pasa{aprobados !== 1 ? 'n' : ''} al siguiente nivel.
+                  ¿Enviar los folletos de <strong className="text-navy">{levelLabel(folletoTarget)}</strong>?
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Cantidad de folletos</label>
+                  <p className="text-sm text-navy font-body font-medium">{aprobados}</p>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="folleto-sede" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                    Sede (del dirigente — verificá o corregí)
+                  </label>
+                  <input
+                    id="folleto-sede"
+                    value={folletoSede}
+                    onChange={e => setFolletoSede(e.target.value)}
+                    placeholder="Sede destino"
+                    className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={sendFolletos}
+                onClick={() => setSendFolletos(v => !v)}
+                className="flex items-center gap-3 w-full text-left pt-1"
+              >
+                <span className={cn('relative h-6 w-11 rounded-full transition-colors shrink-0', sendFolletos ? 'bg-coral' : 'bg-navy/20')}>
+                  <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', sendFolletos ? 'translate-x-5' : 'translate-x-0')} />
+                </span>
+                <span className="text-sm text-navy font-body">
+                  {sendFolletos ? 'Se enviará la solicitud de folletos al cerrar' : 'No se enviará solicitud de folletos'}
+                </span>
+              </button>
+              {sendFolletos && (
+                <p className="text-[12px] text-navy-light/60 font-body">
+                  Estarán listos para recoger en la sede ~2 semanas después del cierre. Se notificará al equipo de folletos por correo y en el sistema.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Advertencia: el cierre es irreversible. */}
           <div className="rounded-2xl p-5 bg-coral/5 border border-coral/20 flex items-start gap-3">

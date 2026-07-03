@@ -1,0 +1,236 @@
+'use client'
+
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { usePermissions } from '@/hooks/usePermissions'
+import { useRowSelection } from '@/hooks/useRowSelection'
+import { BulkActionBar } from '@/components/shared/BulkActionBar'
+import { Modal } from '@/components/shared/Modal'
+import { AccessDenied } from '@/components/shared/AccessDenied'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { cn } from '@/lib/utils'
+import { FileText, Loader2, Check, ChevronRight } from 'lucide-react'
+import type { DbFolletoRequest } from '@/lib/supabase/queries/folletos'
+import {
+  FOLLETO_STATES, FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState,
+  levelLabel, type FolletoState,
+} from '@/lib/studies/folletos'
+
+const STATUS_FILTERS: { key: FolletoState | 'all'; label: string }[] = [
+  { key: 'all', label: 'Todos' },
+  ...FOLLETO_STATES.map(s => ({ key: s, label: FOLLETO_STATE_LABEL[s] })),
+]
+
+function fmtDate(iso: string | null): string {
+  if (!iso) return '—'
+  const d = new Date(`${iso}T00:00:00`)
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+export default function FolletosPage() {
+  const { can } = usePermissions()
+  const canView = can('folletos', 'view')
+  const canEdit = can('folletos', 'edit')
+
+  const [rows, setRows] = useState<DbFolletoRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [sedeFilter, setSedeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<FolletoState | 'all'>('all')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  const [confirm, setConfirm] = useState<FolletoState | null>(null)
+
+  const refetch = useCallback(() => {
+    setLoading(true)
+    fetch('/api/studies/folletos')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then((d: DbFolletoRequest[]) => setRows(Array.isArray(d) ? d : []))
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false))
+  }, [])
+  useEffect(() => { if (canView) refetch() }, [canView, refetch])
+
+  const sedeOptions = useMemo(
+    () => Array.from(new Set(rows.map(r => r.sede).filter((s): s is string => !!s))).sort((a, b) => a.localeCompare(b)),
+    [rows],
+  )
+  const filtered = useMemo(() => rows.filter(r =>
+    (sedeFilter === 'all' || r.sede === sedeFilter) &&
+    (statusFilter === 'all' || r.status === statusFilter),
+  ), [rows, sedeFilter, statusFilter])
+
+  const sel = useRowSelection(filtered.map(r => r.id))
+
+  const applyStatus = useCallback(async (ids: string[], status: FolletoState) => {
+    if (busy || ids.length === 0) return
+    setBusy(true); setMsg(null)
+    try {
+      const res = await fetch('/api/studies/folletos/bulk', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, status }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo actualizar.')
+      setMsg(`${data.updated} folleto${data.updated !== 1 ? 's' : ''} → ${FOLLETO_STATE_LABEL[status]}.`)
+      sel.clear(); setConfirm(null); refetch()
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Error desconocido')
+    } finally { setBusy(false) }
+  }, [busy, sel, refetch])
+
+  if (!canView) return <AccessDenied />
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 shadow-[var(--shadow-md)]">
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+            <FileText size={22} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Folletos</h1>
+            <p className="mt-0.5 text-sm text-white/70 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
+          </div>
+        </div>
+      </div>
+
+      {msg && (
+        <p className="rounded-xl bg-surface-low px-4 py-2 text-sm text-navy-light/80 font-body inline-flex items-center gap-1.5">
+          <Check size={14} className="text-teal-deep" /> {msg}
+        </p>
+      )}
+
+      {/* Filtros */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <select
+          value={sedeFilter}
+          onChange={e => setSedeFilter(e.target.value)}
+          aria-label="Filtrar por sede"
+          className="w-full sm:w-auto rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
+        >
+          <option value="all">Todas las sedes</option>
+          {sedeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <div className="flex gap-1.5 flex-wrap">
+          {STATUS_FILTERS.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setStatusFilter(f.key)}
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
+                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent',
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Bulk */}
+      {canEdit && (
+        <BulkActionBar count={sel.count} onClear={sel.clear} noun="folletos">
+          {FOLLETO_STATES.filter(s => s !== 'creada').map(s => (
+            <button
+              key={s}
+              onClick={() => setConfirm(s)}
+              className="rounded-full border border-white/30 px-3.5 py-1.5 text-[12px] text-white hover:bg-white/10 transition-colors font-body"
+            >
+              {FOLLETO_STATE_LABEL[s]}
+            </button>
+          ))}
+        </BulkActionBar>
+      )}
+
+      {/* Tabla */}
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+        {loading ? (
+          <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+        ) : filtered.length === 0 ? (
+          <EmptyState icon={FileText} title="No hay solicitudes de folletos con esos filtros" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {canEdit && (
+                    <th className="px-4 py-3 w-10">
+                      <input
+                        type="checkbox" className="accent-coral" aria-label="Seleccionar todos"
+                        checked={sel.allSelected && filtered.length > 0}
+                        ref={el => { if (el) el.indeterminate = sel.someSelected }}
+                        onChange={sel.toggleAll}
+                      />
+                    </th>
+                  )}
+                  {['Grupo origen', 'Nivel destino', 'Cantidad', 'Sede', 'Fecha estimada', 'Estado', ''].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((r, idx) => {
+                  const next = nextFolletoState(r.status)
+                  return (
+                    <tr key={r.id} className={cn('transition-colors', sel.isSelected(r.id) ? 'bg-coral/5' : idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
+                      {canEdit && (
+                        <td className="px-4 py-3">
+                          <input type="checkbox" className="accent-coral" aria-label={`Seleccionar folleto ${levelLabel(r.target_level_code)}`} checked={sel.isSelected(r.id)} onChange={() => sel.toggle(r.id)} />
+                        </td>
+                      )}
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
+                        {r.source_group?.name ?? '—'}
+                        {r.source_plan_code && <span className="text-navy-light/50"> · {levelLabel(r.source_plan_code)}</span>}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-navy font-body whitespace-nowrap">{levelLabel(r.target_level_code)}</td>
+                      <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[13px]">{r.quantity}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.sede ?? '—'}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body whitespace-nowrap">{fmtDate(r.available_at)}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', FOLLETO_STATE_BADGE[r.status])}>
+                          {FOLLETO_STATE_LABEL[r.status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {canEdit && next && (
+                          <button
+                            onClick={() => applyStatus([r.id], next)}
+                            disabled={busy}
+                            className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                          >
+                            {FOLLETO_STATE_LABEL[next]} <ChevronRight size={12} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Confirmación bulk */}
+      {confirm && (
+        <Modal onClose={() => !busy && setConfirm(null)} titleId="confirm-folleto-title" width={420}>
+          <div className="p-6 space-y-4">
+            <h3 id="confirm-folleto-title" className="text-base font-bold text-navy font-display">Cambiar estado</h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              <strong className="text-navy">{sel.count}</strong> folleto{sel.count !== 1 ? 's' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">{FOLLETO_STATE_LABEL[confirm]}</strong>.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => applyStatus(sel.selectedIds, confirm)}
+                disabled={busy}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-teal-deep hover:opacity-90', busy && 'opacity-60 cursor-not-allowed')}
+              >
+                {busy ? <><Loader2 size={15} className="animate-spin" /> Aplicando…</> : 'Confirmar'}
+              </button>
+              <button onClick={() => setConfirm(null)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}

@@ -59,6 +59,15 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'folletos',
+    name: 'Folletos',
+    description: 'Gestión y seguimiento de folletos de estudios',
+    color: '#7FB2D4',
+    permissions: [
+      { module: 'folletos', actions: ['view', 'edit'], scope: 'all' },
+    ],
+  },
+  {
     id: 'editor_perfiles',
     name: 'Editor de Perfiles',
     description: 'Crear y editar perfiles de miembros',

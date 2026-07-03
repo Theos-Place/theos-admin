@@ -17,6 +17,8 @@ export type InternalNotificationType =
   | 'application_assigned'
   | 'vacancy_request_sent'
   | 'vacancy_request_new'
+  // Estudios:
+  | 'folleto_created'
 
 export type InternalNotification = {
   id: string
