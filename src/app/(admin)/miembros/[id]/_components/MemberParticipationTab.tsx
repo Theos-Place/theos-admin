@@ -73,7 +73,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; cost: number }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -217,18 +217,24 @@ export function MemberParticipationTab({
                     </td>
                     <td className="px-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        {row.rawStatus === 'enrolled' && row.requiresPayment && (
+                        {(row.rawStatus === 'enrolled' || row.rawStatus === 'pendiente_de_pago') && row.requiresPayment && (
                           row.paymentStatus === 'en_revision' ? (
                             <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">Pago en revisión</span>
                           ) : row.paymentStatus === 'aprobado' ? (
                             <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">Pagado</span>
-                          ) : row.groupId ? (
-                            <PayMatriculaButton
-                              memberId={memberId}
-                              groupId={row.groupId}
-                              retry={row.paymentStatus === 'rechazado'}
-                            />
-                          ) : null
+                          ) : (
+                            <span className="inline-flex items-center gap-2">
+                              {row.cost > 0 && (
+                                <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
+                                  Pendiente: ₡{row.cost.toLocaleString('es-CR')}
+                                </span>
+                              )}
+                              <PayMatriculaButton
+                                enrollmentId={row.enrollmentId}
+                                retry={row.paymentStatus === 'rechazado'}
+                              />
+                            </span>
+                          )
                         )}
                         {row.groupId ? (
                           <Link
@@ -532,7 +538,7 @@ export function MemberParticipationTab({
 }
 
 // ── Botón de pago de matrícula por comprobante ───────────────────────────────
-function PayMatriculaButton({ memberId, groupId, retry }: { memberId: string; groupId: string; retry: boolean }) {
+function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: string; retry: boolean }) {
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
@@ -546,8 +552,7 @@ function PayMatriculaButton({ memberId, groupId, retry }: { memberId: string; gr
     try {
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('member_id', memberId)
-      fd.append('group_id', groupId)
+      fd.append('enrollment_id', enrollmentId)
       fd.append('reference', reference.trim())
       const res = await fetch('/api/payments', { method: 'POST', body: fd })
       const data = await res.json().catch(() => null)

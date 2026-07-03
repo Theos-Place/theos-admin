@@ -91,7 +91,7 @@ export type DbFamilyMember = {
 export type DbMemberFull = DbMemberEnriched & {
   /** Sede calculada por asistencia a charlas (últimos 12 meses). null = sin sede. */
   attendance_sede: { name: string; count: number } | null
-  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null }>
+  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number }>
   attendance: DbAttendance[]
   service_history: DbService[]
   donations: DbDonation[]
@@ -327,6 +327,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         status: e.status,
         requires_payment: !!plan.requires_payment && Number(plan.cost ?? 0) > 0,
         payment_status: paymentStatusByEnrollment.get(e.id) ?? null,
+        cost: Number(plan.cost ?? 0),
       }
     })
     .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')) // más reciente primero (igual que eventos y donaciones)

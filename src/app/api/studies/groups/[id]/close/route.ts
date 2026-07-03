@@ -6,6 +6,7 @@ import {
   createFolletoRequest, getFolletoRecipients, getLeaderSedeForGroup,
 } from '@/lib/supabase/queries/folletos'
 import { isFolletoEligible, nextLevelCode, levelLabel, estimatedAvailableDate } from '@/lib/studies/folletos'
+import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
 import { sendEmail } from '@/lib/email/provider'
 
 type FolletoPayload = { send?: boolean; sede?: string }
@@ -26,6 +27,17 @@ export async function POST(
     const { id } = await params
     const { results, folleto } = (await req.json()) as { results: CloseResult[]; folleto?: FolletoPayload }
     await closeGroup(id, results ?? [], auth.ctx.memberId)
+
+    // Matrícula automática al siguiente nivel para los aprobados, en estado
+    // 'pendiente_de_pago' + pago pendiente (concepto matricula). Best-effort.
+    let autoEnrolled = 0
+    try {
+      const approvedIds = (results ?? []).filter(r => r.status_result === 'aprobado').map(r => r.member_id)
+      const { enrolled } = await autoEnrollApprovedToNextLevel(id, approvedIds)
+      autoEnrolled = enrolled
+    } catch (e) {
+      console.warn('No se pudo matricular automáticamente al siguiente nivel:', e)
+    }
 
     // Paso de folletos: al confirmar con envío activado, crear la solicitud del
     // siguiente nivel + notificar + correo. Best-effort: el cierre ya ocurrió,
@@ -100,7 +112,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ ok: true, folletoCreated })
+    return NextResponse.json({ ok: true, folletoCreated, autoEnrolled })
   } catch (error) {
     console.error('POST /api/studies/groups/[id]/close:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
