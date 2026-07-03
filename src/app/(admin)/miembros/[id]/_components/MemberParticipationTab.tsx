@@ -1,8 +1,10 @@
 import Link from 'next/link'
-import { Lock, ChevronDown, ChevronUp } from 'lucide-react'
+import { useState } from 'react'
+import { Lock, ChevronDown, ChevronUp, CreditCard, Loader2, Check } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
+import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 
@@ -71,7 +73,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -214,16 +216,31 @@ export function MemberParticipationTab({
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      {row.groupId ? (
-                        <Link
-                          href={`/estudios/grupos/${row.groupId}`}
-                          className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap font-body"
-                        >
-                          Ver grupo →
-                        </Link>
-                      ) : (
-                        <span className="text-xs text-navy-light/60 whitespace-nowrap font-body">Sin grupo</span>
-                      )}
+                      <div className="flex items-center justify-end gap-3">
+                        {row.rawStatus === 'enrolled' && row.requiresPayment && (
+                          row.paymentStatus === 'en_revision' ? (
+                            <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">Pago en revisión</span>
+                          ) : row.paymentStatus === 'aprobado' ? (
+                            <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">Pagado</span>
+                          ) : row.groupId ? (
+                            <PayMatriculaButton
+                              memberId={memberId}
+                              groupId={row.groupId}
+                              retry={row.paymentStatus === 'rechazado'}
+                            />
+                          ) : null
+                        )}
+                        {row.groupId ? (
+                          <Link
+                            href={`/estudios/grupos/${row.groupId}`}
+                            className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap font-body"
+                          >
+                            Ver grupo →
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-navy-light/60 whitespace-nowrap font-body">Sin grupo</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
@@ -511,5 +528,94 @@ export function MemberParticipationTab({
         )}
       </SectionAccordion>
     </div>
+  )
+}
+
+// ── Botón de pago de matrícula por comprobante ───────────────────────────────
+function PayMatriculaButton({ memberId, groupId, retry }: { memberId: string; groupId: string; retry: boolean }) {
+  const [open, setOpen] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [reference, setReference] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit() {
+    if (busy || !file) return
+    setBusy(true); setError(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('member_id', memberId)
+      fd.append('group_id', groupId)
+      fd.append('reference', reference.trim())
+      const res = await fetch('/api/payments', { method: 'POST', body: fd })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el comprobante.')
+      setDone(true); setOpen(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally { setBusy(false) }
+  }
+
+  if (done) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">
+        <Check size={11} /> Comprobante enviado
+      </span>
+    )
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[11px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
+      >
+        <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar matrícula'}
+      </button>
+      {open && (
+        <Modal onClose={() => !busy && setOpen(false)} titleId="pay-title" width={420}>
+          <div className="p-6 space-y-4">
+            <h3 id="pay-title" className="text-base font-bold text-navy font-display">Pagar matrícula</h3>
+            <p className="text-[13px] text-navy-light/70 font-body">
+              Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
+            </p>
+            <div className="space-y-1">
+              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>
+              <input
+                type="file"
+                accept="image/*"
+                aria-label="Comprobante de pago"
+                onChange={e => setFile(e.target.files?.[0] ?? null)}
+                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[12px] file:text-navy"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="pay-ref" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Número de referencia</label>
+              <input
+                id="pay-ref"
+                value={reference}
+                onChange={e => setReference(e.target.value)}
+                placeholder="Ej. 2026070212345"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+            </div>
+            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={submit}
+                disabled={busy || !file}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
+              </button>
+              <button onClick={() => setOpen(false)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </>
   )
 }

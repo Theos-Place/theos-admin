@@ -65,6 +65,16 @@ export const ROLES: Role[] = [
     color: '#7FB2D4',
     permissions: [
       { module: 'folletos', actions: ['view', 'edit'], scope: 'all' },
+      { module: 'revision_pagos', actions: ['view', 'edit'], scope: 'all' },
+    ],
+  },
+  {
+    id: 'revision_pagos',
+    name: 'Revisión de pagos',
+    description: 'Revisar y aprobar/rechazar pagos por comprobante',
+    color: '#3DB97A',
+    permissions: [
+      { module: 'revision_pagos', actions: ['view', 'edit'], scope: 'all' },
     ],
   },
   {
@@ -115,6 +125,7 @@ export const ROLES: Role[] = [
       { module: 'estudios', actions: ['view', 'edit'], scope: 'all' },
       { module: 'miembros', actions: ['view'],         scope: 'all' },
       { module: 'reportes', actions: ['view', 'export'], scope: 'all' },
+      { module: 'revision_pagos', actions: ['view', 'edit'], scope: 'all' },
     ],
   },
   {
@@ -126,6 +137,7 @@ export const ROLES: Role[] = [
       { module: 'estudios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'miembros', actions: ['view'],                             scope: 'all' },
       { module: 'reportes', actions: ['view', 'export'],                   scope: 'all' },
+      { module: 'revision_pagos', actions: ['view', 'edit'],               scope: 'all' },
     ],
   },
   {
@@ -168,6 +180,7 @@ export const ROLES: Role[] = [
     permissions: [
       { module: 'finanzas', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'miembros', actions: ['view'],                             scope: 'all' },
+      { module: 'revision_pagos', actions: ['view', 'edit'],               scope: 'all' },
     ],
   },
   {
@@ -188,6 +201,7 @@ export const ROLES: Role[] = [
       { module: 'comunicaciones', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'formularios',    actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'reportes',       actions: ['view', 'export'],                   scope: 'all' },
+      { module: 'revision_pagos', actions: ['view', 'edit'],                     scope: 'all' },
     ],
   },
   {

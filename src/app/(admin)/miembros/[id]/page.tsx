@@ -144,6 +144,10 @@ export default function MiembroDetailPage() {
       duration: s.weeks ? `${s.weeks} sem.` : '—',
       status: STATUS[s.status] ?? s.status,
       groupId: s.group_id,
+      enrollmentId: s.enrollment_id,
+      rawStatus: s.status,
+      requiresPayment: s.requires_payment,
+      paymentStatus: s.payment_status,
     }))
   }, [member])
 

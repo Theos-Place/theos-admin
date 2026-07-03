@@ -1,6 +1,7 @@
 // Detail view del miembro: trae el miembro + TODO su histórico relacionado.
 // Extraído de members.ts (auditoría 2026-06: archivos gigantes). Re-exportado
 // por members.ts para no tocar a los consumidores.
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
 import type { DbMember, DbMemberEnriched } from './members'
@@ -90,7 +91,7 @@ export type DbFamilyMember = {
 export type DbMemberFull = DbMemberEnriched & {
   /** Sede calculada por asistencia a charlas (últimos 12 meses). null = sin sede. */
   attendance_sede: { name: string; count: number } | null
-  study_history: Array<{ group_id: string | null; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string }>
+  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null }>
   attendance: DbAttendance[]
   service_history: DbService[]
   donations: DbDonation[]
@@ -125,9 +126,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         )
       ),
       study_enrollments(
-        status, completed_at, enrolled_at,
-        study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks)),
-        plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks)
+        id, status, completed_at, enrolled_at,
+        study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks, cost, requires_payment)),
+        plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks, cost, requires_payment)
       ),
       study_leaders(member_id)
     `)
@@ -267,8 +268,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       area: { id: string; name: string } | null
     } | null
   }>
-  type PlanEmbed = { code: string | null; name: string | null; duration_weeks: number | null } | null
+  type PlanEmbed = { code: string | null; name: string | null; duration_weeks: number | null; cost: number | null; requires_payment: boolean | null } | null
   const enrollments = (memberRow.study_enrollments ?? []) as Array<{
+    id: string
     status: string
     completed_at: string | null
     enrolled_at: string | null
@@ -289,6 +291,23 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   const completedStudies = enrollments
     .filter(e => e.status === 'completed' && planOf(e)?.name && !ledByMember(e))
     .map(e => planOf(e)!.name as string)
+  // Estado de pago de matrícula por inscripción (para el botón "Pagar" del perfil).
+  // payments tiene columnas nuevas fuera de los tipos generados → cliente laxo.
+  const enrollmentIds = enrollments.map(e => e.id).filter(Boolean)
+  const paymentStatusByEnrollment = new Map<string, string>()
+  if (enrollmentIds.length) {
+    const loose = supabase as unknown as SupabaseClient
+    const { data: pays } = await loose
+      .from('payments').select('enrollment_id, review_status, created_at')
+      .in('enrollment_id', enrollmentIds).eq('concept', 'matricula')
+      .order('created_at', { ascending: false })
+    for (const p of (pays ?? []) as Array<{ enrollment_id: string | null; review_status: string | null }>) {
+      if (p.enrollment_id && p.review_status && !paymentStatusByEnrollment.has(p.enrollment_id)) {
+        paymentStatusByEnrollment.set(p.enrollment_id, p.review_status)
+      }
+    }
+  }
+
   // Historial de estudios con fecha real (del grupo si existe; si no, de la inscripción).
   const studyHistory = enrollments
     .filter(e => planOf(e)?.code && !ledByMember(e))
@@ -299,12 +318,15 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       const d = e.completed_at ?? e.study_groups?.starts_at ?? e.enrolled_at ?? null
       return {
         group_id: e.study_groups?.id ?? null,
+        enrollment_id: e.id,
         code: plan.code as string,
         name: plan.name ?? '',
         date: d ? d.slice(0, 10) : null,
         year: d ? Number(d.slice(0, 4)) : null,
         weeks: plan.duration_weeks ?? null,
         status: e.status,
+        requires_payment: !!plan.requires_payment && Number(plan.cost ?? 0) > 0,
+        payment_status: paymentStatusByEnrollment.get(e.id) ?? null,
       }
     })
     .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')) // más reciente primero (igual que eventos y donaciones)

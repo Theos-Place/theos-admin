@@ -17,6 +17,7 @@ export type RoleId =
   | 'solo_lectura'
   | 'reportes'
   | 'folletos'
+  | 'revision_pagos'
 
 export type Permission = {
   module: string

@@ -19,6 +19,8 @@ export type InternalNotificationType =
   | 'vacancy_request_new'
   // Estudios:
   | 'folleto_created'
+  // Pagos:
+  | 'payment_rejected'
 
 export type InternalNotification = {
   id: string
