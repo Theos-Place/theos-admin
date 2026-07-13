@@ -35,6 +35,9 @@ export type EligibleGroup = {
 export type MemberStudyProfile = {
   completed_codes: string[]
   current_code: string | null
+  /** Códigos con matrícula automática pendiente de pago: bloquean la
+   *  re-matrícula (el camino es subir el comprobante, no re-inscribirse). */
+  pending_payment_codes?: string[]
   is_donor: boolean
   is_server: boolean
   /** Check-ins de charla en los últimos 6 meses (ventana de matrícula). */
@@ -118,9 +121,11 @@ export function computeEligibility(
       reasons_met.push('No requiere estudios previos')
     }
 
-    // 2. No está cursándolo
+    // 2. No está cursándolo ni tiene la matrícula pendiente de pago
     if (profile.current_code === study.code) {
       reasons_blocked.push('Ya estás matriculado en este estudio')
+    } else if (profile.pending_payment_codes?.includes(study.code)) {
+      reasons_blocked.push('Ya tenés una matrícula pendiente de pago para este estudio — subí tu comprobante desde tu perfil para activarla')
     }
 
     // 3. No lo completó

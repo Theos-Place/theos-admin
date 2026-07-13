@@ -8,6 +8,7 @@ import { calcAge } from '@/lib/format'
 export async function getMemberStudyProfile(memberId: string): Promise<{
   completed_codes: string[]
   current_code: string | null
+  pending_payment_codes: string[]
   is_donor: boolean
   is_server: boolean
   charla_count: number
@@ -47,11 +48,17 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   const current_code = enrollments
     .map(e => e.status === 'enrolled' ? codeOf(e) : null)
     .find(Boolean) ?? null
+  // Niveles con matrícula pendiente de pago (auto-matrícula al cerrar el nivel
+  // anterior): bloquean la re-matrícula — el camino es pagar, no re-inscribirse.
+  const pending_payment_codes = enrollments
+    .filter(e => e.status === 'pendiente_de_pago' && codeOf(e))
+    .map(e => codeOf(e)!)
 
   const birth = (memberRes.data as { birth_date?: string | null } | null)?.birth_date ?? null
   return {
     completed_codes,
     current_code,
+    pending_payment_codes,
     is_donor: Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor),
     is_server: (volRes.data ?? []).length > 0,
     charla_count: (chkRes.data ?? []).length,
@@ -123,8 +130,10 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const completed = new Set(
     enrollments.filter(e => e.status === 'completed' && codeOf(e)).map(e => codeOf(e)!),
   )
+  // 'pendiente_de_pago' cuenta como cursando: no se puede solicitar un plan
+  // cuya matrícula automática ya existe y solo espera el pago.
   const enrolledCodes = new Set(
-    enrollments.filter(e => e.status === 'enrolled' && codeOf(e)).map(e => codeOf(e)!),
+    enrollments.filter(e => (e.status === 'enrolled' || e.status === 'pendiente_de_pago') && codeOf(e)).map(e => codeOf(e)!),
   )
   const active_enrollments = enrollments
     .filter(e => e.status === 'enrolled' && e.group)

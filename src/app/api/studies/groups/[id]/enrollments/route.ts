@@ -18,6 +18,12 @@ export async function POST(
     await notifyEnrollment(id, member_id)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'PAGO_PENDIENTE') {
+      return NextResponse.json(
+        { error: 'El miembro ya tiene una matrícula pendiente de pago para este estudio; debe subir el comprobante para activarla.' },
+        { status: 409 },
+      )
+    }
     console.error('POST enrollments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

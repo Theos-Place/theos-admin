@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
-import { getMembers } from '@/lib/supabase/queries/members'
+import { getMemberIds, getMembersByIds } from '@/lib/supabase/queries/members'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
 // para exportar. Mismos params que /api/members. Usa createAdminClient (en getMembers).
@@ -32,18 +32,20 @@ export async function GET(req: NextRequest) {
       } catch { /* condiciones malformadas → se ignoran */ }
     }
 
-    const result = await getMembers({
+    // PostgREST corta cada respuesta en ~1000 filas, así que una sola query
+    // con pageSize gigante truncaría el padrón en silencio. getMemberIds
+    // pagina hasta agotar y getMembersByIds enriquece en chunks.
+    const { ids, total } = await getMemberIds({
       search,
       conditions,
       is_active: is_active !== null ? is_active === 'true' : true,
       is_donor:  is_donor  !== null ? is_donor  === 'true' : undefined,
       is_server: is_server === 'true' ? true : undefined,
       active_attendance: active_attendance === 'true' ? true : undefined,
-      page: 1,
-      pageSize: 100000, // sin límite práctico
     })
+    const members = await getMembersByIds(ids)
 
-    return NextResponse.json(result)
+    return NextResponse.json({ members, total })
   } catch (error) {
     console.error('GET /api/members/export:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

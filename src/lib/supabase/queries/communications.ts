@@ -375,6 +375,19 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     throw new Error(EMAIL_NOT_CONFIGURED)
   }
 
+  // Claim atómico draft → sending: sin esto, dos POST /send al mismo broadcast
+  // (doble clic, retry del navegador tras timeout) insertarían dos sets
+  // completos de logs y notificaciones — cada destinatario recibiría el
+  // comunicado dos veces.
+  const { data: claimed, error: claimErr } = await supabase
+    .from('message_broadcasts')
+    .update({ status: 'sending', started_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('status', 'draft')
+    .select('id')
+  if (claimErr) throw claimErr
+  if ((claimed ?? []).length === 0) throw new Error('BROADCAST_YA_ENVIADO')
+
   // Tipo de broadcast: marketing (respeta opt-out + bounced) vs transaccional.
   const { data: bMeta } = await supabase
     .from('message_broadcasts').select('kind').eq('id', id).single()
@@ -385,10 +398,6 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   //   · siempre: rebotados (email_bounced) y quejas (email_complained)
   //   · marketing: además los que se dieron de baja (newsletter_opt_out)
   const emailRecipients = await resolveEmailRecipients(supabase, emailRecipientsRaw, isMarketing)
-
-  await supabase.from('message_broadcasts')
-    .update({ status: 'sending', started_at: new Date().toISOString() })
-    .eq('id', id)
 
   // Canal interna: notificación en el sistema para cada destinatario con member_id.
   // Es un anuncio general → respeta el toggle "Mensajes del sistema" del miembro

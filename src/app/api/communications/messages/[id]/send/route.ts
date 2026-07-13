@@ -21,6 +21,12 @@ export async function POST(
         { status: 400 },
       )
     }
+    if (error instanceof Error && error.message === 'BROADCAST_YA_ENVIADO') {
+      return NextResponse.json(
+        { error: 'Este comunicado ya fue enviado (o se está enviando). Refrescá la página para ver su estado.' },
+        { status: 409 },
+      )
+    }
     console.error('POST /api/communications/messages/[id]/send:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

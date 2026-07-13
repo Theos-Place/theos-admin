@@ -88,7 +88,14 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
   // Eventos: NO se cuentan crudo (las charlas de hoy son ocurrencias de eventos
   // recurrentes, no filas con la fecha de hoy). Se traen los ACTIVOS (recurrentes
   // + próximos) y se EXPANDE con la misma lógica del calendario/lista.
-  const { events: activeEvents } = await getEvents({ light: true, is_active: true, pageSize: 2000 })
+  // Paginado hasta agotar: PostgREST corta cada respuesta en ~1000 filas y un
+  // pageSize gigante truncaría en silencio.
+  let activeEvents: Awaited<ReturnType<typeof getEvents>>['events'] = []
+  for (let page = 1; ; page++) {
+    const batch = await getEvents({ light: true, is_active: true, page, pageSize: 1000 })
+    activeEvents = activeEvents.concat(batch.events)
+    if (activeEvents.length >= batch.total || batch.events.length < 1000) break
+  }
   // Forma mínima para la expansión (eventsInRange usa start_at/end_at/recurrencia).
   const rangeable = activeEvents.map(e => ({
     id: e.id, start_at: e.starts_at, end_at: e.ends_at ?? e.starts_at,

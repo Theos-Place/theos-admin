@@ -890,16 +890,30 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
 // Inscripciones
 export async function enrollMember(groupId: string, memberId: string): Promise<void> {
   const supabase = createAdminClient()
-  const { error } = await supabase
-    .from('study_enrollments')
-    .upsert({ group_id: groupId, member_id: memberId, status: 'enrolled' }, { onConflict: 'group_id,member_id' })
-  if (error) throw error
-  // Consumir invitación/excepción activa del plan del grupo al matricularse.
   const { data: g } = await supabase
     .from('study_groups')
     .select('plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation)')
     .eq('id', groupId).maybeSingle()
   const plan = (g as { plan: { id: string; requires_invitation: boolean | null } | null } | null)?.plan
+  // Guard: si ya existe una matrícula 'pendiente_de_pago' para este plan
+  // (auto-matrícula al cerrar el nivel anterior), inscribirse a un grupo la
+  // saltaría creando una matrícula activa sin pagar. El camino correcto es
+  // subir el comprobante.
+  if (plan?.id) {
+    const { data: pending } = await supabase
+      .from('study_enrollments')
+      .select('id')
+      .eq('member_id', memberId)
+      .eq('plan_id', plan.id)
+      .eq('status', 'pendiente_de_pago')
+      .limit(1)
+    if ((pending ?? []).length > 0) throw new Error('PAGO_PENDIENTE')
+  }
+  const { error } = await supabase
+    .from('study_enrollments')
+    .upsert({ group_id: groupId, member_id: memberId, status: 'enrolled' }, { onConflict: 'group_id,member_id' })
+  if (error) throw error
+  // Consumir invitación/excepción activa del plan del grupo al matricularse.
   if (plan?.id) {
     if (plan.requires_invitation) {
       const { markInvitationUsed } = await import('./study-invitations')

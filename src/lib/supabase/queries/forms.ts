@@ -134,11 +134,13 @@ function remapConditions(raw: unknown, idMap: Map<string, string>): LogicRule[] 
 
 /** Construye las filas de form_fields con UUID asignado y reglas de lógica
  *  remapeadas (las referencias entre campos quedan consistentes con los UUID
- *  persistidos, sobreviviendo a create y a edit/delete+reinsert). */
-function buildFieldRows(formId: string, fields: FieldInput[]) {
+ *  persistidos). Los campos cuyo id ya existe en la BD (`existingIds`)
+ *  conservan su UUID: las form_response_values que los referencian
+ *  sobreviven a la edición. */
+function buildFieldRows(formId: string, fields: FieldInput[], existingIds?: Set<string>) {
   const idMap = new Map<string, string>()
   const uuids = fields.map(f => {
-    const uuid = randomUUID()
+    const uuid = f.id && existingIds?.has(f.id) ? f.id : randomUUID()
     if (f.id) idMap.set(f.id, uuid)
     return uuid
   })
@@ -187,7 +189,11 @@ export async function createForm(input: FormWriteInput, fields: FieldInput[] = [
   return { id }
 }
 
-/** Actualiza el form. Si se pasan `fields`, reemplaza el set completo. */
+/** Actualiza el form. Si se pasan `fields`, sincroniza el set: los campos
+ *  existentes conservan su UUID (upsert) y solo se borran los eliminados en
+ *  el builder — borrar un form_field elimina en cascada sus
+ *  form_response_values, así que un delete+reinsert total destruiría las
+ *  respuestas históricas. */
 export async function updateForm(
   id: string,
   patch: Partial<FormWriteInput>,
@@ -199,9 +205,24 @@ export async function updateForm(
     if (error) throw error
   }
   if (fields) {
-    const { error: delErr } = await supabase.from('form_fields').delete().eq('form_id', id)
-    if (delErr) throw delErr
-    await insertFields(supabase, id, fields)
+    const { data: existing, error: exErr } = await supabase
+      .from('form_fields').select('id').eq('form_id', id)
+    if (exErr) throw exErr
+    const existingIds = new Set((existing ?? []).map(r => (r as { id: string }).id))
+
+    const rows = buildFieldRows(id, fields, existingIds)
+    const keepIds = new Set(rows.map(r => r.id))
+    const toDelete = [...existingIds].filter(fid => !keepIds.has(fid))
+    if (toDelete.length > 0) {
+      const { error: delErr } = await supabase.from('form_fields').delete().in('id', toDelete)
+      if (delErr) throw delErr
+    }
+    if (rows.length > 0) {
+      const { error: upErr } = await supabase
+        .from('form_fields')
+        .upsert(rows as Insertable<'form_fields'>[], { onConflict: 'id' })
+      if (upErr) throw upErr
+    }
   }
 }
 

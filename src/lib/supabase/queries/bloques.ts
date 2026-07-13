@@ -1,7 +1,7 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { bloqueMilestones, MILESTONE_TO_TIPO, bloqueEstadoActual, type BloqueMilestone, type BloqueEstado } from '@/lib/studies/bloques'
+import { bloqueMilestones, MILESTONE_TO_TIPO, bloqueEstadoActual, addDays, type BloqueMilestone, type BloqueEstado } from '@/lib/studies/bloques'
 
 /** Hoy en zona America/Costa_Rica (YYYY-MM-DD). */
 function crToday(): string {
@@ -73,11 +73,13 @@ export async function deleteBloque(id: string): Promise<void> {
   if (error) throw error
 }
 
-/** Conteo de folletos del bloque por sede (asociación por rango de fechas). */
+/** Conteo de folletos del bloque por sede (asociación por rango de fechas).
+ *  Lanza si el RPC falla: un [] silencioso haría que el cron marque hitos como
+ *  enviados sin haber creado ningún reporte. */
 export async function countBlockBySede(aperturaIso: string): Promise<SedeCount[]> {
   const supabase = looseClient()
   const { data, error } = await supabase.rpc('block_folletos_by_sede', { p_apertura: aperturaIso })
-  if (error) { console.warn('countBlockBySede:', error.message); return [] }
+  if (error) throw new Error(`countBlockBySede: ${error.message}`)
   return ((data ?? []) as Array<{ sede: string; cantidad: number }>).map(r => ({ sede: r.sede, cantidad: Number(r.cantidad) }))
 }
 
@@ -125,36 +127,57 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
     preliminar: 'preliminar_sent_at', confirmacion: 'confirmacion_sent_at', final: 'final_sent_at',
   }
 
+  // Ventana de catch-up: si el cron no corrió el día exacto del hito (deploy
+  // caído, edge function con error), el hito se dispara en los días siguientes
+  // en vez de perderse para siempre. Acotada para que bloques históricos que
+  // nunca dispararon no generen reportes viejos de golpe.
+  const CATCHUP_DAYS = 7
+
   for (const b of list) {
     const hitos = bloqueMilestones(b.fecha_apertura, b.fecha_cierre_matricula)
     for (const m of ['preliminar', 'confirmacion', 'final'] as BloqueMilestone[]) {
       const alreadySent = b[sentCol[m]]
       if (alreadySent) continue
-      if (hitos[m] !== todayIso) continue
+      if (todayIso < hitos[m] || todayIso > addDays(hitos[m], CATCHUP_DAYS)) continue
 
-      const bySede = await countBlockBySede(b.fecha_apertura)
-      const total = bySede.reduce((s, r) => s + r.cantidad, 0)
-      const tipo = MILESTONE_TO_TIPO[m]
+      // Si el conteo o el insert fallan, NO se marca el hito: el próximo cron
+      // dentro de la ventana lo reintenta. Un fallo en un bloque no detiene
+      // los demás.
+      try {
+        const bySede = await countBlockBySede(b.fecha_apertura)
+        const total = bySede.reduce((s, r) => s + r.cantidad, 0)
+        const tipo = MILESTONE_TO_TIPO[m]
 
-      // Una folleto_request de preapertura por sede con cantidad > 0.
-      const rows = bySede.filter(r => r.cantidad > 0).map(r => ({
-        tipo,
-        bloque_id: b.id,
-        sede: r.sede,
-        quantity: r.cantidad,
-        close_date: todayIso,        // fecha del reporte
-        available_at: b.fecha_apertura, // listos para la apertura
-        status: 'creada',
-      }))
-      if (rows.length) await supabase.from('folleto_requests').insert(rows)
+        // Una folleto_request de preapertura por sede con cantidad > 0.
+        const rows = bySede.filter(r => r.cantidad > 0).map(r => ({
+          tipo,
+          bloque_id: b.id,
+          sede: r.sede,
+          quantity: r.cantidad,
+          close_date: todayIso,        // fecha del reporte
+          available_at: b.fecha_apertura, // listos para la apertura
+          status: 'creada',
+        }))
+        if (rows.length) {
+          const { error: insErr } = await supabase.from('folleto_requests').insert(rows)
+          if (insErr) throw insErr
+        }
 
-      // Marcar el hito como enviado (anti-duplicado del cron).
-      await supabase.from('capacitacion_bloques').update({ [sentCol[m]]: new Date().toISOString() }).eq('id', b.id)
+        // Marcar el hito como enviado (anti-duplicado del cron) — solo tras
+        // crear los reportes con éxito.
+        const { error: markErr } = await supabase
+          .from('capacitacion_bloques')
+          .update({ [sentCol[m]]: new Date().toISOString() })
+          .eq('id', b.id)
+        if (markErr) throw markErr
 
-      results.push({
-        bloque_id: b.id, bloque_nombre: b.nombre, milestone: m, tipo,
-        fecha_apertura: b.fecha_apertura, by_sede: bySede, total,
-      })
+        results.push({
+          bloque_id: b.id, bloque_nombre: b.nombre, milestone: m, tipo,
+          fecha_apertura: b.fecha_apertura, by_sede: bySede, total,
+        })
+      } catch (e) {
+        console.error(`processBloqueMilestones ${b.nombre}/${m}:`, e)
+      }
     }
   }
   return results
