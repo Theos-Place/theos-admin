@@ -73,7 +73,7 @@ const COMUNICACIONES_SUB: SubItem[] = [
 
 const SERVIDORES_SUB: SubItem[] = [
   { href: '/servidores/vacantes',     label: 'Puestos de Servicio', icon: Bookmark      },
-  { href: '/servidores/aplicaciones', label: 'Aplicaciones',        icon: ClipboardList },
+  { href: '/servidores/aplicaciones', label: 'Solicitudes',         icon: ClipboardList },
 ]
 
 // Roles que ven la página de mantenimiento (áreas/comités/puestos).
@@ -92,11 +92,10 @@ interface SidebarProps {
   onClose: () => void
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin:        'Administrador',
-  finance:      'Finanzas',
-  staff_leader: 'Líder de Staff',
-}
+// Nombres bonitos desde la fuente de verdad (ROLES): el mapa manual anterior
+// solo cubría 3 roles y el resto veía su slug crudo (p. ej. coordinador_estudios).
+import { ROLES } from '@/lib/auth/roles'
+const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLES.map(r => [r.id, r.name]))
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()

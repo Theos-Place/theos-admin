@@ -127,7 +127,7 @@ export default function AplicacionesPage() {
       {/* Header */}
       <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
         <div>
-          <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Aplicaciones</h1>
+          <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Solicitudes de servicio</h1>
           <p className="mt-1 text-sm text-white/70 font-body">
             {pending} pendiente{pending !== 1 ? 's' : ''} · {reviewing} en revisión
           </p>

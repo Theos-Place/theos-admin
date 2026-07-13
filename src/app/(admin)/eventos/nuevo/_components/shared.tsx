@@ -25,11 +25,19 @@ export function Toggle({
   onToggle: () => void
   label: string
 }) {
+  // button + role=switch: operable con teclado (estándar de accesibilidad
+  // del proyecto; antes era un div sin foco ni Enter/Espacio).
   return (
-    <div className="flex items-center gap-3 cursor-pointer" onClick={onToggle}>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onToggle}
+      className="flex items-center gap-3 cursor-pointer text-left"
+    >
       <div
         className={cn(
-          'relative h-6 w-11 rounded-full transition-all duration-200 cursor-pointer shrink-0',
+          'relative h-6 w-11 rounded-full transition-all duration-200 shrink-0',
           checked ? 'bg-coral' : 'bg-navy-light/20',
         )}
       >
@@ -45,7 +53,7 @@ export function Toggle({
       >
         {label}
       </span>
-    </div>
+    </button>
   )
 }
 

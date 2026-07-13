@@ -38,6 +38,7 @@ export default function DonacionesPage() {
   const [showUnidentifiedModal, setShowUnidentifiedModal] = useState(false)
   const [unidentified, setUnidentified] = useState<Donation[]>([])
   const [linkingId, setLinkingId] = useState<string | null>(null)
+  const [linkConfirm, setLinkConfirm] = useState<{ donationId: string; memberId: string; memberName: string } | null>(null)
   const [toast, setToast] = useState('')
 
   // El modal carga las donaciones sin identificar aparte (no están en la lista
@@ -367,7 +368,7 @@ export default function DonacionesPage() {
                       autoFocus
                       pageSize={6}
                       placeholder="Buscar miembro por nombre o cédula..."
-                      onSelect={m => handleLink(d.id, m.id, `${m.first_name} ${m.last_name}`)}
+                      onSelect={m => setLinkConfirm({ donationId: d.id, memberId: m.id, memberName: `${m.first_name} ${m.last_name}`.trim() })}
                     />
                   )}
                 </div>
@@ -378,6 +379,33 @@ export default function DonacionesPage() {
                 </p>
               )}
             </div>
+        </Modal>
+      )}
+
+      {/* Confirmación de vínculo: reasigna la donación al miembro (sin deshacer en la UI). */}
+      {linkConfirm && (
+        <Modal onClose={() => setLinkConfirm(null)} titleId="vincular-donacion-titulo" width={400}>
+          <div className="p-5 space-y-4">
+            <h3 id="vincular-donacion-titulo" className="font-semibold text-navy font-display">Vincular donación</h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              ¿Vincular esta donación a <strong>{linkConfirm.memberName}</strong>?
+              La donación quedará identificada a su nombre.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { handleLink(linkConfirm.donationId, linkConfirm.memberId, linkConfirm.memberName); setLinkConfirm(null) }}
+                className="flex-1 rounded-full bg-teal-deep px-4 py-2 text-sm text-white hover:opacity-90 transition-opacity font-body"
+              >
+                Vincular
+              </button>
+              <button
+                onClick={() => setLinkConfirm(null)}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
 

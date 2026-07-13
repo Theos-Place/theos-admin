@@ -363,7 +363,7 @@ export default function ServidoresAdminPage() {
       description: `Se eliminará el área "${area.name}" y todos sus comités y puestos. Esta acción no se puede deshacer.`,
       run: async () => {
         const res = await fetch(`/api/servers/areas/${area.id}`, { method: 'DELETE' })
-        if (!res.ok) return
+        if (!res.ok) { toast('No se pudo eliminar el área. Intentá de nuevo.', 'error'); return }
         if (selectedAreaId === area.id) setSelectedAreaId(null)
         refetchOrg()
         await refetchServers()
@@ -383,7 +383,7 @@ export default function ServidoresAdminPage() {
       description: `Se eliminará el comité "${c.name}" y sus puestos. Esta acción no se puede deshacer.`,
       run: async () => {
         const res = await fetch(`/api/servers/areas/${c.id}`, { method: 'DELETE' })
-        if (!res.ok) return
+        if (!res.ok) { toast('No se pudo eliminar el comité. Intentá de nuevo.', 'error'); return }
         if (selectedCommId === c.id) setSelectedCommId(null)
         refetchOrg()
         await refetchServers()
@@ -403,7 +403,7 @@ export default function ServidoresAdminPage() {
       description: `Se eliminará el puesto "${p.title}". Esta acción no se puede deshacer.`,
       run: async () => {
         const res = await fetch(`/api/servers/positions/${p.id}`, { method: 'DELETE' })
-        if (!res.ok) return
+        if (!res.ok) { toast('No se pudo eliminar el puesto. Intentá de nuevo.', 'error'); return }
         await refetchServers()
       },
     })
@@ -429,7 +429,9 @@ export default function ServidoresAdminPage() {
         if (id) setSelectedAreaId(id)
       }
       refetchOrg()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo guardar el área. Intentá de nuevo.', 'error')
+    }
   }
 
   function requestToggleArea(area: Area) {
@@ -441,8 +443,11 @@ export default function ServidoresAdminPage() {
       const res = await fetch(`/api/servers/areas/${area.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !area.is_active }),
       })
-      if (res.ok) refetchOrg()
-    } catch { /* */ }
+      if (!res.ok) throw new Error()
+      refetchOrg()
+    } catch {
+      toast('No se pudo cambiar el estado del área.', 'error')
+    }
   }
 
   // ── Committee handlers ────────────────────────────────────────────────────
@@ -464,7 +469,9 @@ export default function ServidoresAdminPage() {
         if (!res.ok) throw new Error()
       }
       refetchOrg()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo guardar el comité. Intentá de nuevo.', 'error')
+    }
   }
 
   function requestToggleCommittee(c: Committee) {
@@ -483,8 +490,11 @@ export default function ServidoresAdminPage() {
       const res = await fetch(`/api/servers/areas/${c.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !c.is_active }),
       })
-      if (res.ok) { refetchOrg(); await refetchServers() }
-    } catch { /* */ }
+      if (!res.ok) throw new Error()
+      refetchOrg(); await refetchServers()
+    } catch {
+      toast('No se pudo cambiar el estado del comité.', 'error')
+    }
   }
 
   function confirmDeactivate() {

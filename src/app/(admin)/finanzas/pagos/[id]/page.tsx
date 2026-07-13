@@ -14,7 +14,7 @@ import { formatDate, formatDateTime } from '@/lib/format'
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { payments, refetch } = useFinance()
+  const { payments, refetch, loading } = useFinance()
   const [payment, setPayment] = useState<Payment | null>(null)
   useEffect(() => { setPayment(payments.find(p => p.id === id) ?? null) }, [payments, id])
   const [showRefund, setShowRefund] = useState(false)
@@ -29,10 +29,19 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
     return (
       <FinanceGuard>
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-          <p className="text-xl font-bold font-display text-navy">Pago no encontrado</p>
-          <Link href="/finanzas/pagos" className="text-sm text-teal-deep font-body">
-            ← Volver a pagos
-          </Link>
+          {loading ? (
+            <>
+              <div className="h-7 w-7 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+              <p className="text-sm text-navy-light/60 font-body">Cargando pago…</p>
+            </>
+          ) : (
+            <>
+              <p className="text-xl font-bold font-display text-navy">Pago no encontrado</p>
+              <Link href="/finanzas/pagos" className="text-sm text-teal-deep font-body">
+                ← Volver a pagos
+              </Link>
+            </>
+          )}
         </div>
       </FinanceGuard>
     )

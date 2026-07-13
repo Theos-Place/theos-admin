@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAllEventsLight } from '@/hooks/useEvents'
 import { usePermissions } from '@/hooks/usePermissions'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { todaysCheckinEvents, CHECKIN_STATUS_LABEL, type CheckinStatus } from '@/lib/events/checkin-window'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, QrCode, ChevronLeft } from 'lucide-react'
@@ -29,10 +30,8 @@ export default function CheckinPickerPage() {
   const { events, loading } = useAllEventsLight()
   const [search, setSearch] = useState('')
 
-  // Sin permiso → fuera.
-  useEffect(() => {
-    if (!loading && !canCheckin) router.replace('/dashboard')
-  }, [loading, canCheckin, router])
+  // Sin permiso → AccessDenied explícito (redirigir en silencio a /dashboard
+  // hacía creer que el link estaba roto).
 
   const today = useMemo(() => todaysCheckinEvents(events), [events])
   const q = search.trim().toLowerCase()
@@ -46,7 +45,7 @@ export default function CheckinPickerPage() {
       .slice(0, 50)
   }, [q, today, events])
 
-  if (!canCheckin) return null
+  if (!canCheckin) return <AccessDenied />
 
   return (
     <div className="space-y-5">

@@ -48,6 +48,22 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
     )
   }
 
+  // Solo grupos EN CURSO se cierran (la URL era accesible en cualquier estado).
+  if (group.status !== 'en_curso') {
+    return (
+      <div className="space-y-4">
+        <Link href={`/estudios/grupos/${group.id}`} className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
+          <ChevronLeft size={16} /> Volver al grupo
+        </Link>
+        <p className="text-navy-light/60 font-body">
+          {group.status === 'finalizado'
+            ? 'Este grupo ya fue cerrado.'
+            : 'Este grupo todavía está en matrícula; solo los grupos en curso se pueden cerrar.'}
+        </p>
+      </div>
+    )
+  }
+
   const studyType = studyTypes.find(s => s.code === group.study_type_id) ?? null
   return <CierreForm group={group} studyType={studyType} />
 }

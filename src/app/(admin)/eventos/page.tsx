@@ -279,7 +279,7 @@ function EventosContent() {
         tabs={[
           { key: 'calendar', label: 'Calendario' },
           { key: 'list', label: 'Lista' },
-          { key: 'grid', label: 'Grid' },
+          { key: 'grid', label: 'Cuadrícula' },
         ]}
         active={view}
         onChange={setView}

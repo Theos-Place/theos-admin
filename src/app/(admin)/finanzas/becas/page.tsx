@@ -6,6 +6,7 @@ import { GraduationCap, Plus, Check, AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { FilterChips } from '@/components/shared/FilterChips'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
@@ -15,19 +16,14 @@ import { TOAST_MS } from '@/lib/constants'
 import { formatDate } from '@/lib/format'
 
 export default function BecasPage() {
-  const { scholarships: allScholarships, error, refetch } = useFinance()
+  const { scholarships: allScholarships, error, refetch, loading } = useFinance()
   const [scholarships, setScholarships] = useState<Scholarship[]>([])
   useEffect(() => { setScholarships(allScholarships) }, [allScholarships])
   const [typeFilter, setTypeFilter] = useState<'all' | 'percentage' | 'fixed'>('all')
   const [entityFilter, setEntityFilter] = useState<'all' | 'event' | 'study_group'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unused' | 'used'>('all')
   const [confirmRevoke, setConfirmRevoke] = useState<Scholarship | null>(null)
-  const [toast, setToast] = useState('')
-
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), TOAST_MS)
-  }
+  const toast = useToast()
 
   const activeCount = scholarships.filter(s => !s.is_used).length
   const usedCount = scholarships.filter(s => s.is_used).length
@@ -55,9 +51,9 @@ export default function BecasPage() {
         throw new Error(d?.error)
       }
       setScholarships(prev => prev.filter(sc => sc.id !== s.id))
-      showToast(`Beca revocada para ${s.member_name}`)
+      toast(`Beca revocada para ${s.member_name}`, 'success')
     } catch (e) {
-      showToast(e instanceof Error && e.message ? e.message : 'No se pudo revocar la beca')
+      toast(e instanceof Error && e.message ? e.message : 'No se pudo revocar la beca', 'error')
     } finally {
       setRevoking(false)
       setConfirmRevoke(null)
@@ -219,7 +215,9 @@ export default function BecasPage() {
                     <td colSpan={9}>
                       {error
                         ? <ErrorState message={error} onRetry={refetch} />
-                        : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
+                        : loading
+                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
+                          : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
                     </td>
                   </tr>
                 )}
@@ -270,7 +268,9 @@ export default function BecasPage() {
               <li>
                 {error
                   ? <ErrorState message={error} onRetry={refetch} />
-                  : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
+                  : loading
+                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
+                          : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
               </li>
             )}
           </ul>
@@ -307,12 +307,6 @@ export default function BecasPage() {
         </Modal>
       )}
 
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
-          <Check size={15} className="text-[#3DB97A]" />
-          {toast}
-        </div>
-      )}
     </FinanceGuard>
   )
 }

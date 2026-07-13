@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { Plus, FileText } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
+import { useToast } from '@/components/shared/Toast'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
 
 type CategoryFilter = 'all' | string
@@ -26,6 +27,7 @@ const CHANNEL_FILTERS: { key: 'all' | CommunicationChannel; label: string }[] = 
 
 export default function PlantillasPage() {
   const router = useRouter()
+  const toast = useToast()
   const { templates, error, refetch } = useCommunications()
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
@@ -63,7 +65,9 @@ export default function PlantillasPage() {
       })
       if (!res.ok) throw new Error()
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo duplicar la plantilla. Intentá de nuevo.', 'error')
+    }
   }
 
   async function confirmDelete() {
@@ -74,7 +78,9 @@ export default function PlantillasPage() {
       const res = await fetch(`/api/communications/templates/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo eliminar la plantilla. Intentá de nuevo.', 'error')
+    }
   }
 
   function handleUse(t: MessageTemplate) {

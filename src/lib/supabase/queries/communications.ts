@@ -512,7 +512,10 @@ async function refreshBroadcastCounters(broadcastId: string): Promise<void> {
   // Estados según la 016: 'sending' mientras quede cola; al terminar,
   // 'sent' (todo ok), 'partial' (mezcla) o 'failed' (nada salió).
   const done = pendingEmails === 0
-  const finalStatus = failed === 0 ? 'sent' : sent > 0 ? 'partial' : 'failed'
+  // Con 0 logs (nadie recibió nada: todos excluidos/sin correo) el broadcast
+  // es 'failed', no 'sent' — un "enviado" sin destinatarios engaña al usuario.
+  const finalStatus = sent === 0 && failed === 0 ? 'failed'
+    : failed === 0 ? 'sent' : sent > 0 ? 'partial' : 'failed'
   const { error } = await supabase.from('message_broadcasts').update({
     sent_count: sent,
     failed_count: failed,

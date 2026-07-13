@@ -8,6 +8,14 @@ import { Tabs } from '@/components/shared/Tabs'
 import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 
+// Etiquetas en español para la tabla (los values crudos venían de la BD).
+const METHOD_LABEL: Record<string, string> = {
+  card: 'Tarjeta', sinpe: 'SINPE', cash: 'Efectivo', scholarship: 'Beca', comprobante: 'Comprobante',
+}
+const STATUS_LABEL: Record<string, string> = {
+  paid: 'Pagado', pending: 'Pendiente', failed: 'Fallido', refunded: 'Devuelto', partial_refund: 'Devolución parcial',
+}
+
 const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
 // Las entidades del filtro se derivan de los pagos reales (antes era una
@@ -156,7 +164,7 @@ export default function ReportesPage() {
               <button onClick={exportDonationsCSV}
                 className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
                 <Download size={14} />
-                Exportar a Excel
+                Exportar CSV
               </button>
             </div>
 
@@ -202,7 +210,7 @@ export default function ReportesPage() {
               <button onClick={exportPaymentsCSV}
                 className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
                 <Download size={14} />
-                Exportar a Excel
+                Exportar CSV
               </button>
             </div>
 
@@ -238,8 +246,8 @@ export default function ReportesPage() {
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} defaultHidden={false} /></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{p.method}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{p.status}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{METHOD_LABEL[p.method] ?? p.method}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{STATUS_LABEL[p.status] ?? p.status}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">{p.created_at.split('T')[0]}</p></td>
                       </tr>
                     ))}
@@ -258,7 +266,7 @@ export default function ReportesPage() {
                 <span className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">Año</span>
                 <select value={yearFilter} onChange={e => setYearFilter(e.target.value)}
                   className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
-                  {['2024', '2025', '2026'].map(y => <option key={y} value={y}>{y}</option>)}
+                  {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => String(2024 + i)).map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
               <button onClick={exportTransparencyCSV}

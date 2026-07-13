@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
-import { CreditCard, Eye, EyeOff, Search, Check } from 'lucide-react'
+import { CreditCard, Eye, EyeOff, Search } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { FilterChips } from '@/components/shared/FilterChips'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
@@ -39,12 +40,7 @@ function PagosContent() {
   const [sinpeTarget, setSinpeTarget] = useState<Payment | null>(null)
   const [sinpeConf, setSinpeConf] = useState('')
   const [sinpeDate, setSinpeDate] = useState('')
-  const [toast, setToast] = useState('')
-
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 3500)
-  }
+  const toast = useToast()
 
   // Listado paginado server-side (filtros + búsqueda viajan al servidor).
   const buildUrl = (page: number) => {
@@ -95,11 +91,11 @@ function PagosContent() {
           sinpe_pending: target.method === 'sinpe',
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error)
       await refetch()
-      showToast(`Solicitud de devolución creada para ${target.member_name}`)
-    } catch {
-      showToast('Error al crear la devolución')
+      toast(`Solicitud de devolución creada para ${target.member_name}`, 'success')
+    } catch (e) {
+      toast(e instanceof Error && e.message ? e.message : 'No se pudo crear la devolución. Intentá de nuevo.', 'error')
     }
   }
 
@@ -119,11 +115,11 @@ function PagosContent() {
           paid_at: sinpeDate || new Date().toISOString(),
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error)
       await refetch()
-      showToast(`Pago SINPE confirmado para ${target.member_name}`)
-    } catch {
-      showToast('Error al confirmar el pago')
+      toast(`Pago SINPE confirmado para ${target.member_name}`, 'success')
+    } catch (e) {
+      toast(e instanceof Error && e.message ? e.message : 'No se pudo confirmar el pago. Intentá de nuevo.', 'error')
     }
   }
 
@@ -294,7 +290,9 @@ function PagosContent() {
                     <td colSpan={7}>
                       {error
                         ? <ErrorState message={error} onRetry={refetch} />
-                        : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
+                        : loading
+                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
+                          : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
                     </td>
                   </tr>
                 )}
@@ -430,13 +428,6 @@ function PagosContent() {
         </Modal>
       )}
 
-      {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
-          <Check size={15} className="text-[#3DB97A]" />
-          {toast}
-        </div>
-      )}
     </FinanceGuard>
   )
 }

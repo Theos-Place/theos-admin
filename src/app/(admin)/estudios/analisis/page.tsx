@@ -6,6 +6,7 @@ import { useStudies } from '@/hooks/useStudies'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { getCurrentBlock, getNextBlock, suggestedGroups } from '@/lib/studies/blocks'
+import { ErrorState } from '@/components/shared/ErrorState'
 import { cn } from '@/lib/utils'
 import { HandCoins, CalendarCheck, HeartHandshake, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 
@@ -73,6 +74,8 @@ export default function AnalisisPage() {
   const [selectedStudyId, setSelectedStudyId] = useState('')
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   // Celda expandida para el drill-down: zona + categoría.
   const [expanded, setExpanded] = useState<{ zone: string; cat: 'graduating' | 'eligible' } | null>(null)
   const [memberNames, setMemberNames] = useState<Record<string, string>>({})
@@ -90,23 +93,33 @@ export default function AnalisisPage() {
     setSelectedStudyId(id)
     setAnalysis(null)
     setExpanded(null)
+    setLoadError(false)
     setLoading(Boolean(id))
+  }
+
+  function retry() {
+    setLoadError(false)
+    setLoading(true)
+    setReloadKey(k => k + 1)
   }
 
   useEffect(() => {
     if (!study) return
     let alive = true
     fetch(`/api/studies/analysis?study_code=${encodeURIComponent(study.code)}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then((d: Analysis | null) => {
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+      .then((d: Analysis) => {
         if (!alive) return
         setAnalysis(d)
         setLoading(false)
       })
-      .catch(() => { if (alive) { setAnalysis(null); setLoading(false) } })
+      .catch(() => { if (alive) { setAnalysis(null); setLoadError(true); setLoading(false) } })
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [study?.code])
+  }, [study?.code, reloadKey])
 
   // Nombres para el drill-down: se cargan al expandir una celda (cache local).
   function toggleExpand(zone: string, cat: 'graduating' | 'eligible', ids: string[]) {
@@ -223,9 +236,18 @@ export default function AnalisisPage() {
       </div>
 
       {selectedStudyId && loading && (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center gap-3 py-12">
           <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+          <span className="text-sm text-navy-light/70 font-body">Cargando…</span>
         </div>
+      )}
+
+      {selectedStudyId && !loading && loadError && (
+        <ErrorState
+          title="No se pudo cargar el análisis de demanda"
+          message="Revisá tu conexión o permisos e intentá de nuevo."
+          onRetry={retry}
+        />
       )}
 
       {study && analysis && !loading && (

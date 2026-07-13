@@ -65,13 +65,22 @@ export default function ImportarDonacionesPage() {
     setTimeout(() => setToast(''), 3500)
   }
 
+  async function loadFile(file: File) {
+    setFileName(file.name)
+    const text = await file.text()
+    const parsed = parseDonationsCSV(text)
+    // Avisar cuántas filas se descartaron (sin fecha o sin monto válido).
+    const dataLines = text.split(/\r?\n/).filter(l => l.trim()).length - 1
+    const dropped = Math.max(0, dataLines - parsed.length)
+    if (dropped > 0) showToast(`${dropped} fila${dropped !== 1 ? 's' : ''} sin fecha o monto válido se descartaron.`)
+    setRows(parsed)
+    setStep(2)
+  }
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setFileName(file.name)
-    const text = await file.text()
-    setRows(parseDonationsCSV(text))
-    setStep(2)
+    await loadFile(file)
   }
 
   function downloadTemplate() {
@@ -166,6 +175,18 @@ export default function ImportarDonacionesPage() {
             <div
               className="border-2 border-dashed rounded-2xl p-12 flex flex-col items-center gap-4 cursor-pointer transition-all hover:border-navy/30 hover:bg-navy/2 border-[rgba(22,20,64,0.20)]"
               onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => e.preventDefault()}
+              onDrop={async e => {
+                // Sin preventDefault, soltar el archivo NAVEGABA fuera de la página.
+                e.preventDefault()
+                const file = e.dataTransfer.files?.[0]
+                if (!file) return
+                if (!file.name.toLowerCase().endsWith('.csv')) {
+                  showToast('El archivo debe ser un CSV.')
+                  return
+                }
+                await loadFile(file)
+              }}
             >
               <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(81,157,162,0.10)]">
                 <CloudUpload size={32} className="text-teal-deep" />

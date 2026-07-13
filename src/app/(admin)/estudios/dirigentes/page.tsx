@@ -17,6 +17,7 @@ import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, Users, Plus, CheckCircle2, XCircle } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { getInitials } from '@/lib/format'
 
@@ -84,6 +85,7 @@ function DirigenteRow({
 
 export default function DirigentesPage() {
   const router = useRouter()
+  const toast = useToast()
   const { dirigentes, loading, refetch } = useDirigentes()
   const { studyTypes } = useStudyPlans()
   const { hasRole } = useAuth()
@@ -184,6 +186,7 @@ export default function DirigentesPage() {
       refetch()
     } catch (e) {
       console.error('No se pudo aplicar el cambio masivo:', e)
+      toast('No se pudo aplicar el cambio de estado a los dirigentes seleccionados. Intentá de nuevo.', 'error')
     } finally {
       setApplying(false)
     }
@@ -418,6 +421,7 @@ function BulkStudiesModal({
   ids: string[]; options: { code: string; name: string }[]
   onClose: () => void; onDone: () => void
 }) {
+  const toast = useToast()
   const [code, setCode] = useState('')
   const [saving, setSaving] = useState(false)
   const opts = studySelectOptions(options)
@@ -436,7 +440,10 @@ function BulkStudiesModal({
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       onDone()
-    } catch (e) { console.error('No se pudo aplicar:', e) }
+    } catch (e) {
+      console.error('No se pudo aplicar:', e)
+      toast(`No se pudo ${action === 'add' ? 'agregar' : 'quitar'} el estudio ${field === 'formation' ? 'de la formación' : 'de la disponibilidad'}. Intentá de nuevo.`, 'error')
+    }
     finally { setSaving(false) }
   }
 

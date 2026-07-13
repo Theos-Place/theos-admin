@@ -73,9 +73,11 @@ export default function BloquesPage() {
     } finally { setBusy(false) }
   }
 
+  const [genConfirm, setGenConfirm] = useState(false)
+
   async function generateYear() {
     const year = new Date().getFullYear() + 1
-    if (!confirm(`¿Generar los 3 bloques sugeridos de ${year}? Podés ajustar las fechas después.`)) return
+    setGenConfirm(false)
     setBusy(true); setMsg(null)
     let created = 0
     try {
@@ -129,7 +131,7 @@ export default function BloquesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-          <button onClick={generateYear} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-40 font-body">
+          <button onClick={() => setGenConfirm(true)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-40 font-body">
             Generar año siguiente
           </button>
           <button onClick={openNew} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">
@@ -191,6 +193,21 @@ export default function BloquesPage() {
       </div>
 
       {/* Crear/editar */}
+      {genConfirm && (
+        <Modal onClose={() => setGenConfirm(false)} titleId="generar-anio-titulo" width={400}>
+          <div className="p-5 space-y-4">
+            <h3 id="generar-anio-titulo" className="font-semibold text-navy font-display">Generar bloques del año</h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              ¿Generar los 3 bloques sugeridos de {new Date().getFullYear() + 1}? Podés ajustar las fechas después.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={generateYear} className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Generar</button>
+              <button onClick={() => setGenConfirm(false)} className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {modalOpen && (
         <Modal onClose={() => !busy && setModalOpen(false)} titleId="bloque-title" width={460}>
           <div className="p-6 space-y-4">

@@ -105,7 +105,9 @@ export default function EmpleadoDetailPage() {
       if (!res.ok) throw new Error()
       setRaiseSaved(true)
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo registrar el ajuste salarial. Intentá de nuevo.', 'error')
+    }
   }
 
   async function handleTerminate() {
@@ -120,7 +122,9 @@ export default function EmpleadoDetailPage() {
       })
       if (!res.ok) throw new Error()
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo registrar la salida del empleado. Intentá de nuevo.', 'error')
+    }
   }
 
   async function handleSaveVacation() {
@@ -137,7 +141,9 @@ export default function EmpleadoDetailPage() {
       if (!res.ok) throw new Error()
       setVacSaved(true)
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo registrar la solicitud de vacaciones. Intentá de nuevo.', 'error')
+    }
   }
 
   async function handleSetVacationStatus(recordId: string, status: 'aprobado' | 'pendiente' | 'rechazado') {
@@ -149,7 +155,9 @@ export default function EmpleadoDetailPage() {
       })
       if (!res.ok) throw new Error()
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo actualizar el estado de la solicitud.', 'error')
+    }
   }
 
   async function handleUploadDoc(file: File) {
@@ -227,7 +235,9 @@ export default function EmpleadoDetailPage() {
       const res = await fetch(`/api/employees/documents/${docId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo eliminar el documento. Intentá de nuevo.', 'error')
+    }
   }
 
   return (

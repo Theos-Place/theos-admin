@@ -11,6 +11,7 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useToast } from '@/components/shared/Toast'
 import { useOrg } from '@/lib/org'
 import { generateCSV } from '@/lib/export'
 import { Send, Download } from 'lucide-react'
@@ -160,6 +161,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     return { ...rawEvent, start_at: occStart.toISOString(), end_at: new Date(occStart.getTime() + durMs).toISOString() }
   }, [rawEvent, occParam])
   const { can } = usePermissions()
+  const toast = useToast()
   const { adminCommittees } = useOrg()
   // Gating de tabs: los miembros normales solo ven Información. encargado_eventos
   // (edit/export en eventos) ve check-in y reportes; gestión (inscripciones,
@@ -345,6 +347,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       }
     } catch (e) {
       console.error('No se pudo eliminar el evento:', e)
+      toast('No se pudo eliminar el evento. Intentá de nuevo.', 'error')
       setDeleting(false)
     }
   }

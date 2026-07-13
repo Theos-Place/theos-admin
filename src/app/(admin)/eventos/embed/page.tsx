@@ -94,7 +94,7 @@ export default function EmbedPage() {
             <label className={`${labelCls} font-display`}>Vista</label>
             <div className="flex gap-2">
               {(['monthly', 'weekly', 'list', 'grid'] as const).map(v => {
-                const labels = { monthly: 'Mensual', weekly: 'Semanal', list: 'Lista', grid: 'Grid' }
+                const labels = { monthly: 'Mensual', weekly: 'Semanal', list: 'Lista', grid: 'Cuadrícula' }
                 return (
                   <button
                     key={v}
@@ -162,7 +162,7 @@ export default function EmbedPage() {
                     }}
                     className="text-[10px] text-navy-light/60 hover:text-navy transition-colors font-body"
                   >
-                    reset
+                    restablecer
                   </button>
                 </div>
               ))}

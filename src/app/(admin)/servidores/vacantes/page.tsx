@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils'
 import { Plus, Users, ChevronDown, Upload, Search, MapPin, Clock, Calendar, Pencil, XCircle, Eye, FilePlus2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
+import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { ApplyToVacancyButton } from '@/components/servers/ApplyToVacancyButton'
 
 export default function VacantesPage() {
@@ -235,9 +237,12 @@ export default function VacantesPage() {
 
 // Cerrar puesto (solo admin). PUT status=closed; recarga la lista.
 function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClosed: () => void }) {
+  const toast = useToast()
   const [busy, setBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   async function close() {
-    if (busy || !confirm('¿Cerrar este puesto? Dejará de estar disponible para aplicar.')) return
+    if (busy) return
+    setConfirmOpen(false)
     setBusy(true)
     try {
       const res = await fetch(`/api/servers/vacancies/${vacancyId}`, {
@@ -247,12 +252,41 @@ function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClos
       onClosed()
     } catch (e) {
       console.error('No se pudo cerrar el puesto:', e)
+      toast('No se pudo cerrar el puesto. Intentá de nuevo.', 'error')
       setBusy(false)
     }
   }
   return (
-    <button onClick={close} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
-      <XCircle size={12} aria-hidden /> {busy ? 'Cerrando…' : 'Cerrar'}
-    </button>
+    <>
+      <button onClick={() => setConfirmOpen(true)} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
+        <XCircle size={12} aria-hidden /> {busy ? 'Cerrando…' : 'Cerrar'}
+      </button>
+      {confirmOpen && (
+        <Modal onClose={() => setConfirmOpen(false)} titleId="cerrar-puesto-title" width={384}>
+          <div className="p-6 space-y-4">
+            <div>
+              <p id="cerrar-puesto-title" className="text-base font-bold text-navy font-display">¿Cerrar este puesto?</p>
+              <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed font-body">
+                Dejará de estar disponible para aplicar. Podés volver a publicarlo más adelante desde la edición del puesto.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmOpen(false)}
+                className="flex-1 rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={close}
+                className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+              >
+                Cerrar puesto
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </>
   )
 }

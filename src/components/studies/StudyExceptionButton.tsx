@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { ShieldCheck, X } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
@@ -27,6 +28,7 @@ const REQ_LABEL: Record<string, string> = {
 /** "Crear excepción de matrícula" en el perfil — solo roles de estudios. Exime a un
  *  miembro de requisitos de un estudio para que se matricule él mismo. */
 export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: { memberId: string; memberName?: string }) {
+  const toast = useToast()
   const { hasRole, loaded } = useAuth()
   const { studyTypes } = useStudyPlans()
   const [open, setOpen] = useState(false)
@@ -82,7 +84,10 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
       const res = await fetch(`/api/studies/exceptions/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       refetch()
-    } catch (e) { console.error('No se pudo revocar:', e) }
+    } catch (e) {
+      console.error('No se pudo revocar:', e)
+      toast('No se pudo revocar la excepción de matrícula. Intentá de nuevo.', 'error')
+    }
   }
 
   function toggle(key: string) {

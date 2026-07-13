@@ -16,6 +16,7 @@ import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { Archive, Pencil, Search, X, Bus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 
 const PAGE_SIZE = 10
 
@@ -65,6 +66,7 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
 export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const toast = useToast()
   const { hasRole, loaded } = useAuth()
 
   const { studyTypes, groups, refetch } = useStudies()
@@ -156,6 +158,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       await refetch()
     } catch (err) {
       console.error('No se pudo cambiar el archivado:', err)
+      toast(`No se pudo ${val ? 'desactivar' : 'activar'} el plan de estudio. Intentá de nuevo.`, 'error')
     } finally {
       setBusy(false)
       setShowArchive(false)
@@ -244,11 +247,17 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                 currentName={studyType.mentor_name ?? null}
                 onChange={async (memberId) => {
                   if (!studyType.plan_id) return
-                  await fetch(`/api/studies/plans/${studyType.plan_id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mentor_id: memberId }),
-                  })
+                  try {
+                    const res = await fetch(`/api/studies/plans/${studyType.plan_id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ mentor_id: memberId }),
+                    })
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                  } catch (err) {
+                    console.error('No se pudo cambiar el dirigente encargado:', err)
+                    toast('No se pudo cambiar el dirigente encargado del plan. Intentá de nuevo.', 'error')
+                  }
                   refetch()
                 }}
               />
@@ -291,7 +300,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
             <div>
-              <div className="st">Prerequisito</div>
+              <div className="st">Prerrequisito</div>
               <div className="font-semibold text-[13px] font-body">
                 {view.prerequisite
                   ? studyTypes.find(s => s.code === view.prerequisite)?.name || view.prerequisite

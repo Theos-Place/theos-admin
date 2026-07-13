@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { type EventTypeEntry } from '@/data/event-config'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import {
   Plus, Edit2, Mic, Tent, Users, Star, BookOpen,
@@ -209,21 +210,26 @@ function TypeModal({
 }
 
 export default function TiposEventoPage() {
+  const toast = useToast()
   const [types, setTypes] = useState<EventTypeEntry[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<EventTypeEntry | null>(null)
   const [saving, setSaving] = useState(false)
 
-  async function loadTypes() {
+  const loadTypes = useCallback(async () => {
     try {
       const res = await fetch('/api/events/types')
       if (res.ok) setTypes(await res.json())
     } catch (err) {
       console.error('No se pudieron cargar los tipos de evento:', err)
+      toast('No se pudieron cargar los tipos de evento. Recargá la página.', 'error')
+    } finally {
+      setLoading(false)
     }
-  }
+  }, [toast])
 
-  useEffect(() => { loadTypes() }, [])
+  useEffect(() => { loadTypes() }, [loadTypes])
 
   async function handleSave(data: FormState) {
     if (saving) return
@@ -250,6 +256,7 @@ export default function TiposEventoPage() {
       setEditTarget(null)
     } catch (err) {
       console.error('No se pudo guardar el tipo de evento:', err)
+      toast('No se pudo guardar el tipo de evento. Intentá de nuevo.', 'error')
     } finally {
       setSaving(false)
     }
@@ -269,6 +276,7 @@ export default function TiposEventoPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
     } catch (err) {
       console.error('No se pudo cambiar el estado del tipo:', err)
+      toast('No se pudo cambiar el estado del tipo. Intentá de nuevo.', 'error')
       setTypes(ts => ts.map(t => t.id === id ? { ...t, is_active: !next } : t))
     }
   }
@@ -303,6 +311,30 @@ export default function TiposEventoPage() {
           Nuevo tipo
         </button>
       </div>
+
+      {/* Estado de carga */}
+      {loading && (
+        <div className="flex items-center justify-center gap-3 py-16">
+          <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" aria-hidden="true" />
+          <p className="text-sm text-navy-light/70 font-body">Cargando…</p>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && types.length === 0 && (
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] px-6 py-12 text-center space-y-3">
+          <p className="text-sm text-navy-light/70 font-body">
+            Todavía no hay tipos de evento. Creá el primero para clasificar tus eventos.
+          </p>
+          <button
+            onClick={() => { setEditTarget(null); setShowModal(true) }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
+          >
+            <Plus size={14} />
+            Crear tipo
+          </button>
+        </div>
+      )}
 
       {/* Cards grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

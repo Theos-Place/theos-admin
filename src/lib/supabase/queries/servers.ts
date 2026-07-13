@@ -703,7 +703,9 @@ export async function assignVolunteer(positionId: string, memberId: string): Pro
   const { error } = await supabase
     .from('volunteers')
     .upsert(
-      { position_id: positionId, member_id: memberId, status: 'active', start_date: new Date().toISOString().slice(0, 10) },
+      // end_date: null limpia la fecha de baja al REACTIVAR (removeVolunteer la
+      // setea; sin esto el registro quedaba activo con fin en el pasado).
+      { position_id: positionId, member_id: memberId, status: 'active', start_date: new Date().toISOString().slice(0, 10), end_date: null },
       { onConflict: 'member_id,position_id' },
     )
   if (error) throw error

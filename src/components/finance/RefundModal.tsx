@@ -172,9 +172,11 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 rounded-full py-2.5 text-sm text-white transition-colors bg-coral font-body"
+            disabled={type === 'partial' && (!partialAmount || Number(partialAmount) <= 0)}
+            className="flex-1 rounded-full py-2.5 text-sm text-white transition-colors bg-coral font-body disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isSinpe ? 'Crear solicitud' : 'Procesar automáticamente'}
+            {/* Siempre crea una SOLICITUD pendiente — "Procesar automáticamente" prometía de más. */}
+            Crear solicitud de devolución
           </button>
         </div>
     </Modal>

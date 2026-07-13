@@ -5,7 +5,15 @@ import { useAuth } from '@/hooks/useAuth'
 export function FinanceGuard({ children }: { children: React.ReactNode }) {
   const { loaded, hasRole } = useAuth()
 
-  if (!loaded) return null
+  // Mientras cargan los roles: spinner en vez de pantalla en blanco.
+  if (!loaded) {
+    return (
+      <div className="py-16 text-center font-body">
+        <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+        <p className="text-sm text-navy-light/60">Cargando…</p>
+      </div>
+    )
+  }
 
   if (!hasRole('finanzas', 'admin', 'direccion')) {
     return (

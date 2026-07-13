@@ -9,6 +9,7 @@ import { useDirigentes } from '@/hooks/useDirigentes'
 import { cn } from '@/lib/utils'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { useToast } from '@/components/shared/Toast'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { type FlatServer, SERVER_COLUMNS } from '@/lib/servers/columns'
 import { esComiteDirigentes } from '@/lib/dirigentes'
@@ -31,6 +32,7 @@ type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
 export default function CommitteeDetailPage() {
   const { committeeId } = useParams<{ committeeId: string }>()
   const router = useRouter()
+  const toast = useToast()
   const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, goalsByCommittee, refetch } = useServers()
 
   const committee = useMemo(
@@ -180,7 +182,9 @@ export default function CommitteeDetailPage() {
       })
       if (!res.ok) throw new Error('disconnect failed')
       await refetch()
-    } catch { /* el servidor sigue visible si falla */ }
+    } catch {
+      toast('No se pudo desconectar al servidor. Intentá de nuevo.', 'error')
+    }
   }
 
   async function updateCommitteeInMock() {
@@ -200,7 +204,8 @@ export default function CommitteeDetailPage() {
       if (!res.ok) throw new Error('update failed')
       await refetch()
     } catch {
-      // se mantiene el override local aunque falle la persistencia
+      setCommitteeOverride({}) // revertir el nombre optimista
+      toast('No se pudieron guardar los cambios del comité. Intentá de nuevo.', 'error')
     }
   }
 
@@ -218,7 +223,9 @@ export default function CommitteeDetailPage() {
       })
       if (!res.ok) throw new Error('assign failed')
       await refetch()
-    } catch { /* no se agregó; reintentar */ }
+    } catch {
+      toast('No se pudo agregar el servidor al comité. Intentá de nuevo.', 'error')
+    }
   }
 
   // Cambiar puesto = baja del puesto actual + alta en el nuevo (newPosition es el position_id destino).
@@ -244,7 +251,9 @@ export default function CommitteeDetailPage() {
       })
       if (!res.ok) throw new Error('change position failed')
       await refetch()
-    } catch { /* sin cambios si falla */ }
+    } catch {
+      toast('No se pudo cambiar el puesto del servidor. Revisá su asignación e intentá de nuevo.', 'error')
+    }
   }
 
   async function addGoal() {
@@ -263,7 +272,7 @@ export default function CommitteeDetailPage() {
       if (!res.ok) throw new Error('create goal failed')
       await refetch()
     } catch {
-      // si falla, la meta no queda; el usuario puede reintentar
+      toast('No se pudo crear la meta. Intentá de nuevo.', 'error')
     }
   }
 
@@ -282,6 +291,7 @@ export default function CommitteeDetailPage() {
       await refetch()
     } catch {
       setGoals(prev => prev.map(g => g.id === id ? { ...g, status: goal.status } : g)) // revertir
+      toast('No se pudo actualizar la meta.', 'error')
     }
   }
 

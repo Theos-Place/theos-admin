@@ -11,6 +11,7 @@ import { groupCodesForDisplay, studySelectOptions, expandSelectionValue } from '
 import { cn } from '@/lib/utils'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { ChevronLeft, ExternalLink, Users, X, Pencil, Info } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 import { getInitials } from '@/lib/format'
@@ -70,6 +71,7 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
  *  desactivar = lo saca del comité + quita el rol). No permite desactivar a quien
  *  tiene un grupo en curso/abierto (punto 1): muestra ActiveWarningModal. */
 function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: string; memberName: string; active: boolean; onChanged: () => void }) {
+  const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [warn, setWarn] = useState(false)
   const [confirm, setConfirm] = useState(false)
@@ -86,7 +88,10 @@ function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: s
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setConfirm(false)
       onChanged()
-    } catch (e) { console.error('No se pudo cambiar el estado:', e) }
+    } catch (e) {
+      console.error('No se pudo cambiar el estado:', e)
+      toast(`No se pudo ${active ? 'desactivar' : 'activar'} al dirigente. Intentá de nuevo.`, 'error')
+    }
     finally { setSaving(false) }
   }
   return (
@@ -263,6 +268,7 @@ function GroupedStudyBadges({ codes, editing, onRemove }: { codes: string[]; edi
 
 // ─── Configuración editable del dirigente (estudios que imparte + zonas) ─────────
 function DirigenteConfigCard({ memberId }: { memberId: string }) {
+  const toast = useToast()
   const { studyTypes, leaders } = useStudies()
   const { activeSedes: SEDES } = useSedes()
   const { hasRole } = useAuth()
@@ -311,7 +317,9 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
       if (!res.ok) throw new Error()
       setSaved(true)
       setEditing(false)
-    } catch { /* noop */ }
+    } catch {
+      toast('No se pudo guardar la configuración del dirigente (estudios y zonas). Intentá de nuevo.', 'error')
+    }
     finally { setSaving(false) }
   }
 

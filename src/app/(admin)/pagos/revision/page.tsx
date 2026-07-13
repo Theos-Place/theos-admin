@@ -5,8 +5,9 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { CreditCard, Loader2, Check, AlertTriangle, Image as ImageIcon } from 'lucide-react'
+import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 
 type QueueRow = {
   id: string
@@ -29,13 +30,14 @@ function money(amount: number, currency: string) {
 
 export default function RevisionPagosPage() {
   const { can } = usePermissions()
+  const toast = useToast()
   const canView = can('revision_pagos', 'view')
   const canReview = can('revision_pagos', 'edit')
 
   const [rows, setRows] = useState<QueueRow[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [msg, setMsg] = useState<string | null>(null)
+  const [approveTarget, setApproveTarget] = useState<QueueRow | null>(null)
   const [reject, setReject] = useState<QueueRow | null>(null)
   const [reason, setReason] = useState('')
   const [receipt, setReceipt] = useState<{ row: QueueRow; url: string | null; loading: boolean } | null>(null)
@@ -63,33 +65,34 @@ export default function RevisionPagosPage() {
 
   async function approve(row: QueueRow) {
     if (busyId) return
-    setBusyId(row.id); setMsg(null)
+    setBusyId(row.id)
     try {
       const res = await fetch(`/api/payments/${row.id}/review`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'approve' }),
       })
       if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo aprobar.')
-      setMsg(`Pago de ${row.member_name} aprobado.`)
+      toast(`Pago de ${row.member_name} aprobado.`, 'success')
+      setApproveTarget(null)
       refetch()
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Error desconocido')
+      toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
     } finally { setBusyId(null) }
   }
 
   async function doReject() {
     if (!reject || busyId || !reason.trim()) return
-    setBusyId(reject.id); setMsg(null)
+    setBusyId(reject.id)
     try {
       const res = await fetch(`/api/payments/${reject.id}/review`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reject', reason: reason.trim() }),
       })
       if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo rechazar.')
-      setMsg(`Pago de ${reject.member_name} rechazado. Se avisó a la persona.`)
+      toast(`Pago de ${reject.member_name} rechazado. Se avisó a la persona.`, 'success')
       setReject(null); setReason(''); refetch()
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Error desconocido')
+      toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
     } finally { setBusyId(null) }
   }
 
@@ -108,12 +111,6 @@ export default function RevisionPagosPage() {
           </div>
         </div>
       </div>
-
-      {msg && (
-        <p className="rounded-xl bg-surface-low px-4 py-2 text-sm text-navy-light/80 font-body inline-flex items-center gap-1.5">
-          <Check size={14} className="text-teal-deep" /> {msg}
-        </p>
-      )}
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
@@ -157,7 +154,7 @@ export default function RevisionPagosPage() {
                       {canReview && (
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => approve(r)}
+                            onClick={() => setApproveTarget(r)}
                             disabled={busyId === r.id}
                             className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                           >
@@ -194,6 +191,31 @@ export default function RevisionPagosPage() {
             ) : (
               <p className="text-sm text-coral font-body py-6">No se pudo cargar el comprobante.</p>
             )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Confirmación de aprobación (simétrico al rechazo: es la acción que
+          activa la matrícula/pedido pagado y no tiene deshacer). */}
+      {approveTarget && (
+        <Modal onClose={() => !busyId && setApproveTarget(null)} titleId="approve-title" width={440}>
+          <div className="p-6 space-y-3">
+            <h3 id="approve-title" className="text-base font-bold text-navy font-display">Aprobar pago</h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              ¿Aprobar el pago de <strong className="text-navy">{approveTarget.member_name}</strong>
+              {approveTarget.concept ? ` (${CONCEPT_LABEL[approveTarget.concept]})` : ''} por {money(approveTarget.amount, approveTarget.currency)}?
+              El pago quedará como pagado y activará lo que corresponda (p. ej. la matrícula).
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => approve(approveTarget)}
+                disabled={!!busyId}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-opacity font-body inline-flex items-center justify-center gap-2 bg-teal-deep hover:opacity-90', !!busyId && 'opacity-50 cursor-not-allowed')}
+              >
+                {busyId ? <><Loader2 size={15} className="animate-spin" /> Aprobando…</> : 'Aprobar pago'}
+              </button>
+              <button onClick={() => setApproveTarget(null)} disabled={!!busyId} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            </div>
           </div>
         </Modal>
       )}

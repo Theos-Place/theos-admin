@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { X, UserPlus } from 'lucide-react'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
+import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -23,6 +24,7 @@ const STATUS_LABEL: Record<Invitation['status'], { label: string; cls: string }>
 
 /** Sección "Invitados" del detalle de un plan invitation_only. Solo para roles de estudios. */
 export function PlanInvitations({ planId }: { planId: string }) {
+  const toast = useToast()
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
@@ -50,6 +52,7 @@ export function PlanInvitations({ planId }: { planId: string }) {
       load()
     } catch (e) {
       console.error('No se pudo invitar:', e)
+      toast(`No se pudo invitar a ${m.first_name} ${m.last_name} al estudio. Intentá de nuevo.`, 'error')
     } finally {
       setAdding(false)
     }
@@ -62,6 +65,7 @@ export function PlanInvitations({ planId }: { planId: string }) {
       setInvitations(prev => prev.map(i => i.id === id ? { ...i, status: 'revoked' } : i))
     } catch (e) {
       console.error('No se pudo revocar:', e)
+      toast('No se pudo revocar la invitación. Intentá de nuevo.', 'error')
     }
   }
 

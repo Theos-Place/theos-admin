@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Search, Check, X } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
+import { useToast } from '@/components/shared/Toast'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useEvents } from '@/hooks/useEvents'
 import { useStudies } from '@/hooks/useStudies'
@@ -24,13 +25,8 @@ export default function NuevaBecaPage() {
   const [percentage, setPercentage] = useState(50)
   const [fixedAmount, setFixedAmount] = useState('')
   const [notes, setNotes] = useState('')
-  const [toast, setToast] = useState('')
+  const toast = useToast()
   const [saving, setSaving] = useState(false)
-
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), TOAST_MS)
-  }
 
   // Eventos con pago y grupos de estudio (costo del plan) como opciones reales.
   const EVENTS: EntityOption[] = useMemo(
@@ -80,12 +76,12 @@ export default function NuevaBecaPage() {
           notes: notes.trim() || null,
         }),
       })
-      if (!res.ok) throw new Error()
-      showToast('Beca creada exitosamente')
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error)
+      toast('Beca creada exitosamente', 'success')
       setTimeout(() => router.push('/finanzas/becas'), REDIRECT_AFTER_SAVE_MS)
-    } catch {
+    } catch (e) {
       setSaving(false)
-      showToast('Error al crear la beca')
+      toast(e instanceof Error && e.message ? e.message : 'No se pudo crear la beca. Revisá los datos e intentá de nuevo.', 'error')
     }
   }
 
@@ -331,12 +327,6 @@ export default function NuevaBecaPage() {
         </div>
       </div>
 
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
-          <Check size={15} className="text-[#3DB97A]" />
-          {toast}
-        </div>
-      )}
     </FinanceGuard>
   )
 }

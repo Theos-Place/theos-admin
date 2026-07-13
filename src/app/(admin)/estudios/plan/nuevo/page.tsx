@@ -309,7 +309,7 @@ export default function NuevoTipoPage() {
           disabled={submitting}
           className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 border-[var(--outline-variant)] font-body"
         >
-          Guardar como borrador
+          Guardar desactivado
         </button>
         <Link
           href="/estudios/plan"

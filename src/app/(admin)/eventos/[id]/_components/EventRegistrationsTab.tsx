@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Download, Send, UserPlus, Search, Trash2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
@@ -41,8 +42,11 @@ type Props = {
 }
 
 export function EventRegistrationsTab({ event, eventId, registrationCount, circumference, onSendMessage, onChanged }: Props) {
+  const toast = useToast()
   const [showInscribir, setShowInscribir] = useState(false)
   const [busyMember, setBusyMember] = useState<string | null>(null)
+  // Confirmación antes de quitar una inscripción.
+  const [toRemove, setToRemove] = useState<{ id: string; name: string } | null>(null)
 
   async function changePayment(memberId: string, status: PaymentStatus) {
     setBusyMember(memberId)
@@ -56,6 +60,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
       onChanged()
     } catch (err) {
       console.error('No se pudo cambiar el estado de pago:', err)
+      toast('No se pudo cambiar el estado de pago. Intentá de nuevo.', 'error')
     } finally {
       setBusyMember(null)
     }
@@ -66,9 +71,11 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
     try {
       const res = await fetch(`/api/events/${eventId}/registrations/${memberId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setToRemove(null)
       onChanged()
     } catch (err) {
       console.error('No se pudo quitar la inscripción:', err)
+      toast('No se pudo quitar la inscripción. Intentá de nuevo.', 'error')
     } finally {
       setBusyMember(null)
     }
@@ -192,7 +199,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
-                      onClick={() => removeRegistration(reg.member_id)}
+                      onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                       disabled={busyMember === reg.member_id}
                       className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 hover:text-coral transition-colors font-body"
                     >
@@ -236,7 +243,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
                   </select>
                   <button
-                    onClick={() => removeRegistration(reg.member_id)}
+                    onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                     disabled={busyMember === reg.member_id}
                     className="text-navy-light/60 hover:text-coral transition-colors shrink-0"
                     aria-label="Quitar inscripción"
@@ -249,6 +256,33 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           )}
         </div>
       </div>
+
+      {toRemove && (
+        <Modal onClose={() => { if (busyMember !== toRemove.id) setToRemove(null) }} titleId="quitar-inscripcion-titulo" width={448}>
+          <div className="p-6 space-y-4">
+            <h3 id="quitar-inscripcion-titulo" className="text-lg font-extrabold text-navy font-display">Quitar inscripción</h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              ¿Quitar la inscripción de <span className="font-semibold text-navy">{toRemove.name}</span>? Si tiene pago asociado, el registro del pago se conserva.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => removeRegistration(toRemove.id)}
+                disabled={busyMember === toRemove.id}
+                className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+              >
+                {busyMember === toRemove.id ? 'Quitando…' : 'Quitar'}
+              </button>
+              <button
+                onClick={() => setToRemove(null)}
+                disabled={busyMember === toRemove.id}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {showInscribir && (
         <InscribirModal
@@ -274,6 +308,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
   onClose: () => void
   onInscrito: () => void
 }) {
+  const toast = useToast()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MemberResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -310,6 +345,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
       setPayFor(null)
     } catch (err) {
       console.error('No se pudo inscribir al miembro:', err)
+      toast('No se pudo inscribir al miembro. Intentá de nuevo.', 'error')
     } finally {
       setAdding(null)
     }

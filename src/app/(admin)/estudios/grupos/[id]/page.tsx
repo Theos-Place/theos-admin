@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
 
 function AttendanceBar({ pct }: { pct: number }) {
@@ -33,6 +34,7 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
   onClose: () => void
   onEnrolled: () => void
 }) {
+  const toast = useToast()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<{ id: string; first_name: string; last_name: string; cedula: string | null }[]>([])
   const [adding, setAdding] = useState<string | null>(null)
@@ -63,6 +65,7 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
       onClose()
     } catch (err) {
       console.error('No se pudo inscribir al miembro:', err)
+      toast('No se pudo inscribir al miembro en el grupo. Intentá de nuevo.', 'error')
       setAdding(null)
     }
   }

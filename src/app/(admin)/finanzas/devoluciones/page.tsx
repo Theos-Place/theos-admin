@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { ArrowLeftRight, Check } from 'lucide-react'
+import { ArrowLeftRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { type Refund, type RefundStatus } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
-import { TOAST_MS } from '@/lib/constants'
+import { useToast } from '@/components/shared/Toast'
 import { formatDate } from '@/lib/format'
 
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
@@ -28,7 +28,7 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
 }
 
 export default function DevolucionesPage() {
-  const { refunds: allRefunds, refetch } = useFinance()
+  const { refunds: allRefunds, refetch, loading } = useFinance()
   const [refunds, setRefunds] = useState<Refund[]>([])
   useEffect(() => { setRefunds(allRefunds) }, [allRefunds])
   const [completeTarget, setCompleteTarget] = useState<Refund | null>(null)
@@ -36,12 +36,7 @@ export default function DevolucionesPage() {
   const [completionDate, setCompletionDate] = useState('')
   const [completionConf, setCompletionConf] = useState('')
   const [rejectReason, setRejectReason] = useState('')
-  const [toast, setToast] = useState('')
-
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), TOAST_MS)
-  }
+  const toast = useToast()
 
   const cardRefunds = refunds.filter(r => r.method === 'card')
   const sinpeRefunds = refunds.filter(r => r.method === 'sinpe')
@@ -72,9 +67,9 @@ export default function DevolucionesPage() {
       })
       if (!res.ok) throw new Error()
       await refetch()
-      showToast(`Devolución completada para ${target.member_name}`)
+      toast(`Devolución completada para ${target.member_name}`, 'success')
     } catch {
-      showToast('Error al completar la devolución')
+      toast('No se pudo completar la devolución. Intentá de nuevo.', 'error')
     }
   }
 
@@ -92,9 +87,9 @@ export default function DevolucionesPage() {
       })
       if (!res.ok) throw new Error()
       await refetch()
-      showToast(`Devolución rechazada para ${target.member_name}`)
+      toast(`Devolución rechazada para ${target.member_name}`, 'success')
     } catch {
-      showToast('Error al rechazar la devolución')
+      toast('No se pudo rechazar la devolución. Intentá de nuevo.', 'error')
     }
   }
 
@@ -182,7 +177,7 @@ export default function DevolucionesPage() {
                   </tr>
                 ))}
                 {cardRefunds.length === 0 && (
-                  <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones por tarjeta</td></tr>
+                  <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones por tarjeta'}</td></tr>
                 )}
               </tbody>
             </table>
@@ -210,7 +205,7 @@ export default function DevolucionesPage() {
               </li>
             ))}
             {cardRefunds.length === 0 && (
-              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones por tarjeta</li>
+              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones por tarjeta'}</li>
             )}
           </ul>
         </div>
@@ -278,7 +273,7 @@ export default function DevolucionesPage() {
                   </tr>
                 ))}
                 {sinpeRefunds.length === 0 && (
-                  <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones SINPE</td></tr>
+                  <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones SINPE'}</td></tr>
                 )}
               </tbody>
             </table>
@@ -325,7 +320,7 @@ export default function DevolucionesPage() {
               </li>
             ))}
             {sinpeRefunds.length === 0 && (
-              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">Sin devoluciones SINPE</li>
+              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones SINPE'}</li>
             )}
           </ul>
         </div>
@@ -398,12 +393,6 @@ export default function DevolucionesPage() {
         </Modal>
       )}
 
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
-          <Check size={15} className="text-[#3DB97A]" />
-          {toast}
-        </div>
-      )}
     </FinanceGuard>
   )
 }

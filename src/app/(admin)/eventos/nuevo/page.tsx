@@ -3,6 +3,9 @@
 import { useState, useMemo, useRef, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/shared/Toast'
+import { usePermissions } from '@/hooks/usePermissions'
+import { useAuth } from '@/lib/auth/auth-context'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { type EventType } from '@/data/event-config'
@@ -80,6 +83,10 @@ export default function NuevoEventoPage() {
 
 function NuevoEventoForm() {
   const toast = useToast()
+  // Gate temprano: sin permiso de crear eventos, el 403 llegaba recién al
+  // publicar, después de llenar los 4 pasos.
+  const { can } = usePermissions()
+  const { loaded } = useAuth()
   // Fecha precargada al venir del clic en una celda del calendario (?date=YYYY-MM-DD).
   const dateParam = useSearchParams().get('date')
   const initialDate = dateParam || toYmdLocal(new Date())
@@ -194,6 +201,9 @@ function NuevoEventoForm() {
   )
 
   const [submitting, setSubmitting] = useState(false)
+
+  // Después de TODOS los hooks (regla de hooks): gate temprano de permiso.
+  if (loaded && !can('eventos', 'create')) return <AccessDenied />
 
   async function handlePublish() {
     setSubmitting(true)

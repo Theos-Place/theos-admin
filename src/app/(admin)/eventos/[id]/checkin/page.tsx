@@ -408,7 +408,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <div className="rounded-2xl bg-surface-card p-6 text-center shadow-[var(--shadow-sm)] space-y-3">
               <p className="text-navy font-medium font-body">{selectedMember.name}</p>
               <p className="text-sm text-navy-light/70 font-body">
-                Este evento es pago: el check-in solo está disponible para personas inscritas y con su pago al día. Inscribí y registrá el pago primero.
+                Este evento es pago: el check-in solo está disponible para personas inscritas. Inscribila primero desde la pestaña Inscripciones (ahí se registra el pago).
               </p>
               <button
                 onClick={() => { setSelectedMember(null); setQuery('') }}
