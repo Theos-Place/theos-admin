@@ -84,6 +84,10 @@ export function toDomainStudyGroup(db: DbGroupForDomain): StudyGroup {
         member_id: e.member_id,
         member_name: e.member ? `${e.member.first_name} ${e.member.last_name}`.trim() : '',
         status: mapParticipantStatus(e.status),
+        // Resultado del cierre según notes ('aprobado' | 'reprobado: <motivo>').
+        result: e.notes?.startsWith('reprobado') ? 'reprobado' as const
+          : e.notes === 'aprobado' || e.status === 'completed' ? 'aprobado' as const
+          : null,
         grade: e.grade,
         // attendance_pct se calcula en la vista de detalle (Fase 2b) con study_attendance.
         attendance_pct: 0,

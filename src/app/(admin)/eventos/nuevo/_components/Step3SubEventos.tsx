@@ -10,7 +10,6 @@ interface Step3Props {
   newSubCap: string
   requires_registration: boolean
   max_capacity: string
-  prerequisite: string
   has_satisfaction_survey: boolean
   onSetShowSubEventForm: (v: boolean) => void
   onNewSubNameChange: (v: string) => void
@@ -19,7 +18,6 @@ interface Step3Props {
   onRemoveSubEvent: (id: string) => void
   onToggleRegistration: () => void
   onMaxCapacityChange: (v: string) => void
-  onPrerequisiteChange: (v: string) => void
   onToggleSatisfactionSurvey: () => void
 }
 
@@ -30,7 +28,6 @@ export function Step3SubEventos({
   newSubCap,
   requires_registration,
   max_capacity,
-  prerequisite,
   has_satisfaction_survey,
   onSetShowSubEventForm,
   onNewSubNameChange,
@@ -39,7 +36,6 @@ export function Step3SubEventos({
   onRemoveSubEvent,
   onToggleRegistration,
   onMaxCapacityChange,
-  onPrerequisiteChange,
   onToggleSatisfactionSurvey,
 }: Step3Props) {
   return (
@@ -154,24 +150,19 @@ export function Step3SubEventos({
                     onChange={e => onMaxCapacityChange(e.target.value)}
                   />
                 </div>
-                <div>
-                  <FieldLabel>Prerrequisito (opcional)</FieldLabel>
-                  <select
-                    className={`${inputCls} font-body`}
-                    value={prerequisite}
-                    onChange={e => onPrerequisiteChange(e.target.value)}
-                  >
-                    <option value="">Sin prerrequisito</option>
-                    <option value="member">Ser miembro activo</option>
-                    <option value="server">Ser servidor activo</option>
-                    <option value="n1">Haber completado N1</option>
-                  </select>
-                </div>
+                {/* "Prerrequisito" se quitó: los eventos no tienen ese campo en
+                    la BD y el valor se descartaba en silencio al publicar. */}
               </div>
-              <button type="button" className="btn btn-ghost btn-sm">
+              <a
+                href="/formularios/nuevo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-ghost btn-sm"
+                title="Abre el builder de formularios en otra pestaña (el wizard conserva tu avance)"
+              >
                 <Plus size={13} />
                 Crear formulario de inscripción
-              </button>
+              </a>
             </div>
           )}
         </div>
@@ -188,10 +179,16 @@ export function Step3SubEventos({
           />
           {has_satisfaction_survey && (
             <div className="pl-14">
-              <button type="button" className="btn btn-ghost btn-sm">
+              <a
+                href="/formularios/nuevo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-ghost btn-sm"
+                title="Abre el builder de formularios en otra pestaña (el wizard conserva tu avance)"
+              >
                 <Plus size={13} />
                 Crear encuesta
-              </button>
+              </a>
             </div>
           )}
         </div>

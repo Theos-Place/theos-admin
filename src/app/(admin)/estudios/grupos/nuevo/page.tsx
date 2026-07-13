@@ -336,17 +336,8 @@ export default function NuevoGrupoPage() {
               />
             </div>
 
-            <div className="col-span-1 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
-                Fecha límite de inscripción (opcional)
-              </label>
-              <input
-                type="date"
-                className={inputCls}
-                value={step1.signup_deadline}
-                onChange={e => setS1('signup_deadline', e.target.value)}
-              />
-            </div>
+            {/* "Fecha límite de inscripción" se quitó: no existe en la BD y el
+                valor se descartaba en silencio. */}
           </div>
 
           <div className="flex flex-col items-end gap-1.5 pt-2">

@@ -26,7 +26,6 @@ export default function EmbedPage() {
     lang: 'es',
     height: '600',
   })
-  const [codeTab, setCodeTab] = useState<'iframe' | 'js' | 'react'>('iframe')
   const [copied, setCopied] = useState(false)
 
   // Al cargar los tipos, seleccionar todos por defecto (una vez).
@@ -58,40 +57,7 @@ export default function EmbedPage() {
   title="Calendario Theos Place"
 ></iframe>`
 
-  const jsCode = `<!-- Calendario Theos Place -->
-<div id="theos-calendar"></div>
-<script>
-  window.TheosCalendarConfig = {
-    container: '#theos-calendar',
-    view: '${cfg.view}',
-    types: ${JSON.stringify(cfg.types)},
-    colors: { primary: '${cfg.primary}', accent: '${cfg.accent}', background: '${cfg.bg}' },
-    showDescription: ${cfg.showDesc},
-    showLocation: ${cfg.showLoc},
-    showRegistrationButton: ${cfg.showBtn},
-    language: '${cfg.lang}',
-    height: '${cfg.height}px'
-  };
-<\/script>
-<script src="https://admin.theosplace.org/embed/calendar.js" async><\/script>`
-
-  const reactCode = `import { TheosCalendar } from '@theosplace/calendar-widget'
-
-export default function MiPagina() {
-  return (
-    <TheosCalendar
-      view="${cfg.view}"
-      types={${JSON.stringify(cfg.types)}}
-      colors={{ primary: '${cfg.primary}', accent: '${cfg.accent}' }}
-      showRegistrationButton={${cfg.showBtn}}
-      language="${cfg.lang}"
-      height="${cfg.height}px"
-    />
-  )
-}`
-
-  const codeMap = { iframe: iframeCode, js: jsCode, react: reactCode }
-  const currentCode = codeMap[codeTab]
+  const currentCode = iframeCode
 
   function handleCopy() {
     navigator.clipboard.writeText(currentCode).then(() => {
@@ -211,7 +177,7 @@ export default function MiPagina() {
                 { key: 'showDesc' as const, label: 'Mostrar descripción' },
                 { key: 'showLoc' as const, label: 'Mostrar ubicación' },
                 { key: 'showBtn' as const, label: 'Mostrar botón de inscripción' },
-                { key: 'showPast' as const, label: 'Mostrar eventos pasados' },
+                // 'Mostrar eventos pasados' se quitó: no afectaba ni el preview ni el código.
               ].map(({ key, label }) => (
                 <label key={key} className="flex items-center gap-2.5 cursor-pointer">
                   <input
@@ -274,27 +240,9 @@ export default function MiPagina() {
           {/* Generated code */}
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-b-[var(--outline-variant)]">
-              <div className="flex gap-1">
-                {(['iframe', 'js', 'react'] as const).map(tab => {
-                  const labels = { iframe: 'iFrame', js: 'JavaScript', react: 'React' }
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setCodeTab(tab)}
-                      className={cn(
-                        'rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all',
-                        codeTab === tab
-                          ? 'bg-navy text-white'
-                          : 'text-navy-light/60 hover:bg-surface-low',
-                        'font-body'
-                      )}
-                    >
-                      {labels[tab]}
-                    </button>
-                  )
-                })}
-              </div>
+              {/* Solo iFrame: los snippets de JavaScript/React referenciaban
+                  calendar.js y @theosplace/calendar-widget, que no existen. */}
+              <span className="rounded-lg px-3 py-1.5 text-[12px] font-medium bg-navy text-white font-body">iFrame</span>
               <button
                 type="button"
                 onClick={handleCopy}

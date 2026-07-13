@@ -40,6 +40,8 @@ export type GroupParticipant = {
   member_id: string
   member_name: string
   status: 'enrolled' | 'pending' | 'withdrawn'
+  /** Resultado del cierre (solo en grupos finalizados): derivado de notes. */
+  result?: 'aprobado' | 'reprobado' | null
   grade: number | null
   attendance_pct: number
 }

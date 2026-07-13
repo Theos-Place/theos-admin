@@ -56,7 +56,6 @@ export default function ImportarDonacionesPage() {
   const [fileName, setFileName] = useState('')
   const [rows, setRows] = useState<PreviewRow[]>([])
   const [updateDonorStatus, setUpdateDonorStatus] = useState(true)
-  const [applyFamilyLogic, setApplyFamilyLogic] = useState(false)
   const [toast, setToast] = useState('')
   const [importing, setImporting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -96,6 +95,7 @@ export default function ImportarDonacionesPage() {
         body: JSON.stringify({
           filename: fileName || 'donaciones.csv',
           rows: rows.map(r => ({ cedula: r.cedula || null, donation_date: r.date, amount: r.amount })),
+          update_donor_status: updateDonorStatus,
         }),
       })
       if (!res.ok) throw new Error()
@@ -316,22 +316,8 @@ export default function ImportarDonacionesPage() {
                   </p>
                 </div>
               </label>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={applyFamilyLogic}
-                  onChange={e => setApplyFamilyLogic(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded accent-navy"
-                />
-                <div>
-                  <p className="text-sm font-medium font-body text-navy">
-                    Aplicar lógica familiar
-                  </p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
-                    Agrupa donaciones de miembros del mismo núcleo familiar
-                  </p>
-                </div>
-              </label>
+              {/* "Lógica familiar" se quitó: el backend no la implementa y el
+                  checkbox se descartaba en silencio. */}
             </div>
 
             <div className="flex items-center gap-3">

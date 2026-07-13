@@ -243,6 +243,30 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
+  const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string } | null>(null)
+  const [withdrawing, setWithdrawing] = useState(false)
+  const [withdrawError, setWithdrawError] = useState(false)
+
+  async function confirmWithdraw() {
+    if (!withdrawTarget || withdrawing) return
+    setWithdrawing(true)
+    setWithdrawError(false)
+    try {
+      const res = await fetch(`/api/studies/groups/${id}/enrollments`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: withdrawTarget.member_id, reason: 'Desinscrito desde el grupo' }),
+      })
+      if (!res.ok) throw new Error()
+      setWithdrawTarget(null)
+      refetch()
+    } catch {
+      setWithdrawError(true)
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
   // null = sin guardado local en esta sesión; se muestra el valor del servidor
   // (que llega async — un useState inicial quedaría vacío).
   const [waSaved, setWaSaved] = useState<string | null>(null)
@@ -321,6 +345,37 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           onClose={() => setShowAddMember(false)}
           onEnrolled={refetch}
         />
+      )}
+      {withdrawTarget && (
+        <Modal onClose={() => setWithdrawTarget(null)} titleId="desinscribir-titulo" width={400}>
+          <div className="p-5 space-y-4">
+            <h3 id="desinscribir-titulo" className="font-semibold text-navy font-display">Desinscribir participante</h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              ¿Desinscribir a <strong>{withdrawTarget.member_name}</strong> de este grupo?
+              Quedará como retirado y conservará su historial.
+            </p>
+            {withdrawError && (
+              <p className="text-sm text-coral font-body" role="alert">
+                No se pudo desinscribir. Intentá de nuevo.
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={confirmWithdraw}
+                disabled={withdrawing}
+                className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+              >
+                {withdrawing ? 'Desinscribiendo…' : 'Desinscribir'}
+              </button>
+              <button
+                onClick={() => setWithdrawTarget(null)}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
       {showSendMessage && (
         <SendMessageModal
@@ -447,9 +502,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       {group.status === 'finalizado' ? (
                         <span className={cn(
                           'rounded-md px-2 py-0.5 text-[10px] font-medium',
-                          p.status === 'withdrawn' ? 'bg-coral/15 text-coral' : 'bg-teal-soft/30 text-teal-deep'
+                          p.status === 'withdrawn' ? 'bg-surface-low text-navy-light/60'
+                            : p.result === 'reprobado' ? 'bg-coral/15 text-coral'
+                            : 'bg-teal-soft/30 text-teal-deep'
                         )}>
-                          {p.status === 'withdrawn' ? 'Reprobó' : 'Aprobado'}
+                          {p.status === 'withdrawn' ? 'Retirado' : p.result === 'reprobado' ? 'Reprobó' : 'Aprobado'}
                         </span>
                       ) : (
                         <span className={cn(
@@ -472,8 +529,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     )}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        {group.status !== 'finalizado' && (
+                        {group.status !== 'finalizado' && p.status !== 'withdrawn' && (
                           <button
+                            onClick={() => { setWithdrawError(false); setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name }) }}
                             className="rounded-lg px-2 py-1 text-[10px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
                           >
                             Desinscribir
@@ -658,11 +716,12 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
 
           {group.status !== 'finalizado' && (
             <div className="flex gap-2 pt-2 border-t border-[var(--outline-variant)]">
-              <button
+              <Link
+                href={`/estudios/grupos/${id}/editar`}
                 className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
               >
                 Cambiar dirigente
-              </button>
+              </Link>
             </div>
           )}
         </div>

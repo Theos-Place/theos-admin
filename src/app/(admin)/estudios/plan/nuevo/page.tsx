@@ -90,11 +90,11 @@ export default function NuevoTipoPage() {
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
+  // Selección ÚNICA: el modelo de datos soporta UN prerequisito por plan
+  // (prerequisite_code); la multi-selección anterior descartaba en silencio
+  // todos menos el primero.
   function togglePrerequisito(code: string) {
-    set('prerequisitos', form.prerequisitos.includes(code)
-      ? form.prerequisitos.filter(c => c !== code)
-      : [...form.prerequisitos, code]
-    )
+    set('prerequisitos', form.prerequisitos.includes(code) ? [] : [code])
   }
 
   async function handleSave(active: boolean) {
@@ -223,8 +223,11 @@ export default function NuevoTipoPage() {
       {/* Prerequisitos */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
-          Prerequisitos
+          Prerrequisito
         </h2>
+        <p className="text-[12px] text-navy-light/60 font-body">
+          Elegí el estudio que debe estar completado antes de matricular este (uno solo).
+        </p>
 
         {[
           { label: 'Niveles',         items: niveles },

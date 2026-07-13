@@ -15,7 +15,7 @@ import { useFinance } from '@/hooks/useFinance'
 import { formatDate } from '@/lib/format'
 
 export default function FinanzasPage() {
-  const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS, refunds: MOCK_REFUNDS } = useFinance()
+  const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS, refunds: MOCK_REFUNDS, scholarships } = useFinance()
   const [period, setPeriod] = useState<'month' | 'prev_month' | 'year'>('month')
   const [revealAll, setRevealAll] = useState(false)
 
@@ -62,7 +62,7 @@ export default function FinanzasPage() {
     const d = new Date(p.created_at)
     return (now.getTime() - d.getTime()) < 7 * 24 * 60 * 60 * 1000
   })
-  const unusedScholarships: number = 3 // from MOCK_SCHOLARSHIPS where !is_used
+  const unusedScholarships = scholarships.filter(s => !s.is_used).length
 
   const recentPayments = [...MOCK_PAYMENTS]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())

@@ -379,11 +379,12 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
           >
+            {/* Los values coinciden con GroupStatus real (antes había opciones
+                en inglés que nunca matcheaban y devolvían "Sin resultados"). */}
             <option value="all">Todos los estados</option>
-            <option value="open">Abierto</option>
-            <option value="in_progress">En curso</option>
             <option value="en_matricula">En matrícula</option>
-            <option value="finished">Finalizado</option>
+            <option value="en_curso">En curso</option>
+            <option value="finalizado">Finalizado</option>
           </select>
 
           <select

@@ -536,15 +536,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                 <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Capacidad máxima</label>
                 <input type="number" className={cn(inputCls, 'font-body')} value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
               </div>
-              <div className="space-y-1">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Prerrequisito</label>
-                <select className={cn(inputCls, 'font-body')}>
-                  <option value="">Sin prerrequisito</option>
-                  <option value="member">Ser miembro activo</option>
-                  <option value="server">Ser servidor activo</option>
-                  <option value="n1">Haber completado N1</option>
-                </select>
-              </div>
+              {/* "Prerrequisito" se quitó: los eventos no tienen ese campo en la
+                  BD y el select no estaba conectado a nada. */}
             </div>
           )}
         </div>

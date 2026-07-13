@@ -61,6 +61,8 @@ export type DbGroupEnriched = {
     member_id: string
     status: 'enrolled' | 'waitlist' | 'completed' | 'dropped' | 'transferred'
     grade: number | null
+    /** Resultado del cierre: 'aprobado' o 'reprobado: <motivo>'. */
+    notes: string | null
     member: { first_name: string; last_name: string } | null
   }>
 }
@@ -301,7 +303,7 @@ const GROUP_SELECT = `
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(
-    member_id, status, grade,
+    member_id, status, grade, notes,
     member:members(first_name, last_name)
   )
 `

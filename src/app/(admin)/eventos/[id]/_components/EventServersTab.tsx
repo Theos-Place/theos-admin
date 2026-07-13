@@ -1,4 +1,4 @@
-import { Check, Clock, X as XIcon, UserPlus, Search, Link2, Send } from 'lucide-react'
+import { Check, Clock, X as XIcon, UserPlus, Search, Send } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { RowActionsMenu } from '@/components/shared/RowActionsMenu'
@@ -39,8 +39,6 @@ type Props = {
   pendingCount: number
   declinedCount: number
   isRecurring: boolean
-  recurringGlobal: boolean
-  onRecurringGlobalToggle: () => void
   onRemoveBooking: (id: string) => void
   showAssignModal: boolean
   onShowAssignModal: () => void
@@ -58,8 +56,6 @@ type Props = {
   onAssignRoleChange: (val: string) => void
   customRole: string
   onCustomRoleChange: (val: string) => void
-  assignRecurring: boolean
-  onAssignRecurringToggle: () => void
   onResetModal: () => void
   onConfirmAssignment: () => void
   serverToast: string | null
@@ -74,8 +70,6 @@ export function EventServersTab({
   pendingCount,
   declinedCount,
   isRecurring,
-  recurringGlobal,
-  onRecurringGlobalToggle,
   onRemoveBooking,
   showAssignModal,
   onShowAssignModal,
@@ -93,8 +87,6 @@ export function EventServersTab({
   onAssignRoleChange,
   customRole,
   onCustomRoleChange,
-  assignRecurring,
-  onAssignRecurringToggle,
   onResetModal,
   onConfirmAssignment,
   serverToast,
@@ -118,16 +110,12 @@ export function EventServersTab({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Los volunteers viven en el evento padre: en un recurrente SIEMPRE
+              aplican a toda la serie. El toggle anterior no controlaba nada. */}
           {isRecurring && (
-            <label className="flex items-center gap-2 cursor-pointer" title="Los servidores asignados se repetirán automáticamente en cada fecha de la serie">
-              <div
-                onClick={onRecurringGlobalToggle}
-                className={cn('relative h-5 w-9 rounded-full transition-colors cursor-pointer', recurringGlobal ? 'bg-coral' : 'bg-navy-light/20')}
-              >
-                <div className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', recurringGlobal ? 'translate-x-4' : 'translate-x-0')} />
-              </div>
-              <span className="text-[12px] text-navy-light/60 font-body">Aplicar a toda la serie</span>
-            </label>
+            <span className="text-[12px] text-navy-light/60 font-body">
+              Los servidores asignados aplican a todas las fechas de la serie.
+            </span>
           )}
           <button
             onClick={() => { onShowAssignModal(); setModalStep(1) }}
@@ -165,11 +153,8 @@ export function EventServersTab({
                         )}>
                           {b.status === 'confirmed' ? '✓ Confirmado' : b.status === 'pending' ? '⏳ Pendiente' : '✗ Declinó'}
                         </span>
-                        {b.is_recurring && (
-                          <span className="text-[10px] text-navy-light/60 font-body">
-                            <Link2 size={10} className="inline" /> Serie
-                          </span>
-                        )}
+                        {/* Badge "Serie" eliminado: is_recurring era estado local
+                            decorativo, no un dato persistido. */}
                       </div>
                     </div>
                     <div className="shrink-0">
@@ -178,7 +163,7 @@ export function EventServersTab({
                         width={160}
                         triggerClassName="hover:bg-surface-card"
                         actions={[
-                          { label: 'Cambiar rol' },
+                          // Para cambiar de rol: Quitar y volver a asignar (no hay edición in-place).
                           { label: 'Quitar', onClick: () => onRemoveBooking(b.id), danger: true },
                         ]}
                       />
@@ -314,22 +299,9 @@ export function EventServersTab({
                   </div>
 
                   {isRecurring && (
-                    <label className="flex items-start gap-3 cursor-pointer rounded-xl bg-surface-low px-3 py-2.5">
-                      <div
-                        onClick={onAssignRecurringToggle}
-                        className={cn('relative h-5 w-9 rounded-full transition-colors cursor-pointer mt-0.5 shrink-0', assignRecurring ? 'bg-coral' : 'bg-navy-light/20')}
-                      >
-                        <div className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', assignRecurring ? 'translate-x-4' : 'translate-x-0')} />
-                      </div>
-                      <div>
-                        <p className="text-sm text-navy font-body">Booking recurrente</p>
-                        {assignRecurring && (
-                          <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
-                            Esta persona quedará asignada a todas las instancias futuras de esta serie
-                          </p>
-                        )}
-                      </div>
-                    </label>
+                    <p className="rounded-xl bg-surface-low px-3 py-2.5 text-[12px] text-navy-light/60 font-body">
+                      Este evento es recurrente: la persona quedará asignada a todas las fechas de la serie.
+                    </p>
                   )}
                 </>
               )}

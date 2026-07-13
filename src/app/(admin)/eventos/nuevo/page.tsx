@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, Suspense } from 'react'
+import { useState, useMemo, useRef, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
@@ -125,6 +125,16 @@ function NuevoEventoForm() {
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
   }
+
+  // El wizard no guarda borradores: si hay trabajo empezado, avisar antes de
+  // recargar/cerrar la pestaña (sin esto los 4 pasos se pierden sin aviso).
+  const dirty = !published && (form.name.trim() !== '' || form.description !== '' || form.sub_events.length > 0)
+  useEffect(() => {
+    if (!dirty) return
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault() }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [dirty])
 
 
   function addSubEvent() {
@@ -252,9 +262,6 @@ function NuevoEventoForm() {
             <div className="psub">Completá los pasos para publicar un nuevo evento</div>
           </div>
           <div className="ph-actions">
-            <button type="button" className="btn btn-ghost btn-sm">
-              Guardar borrador
-            </button>
             {/* "Siguiente" va al pie del paso; arriba solo Publicar (último paso). */}
             {step === STEPS_COUNT && (
               <button
@@ -355,7 +362,6 @@ function NuevoEventoForm() {
               newSubCap={newSubCap}
               requires_registration={form.requires_registration}
               max_capacity={form.max_capacity}
-              prerequisite={form.prerequisite}
               has_satisfaction_survey={form.has_satisfaction_survey}
               onSetShowSubEventForm={setShowSubEventForm}
               onNewSubNameChange={setNewSubName}
@@ -364,7 +370,6 @@ function NuevoEventoForm() {
               onRemoveSubEvent={removeSubEvent}
               onToggleRegistration={() => set('requires_registration', !form.requires_registration)}
               onMaxCapacityChange={v => set('max_capacity', v)}
-              onPrerequisiteChange={v => set('prerequisite', v)}
               onToggleSatisfactionSurvey={() => set('has_satisfaction_survey', !form.has_satisfaction_survey)}
             />
           )}

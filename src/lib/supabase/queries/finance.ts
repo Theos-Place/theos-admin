@@ -436,10 +436,13 @@ export type DonationRow = {
 }
 
 /** Importa un lote de donaciones: identifica por cédula, detecta duplicados
- *  (mismo miembro+fecha+monto ya existente) y crea el registro del lote. */
+ *  (mismo miembro+fecha+monto, tanto contra la BD como dentro del mismo
+ *  archivo) y crea el registro del lote. `updateDonorStatus` marca is_donor
+ *  a los miembros identificados. */
 export async function importDonations(
   filename: string,
   rows: DonationRow[],
+  opts: { updateDonorStatus?: boolean } = {},
 ): Promise<DbImportBatch> {
   const supabase = createAdminClient()
 
@@ -462,14 +465,19 @@ export async function importDonations(
   let identified = 0
   let duplicates = 0
   const toInsert: Array<Record<string, unknown>> = []
+  // Dedup DENTRO del archivo: dos filas idénticas en el mismo CSV (o el mismo
+  // CSV reimportado con filas sin cédula) se insertaban ambas.
+  const seenInFile = new Set<string>()
 
   for (const r of rows) {
     const memberId = r.cedula ? cedulaToId.get(r.cedula) ?? null : null
     const isIdentified = memberId != null
     if (isIdentified) identified++
 
+    const fileKey = `${memberId ?? r.cedula ?? ''}|${r.donation_date}|${r.amount}`
     let isDup = false
-    if (memberId) {
+    if (seenInFile.has(fileKey)) { isDup = true; duplicates++ }
+    else if (memberId) {
       const { count } = await supabase
         .from('donations')
         .select('id', { count: 'exact', head: true })
@@ -478,6 +486,7 @@ export async function importDonations(
         .eq('amount', r.amount)
       if ((count ?? 0) > 0) { isDup = true; duplicates++ }
     }
+    seenInFile.add(fileKey)
     if (isDup) continue
 
     toInsert.push({
@@ -492,6 +501,18 @@ export async function importDonations(
   if (toInsert.length > 0) {
     const { error: dErr } = await supabase.from('donations').insert(toInsert as Insertable<'donations'>[])
     if (dErr) throw dErr
+  }
+
+  // 2b. Marcar como donadores a los miembros identificados (opcional).
+  if (opts.updateDonorStatus) {
+    const donorIds = [...new Set([...cedulaToId.values()])]
+    for (let i = 0; i < donorIds.length; i += 300) {
+      const { error: uErr } = await supabase
+        .from('members').update({ is_donor: true })
+        .in('id', donorIds.slice(i, i + 300))
+        .eq('is_donor', false)
+      if (uErr) console.warn('importDonations is_donor:', uErr.message)
+    }
   }
 
   // 3. Registrar el lote.

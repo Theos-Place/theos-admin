@@ -10,18 +10,8 @@ import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 
 const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
-const ENTITIES = [
-  { id: 'all', name: 'Todas las entidades' },
-  { id: 'evt-camp-jun25', name: 'Campamento Junio 2025' },
-  { id: 'evt-retiro-lid', name: 'Retiro de Liderazgo' },
-  { id: 'evt-taller-fin', name: 'Taller de Finanzas' },
-  { id: 'evt-adoracion',  name: 'Noche de Adoración' },
-  { id: 'evt-camp-ver26', name: 'Campamento Verano 2026' },
-  { id: 'grp-alpha',      name: 'Grupo Alpha' },
-  { id: 'grp-omega',      name: 'Grupo Omega' },
-  { id: 'grp-genesis',    name: 'Grupo Génesis' },
-  { id: 'grp-esperanza',  name: 'Grupo Esperanza' },
-]
+// Las entidades del filtro se derivan de los pagos reales (antes era una
+// lista mock cuyos ids no matcheaban nada: filtrar vaciaba la tabla).
 
 export default function ReportesPage() {
   const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS } = useFinance()
@@ -42,10 +32,19 @@ export default function ReportesPage() {
   }, [donDateFrom, donDateTo])
 
   // Payments tab
+  const entities = useMemo(() => {
+    const byId = new Map<string, string>()
+    for (const p of MOCK_PAYMENTS) {
+      if (p.entity_id && !byId.has(p.entity_id)) byId.set(p.entity_id, p.entity_name || p.entity_id)
+    }
+    return [{ id: 'all', name: 'Todas las entidades' },
+      ...[...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'es'))]
+  }, [MOCK_PAYMENTS])
+
   const filteredPayments = useMemo(() => {
     if (entityFilter === 'all') return MOCK_PAYMENTS
     return MOCK_PAYMENTS.filter(p => p.entity_id === entityFilter)
-  }, [entityFilter])
+  }, [entityFilter, MOCK_PAYMENTS])
 
   const paidPayments = filteredPayments.filter(p => p.status === 'paid')
   const pendingPayments = filteredPayments.filter(p => p.status === 'pending')
@@ -198,7 +197,7 @@ export default function ReportesPage() {
             <div className="flex flex-wrap items-center gap-3">
               <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)}
                 className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
-                {ENTITIES.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                {entities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
               <button onClick={exportPaymentsCSV}
                 className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">

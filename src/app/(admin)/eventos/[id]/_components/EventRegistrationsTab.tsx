@@ -6,6 +6,7 @@ import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import type { MockEvent } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
+import { generateCSV } from '@/lib/export'
 
 type Event = MockEvent
 type PaymentStatus = 'pending' | 'paid' | 'exempted'
@@ -119,7 +120,22 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           >
             <UserPlus size={13} /> Inscribir
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body">
+          <button
+            onClick={() => {
+              const labels: Record<string, string> = { paid: 'Pagado', pending: 'Pendiente', exempted: 'Exento' }
+              generateCSV(
+                ['Nombre', 'Fecha de inscripción', 'Pago'],
+                event.registrations.map(r => [
+                  r.member_name,
+                  new Date(r.registered_at).toLocaleDateString('es-CR'),
+                  labels[r.payment_status] ?? r.payment_status,
+                ]),
+                'inscritos',
+              )
+            }}
+            disabled={event.registrations.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
+          >
             <Download size={13} /> Exportar
           </button>
           {onSendMessage && (

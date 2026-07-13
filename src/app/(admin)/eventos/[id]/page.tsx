@@ -199,8 +199,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
   const [assignRole, setAssignRole] = useState('')
   const [customRole, setCustomRole] = useState('')
-  const [assignRecurring, setAssignRecurring] = useState(false)
-  const [recurringGlobal, setRecurringGlobal] = useState(false)
   const [serverToast, setServerToast] = useState<string | null>(null)
   // undefined = sin cambio local; se muestra el flyer del servidor (que llega async).
   const [flyerOverride, setFlyerOverride] = useState<string | null | undefined>(undefined)
@@ -358,7 +356,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     setSelectedMemberId(null)
     setAssignRole('')
     setCustomRole('')
-    setAssignRecurring(false)
     setShowAssignModal(false)
   }
 
@@ -575,8 +572,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           pendingCount={pendingCount}
           declinedCount={declinedCount}
           isRecurring={event.is_recurring}
-          recurringGlobal={recurringGlobal}
-          onRecurringGlobalToggle={() => setRecurringGlobal(v => !v)}
           onRemoveBooking={removeBooking}
           showAssignModal={showAssignModal}
           onShowAssignModal={() => setShowAssignModal(true)}
@@ -594,8 +589,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           onAssignRoleChange={setAssignRole}
           customRole={customRole}
           onCustomRoleChange={setCustomRole}
-          assignRecurring={assignRecurring}
-          onAssignRecurringToggle={() => setAssignRecurring(v => !v)}
           onResetModal={resetModal}
           onConfirmAssignment={confirmAssignment}
           serverToast={serverToast}
