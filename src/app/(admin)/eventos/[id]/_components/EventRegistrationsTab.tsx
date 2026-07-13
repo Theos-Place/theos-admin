@@ -34,7 +34,8 @@ type Props = {
   eventId: string
   registrationCount: number
   circumference: number
-  onSendMessage: () => void
+  /** Ausente cuando el usuario no tiene rol de comunicaciones (oculta el botón). */
+  onSendMessage?: () => void
   onChanged: () => void
 }
 
@@ -121,12 +122,14 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           <button className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body">
             <Download size={13} /> Exportar
           </button>
-          <button
-            onClick={onSendMessage}
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
-          >
-            <Send size={13} /> Enviar recordatorio
-          </button>
+          {onSendMessage && (
+            <button
+              onClick={onSendMessage}
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+            >
+              <Send size={13} /> Enviar recordatorio
+            </button>
+          )}
         </div>
       </div>
 

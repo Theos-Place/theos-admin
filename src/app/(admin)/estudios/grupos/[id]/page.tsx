@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
+import { usePermissions } from '@/hooks/usePermissions'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge } from '@/components/studies/GroupStatusBadge'
@@ -116,10 +117,62 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
   )
 }
 
-function SendMessageModal({ onClose }: { onClose: () => void }) {
-  const [channel, setChannel] = useState<'whatsapp' | 'email'>('whatsapp')
+/** Envío REAL vía el módulo de comunicaciones (correo + notificación interna
+ *  a los participantes activos). El botón está gateado por
+ *  can('comunicaciones','create') — los endpoints exigen ese rol. */
+function SendMessageModal({ groupName, memberIds, onClose }: {
+  groupName: string
+  memberIds: string[]
+  onClose: () => void
+}) {
+  const [subject, setSubject] = useState(`Grupo ${groupName}`)
   const [msg, setMsg] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+
+  async function handleSend() {
+    if (sending) return
+    setSending(true)
+    setError(null)
+    try {
+      const createRes = await fetch('/api/communications/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: 'email',
+          kind: 'transactional',
+          subject,
+          body: msg,
+          body_format: 'text',
+          segment_label: `Grupo · ${groupName}`,
+          total_recipients: memberIds.length,
+          smtp_config_id: null,
+          whatsapp_config_id: null,
+        }),
+      })
+      if (!createRes.ok) throw new Error()
+      const { id } = await createRes.json()
+      const recipients = memberIds.flatMap(mid => [
+        { member_id: mid, channel: 'email', recipient: '' },
+        { member_id: mid, channel: 'interna', recipient: '' },
+      ])
+      const sendRes = await fetch(`/api/communications/messages/${id}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipients }),
+      })
+      if (!sendRes.ok) {
+        const d = await sendRes.json().catch(() => null)
+        throw new Error(d?.error)
+      }
+      setSent(true)
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : 'No se pudo enviar el mensaje. Intentá de nuevo.')
+    } finally {
+      setSending(false)
+    }
+  }
 
   if (sent) {
     return (
@@ -127,6 +180,10 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
         <div className="p-6 text-center space-y-3">
           <Send size={32} className="text-teal-deep mx-auto" />
           <p id="mensaje-enviado-title" className="font-semibold text-navy font-display">Mensaje enviado</p>
+          <p className="text-sm text-navy-light/70 font-body">
+            Se envió a {memberIds.length} participante{memberIds.length !== 1 ? 's' : ''} (correo + notificación).
+            Podés ver el estado en Comunicaciones.
+          </p>
           <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors">
             Cerrar
           </button>
@@ -139,35 +196,31 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
     <Modal onClose={onClose} titleId="enviar-mensaje-grupo-title" width={384}>
       <div className="p-5 space-y-4">
         <h3 id="enviar-mensaje-grupo-title" className="font-semibold text-navy font-display">Enviar mensaje al grupo</h3>
-        <div className="flex gap-2">
-          {['whatsapp', 'email'].map(c => (
-            <button
-              key={c}
-              onClick={() => setChannel(c as 'whatsapp' | 'email')}
-              className={cn(
-                'flex-1 rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all',
-                channel === c ? 'bg-navy text-white border-navy' : 'text-navy-light hover:bg-surface-low',
-                'border-[var(--outline-variant)] font-display',
-              )}
-            >
-              {c === 'whatsapp' ? 'WhatsApp' : 'Correo'}
-            </button>
-          ))}
-        </div>
+        <p className="text-sm text-navy-light/70 font-body">
+          Va por correo y notificación interna a {memberIds.length} participante{memberIds.length !== 1 ? 's' : ''} activo{memberIds.length !== 1 ? 's' : ''}.
+        </p>
+        <input
+          aria-label="Asunto"
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          value={subject}
+          onChange={e => setSubject(e.target.value)}
+        />
         <textarea
+          aria-label="Mensaje"
           className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
           rows={4}
           placeholder="Escribe tu mensaje..."
           value={msg}
           onChange={e => setMsg(e.target.value)}
         />
+        {error && <p className="text-sm text-coral font-body" role="alert">{error}</p>}
         <div className="flex gap-2">
           <button
-            onClick={() => setSent(true)}
-            disabled={!msg.trim()}
+            onClick={handleSend}
+            disabled={!msg.trim() || !subject.trim() || memberIds.length === 0 || sending}
             className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
           >
-            Enviar
+            {sending ? 'Enviando…' : 'Enviar'}
           </button>
           <button
             onClick={onClose}
@@ -184,11 +237,39 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
 export default function GrupoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { group, studyTypes, refetch, loading } = useGroup(id)
+  const { can } = usePermissions()
+  // El envío usa los endpoints de comunicaciones, que exigen ese rol.
+  const canSendMessage = can('comunicaciones', 'create')
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
-  const [waUrl, setWaUrl] = useState(group?.whatsapp_group_url ?? '')
+  // null = sin guardado local en esta sesión; se muestra el valor del servidor
+  // (que llega async — un useState inicial quedaría vacío).
+  const [waSaved, setWaSaved] = useState<string | null>(null)
+  const waUrl = waSaved ?? group?.whatsapp_group_url ?? ''
   const [waInput, setWaInput] = useState('')
+  const [waSaving, setWaSaving] = useState(false)
+  const [waError, setWaError] = useState(false)
+
+  async function saveWhatsappUrl() {
+    if (!waInput.trim() || waSaving) return
+    setWaSaving(true)
+    setWaError(false)
+    try {
+      const res = await fetch(`/api/studies/groups/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whatsapp_group_url: waInput.trim() }),
+      })
+      if (!res.ok) throw new Error()
+      setWaSaved(waInput.trim())
+      setWaInput('')
+    } catch {
+      setWaError(true)
+    } finally {
+      setWaSaving(false)
+    }
+  }
   const [sessions, setSessions] = useState<Array<{ id: string; date: string; topic: string | null; present: number; total: number }>>([])
 
   useEffect(() => {
@@ -241,7 +322,13 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           onEnrolled={refetch}
         />
       )}
-      {showSendMessage && <SendMessageModal onClose={() => setShowSendMessage(false)} />}
+      {showSendMessage && (
+        <SendMessageModal
+          groupName={group.name ?? 'de estudio'}
+          memberIds={[...new Set(enrolled.map(p => p.member_id).filter((m): m is string => Boolean(m)))]}
+          onClose={() => setShowSendMessage(false)}
+        />
+      )}
 
       {/* Back */}
       <Link
@@ -432,18 +519,25 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 </p>
                 <div className="flex gap-2">
                   <input
+                    aria-label="Link de invitación de WhatsApp"
                     className="flex-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                     placeholder="https://chat.whatsapp.com/..."
                     value={waInput}
                     onChange={e => setWaInput(e.target.value)}
                   />
                   <button
-                    onClick={() => { if (waInput) setWaUrl(waInput) }}
-                    className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
+                    onClick={saveWhatsappUrl}
+                    disabled={!waInput.trim() || waSaving}
+                    className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
                   >
-                    Guardar
+                    {waSaving ? 'Guardando…' : 'Guardar'}
                   </button>
                 </div>
+                {waError && (
+                  <p className="text-sm text-coral font-body" role="alert">
+                    No se pudo guardar el link. Intentá de nuevo.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -510,17 +604,24 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {/* Tab: Comunicaciones */}
       {activeTab === 'comunicaciones' && (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <button
-              onClick={() => setShowSendMessage(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
-            >
-              <Send size={14} /> Enviar mensaje
-            </button>
-          </div>
+          {canSendMessage && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowSendMessage(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
+              >
+                <Send size={14} /> Enviar mensaje
+              </button>
+            </div>
+          )}
 
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-            <EmptyState icon={MessageCircle} title="No hay comunicaciones registradas para este grupo" />
+            <EmptyState
+              icon={MessageCircle}
+              title={canSendMessage
+                ? 'Los mensajes enviados desde acá quedan registrados en el módulo de Comunicaciones'
+                : 'El envío de mensajes requiere el rol de comunicaciones'}
+            />
           </div>
         </div>
       )}

@@ -345,6 +345,20 @@ export async function markScholarshipUsed(id: string): Promise<void> {
   if (error) throw error
 }
 
+/** Revoca (borra) una beca SIN usar. Una beca ya aplicada a un pago no se
+ *  revoca — el descuento ya ocurrió. Devuelve false si no había fila sin usar. */
+export async function revokeScholarship(id: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('scholarships')
+    .delete()
+    .eq('id', id)
+    .eq('is_used', false)
+    .select('id')
+  if (error) throw error
+  return (data ?? []).length > 0
+}
+
 export type RefundWriteInput = {
   payment_id: string
   member_id?: string | null
@@ -362,12 +376,28 @@ export async function createRefund(input: RefundWriteInput): Promise<{ id: strin
   return data as { id: string }
 }
 
-/** Cambia el estado de una devolución. Al completar, marca el pago como reembolsado. */
-export async function processRefund(id: string, status: RefundStatus): Promise<void> {
+/** Cambia el estado de una devolución. Al completar, marca el pago como
+ *  reembolsado. `details` persiste lo que el revisor digita en el modal
+ *  (fecha real de la transferencia, nº de confirmación, motivo del rechazo). */
+export async function processRefund(
+  id: string,
+  status: RefundStatus,
+  details?: { processedDate?: string | null; confirmation?: string | null; rejectReason?: string | null },
+): Promise<void> {
   const supabase = createAdminClient()
   const patch: Record<string, unknown> = { status }
   if (status === 'completed' || status === 'rejected') {
-    patch.processed_at = new Date().toISOString()
+    patch.processed_at = details?.processedDate
+      ? new Date(`${details.processedDate}T12:00:00`).toISOString() // mediodía: evita corrimiento de día por TZ
+      : new Date().toISOString()
+  }
+  const extras: string[] = []
+  if (details?.confirmation) extras.push(`Confirmación: ${details.confirmation}`)
+  if (details?.rejectReason) extras.push(`Motivo del rechazo: ${details.rejectReason}`)
+  if (extras.length > 0) {
+    const { data: cur } = await supabase.from('refunds').select('notes').eq('id', id).maybeSingle()
+    const prev = (cur as { notes?: string | null } | null)?.notes
+    patch.notes = [prev, ...extras].filter(Boolean).join('\n')
   }
   const { data, error } = await supabase.from('refunds').update(patch as Updatable<'refunds'>).eq('id', id).select('payment_id').single()
   if (error) throw error

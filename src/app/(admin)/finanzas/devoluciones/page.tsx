@@ -54,8 +54,13 @@ export default function DevolucionesPage() {
   }), [refunds])
 
   async function handleComplete() {
-    if (!completeTarget) return
+    if (!completeTarget || !completionDate || !completionConf.trim()) return
     const target = completeTarget
+    const body = {
+      status: 'completed',
+      processed_date: completionDate,
+      confirmation: completionConf.trim(),
+    }
     setCompleteTarget(null)
     setCompletionDate('')
     setCompletionConf('')
@@ -63,7 +68,7 @@ export default function DevolucionesPage() {
       const res = await fetch(`/api/finance/refunds/${target.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error()
       await refetch()
@@ -74,15 +79,16 @@ export default function DevolucionesPage() {
   }
 
   async function handleReject() {
-    if (!rejectTarget) return
+    if (!rejectTarget || !rejectReason.trim()) return
     const target = rejectTarget
+    const body = { status: 'rejected', reject_reason: rejectReason.trim() }
     setRejectTarget(null)
     setRejectReason('')
     try {
       const res = await fetch(`/api/finance/refunds/${target.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'rejected' }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error()
       await refetch()
@@ -353,7 +359,8 @@ export default function DevolucionesPage() {
                 Cancelar
               </button>
               <button onClick={handleComplete}
-                className="flex-1 rounded-full py-2.5 text-sm text-white bg-[#3DB97A] font-body">
+                disabled={!completionDate || !completionConf.trim()}
+                className="flex-1 rounded-full py-2.5 text-sm text-white bg-[#3DB97A] font-body disabled:opacity-40 disabled:cursor-not-allowed">
                 Confirmar
               </button>
             </div>
@@ -383,7 +390,8 @@ export default function DevolucionesPage() {
                 Cancelar
               </button>
               <button onClick={handleReject}
-                className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body">
+                disabled={!rejectReason.trim()}
+                className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body disabled:opacity-40 disabled:cursor-not-allowed">
                 Rechazar
               </button>
             </div>

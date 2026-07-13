@@ -77,14 +77,18 @@ export default function BloquesPage() {
     const year = new Date().getFullYear() + 1
     if (!confirm(`¿Generar los 3 bloques sugeridos de ${year}? Podés ajustar las fechas después.`)) return
     setBusy(true); setMsg(null)
+    let created = 0
     try {
       for (const b of suggestedBlocksForYear(year)) {
-        await fetch('/api/studies/bloques', {
+        const res = await fetch('/api/studies/bloques', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...b, anio: year }),
         })
+        if (res.ok) created++
       }
-      setMsg(`3 bloques de ${year} creados. Ajustá las fechas exactas.`)
+      setMsg(created === 3
+        ? `3 bloques de ${year} creados. Ajustá las fechas exactas.`
+        : `Se crearon ${created} de 3 bloques de ${year}. Revisá y creá los que faltan a mano.`)
       refetch()
     } finally { setBusy(false) }
   }

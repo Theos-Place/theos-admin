@@ -26,15 +26,73 @@ import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { getInitials } from '@/lib/format'
 
-function SendMessageModal({ onClose }: { onClose: () => void }) {
+/** Envío REAL vía el módulo de comunicaciones (correo + notificación interna
+ *  a los inscritos con miembro asociado). El botón que abre este modal está
+ *  gateado por can('comunicaciones','create') — los endpoints exigen ese rol. */
+function SendMessageModal({ eventTitle, memberIds, onClose }: {
+  eventTitle: string
+  memberIds: string[]
+  onClose: () => void
+}) {
+  const [subject, setSubject] = useState(`Evento: ${eventTitle}`)
   const [msg, setMsg] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+
+  async function handleSend() {
+    if (sending) return
+    setSending(true)
+    setError(null)
+    try {
+      const createRes = await fetch('/api/communications/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: 'email',
+          kind: 'transactional',
+          subject,
+          body: msg,
+          body_format: 'text',
+          segment_label: `Inscritos · ${eventTitle}`,
+          total_recipients: memberIds.length,
+          smtp_config_id: null,
+          whatsapp_config_id: null,
+        }),
+      })
+      if (!createRes.ok) throw new Error()
+      const { id } = await createRes.json()
+      const recipients = memberIds.flatMap(mid => [
+        { member_id: mid, channel: 'email', recipient: '' },
+        { member_id: mid, channel: 'interna', recipient: '' },
+      ])
+      const sendRes = await fetch(`/api/communications/messages/${id}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipients }),
+      })
+      if (!sendRes.ok) {
+        const d = await sendRes.json().catch(() => null)
+        throw new Error(d?.error)
+      }
+      setSent(true)
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : 'No se pudo enviar el mensaje. Intentá de nuevo.')
+    } finally {
+      setSending(false)
+    }
+  }
+
   if (sent) {
     return (
       <Modal onClose={onClose} titleId="enviar-mensaje-titulo" width={384}>
         <div className="p-6 text-center space-y-3">
           <Send size={32} className="text-teal-deep mx-auto" />
           <p id="enviar-mensaje-titulo" className="font-semibold text-navy font-display">Mensaje enviado</p>
+          <p className="text-sm text-navy-light/70 font-body">
+            Se envió a {memberIds.length} inscrito{memberIds.length !== 1 ? 's' : ''} (correo + notificación).
+            Podés ver el estado en Comunicaciones.
+          </p>
           <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar</button>
         </div>
       </Modal>
@@ -43,16 +101,33 @@ function SendMessageModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal onClose={onClose} titleId="enviar-mensaje-titulo" width={384}>
       <div className="p-5 space-y-4">
-        <h3 id="enviar-mensaje-titulo" className="font-semibold text-navy font-display">Enviar mensaje</h3>
+        <h3 id="enviar-mensaje-titulo" className="font-semibold text-navy font-display">Enviar mensaje a los inscritos</h3>
+        <p className="text-sm text-navy-light/70 font-body">
+          Va por correo y notificación interna a {memberIds.length} inscrito{memberIds.length !== 1 ? 's' : ''} con miembro asociado.
+        </p>
+        <input
+          aria-label="Asunto"
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          value={subject}
+          onChange={e => setSubject(e.target.value)}
+        />
         <textarea
+          aria-label="Mensaje"
           className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
           rows={4}
           placeholder="Escribe el mensaje para los inscritos..."
           value={msg}
           onChange={e => setMsg(e.target.value)}
         />
+        {error && <p className="text-sm text-coral font-body" role="alert">{error}</p>}
         <div className="flex gap-2">
-          <button onClick={() => setSent(true)} disabled={!msg.trim()} className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">Enviar</button>
+          <button
+            onClick={handleSend}
+            disabled={!msg.trim() || !subject.trim() || memberIds.length === 0 || sending}
+            className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+          >
+            {sending ? 'Enviando…' : 'Enviar'}
+          </button>
           <button onClick={onClose} className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
         </div>
       </div>
@@ -92,6 +167,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const canCheckin = can('eventos', 'edit')
   const canReport  = can('eventos', 'export')
   const canManage  = can('eventos', 'create')
+  // El envío usa los endpoints de comunicaciones, que exigen ese rol.
+  const canSendMessage = can('comunicaciones', 'create')
   const visibleTabs = TABS.filter(t =>
     t === 'informacion' ? true
     : t === 'checkin'   ? canCheckin
@@ -125,8 +202,11 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const [assignRecurring, setAssignRecurring] = useState(false)
   const [recurringGlobal, setRecurringGlobal] = useState(false)
   const [serverToast, setServerToast] = useState<string | null>(null)
-  const [flyerPreview, setFlyerPreview] = useState<string | null>(event?.flyer_url ?? null)
+  // undefined = sin cambio local; se muestra el flyer del servidor (que llega async).
+  const [flyerOverride, setFlyerOverride] = useState<string | null | undefined>(undefined)
+  const flyerPreview = flyerOverride === undefined ? (event?.flyer_url ?? null) : flyerOverride
   const [flyerDragOver, setFlyerDragOver] = useState(false)
+  const [flyerError, setFlyerError] = useState<string | null>(null)
   const flyerInputRef = useRef<HTMLInputElement>(null)
 
   // Servidores derived (hooks deben ir antes de cualquier return condicional)
@@ -321,9 +401,29 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     }
   }
 
+  // Persiste el flyer (data URL, igual que el wizard de creación). Optimista
+  // con rollback: si el PUT falla, se restaura el anterior y se avisa.
+  async function persistFlyer(dataUrl: string | null) {
+    const prev = flyerOverride
+    setFlyerOverride(dataUrl)
+    setFlyerError(null)
+    try {
+      const res = await fetch(`/api/events/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flyer: dataUrl, scope: 'all' }),
+      })
+      if (!res.ok) throw new Error()
+      refetch()
+    } catch {
+      setFlyerOverride(prev)
+      setFlyerError('No se pudo guardar el flyer. Intentá de nuevo.')
+    }
+  }
+
   function handleFlyerSelect(file: File) {
     const reader = new FileReader()
-    reader.onload = (e) => setFlyerPreview(e.target?.result as string)
+    reader.onload = (e) => { void persistFlyer(e.target?.result as string) }
     reader.readAsDataURL(file)
   }
 
@@ -339,25 +439,26 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           eventName={event.name}
           registrationCount={registrationCount}
           onConfirm={async (reason) => {
-            try {
-              const res = await fetch(`/api/events/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'cancel', reason }),
-              })
-              if (!res.ok) throw new Error(`HTTP ${res.status}`)
-              setCancelled(true)
-              refetch()
-            } catch (e) {
-              console.error('No se pudo cancelar el evento:', e)
-            } finally {
-              setShowCancelModal(false)
-            }
+            // Lanza si falla: el modal muestra el error y permite reintentar.
+            const res = await fetch(`/api/events/${id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'cancel', reason }),
+            })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            setCancelled(true)
+            refetch()
           }}
           onClose={() => setShowCancelModal(false)}
         />
       )}
-      {showMessageModal && <SendMessageModal onClose={() => setShowMessageModal(false)} />}
+      {showMessageModal && (
+        <SendMessageModal
+          eventTitle={event.name}
+          memberIds={[...new Set(event.registrations.map(r => r.member_id).filter((m): m is string => Boolean(m)))]}
+          onClose={() => setShowMessageModal(false)}
+        />
+      )}
       {showDeleteScope && (
         <DeleteEventModal
           busy={deleting}
@@ -437,7 +538,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           flyerInputRef={flyerInputRef}
           onFlyerSelect={handleFlyerSelect}
           onFlyerDragOver={setFlyerDragOver}
-          onFlyerClear={() => setFlyerPreview(null)}
+          onFlyerClear={() => { void persistFlyer(null) }}
+          flyerError={flyerError}
+          canEditFlyer={canManage}
         />
       )}
 
@@ -448,7 +551,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           eventId={id}
           registrationCount={registrationCount}
           circumference={circumference}
-          onSendMessage={() => setShowMessageModal(true)}
+          onSendMessage={canSendMessage ? () => setShowMessageModal(true) : undefined}
           onChanged={refetch}
         />
       )}
@@ -503,18 +606,22 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       {/* Tab: Comunicaciones */}
       {activeTab === 'comunicaciones' && (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <button
-              onClick={() => setShowMessageModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-            >
-              <Send size={14} /> Enviar mensaje
-            </button>
-          </div>
+          {canSendMessage && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowMessageModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+              >
+                <Send size={14} /> Enviar mensaje
+              </button>
+            </div>
+          )}
 
           <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)] text-center">
             <p className="text-sm text-navy-light/60 font-body">
-              No hay comunicaciones registradas para este evento.
+              {canSendMessage
+                ? 'Los mensajes enviados desde acá quedan registrados en el módulo de Comunicaciones.'
+                : 'El envío de mensajes requiere el rol de comunicaciones.'}
             </p>
           </div>
         </div>

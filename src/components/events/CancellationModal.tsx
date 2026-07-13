@@ -1,46 +1,36 @@
 'use client'
 
 import { useState } from 'react'
-import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 
 interface CancellationModalProps {
   eventName: string
   registrationCount: number
-  onConfirm: (reason: string) => void
+  /** Ejecuta la cancelación real; debe lanzar si falla (el modal muestra el error). */
+  onConfirm: (reason: string) => Promise<void>
   onClose: () => void
 }
 
-const CHECKLIST_ITEMS = [
-  'Notificando a inscritos...',
-  'Liberando cupos...',
-  'Actualizando estado del evento...',
-  'Registrando motivo de cancelación...',
-  'Evento cancelado correctamente.',
-]
-
 export function CancellationModal({ eventName, registrationCount, onConfirm, onClose }: CancellationModalProps) {
-  const [step, setStep] = useState<1 | 2>(1)
   const [reason, setReason] = useState('')
   const [confirmText, setConfirmText] = useState('')
-  const [visibleItems, setVisibleItems] = useState<number[]>([])
+  const [state, setState] = useState<'form' | 'working' | 'done' | 'error'>('form')
 
   const canConfirm = confirmText === 'CANCELAR' && reason.trim().length > 0
 
-  function handleConfirm() {
-    setStep(2)
-    CHECKLIST_ITEMS.forEach((_, i) => {
-      setTimeout(() => {
-        setVisibleItems(prev => [...prev, i])
-        if (i === CHECKLIST_ITEMS.length - 1) {
-          setTimeout(() => onConfirm(reason), 800)
-        }
-      }, i * 400)
-    })
+  async function handleConfirm() {
+    if (state === 'working') return
+    setState('working')
+    try {
+      await onConfirm(reason)
+      setState('done')
+    } catch {
+      setState('error')
+    }
   }
 
-  if (step === 1) {
+  if (state === 'form' || state === 'error') {
     return (
       <Modal onClose={onClose} titleId="cancelar-evento-titulo" width={448}>
           <>
@@ -54,7 +44,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                   Cancelar evento
                 </h3>
                 <p className="text-[11px] text-navy-light/60 font-body">
-                  Esta acción notificará a {registrationCount} inscritos
+                  El evento quedará cancelado; hay {registrationCount} inscritos
                 </p>
               </div>
             </div>
@@ -85,7 +75,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                 <label
                   className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
                 >
-                  Escribí "CANCELAR" para confirmar
+                  Escribí &quot;CANCELAR&quot; para confirmar
                 </label>
                 <input
                   className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
@@ -95,13 +85,19 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                 />
               </div>
 
+              {state === 'error' && (
+                <p className="text-sm text-coral font-body" role="alert">
+                  No se pudo cancelar el evento. Revisá tu conexión e intentá de nuevo.
+                </p>
+              )}
+
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={handleConfirm}
                   disabled={!canConfirm}
                   className="flex-1 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
                 >
-                  Cancelar evento
+                  {state === 'error' ? 'Reintentar' : 'Cancelar evento'}
                 </button>
                 <button
                   onClick={onClose}
@@ -116,55 +112,39 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
     )
   }
 
-  // Paso 2: overlay de progreso NO cerrable — se queda fuera del Modal compartido a propósito.
+  // working / done: overlay NO cerrable mientras corre la petición real —
+  // fuera del Modal compartido a propósito. El éxito solo se muestra cuando
+  // el servidor respondió OK.
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-navy-ink/60 backdrop-blur-sm" />
       <div
         className="relative rounded-2xl w-full max-w-md mx-4 overflow-hidden bg-surface-card shadow-[var(--shadow-lg)]"
       >
-          <div className="p-6 space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-full bg-teal-soft/30 flex items-center justify-center">
+        <div className="p-6 space-y-4 text-center">
+          {state === 'working' ? (
+            <>
+              <div className="h-8 w-8 mx-auto rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+              <p className="font-semibold text-navy font-display">Cancelando evento…</p>
+            </>
+          ) : (
+            <>
+              <div className="h-10 w-10 mx-auto rounded-full bg-teal-soft/30 flex items-center justify-center">
                 <CheckCircle size={20} className="text-teal-deep" />
               </div>
-              <p className="font-semibold text-navy font-display">
-                Procesando cancelación...
+              <p className="font-semibold text-navy font-display">Evento cancelado</p>
+              <p className="text-sm text-navy-light/70 font-body">
+                El motivo quedó registrado y los cupos fueron liberados.
               </p>
-            </div>
-            <div className="space-y-2">
-              {CHECKLIST_ITEMS.map((item, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'flex items-center gap-2.5 transition-all duration-300',
-                    visibleItems.includes(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'h-4 w-4 rounded-full flex items-center justify-center text-white text-[10px] transition-all',
-                      visibleItems.includes(i)
-                        ? i === CHECKLIST_ITEMS.length - 1 ? 'bg-teal-deep' : 'bg-navy'
-                        : 'bg-navy-light/20'
-                    )}
-                  >
-                    ✓
-                  </div>
-                  <span
-                    className={cn(
-                      'text-sm transition-colors font-body',
-                      i === CHECKLIST_ITEMS.length - 1 && visibleItems.includes(i)
-                        ? 'text-teal-deep font-medium'
-                        : 'text-navy-light/70'
-                    )}
-                  >
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+              <button
+                onClick={onClose}
+                className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+              >
+                Cerrar
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

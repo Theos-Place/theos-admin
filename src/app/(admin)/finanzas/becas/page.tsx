@@ -44,10 +44,24 @@ export default function BecasPage() {
     })
   }, [scholarships, typeFilter, entityFilter, statusFilter])
 
-  function handleRevoke(s: Scholarship) {
-    setScholarships(prev => prev.filter(sc => sc.id !== s.id))
-    setConfirmRevoke(null)
-    showToast(`Beca revocada para ${s.member_name}`)
+  const [revoking, setRevoking] = useState(false)
+  async function handleRevoke(s: Scholarship) {
+    if (revoking) return
+    setRevoking(true)
+    try {
+      const res = await fetch(`/api/finance/scholarships/${s.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const d = await res.json().catch(() => null)
+        throw new Error(d?.error)
+      }
+      setScholarships(prev => prev.filter(sc => sc.id !== s.id))
+      showToast(`Beca revocada para ${s.member_name}`)
+    } catch (e) {
+      showToast(e instanceof Error && e.message ? e.message : 'No se pudo revocar la beca')
+    } finally {
+      setRevoking(false)
+      setConfirmRevoke(null)
+    }
   }
 
   return (

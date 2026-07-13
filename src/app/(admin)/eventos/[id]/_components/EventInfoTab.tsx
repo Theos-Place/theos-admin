@@ -16,6 +16,9 @@ type Props = {
   onFlyerSelect: (file: File) => void
   onFlyerDragOver: (val: boolean) => void
   onFlyerClear: () => void
+  flyerError?: string | null
+  /** Sin permiso de gestión el flyer es solo lectura. */
+  canEditFlyer?: boolean
 }
 
 export function EventInfoTab({
@@ -26,6 +29,8 @@ export function EventInfoTab({
   onFlyerSelect,
   onFlyerDragOver,
   onFlyerClear,
+  flyerError,
+  canEditFlyer = false,
 }: Props) {
   const { adminCommittees } = useOrg()
   const committeeName = event.organizing_committee_ids
@@ -118,43 +123,52 @@ export function EventInfoTab({
             }}
           />
           {!flyerPreview ? (
-            <div
-              onDragOver={(e) => { e.preventDefault(); onFlyerDragOver(true) }}
-              onDragLeave={() => onFlyerDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault()
-                onFlyerDragOver(false)
-                const f = e.dataTransfer.files[0]
-                if (f?.type.startsWith('image/')) onFlyerSelect(f)
-              }}
-              onClick={() => flyerInputRef.current?.click()}
-              className={cn(
-                'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer transition-all',
-                flyerDragOver ? 'border-coral bg-coral/5' : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low'
-              )}
-            >
-              <ImageIcon size={24} className="text-navy-light/60" />
-              <p className="text-[12px] font-medium text-navy-light/60 font-body">
-                Subir flyer
-              </p>
-              <p className="text-[10px] text-navy-light/60 font-body">
-                PNG, JPG, WebP — máx 5MB
-              </p>
-            </div>
+            canEditFlyer ? (
+              <div
+                onDragOver={(e) => { e.preventDefault(); onFlyerDragOver(true) }}
+                onDragLeave={() => onFlyerDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  onFlyerDragOver(false)
+                  const f = e.dataTransfer.files[0]
+                  if (f?.type.startsWith('image/')) onFlyerSelect(f)
+                }}
+                onClick={() => flyerInputRef.current?.click()}
+                className={cn(
+                  'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer transition-all',
+                  flyerDragOver ? 'border-coral bg-coral/5' : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low'
+                )}
+              >
+                <ImageIcon size={24} className="text-navy-light/60" />
+                <p className="text-[12px] font-medium text-navy-light/60 font-body">
+                  Subir flyer
+                </p>
+                <p className="text-[10px] text-navy-light/60 font-body">
+                  PNG, JPG, WebP — máx 5MB
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-navy-light/60 font-body">Sin flyer.</p>
+            )
           ) : (
             <div className="relative rounded-xl overflow-hidden border border-[var(--outline-variant)]">
               <img src={flyerPreview} alt="Flyer del evento" className="w-full object-cover max-h-40" />
-              <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2 bg-[rgba(22,20,64,0.6)]">
-                <button type="button" onClick={() => flyerInputRef.current?.click()}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors font-body">
-                  Cambiar
-                </button>
-                <button type="button" onClick={onFlyerClear}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body">
-                  Eliminar
-                </button>
-              </div>
+              {canEditFlyer && (
+                <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2 bg-[rgba(22,20,64,0.6)]">
+                  <button type="button" onClick={() => flyerInputRef.current?.click()}
+                    className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors font-body">
+                    Cambiar
+                  </button>
+                  <button type="button" onClick={onFlyerClear}
+                    className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body">
+                    Eliminar
+                  </button>
+                </div>
+              )}
             </div>
+          )}
+          {flyerError && (
+            <p className="text-sm text-coral font-body" role="alert">{flyerError}</p>
           )}
         </div>
       </div>
