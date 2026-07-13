@@ -46,15 +46,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Columnas que aceptamos al crear un miembro desde la UI (evita pasar campos
-// que no existen en la tabla, como send_invite).
-const MEMBER_FIELDS = [
-  'cedula', 'first_name', 'last_name', 'birth_date', 'gender', 'marital_status',
-  'phone', 'email', 'province', 'canton', 'district', 'address', 'occupation',
-  'workplace', 'allergies', 'emergency_contact_name', 'emergency_contact_phone',
-  'photo_url', 'is_donor', 'is_active',
-] as const
-
 export async function POST(req: NextRequest) {
   try {
     const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
@@ -62,18 +53,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const sendInvite = Boolean(body?.send_invite)
 
+    const { MEMBER_WRITE_FIELDS, normalizeEmail } = await import('@/lib/supabase/queries/members')
     const payload: Record<string, unknown> = {}
-    for (const k of MEMBER_FIELDS) if (k in body) payload[k] = body[k]
+    for (const k of MEMBER_WRITE_FIELDS) if (k in body) payload[k] = body[k]
 
     // Teléfonos solo dígitos (centralizado): cubre formularios, check-in familia e imports.
     const { normalizePhoneOrNull } = await import('@/lib/phone')
     if ('phone' in payload) payload.phone = normalizePhoneOrNull(payload.phone as string)
     if ('emergency_contact_phone' in payload) payload.emergency_contact_phone = normalizePhoneOrNull(payload.emergency_contact_phone as string)
+    // Correo normalizado (trim + minúsculas) ANTES de guardar: lo que se
+    // compara en el chequeo de duplicados es lo mismo que queda en la BD.
+    if ('email' in payload) payload.email = normalizeEmail(payload.email)
+    if ('cedula' in payload && typeof payload.cedula === 'string') payload.cedula = payload.cedula.trim() || null
 
     // Verificación de duplicados a nivel de app (cédula / correo), porque la BD
     // no tiene el UNIQUE activo sobre estos campos.
-    const cedula = typeof payload.cedula === 'string' ? payload.cedula.trim() : ''
-    const email = typeof payload.email === 'string' ? payload.email.trim() : ''
+    const cedula = typeof payload.cedula === 'string' ? payload.cedula : ''
+    const email = typeof payload.email === 'string' ? payload.email : ''
     if (cedula || email) {
       const { findMemberByCedulaOrEmail } = await import('@/lib/supabase/queries/members')
       const existing = await findMemberByCedulaOrEmail(cedula || null, email || null)

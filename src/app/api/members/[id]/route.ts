@@ -46,7 +46,30 @@ export async function PUT(
   try {
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
-    const updates = await req.json()
+    const body = await req.json()
+
+    // Mismo tratamiento que el alta: allowlist de columnas, teléfonos solo
+    // dígitos, correo normalizado y chequeo de duplicados (la BD no tiene
+    // UNIQUE en cédula/correo — sin esto, editar crea los duplicados que el
+    // alta previene con 409).
+    const { MEMBER_WRITE_FIELDS, normalizeEmail, findMemberByCedulaOrEmail } = await import('@/lib/supabase/queries/members')
+    const updates: Record<string, unknown> = {}
+    for (const k of MEMBER_WRITE_FIELDS) if (k in body) updates[k] = body[k]
+    const { normalizePhoneOrNull } = await import('@/lib/phone')
+    if ('phone' in updates) updates.phone = normalizePhoneOrNull(updates.phone as string)
+    if ('emergency_contact_phone' in updates) updates.emergency_contact_phone = normalizePhoneOrNull(updates.emergency_contact_phone as string)
+    if ('email' in updates) updates.email = normalizeEmail(updates.email)
+    if ('cedula' in updates && typeof updates.cedula === 'string') updates.cedula = updates.cedula.trim() || null
+
+    const cedula = typeof updates.cedula === 'string' ? updates.cedula : ''
+    const email = typeof updates.email === 'string' ? updates.email : ''
+    if (cedula || email) {
+      const existing = await findMemberByCedulaOrEmail(cedula || null, email || null, id)
+      if (existing) {
+        return NextResponse.json({ error: 'duplicate' }, { status: 409 })
+      }
+    }
+
     const member = await updateMember(id, updates)
     return NextResponse.json(member)
   } catch (error) {

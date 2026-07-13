@@ -15,7 +15,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { action, reason } = (await req.json()) as { action?: 'approve' | 'reject'; reason?: string }
 
     if (action === 'approve') {
-      await approvePayment(id, auth.ctx.memberId)
+      const approved = await approvePayment(id, auth.ctx.memberId)
+      if (!approved) return NextResponse.json({ error: 'El pago ya no está en revisión.' }, { status: 409 })
       return NextResponse.json({ ok: true })
     }
 

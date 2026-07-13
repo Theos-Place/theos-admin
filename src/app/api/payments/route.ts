@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
+import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { submitEnrollmentComprobante, PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
 
@@ -16,7 +17,8 @@ export async function POST(req: NextRequest) {
     const reference = (String(form.get('reference') ?? '')).trim() || null
 
     if (!(file instanceof File) || file.size === 0) return NextResponse.json({ error: 'Falta el comprobante.' }, { status: 400 })
-    if (!enrollmentId) return NextResponse.json({ error: 'Falta la matrícula.' }, { status: 400 })
+    // isUuid también evita segmentos de path arbitrarios en el bucket.
+    if (!enrollmentId || !isUuid(enrollmentId)) return NextResponse.json({ error: 'Falta la matrícula.' }, { status: 400 })
     if (file.size > 8 * 1024 * 1024) return NextResponse.json({ error: 'El archivo supera 8 MB.' }, { status: 400 })
 
     const supabase = createAdminClient()
@@ -37,6 +39,12 @@ export async function POST(req: NextRequest) {
     if (!result) return NextResponse.json({ error: 'No se encontró la matrícula.' }, { status: 404 })
     return NextResponse.json({ ok: true, id: result.id }, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'COMPROBANTE_EN_REVISION') {
+      return NextResponse.json(
+        { error: 'Ya hay un comprobante en revisión para esta matrícula. Esperá el resultado antes de subir otro.' },
+        { status: 409 },
+      )
+    }
     console.error('POST /api/payments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

@@ -20,8 +20,25 @@ async function count(
   return c ?? 0
 }
 
+// Fronteras de día/mes en hora de COSTA RICA (UTC-6 fijo, sin DST): el
+// servidor corre en UTC y usar sus componentes locales corría los contadores
+// 6 horas (después de las 6 pm CR, "hoy" ya contaba mañana).
+const CR_OFFSET_MS = 6 * 3600_000
+
+/** Componentes de fecha en hora CR del instante dado. */
+function crParts(now: Date): { y: number; m: number; d: number } {
+  const shifted = new Date(now.getTime() - CR_OFFSET_MS)
+  return { y: shifted.getUTCFullYear(), m: shifted.getUTCMonth(), d: shifted.getUTCDate() }
+}
+
+/** Instante UTC de la medianoche CR de (y, m, d). */
+function crMidnight(y: number, m: number, d: number): Date {
+  return new Date(Date.UTC(y, m, d) + CR_OFFSET_MS)
+}
+
 function startOfMonthISO(now: Date): string {
-  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const { y, m } = crParts(now)
+  return crMidnight(y, m, 1).toISOString()
 }
 
 export type DashboardStats = {
@@ -36,9 +53,9 @@ export type DashboardStats = {
 export async function getDashboardStats(now: Date = new Date()): Promise<DashboardStats> {
   const supabase = createAdminClient()
   const monthStart = startOfMonthISO(now)
-  const monthStartDate = monthStart.slice(0, 10)
-  const in30 = new Date(now.getTime() + 30 * 86400000).toISOString().slice(0, 10)
-  const todayStr = now.toISOString().slice(0, 10)
+  const monthStartDate = new Date(now.getTime() - CR_OFFSET_MS).toISOString().slice(0, 7) + '-01'
+  const in30 = new Date(now.getTime() + 30 * 86400000 - CR_OFFSET_MS).toISOString().slice(0, 10)
+  const todayStr = new Date(now.getTime() - CR_OFFSET_MS).toISOString().slice(0, 10) // hoy en CR
   const weekEnd = new Date(now.getTime() + 7 * 86400000).toISOString()
 
   // Planes de Niveles (N1–N4) → para separar grupos de "estudios" vs
@@ -97,13 +114,17 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
     if (activeEvents.length >= batch.total || batch.events.length < 1000) break
   }
   // Forma mínima para la expansión (eventsInRange usa start_at/end_at/recurrencia).
-  const rangeable = activeEvents.map(e => ({
-    id: e.id, start_at: e.starts_at, end_at: e.ends_at ?? e.starts_at,
-    is_recurring: e.is_recurring, recurrence_rule: e.recurrence_rule, recurrence_end: e.recurrence_end,
-  })) as unknown as Parameters<typeof eventsInRange>[0]
-  const startToday = new Date(now); startToday.setHours(0, 0, 0, 0)
-  const endToday = new Date(startToday); endToday.setDate(endToday.getDate() + 1)
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  // Los cancelados/archivados no cuentan (cancelEvent no toca is_active).
+  const rangeable = activeEvents
+    .filter(e => e.status !== 'cancelled' && e.status !== 'archived')
+    .map(e => ({
+      id: e.id, start_at: e.starts_at, end_at: e.ends_at ?? e.starts_at,
+      is_recurring: e.is_recurring, recurrence_rule: e.recurrence_rule, recurrence_end: e.recurrence_end,
+    })) as unknown as Parameters<typeof eventsInRange>[0]
+  const { y: crY, m: crM, d: crD } = crParts(now)
+  const startToday = crMidnight(crY, crM, crD)
+  const endToday = crMidnight(crY, crM, crD + 1)
+  const monthEnd = crMidnight(crY, crM + 1, 1)
   const eventsToday = eventsInRange(rangeable, startToday, endToday).length
   const thisWeek = eventsInRange(rangeable, now, new Date(weekEnd)).length
   const upcomingMonth = eventsInRange(rangeable, now, monthEnd).length

@@ -847,5 +847,6 @@ export type {
 export {
   findMemberByCedulaOrEmail, mergeMembers, getDuplicatePairs, dismissDuplicatePair,
   createMember, createFamily, getMemberFamily, updateMember, deactivateMember,
+  MEMBER_WRITE_FIELDS, normalizeEmail,
 } from '@/lib/supabase/queries/members-mutations'
 export type { DuplicateMember, DuplicatePair } from '@/lib/supabase/queries/members-mutations'

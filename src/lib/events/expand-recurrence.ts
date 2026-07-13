@@ -22,11 +22,15 @@ type RecurringLike = {
   exception_dates?: string[]
 }
 
-/** Fecha local (hora CR del navegador) → 'YYYY-MM-DD'. */
+/** Costa Rica es UTC-6 FIJO (sin horario de verano): el corrimiento es una
+ *  constante, independiente de la zona del runtime. Antes estos helpers usaban
+ *  los componentes locales del proceso, y en el servidor (Vercel = UTC) las
+ *  ocurrencias caían un día corrido. */
+const CR_OFFSET_MS = 6 * 3600_000
+
+/** Fecha en hora CR → 'YYYY-MM-DD'. */
 function localYmd(d: Date): string {
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${day}`
+  return new Date(d.getTime() - CR_OFFSET_MS).toISOString().slice(0, 10)
 }
 
 export type Occurrence<T extends RecurringLike> = T & {
@@ -51,13 +55,14 @@ const DAY_LABEL: Record<string, string> = {
 
 /* rrule calcula los días de semana sobre el día UTC, pero las charlas son por
  * la noche hora CR (UTC-6): un martes 19:00 CR es miércoles 01:00 UTC y la
- * regla "WEEKLY:TUE" generaría lunes locales. Truco estándar: construir una
- * fecha "falsa UTC" con los componentes LOCALES, iterar ahí y deshacer. */
+ * regla "WEEKLY:TUE" generaría lunes locales. Truco estándar: correr el
+ * instante -6h para que sus componentes UTC sean la hora de pared CR, iterar
+ * ahí y deshacer. Como CR no tiene DST, el corrimiento constante es exacto. */
 function toFakeUTC(d: Date): Date {
-  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()))
+  return new Date(d.getTime() - CR_OFFSET_MS)
 }
 function fromFakeUTC(d: Date): Date {
-  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
+  return new Date(d.getTime() + CR_OFFSET_MS)
 }
 
 function parseRule(rule: string, dtstart: Date, until: Date): RRule | null {

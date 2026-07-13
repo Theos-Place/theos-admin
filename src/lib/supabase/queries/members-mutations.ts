@@ -4,18 +4,42 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { DbMember } from './members'
 
-/** Busca un miembro existente por cédula o correo (para evitar duplicados al crear).
- *  Dos .eq() separados en vez de .or(): .or() interpola el valor en la sintaxis
- *  de PostgREST, así que comas/paréntesis del input alteran el filtro. */
-export async function findMemberByCedulaOrEmail(cedula: string | null, email: string | null) {
+/** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
+ *  campos que no existen en la tabla o que no deben tocarse por este camino). */
+export const MEMBER_WRITE_FIELDS = [
+  'cedula', 'first_name', 'last_name', 'birth_date', 'gender', 'marital_status',
+  'phone', 'email', 'province', 'canton', 'district', 'address', 'occupation',
+  'workplace', 'allergies', 'medications', 'emergency_contact_name',
+  'emergency_contact_phone', 'photo_url', 'is_donor', 'is_active',
+] as const
+
+/** Correo normalizado para guardar/comparar: trim + minúsculas ('' → null).
+ *  Sin esto, "Juan@X.com " y "juan@x.com" burlan el chequeo de duplicados. */
+export function normalizeEmail(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null
+  const v = raw.trim().toLowerCase()
+  return v || null
+}
+
+/** Busca un miembro existente por cédula o correo (para evitar duplicados al
+ *  crear/editar). Dos lookups separados en vez de .or(): .or() interpola el
+ *  valor en la sintaxis de PostgREST, así que comas/paréntesis del input
+ *  alteran el filtro. El correo se compara case-insensitive (hay filas
+ *  históricas con mayúsculas). `excludeId` omite al propio miembro (edición). */
+export async function findMemberByCedulaOrEmail(cedula: string | null, email: string | null, excludeId?: string) {
   if (!cedula && !email) return null
   const supabase = createAdminClient()
-  const lookup = (col: 'cedula' | 'email', val: string) =>
-    supabase.from('members').select('id').eq(col, val).limit(1).maybeSingle()
+  const lookup = (col: 'cedula' | 'email', val: string, ci = false) => {
+    let q = supabase.from('members').select('id')
+    // ilike sin comodines = igualdad case-insensitive; se escapan %_\ del input.
+    q = ci ? q.ilike(col, val.replace(/[\\%_]/g, m => `\\${m}`)) : q.eq(col, val)
+    if (excludeId) q = q.neq('id', excludeId)
+    return q.limit(1).maybeSingle()
+  }
 
   const [byCedula, byEmail] = await Promise.all([
-    cedula ? lookup('cedula', cedula) : null,
-    email ? lookup('email', email) : null,
+    cedula ? lookup('cedula', cedula.trim()) : null,
+    email ? lookup('email', email.trim(), true) : null,
   ])
   if (byCedula?.error) throw byCedula.error
   if (byEmail?.error) throw byEmail.error

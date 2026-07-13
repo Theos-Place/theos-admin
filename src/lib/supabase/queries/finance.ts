@@ -385,6 +385,21 @@ export async function processRefund(
   details?: { processedDate?: string | null; confirmation?: string | null; rejectReason?: string | null },
 ): Promise<void> {
   const supabase = createAdminClient()
+  // Máquina de estados: completed/rejected son terminales — sin esto se
+  // podía "completar" una devolución ya rechazada (y marcar el pago refunded).
+  const { data: cur, error: curErr } = await supabase
+    .from('refunds').select('status, notes').eq('id', id).maybeSingle()
+  if (curErr) throw curErr
+  if (!cur) throw new Error('YA_PROCESADO')
+  const current = cur as { status: RefundStatus; notes: string | null }
+  const allowed: Record<RefundStatus, RefundStatus[]> = {
+    pending: ['processing', 'completed', 'rejected'],
+    processing: ['completed', 'rejected'],
+    completed: [],
+    rejected: [],
+  }
+  if (!allowed[current.status]?.includes(status)) throw new Error('YA_PROCESADO')
+
   const patch: Record<string, unknown> = { status }
   if (status === 'completed' || status === 'rejected') {
     patch.processed_at = details?.processedDate
@@ -395,12 +410,15 @@ export async function processRefund(
   if (details?.confirmation) extras.push(`Confirmación: ${details.confirmation}`)
   if (details?.rejectReason) extras.push(`Motivo del rechazo: ${details.rejectReason}`)
   if (extras.length > 0) {
-    const { data: cur } = await supabase.from('refunds').select('notes').eq('id', id).maybeSingle()
-    const prev = (cur as { notes?: string | null } | null)?.notes
-    patch.notes = [prev, ...extras].filter(Boolean).join('\n')
+    patch.notes = [current.notes, ...extras].filter(Boolean).join('\n')
   }
-  const { data, error } = await supabase.from('refunds').update(patch as Updatable<'refunds'>).eq('id', id).select('payment_id').single()
+  // Condicional al estado leído: dos revisores simultáneos no procesan doble.
+  const { data, error } = await supabase
+    .from('refunds').update(patch as Updatable<'refunds'>)
+    .eq('id', id).eq('status', current.status)
+    .select('payment_id').maybeSingle()
   if (error) throw error
+  if (!data) throw new Error('YA_PROCESADO')
 
   if (status === 'completed') {
     const { error: pErr } = await supabase

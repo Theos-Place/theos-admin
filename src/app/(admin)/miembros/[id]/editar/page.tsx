@@ -117,6 +117,11 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      if (res.status === 409) {
+        notify('Ya existe otro miembro con esa cédula o correo.', 'error')
+        setSaving(false)
+        return
+      }
       if (!res.ok) throw new Error('Error guardando cambios')
       setSaving(false)
       setToast(true)

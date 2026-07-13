@@ -368,7 +368,15 @@ export async function registrationPricing(
   return { requiresPayment, isServer, exempt: false, price }
 }
 
-/** Inscribe a un miembro en un evento. UNIQUE(event_id, member_id) evita duplicados.
+export class EventFullError extends Error {
+  constructor() { super('El evento ya alcanzó su capacidad máxima.') }
+}
+export class AlreadyRegisteredError extends Error {
+  constructor() { super('El miembro ya está inscrito en este evento.') }
+}
+
+/** Inscribe a un miembro en un evento. UNIQUE(event_id, member_id) evita duplicados
+ *  (se traduce a AlreadyRegisteredError). Controla cupo contra max_capacity.
  *  Si el evento es pago, exige pago completado (paid) o exención; los servidores
  *  exentos se inscriben como 'exempted' automáticamente. */
 export async function createRegistration(
@@ -388,12 +396,28 @@ export async function createRegistration(
     }
   }
 
+  // Control de cupo (best-effort: check-then-insert; sin constraint en BD una
+  // carrera exacta puede pasarse por 1, pero cierra el caso normal de overbooking).
+  const { data: ev } = await supabase
+    .from('events').select('max_capacity').eq('id', eventId).maybeSingle()
+  const maxCapacity = (ev as { max_capacity: number | null } | null)?.max_capacity
+  if (maxCapacity != null && maxCapacity > 0) {
+    const { count } = await supabase
+      .from('event_registrations')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+    if ((count ?? 0) >= maxCapacity) throw new EventFullError()
+  }
+
   const { data, error } = await supabase
     .from('event_registrations')
     .insert({ event_id: eventId, member_id: input.member_id, payment_status: status })
     .select('id')
     .single()
-  if (error) throw error
+  if (error) {
+    if ((error as { code?: string }).code === '23505') throw new AlreadyRegisteredError()
+    throw error
+  }
   return data as { id: string }
 }
 
@@ -717,10 +741,11 @@ export async function updateEventScoped(
     return override
   }
 
-  // scope === 'future'
+  // scope === 'future': crear el NUEVO padre PRIMERO y truncar el viejo
+  // después — si el create falla, la serie original queda intacta (antes se
+  // truncaba primero y un fallo amputaba las ocurrencias futuras sin
+  // reemplazo). Si lo que falla es el truncado, se revierte el nuevo padre.
   const until = new Date(new Date(occurrence.start).getTime() - 1000).toISOString()
-  const { error: upErr } = await supabase.from('events').update({ recurrence_end: until }).eq('id', id)
-  if (upErr) throw upErr
   const newParentInput: EventWriteInput = {
     ...base, ...input,
     is_recurring: true,
@@ -728,7 +753,13 @@ export async function updateEventScoped(
     recurrence_end: parent.recurrence_end ?? null, // conserva el fin original de la serie
     parent_event_id: null,
   }
-  return createEvent(newParentInput, subs, createdBy, committees)
+  const newParent = await createEvent(newParentInput, subs, createdBy, committees)
+  const { error: upErr } = await supabase.from('events').update({ recurrence_end: until }).eq('id', id)
+  if (upErr) {
+    await supabase.from('events').delete().eq('id', newParent.id)
+    throw upErr
+  }
+  return newParent
 }
 
 /**

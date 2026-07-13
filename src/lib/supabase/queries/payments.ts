@@ -63,10 +63,68 @@ export async function createComprobantePayment(input: {
   return data as { id: string }
 }
 
+/** Busca (o crea) el grupo SUCESOR del siguiente nivel: la cohorte continúa
+ *  junta de N1→N2→N3→N4 con el mismo dirigente, día, horario y zona (regla de
+ *  producto 2026-07-13), así que el grupo siguiente hereda esos datos del
+ *  grupo que cierra. Idempotente: si ya existe un grupo del plan siguiente
+ *  con el mismo dirigente/horario/zona sin finalizar, se reutiliza. */
+async function findOrCreateSuccessorGroup(
+  supabase: SupabaseClient,
+  src: {
+    id: string; name: string | null; leader_id: string | null; co_leader_id: string | null
+    zone: string | null; schedule_days: string[] | null; schedule_time: string | null
+    location: string | null; sede: string | null; max_students: number | null
+    age_min: number | null; age_max: number | null
+  },
+  nextPlanId: string,
+  sourceCode: string,
+  nextCode: string,
+): Promise<string | null> {
+  let query = supabase
+    .from('study_groups')
+    .select('id')
+    .eq('plan_id', nextPlanId)
+    .in('status', ['en_matricula', 'en_curso'])
+    .limit(1)
+  query = src.leader_id ? query.eq('leader_id', src.leader_id) : query.is('leader_id', null)
+  query = src.zone ? query.eq('zone', src.zone) : query.is('zone', null)
+  query = src.schedule_time ? query.eq('schedule_time', src.schedule_time) : query.is('schedule_time', null)
+  const { data: found, error: findErr } = await query
+  if (findErr) { console.warn('successor find:', findErr.message); return null }
+  if ((found ?? []).length > 0) return (found as Array<{ id: string }>)[0].id
+
+  // Nombre: reutiliza el del grupo origen cambiando el código de nivel.
+  const name = src.name?.includes(sourceCode)
+    ? src.name.replace(sourceCode, nextCode)
+    : `${nextCode} · ${src.name ?? 'continuación'}`
+  const { data: created, error: createErr } = await supabase
+    .from('study_groups')
+    .insert({
+      plan_id: nextPlanId,
+      name,
+      leader_id: src.leader_id,
+      co_leader_id: src.co_leader_id,
+      zone: src.zone,
+      schedule_days: src.schedule_days,
+      schedule_time: src.schedule_time,
+      location: src.location,
+      sede: src.sede,
+      max_students: src.max_students,
+      age_min: src.age_min,
+      age_max: src.age_max,
+      status: 'en_matricula',
+      current_week: 0,
+    })
+    .select('id').single()
+  if (createErr) { console.warn('successor create:', createErr.message); return null }
+  return (created as { id: string }).id
+}
+
 /** Matrícula automática al siguiente nivel para los aprobados de un cierre.
  *  Crea la inscripción en 'pendiente_de_pago' + el pago pendiente (concepto
- *  matricula, sin comprobante aún — el alumno lo sube desde su perfil). Evita
- *  duplicados si ya está matriculado o completó ese nivel. Devuelve cuántas creó. */
+ *  matricula, sin comprobante aún — el alumno lo sube desde su perfil), en el
+ *  grupo SUCESOR (mismo dirigente/horario/zona; la cohorte continúa junta).
+ *  Evita duplicados si ya está matriculado o completó ese nivel. Devuelve cuántas creó. */
 export async function autoEnrollApprovedToNextLevel(
   sourceGroupId: string,
   approvedMemberIds: string[],
@@ -74,17 +132,30 @@ export async function autoEnrollApprovedToNextLevel(
   if (approvedMemberIds.length === 0) return { enrolled: 0, next_level: null, amount: 0 }
   const supabase = looseClient()
 
-  // Plan origen del grupo → nivel siguiente.
-  const { data: g } = await supabase.from('study_groups').select('plan:study_plans(code)').eq('id', sourceGroupId).maybeSingle()
-  const planEmbed = (g as { plan: { code: string | null } | { code: string | null }[] | null } | null)?.plan
+  // Grupo origen completo (para heredar dirigente/horario/zona) + nivel siguiente.
+  const { data: g } = await supabase
+    .from('study_groups')
+    .select('id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location, sede, max_students, age_min, age_max, plan:study_plans(code)')
+    .eq('id', sourceGroupId).maybeSingle()
+  const src = g as {
+    id: string; name: string | null; leader_id: string | null; co_leader_id: string | null
+    zone: string | null; schedule_days: string[] | null; schedule_time: string | null
+    location: string | null; sede: string | null; max_students: number | null
+    age_min: number | null; age_max: number | null
+    plan: { code: string | null } | { code: string | null }[] | null
+  } | null
+  const planEmbed = src?.plan
   const sourceCode = (Array.isArray(planEmbed) ? planEmbed[0] : planEmbed)?.code ?? null
   const next = nextLevelCode(sourceCode)
-  if (!next) return { enrolled: 0, next_level: null, amount: 0 }
+  if (!src || !next) return { enrolled: 0, next_level: null, amount: 0 }
 
   const { data: nextPlan } = await supabase.from('study_plans').select('id, cost').eq('code', next).maybeSingle()
   const np = nextPlan as { id: string; cost: number | null } | null
   if (!np) return { enrolled: 0, next_level: next, amount: 0 }
   const amount = Number(np.cost ?? 0)
+
+  // Grupo sucesor (best-effort: si falla, la matrícula queda solo a nivel de plan).
+  const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next)
 
   // Dedup: quién ya tiene inscripción a ese nivel (activa/pendiente/completada/espera).
   const { data: existing } = await supabase
@@ -104,7 +175,13 @@ export async function autoEnrollApprovedToNextLevel(
     if (already.has(memberId)) continue
     const { data: enr, error: enrErr } = await supabase
       .from('study_enrollments')
-      .insert({ member_id: memberId, plan_id: np.id, status: free ? 'enrolled' : 'pendiente_de_pago', enrolled_at: now })
+      .insert({
+        member_id: memberId,
+        plan_id: np.id,
+        group_id: successorGroupId,
+        status: free ? 'enrolled' : 'pendiente_de_pago',
+        enrolled_at: now,
+      })
       .select('id').single()
     if (enrErr) { console.warn('auto-enroll insert:', enrErr.message); continue }
     if (!free) {
@@ -151,6 +228,18 @@ export async function submitEnrollmentComprobante(input: {
   const gplan = grp ? (Array.isArray(grp.plan) ? grp.plan[0] : grp.plan) : null
   const dplan = Array.isArray(row.plan_direct) ? row.plan_direct[0] : row.plan_direct
   const amount = Number((gplan as { cost: number | null } | null)?.cost ?? dplan?.cost ?? 0)
+
+  // Si ya hay un comprobante EN REVISIÓN para esta matrícula, no se acepta
+  // otro: un doble submit (doble clic / dos pestañas) creaba dos pagos en la
+  // cola y ambos podían aprobarse.
+  const { data: inReview } = await supabase
+    .from('payments')
+    .select('id')
+    .eq('enrollment_id', input.enrollment_id)
+    .eq('concept', 'matricula')
+    .eq('review_status', 'en_revision')
+    .limit(1)
+  if ((inReview ?? []).length > 0) throw new Error('COMPROBANTE_EN_REVISION')
 
   // ¿Ya hay un pago pendiente (sin revisar o rechazado) para esta matrícula?
   const { data: existing } = await supabase
@@ -244,8 +333,9 @@ export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
 
 /** Aprueba: review_status=aprobado + status=paid (activa el objeto pagado —
  *  matrícula/folletos quedan como pagados; la fuente de verdad del "pagado" es
- *  este registro). Devuelve datos para trazabilidad. */
-export async function approvePayment(id: string, reviewerMemberId: string | null): Promise<void> {
+ *  este registro). Devuelve false si el pago ya no estaba en revisión (otro
+ *  revisor lo procesó): antes esto respondía éxito falso. */
+export async function approvePayment(id: string, reviewerMemberId: string | null): Promise<boolean> {
   const supabase = looseClient()
   const now = new Date().toISOString()
   const { data, error } = await supabase
@@ -256,6 +346,7 @@ export async function approvePayment(id: string, reviewerMemberId: string | null
     .select('concept, enrollment_id')
     .maybeSingle()
   if (error) throw error
+  if (!data) return false
 
   // Activar la matrícula: pendiente_de_pago → enrolled (activa).
   const row = data as { concept: string | null; enrollment_id: string | null } | null
@@ -267,6 +358,7 @@ export async function approvePayment(id: string, reviewerMemberId: string | null
       .eq('status', 'pendiente_de_pago')
     if (enrErr) console.warn('activar matrícula tras pago:', enrErr.message)
   }
+  return true
 }
 
 /** Rechaza: review_status=rechazado + motivo. Devuelve datos del pago para avisar

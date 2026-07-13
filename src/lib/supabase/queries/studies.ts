@@ -772,6 +772,18 @@ export async function closeGroup(groupId: string, results: CloseResult[], closed
   const supabase = createAdminClient()
   const now = new Date().toISOString()
 
+  // Claim atómico: marcar 'finalizado' PRIMERO y de forma condicional. Un
+  // doble POST (doble clic / retry) no debe re-ejecutar el cierre — duplicaría
+  // folletos, notificaciones y correos en la ruta.
+  const { data: claimed, error: claimErr } = await supabase
+    .from('study_groups')
+    .update({ status: 'finalizado' })
+    .eq('id', groupId)
+    .neq('status', 'finalizado')
+    .select('id')
+  if (claimErr) throw claimErr
+  if ((claimed ?? []).length === 0) throw new Error('YA_CERRADO')
+
   for (const r of results) {
     if (r.status_result === 'retirado') {
       const { error } = await supabase
@@ -816,12 +828,6 @@ export async function closeGroup(groupId: string, results: CloseResult[], closed
     const { error: recErr } = await supabase.from('member_recommendations').insert(recRows)
     if (recErr) console.warn('closeGroup: recomendaciones fallaron:', recErr.message)
   }
-
-  const { error: gErr } = await supabase
-    .from('study_groups')
-    .update({ status: 'finalizado' })
-    .eq('id', groupId)
-  if (gErr) throw gErr
 }
 
 export type MemberRecommendation = {
@@ -909,6 +915,18 @@ export async function enrollMember(groupId: string, memberId: string): Promise<v
       .limit(1)
     if ((pending ?? []).length > 0) throw new Error('PAGO_PENDIENTE')
   }
+  // El upsert re-activa una fila existente (group,member). Legítimo para
+  // 'dropped' (reincorporación) y 'pendiente_de_pago' con pago del plan al
+  // día, pero una inscripción 'completed' no debe resucitarse.
+  const { data: existing } = await supabase
+    .from('study_enrollments')
+    .select('status')
+    .eq('group_id', groupId)
+    .eq('member_id', memberId)
+    .maybeSingle()
+  const existingStatus = (existing as { status: string } | null)?.status
+  if (existingStatus === 'completed') throw new Error('YA_COMPLETADO')
+  if (existingStatus === 'pendiente_de_pago') throw new Error('PAGO_PENDIENTE')
   const { error } = await supabase
     .from('study_enrollments')
     .upsert({ group_id: groupId, member_id: memberId, status: 'enrolled' }, { onConflict: 'group_id,member_id' })

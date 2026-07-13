@@ -13,8 +13,11 @@ export async function GET(req: NextRequest) {
     const event_type = searchParams.get('event_type') ?? undefined
     const status     = searchParams.get('status')     ?? undefined
     const is_active  = searchParams.get('is_active')
-    const page       = Number(searchParams.get('page') ?? 1)
-    const pageSize   = Number(searchParams.get('pageSize') ?? 100)
+    // Clamp (como /api/members): NaN o valores fuera de rango rompen .range().
+    const rawPage     = Number(searchParams.get('page') ?? 1)
+    const rawPageSize = Number(searchParams.get('pageSize') ?? 100)
+    const page     = Number.isFinite(rawPage)     ? Math.max(1, Math.trunc(rawPage)) : 1
+    const pageSize = Number.isFinite(rawPageSize) ? Math.min(1000, Math.max(1, Math.trunc(rawPageSize))) : 100
 
     const result = await getEvents({
       search,

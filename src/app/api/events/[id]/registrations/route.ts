@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { createRegistration, registrationPricing, getEventRegistrationIds, PaymentRequiredError } from '@/lib/supabase/queries/events'
+import { createRegistration, registrationPricing, getEventRegistrationIds, PaymentRequiredError, EventFullError, AlreadyRegisteredError } from '@/lib/supabase/queries/events'
 
 // GET: con ?member_id → precio aplicable para inscribir a ese miembro.
 //      sin member_id → lista de inscritos { count, member_ids } (audiencia comms).
@@ -43,6 +43,12 @@ export async function POST(
   } catch (error) {
     if (error instanceof PaymentRequiredError) {
       return NextResponse.json({ error: error.message }, { status: 422 })
+    }
+    if (error instanceof AlreadyRegisteredError) {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
+    if (error instanceof EventFullError) {
+      return NextResponse.json({ error: error.message }, { status: 409 })
     }
     console.error('POST /api/events/[id]/registrations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

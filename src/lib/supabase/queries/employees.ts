@@ -214,23 +214,38 @@ export async function createVacationRecord(input: VacationWriteInput): Promise<{
   return data as { id: string }
 }
 
-/** Cambia el estado de una solicitud de vacaciones. Al aprobar (tipo
- *  'vacaciones') suma los días a vacation_days_used del empleado. */
+/** Cambia el estado de una solicitud de vacaciones ajustando el contador de
+ *  días por TRANSICIÓN (entra a 'aprobado' → suma; sale de 'aprobado' →
+ *  resta). El update es condicional al estado leído: un doble clic o dos
+ *  revisores simultáneos no duplican el descuento (la segunda pasada no
+ *  matchea y lanza YA_PROCESADO). */
 export async function setVacationStatus(id: string, status: VacationRecordStatus): Promise<void> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('vacation_records').update({ status }).eq('id', id)
-    .select('employee_id, days, type').single()
-  if (error) throw error
+  const { data: cur, error: curErr } = await supabase
+    .from('vacation_records').select('status, employee_id, days, type').eq('id', id).maybeSingle()
+  if (curErr) throw curErr
+  if (!cur) throw new Error('YA_PROCESADO')
+  const rec = cur as { status: VacationRecordStatus; employee_id: string; days: number; type: VacationRecordType }
+  if (rec.status === status) throw new Error('YA_PROCESADO')
 
-  const rec = data as { employee_id: string; days: number; type: VacationRecordType }
-  if (status === 'aprobado' && rec.type === 'vacaciones') {
+  const { data: updated, error } = await supabase
+    .from('vacation_records').update({ status })
+    .eq('id', id).eq('status', rec.status)
+    .select('id')
+  if (error) throw error
+  if ((updated ?? []).length === 0) throw new Error('YA_PROCESADO')
+
+  const delta = rec.type !== 'vacaciones' ? 0
+    : status === 'aprobado' ? rec.days
+    : rec.status === 'aprobado' ? -rec.days
+    : 0
+  if (delta !== 0) {
     const { data: emp, error: eErr } = await supabase
       .from('employees').select('vacation_days_used').eq('id', rec.employee_id).single()
     if (eErr) throw eErr
     const used = (emp as { vacation_days_used: number }).vacation_days_used ?? 0
     const { error: uErr } = await supabase
-      .from('employees').update({ vacation_days_used: used + rec.days }).eq('id', rec.employee_id)
+      .from('employees').update({ vacation_days_used: Math.max(0, used + delta) }).eq('id', rec.employee_id)
     if (uErr) throw uErr
   }
 }

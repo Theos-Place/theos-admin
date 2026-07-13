@@ -22,6 +22,16 @@ export async function POST(req: NextRequest) {
     if (!b.nombre?.trim() || !b.anio || !b.fecha_apertura || !b.fecha_cierre_matricula) {
       return NextResponse.json({ error: 'Nombre, año y ambas fechas son obligatorios.' }, { status: 400 })
     }
+    const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+    if (!ISO_DATE.test(b.fecha_apertura) || !ISO_DATE.test(b.fecha_cierre_matricula)) {
+      return NextResponse.json({ error: 'Las fechas deben tener formato YYYY-MM-DD.' }, { status: 400 })
+    }
+    if (b.fecha_cierre_matricula < b.fecha_apertura) {
+      return NextResponse.json(
+        { error: 'La fecha de cierre de matrícula no puede ser anterior a la apertura.' },
+        { status: 400 },
+      )
+    }
     const { id } = await createBloque({
       nombre: b.nombre.trim(), anio: Number(b.anio),
       fecha_apertura: b.fecha_apertura, fecha_cierre_matricula: b.fecha_cierre_matricula,

@@ -114,6 +114,12 @@ export async function POST(
 
     return NextResponse.json({ ok: true, folletoCreated, autoEnrolled })
   } catch (error) {
+    if (error instanceof Error && error.message === 'YA_CERRADO') {
+      return NextResponse.json(
+        { error: 'Este grupo ya fue cerrado. Refrescá la página para ver su estado.' },
+        { status: 409 },
+      )
+    }
     console.error('POST /api/studies/groups/[id]/close:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
