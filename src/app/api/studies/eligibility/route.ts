@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { isUuid } from '@/lib/validate'
 import { getEligibleStudiesForMember } from '@/lib/supabase/queries/studies'
 
 // GET ?member_id=X — elegibilidad de estudios del miembro para los modales de
-// solicitud. Cualquier autenticado (crear solicitudes está abierto a todo rol).
+// solicitud. El propio perfil siempre; el de OTRO miembro exige módulo estudios
+// o padrón (devuelve is_donor/historial — datos que un usuario base no debe
+// poder consultar de terceros).
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireRoles()
     if (auth.res) return auth.res
     const memberId = req.nextUrl.searchParams.get('member_id')
-    if (!memberId) return NextResponse.json({ error: 'Se requiere member_id' }, { status: 400 })
+    if (!memberId || !isUuid(memberId)) {
+      return NextResponse.json({ error: 'Se requiere member_id válido' }, { status: 400 })
+    }
+    if (memberId !== auth.ctx.memberId) {
+      const estudios = await requireModuleView('estudios', { beyondOwn: true })
+      if (estudios.res) {
+        const miembros = await requireModuleView('miembros', { beyondOwn: true })
+        if (miembros.res) return miembros.res
+      }
+    }
     return NextResponse.json(await getEligibleStudiesForMember(memberId))
   } catch (error) {
     console.error('GET /api/studies/eligibility:', error)

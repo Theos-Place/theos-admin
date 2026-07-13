@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getMemberLists, createMemberList } from '@/lib/supabase/queries/member-lists'
 
 export async function GET() {
   try {
-    const auth = await requireRoles()
-    if (auth.res) return auth.res
+    // Listas de segmentación del padrón: para quien ve el padrón o gestiona
+    // comunicaciones — no para cualquier sesión (alineado con las escrituras).
+    const auth = await requireModuleView('miembros', { beyondOwn: true })
+    if (auth.res) {
+      const com = await requireModuleView('comunicaciones')
+      if (com.res) return com.res
+    }
     return NextResponse.json(await getMemberLists())
   } catch (error) {
     console.error('GET /api/member-lists:', error)

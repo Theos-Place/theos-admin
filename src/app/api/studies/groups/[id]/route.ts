@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { updateGroup, getGroupById, type GroupWriteInput } from '@/lib/supabase/queries/studies'
 
 export async function GET(
@@ -12,6 +12,11 @@ export async function GET(
     const { id } = await params
     const group = await getGroupById(id)
     if (!group) return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 })
+    // El roster (nombres y notas de los inscritos) es solo para el módulo
+    // estudios; otras sesiones (p. ej. la confirmación de matrícula) reciben
+    // el grupo sin inscripciones.
+    const mod = await requireModuleView('estudios')
+    if (mod.res) return NextResponse.json({ ...group, enrollments: [] })
     return NextResponse.json(group)
   } catch (error) {
     console.error('GET /api/studies/groups/[id]:', error)

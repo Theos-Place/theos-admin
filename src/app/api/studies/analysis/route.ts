@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireModuleView } from '@/lib/auth/guard'
 import { getStudyDemand } from '@/lib/supabase/queries/studies'
 import { getCurrentBlock, getNextBlock, suggestedGroups } from '@/lib/studies/blocks'
 
 // GET /api/studies/analysis?study_code=XX — demanda por zona de un estudio,
 // con contexto del bloque actual y el siguiente (para el que se calcula).
+// Información de planificación interna: solo módulo estudios.
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles()
+    const auth = await requireModuleView('estudios')
     if (auth.res) return auth.res
     const code = req.nextUrl.searchParams.get('study_code')
     if (!code) return NextResponse.json({ error: 'Se requiere study_code' }, { status: 400 })

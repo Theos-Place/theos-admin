@@ -13,7 +13,19 @@ export async function GET(req: Request) {
     if (!rateLimit(`public-events:${clientIp(req)}`, 60, 60_000)) {
       return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
     }
-    const { events } = await getEvents({ light: true, is_active: 'all', pageSize: 2000 })
+    // INVARIANTE de privacidad: esta ruta es pública. `light: true` es
+    // obligatorio (su SELECT no trae registrations/checkins/volunteers, que
+    // incluyen nombres de miembros) y el .map() de abajo es una whitelist —
+    // nunca hacer spread del evento enriquecido acá.
+    // PostgREST corta cada respuesta en ~1000 filas: paginar hasta agotar
+    // (un pageSize gigante truncaría el calendario en silencio).
+    const pageSize = 1000
+    let events: DbEventEnriched[] = []
+    for (let page = 1; ; page++) {
+      const batch = await getEvents({ light: true, is_active: 'all', page, pageSize })
+      events = events.concat(batch.events)
+      if (events.length >= batch.total || batch.events.length < pageSize) break
+    }
     const publicEvents = events
       .filter(e => e.status !== 'cancelled' && e.status !== 'archived')
       .map((e: DbEventEnriched) => ({

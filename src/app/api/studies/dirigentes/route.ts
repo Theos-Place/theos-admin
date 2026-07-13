@@ -4,6 +4,8 @@ import { requireRoles } from '@/lib/auth/guard'
 
 export async function GET() {
   try {
+    // Solo sesión: devuelve únicamente member_id + nombre (sin datos
+    // sensibles) y lo consumen también pantallas de servidores.
     const auth = await requireRoles()
     if (auth.res) return auth.res
     return NextResponse.json(await getActiveDirigentes())
