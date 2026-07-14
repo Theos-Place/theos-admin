@@ -1,7 +1,7 @@
 // Tipos generados de la BD (supabase gen types / MCP generate_typescript_types).
 // REGENERAR después de CADA migración: sin esto la capa de queries pierde el
 // typecheck y aparecen los casts "as unknown as" (ver revisión 2026-07-13).
-// Generado: 2026-07-13 (migraciones 001-110).
+// Generado: 2026-07-13 (migraciones 001-113).
 
 export type Json =
   | string
@@ -4179,6 +4179,10 @@ export type Database = {
     }
     Functions: {
       approve_applications: { Args: { app_ids: string[] }; Returns: number }
+      approve_payment: {
+        Args: { p_payment_id: string; p_reviewer: string }
+        Returns: boolean
+      }
       block_folletos_by_sede: {
         Args: { p_apertura: string }
         Returns: {
@@ -4195,6 +4199,10 @@ export type Database = {
         }[]
       }
       charla_sede_code: { Args: { p_title: string }; Returns: string }
+      close_group: {
+        Args: { p_closed_by: string; p_group_id: string; p_results: Json }
+        Returns: boolean
+      }
       dashboard_sums: {
         Args: { p_month_start: string; p_month_start_date: string }
         Returns: {

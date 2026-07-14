@@ -74,18 +74,23 @@ async function findOrCreateSuccessorGroup(
   sourceCode: string,
   nextCode: string,
 ): Promise<string | null> {
-  let query = supabase
-    .from('study_groups')
-    .select('id')
-    .eq('plan_id', nextPlanId)
-    .in('status', ['en_matricula', 'en_curso'])
-    .limit(1)
-  query = src.leader_id ? query.eq('leader_id', src.leader_id) : query.is('leader_id', null)
-  query = src.zone ? query.eq('zone', src.zone) : query.is('zone', null)
-  query = src.schedule_time ? query.eq('schedule_time', src.schedule_time) : query.is('schedule_time', null)
-  const { data: found, error: findErr } = await query
-  if (findErr) { console.warn('successor find:', findErr.message); return null }
-  if ((found ?? []).length > 0) return (found as Array<{ id: string }>)[0].id
+  const findSuccessor = async (): Promise<string | null> => {
+    let query = supabase
+      .from('study_groups')
+      .select('id')
+      .eq('plan_id', nextPlanId)
+      .in('status', ['en_matricula', 'en_curso'])
+      .limit(1)
+    query = src.leader_id ? query.eq('leader_id', src.leader_id) : query.is('leader_id', null)
+    query = src.zone ? query.eq('zone', src.zone) : query.is('zone', null)
+    query = src.schedule_time ? query.eq('schedule_time', src.schedule_time) : query.is('schedule_time', null)
+    const { data, error } = await query
+    if (error) { console.warn('successor find:', error.message); return null }
+    return (data ?? []).length > 0 ? (data as Array<{ id: string }>)[0].id : null
+  }
+
+  const existing = await findSuccessor()
+  if (existing) return existing
 
   // Nombre: reutiliza el del grupo origen cambiando el código de nivel.
   const name = src.name?.includes(sourceCode)
@@ -110,7 +115,16 @@ async function findOrCreateSuccessorGroup(
       current_week: 0,
     })
     .select('id').single()
-  if (createErr) { console.warn('successor create:', createErr.message); return null }
+  if (createErr) {
+    // 23505 = perdió la carrera contra otro cierre concurrente (índice único
+    // parcial study_groups_sucesor_uniq, migración 112): usar el ganador.
+    if ((createErr as { code?: string }).code === '23505') {
+      const winner = await findSuccessor()
+      if (winner) return winner
+    }
+    console.warn('successor create:', createErr.message)
+    return null
+  }
   return (created as { id: string }).id
 }
 
@@ -325,34 +339,20 @@ export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
   })
 }
 
-/** Aprueba: review_status=aprobado + status=paid (activa el objeto pagado —
- *  matrícula/folletos quedan como pagados; la fuente de verdad del "pagado" es
- *  este registro). Devuelve false si el pago ya no estaba en revisión (otro
- *  revisor lo procesó): antes esto respondía éxito falso. */
+/** Aprueba vía RPC TRANSACCIONAL (migración 113): pago → paid + matrícula
+ *  pendiente_de_pago → enrolled en una sola transacción. Antes eran dos
+ *  updates sueltos: si el segundo fallaba quedaba dinero cobrado con la
+ *  matrícula sin activar y solo un console.warn. Devuelve false si el pago
+ *  ya no estaba en revisión (otro revisor lo procesó). */
 export async function approvePayment(id: string, reviewerMemberId: string | null): Promise<boolean> {
+  if (!reviewerMemberId) throw new Error('approvePayment requiere el member_id del revisor')
   const supabase = createAdminClient()
-  const now = new Date().toISOString()
-  const { data, error } = await supabase
-    .from('payments')
-    .update({ review_status: 'aprobado', status: 'paid', reviewed_by: reviewerMemberId, reviewed_at: now, paid_at: now })
-    .eq('id', id)
-    .eq('review_status', 'en_revision')
-    .select('concept, enrollment_id')
-    .maybeSingle()
+  const { data, error } = await supabase.rpc('approve_payment', {
+    p_payment_id: id,
+    p_reviewer: reviewerMemberId,
+  })
   if (error) throw error
-  if (!data) return false
-
-  // Activar la matrícula: pendiente_de_pago → enrolled (activa).
-  const row = data as { concept: string | null; enrollment_id: string | null } | null
-  if (row?.concept === 'matricula' && row.enrollment_id) {
-    const { error: enrErr } = await supabase
-      .from('study_enrollments')
-      .update({ status: 'enrolled' })
-      .eq('id', row.enrollment_id)
-      .eq('status', 'pendiente_de_pago')
-    if (enrErr) console.warn('activar matrícula tras pago:', enrErr.message)
-  }
-  return true
+  return Boolean(data)
 }
 
 /** Rechaza: review_status=rechazado + motivo. Devuelve datos del pago para avisar

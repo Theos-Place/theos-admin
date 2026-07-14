@@ -73,6 +73,11 @@ export async function PUT(
     const member = await updateMember(id, updates)
     return NextResponse.json(member)
   } catch (error) {
+    // 23505 = índice único parcial de cédula (migración 114): cierra el TOCTOU
+    // que el chequeo de arriba no cubre entre requests concurrentes.
+    if ((error as { code?: string })?.code === '23505') {
+      return NextResponse.json({ error: 'duplicate' }, { status: 409 })
+    }
     console.error('PUT /api/members/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

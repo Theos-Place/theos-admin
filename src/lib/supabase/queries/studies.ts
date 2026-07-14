@@ -1,4 +1,5 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import type { Json } from '@/types/database'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -772,64 +773,20 @@ export type CloseResult = {
  */
 export async function closeGroup(groupId: string, results: CloseResult[], closedBy: string | null = null): Promise<void> {
   const supabase = createAdminClient()
-  const now = new Date().toISOString()
-
-  // Claim atómico: marcar 'finalizado' PRIMERO y de forma condicional. Un
-  // doble POST (doble clic / retry) no debe re-ejecutar el cierre — duplicaría
-  // folletos, notificaciones y correos en la ruta.
-  const { data: claimed, error: claimErr } = await supabase
-    .from('study_groups')
-    .update({ status: 'finalizado' })
-    .eq('id', groupId)
-    .neq('status', 'finalizado')
-    .select('id')
-  if (claimErr) throw claimErr
-  if ((claimed ?? []).length === 0) throw new Error('YA_CERRADO')
-
-  for (const r of results) {
-    if (r.status_result === 'retirado') {
-      const { error } = await supabase
-        .from('study_enrollments')
-        .update({ status: 'dropped', dropped_at: now, drop_reason: 'Retirado en cierre' })
-        .eq('group_id', groupId)
-        .eq('member_id', r.member_id)
-      if (error) throw error
-    } else {
-      const { error } = await supabase
-        .from('study_enrollments')
-        .update({
-          status: 'completed',
-          completed_at: now,
-          grade: r.grade ?? null,
-          notes: r.status_result === 'reprobado' && r.fail_reason
-            ? `reprobado: ${r.fail_reason}`
-            : r.status_result,
-        })
-        .eq('group_id', groupId)
-        .eq('member_id', r.member_id)
-      if (error) throw error
-    }
+  // RPC TRANSACCIONAL (migración 113): claim 'finalizado' + updates de las
+  // inscripciones + recomendaciones en una sola transacción. Antes eran N
+  // pasos sueltos: un fallo a mitad dejaba el grupo cerrado con inscripciones
+  // a medias y el retry rebotaba con YA_CERRADO sin camino de reparación.
+  // Los tipos generados marcan p_closed_by como requerido (se generaron antes
+  // del DEFAULT NULL); omitirlo cuando es null aplica el default en la BD.
+  const args: { p_group_id: string; p_results: Json; p_closed_by?: string } = {
+    p_group_id: groupId,
+    p_results: results as unknown as Json,
   }
-
-  // Recomendaciones (best-effort por fila: una recomendación inválida no
-  // debe impedir el cierre del grupo).
-  const recRows = results.flatMap(r => {
-    const rec = r.recommendations
-    if (!rec) return []
-    return (['oracion', 'servicio', 'dirigente'] as const)
-      .filter(k => rec[k])
-      .map(k => ({
-        member_id: r.member_id,
-        recommended_for: k,
-        justification: rec.justification?.trim() || null,
-        recommended_by: closedBy,
-        study_group_id: groupId,
-      }))
-  })
-  if (recRows.length > 0) {
-    const { error: recErr } = await supabase.from('member_recommendations').insert(recRows)
-    if (recErr) console.warn('closeGroup: recomendaciones fallaron:', recErr.message)
-  }
+  if (closedBy) args.p_closed_by = closedBy
+  const { data, error } = await supabase.rpc('close_group', args as unknown as { p_group_id: string; p_results: Json; p_closed_by: string })
+  if (error) throw error
+  if (!data) throw new Error('YA_CERRADO')
 }
 
 export type MemberRecommendation = {
