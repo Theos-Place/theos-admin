@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
-import { getStudyPlans, createPlan, type PlanWriteInput } from '@/lib/supabase/queries/studies'
+import { getStudyPlans, createPlan } from '@/lib/supabase/queries/studies'
+import { planWriteSchema } from './schema'
 
 export async function GET() {
   try {
@@ -19,8 +21,14 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles(...STUDY_ADMIN_ROLES)
     if (auth.res) return auth.res
   try {
-    const body = (await req.json()) as PlanWriteInput
-    const plan = await createPlan(body)
+    const parsed = planWriteSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    const plan = await createPlan(parsed.data)
     return NextResponse.json(plan, { status: 201 })
   } catch (error) {
     console.error('POST /api/studies/plans:', error)

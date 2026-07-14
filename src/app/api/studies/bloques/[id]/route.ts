@@ -68,10 +68,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-// DELETE: ?check=1 devuelve cuántas matrículas asociadas tiene (para que la UI
-// advierta). El borrado real TAMBIÉN valida server-side: un bloque con
-// matrículas no se borra (se archiva) — la regla no puede vivir solo en el cliente.
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// DELETE: borra el bloque. Valida server-side: un bloque con matrículas no se
+// borra (se archiva) — la regla no puede vivir solo en el cliente. El conteo
+// previo para advertir en la UI vive en GET ./usage.
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireRoles('coordinador_estudios', 'admin')
   if (auth.res) return auth.res
   try {
@@ -81,9 +81,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const apertura = (data as { fecha_apertura: string } | null)?.fecha_apertura ?? null
     const enrollments = apertura ? await countBlockEnrollments(apertura) : 0
 
-    if (req.nextUrl.searchParams.get('check') === '1') {
-      return NextResponse.json({ enrollments })
-    }
     if (enrollments > 0) {
       return NextResponse.json(
         { error: `El bloque tiene ${enrollments} matrícula(s) asociadas; archivalo en vez de borrarlo.` },

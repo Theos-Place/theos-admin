@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
-import { updateArea, deleteArea, countAreaLinks } from '@/lib/supabase/queries/servers'
+import { updateArea, deleteArea } from '@/lib/supabase/queries/servers'
+import { areaUpdateSchema } from '../schema'
 
 // PUT: edita un área/comité (nombre, descripción, área padre, encargado).
 export async function PUT(
@@ -12,7 +14,14 @@ export async function PUT(
   if (auth.res) return auth.res
   try {
     const { id } = await params
-    await updateArea(id, await req.json())
+    const parsed = areaUpdateSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    await updateArea(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/servers/areas/[id]:', error)
@@ -20,19 +29,16 @@ export async function PUT(
   }
 }
 
-// DELETE: elimina un área o comité. ?check=1 devuelve entidades activas ligadas
-// (servidores activos, puestos, comités hijos) para el ActiveWarningModal.
+// DELETE: elimina un área o comité. Las entidades activas ligadas (para el
+// ActiveWarningModal) se consultan con GET ./usage.
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const auth = await requireRoles(...SERVICE_ADMIN_ROLES)
   if (auth.res) return auth.res
   try {
     const { id } = await params
-    if (req.nextUrl.searchParams.get('check') === '1') {
-      return NextResponse.json(await countAreaLinks(id))
-    }
     await deleteArea(id)
     return NextResponse.json({ ok: true })
   } catch (error) {

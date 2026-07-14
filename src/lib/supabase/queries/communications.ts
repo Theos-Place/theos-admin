@@ -388,6 +388,7 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   if (claimErr) throw claimErr
   if ((claimed ?? []).length === 0) throw new Error('BROADCAST_YA_ENVIADO')
 
+  try {
   // Tipo de broadcast: marketing (respeta opt-out + bounced) vs transaccional.
   const { data: bMeta } = await supabase
     .from('message_broadcasts').select('kind').eq('id', id).single()
@@ -490,6 +491,24 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   } else {
     await refreshBroadcastCounters(id)
   }
+  } catch (err) {
+    // A8: sin esto, un fallo después del claim dejaba el broadcast ZOMBI —
+    // 'sending' sin logs, con el retry rebotando en BROADCAST_YA_ENVIADO para
+    // siempre. Si todavía no se insertó ningún log, el claim se revierte a
+    // draft para que el reintento del usuario funcione.
+    const { count } = await createAdminClient()
+      .from('message_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('broadcast_id', id)
+    if ((count ?? 0) === 0) {
+      await createAdminClient()
+        .from('message_broadcasts')
+        .update({ status: 'draft', started_at: null })
+        .eq('id', id)
+        .eq('status', 'sending')
+    }
+    throw err
+  }
 }
 
 /** Recalcula sent/failed del broadcast desde los logs y cierra si no queda nada pendiente. */
@@ -516,12 +535,15 @@ async function refreshBroadcastCounters(broadcastId: string): Promise<void> {
   // es 'failed', no 'sent' — un "enviado" sin destinatarios engaña al usuario.
   const finalStatus = sent === 0 && failed === 0 ? 'failed'
     : failed === 0 ? 'sent' : sent > 0 ? 'partial' : 'failed'
+  // Condicionado a 'sending' (A8): sin esto, procesar un DRAFT (0 logs) lo
+  // marcaba 'failed' con completed_at y quedaba insendable para siempre (el
+  // claim de envío exige status='draft').
   const { error } = await supabase.from('message_broadcasts').update({
     sent_count: sent,
     failed_count: failed,
     status: done ? finalStatus : 'sending',
     completed_at: done ? new Date().toISOString() : null,
-  }).eq('id', broadcastId)
+  }).eq('id', broadcastId).in('status', ['sending', 'sent', 'partial', 'failed'])
   if (error) console.warn('refreshBroadcastCounters:', error.message)
 }
 
@@ -586,24 +608,15 @@ export async function processPendingEmails(
   const dailyUsed = await getDailyEmailsSent()
   const available = Math.max(0, DAILY_LIMIT - dailyUsed)
 
-  // CLAIM ATÓMICO (auditoría S6): reclamamos el lote pasándolo a 'sending'
-  // con un UPDATE condicionado a status='pending'. Si otra ejecución corre a
-  // la vez (cron + botón manual), cada fila la reclama solo una — adiós
-  // emails duplicados. Solo se procesa lo efectivamente reclamado.
-  const candidateIds = logs.slice(0, available).map(l => l.id)
-  if (candidateIds.length === 0) {
-    await refreshBroadcastCounters(broadcastId)
-    return { sent: 0, failed: 0 }
-  }
-  const { data: claimedData, error: clErr } = await supabase
-    .from('message_logs')
-    .update({ status: 'sending', claimed_at: new Date().toISOString() })
-    .in('id', candidateIds)
-    .eq('status', 'pending')
-    .select('id, recipient, member_id, attempts')
-  if (clErr) throw clErr
-  const batch = (claimedData ?? []) as Array<{ id: string; recipient: string; member_id: string | null; attempts: number | null }>
-  if (!batch.length) {
+  // Candidatos del run (respetando el cupo). El claim real es POR FILA justo
+  // antes de cada envío (ver el loop): la auditoría A6 encontró que el claim
+  // por LOTE dejaba filas en 'sending' durante 15-30 min (lotes grandes a
+  // ~100ms+SMTP por correo) — más que el umbral de rescate de 10 min — y un
+  // segundo run las "rescataba" y RE-ENVIABA mientras el primero seguía vivo.
+  // Con claim por fila, la ventana claim→envío es de ~1s y el rescate solo
+  // puede tocar filas de procesos realmente muertos.
+  const batch = logs.slice(0, available)
+  if (batch.length === 0) {
     await refreshBroadcastCounters(broadcastId)
     return { sent: 0, failed: 0 }
   }
@@ -629,6 +642,16 @@ export async function processPendingEmails(
 
   let sent = 0, failed = 0
   for (const log of batch) {
+    // Claim atómico por fila: si otro run (cron + botón manual) la tomó, saltar.
+    const { data: claimed, error: clErr } = await supabase
+      .from('message_logs')
+      .update({ status: 'sending', claimed_at: new Date().toISOString() })
+      .eq('id', log.id)
+      .eq('status', 'pending')
+      .select('id')
+    if (clErr) { console.warn('claim log:', clErr.message); continue }
+    if ((claimed ?? []).length === 0) continue
+
     const attempts = (log.attempts ?? 0) + 1
     const token = log.member_id ? tokens.get(log.member_id) : undefined
     const nombre = log.member_id ? (firstNames.get(log.member_id) ?? '') : ''
@@ -665,14 +688,46 @@ export async function processPendingEmails(
   return { sent, failed }
 }
 
-/** Reencola los fallidos de un broadcast: status pending con fecha de hoy. */
+/** Reencola los fallidos de un broadcast: status pending con fecha de hoy.
+ *  A10: excluye destinatarios SUPRIMIDOS (rebote duro/queja posteriores al
+ *  envío original — reenviarles daña la reputación SES) y respeta un tope de
+ *  intentos para no reencolar eternamente lo que siempre falla. */
+const MAX_EMAIL_ATTEMPTS = 3
+
 export async function retryFailedEmails(broadcastId: string): Promise<number> {
   const supabase = createAdminClient()
+  const { data: failedLogs, error: fErr } = await supabase
+    .from('message_logs')
+    .select('id, member_id, attempts')
+    .eq('broadcast_id', broadcastId)
+    .eq('channel', 'email')
+    .in('status', ['failed', 'bounced'])
+  if (fErr) throw fErr
+  const logs = (failedLogs ?? []) as Array<{ id: string; member_id: string | null; attempts: number | null }>
+  if (!logs.length) return 0
+
+  // Supresión vigente de los miembros involucrados.
+  const memberIds = [...new Set(logs.map(l => l.member_id).filter((m): m is string => Boolean(m)))]
+  const suppressed = new Set<string>()
+  for (let i = 0; i < memberIds.length; i += 300) {
+    const { data: ms } = await supabase
+      .from('members').select('id, email_bounced, email_complained')
+      .in('id', memberIds.slice(i, i + 300))
+    for (const m of (ms ?? []) as Array<{ id: string; email_bounced: boolean | null; email_complained: boolean | null }>) {
+      if (m.email_bounced || m.email_complained) suppressed.add(m.id)
+    }
+  }
+
+  const retryIds = logs
+    .filter(l => (l.attempts ?? 0) < MAX_EMAIL_ATTEMPTS)
+    .filter(l => !l.member_id || !suppressed.has(l.member_id))
+    .map(l => l.id)
+  if (!retryIds.length) return 0
+
   const { data, error } = await supabase
     .from('message_logs')
     .update({ status: 'pending', scheduled_date: todayStr(), last_error: null })
-    .eq('broadcast_id', broadcastId)
-    .eq('channel', 'email')
+    .in('id', retryIds)
     .in('status', ['failed', 'bounced'])
     .select('id')
   if (error) throw error

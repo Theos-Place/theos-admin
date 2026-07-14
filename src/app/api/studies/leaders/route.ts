@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
-import { getStudyLeaders, createLeader, type LeaderWriteInput } from '@/lib/supabase/queries/studies'
+import { getStudyLeaders, createLeader } from '@/lib/supabase/queries/studies'
+import { leaderWriteSchema } from './schema'
 
 export async function GET() {
   try {
@@ -27,7 +29,14 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
     if (auth.res) return auth.res
   try {
-    const leader = await createLeader((await req.json()) as LeaderWriteInput)
+    const parsed = leaderWriteSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    const leader = await createLeader(parsed.data)
     return NextResponse.json(leader, { status: 201 })
   } catch (error) {
     console.error('POST /api/studies/leaders:', error)

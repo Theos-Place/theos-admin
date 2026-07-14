@@ -24,7 +24,12 @@ export async function POST(
 
     const { data: existing } = await supabase
       .from('applications').select('id').eq('vacancy_id', id).eq('applicant_id', memberId).maybeSingle()
-    if (existing) return NextResponse.json({ error: 'already_applied' }, { status: 409 })
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Ya aplicaste a este puesto.', code: 'already_applied' },
+        { status: 409 },
+      )
+    }
 
     const body = await req.json().catch(() => ({}))
     await createApplication({ vacancy_id: id, applicant_id: memberId, notes: typeof body?.notes === 'string' ? body.notes : null })

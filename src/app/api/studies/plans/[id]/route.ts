@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
-import { updatePlan, type PlanWriteInput } from '@/lib/supabase/queries/studies'
+import { updatePlan } from '@/lib/supabase/queries/studies'
+import { planUpdateSchema } from '../schema'
 
 export async function PUT(
   req: NextRequest,
@@ -11,8 +13,14 @@ export async function PUT(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    const patch = (await req.json()) as Partial<PlanWriteInput>
-    const plan = await updatePlan(id, patch)
+    const parsed = planUpdateSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    const plan = await updatePlan(id, parsed.data)
     return NextResponse.json(plan)
   } catch (error) {
     console.error('PUT /api/studies/plans/[id]:', error)

@@ -97,7 +97,7 @@ export default function BloquesPage() {
 
   async function askDelete(b: Bloque) {
     // Regla de borrado: si tiene matrículas asociadas, solo advertencia.
-    const res = await fetch(`/api/studies/bloques/${b.id}?check=1`, { method: 'DELETE' })
+    const res = await fetch(`/api/studies/bloques/${b.id}/usage`)
     const data = await res.json().catch(() => null)
     if (res.ok && (data?.enrollments ?? 0) > 0) {
       setWarn(`Este bloque tiene ${data.enrollments} matrícula(s) de capacitación asociadas. Archivalo en vez de borrarlo para conservar el histórico.`)

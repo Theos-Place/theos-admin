@@ -737,7 +737,13 @@ export async function updateEventScoped(
       { parent_event_id: id, exception_date: occurrence.date, override_event_id: override.id },
       { onConflict: 'parent_event_id,exception_date' },
     )
-    if (error) throw error
+    if (error) {
+      // A15: sin la excepción, la ocurrencia original sigue visible y el
+      // override queda suelto → evento duplicado en el calendario. Compensar
+      // borrando el override recién creado.
+      await supabase.from('events').delete().eq('id', override.id)
+      throw error
+    }
     return override
   }
 

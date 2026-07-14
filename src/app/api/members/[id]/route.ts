@@ -66,7 +66,10 @@ export async function PUT(
     if (cedula || email) {
       const existing = await findMemberByCedulaOrEmail(cedula || null, email || null, id)
       if (existing) {
-        return NextResponse.json({ error: 'duplicate' }, { status: 409 })
+        return NextResponse.json(
+          { error: 'Ya existe otro miembro con esa cédula o correo.', code: 'duplicate' },
+          { status: 409 },
+        )
       }
     }
 
@@ -76,7 +79,10 @@ export async function PUT(
     // 23505 = índice único parcial de cédula (migración 114): cierra el TOCTOU
     // que el chequeo de arriba no cubre entre requests concurrentes.
     if ((error as { code?: string })?.code === '23505') {
-      return NextResponse.json({ error: 'duplicate' }, { status: 409 })
+      return NextResponse.json(
+        { error: 'Ya existe otro miembro con esa cédula o correo.', code: 'duplicate' },
+        { status: 409 },
+      )
     }
     console.error('PUT /api/members/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

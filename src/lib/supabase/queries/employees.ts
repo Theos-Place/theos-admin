@@ -268,12 +268,18 @@ export async function addEmployeeDocument(input: DocumentWriteInput): Promise<{ 
 
 export async function deleteEmployeeDocument(id: string): Promise<void> {
   const supabase = createAdminClient()
-  // Borra primero el archivo de storage (si lo tiene), luego el registro.
+  // Borra primero el REGISTRO (guardando el path antes) y el archivo después,
+  // best-effort: un archivo huérfano en el bucket es inofensivo, pero un registro
+  // apuntando a un archivo inexistente rompe la descarga (404). El cron
+  // /api/cron/storage-orphans reporta los huérfanos que queden.
   const { data } = await supabase.from('employee_documents').select('file_url').eq('id', id).maybeSingle()
   const path = (data as { file_url: string | null } | null)?.file_url
-  if (path) await supabase.storage.from(EMPLOYEE_DOCS_BUCKET).remove([path])
   const { error } = await supabase.from('employee_documents').delete().eq('id', id)
   if (error) throw error
+  if (path) {
+    const { error: rmErr } = await supabase.storage.from(EMPLOYEE_DOCS_BUCKET).remove([path])
+    if (rmErr) console.warn(`deleteEmployeeDocument: quedó archivo huérfano en storage (${path}):`, rmErr.message)
+  }
 }
 
 // ── Storage de documentos ──────────────────────────────────

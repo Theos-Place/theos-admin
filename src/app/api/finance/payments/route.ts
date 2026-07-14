@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import {
-  getPayments, getPaymentsPage, getPaymentStats, createPayment, type PaymentWriteInput,
+  getPayments, getPaymentsPage, getPaymentStats, createPayment,
 } from '@/lib/supabase/queries/finance'
+
+// Validación runtime del alta manual de pagos. El input va directo al insert
+// de `payments` con service role: `.strict()` corta el mass assignment.
+const paymentWriteSchema = z
+  .object({
+    member_id: z.string().trim().min(1).nullish(),
+    entity_type: z.enum(['event', 'study_group']).nullish(),
+    event_id: z.string().trim().min(1).nullish(),
+    study_group_id: z.string().trim().min(1).nullish(),
+    amount: z.number().min(0),
+    payment_method: z.enum(['card', 'sinpe', 'scholarship', 'cash']).nullish(),
+    status: z.enum(['paid', 'pending', 'refunded', 'partial_refund', 'failed']).optional(),
+    gateway_ref: z.string().trim().nullish(),
+    sinpe_confirmation: z.string().trim().nullish(),
+    scholarship_id: z.string().trim().min(1).nullish(),
+    paid_at: z.string().trim().min(1).nullish(),
+    description: z.string().trim().nullish(),
+  })
+  .strict()
 
 export async function GET(req: NextRequest) {
   try {
@@ -47,7 +67,14 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles('finanzas', 'direccion')
     if (auth.res) return auth.res
   try {
-    const payment = await createPayment((await req.json()) as PaymentWriteInput)
+    const parsed = paymentWriteSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    const payment = await createPayment(parsed.data)
     return NextResponse.json(payment, { status: 201 })
   } catch (error) {
     console.error('POST /api/finance/payments:', error)

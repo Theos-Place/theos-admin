@@ -42,6 +42,20 @@ export async function getActiveAttendanceMemberIds(
     const supabase = createAdminClient()
     const monthsKeys = lastCompleteMonthsKeys(months)
     const oldest = `${monthsKeys[monthsKeys.length - 1]}-01` // inicio del mes más viejo
+
+    // A16 (auditoría de rendimiento): el agregado en SQL resuelve en ~37 ms y
+    // UN round trip lo que el loop de abajo hacía en ~19 round trips (95 ms
+    // por llamada, la query más cara de producción). El loop queda como
+    // fallback por si el RPC no está desplegado.
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('active_attendance_member_ids', {
+      p_oldest: `${oldest}T00:00:00Z`,
+      p_months: monthsKeys,
+      p_min_count: (minCount ?? null) as unknown as number, // NULL = modo cobertura
+    })
+    if (!rpcErr && rpcData) {
+      return (rpcData as Array<{ member_id: string }>).map(r => r.member_id)
+    }
+    console.warn('active_attendance_member_ids RPC no disponible, usando fallback:', rpcErr?.message)
     const byMemberMonths = new Map<string, Set<string>>() // cobertura
     const byMemberCount = new Map<string, number>()        // conteo
     for (let from = 0; ; from += 1000) {

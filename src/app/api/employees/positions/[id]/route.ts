@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
-import { updatePosition, deletePosition, type PositionWriteInput } from '@/lib/supabase/queries/employees'
+import { updatePosition, deletePosition } from '@/lib/supabase/queries/employees'
+import { positionUpdateSchema } from '../schema'
 
 export async function PUT(
   req: NextRequest,
@@ -10,7 +12,14 @@ export async function PUT(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    await updatePosition(id, (await req.json()) as Partial<PositionWriteInput>)
+    const parsed = positionUpdateSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    await updatePosition(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/employees/positions/[id]:', error)

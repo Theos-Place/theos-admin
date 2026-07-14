@@ -45,6 +45,18 @@ export async function POST(
       )
     }
     const { id } = await params
+    // A8: procesar un DRAFT (0 logs) lo marcaba 'failed' e insendable para
+    // siempre. Los borradores se envían por /send, no por /process.
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const { data: b } = await createAdminClient()
+      .from('message_broadcasts').select('status').eq('id', id).maybeSingle()
+    if (!b) return NextResponse.json({ error: 'Comunicado no encontrado' }, { status: 404 })
+    if ((b as { status: string }).status === 'draft') {
+      return NextResponse.json(
+        { error: 'Este comunicado es un borrador; envialo primero desde su pantalla.' },
+        { status: 409 },
+      )
+    }
     const body = await req.json().catch(() => ({}))
     let retried = 0
     if (body?.retry_failed) retried = await retryFailedEmails(id)

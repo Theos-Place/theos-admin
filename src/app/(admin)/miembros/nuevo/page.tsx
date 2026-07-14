@@ -245,7 +245,7 @@ export default function NuevoMiembroPage() {
     })
     const json = await res.json().catch(() => null)
     if (!res.ok) {
-      throw new Error(json?.error === 'duplicate'
+      throw new Error(json?.code === 'duplicate'
         ? `Ya existe un miembro con la cédula o correo de ${payload.first_name}.`
         : `No se pudo crear a ${payload.first_name}.`)
     }

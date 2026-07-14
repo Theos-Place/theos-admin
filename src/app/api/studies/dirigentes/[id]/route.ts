@@ -17,7 +17,10 @@ export async function PATCH(
       if (!body.active) {
         const blocked = await membersWithActiveGroups([id])
         if (blocked.has(id)) {
-          return NextResponse.json({ error: 'has_active_groups' }, { status: 409 })
+          return NextResponse.json(
+            { error: 'No se puede desactivar: tiene un grupo en curso o abierto.', code: 'has_active_groups' },
+            { status: 409 },
+          )
         }
       }
       await setDirigenteActive(id, body.active)

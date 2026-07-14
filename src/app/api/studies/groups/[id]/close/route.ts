@@ -22,9 +22,10 @@ export async function POST(
 ) {
   const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
   if (auth.res) return auth.res
+  // Body y params fuera del try: el catch de YA_CERRADO los necesita para reconciliar.
+  const { id } = await params
+  const { results, folleto } = (await req.json().catch(() => ({ results: [] }))) as { results: CloseResult[]; folleto?: FolletoPayload }
   try {
-    const { id } = await params
-    const { results, folleto } = (await req.json()) as { results: CloseResult[]; folleto?: FolletoPayload }
     await closeGroup(id, results ?? [], auth.ctx.memberId)
 
     // Matrícula automática al siguiente nivel para los aprobados, en estado
@@ -94,8 +95,27 @@ export async function POST(
     return NextResponse.json({ ok: true, folletoCreated, autoEnrolled })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_CERRADO') {
+      // A9 (reconciliación): si el cierre original murió DESPUÉS de finalizar
+      // el grupo pero ANTES de completar la matrícula automática, los
+      // aprobados quedaban sin matrícula y el retry solo rebotaba. Re-correr
+      // la auto-matrícula acá es seguro: es idempotente (dedup por plan) y
+      // repara a los que faltaron.
+      let reconciled = 0
+      try {
+        const approvedIds = (results ?? []).filter(r => r.status_result === 'aprobado').map(r => r.member_id)
+        if (approvedIds.length > 0) {
+          const { enrolled } = await autoEnrollApprovedToNextLevel(id, approvedIds)
+          reconciled = enrolled
+        }
+      } catch (e) {
+        console.warn('Reconciliación de auto-matrícula tras YA_CERRADO:', e)
+      }
       return NextResponse.json(
-        { error: 'Este grupo ya fue cerrado. Refrescá la página para ver su estado.' },
+        {
+          error: reconciled > 0
+            ? `Este grupo ya estaba cerrado; se completó la matrícula automática de ${reconciled} aprobado(s) que faltaba(n).`
+            : 'Este grupo ya fue cerrado. Refrescá la página para ver su estado.',
+        },
         { status: 409 },
       )
     }

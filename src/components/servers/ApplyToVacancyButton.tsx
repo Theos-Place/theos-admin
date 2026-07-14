@@ -15,8 +15,8 @@ export function ApplyToVacancyButton({ vacancyId, className }: { vacancyId: stri
     try {
       const res = await fetch(`/api/servers/vacancies/${vacancyId}/apply`, { method: 'POST' })
       if (res.status === 201) { setState('done'); return }
-      const d = await res.json().catch(() => null) as { error?: string } | null
-      if (res.status === 409 && d?.error === 'already_applied') { setState('already'); return }
+      const d = await res.json().catch(() => null) as { error?: string; code?: string } | null
+      if (res.status === 409 && d?.code === 'already_applied') { setState('already'); return }
       setState('error')
     } catch {
       setState('error')

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
-import { updateConfig, deleteConfig, type ConfigWriteInput } from '@/lib/supabase/queries/communications'
+import { updateConfig, deleteConfig } from '@/lib/supabase/queries/communications'
+import { configUpdateSchema } from '../schema'
 
 export async function PUT(
   req: NextRequest,
@@ -10,7 +12,14 @@ export async function PUT(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    await updateConfig(id, (await req.json()) as Partial<ConfigWriteInput>)
+    const parsed = configUpdateSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    await updateConfig(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/communications/configs/[id]:', error)

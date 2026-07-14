@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
-import { updateTemplate, deleteTemplate, type TemplateWriteInput } from '@/lib/supabase/queries/communications'
+import { updateTemplate, deleteTemplate } from '@/lib/supabase/queries/communications'
+import { templateUpdateSchema } from '../schema'
 
 export async function PUT(
   req: NextRequest,
@@ -10,7 +12,14 @@ export async function PUT(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    await updateTemplate(id, (await req.json()) as Partial<TemplateWriteInput>)
+    const parsed = templateUpdateSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    await updateTemplate(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/communications/templates/[id]:', error)

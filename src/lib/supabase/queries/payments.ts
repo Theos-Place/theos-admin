@@ -165,14 +165,27 @@ export async function autoEnrollApprovedToNextLevel(
   // Grupo sucesor (best-effort: si falla, la matrícula queda solo a nivel de plan).
   const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next)
 
-  // Dedup: quién ya tiene inscripción a ese nivel (activa/pendiente/completada/espera).
-  const { data: existing } = await supabase
-    .from('study_enrollments')
-    .select('member_id')
-    .eq('plan_id', np.id)
-    .in('member_id', approvedMemberIds)
-    .in('status', ['enrolled', 'pendiente_de_pago', 'completed', 'waitlist'])
-  const already = new Set(((existing ?? []) as Array<{ member_id: string }>).map(r => r.member_id))
+  // Dedup: quién ya tiene inscripción a ese nivel — por plan_id directo O por
+  // grupo cuyo plan es el siguiente (A12: las matrículas por grupo tienen
+  // plan_id NULL y el dedup anterior no las veía → 3 duplicados en prod).
+  const [byPlan, byGroup] = await Promise.all([
+    supabase
+      .from('study_enrollments')
+      .select('member_id')
+      .eq('plan_id', np.id)
+      .in('member_id', approvedMemberIds)
+      .in('status', ['enrolled', 'pendiente_de_pago', 'completed', 'waitlist']),
+    supabase
+      .from('study_enrollments')
+      .select('member_id, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)')
+      .eq('group.plan_id', np.id)
+      .in('member_id', approvedMemberIds)
+      .in('status', ['enrolled', 'pendiente_de_pago', 'completed', 'waitlist']),
+  ])
+  const already = new Set([
+    ...((byPlan.data ?? []) as Array<{ member_id: string }>).map(r => r.member_id),
+    ...((byGroup.data ?? []) as Array<{ member_id: string }>).map(r => r.member_id),
+  ])
 
   // Si el nivel siguiente es gratis (costo 0), la matrícula queda ACTIVA de una;
   // si tiene costo, queda 'pendiente_de_pago' + pago pendiente por comprobante.
@@ -275,7 +288,9 @@ export async function submitEnrollmentComprobante(input: {
     return { id: eid }
   }
 
-  const { data, error } = await supabase.from('payments').insert({
+  let insertResult
+  try {
+    insertResult = await supabase.from('payments').insert({
     member_id: row.member_id,
     amount,
     currency: 'CRC',
@@ -289,7 +304,16 @@ export async function submitEnrollmentComprobante(input: {
     status: 'pending',
     review_status: 'en_revision',
   }).select('id').single()
-  if (error) throw error
+  } catch (e) {
+    throw e
+  }
+  const { data, error } = insertResult
+  if (error) {
+    // 23505 = índice único parcial (migración 118): otro comprobante de esta
+    // matrícula ya está en revisión (carrera que el check de arriba no cubre).
+    if ((error as { code?: string }).code === '23505') throw new Error('COMPROBANTE_EN_REVISION')
+    throw error
+  }
   return { id: (data as { id: string }).id }
 }
 

@@ -50,9 +50,13 @@ export async function PUT(
     const event = await updateEventScoped(id, scope, formToPartialWriteInput(body), subEvents, occurrence, auth.ctx.userId, committees)
     return NextResponse.json(event)
   } catch (error) {
+    // Solo los errores de dominio conocidos exponen su mensaje al cliente;
+    // cualquier otro error interno no debe filtrar detalles (SQL, stack, etc.).
+    if (error instanceof EventHasAttendanceError) {
+      return NextResponse.json({ error: error.message }, { status: 422 })
+    }
     console.error('PUT /api/events/[id]:', error)
-    const msg = (error as { message?: string })?.message ?? 'Error interno'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 

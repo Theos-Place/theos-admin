@@ -19,3 +19,16 @@ sí usan `max-w-*` para un ancho de lectura cómodo.
 # Seguridad en rutas API
 
 El proxy (`src/proxy.ts`) excluye `/api`: **todo handler de ruta API debe llamar `requireRoles(...)` de `src/lib/auth/guard.ts`** (las queries usan service role y saltan RLS). Escrituras (POST/PUT/PATCH/DELETE) exigen roles explícitos, no solo sesión, salvo decisión documentada en el propio handler.
+
+## Convención de rutas API
+
+1. Errores: `{ error }` con mensaje humano; si el cliente distingue casos, campo `code` aparte.
+2. Todo body de escritura se valida con zod; fallo → 400 `{ error: 'Datos inválidos', detalles: z.treeifyError(...) }`.
+3. 500 solo en el `catch` final del handler.
+4. Códigos: 201 al crear, 404/409/400 según el caso; DELETE responde 200 `{ ok: true }`.
+5. Crear devuelve el recurso creado; las demás escrituras `{ ok: true }`.
+6. Updates parciales usan PATCH.
+7. Acciones puntuales van como `{ action }` validado (enum), no endpoints ad-hoc.
+8. Listas paginadas responden `{ items, total, page, pageSize }`.
+9. Sin "modo consulta" en DELETE (nada de `?check=1`); la consulta previa es un GET propio.
+10. Paths nuevos en inglés y plural.

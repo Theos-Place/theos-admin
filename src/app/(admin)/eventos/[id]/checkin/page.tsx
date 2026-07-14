@@ -720,7 +720,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
     })
     const data = await res.json().catch(() => null)
     if (!res.ok) {
-      throw new Error(data?.error === 'duplicate'
+      throw new Error(data?.code === 'duplicate'
         ? `Ya existe un miembro con la cédula o correo de ${payload.first_name}.`
         : `No se pudo crear a ${payload.first_name}.`)
     }

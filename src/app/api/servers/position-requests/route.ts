@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES, STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createPositionRequest, getPositionRequests, getManageableCommitteeIds, type PositionRequestInput } from '@/lib/supabase/queries/servers'
+import { createPositionRequest, getPositionRequests, getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
+
+// Validación runtime de la solicitud de puesto nuevo. `.strict()` corta el mass
+// assignment; `requested_by` lo pone el handler desde la sesión, nunca el cliente.
+const positionRequestSchema = z
+  .object({
+    committee_id: z.string().trim().min(1),
+    title: z.string().trim().min(1),
+    description: z.string().trim().nullish(),
+    functions: z.string().trim().nullish(),
+    profile: z.string().trim().nullish(),
+    study_requirement: z.string().trim().nullish(),
+  })
+  .strict()
 
 // GET: lista de solicitudes de puesto nuevo (default: pendientes). Solo Staff/admin.
 export async function GET(req: NextRequest) {
@@ -23,10 +37,14 @@ export async function POST(req: NextRequest) {
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
-    const input = (await req.json()) as PositionRequestInput
-    if (!input?.committee_id || !input?.title?.trim()) {
-      return NextResponse.json({ error: 'Comité y nombre del puesto son obligatorios.' }, { status: 400 })
+    const parsed = positionRequestSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
     }
+    const input = parsed.data
     // Permiso (puntos 1): solo admin + coordinación de staff (cualquier comité), o
     // coordinadores/líderes de comité (solo los comités que gestionan). Dirección
     // queda fuera salvo que lidere un comité.
@@ -56,7 +74,7 @@ export async function POST(req: NextRequest) {
           recipient_member_id: rid,
           type: 'position_request',
           title: 'Nueva solicitud de puesto',
-          body: `${input.title.trim()} · ${(committee as { name?: string } | null)?.name ?? 'comité'}`,
+          body: `${input.title} · ${(committee as { name?: string } | null)?.name ?? 'comité'}`,
           link: '/servidores/admin?solicitudes=1',
         })))
       }

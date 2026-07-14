@@ -74,7 +74,10 @@ export async function POST(req: NextRequest) {
       const { findMemberByCedulaOrEmail } = await import('@/lib/supabase/queries/members')
       const existing = await findMemberByCedulaOrEmail(cedula || null, email || null)
       if (existing) {
-        return NextResponse.json({ error: 'duplicate' }, { status: 409 })
+        return NextResponse.json(
+          { error: 'Ya existe un miembro con esa cédula o correo.', code: 'duplicate' },
+          { status: 409 },
+        )
       }
     }
 
@@ -94,7 +97,10 @@ export async function POST(req: NextRequest) {
     console.error('POST /api/members:', error)
     const e = error as { code?: string; message?: string }
     if (e?.code === '23505') {
-      return NextResponse.json({ error: 'duplicate' }, { status: 409 })
+      return NextResponse.json(
+        { error: 'Ya existe un miembro con esa cédula o correo.', code: 'duplicate' },
+        { status: 409 },
+      )
     }
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

@@ -244,32 +244,19 @@ export async function submitResponse(
   },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('form_responses')
-    .insert({
-      form_id: formId,
-      member_id: input.member_id ?? null,
-      guest_name: input.guest_name ?? null,
-      guest_email: input.guest_email ?? null,
-    })
-    .select('id')
-    .single()
-  if (error) throw error
-  const responseId = (data as { id: string }).id
-
-  const values = Object.entries(input.answers).map(([field_id, value]) => {
-    const isComposite = Array.isArray(value) || typeof value === 'number'
-    return {
-      response_id: responseId,
-      field_id,
-      value_text: isComposite ? null : String(value),
-      value_json: isComposite ? value : null,
-    }
+  // RPC TRANSACCIONAL (migración 119, auditoría A14): antes eran 2 inserts
+  // sueltos y un fallo entre ambos dejaba una respuesta fantasma (contaba en
+  // los totales, vacía al abrirla).
+  const { data: rpcId, error } = await supabase.rpc('submit_form_response', {
+    p_form_id: formId,
+    // null explícito (sin DEFAULT en la función, undefined omitiría la key).
+    p_member_id: (input.member_id ?? null) as unknown as string,
+    p_guest_name: (input.guest_name ?? null) as unknown as string,
+    p_guest_email: (input.guest_email ?? null) as unknown as string,
+    p_answers: input.answers,
   })
-  if (values.length > 0) {
-    const { error: vErr } = await supabase.from('form_response_values').insert(values)
-    if (vErr) throw vErr
-  }
+  if (error) throw error
+  const responseId = rpcId as unknown as string
 
   // Confirmación "form_completado" al remitente (best-effort, transaccional).
   try {
