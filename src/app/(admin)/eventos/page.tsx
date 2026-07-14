@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
 import { useEventTypes, useEventTypeStyle } from '@/hooks/useEventTypes'
-import { type EventType, type MockEvent } from '@/data/event-config'
+import { type EventType, type AdminEvent } from '@/data/event-config'
 import { useEvents, useAllEventsLight } from '@/hooks/useEvents'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
@@ -29,7 +29,7 @@ const VIEW_STORAGE_KEY = 'theos_eventos_view'
 
 const PAGE_SIZE = 15
 
-function downloadAllEventsICS(events: MockEvent[]) {
+function downloadAllEventsICS(events: AdminEvent[]) {
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 

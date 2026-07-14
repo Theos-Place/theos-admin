@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { DbEventEnriched } from '@/lib/supabase/queries/events'
 import { toDomainEvent } from '@/lib/events/adapter'
-import type { MockEvent, EventType, EventStatus } from '@/types/event'
+import type { AdminEvent, EventType, EventStatus } from '@/types/event'
 
 type Filters = {
   search?: string
@@ -41,7 +41,7 @@ export function useEvents(filters: Filters = {}) {
 
   useEffect(() => { fetchEvents() }, [fetchEvents])
 
-  const events: MockEvent[] = useMemo(
+  const events: AdminEvent[] = useMemo(
     () => dbEvents.map(toDomainEvent),
     [dbEvents],
   )
@@ -68,7 +68,7 @@ export function usePublicEvents() {
     return () => { cancelled = true }
   }, [])
 
-  const events: MockEvent[] = useMemo(
+  const events: AdminEvent[] = useMemo(
     () => dbEvents.map(toDomainEvent),
     [dbEvents],
   )
@@ -96,7 +96,7 @@ export function useAllEventsLight() {
     return () => { cancelled = true }
   }, [])
 
-  const events: MockEvent[] = useMemo(
+  const events: AdminEvent[] = useMemo(
     () => dbEvents.map(toDomainEvent),
     [dbEvents],
   )
@@ -128,7 +128,7 @@ export function useEvent(id: string | null) {
 
   useEffect(() => { fetchEvent() }, [fetchEvent])
 
-  const event: MockEvent | null = useMemo(
+  const event: AdminEvent | null = useMemo(
     () => (dbEvent ? toDomainEvent(dbEvent) : null),
     [dbEvent],
   )

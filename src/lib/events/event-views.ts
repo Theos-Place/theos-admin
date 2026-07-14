@@ -2,7 +2,7 @@
 // calendario, calendario público y export ICS) para que no haya discrepancias.
 // Todas se apoyan en expand-recurrence.ts.
 
-import type { MockEvent } from '@/types/event'
+import type { AdminEvent } from '@/types/event'
 import { expandRecurring, nextOccurrence, isPastEvent } from './expand-recurrence'
 
 /**
@@ -10,8 +10,8 @@ import { expandRecurring, nextOccurrence, isPastEvent } from './expand-recurrenc
  * (virtual, fechas desplazadas); los puntuales futuros tal cual. Orden ascendente.
  * Excluye inactivos. Lo usan la lista y el grid.
  */
-export function upcomingEvents(events: MockEvent[], now: Date = new Date()): MockEvent[] {
-  const out: MockEvent[] = []
+export function upcomingEvents(events: AdminEvent[], now: Date = new Date()): AdminEvent[] {
+  const out: AdminEvent[] = []
   for (const e of events) {
     if (e.is_active === false) continue
     if (e.is_recurring && e.recurrence_rule) {
@@ -34,7 +34,7 @@ export function upcomingEvents(events: MockEvent[], now: Date = new Date()): Moc
  * Eventos de un mes: puntuales con start_at en el mes + ocurrencias virtuales de
  * recurrentes dentro de la ventana. Lo usan el calendario interno y el público.
  */
-export function monthEvents(events: MockEvent[], month: number, year: number): MockEvent[] {
+export function monthEvents(events: AdminEvent[], month: number, year: number): AdminEvent[] {
   const from = new Date(year, month, 1)
   const to = new Date(year, month + 1, 1)
   const inMonth = events.filter(e => {
@@ -46,7 +46,7 @@ export function monthEvents(events: MockEvent[], month: number, year: number): M
 }
 
 /** Eventos en una ventana de fechas arbitraria (puntuales + ocurrencias). */
-export function eventsInRange(events: MockEvent[], from: Date, to: Date): MockEvent[] {
+export function eventsInRange(events: AdminEvent[], from: Date, to: Date): AdminEvent[] {
   const inRange = events.filter(e => {
     const d = new Date(e.start_at)
     return d >= from && d < to

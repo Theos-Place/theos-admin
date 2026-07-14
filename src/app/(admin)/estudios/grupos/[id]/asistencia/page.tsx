@@ -7,7 +7,7 @@ import { toDomainStudyGroup, toDomainStudyType } from '@/lib/studies/adapter'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle, Users } from 'lucide-react'
-import { getInitials } from '@/lib/format'
+import { getInitials, toYmdLocal } from '@/lib/format'
 
 export default function AsistenciaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -16,6 +16,8 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true)
   const [attendance, setAttendance] = useState<Record<string, boolean>>({})
   const [notes, setNotes] = useState('')
+  const todayYmd = toYmdLocal(new Date()) // hora local, no UTC (después de las 6 pm difieren)
+  const [sessionDate, setSessionDate] = useState(todayYmd)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +62,6 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
   }
 
   const presentCount = Object.values(attendance).filter(Boolean).length
-  const today = new Date().toLocaleDateString('es-CR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   const sessionNum = group.current_week + 1
 
   function markAll() {
@@ -78,7 +79,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_date: new Date().toISOString().slice(0, 10),
+          session_date: sessionDate,
           notes: notes.trim() || null,
           attendance: enrolled.map(p => ({ member_id: p.member_id, present: attendance[p.member_id] ?? false })),
         }),
@@ -134,9 +135,18 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         <p className="mt-1 text-sm text-navy-light/60 font-body">
           {group.study_type_id} — {sedeLabel(group.zone)}
         </p>
-        <p className="text-sm text-navy-light/60 capitalize font-body">
-          {today}
-        </p>
+        {/* Fecha editable (default hoy, sin futuro): permite registrar una
+            sesión pasada que quedó sin pasar lista ese día. */}
+        <label className="mt-1 flex items-center gap-2 text-sm text-navy-light/60 font-body">
+          Fecha de la sesión
+          <input
+            type="date"
+            value={sessionDate}
+            max={todayYmd}
+            onChange={e => setSessionDate(e.target.value)}
+            className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          />
+        </label>
       </div>
 
       {/* Herramienta de una acción: lista a la izquierda, resumen + notas a la derecha. */}

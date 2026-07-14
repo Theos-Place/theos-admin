@@ -5,11 +5,11 @@ import { Download, Send, UserPlus, Search, Trash2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import type { MockEvent } from '@/data/event-config'
+import type { AdminEvent } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
 import { generateCSV } from '@/lib/export'
 
-type Event = MockEvent
+type Event = AdminEvent
 type PaymentStatus = 'pending' | 'paid' | 'exempted'
 
 const PAYMENT_LABEL: Record<string, string> = {

@@ -9,9 +9,9 @@ import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
 import { downloadBlob } from '@/lib/export'
 import { Repeat } from 'lucide-react'
-import type { MockEvent } from '@/data/event-config'
+import type { AdminEvent } from '@/data/event-config'
 
-type Event = MockEvent
+type Event = AdminEvent
 
 function getGoogleCalendarUrl(event: Event) {
   const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
@@ -100,7 +100,8 @@ export function EventHeader({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <EventTypeBadge type={cancelled ? 'charla' : event.event_type} size="sm" />
+              {/* El tipo real siempre — cancelar no convierte el evento en "charla". */}
+              <EventTypeBadge type={event.event_type} size="sm" />
               {!cancelled && !event.is_recurring && isPastEvent(event)
                 ? <RealizadoBadge />
                 : <EventStatusBadge status={cancelled ? 'cancelled' : event.status} size="sm" />}

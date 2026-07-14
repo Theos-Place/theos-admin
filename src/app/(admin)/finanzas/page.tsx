@@ -333,7 +333,7 @@ export default function FinanzasPage() {
 
             {/* Failed payments */}
             {failedRecent7.length > 0 && (
-              <Link href="/finanzas/pagos" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(239,85,84,0.08)] border border-[rgba(239,85,84,0.20)]">
+              <Link href="/finanzas/pagos?estado=failed" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(239,85,84,0.08)] border border-[rgba(239,85,84,0.20)]">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle size={15} className="text-coral mt-[1px] shrink-0" />
                   <div>

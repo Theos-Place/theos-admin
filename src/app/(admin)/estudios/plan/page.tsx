@@ -344,7 +344,9 @@ export default function PlanDeEstudiosPage() {
                   <td className="px-4 py-3">
                     <CommitmentIcons donor={s.req_donor} server={s.req_server} charlas={s.req_attendee} size={13} />
                   </td>
-                  <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Visibles siempre en táctil (sin hover) y con foco de teclado;
+                      el fade solo aplica en desktop con puntero. */}
+                  <td className="px-4 py-3 text-right transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
                     <div className="flex items-center justify-end gap-2">
                       {canManage && (
                         <Link

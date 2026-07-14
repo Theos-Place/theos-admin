@@ -10,10 +10,10 @@ import { useClientPagination } from '@/hooks/useClientPagination'
 import { usePermissions } from '@/hooks/usePermissions'
 import { TOAST_MS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import type { MockEvent, EventCheckin } from '@/data/event-config'
+import type { AdminEvent, EventCheckin } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
 
-type Event = MockEvent
+type Event = AdminEvent
 
 const AVATAR_COLORS: Record<string, string> = {
   A: 'bg-coral', B: 'bg-teal-deep', C: 'bg-navy', D: 'bg-purple-700', E: 'bg-amber-500',

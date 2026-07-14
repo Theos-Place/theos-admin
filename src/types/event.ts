@@ -40,7 +40,9 @@ export type VolunteerBooking = {
   status: 'confirmed' | 'pending' | 'cancelled'
 }
 
-export type MockEvent = {
+// Antes se llamaba MockEvent: es el evento REAL del dominio admin (el nombre
+// era un residuo de la era de mocks y confundía).
+export type AdminEvent = {
   id: string
   name: string
   event_type: EventType

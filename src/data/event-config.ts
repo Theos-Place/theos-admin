@@ -1,6 +1,6 @@
 // Types live in @/types/event — imported here for internal use, re-exported for consumers.
-import type { EventType, EventStatus, EventPaymentStatus, AttendanceType, SubEvent, EventRegistration, EventCheckin, VolunteerBooking, MockEvent, EventTypeEntry } from '@/types/event'
-export type { EventType, EventStatus, EventPaymentStatus, AttendanceType, SubEvent, EventRegistration, EventCheckin, VolunteerBooking, MockEvent, EventTypeEntry }
+import type { EventType, EventStatus, EventPaymentStatus, AttendanceType, SubEvent, EventRegistration, EventCheckin, VolunteerBooking, AdminEvent, EventTypeEntry } from '@/types/event'
+export type { EventType, EventStatus, EventPaymentStatus, AttendanceType, SubEvent, EventRegistration, EventCheckin, VolunteerBooking, AdminEvent, EventTypeEntry }
 // Backward-compat alias: PaymentStatus was the original name for EventPaymentStatus in this file.
 export type { EventPaymentStatus as PaymentStatus } from '@/types/event'
 

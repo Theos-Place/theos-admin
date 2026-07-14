@@ -3,10 +3,10 @@ import { Image as ImageIcon } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { cn } from '@/lib/utils'
 import { useOrg } from '@/lib/org'
-import type { MockEvent } from '@/data/event-config'
+import type { AdminEvent } from '@/data/event-config'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
 
-type Event = MockEvent
+type Event = AdminEvent
 
 type Props = {
   event: Event

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Calendar, Clock, MapPin, Repeat } from 'lucide-react'
-import type { MockEvent } from '@/types/event'
+import type { AdminEvent } from '@/types/event'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
@@ -10,14 +10,14 @@ import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
 import { useEventTypeStyle } from '@/hooks/useEventTypes'
 
 /** Card grande y visual de un evento para la vista Grid. */
-export function EventCard({ event }: { event: MockEvent }) {
+export function EventCard({ event }: { event: AdminEvent }) {
   const typeColor = useEventTypeStyle()(event.event_type).color
   const past = isPastEvent(event)
   const start = new Date(event.start_at)
   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
   // Ocurrencias virtuales comparten el id del padre → pasamos su fecha para que
   // el detalle muestre la de esta ocurrencia, no la del padre.
-  const isOccurrence = (event as MockEvent & { occurrence_key?: string }).occurrence_key != null
+  const isOccurrence = (event as AdminEvent & { occurrence_key?: string }).occurrence_key != null
   const href = isOccurrence
     ? `/eventos/${event.id}?date=${encodeURIComponent(event.start_at)}`
     : `/eventos/${event.id}`

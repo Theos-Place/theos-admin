@@ -214,6 +214,7 @@ function PagosContent() {
               { key: 'all', label: 'Todos' },
               { key: 'paid', label: 'Pagado' },
               { key: 'pending', label: 'Pendiente' },
+              { key: 'failed', label: 'Fallido' },
               { key: 'refunded', label: 'Devuelto' },
             ]}
           />

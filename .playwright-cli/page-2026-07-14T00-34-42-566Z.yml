@@ -1,0 +1,196 @@
+- generic [ref=e6]:
+  - navigation [ref=e7]:
+    - generic [ref=e8]:
+      - link [ref=e10] [cursor=pointer]:
+        - /url: /
+        - img "Theos Place" [ref=e11]
+      - generic [ref=e12]:
+        - link "¿Quiénes Somos?" [ref=e13] [cursor=pointer]:
+          - /url: /quienes-somos
+        - link "Sedes" [ref=e14] [cursor=pointer]:
+          - /url: /sedes
+        - link "Estudios Bíblicos" [ref=e15] [cursor=pointer]:
+          - /url: /estudios-biblicos
+        - link "Actividades" [ref=e16] [cursor=pointer]:
+          - /url: /actividades
+        - link "Donaciones" [ref=e17] [cursor=pointer]:
+          - /url: /donaciones
+        - link "Puestos de Servicio" [ref=e18] [cursor=pointer]:
+          - /url: /puestos-de-servicio
+  - generic [ref=e19]:
+    - iframe [ref=e22]:
+      - generic "YouTube Video Player" [ref=f1e3]
+    - heading "Guiamos a las personas a disfrutar de una relación cada vez más cercana con Dios." [level=1] [ref=e24]
+  - generic [ref=e30]:
+    - heading "¿Qué es Theos?" [level=2] [ref=e31]
+    - paragraph [ref=e32]: Somos una comunidad donde podés crecer, conectar con otros y descubrir tu propósito. Un espacio para ser vos mismo, hacer amigos reales y servir juntos.
+    - link [ref=e34] [cursor=pointer]:
+      - /url: /sedes
+      - button "Acompáñanos a nuestras charlas" [ref=e35]
+  - generic [ref=e39]:
+    - generic [ref=e40]:
+      - heading "La experiencia" [level=2] [ref=e41]
+      - paragraph [ref=e42]: Descubrí las formas en que podés crecer y conectar
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - heading "Charlas" [level=3] [ref=e49]
+        - paragraph [ref=e50]: Tenemos charlas semanales donde hablamos de temas reales y cómo aplicarlo a nuestra vida, basadas en lo que dice la Biblia.
+      - generic [ref=e51]:
+        - heading "Estudios Bíblicos" [level=3] [ref=e56]
+        - paragraph [ref=e57]: En grupos pequeños, exploramos la Biblia de forma práctica y relevante para la vida.
+      - generic [ref=e58]:
+        - heading "Servicio" [level=3] [ref=e63]
+        - paragraph [ref=e64]: Servimos a la comunidad para marcar la diferencia. Podés hacerlo en nuestras sedes o en los proyectos de Ayuda Social que tenemos.
+  - generic [ref=e69]:
+    - generic [ref=e70]:
+      - heading "Buscá tu sede" [level=2] [ref=e71]
+      - paragraph [ref=e72]: Escogé la sede más cerca de vos
+    - generic [ref=e73]:
+      - generic [ref=e74]:
+        - heading "Meridiano" [level=3] [ref=e75]
+        - generic [ref=e76]:
+          - paragraph [ref=e81]: Martes 7:30pm
+          - paragraph [ref=e85]: Edificio Meridiano, Escazú
+          - paragraph [ref=e92]: "Edad: +32"
+        - link "Waze para llegar" [ref=e93] [cursor=pointer]:
+          - /url: https://www.waze.com/live-map/directions?to=ll.9.942691,-84.152763
+      - generic [ref=e96]:
+        - heading "Antares" [level=3] [ref=e97]
+        - generic [ref=e98]:
+          - paragraph [ref=e103]: Miércoles 7:30pm
+          - paragraph [ref=e107]: Plaza Antares, San Pedro
+          - paragraph [ref=e114]: "Edad: +18"
+        - link "Waze para llegar" [ref=e115] [cursor=pointer]:
+          - /url: https://waze.com/ul/hd1u0x3283
+      - generic [ref=e118]:
+        - generic [ref=e119]: DESTACADO
+        - heading "Pedregal" [level=3] [ref=e120]
+        - generic [ref=e121]:
+          - paragraph [ref=e126]: Múltiples horarios
+          - paragraph [ref=e130]: Pedregal
+          - paragraph [ref=e137]: Todas las edades
+        - link "Waze para llegar" [ref=e138] [cursor=pointer]:
+          - /url: https://waze.com/ul/hd1u0u2xsj
+    - link "Ver sedes" [ref=e142] [cursor=pointer]:
+      - /url: /sedes
+  - generic [ref=e149]:
+    - generic [ref=e150]:
+      - heading "Eventos" [level=2] [ref=e151]
+      - paragraph [ref=e152]: Tenemos muchas actividades pensadas para vos, ¿a cuál nos acompañas?
+    - generic [ref=e153]:
+      - generic [ref=e155]:
+        - 'heading "Un Place Para Theos: Cada Vez Más Cerca" [level=3] [ref=e159]'
+        - paragraph [ref=e160]: ¡Acompañános a cercar el terreno de Theos!
+        - generic [ref=e161]:
+          - generic [ref=e162]: sábado 20 de junio
+          - generic [ref=e166]: 8:00am a 3:00pm
+          - generic [ref=e171]: Terreno de Theos, Lindora
+          - generic [ref=e176]: Juan Mora 8608.3561
+        - link "Apuntate acá" [ref=e181] [cursor=pointer]:
+          - /url: https://theosplace.ccbchurch.com/goto/forms/1215/responses/new
+      - generic [ref=e185]:
+        - heading "Open Day GO" [level=3] [ref=e189]
+        - paragraph [ref=e190]: ¿Querés aprender más sobre las misiones? ¡Acompañános a esta feria donde encontraras info de todas las formas en las que podés ser parte de la gran comisión!
+        - generic [ref=e191]:
+          - generic [ref=e192]: sábado 27 de junio
+          - generic [ref=e196]: 2:30 a 4:30pm
+          - generic [ref=e201]: Theos Pedregal, Belén
+          - generic [ref=e206]: Maria Fernanda Lopez Zuniga
+      - generic [ref=e212]:
+        - heading "Cárcel de Menores" [level=3] [ref=e216]
+        - paragraph [ref=e217]: Visitamos a jóvenes privados de libertad, los escuchamos, motivamos y hacemos estudios bíblicos para que se llenen del amor de Dios.
+        - generic [ref=e218]:
+          - generic [ref=e219]: "Días: Dos viernes al mes"
+          - generic [ref=e223]: 4:00pm - 6:00pm
+          - generic [ref=e228]: Centro de Formación Juvenil, carretera Zurqui
+          - generic [ref=e233]: Ariana Chaves 8311.0816
+        - link "solicitar tu carnet acá:" [ref=e238] [cursor=pointer]:
+          - /url: https://theosplace.ccbchurch.com/goto/forms/702/responses/new
+    - link "Ver actividades" [ref=e242] [cursor=pointer]:
+      - /url: /actividades
+  - generic [ref=e249]:
+    - generic [ref=e250]:
+      - link [ref=e251] [cursor=pointer]:
+        - /url: https://www.instagram.com/_theosplace/
+      - heading "Seguinos en Instagram" [level=2] [ref=e256]
+      - paragraph [ref=e257]: Descubre nuestro contenido más reciente
+    - generic [ref=e264]:
+      - generic [ref=e266]:
+        - link [ref=e268] [cursor=pointer]:
+          - /url: https://www.instagram.com/p/Dani2gdRMur
+          - generic [ref=e270]:
+            - img "Esta semana tuvimos la charla “Whiteout” Si no nos pudiste acompañar durante..." [ref=e271]
+            - img "Post with video" [ref=e273]
+        - link [ref=e278] [cursor=pointer]:
+          - /url: https://www.instagram.com/p/DajYsEJiUOC
+          - generic [ref=e280]:
+            - img "A veces, lo único que necesitamos es bajar el ritmo. Caminar sin prisa. Resp..." [ref=e281]
+            - img "Post with multiple images" [ref=e283]
+        - link [ref=e287] [cursor=pointer]:
+          - /url: https://www.instagram.com/p/DaVi8HHRn4M
+          - generic [ref=e289]:
+            - img "Esta semana tuvimos la charla “Más Grande Que Vos” Si no nos pudiste acompañ..." [ref=e290]
+            - img "Post with video" [ref=e292]
+        - link [ref=e297] [cursor=pointer]:
+          - /url: https://www.instagram.com/p/DaTGgFrFcMz
+          - generic [ref=e299]:
+            - img "¡Julio en Theos Place! Te compartimos las fechas de las actividades que tenem..." [ref=e300]
+            - img "Post with multiple images" [ref=e302]
+        - link [ref=e306] [cursor=pointer]:
+          - /url: https://www.instagram.com/p/DaQt9gjBQL0
+          - generic [ref=e308]:
+            - img "Más que cercar un espacio, estamos construyendo un hogar. ¡Un lugar donde pod..." [ref=e309]
+            - img "Post with video" [ref=e311]
+        - link [ref=e316] [cursor=pointer]:
+          - /url: https://www.instagram.com/p/DaDhZ2dRWIR
+          - generic [ref=e318]:
+            - img "Esta semana tuvimos la charla “Un Corazón Alineado” Si no nos pudiste acompa..." [ref=e319]
+            - img "Post with video" [ref=e321]
+      - button "Next slide" [ref=e325] [cursor=pointer]
+  - contentinfo [ref=e328]:
+    - generic [ref=e329]:
+      - generic [ref=e330]:
+        - generic [ref=e331]:
+          - img "Theos Place" [ref=e332]
+          - paragraph [ref=e333]: Guiamos a las personas adisfrutar de una relacióncada vez más cercana con Dios.
+        - generic [ref=e334]:
+          - heading "Enlaces rápidos" [level=3] [ref=e335]
+          - list [ref=e336]:
+            - listitem [ref=e337]:
+              - link "Recursos" [ref=e338] [cursor=pointer]:
+                - /url: /recursos
+            - listitem [ref=e339]:
+              - link "Software" [ref=e340] [cursor=pointer]:
+                - /url: https://theosplace.ccbchurch.com/goto/login
+            - listitem [ref=e341]:
+              - link "Asistencia" [ref=e342] [cursor=pointer]:
+                - /url: https://app.powerbi.com/view?r=eyJrIjoiMDZjZTUwZTktZGU0ZS00Yjk5LThiMjYtYzAzNGZiZGE3NjQ3IiwidCI6ImQwMzI3YjMzLTc4MzYtNDFkOS05ZTYzLWE2MmQ5NDNlYzdiNiIsImMiOjR9
+            - listitem [ref=e343]:
+              - link "Checkin" [ref=e344] [cursor=pointer]:
+                - /url: https://theosplace.ccbchurch.com/checkin/search
+        - generic [ref=e345]:
+          - heading "Contacto" [level=3] [ref=e346]
+          - list [ref=e347]:
+            - listitem [ref=e348]:
+              - generic [ref=e351]:
+                - paragraph [ref=e352]: WhatsApp
+                - link "+506 8390 4577" [ref=e353] [cursor=pointer]:
+                  - /url: https://wa.me/50683904577
+            - listitem [ref=e354]:
+              - generic [ref=e358]:
+                - paragraph [ref=e359]: Email
+                - link "info@theosplace.org" [ref=e360] [cursor=pointer]:
+                  - /url: mailto:info@theosplace.org
+        - generic [ref=e361]:
+          - heading "Seguinos" [level=3] [ref=e362]
+          - paragraph [ref=e363]: Mantente conectado con todo lo que pasa en Theos.
+          - generic [ref=e364]:
+            - link "Instagram" [ref=e365] [cursor=pointer]:
+              - /url: https://www.instagram.com/_theosplace/
+            - link "Facebook" [ref=e369] [cursor=pointer]:
+              - /url: https://www.facebook.com/theosplacecr
+            - link "YouTube" [ref=e372] [cursor=pointer]:
+              - /url: https://www.youtube.com/@TheosPlaceCharlas
+            - link "Spotify" [ref=e376] [cursor=pointer]:
+              - /url: https://open.spotify.com/show/7ikGjtoCkc8d2PdpV0uGiw?si=31c5f446c58f4e46
+      - paragraph [ref=e380]: © 2026 Theos Place. Todos los derechos reservados.

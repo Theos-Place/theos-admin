@@ -1,15 +1,15 @@
 // Adapta una fila `DbEventEnriched` (Supabase + relaciones) al tipo de dominio
-// `MockEvent` que consumen las páginas de eventos y calendario.
+// `AdminEvent` que consumen las páginas de eventos y calendario.
 
 import type { DbEventEnriched } from '@/lib/supabase/queries/events'
-import type { MockEvent, EventType, AttendanceType } from '@/types/event'
+import type { AdminEvent, EventType, AttendanceType } from '@/types/event'
 
 function fullName(m: { first_name: string; last_name: string } | null): string {
   if (!m) return ''
   return `${m.first_name} ${m.last_name}`.trim()
 }
 
-export function toDomainEvent(db: DbEventEnriched): MockEvent {
+export function toDomainEvent(db: DbEventEnriched): AdminEvent {
   return {
     id: db.id,
     name: db.title,

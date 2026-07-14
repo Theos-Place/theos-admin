@@ -8,7 +8,7 @@ import type { EventType, EventStatus, EventPaymentStatus, AttendanceType } from 
 // ── Tipos ──────────────────────────────────────────────────
 
 /** Fila cruda de `events` + relaciones, tal como las devuelve Supabase.
- *  Convertir a `MockEvent` con `toDomainEvent()` en `@/lib/events/adapter`. */
+ *  Convertir a `AdminEvent` con `toDomainEvent()` en `@/lib/events/adapter`. */
 export type DbEventEnriched = {
   id: string
   title: string

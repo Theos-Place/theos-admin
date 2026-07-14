@@ -14,7 +14,7 @@ import { formatDate, formatDateTime } from '@/lib/format'
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { payments, refetch, loading } = useFinance('payments')
+  const { payments, refunds, refetch, loading } = useFinance('payments', 'refunds')
   const [payment, setPayment] = useState<Payment | null>(null)
   useEffect(() => { setPayment(payments.find(p => p.id === id) ?? null) }, [payments, id])
   const [showRefund, setShowRefund] = useState(false)
@@ -198,7 +198,12 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               {isRefunded && (
                 <TimelineItem
                   label={payment.status === 'refunded' ? 'Devuelto completamente' : 'Devolución parcial'}
-                  date={formatDate(payment.paid_at)}
+                  date={formatDate(
+                    // Fecha real del reembolso (processed_at de la devolución);
+                    // antes se mostraba la fecha del PAGO.
+                    refunds.find(r => r.payment_id === payment.id && r.status === 'completed')?.processed_at
+                      ?? payment.paid_at,
+                  )}
                   color="#519DA2"
                   active
                 />

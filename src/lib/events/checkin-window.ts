@@ -5,12 +5,12 @@
  * ocurrencias de recurrentes (expandidas). Distinto del filtro "próximos" de la
  * lista de eventos: acá un evento que YA empezó sigue visible.
  */
-import type { MockEvent } from '@/types/event'
+import type { AdminEvent } from '@/types/event'
 import { eventsInRange } from './event-views'
 import { CHECKIN_GRACE_HOURS } from '@/lib/constants'
 
 export type CheckinStatus = 'en_curso' | 'por_iniciar' | 'recien_terminado'
-export type CheckinCandidate = MockEvent & { checkin_status: CheckinStatus }
+export type CheckinCandidate = AdminEvent & { checkin_status: CheckinStatus }
 
 export const CHECKIN_STATUS_LABEL: Record<CheckinStatus, string> = {
   en_curso: 'En curso',
@@ -20,7 +20,7 @@ export const CHECKIN_STATUS_LABEL: Record<CheckinStatus, string> = {
 
 /** Eventos de HOY disponibles para check-in (dentro de su ventana de gracia),
  *  ordenados por hora de inicio, con su estado. */
-export function todaysCheckinEvents(events: MockEvent[], now: Date = new Date()): CheckinCandidate[] {
+export function todaysCheckinEvents(events: AdminEvent[], now: Date = new Date()): CheckinCandidate[] {
   const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0)
   const endOfDay = new Date(startOfDay); endOfDay.setDate(endOfDay.getDate() + 1)
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { type MockEvent } from '@/data/event-config'
+import { type AdminEvent } from '@/data/event-config'
 import { useEventTypeStyle } from '@/hooks/useEventTypes'
 import { isPastEvent } from '@/lib/events/expand-recurrence'
 import { Popover } from '@/components/shared/Popover'
@@ -12,7 +12,7 @@ import { MapPin, Clock, ExternalLink, Repeat, ChevronRight } from 'lucide-react'
 
 // Las ocurrencias virtuales de recurrentes traen occurrence_key (mismo id que
 // el padre → el clic lleva al detalle del padre, pero la key de React es única).
-type CalendarEvent = MockEvent & { occurrence_key?: string }
+type CalendarEvent = AdminEvent & { occurrence_key?: string }
 
 interface CalendarGridProps {
   events: CalendarEvent[]

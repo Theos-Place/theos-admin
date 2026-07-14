@@ -1,7 +1,7 @@
 'use client'
 import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import type { MockEvent } from '@/data/event-config'
+import type { AdminEvent } from '@/data/event-config'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { Modal } from '@/components/shared/Modal'
@@ -45,8 +45,8 @@ function CalendarioWidget() {
     () => monthEvents(baseEvents, currentMonth, currentYear).length,
     [baseEvents, currentMonth, currentYear],
   )
-  const [selectedEvent, setSelectedEvent] = useState<MockEvent | null>(null)
-  const [dayModal, setDayModal] = useState<{ date: number; events: MockEvent[] } | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null)
+  const [dayModal, setDayModal] = useState<{ date: number; events: AdminEvent[] } | null>(null)
 
   function formatEventTime(iso: string) {
     return new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })
