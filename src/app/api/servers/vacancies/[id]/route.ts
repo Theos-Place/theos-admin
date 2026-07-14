@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { canManageCommittee } from '@/lib/auth/committee-scope'
-import { updateVacancy, deleteVacancy, getVacancyCommitteeId, type VacancyWriteInput } from '@/lib/supabase/queries/servers'
+import { updateVacancy, deleteVacancy, getVacancyCommitteeId } from '@/lib/supabase/queries/servers'
+import { vacancyWriteSchema } from '../schema'
 
 export async function PUT(
   req: NextRequest,
@@ -15,7 +17,14 @@ export async function PUT(
     if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, committeeId))) {
       return NextResponse.json({ error: 'No podés editar vacantes de este comité.' }, { status: 403 })
     }
-    await updateVacancy(id, (await req.json()) as Partial<VacancyWriteInput>)
+    const parsed = vacancyWriteSchema.partial().safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    await updateVacancy(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/servers/vacancies/[id]:', error)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView, resolveTargetMemberId } from '@/lib/auth/guard'
+import { rateLimit } from '@/lib/rate-limit'
 import { getFormResponses, submitResponse } from '@/lib/supabase/queries/forms'
 
 export async function GET(
@@ -30,6 +31,9 @@ export async function POST(
     // sin sesión), este guard hay que repensarlo con rate limiting.
     const auth = await requireRoles()
     if (auth.res) return auth.res
+    if (!rateLimit(`form-response:${auth.ctx.userId}`, 5, 60_000)) {
+      return NextResponse.json({ error: 'Demasiados envíos seguidos; esperá un minuto.' }, { status: 429 })
+    }
     const { id } = await params
     const body = await req.json()
 

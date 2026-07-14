@@ -6,13 +6,27 @@ import { type AttendanceType, type EventCheckin } from '@/types/event'
 import { useEvent } from '@/hooks/useEvents'
 import { usePermissions } from '@/hooks/usePermissions'
 import { CheckinCard } from '@/components/events/CheckinCard'
-import { QrScanner } from '@/components/events/QrScanner'
+import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { Modal } from '@/components/shared/Modal'
 import { getInitials, toYmdLocal } from '@/lib/format'
+
+// El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
+// no forma parte del bundle inicial de la página.
+const QrScanner = dynamic(
+  () => import('@/components/events/QrScanner').then(m => m.QrScanner),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full aspect-square max-h-[340px] rounded-2xl bg-surface-card flex items-center justify-center shadow-[var(--shadow-sm)]">
+        <p className="text-sm text-navy-light/60 font-body">Cargando cámara…</p>
+      </div>
+    ),
+  },
+)
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

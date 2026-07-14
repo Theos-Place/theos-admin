@@ -1,4 +1,5 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import type { Json } from '@/types/database'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
@@ -207,10 +208,11 @@ async function resolveGroupFilters(
     // Sanitizar metacaracteres de PostgREST (.,()%*\) antes de interpolar en .or()
     // — mismo criterio que finance.ts y servers.ts (evita filter injection).
     const like = `%${f.search.trim().replace(/[%,().*\\]/g, '')}%`
-    const { data: members } = await supabase
-      .from('members').select('id')
-      .or(`first_name.ilike.${like},last_name.ilike.${like}`)
-      .limit(500)
+    // search_text: normalizado (sin tildes) + índice GIN trgm (migración 083);
+    // el .or por first/last no tenía soporte de índice.
+    const { data: members } = await applyMemberSearch(
+      supabase.from('members').select('id'), f.search,
+    ).limit(500)
     const memberIds = ((members ?? []) as Array<{ id: string }>).map(m => m.id)
     const parts = [`name.ilike.${like}`]
     if (memberIds.length > 0) {

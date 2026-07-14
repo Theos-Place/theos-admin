@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    { "path": "/api/cron/folleto-blocks", "schedule": "0 13 * * *" },
+    { "path": "/api/studies/start-reminders", "schedule": "30 13 * * *" },
+    { "path": "/api/notifications/leader-absence-check", "schedule": "0 14 * * *" }
+  ]
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, Clock, MapPin, Repeat } from 'lucide-react'
 import type { AdminEvent } from '@/types/event'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
@@ -30,11 +31,12 @@ export function EventCard({ event }: { event: AdminEvent }) {
       {/* Flyer o placeholder */}
       <div className="relative h-36 w-full overflow-hidden">
         {event.flyer_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={event.flyer_url}
             alt={`Flyer de ${event.name}`}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            fill
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: typeColor + '1A', color: typeColor }}>

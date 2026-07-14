@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
+import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { submitEnrollmentComprobante, PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
@@ -10,6 +11,10 @@ import { submitEnrollmentComprobante, PAYMENT_RECEIPTS_BUCKET } from '@/lib/supa
 export async function POST(req: NextRequest) {
   const auth = await requireModuleView('estudios') // matrícula = estudios; staff que registra
   if (auth.res) return auth.res
+  // Archivos de hasta 8MB: sin tope un usuario autenticado podía llenar el bucket.
+  if (!rateLimit(`comprobante:${auth.ctx.userId}`, 3, 60_000)) {
+    return NextResponse.json({ error: 'Demasiados comprobantes seguidos; esperá un minuto.' }, { status: 429 })
+  }
   try {
     const form = await req.formData()
     const file = form.get('file')

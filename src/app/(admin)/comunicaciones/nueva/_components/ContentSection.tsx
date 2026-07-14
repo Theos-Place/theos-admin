@@ -1,7 +1,7 @@
 import { type RefObject } from 'react'
 import type { CommunicationChannel } from '@/types/communication'
 import { VariableChips, AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
-import { EmailEditor } from '@/components/communications/EmailEditor'
+import { EmailEditor } from '@/components/communications/EmailEditorLazy'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 

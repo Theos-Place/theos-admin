@@ -169,12 +169,12 @@ function stripAccents(s: string): string {
  *  "Juan Pérez" matchea nombre+apellido. Insensible a tildes/ñ (buscar "munoz"
  *  encuentra "Muñoz" y viceversa). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function applyMemberSearch<T extends { ilike: (col: string, pattern: string) => any }>(query: T, search: string): T {
+export function applyMemberSearch<T extends { ilike: (col: string, pattern: string) => any }>(query: T, search: string, col = 'search_text'): T {
   let q = query
   for (const tok of search.trim().split(/\s+/)) {
     const s = stripAccents(tok).toLowerCase().replace(/[%,()]/g, '')
     if (!s) continue
-    q = q.ilike('search_text', `%${s}%`)
+    q = q.ilike(col, `%${s}%`)
   }
   return q
 }

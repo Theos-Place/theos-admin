@@ -63,6 +63,17 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  images: {
+    // Flyers y fotos viven en Supabase Storage; next/image necesita el host
+    // permitido para optimizarlas. (Los comprobantes con URL firmada de 120s
+    // NO usan next/image a propósito: el proxy/caché rompe URLs efímeras.)
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+    ],
+  },
   async redirects() {
     // Lista de espera y reubicaciones se unificaron en solicitudes (migración 042).
     return [

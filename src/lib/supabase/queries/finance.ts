@@ -1,3 +1,4 @@
+import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 
@@ -141,8 +142,9 @@ export async function getPaymentsPage(filters: PaymentFilters = {}): Promise<{ r
   if (filters.method) q = q.eq('payment_method', filters.method)
   if (filters.status) q = q.eq('status', filters.status)
   if (search) {
-    const s = search.replace(/[%,().*\\]/g, '')
-    if (s) q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,cedula.ilike.%${s}%`, { referencedTable: 'member' })
+    // search_text del miembro: normalizado (sin tildes) y con índice GIN trgm
+    // (migración 083) — el .or por columnas sueltas no tenía soporte de índice.
+    q = applyMemberSearch(q, search, 'member.search_text')
   }
 
   const { data, error, count } = await q
@@ -221,9 +223,8 @@ export async function getDonations(filters: DonationFilters = {}): Promise<{ row
   if (filters.from) q = q.gte('donation_date', filters.from)
   if (filters.to) q = q.lte('donation_date', filters.to)
   if (search) {
-    // Sanitizado para sintaxis de filtro PostgREST (coma/paréntesis inyectan).
-    const s = search.replace(/[%,().*\\]/g, '')
-    if (s) q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,cedula.ilike.%${s}%`, { referencedTable: 'member' })
+    // Ver arriba: search_text normalizado con índice, y sin interpolar en .or().
+    q = applyMemberSearch(q, search, 'member.search_text')
   }
 
   const { data, error, count } = await q

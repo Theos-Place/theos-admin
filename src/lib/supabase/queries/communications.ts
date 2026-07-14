@@ -558,13 +558,21 @@ export async function processPendingEmails(
     .order('created_at')
   if (recipientEmails?.length) query = query.in('recipient', recipientEmails)
 
-  // Recuperar claims huérfanos: filas que quedaron en 'sending' hace más de
-  // una hora (proceso muerto entre el claim y el envío) vuelven a 'pending'.
+  // Recuperar claims huérfanos: si el proceso murió entre el claim (status
+  // 'sending' + claimed_at) y el envío, esas filas quedarían en 'sending' para
+  // siempre y el broadcast nunca cerraría. Un envío real tarda segundos, así
+  // que 10 minutos de antigüedad ya es señal inequívoca de proceso muerto;
+  // las devolvemos a 'pending' (claimed_at null) para que este mismo run las
+  // retome. El filtro por claimed_at < umbral mantiene la atomicidad frente a
+  // otro run concurrente: nunca toca claims recién hechos. También rescata
+  // filas 'sending' con claimed_at NULL (anteriores a la migración 054, que
+  // no registraba el claim) — sin esto quedarían huérfanas para siempre.
+  const staleThreshold = new Date(Date.now() - 10 * 60 * 1000).toISOString()
   await supabase.from('message_logs')
     .update({ status: 'pending', claimed_at: null })
     .eq('broadcast_id', broadcastId)
     .eq('status', 'sending')
-    .lt('claimed_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
+    .or(`claimed_at.lt.${staleThreshold},claimed_at.is.null`)
 
   const { data: logsData, error: lErr } = await query
   if (lErr) throw lErr

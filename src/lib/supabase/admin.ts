@@ -1,6 +1,8 @@
 import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+// Valida las env vars al cargar el módulo (falla claro, no a media request).
+import '@/lib/env'
 
 // Helpers de tipos derivados del esquema generado (src/types/database.ts).
 type PublicTables = Database['public']['Tables']

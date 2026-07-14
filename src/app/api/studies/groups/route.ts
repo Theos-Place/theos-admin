@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import {
   getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode,
-  type GroupWriteInput,
 } from '@/lib/supabase/queries/studies'
+import { groupCreateSchema } from './schema'
 
 // Roles que pueden listar todos los grupos: los de estudios + dirigentes, más
 // los consumidores cross-módulo del listado (finanzas en sus solicitudes,
@@ -72,16 +73,22 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
     if (auth.res) return auth.res
   try {
-    const body = (await req.json()) as GroupWriteInput & { study_type_id?: string }
-    // El frontend manda study_type_id (code); resolvemos a plan_id (UUID).
-    if (!body.plan_id && body.study_type_id) {
-      const planId = await getPlanIdByCode(body.study_type_id)
-      if (!planId) {
-        return NextResponse.json({ error: `Plan con code '${body.study_type_id}' no existe` }, { status: 400 })
-      }
-      body.plan_id = planId
+    const parsed = groupCreateSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
     }
-    const { study_type_id: _omit, ...input } = body
+    const { study_type_id, ...input } = parsed.data
+    // El frontend manda study_type_id (code); resolvemos a plan_id (UUID).
+    if (!input.plan_id && study_type_id) {
+      const planId = await getPlanIdByCode(study_type_id)
+      if (!planId) {
+        return NextResponse.json({ error: `Plan con code '${study_type_id}' no existe` }, { status: 400 })
+      }
+      input.plan_id = planId
+    }
     const group = await createGroup(input)
     return NextResponse.json(group, { status: 201 })
   } catch (error) {

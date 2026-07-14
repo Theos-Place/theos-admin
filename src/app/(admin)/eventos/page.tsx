@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
@@ -330,7 +331,7 @@ function EventosContent() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {event.flyer_url && (
-                            <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-9 w-9 rounded-lg object-cover shrink-0" />
+                            <Image src={event.flyer_url} alt={`Flyer de ${event.name}`} width={36} height={36} className="h-9 w-9 rounded-lg object-cover shrink-0" />
                           )}
                           <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: typeColor }} />
                           <div className="min-w-0">
@@ -391,7 +392,7 @@ function EventosContent() {
                   style={idx < visibleRows.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   {event.flyer_url ? (
-                    <img src={event.flyer_url} alt={`Flyer de ${event.name}`} className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                    <Image src={event.flyer_url} alt={`Flyer de ${event.name}`} width={40} height={40} className="h-10 w-10 rounded-lg object-cover shrink-0" />
                   ) : (
                     <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: typeColor }} />
                   )}

@@ -1,4 +1,5 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -249,7 +250,7 @@ export async function getApplicationsPage(filters: ApplicationFilters = {}): Pro
   if (search) {
     const like = `%${search.replace(/[%,().*\\]/g, '')}%`
     const [memRes, vacRes] = await Promise.all([
-      supabase.from('members').select('id').or(`first_name.ilike.${like},last_name.ilike.${like}`).limit(500),
+      applyMemberSearch(supabase.from('members').select('id'), search).limit(500),
       supabase.from('vacancies').select('id').ilike('title', like).limit(500),
     ])
     const memIds = ((memRes.data ?? []) as Array<{ id: string }>).map(m => m.id)

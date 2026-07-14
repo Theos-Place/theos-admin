@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { canManageCommittee } from '@/lib/auth/committee-scope'
-import { getVacancies, createVacancy, type VacancyWriteInput } from '@/lib/supabase/queries/servers'
+import { getVacancies, createVacancy } from '@/lib/supabase/queries/servers'
+import { vacancyWriteSchema } from './schema'
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,7 +28,14 @@ export async function POST(req: NextRequest) {
   const auth = await requireRoles() // autenticado; el permiso real es por comité (abajo)
   if (auth.res) return auth.res
   try {
-    const input = (await req.json()) as VacancyWriteInput
+    const parsed = vacancyWriteSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+    const input = parsed.data
     // El coordinador/líder solo puede solicitar para comités que gestiona; los
     // roles administrativos globales, para cualquiera.
     if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, input.committee_id))) {
