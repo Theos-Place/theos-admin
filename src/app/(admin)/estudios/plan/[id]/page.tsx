@@ -14,20 +14,21 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge } from '@/components/studies/GroupStatusBadge'
 import { sedeLabel } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
-import { Archive, Pencil, Search, X, Bus } from 'lucide-react'
+import { Archive, Pencil, Search, X, Bus, ChevronLeft, Plus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 
 const PAGE_SIZE = 10
 
-const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
+const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
+const sectionLabelCls = 'text-[10px] tracking-widest uppercase text-navy-light/60 font-display'
 
-function getLevelColor(level: string): string {
+function levelPillCls(level: string): string {
   switch (level) {
-    case 'Básico':     return 'rgba(112,189,194,.15)'
-    case 'Intermedio': return 'rgba(22,20,64,.07)'
-    case 'Avanzado':   return 'rgba(239,85,84,.1)'
-    default:           return 'var(--surface-low)'
+    case 'Básico':     return 'bg-teal-soft/30 text-teal-deep'
+    case 'Intermedio': return 'bg-navy/10 text-navy'
+    case 'Avanzado':   return 'bg-coral/10 text-coral'
+    default:           return 'bg-surface-low text-navy-light/70'
   }
 }
 
@@ -44,16 +45,16 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
         <p className="text-sm text-navy-light/70 font-body">
           Al desactivar este tipo de estudio no podrás crear nuevos grupos con él. Los grupos existentes no se ven afectados.
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             onClick={onConfirm}
-            className="btn btn-primary btn-sm"
+            className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Sí, desactivar
           </button>
           <button
             onClick={onCancel}
-            className="btn btn-ghost btn-sm"
+            className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </button>
@@ -114,15 +115,14 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
   if (!studyType) {
     return (
-      <div className="page">
-        <div className="ph">
-          <div className="ptitle">Plan de Estudios</div>
-        </div>
-        <div className="card p-[22px]">
-          <p className="text-sm text-center py-8 text-[var(--fg-muted)] font-body">
-            Tipo de estudio no encontrado.
-          </p>
-        </div>
+      <div className="space-y-4">
+        <Link
+          href="/estudios/plan"
+          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+        >
+          <ChevronLeft size={16} /> Plan de Estudios
+        </Link>
+        <p className="text-navy-light/60 font-body">Tipo de estudio no encontrado.</p>
       </div>
     )
   }
@@ -173,7 +173,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div className="page">
+    <div className="space-y-5">
 
       {showArchive && (
         <ConfirmModal
@@ -182,169 +182,181 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         />
       )}
 
+      {/* ── Back ── */}
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+      >
+        <ChevronLeft size={16} /> Volver
+      </button>
+
       {/* ── Header ── */}
-      <div className="ph">
-        <button
-          className="btn btn-ghost btn-sm mb-[10px]"
-          onClick={() => router.back()}
-        >
-          ← Volver
-        </button>
-        <div className="ph-row">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-3">
+          <StudyTypeBadge code={view.code} />
           <div>
-            <div className="ptitle">{view.name}</div>
-            <div className="psub">
-              {stageInfo?.label}
+            <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
+              {view.name}
+            </h1>
+            <p className="mt-0.5 text-sm text-navy-light/60 font-body">
+              {stageInfo?.label} · {view.weeks} semanas
+              {view.level && ` · Nivel ${view.level}`}
               {isArchived && <span className="ml-2 text-coral font-semibold">[Desactivado]</span>}
-            </div>
+            </p>
           </div>
-          <div className="ph-actions">
-            {isArchived ? (
-              <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setArchive(false)}>
-                <Archive size={13} /> Activar
-              </button>
-            ) : (
-              <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setShowArchive(true)}>
-                <Archive size={13} /> Desactivar
-              </button>
-            )}
+        </div>
+        <div className="flex gap-2 shrink-0">
+          {isArchived ? (
             <button
-              className="btn btn-primary btn-sm"
-              onClick={() => router.push(`/estudios/plan/${id}/editar`)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 font-body"
+              disabled={busy}
+              onClick={() => setArchive(false)}
             >
-              <Pencil size={13} /> Editar
+              <Archive size={13} /> Activar
             </button>
-          </div>
+          ) : (
+            <button
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 font-body"
+              disabled={busy}
+              onClick={() => setShowArchive(true)}
+            >
+              <Archive size={13} /> Desactivar
+            </button>
+          )}
+          <button
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            onClick={() => router.push(`/estudios/plan/${id}/editar`)}
+          >
+            <Pencil size={13} /> Editar
+          </button>
         </div>
       </div>
 
       {/* ── Card info ── */}
-      <div className="card">
-        <div className="card-hd flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <StudyTypeBadge code={view.code} />
+      <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+          {/* Columna principal: descripción, dirigente, compromisos */}
+          <div className="lg:col-span-2 flex flex-col gap-5">
+            {view.description && (
+              <div>
+                <p className={sectionLabelCls}>Descripción</p>
+                <p className="text-[13px] text-navy-light leading-[1.6] mt-1 font-body">
+                  {view.description}
+                </p>
+              </div>
+            )}
+
             <div>
-              <div className="card-title">{view.name}</div>
-              <div className="text-[12px] text-[var(--fg-muted)] mt-0.5 font-body">
-                {stageInfo?.label} · {view.weeks} semanas
-                {view.level && ` · Nivel ${view.level}`}
+              <p className={sectionLabelCls}>Dirigente encargado</p>
+              <div className="mt-1.5 max-w-md">
+                <DirigenteReferenteSelect
+                  value={studyType.mentor_id ?? null}
+                  currentName={studyType.mentor_name ?? null}
+                  onChange={async (memberId) => {
+                    if (!studyType.plan_id) return
+                    try {
+                      const res = await fetch(`/api/studies/plans/${studyType.plan_id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ mentor_id: memberId }),
+                      })
+                      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                    } catch (err) {
+                      console.error('No se pudo cambiar el dirigente encargado:', err)
+                      toast('No se pudo cambiar el dirigente encargado del plan. Intentá de nuevo.', 'error')
+                    }
+                    refetch()
+                  }}
+                />
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="py-5 px-[22px] flex flex-col gap-[18px]">
-
-          {/* Descripción */}
-          {view.description && (
-            <div>
-              <div className="st">Descripción</div>
-              <p className="text-[13px] text-navy-light leading-[1.6] mt-1 font-body">
-                {view.description}
-              </p>
-            </div>
-          )}
-
-          {/* Dirigente encargado */}
-          <div>
-            <div className="st">Dirigente encargado</div>
-            <div className="mt-1">
-              <DirigenteReferenteSelect
-                value={studyType.mentor_id ?? null}
-                currentName={studyType.mentor_name ?? null}
-                onChange={async (memberId) => {
-                  if (!studyType.plan_id) return
-                  try {
-                    const res = await fetch(`/api/studies/plans/${studyType.plan_id}`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ mentor_id: memberId }),
-                    })
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-                  } catch (err) {
-                    console.error('No se pudo cambiar el dirigente encargado:', err)
-                    toast('No se pudo cambiar el dirigente encargado del plan. Intentá de nuevo.', 'error')
-                  }
-                  refetch()
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Compromisos (texto) */}
-          {view.commitments && (
-            <div>
-              <div className="st">Compromisos</div>
-              <div className="text-[12px] text-[var(--fg-muted)] bg-surface-low py-1.5 px-2.5 rounded-lg mt-1 inline-block font-body">
-                📋 {view.commitments}
+            {view.commitments && (
+              <div>
+                <p className={sectionLabelCls}>Compromisos</p>
+                <div className="mt-1.5 inline-block rounded-xl bg-surface-low px-3 py-1.5 text-[12px] text-navy-light/70 font-body">
+                  📋 {view.commitments}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Fila de datos rápidos */}
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+            {view.requires_invitation && (
+              <div>
+                <p className={sectionLabelCls}>Acceso</p>
+                <div className="mt-1.5">
+                  <span className="inline-flex items-center rounded-full bg-[rgba(155,127,212,0.15)] px-2.5 py-1 text-[11px] font-medium text-[#7C5EC2] font-body">
+                    Solo por invitación
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Requisitos de compromiso */}
+            {(view.req_donor || view.req_server || view.req_attendee || view.req_bus) && (
+              <div>
+                <p className={sectionLabelCls}>Compromisos requeridos para matricular</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                  {view.req_donor && (
+                    <span className="inline-flex items-center rounded-full bg-coral/10 px-2.5 py-1 text-[11px] font-medium text-coral font-body">
+                      Ser donador activo
+                    </span>
+                  )}
+                  {view.req_server && (
+                    <span className="inline-flex items-center rounded-full bg-teal-soft/30 px-2.5 py-1 text-[11px] font-medium text-teal-deep font-body">
+                      Servir en un comité
+                    </span>
+                  )}
+                  {view.req_attendee && (
+                    <span className="inline-flex items-center rounded-full bg-navy/10 px-2.5 py-1 text-[11px] font-medium text-navy font-body">
+                      Asistencia regular a charlas
+                    </span>
+                  )}
+                  {view.req_bus && (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-2.5 py-1 text-[11px] font-medium text-coral font-body"
+                      title="Haber asistido a la charla del Bus"
+                    >
+                      <Bus size={14} aria-hidden />
+                      Charla del Bus
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Columna lateral: datos rápidos */}
+          <div className="grid grid-cols-2 gap-4 content-start lg:grid-cols-1">
             <div>
-              <div className="st">Duración</div>
-              <div className="font-semibold text-[13px] font-body">{view.weeks} semanas</div>
+              <p className={sectionLabelCls}>Duración</p>
+              <p className="mt-1 text-sm font-semibold text-navy font-body">{view.weeks} semanas</p>
             </div>
             {view.level && (
               <div>
-                <div className="st">Nivel</div>
-                <span
-                  className="text-[12px] py-0.5 px-2 rounded-full font-semibold font-body"
-                  style={{ background: getLevelColor(view.level) }}
-                >
+                <p className={sectionLabelCls}>Nivel</p>
+                <span className={cn('mt-1 inline-block rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-body', levelPillCls(view.level))}>
                   {view.level}
                 </span>
               </div>
             )}
             <div>
-              <div className="st">Costo</div>
-              <div className="font-semibold text-[13px] font-body">
+              <p className={sectionLabelCls}>Costo</p>
+              <p className="mt-1 text-sm font-semibold text-navy font-body">
                 {view.requires_payment
                   ? `₡${(view.cost ?? 0).toLocaleString('es-CR')}`
                   : 'Gratuito'}
-              </div>
+              </p>
             </div>
             <div>
-              <div className="st">Prerrequisito</div>
-              <div className="font-semibold text-[13px] font-body">
+              <p className={sectionLabelCls}>Prerrequisito</p>
+              <p className="mt-1 text-sm font-semibold text-navy font-body">
                 {view.prerequisite
                   ? studyTypes.find(s => s.code === view.prerequisite)?.name || view.prerequisite
                   : 'Ninguno'}
-              </div>
+              </p>
             </div>
           </div>
-
-          {view.requires_invitation && (
-            <div>
-              <div className="st">Acceso</div>
-              <div className="flex gap-2 flex-wrap mt-1.5">
-                <span className="badge bg-[rgba(155,127,212,0.15)] text-[#7C5EC2]">Solo por invitación</span>
-              </div>
-            </div>
-          )}
-
-          {/* Requisitos de compromiso */}
-          {(view.req_donor || view.req_server || view.req_attendee || view.req_bus) && (
-            <div>
-              <div className="st">Compromisos requeridos para matricular</div>
-              <div className="flex gap-2 flex-wrap mt-1.5 items-center">
-                {view.req_donor    && <span className="badge b-donor">Ser donador activo</span>}
-                {view.req_server   && <span className="badge b-server">Servir en un comité</span>}
-                {view.req_attendee && <span className="badge b-study">Asistencia regular a charlas</span>}
-                {view.req_bus && (
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 text-coral px-2.5 py-1 text-[12px] font-medium font-body"
-                    title="Haber asistido a la charla del Bus"
-                  >
-                    <Bus size={14} aria-hidden />
-                    Charla del Bus
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
@@ -353,28 +365,30 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       {view.requires_invitation && studyType.plan_id && <PlanInvitations planId={studyType.plan_id} />}
 
       {/* ── Grupos ── */}
-      <div className="card">
-        <div className="card-hd flex items-center justify-between">
-          <div className="card-title">
-            Listado de grupos
-            <span className="text-[12px] font-normal text-[var(--fg-muted)] ml-2 font-body">
-              ({filteredGroups.length}{filteredGroups.length !== studyGroups.length ? ` de ${studyGroups.length}` : ''})
-            </span>
+      <div className="overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--outline-variant)] px-5 py-4">
+          <div>
+            <h2 className="text-sm font-semibold text-navy font-display">
+              Listado de grupos
+            </h2>
+            <p className="mt-0.5 text-xs text-navy-light/60 font-body">
+              {filteredGroups.length}{filteredGroups.length !== studyGroups.length ? ` de ${studyGroups.length}` : ''} grupos
+            </p>
           </div>
           <button
-            className="btn btn-primary btn-sm"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             onClick={() => router.push('/estudios/grupos/nuevo')}
           >
-            + Nuevo grupo
+            <Plus size={14} strokeWidth={1.75} /> Nuevo grupo
           </button>
         </div>
 
         {/* Filters */}
-        <div className="py-3 px-[22px] flex flex-wrap gap-2 border-b border-[rgba(22,20,64,0.09)]">
+        <div className="flex flex-wrap gap-2 border-b border-[var(--outline-variant)] px-5 py-3">
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[rgba(41,54,92,0.4)] pointer-events-none" />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-navy-light/60 pointer-events-none" />
             <input
-              className={`${inputCls} font-body pl-[30px] min-w-[200px]`}
+              className={`${inputCls} pl-[30px] min-w-[200px]`}
               placeholder="Buscar por dirigente o zona..."
               aria-label="Buscar por dirigente o zona"
               value={search}
@@ -383,7 +397,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[rgba(41,54,92,0.4)]"
+                aria-label="Limpiar búsqueda"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy transition-colors"
               >
                 <X size={14} />
               </button>
@@ -391,7 +406,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           </div>
 
           <select
-            className={`${inputCls} font-body`}
+            className={inputCls}
+            aria-label="Filtrar por estado"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
           >
@@ -404,7 +420,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
           </select>
 
           <select
-            className={`${inputCls} font-body`}
+            className={inputCls}
+            aria-label="Filtrar por zona"
             value={zoneFilter}
             onChange={e => setZoneFilter(e.target.value)}
           >
@@ -417,20 +434,20 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
         {/* Table or empty */}
         {filteredGroups.length === 0 ? (
-          <div className="py-10 px-[22px] text-center">
-            <p className="text-[14px] font-semibold text-[rgba(41,54,92,0.4)] font-display">Sin resultados</p>
-            <p className="text-[12px] text-[rgba(41,54,92,0.35)] mt-1 font-body">Probá con otros filtros</p>
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm font-semibold text-navy-light/60 font-display">Sin resultados</p>
+            <p className="mt-1 text-xs text-navy-light/60 font-body">Probá con otros filtros</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-[rgba(22,20,64,0.09)]">
-                    {['Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Año', ''].map(h => (
+                  <tr className="border-b border-[var(--outline-variant)]">
+                    {['Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Año', ''].map((h, i) => (
                       <th
-                        key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-[0.07em] uppercase text-[rgba(41,54,92,0.4)] font-display"
+                        key={`${h}-${i}`}
+                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
                       >
                         {h}
                       </th>
@@ -441,28 +458,28 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                   {visibleGroups.map(group => (
                     <tr
                       key={group.id}
-                      className="hover:bg-surface-low transition-colors cursor-pointer border-b border-[rgba(22,20,64,0.06)]"
+                      className="hover:bg-surface-low transition-colors cursor-pointer border-b border-[var(--outline-variant)]"
                       onClick={() => router.push(`/estudios/grupos/${group.id}`)}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                          <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
                             {group.leader_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) ?? '?'}
                           </div>
-                          <span className="text-[13px] text-navy-light font-body">
-                            {group.leader_name ?? <span className="text-[#d97706] text-[11px]">Sin asignar</span>}
+                          <span className="text-sm text-navy font-body">
+                            {group.leader_name ?? <span className="text-amber-600 text-[11px]">Sin asignar</span>}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[rgba(41,54,92,0.7)] font-body">
+                      <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
                         {sedeLabel(group.zone)}
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-[rgba(41,54,92,0.6)] font-body">
+                      <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
                         {group.schedule_days.join('/')} {group.schedule_time}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-[60px] h-[5px] rounded-full bg-[rgba(22,20,64,0.12)] overflow-hidden">
+                          <div className="h-1.5 w-[60px] rounded-full bg-surface-low overflow-hidden">
                             <div
                               className="h-full rounded-full bg-coral"
                               style={{
@@ -470,7 +487,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                               }}
                             />
                           </div>
-                          <span className="text-[12px] text-[rgba(41,54,92,0.7)] font-body">
+                          <span className="text-[12px] text-navy-light/70 font-body">
                             {group.participants.filter((p: { status: string }) => p.status !== 'withdrawn').length}/{group.max_capacity}
                           </span>
                         </div>
@@ -478,13 +495,13 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                       <td className="px-4 py-3">
                         <GroupStatusBadge status={group.status} />
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-[rgba(41,54,92,0.6)] font-body">
+                      <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
                         {group.start_date ? new Date(group.start_date).getFullYear() : '—'}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-right">
                         <Link
                           href={`/estudios/grupos/${group.id}`}
-                          className="btn btn-ghost btn-sm"
+                          className="rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body"
                           onClick={e => e.stopPropagation()}
                         >
                           Ver →
@@ -497,19 +514,19 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {hasMore && (
-              <div className="flex items-center justify-between py-3 px-[22px] border-t border-[rgba(22,20,64,0.09)]">
-                <span className="text-[12px] text-[rgba(41,54,92,0.5)] font-body">
+              <div className="flex items-center justify-between border-t border-[var(--outline-variant)] px-5 py-3">
+                <span className="text-[12px] text-navy-light/60 font-body">
                   Mostrando {visibleCount} de {filteredGroups.length} grupos
                 </span>
                 <div className="flex gap-2">
                   <button
-                    className="btn btn-ghost btn-sm"
+                    className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                     onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
                   >
                     Cargar {Math.min(PAGE_SIZE, remaining)} más
                   </button>
                   <button
-                    className="btn btn-ghost btn-sm"
+                    className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                     onClick={() => setVisibleCount(filteredGroups.length)}
                   >
                     Ver todos ({filteredGroups.length})

@@ -4,6 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { initialsFromParts } from '@/lib/format'
+import { useListNavigation, ComboOption, OptionAvatar } from './combobox-base'
 
 /** Fila de miembro tal como la devuelve `GET /api/members`. */
 export type MemberHit = {
@@ -62,7 +63,12 @@ export function MemberCombobox({
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MemberHit[]>([])
   const [searching, setSearching] = useState(false)
-  const [highlight, setHighlight] = useState(0)
+
+  const { highlight, setHighlight, onKeyDown } = useListNavigation({
+    count: results.length,
+    onPick: i => { const m = results[i]; if (m) pick(m) },
+    onClose: () => setResults([]),
+  })
 
   const excludeKey = excludeIds?.join(',') ?? ''
 
@@ -71,8 +77,8 @@ export function MemberCombobox({
     if (q.length < minChars) { setResults([]); setSearching(false); return }
     const ctrl = new AbortController()
     let alive = true
-    setSearching(true)
     const t = setTimeout(() => {
+      setSearching(true)
       fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=${pageSize}`, { signal: ctrl.signal })
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
@@ -85,20 +91,13 @@ export function MemberCombobox({
         .catch(() => { if (alive) setSearching(false) })
     }, 300)
     return () => { alive = false; clearTimeout(t); ctrl.abort() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, minChars, pageSize, excludeKey])
 
   function pick(m: MemberHit) {
     setQuery('')
     setResults([])
     onSelect(m)
-  }
-
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (results.length === 0) return
-    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight(h => Math.min(h + 1, results.length - 1)) }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight(h => Math.max(h - 1, 0)) }
-    else if (e.key === 'Enter') { e.preventDefault(); const m = results[highlight]; if (m) pick(m) }
-    else if (e.key === 'Escape') { setResults([]) }
   }
 
   const onDark = variant === 'onDark'
@@ -137,25 +136,20 @@ export function MemberCombobox({
             const secondary = secondaryText ? secondaryText(m) : (m.cedula ?? 'Sin cédula')
             const meta = metaText?.(m)
             return (
-              <button
+              <ComboOption
                 key={m.id}
-                type="button"
-                onMouseEnter={() => setHighlight(i)}
-                onClick={() => pick(m)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                  i === highlight ? 'bg-surface-low' : 'hover:bg-surface-low',
-                )}
+                highlighted={i === highlight}
+                onHover={() => setHighlight(i)}
+                onPick={() => pick(m)}
+                className="gap-3 py-2.5"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-                  {initials(m)}
-                </span>
+                <OptionAvatar initials={initials(m)} size={8} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm text-navy font-body">{m.first_name} {m.last_name}</span>
                   {secondary && <span className="block truncate text-[11px] text-navy-light/60 font-body">{secondary}</span>}
                 </span>
                 {meta && <span className="text-[11px] text-navy-light/60 shrink-0 font-body">{meta}</span>}
-              </button>
+              </ComboOption>
             )
           })}
         </div>

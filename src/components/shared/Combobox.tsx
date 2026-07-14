@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Plus, Check, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useDismissOnOutsideClick, ComboPanel, ComboOption, NoResults } from './combobox-base'
 
 export type ComboItem = { value: string; label: string }
 
@@ -46,11 +47,8 @@ export function Combobox({
   const ref = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
-    if (open) { document.addEventListener('mousedown', h); inputRef.current?.focus() }
-    return () => document.removeEventListener('mousedown', h)
-  }, [open])
+  useDismissOnOutsideClick(ref, open, () => setOpen(false))
+  useEffect(() => { if (open) inputRef.current?.focus() }, [open])
 
   const q = query.trim()
   const filtered = q ? items.filter(it => norm(it.label).includes(norm(q))) : items
@@ -78,7 +76,7 @@ export function Combobox({
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-30 rounded-xl border border-[var(--outline-variant)] bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
+        <ComboPanel>
           <div className="flex items-center gap-2 border-b border-[var(--outline-variant)] px-3 py-2">
             <Search size={14} className="shrink-0 text-navy-light/60" />
             <input
@@ -93,28 +91,26 @@ export function Combobox({
           </div>
           <div className="max-h-60 overflow-y-auto py-1">
             {allowEmpty && (
-              <button type="button" onClick={pickEmpty} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low font-body">
+              <ComboOption onPick={pickEmpty} className="text-sm text-navy-light/70 font-body">
                 <span className="flex-1">{emptyLabel}</span>
                 {value.kind === 'empty' && <Check size={14} className="text-coral" />}
-              </button>
+              </ComboOption>
             )}
             {filtered.map(it => (
-              <button key={it.value} type="button" onClick={() => pickExisting(it)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-navy hover:bg-surface-low font-body">
+              <ComboOption key={it.value} onPick={() => pickExisting(it)} className="text-sm text-navy font-body">
                 <span className="flex-1 truncate">{it.label}</span>
                 {value.kind === 'existing' && value.value === it.value && <Check size={14} className="text-coral" />}
-              </button>
+              </ComboOption>
             ))}
             {showCreate && (
-              <button type="button" onClick={pickNew} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-coral hover:bg-coral/5 font-body border-t border-[var(--outline-variant)]">
+              <ComboOption onPick={pickNew} className="text-sm text-coral font-body border-t border-[var(--outline-variant)] hover:bg-coral/5">
                 <Plus size={14} className="shrink-0" />
                 <span className="flex-1 truncate">{createLabel(q)}</span>
-              </button>
+              </ComboOption>
             )}
-            {filtered.length === 0 && !showCreate && (
-              <p className="px-3 py-3 text-[12px] text-navy-light/60 font-body">Sin resultados</p>
-            )}
+            {filtered.length === 0 && !showCreate && <NoResults />}
           </div>
-        </div>
+        </ComboPanel>
       )}
     </div>
   )

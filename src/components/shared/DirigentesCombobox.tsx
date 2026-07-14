@@ -5,6 +5,9 @@ import { useDirigentes } from '@/hooks/useDirigentes'
 import { cn } from '@/lib/utils'
 import { Search, X, ChevronDown } from 'lucide-react'
 import { getInitials } from '@/lib/format'
+import {
+  useDismissOnOutsideClick, useListNavigation, ComboPanel, ComboOption, OptionAvatar, NoResults,
+} from './combobox-base'
 
 type DirigentesComboboxProps = {
   value: string | null              // member_id seleccionado
@@ -28,7 +31,6 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
   const { dirigentes } = useDirigentes()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
-  const [highlight, setHighlight] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -42,19 +44,19 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
       .slice(0, 50)
   }, [dirigentes, q, excludeId])
 
-  // Cerrar al hacer clic fuera.
-  useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    if (open) document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
+  useDismissOnOutsideClick(ref, open, () => setOpen(false))
+
+  const { highlight, setHighlight, onKeyDown } = useListNavigation({
+    count: options.length,
+    onPick: i => pick(options[i].member_id),
+    onClose: () => setOpen(false),
+  })
 
   // Al abrir, foco en el buscador y reset del resaltado.
   useEffect(() => {
     if (open) { setHighlight(0); setTimeout(() => inputRef.current?.focus(), 0) }
     else setQ('')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   function pick(id: string) {
@@ -62,20 +64,11 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
     setOpen(false)
   }
 
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') { setOpen(false); return }
-    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight(h => Math.min(h + 1, options.length - 1)) }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight(h => Math.max(h - 1, 0)) }
-    else if (e.key === 'Enter') { e.preventDefault(); const o = options[highlight]; if (o) pick(o.member_id) }
-  }
-
   return (
     <div className="relative" ref={ref}>
       <div className="flex items-center gap-2 rounded-2xl border border-[var(--outline-variant)] bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
         {selected && !open && (
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-            {getInitials(selected.member_name) || '—'}
-          </span>
+          <OptionAvatar initials={getInitials(selected.member_name)} />
         )}
         <input
           ref={inputRef}
@@ -97,35 +90,29 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
       </div>
 
       {open && (
-        <div className="absolute z-30 mt-1 w-full rounded-2xl bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)] overflow-hidden">
+        <ComboPanel rounded="2xl">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--outline-variant)]">
             <Search size={14} className="text-navy-light/60 shrink-0" />
             <span className="text-xs text-navy-light/60 font-body">Buscá por nombre…</span>
           </div>
           <div className="max-h-64 overflow-y-auto py-1">
             {options.length === 0 ? (
-              <p className="px-3 py-3 text-xs text-navy-light/60 font-body">Sin resultados</p>
+              <NoResults />
             ) : options.map((d, i) => (
-              <button
+              <ComboOption
                 key={d.member_id}
-                type="button"
-                onMouseEnter={() => setHighlight(i)}
-                onClick={() => pick(d.member_id)}
-                className={cn(
-                  'flex w-full items-center gap-2 px-3 py-2 transition-colors text-left',
-                  i === highlight ? 'bg-surface-low' : 'hover:bg-surface-low',
-                  d.member_id === value && 'bg-coral/5',
-                )}
+                highlighted={i === highlight}
+                selected={d.member_id === value}
+                onHover={() => setHighlight(i)}
+                onPick={() => pick(d.member_id)}
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
-                  {getInitials(d.member_name) || '—'}
-                </span>
+                <OptionAvatar initials={getInitials(d.member_name)} />
                 <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{d.member_name}</span>
                 <StatusBadge status={d.status} />
-              </button>
+              </ComboOption>
             ))}
           </div>
-        </div>
+        </ComboPanel>
       )}
     </div>
   )
