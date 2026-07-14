@@ -875,6 +875,20 @@ export async function enrollMember(groupId: string, memberId: string): Promise<v
       .eq('status', 'pendiente_de_pago')
       .limit(1)
     if ((pending ?? []).length > 0) throw new Error('PAGO_PENDIENTE')
+
+    // A3 (auditoría BE): retirar la matrícula pendiente y re-inscribirse por
+    // acá saltaba el cobro (el guard anterior solo ve 'pendiente_de_pago').
+    // Si existe una inscripción RETIRADA de este plan con su pago de matrícula
+    // aún sin pagar, la re-inscripción debe pasar por el comprobante.
+    const { data: droppedDebt } = await supabase
+      .from('study_enrollments')
+      .select('id, payments!payments_enrollment_id_fkey(id, status, concept)')
+      .eq('member_id', memberId)
+      .eq('plan_id', plan.id)
+      .eq('status', 'dropped')
+    const hasUnpaidDebt = ((droppedDebt ?? []) as Array<{ payments: Array<{ status: string; concept: string | null }> | null }>)
+      .some(e => (e.payments ?? []).some(pay => pay.concept === 'matricula' && pay.status !== 'paid'))
+    if (hasUnpaidDebt) throw new Error('PAGO_PENDIENTE')
   }
   // El upsert re-activa una fila existente (group,member). Legítimo para
   // 'dropped' (reincorporación) y 'pendiente_de_pago' con pago del plan al
@@ -904,14 +918,34 @@ export async function enrollMember(groupId: string, memberId: string): Promise<v
   }
 }
 
+/** Retira una inscripción ACTIVA (enrolled/pendiente_de_pago/waitlist).
+ *  A11: 'completed' es terminal — un retiro accidental ya no borra registro
+ *  académico. A3: al retirar una pendiente de pago, su pago de matrícula sin
+ *  comprobante se cancela (status 'failed') para que no quede huérfano y
+ *  aprobable en la cola. */
 export async function withdrawMember(groupId: string, memberId: string, reason?: string): Promise<void> {
   const supabase = createAdminClient()
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('study_enrollments')
     .update({ status: 'dropped', dropped_at: new Date().toISOString(), drop_reason: reason ?? null })
     .eq('group_id', groupId)
     .eq('member_id', memberId)
+    .in('status', ['enrolled', 'pendiente_de_pago', 'waitlist'])
+    .select('id, status')
   if (error) throw error
+  if ((updated ?? []).length === 0) throw new Error('NO_RETIRABLE')
+
+  // Cancelar el pago de matrícula pendiente asociado (si existía y no estaba
+  // en revisión ni pagado). Best-effort: un fallo acá no revierte el retiro.
+  const enrollmentId = (updated as Array<{ id: string }>)[0].id
+  const { error: payErr } = await supabase
+    .from('payments')
+    .update({ status: 'failed' })
+    .eq('enrollment_id', enrollmentId)
+    .eq('concept', 'matricula')
+    .eq('status', 'pending')
+    .is('review_status', null)
+  if (payErr) console.warn('withdrawMember cancelar pago:', payErr.message)
 }
 
 export async function setEnrollmentGrade(groupId: string, memberId: string, grade: number): Promise<void> {
@@ -921,6 +955,9 @@ export async function setEnrollmentGrade(groupId: string, memberId: string, grad
     .update({ grade })
     .eq('group_id', groupId)
     .eq('member_id', memberId)
+    // A11: la nota solo aplica a inscripciones vivas o completadas — no a
+    // retiradas/pendientes de pago.
+    .in('status', ['enrolled', 'completed'])
   if (error) throw error
 }
 

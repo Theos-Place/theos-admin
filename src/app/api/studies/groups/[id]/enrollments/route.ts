@@ -18,6 +18,12 @@ export async function POST(
     await notifyEnrollment(id, member_id)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'YA_COMPLETADO') {
+      return NextResponse.json(
+        { error: 'El miembro ya completó este estudio en este grupo.' },
+        { status: 409 },
+      )
+    }
     if (error instanceof Error && error.message === 'PAGO_PENDIENTE') {
       return NextResponse.json(
         { error: 'El miembro ya tiene una matrícula pendiente de pago para este estudio; debe subir el comprobante para activarla.' },
@@ -60,6 +66,12 @@ export async function DELETE(
     await withdrawMember(id, member_id, reason)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'NO_RETIRABLE') {
+      return NextResponse.json(
+        { error: 'La inscripción ya no está activa (completada o ya retirada); refrescá la página.' },
+        { status: 409 },
+      )
+    }
     console.error('DELETE enrollments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

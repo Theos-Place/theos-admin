@@ -63,6 +63,12 @@ function getTransport(): nodemailer.Transporter {
       user: process.env.SES_SMTP_USER,
       pass: process.env.SES_SMTP_PASSWORD,
     },
+    // Timeouts explícitos (auditoría A7): los defaults de nodemailer son 2 min
+    // de conexión y 10 min de socket — un SMTP colgado congelaba la función
+    // serverless (y al usuario) hasta que Vercel la matara.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   })
   return _transport
 }

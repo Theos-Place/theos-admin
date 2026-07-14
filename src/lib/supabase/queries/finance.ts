@@ -306,10 +306,28 @@ export async function createPayment(input: PaymentWriteInput): Promise<{ id: str
   return data as { id: string }
 }
 
-export async function updatePayment(id: string, patch: Partial<PaymentWriteInput>): Promise<void> {
+/** Confirma un pago SINPE: pending → paid con número de confirmación.
+ *  ÚNICA transición legal de este camino (auditoría A1: el update genérico
+ *  anterior permitía cualquier→cualquier y mass-assignment de amount).
+ *  Devuelve false si el pago ya no estaba pendiente (o no es SINPE). */
+export async function confirmSinpePayment(
+  id: string,
+  input: { sinpe_confirmation: string; paid_at?: string | null },
+): Promise<boolean> {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('payments').update(patch).eq('id', id)
+  const { data, error } = await supabase
+    .from('payments')
+    .update({
+      status: 'paid',
+      sinpe_confirmation: input.sinpe_confirmation,
+      paid_at: input.paid_at ?? new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('status', 'pending')
+    .eq('payment_method', 'sinpe')
+    .select('id')
   if (error) throw error
+  return (data ?? []).length > 0
 }
 
 export type ScholarshipWriteInput = {
@@ -373,62 +391,60 @@ export type RefundWriteInput = {
   notes?: string | null
 }
 
-export async function createRefund(input: RefundWriteInput): Promise<{ id: string }> {
+/** Crea la devolución vía RPC TRANSACCIONAL (migración 116): lock del pago +
+ *  validación de estado (solo paid/partial_refund) + tope de monto contra lo
+ *  ya devuelto, todo en una transacción — el check-then-insert anterior
+ *  permitía sobre-devolución por carrera. Devuelve el código del RPC. */
+export type CreateRefundResult =
+  | { code: 'ok'; id: string }
+  | { code: 'not_found' | 'invalid_amount' }
+  | { code: 'not_refundable'; status: string }
+  | { code: 'exceeds'; max: number }
+
+export async function createRefund(input: RefundWriteInput): Promise<CreateRefundResult> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.from('refunds').insert(input).select('id').single()
+  const { data, error } = await supabase.rpc('create_refund', {
+    p_payment_id: input.payment_id,
+    // null explícito (no undefined): la función no tiene DEFAULT para estos y
+    // JSON.stringify omitiría la key → PostgREST reclamaría el argumento.
+    p_member_id: (input.member_id ?? null) as unknown as string,
+    p_amount: input.amount,
+    p_method: (input.method ?? null) as unknown as string,
+    p_reason: (input.reason ?? null) as unknown as string,
+    p_sinpe_pending: input.sinpe_pending ?? false,
+    p_notes: input.notes ?? undefined,
+  })
   if (error) throw error
-  return data as { id: string }
+  return data as unknown as CreateRefundResult
 }
 
-/** Cambia el estado de una devolución. Al completar, marca el pago como
- *  reembolsado. `details` persiste lo que el revisor digita en el modal
- *  (fecha real de la transferencia, nº de confirmación, motivo del rechazo). */
+/** Procesa la devolución vía RPC TRANSACCIONAL (migración 116): máquina de
+ *  estados (completed/rejected terminales) + el estado del pago se deriva del
+ *  TOTAL devuelto en la misma transacción (refunded si cubre el monto,
+ *  partial_refund si no — antes una devolución parcial marcaba 'refunded'
+ *  entero, y un fallo entre updates dejaba refund completed con pago paid). */
 export async function processRefund(
   id: string,
   status: RefundStatus,
   details?: { processedDate?: string | null; confirmation?: string | null; rejectReason?: string | null },
 ): Promise<void> {
   const supabase = createAdminClient()
-  // Máquina de estados: completed/rejected son terminales — sin esto se
-  // podía "completar" una devolución ya rechazada (y marcar el pago refunded).
-  const { data: cur, error: curErr } = await supabase
-    .from('refunds').select('status, notes').eq('id', id).maybeSingle()
-  if (curErr) throw curErr
-  if (!cur) throw new Error('YA_PROCESADO')
-  const current = cur as { status: RefundStatus; notes: string | null }
-  const allowed: Record<RefundStatus, RefundStatus[]> = {
-    pending: ['processing', 'completed', 'rejected'],
-    processing: ['completed', 'rejected'],
-    completed: [],
-    rejected: [],
-  }
-  if (!allowed[current.status]?.includes(status)) throw new Error('YA_PROCESADO')
-
-  const patch: Record<string, unknown> = { status }
-  if (status === 'completed' || status === 'rejected') {
-    patch.processed_at = details?.processedDate
-      ? new Date(`${details.processedDate}T12:00:00`).toISOString() // mediodía: evita corrimiento de día por TZ
-      : new Date().toISOString()
-  }
-  const extras: string[] = []
-  if (details?.confirmation) extras.push(`Confirmación: ${details.confirmation}`)
-  if (details?.rejectReason) extras.push(`Motivo del rechazo: ${details.rejectReason}`)
-  if (extras.length > 0) {
-    patch.notes = [current.notes, ...extras].filter(Boolean).join('\n')
-  }
-  // Condicional al estado leído: dos revisores simultáneos no procesan doble.
-  const { data, error } = await supabase
-    .from('refunds').update(patch as Updatable<'refunds'>)
-    .eq('id', id).eq('status', current.status)
-    .select('payment_id').maybeSingle()
+  const notes = [
+    details?.confirmation ? `Confirmación: ${details.confirmation}` : null,
+    details?.rejectReason ? `Motivo del rechazo: ${details.rejectReason}` : null,
+  ].filter(Boolean).join('\n')
+  const processedAt = details?.processedDate
+    ? new Date(`${details.processedDate}T12:00:00`).toISOString() // mediodía: evita corrimiento de día por TZ
+    : undefined
+  const { data, error } = await supabase.rpc('process_refund', {
+    p_refund_id: id,
+    p_status: status,
+    p_processed_at: processedAt,
+    p_note: notes || undefined,
+  })
   if (error) throw error
-  if (!data) throw new Error('YA_PROCESADO')
-
-  if (status === 'completed') {
-    const { error: pErr } = await supabase
-      .from('payments').update({ status: 'refunded' }).eq('id', (data as { payment_id: string }).payment_id)
-    if (pErr) throw pErr
-  }
+  const code = (data as unknown as { code: string })?.code
+  if (code !== 'ok') throw new Error('YA_PROCESADO')
 }
 
 // ── Importación de donaciones ──────────────────────────────

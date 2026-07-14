@@ -1,7 +1,7 @@
 // Tipos generados de la BD (supabase gen types / MCP generate_typescript_types).
 // REGENERAR después de CADA migración: sin esto la capa de queries pierde el
 // typecheck y aparecen los casts "as unknown as" (ver revisión 2026-07-13).
-// Generado: 2026-07-13 (migraciones 001-113).
+// Generado: 2026-07-13 (migraciones 001-116).
 
 export type Json =
   | string
@@ -2081,6 +2081,7 @@ export type Database = {
           birth_date: string | null
           canton: string | null
           cedula: string | null
+          cedula_dup_legacy: boolean
           cedula_normalized: string | null
           created_at: string | null
           deactivated_at: string | null
@@ -2126,6 +2127,7 @@ export type Database = {
           birth_date?: string | null
           canton?: string | null
           cedula?: string | null
+          cedula_dup_legacy?: boolean
           cedula_normalized?: string | null
           created_at?: string | null
           deactivated_at?: string | null
@@ -2171,6 +2173,7 @@ export type Database = {
           birth_date?: string | null
           canton?: string | null
           cedula?: string | null
+          cedula_dup_legacy?: boolean
           cedula_normalized?: string | null
           created_at?: string | null
           deactivated_at?: string | null
@@ -4200,8 +4203,20 @@ export type Database = {
       }
       charla_sede_code: { Args: { p_title: string }; Returns: string }
       close_group: {
-        Args: { p_closed_by: string; p_group_id: string; p_results: Json }
+        Args: { p_closed_by?: string; p_group_id: string; p_results: Json }
         Returns: boolean
+      }
+      create_refund: {
+        Args: {
+          p_amount: number
+          p_member_id: string
+          p_method: string
+          p_notes?: string
+          p_payment_id: string
+          p_reason: string
+          p_sinpe_pending: boolean
+        }
+        Returns: Json
       }
       dashboard_sums: {
         Args: { p_month_start: string; p_month_start_date: string }
@@ -4226,6 +4241,15 @@ export type Database = {
         Returns: undefined
       }
       payment_stats: { Args: never; Returns: Json }
+      process_refund: {
+        Args: {
+          p_note?: string
+          p_processed_at?: string
+          p_refund_id: string
+          p_status: string
+        }
+        Returns: Json
+      }
       prune_audit_log: { Args: never; Returns: undefined }
       refresh_donor_flags: { Args: never; Returns: undefined }
       refresh_member_sedes: { Args: never; Returns: undefined }
