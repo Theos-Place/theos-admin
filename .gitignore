@@ -49,3 +49,4 @@ scripts/output/
 
 # Snapshots de pruebas en navegador (Playwright MCP)
 .playwright-mcp/
+.playwright-cli/
