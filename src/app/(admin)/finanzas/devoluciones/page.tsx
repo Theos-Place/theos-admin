@@ -28,7 +28,7 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
 }
 
 export default function DevolucionesPage() {
-  const { refunds: allRefunds, refetch, loading } = useFinance()
+  const { refunds: allRefunds, refetch, loading } = useFinance('refunds')
   const [refunds, setRefunds] = useState<Refund[]>([])
   useEffect(() => { setRefunds(allRefunds) }, [allRefunds])
   const [completeTarget, setCompleteTarget] = useState<Refund | null>(null)

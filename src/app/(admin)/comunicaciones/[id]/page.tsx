@@ -47,7 +47,7 @@ type RecipientRow = {
 
 export default function ComunicacionDetallePage() {
   const { id } = useParams<{ id: string }>()
-  const { messages } = useCommunications()
+  const { messages } = useCommunications('messages')
   const message = useMemo(() => messages.find(m => m.id === id), [messages, id])
   const [recipientFilter, setRecipientFilter] = useState<RecipientFilter>('all')
   const [retrying, setRetrying] = useState(false)

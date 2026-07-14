@@ -41,14 +41,17 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
     Promise.all([
       // Grupos del miembro (inscripciones activas) + grupos abiertos a matrícula.
       fetch(`/api/studies/eligibility?member_id=${memberId}`),
-      fetch('/api/studies/groups'),
+      // Filtro server-side: antes bajaba los ~2,000 grupos y filtraba en el
+      // cliente por status === 'open', que además NO es un estado real
+      // (en_matricula/en_curso/finalizado) — la lista siempre quedaba vacía.
+      fetch('/api/studies/groups?status=en_matricula&all=1'),
       fetch(`/api/finance/requests/payment-options?member_id=${memberId}`),
     ])
       .then(async ([e, g, p]) => {
         const enrolled: GroupOption[] = e.ok ? ((await e.json()).active_enrollments ?? []) : []
-        const allGroups = g.ok ? ((await g.json()) as Array<{ id: string; name: string; status: string; plan: { code: string | null } | null }>) : []
+        const gJson = g.ok ? await g.json() : []
+        const allGroups = (Array.isArray(gJson) ? gJson : (gJson.groups ?? [])) as Array<{ id: string; name: string; plan: { code: string | null } | null }>
         const open = allGroups
-          .filter(gr => gr.status === 'open')
           .map(gr => ({ group_id: gr.id, group_name: gr.name, plan_code: gr.plan?.code ?? null }))
         // inscrito o por inscribirse, sin duplicados
         const seen = new Set(enrolled.map(x => x.group_id))

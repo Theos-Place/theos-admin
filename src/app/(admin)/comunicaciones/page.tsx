@@ -48,9 +48,9 @@ export default function ComunicacionesPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
-  const { messages: MOCK_MESSAGES } = useCommunications()
-  const sent = useMemo(() => MOCK_MESSAGES.filter(m => m.status !== 'draft'), [MOCK_MESSAGES])
-  const drafts = useMemo(() => MOCK_MESSAGES.filter(m => m.status === 'draft'), [MOCK_MESSAGES])
+  const { messages } = useCommunications('messages')
+  const sent = useMemo(() => messages.filter(m => m.status !== 'draft'), [messages])
+  const drafts = useMemo(() => messages.filter(m => m.status === 'draft'), [messages])
 
   const stats = useMemo(() => {
     const sentThisMonth = sent.filter(m => thisMonth(m.sent_at))

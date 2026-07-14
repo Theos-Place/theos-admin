@@ -15,7 +15,7 @@ type EntityOption = { id: string; name: string; amount: number }
 export default function NuevaBecaPage() {
   const router = useRouter()
   const { events } = useEvents()
-  const { groups, studyTypes } = useStudies()
+  const { groups, studyTypes } = useStudies('plans', 'groups')
 
   const [selectedMember, setSelectedMember] = useState<MemberHit | null>(null)
   const [entityType, setEntityType] = useState<'event' | 'study_group'>('event')

@@ -7,7 +7,27 @@ import {
 } from '@/lib/servers/adapter'
 import type { CommitteeData, Vacancy, Application, CommitteeGoal } from '@/types/server'
 
-export function useServers() {
+export type ServersSlice = 'committees' | 'vacancies' | 'applications' | 'goals'
+
+const ENDPOINT: Record<ServersSlice, string> = {
+  committees: '/api/servers/committees',
+  vacancies: '/api/servers/vacancies',
+  applications: '/api/servers/applications',
+  goals: '/api/servers/goals',
+}
+
+// Caché a nivel de módulo (mismo patrón que useFinance/useStudies): navegar
+// entre pantallas de servidores no re-descarga los 4 endpoints. refetch() la salta.
+const TTL_MS = 30_000
+const cache = new Map<ServersSlice, { data: unknown[]; ts: number }>()
+
+/** Datos de servidores por slice. Sin argumentos trae todo (compatibilidad).
+ *  `committees` arrastra `vacancies` (open_vacancies se deriva de ellas). */
+export function useServers(...slices: ServersSlice[]) {
+  const wanted = slices.length ? [...slices] : (['committees', 'vacancies', 'applications', 'goals'] as ServersSlice[])
+  if (wanted.includes('committees') && !wanted.includes('vacancies')) wanted.push('vacancies')
+  const wantedKey = wanted.join(',')
+
   const [dbCommittees, setDbCommittees] = useState<DbCommittee[]>([])
   const [dbVacancies, setDbVacancies]   = useState<DbVacancy[]>([])
   const [dbApps, setDbApps]             = useState<DbApplication[]>([])
@@ -15,29 +35,36 @@ export function useServers() {
   const [loading, setLoading]           = useState(true)
   const [error, setError]               = useState<string | null>(null)
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (force = false) => {
+    const want = wantedKey.split(',') as ServersSlice[]
     setLoading(true)
     setError(null)
     try {
-      const [c, v, a, g] = await Promise.all([
-        fetch('/api/servers/committees'),
-        fetch('/api/servers/vacancies'),
-        fetch('/api/servers/applications'),
-        fetch('/api/servers/goals'),
-      ])
-      if (![c, v, a, g].every((r) => r.ok)) throw new Error('Error cargando servidores')
-      setDbCommittees(await c.json())
-      setDbVacancies(await v.json())
-      setDbApps(await a.json())
-      setDbGoals(await g.json())
+      const results = await Promise.all(want.map(async (slice): Promise<[ServersSlice, unknown[]]> => {
+        const hit = cache.get(slice)
+        if (!force && hit && Date.now() - hit.ts < TTL_MS) return [slice, hit.data]
+        const res = await fetch(ENDPOINT[slice])
+        if (!res.ok) throw new Error('Error cargando servidores')
+        const rows = (await res.json()) as unknown[]
+        cache.set(slice, { data: rows, ts: Date.now() })
+        return [slice, rows]
+      }))
+      for (const [slice, rows] of results) {
+        if (slice === 'committees') setDbCommittees(rows as DbCommittee[])
+        else if (slice === 'vacancies') setDbVacancies(rows as DbVacancy[])
+        else if (slice === 'applications') setDbApps(rows as DbApplication[])
+        else setDbGoals(rows as DbCommitteeGoal[])
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error desconocido')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [wantedKey])
 
   useEffect(() => { fetchAll() }, [fetchAll])
+
+  const refetch = useCallback(() => fetchAll(true), [fetchAll])
 
   const vacancies: Vacancy[]    = useMemo(() => dbVacancies.map(toDomainVacancy), [dbVacancies])
   const applications: Application[] = useMemo(() => dbApps.map(toDomainApplication), [dbApps])
@@ -65,5 +92,5 @@ export function useServers() {
     return m
   }, [dbGoals])
 
-  return { committees, vacancies, applications, goalsByCommittee, loading, error, refetch: fetchAll }
+  return { committees, vacancies, applications, goalsByCommittee, loading, error, refetch }
 }

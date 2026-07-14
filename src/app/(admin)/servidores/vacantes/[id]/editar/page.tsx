@@ -9,7 +9,7 @@ import { Check } from 'lucide-react'
 export default function EditarVacantePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { vacancies, loading } = useServers()
+  const { vacancies, loading } = useServers('vacancies')
   const toast = useToast()
   const vacancy = useMemo(() => vacancies.find(v => v.id === id), [vacancies, id])
 

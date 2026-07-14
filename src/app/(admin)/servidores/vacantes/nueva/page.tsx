@@ -15,7 +15,7 @@ function NuevaVacanteContent() {
   const params = useSearchParams()
   const router = useRouter()
   const preselectedCommittee = params.get('comite') ?? ''
-  const { committees: allCommittees } = useServers()
+  const { committees: allCommittees } = useServers('committees')
   const toast = useToast()
 
   // El coordinador/líder solo puede solicitar para comités que gestiona; los

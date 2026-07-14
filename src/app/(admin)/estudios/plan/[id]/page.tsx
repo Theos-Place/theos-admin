@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
@@ -69,7 +69,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   const toast = useToast()
   const { hasRole, loaded } = useAuth()
 
-  const { studyTypes, groups, refetch } = useStudies()
+  const { studyTypes, groups, refetch } = useStudies('plans', 'groups')
   const studyType = studyTypes.find(s => s.id === id)
 
   const [showArchive, setShowArchive] = useState(false)
@@ -79,21 +79,28 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
   const [zoneFilter,   setZoneFilter]   = useState<string>('all')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  const studyGroups = groups.filter(g => g.study_type_id === id)
+  // Memo: son ~2,000 grupos y esto corría en CADA render (cada keystroke del buscador).
+  const studyGroups = useMemo(() => groups.filter(g => g.study_type_id === id), [groups, id])
 
-  const filteredGroups = studyGroups.filter(g => {
-    const matchSearch = !search.trim() ||
-      g.leader_name?.toLowerCase().includes(search.toLowerCase()) ||
-      g.zone?.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === 'all' || g.status === statusFilter
-    const matchZone   = zoneFilter === 'all'   || g.zone === zoneFilter
-    return matchSearch && matchStatus && matchZone
-  })
+  const filteredGroups = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return studyGroups.filter(g => {
+      const matchSearch = !q ||
+        g.leader_name?.toLowerCase().includes(q) ||
+        g.zone?.toLowerCase().includes(q)
+      const matchStatus = statusFilter === 'all' || g.status === statusFilter
+      const matchZone   = zoneFilter === 'all'   || g.zone === zoneFilter
+      return matchSearch && matchStatus && matchZone
+    })
+  }, [studyGroups, search, statusFilter, zoneFilter])
 
-  const visibleGroups = filteredGroups.slice(0, visibleCount)
+  const visibleGroups = useMemo(() => filteredGroups.slice(0, visibleCount), [filteredGroups, visibleCount])
   const hasMore    = visibleCount < filteredGroups.length
   const remaining  = filteredGroups.length - visibleCount
-  const uniqueZones = Array.from(new Set(studyGroups.map(g => g.zone).filter(Boolean))) as string[]
+  const uniqueZones = useMemo(
+    () => Array.from(new Set(studyGroups.map(g => g.zone).filter(Boolean))) as string[],
+    [studyGroups],
+  )
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)

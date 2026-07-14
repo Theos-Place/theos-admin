@@ -17,7 +17,7 @@ const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60 font-
 function SolicitarPuestoContent() {
   const params = useSearchParams()
   const router = useRouter()
-  const { committees: allCommittees } = useServers()
+  const { committees: allCommittees } = useServers('committees')
   const { hasRole, loaded } = useAuth()
   const toast = useToast()
 

@@ -118,3 +118,37 @@ export async function setFolletoRequestsStatus(ids: string[], status: FolletoSta
   if (error) throw error
   return { updated: count ?? ids.length }
 }
+
+/** Notifica (campana + correo) a quienes tienen el permiso de folletos.
+ *  Centraliza el patrón que duplicaban el cierre de grupo y el cron de
+ *  bloques (~40 líneas cada uno). Best-effort: los correos fallidos se
+ *  loguean sin bloquear (allSettled — antes eran awaits secuenciales). */
+export async function notifyFolletoRecipients(input: {
+  title: string
+  body: string
+  subject: string
+  html: string
+}): Promise<void> {
+  const recipients = await getFolletoRecipients()
+  if (recipients.length === 0) return
+  const supabase = createAdminClient()
+
+  const { error } = await supabase.from('internal_notifications').insert(recipients.map(r => ({
+    recipient_member_id: r.member_id,
+    type: 'folleto_created',
+    title: input.title,
+    body: input.body,
+    link: '/estudios/folletos',
+  })))
+  if (error) console.warn('notifyFolletoRecipients notificaciones:', error.message)
+
+  const { sendEmail } = await import('@/lib/email/provider')
+  await Promise.allSettled(recipients
+    .filter(r => r.email)
+    .map(r => sendEmail({
+      to: { email: r.email!, name: r.name },
+      subject: input.subject,
+      html: input.html,
+      kind: 'transactional',
+    }).catch(e => console.warn('sendEmail folletos falló:', e))))
+}

@@ -29,7 +29,7 @@ const labelCls = 'text-[11px] text-navy-light/60 font-display'
 
 export default function EditarGrupoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { groups, studyTypes, loading, refetch } = useStudies()
+  const { groups, studyTypes, loading, refetch } = useStudies('plans', 'groups')
 
   // El form se monta solo cuando el grupo ya cargó: los useState del form se
   // inicializan una única vez, así que montar antes dejaría los campos vacíos

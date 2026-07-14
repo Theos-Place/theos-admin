@@ -434,6 +434,14 @@ export async function setApplicationStatus(
   if (error) throw error
 }
 
+/** Rechazo masivo en un solo UPDATE (el bulk hacía una query por id). */
+export async function rejectApplications(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('applications').update({ status: 'rejected' }).in('id', ids)
+  if (error) throw error
+}
+
 /** Aprueba varias aplicaciones a la vez (bulk, 5b). Cada aprobación activa al
  *  aplicante como servidor del puesto/comité de su vacante, en una sola
  *  transacción. Devuelve cuántos servidores se activaron. No dispara correos. */

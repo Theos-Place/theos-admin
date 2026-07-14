@@ -37,15 +37,15 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 export default function EmpleadosPage() {
   const router = useRouter()
   const { can } = usePermissions()
-  const { employees: MOCK_EMPLOYEES } = useEmployees()
+  const { employees } = useEmployees()
   const [filter, setFilter] = useState<FilterKey>('all')
   const [historyOpen, setHistoryOpen] = useState(false)
 
-  const active   = MOCK_EMPLOYEES.filter(e => e.status === 'active')
-  const inactive = MOCK_EMPLOYEES.filter(e => e.status === 'inactive')
+  const active   = employees.filter(e => e.status === 'active')
+  const inactive = employees.filter(e => e.status === 'inactive')
   const planilla = active.filter(e => e.contract_type === 'planilla').length
   const servicios = active.filter(e => e.contract_type === 'servicios_profesionales').length
-  const pendingVacations = MOCK_EMPLOYEES.reduce(
+  const pendingVacations = employees.reduce(
     (sum, e) => sum + e.vacation_records.filter(r => r.status === 'pendiente').length, 0
   )
 

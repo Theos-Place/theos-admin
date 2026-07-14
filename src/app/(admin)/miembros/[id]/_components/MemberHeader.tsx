@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Star, Heart, Hammer, CalendarCheck, BookOpen, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
-import { initialsFromParts } from '@/lib/format'
+import { initialsFromParts, formatDate } from '@/lib/format'
 
 function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
   active: boolean
@@ -67,9 +67,6 @@ function initials(firstName: string, lastName: string) {
   return initialsFromParts(firstName, lastName)
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
 
 
 type Props = {

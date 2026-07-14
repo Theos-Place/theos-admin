@@ -39,7 +39,7 @@ const VACANCY_STATUS_LABELS: Record<string, string> = {
 
 export default function VacanteDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { vacancies, applications, refetch } = useServers()
+  const { vacancies, applications, refetch } = useServers('vacancies', 'applications')
 
   const vacancy = useMemo(() => vacancies.find(v => v.id === id), [vacancies, id])
   const initialApps = useMemo(

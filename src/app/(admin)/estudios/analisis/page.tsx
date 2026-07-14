@@ -70,7 +70,7 @@ function RequirementChips({ requirements, size = 'md' }: { requirements: string[
 }
 
 export default function AnalisisPage() {
-  const { studyTypes: STUDY_TYPES } = useStudies()
+  const { studyTypes: STUDY_TYPES } = useStudies('plans')
   const [selectedStudyId, setSelectedStudyId] = useState('')
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(false)

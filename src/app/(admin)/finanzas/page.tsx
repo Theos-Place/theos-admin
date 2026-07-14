@@ -15,7 +15,7 @@ import { useFinance } from '@/hooks/useFinance'
 import { formatDate } from '@/lib/format'
 
 export default function FinanzasPage() {
-  const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS, refunds: MOCK_REFUNDS, scholarships } = useFinance()
+  const { payments, donations, refunds, scholarships } = useFinance('payments', 'donations', 'refunds', 'scholarships')
   const [period, setPeriod] = useState<'month' | 'prev_month' | 'year'>('month')
   const [revealAll, setRevealAll] = useState(false)
 
@@ -24,7 +24,7 @@ export default function FinanzasPage() {
   const thisYear = now.getFullYear()
 
   const filteredPayments = useMemo(() => {
-    return MOCK_PAYMENTS.filter(p => {
+    return payments.filter(p => {
       if (!p.paid_at || p.status !== 'paid') return false
       const d = new Date(p.paid_at)
       if (period === 'month') return d.getMonth() === thisMonth && d.getFullYear() === thisYear
@@ -38,7 +38,7 @@ export default function FinanzasPage() {
   }, [period, thisMonth, thisYear])
 
   const filteredDonations = useMemo(() => {
-    return MOCK_DONATIONS.filter(d => {
+    return donations.filter(d => {
       const dt = new Date(d.donation_date)
       if (period === 'month') return dt.getMonth() === thisMonth && dt.getFullYear() === thisYear
       if (period === 'prev_month') {
@@ -54,17 +54,17 @@ export default function FinanzasPage() {
     + filteredDonations.reduce((s, d) => s + d.amount, 0)
 
   const activeDonors = new Set(filteredDonations.filter(d => d.is_identified).map(d => d.member_id)).size
-  const pendingPayments = MOCK_PAYMENTS.filter(p => p.status === 'pending').length
-  const pendingRefunds = MOCK_REFUNDS.filter(r => r.status === 'pending' || r.status === 'processing').length
-  const sinpePendingRefunds = MOCK_REFUNDS.filter(r => r.sinpe_pending && (r.status === 'pending' || r.status === 'processing'))
-  const failedRecent7 = MOCK_PAYMENTS.filter(p => {
+  const pendingPayments = payments.filter(p => p.status === 'pending').length
+  const pendingRefunds = refunds.filter(r => r.status === 'pending' || r.status === 'processing').length
+  const sinpePendingRefunds = refunds.filter(r => r.sinpe_pending && (r.status === 'pending' || r.status === 'processing'))
+  const failedRecent7 = payments.filter(p => {
     if (p.status !== 'failed') return false
     const d = new Date(p.created_at)
     return (now.getTime() - d.getTime()) < 7 * 24 * 60 * 60 * 1000
   })
   const unusedScholarships = scholarships.filter(s => !s.is_used).length
 
-  const recentPayments = [...MOCK_PAYMENTS]
+  const recentPayments = [...payments]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 8)
 
@@ -190,7 +190,7 @@ export default function FinanzasPage() {
         </div>
 
         {/* Chart */}
-        <FinanceChart payments={MOCK_PAYMENTS} donations={MOCK_DONATIONS} />
+        <FinanceChart payments={payments} donations={donations} />
 
         {/* Bottom two columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

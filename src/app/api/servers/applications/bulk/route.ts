@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { approveApplications, setApplicationStatus } from '@/lib/supabase/queries/servers'
+import { approveApplications, rejectApplications } from '@/lib/supabase/queries/servers'
 
 // POST: acción masiva sobre aplicaciones. Body: { action: 'approve'|'reject', ids: string[] }
 //  - approve (5b): aprueba y activa al aplicante como servidor (transaccional, sin correo).
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, approved: list.length, activated })
     }
     if (action === 'reject') {
-      for (const id of list) await setApplicationStatus(id, 'rejected')
+      await rejectApplications(list) // un solo UPDATE .in() — antes era 1 query por id
       return NextResponse.json({ ok: true, rejected: list.length })
     }
     return NextResponse.json({ error: 'Acción inválida.' }, { status: 400 })

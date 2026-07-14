@@ -39,7 +39,7 @@ const STAGE_LABEL: Record<StudyType['stage'], string> = {
 export default function EditarEstudioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: code } = use(params)
   const { hasRole, loaded } = useAuth()
-  const { studyTypes, loading } = useStudies()
+  const { studyTypes, loading } = useStudies('plans')
 
   // Editar tipos de estudio: solo roles de estudios (protección por URL).
   if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return <AccessDenied />

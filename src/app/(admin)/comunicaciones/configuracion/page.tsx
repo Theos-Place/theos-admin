@@ -31,7 +31,7 @@ const INITIAL_WA_FORM = {
 }
 
 export default function ConfiguracionPage() {
-  const { configs: allConfigs, refetch } = useCommunications()
+  const { configs: allConfigs, refetch } = useCommunications('configs')
   const [tab, setTab] = useState<SmtpTab>('smtp')
   const [configs, setConfigs] = useState<ChannelConfig[]>([])
   useEffect(() => { setConfigs(allConfigs) }, [allConfigs])

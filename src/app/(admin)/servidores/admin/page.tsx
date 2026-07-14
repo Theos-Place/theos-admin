@@ -258,7 +258,7 @@ function PositionEditModal({
 export default function ServidoresAdminPage() {
   const { hasRole, loaded } = useAuth()
   const { adminAreas, adminCommittees, refetch: refetchOrg } = useOrg()
-  const { committees: serverCommittees, refetch: refetchServers } = useServers()
+  const { committees: serverCommittees, refetch: refetchServers } = useServers('committees')
   const toast = useToast()
 
   // Conteo real de servidores activos por comité (id de área-comité).

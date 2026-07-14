@@ -37,7 +37,7 @@ function NuevaComunicacionContent() {
   const toast = useToast()
   const router = useRouter()
   const [savingDraft, setSavingDraft] = useState(false)
-  const { templates: MOCK_TEMPLATES, messages: MOCK_MESSAGES, configs: MOCK_CHANNEL_CONFIGS } = useCommunications()
+  const { templates, messages, configs } = useCommunications('templates', 'messages', 'configs')
 
   const initialMode = (searchParams.get('mode') as RecipientMode) || 'filters'
   const initialMemberIds = useMemo(
@@ -47,7 +47,7 @@ function NuevaComunicacionContent() {
   )
   const reenviarId = searchParams.get('reenviar') ?? ''
   const reenviarMsg = useMemo(
-    () => reenviarId ? MOCK_MESSAGES.find(m => m.id === reenviarId) : null,
+    () => reenviarId ? messages.find(m => m.id === reenviarId) : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
@@ -124,14 +124,14 @@ function NuevaComunicacionContent() {
   }, [channel])
 
   // Email: el envío usa SES por env (no channel_configs). WhatsApp pendiente.
-  const waConfig = MOCK_CHANNEL_CONFIGS.find(c => c.type === 'whatsapp' && c.is_active && c.is_verified)
+  const waConfig = configs.find(c => c.type === 'whatsapp' && c.is_active && c.is_verified)
 
-  const filteredTemplates = MOCK_TEMPLATES.filter(
+  const filteredTemplates = templates.filter(
     t => t.channel === channel || t.channel === 'both' || channel === 'both'
   )
 
   function applyTemplate(tplId: string) {
-    const tpl = MOCK_TEMPLATES.find(t => t.id === tplId)
+    const tpl = templates.find(t => t.id === tplId)
     if (!tpl) return
     if (tpl.channel !== 'email') setWaBody(tpl.body)
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
@@ -146,8 +146,8 @@ function NuevaComunicacionContent() {
   const [tplApplied, setTplApplied] = useState(false)
   useEffect(() => {
     const tid = searchParams.get('template')
-    if (tplApplied || !tid || MOCK_TEMPLATES.length === 0) return
-    const tpl = MOCK_TEMPLATES.find(t => t.id === tid)
+    if (tplApplied || !tid || templates.length === 0) return
+    const tpl = templates.find(t => t.id === tid)
     if (!tpl) return
     setChannel(tpl.channel)
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
@@ -155,7 +155,7 @@ function NuevaComunicacionContent() {
     if (tpl.is_system || tpl.category === 'transaccional') setEmailKind('transactional')
     setTplApplied(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tplApplied, MOCK_TEMPLATES])
+  }, [tplApplied, templates])
 
   // Guarda como borrador (sin enviar): crea el broadcast en estado 'draft'.
   async function saveDraft() {

@@ -81,7 +81,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
 
 export default function ServidoresPage() {
   const router = useRouter()
-  const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, applications: MOCK_APPLICATIONS } = useServers()
+  const { committees, vacancies, applications } = useServers('committees', 'vacancies', 'applications')
   const { areas: AREAS } = useOrg()
   const AREA_FILTERS = useMemo(
     () => [{ key: 'all', label: 'Todos' }, ...AREAS.map(a => ({ key: a.code, label: a.name }))],
@@ -97,28 +97,28 @@ export default function ServidoresPage() {
   const { puestosOcupados, personasUnicas } = useMemo(() => {
     const ids = new Set<string>()
     let count = 0
-    for (const c of MOCK_COMMITTEES) {
+    for (const c of committees) {
       for (const m of c.members) {
         if (m.status === 'active') { count++; ids.add(m.member_id) }
       }
     }
     return { puestosOcupados: count, personasUnicas: ids.size }
-  }, [MOCK_COMMITTEES])
-  const totalCommittees = MOCK_COMMITTEES.length
-  const openVacancies   = MOCK_VACANCIES.filter(v => v.status === 'published').length
-  const pendingApps     = MOCK_APPLICATIONS.filter(a => a.status === 'pending').length
+  }, [committees])
+  const totalCommittees = committees.length
+  const openVacancies   = vacancies.filter(v => v.status === 'published').length
+  const pendingApps     = applications.filter(a => a.status === 'pending').length
 
   const filteredAreas = useMemo(() => {
     return AREAS.map(area => ({
       ...area,
-      committees: MOCK_COMMITTEES.filter(
+      committees: committees.filter(
         c => c.area_code === area.code && (areaFilter === 'all' || c.area_code === areaFilter)
       ),
     })).filter(a => a.committees.length > 0)
-  }, [AREAS, MOCK_COMMITTEES, areaFilter])
+  }, [AREAS, committees, areaFilter])
 
   const flatServers = useMemo<FlatServer[]>(() => {
-    const visibleCommittees = MOCK_COMMITTEES.filter(
+    const visibleCommittees = committees.filter(
       c => areaFilter === 'all' || c.area_code === areaFilter
     )
     return visibleCommittees.flatMap(c =>
@@ -132,7 +132,7 @@ export default function ServidoresPage() {
         birth_date: m.birth_date ?? null,
       }))
     )
-  }, [MOCK_COMMITTEES, areaFilter])
+  }, [committees, areaFilter])
 
   return (
     <div className="space-y-6">

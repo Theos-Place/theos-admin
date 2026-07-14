@@ -22,7 +22,7 @@ const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Jul
 // lista mock cuyos ids no matcheaban nada: filtrar vaciaba la tabla).
 
 export default function ReportesPage() {
-  const { payments: MOCK_PAYMENTS, donations: MOCK_DONATIONS } = useFinance()
+  const { payments, donations } = useFinance('payments', 'donations')
   const [activeTab, setActiveTab] = useState<'donations' | 'payments' | 'transparency'>('donations')
   const [donDateFrom, setDonDateFrom] = useState('')
   const [donDateTo, setDonDateTo] = useState('')
@@ -31,7 +31,7 @@ export default function ReportesPage() {
 
   // Donations tab
   const filteredDonations = useMemo(() => {
-    return MOCK_DONATIONS.filter(d => {
+    return donations.filter(d => {
       const dt = new Date(d.donation_date)
       const matchFrom = !donDateFrom || dt >= new Date(donDateFrom)
       const matchTo = !donDateTo || dt <= new Date(donDateTo)
@@ -42,17 +42,17 @@ export default function ReportesPage() {
   // Payments tab
   const entities = useMemo(() => {
     const byId = new Map<string, string>()
-    for (const p of MOCK_PAYMENTS) {
+    for (const p of payments) {
       if (p.entity_id && !byId.has(p.entity_id)) byId.set(p.entity_id, p.entity_name || p.entity_id)
     }
     return [{ id: 'all', name: 'Todas las entidades' },
       ...[...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'es'))]
-  }, [MOCK_PAYMENTS])
+  }, [payments])
 
   const filteredPayments = useMemo(() => {
-    if (entityFilter === 'all') return MOCK_PAYMENTS
-    return MOCK_PAYMENTS.filter(p => p.entity_id === entityFilter)
-  }, [entityFilter, MOCK_PAYMENTS])
+    if (entityFilter === 'all') return payments
+    return payments.filter(p => p.entity_id === entityFilter)
+  }, [entityFilter, payments])
 
   const paidPayments = filteredPayments.filter(p => p.status === 'paid')
   const pendingPayments = filteredPayments.filter(p => p.status === 'pending')
@@ -61,7 +61,7 @@ export default function ReportesPage() {
   // Transparency tab — month-by-month
   const yearDonations = useMemo(() => {
     const year = Number(yearFilter)
-    return MOCK_DONATIONS.filter(d => new Date(d.donation_date).getFullYear() === year)
+    return donations.filter(d => new Date(d.donation_date).getFullYear() === year)
   }, [yearFilter])
 
   const monthlyData = useMemo(() => {
@@ -108,11 +108,11 @@ export default function ReportesPage() {
   }
 
   function exportQuickBooksDonations() {
-    exportQuickBooksCSV('donations', MOCK_DONATIONS.map(d => [d.donation_date, d.member_name, 'Donaciones', d.amount, 'Donación Theos Place']))
+    exportQuickBooksCSV('donations', donations.map(d => [d.donation_date, d.member_name, 'Donaciones', d.amount, 'Donación Theos Place']))
   }
 
   function exportQuickBooksPayments() {
-    exportQuickBooksCSV('payments', MOCK_PAYMENTS.filter(p => p.status === 'paid').map(p => [p.paid_at?.split('T')[0] ?? '', p.member_name, 'Pagos', p.amount, p.entity_name, p.method]))
+    exportQuickBooksCSV('payments', payments.filter(p => p.status === 'paid').map(p => [p.paid_at?.split('T')[0] ?? '', p.member_name, 'Pagos', p.amount, p.entity_name, p.method]))
   }
 
   return (

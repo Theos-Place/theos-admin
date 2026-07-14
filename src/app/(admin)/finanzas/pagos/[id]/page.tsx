@@ -14,7 +14,7 @@ import { formatDate, formatDateTime } from '@/lib/format'
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { payments, refetch, loading } = useFinance()
+  const { payments, refetch, loading } = useFinance('payments')
   const [payment, setPayment] = useState<Payment | null>(null)
   useEffect(() => { setPayment(payments.find(p => p.id === id) ?? null) }, [payments, id])
   const [showRefund, setShowRefund] = useState(false)

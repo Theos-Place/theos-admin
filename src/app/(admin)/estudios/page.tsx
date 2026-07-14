@@ -26,7 +26,7 @@ const QUICK_ACCESS = [
 ]
 
 export default function EstudiosPage() {
-  const { groups } = useStudies()
+  const { groups } = useStudies('groups')
 
   // Solicitudes abiertas (reubicaciones + unirse a grupo + grupo nuevo).
   // El endpoint exige rol de coordinación: con 403 el conteo queda en 0.

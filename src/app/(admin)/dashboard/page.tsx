@@ -231,7 +231,7 @@ function ModuleCard({
 export default function DashboardPage() {
   const { user, loaded, hasRole } = useAuth()
   const { can } = usePermissions()
-  const { events: MOCK_EVENTS } = useEvents()
+  const { events } = useEvents()
   const { stats, activity: RECENT_ACTIVITY } = useDashboard()
   const DASHBOARD_STATS = stats ?? EMPTY_STATS
 
@@ -264,15 +264,15 @@ export default function DashboardPage() {
   const todayEvents = useMemo(() => {
     const start = new Date(today); start.setHours(0, 0, 0, 0)
     const end = new Date(start); end.setDate(end.getDate() + 1)
-    return eventsInRange(MOCK_EVENTS, start, end)
-  }, [MOCK_EVENTS, today])
+    return eventsInRange(events, start, end)
+  }, [events, today])
 
   const upcomingEvents = useMemo(() => {
     const in30 = new Date(today.getTime() + 1000 * 60 * 60 * 24 * 30)
-    return upcomingEventsView(MOCK_EVENTS, today)
+    return upcomingEventsView(events, today)
       .filter(e => new Date(e.start_at) < in30)
       .slice(0, 5)
-  }, [MOCK_EVENTS, today])
+  }, [events, today])
 
   // Today check-ins (mock last 5)
   const todayCheckins = useMemo(() => {

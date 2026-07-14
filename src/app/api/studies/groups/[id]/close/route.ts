@@ -3,11 +3,10 @@ import { requireRoles } from '@/lib/auth/guard'
 import { closeGroup, type CloseResult } from '@/lib/supabase/queries/studies'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
-  createFolletoRequest, getFolletoRecipients, getLeaderSedeForGroup,
+  createFolletoRequest, getLeaderSedeForGroup, notifyFolletoRecipients,
 } from '@/lib/supabase/queries/folletos'
 import { isFolletoEligible, nextLevelCode, levelLabel, estimatedAvailableDate } from '@/lib/studies/folletos'
 import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
-import { sendEmail } from '@/lib/email/provider'
 
 type FolletoPayload = { send?: boolean; sede?: string }
 
@@ -70,42 +69,22 @@ export async function POST(
           })
           folletoCreated = true
 
-          const recipients = await getFolletoRecipients()
-          if (recipients.length) {
-            await supabase.from('internal_notifications').insert(recipients.map(r => ({
-              recipient_member_id: r.member_id,
-              type: 'folleto_created',
-              title: 'Folletos solicitados',
-              body: `${quantity} folleto${quantity !== 1 ? 's' : ''} de ${levelLabel(target)} · ${sede ?? 'sede sin definir'}`,
-              link: '/estudios/folletos',
-            })))
-          }
-
-          // Correos (best-effort, uno por destinatario con correo).
           const availableLabel = new Date(`${availableAt}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
-          const html = `
-            <p>Se solicitaron folletos a partir de un cierre de grupo.</p>
-            <ul>
-              <li><strong>Nivel:</strong> ${levelLabel(target)}</li>
-              <li><strong>Cantidad:</strong> ${quantity}</li>
-              <li><strong>Sede:</strong> ${sede ?? 'sin definir'}</li>
-              <li><strong>Disponibilidad estimada:</strong> ${availableLabel} (listos para recoger en la sede)</li>
-            </ul>
-            <p>Podés seguir el estado en el sistema, en Estudios &rsaquo; Folletos.</p>
-          `
-          for (const r of recipients) {
-            if (!r.email) continue
-            try {
-              await sendEmail({
-                to: { email: r.email, name: r.name },
-                subject: `Folletos de ${levelLabel(target)} — ${sede ?? 'sede sin definir'}`,
-                html,
-                kind: 'transactional',
-              })
-            } catch (e) {
-              console.warn('sendEmail folleto falló:', e)
-            }
-          }
+          await notifyFolletoRecipients({
+            title: 'Folletos solicitados',
+            body: `${quantity} folleto${quantity !== 1 ? 's' : ''} de ${levelLabel(target)} · ${sede ?? 'sede sin definir'}`,
+            subject: `Folletos de ${levelLabel(target)} — ${sede ?? 'sede sin definir'}`,
+            html: `
+              <p>Se solicitaron folletos a partir de un cierre de grupo.</p>
+              <ul>
+                <li><strong>Nivel:</strong> ${levelLabel(target)}</li>
+                <li><strong>Cantidad:</strong> ${quantity}</li>
+                <li><strong>Sede:</strong> ${sede ?? 'sin definir'}</li>
+                <li><strong>Disponibilidad estimada:</strong> ${availableLabel} (listos para recoger en la sede)</li>
+              </ul>
+              <p>Podés seguir el estado en el sistema, en Estudios &rsaquo; Folletos.</p>
+            `,
+          })
         }
       } catch (e) {
         console.warn('No se pudo crear la solicitud de folletos:', e)

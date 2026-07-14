@@ -16,7 +16,7 @@ import { TOAST_MS } from '@/lib/constants'
 import { formatDate } from '@/lib/format'
 
 export default function BecasPage() {
-  const { scholarships: allScholarships, error, refetch, loading } = useFinance()
+  const { scholarships: allScholarships, error, refetch, loading } = useFinance('scholarships')
   const [scholarships, setScholarships] = useState<Scholarship[]>([])
   useEffect(() => { setScholarships(allScholarships) }, [allScholarships])
   const [typeFilter, setTypeFilter] = useState<'all' | 'percentage' | 'fixed'>('all')

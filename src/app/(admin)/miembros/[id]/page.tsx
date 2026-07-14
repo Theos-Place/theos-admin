@@ -373,7 +373,7 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
   onClose: () => void
   onAdded: () => void
 }) {
-  const { studyTypes } = useStudies()
+  const { studyTypes } = useStudies('plans')
   const [code, setCode] = useState('')
   const [date, setDate] = useState('')
   const [status, setStatus] = useState('completed')

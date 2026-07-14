@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { processBloqueMilestones } from '@/lib/supabase/queries/bloques'
-import { getFolletoRecipients } from '@/lib/supabase/queries/folletos'
-import { sendEmail } from '@/lib/email/provider'
+import { notifyFolletoRecipients } from '@/lib/supabase/queries/folletos'
 
 const MILESTONE_LABEL = { preliminar: 'Preliminar', confirmacion: 'Confirmación', final: 'Final' } as const
 
@@ -25,40 +23,23 @@ export async function POST(req: NextRequest) {
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date())
     const results = await processBloqueMilestones(today)
 
-    if (results.length) {
-      const supabase = createAdminClient()
-      const recipients = await getFolletoRecipients()
-      for (const r of results) {
-        const aperturaLabel = new Date(`${r.fecha_apertura}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
-        const hito = MILESTONE_LABEL[r.milestone]
-        const sedeLines = r.by_sede.filter(s => s.cantidad > 0).map(s => `<li>${s.sede}: <strong>${s.cantidad}</strong></li>`).join('')
-
-        if (recipients.length) {
-          await supabase.from('internal_notifications').insert(recipients.map(rc => ({
-            recipient_member_id: rc.member_id,
-            type: 'folleto_created',
-            title: `Folletos ${hito} · ${r.bloque_nombre}`,
-            body: `${r.total} folleto${r.total !== 1 ? 's' : ''} en total. Apertura: ${aperturaLabel}.`,
-            link: '/estudios/folletos',
-          })))
-        }
-        const html = `
+    for (const r of results) {
+      const aperturaLabel = new Date(`${r.fecha_apertura}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
+      const hito = MILESTONE_LABEL[r.milestone]
+      const sedeLines = r.by_sede.filter(s => s.cantidad > 0).map(s => `<li>${s.sede}: <strong>${s.cantidad}</strong></li>`).join('')
+      await notifyFolletoRecipients({
+        title: `Folletos ${hito} · ${r.bloque_nombre}`,
+        body: `${r.total} folleto${r.total !== 1 ? 's' : ''} en total. Apertura: ${aperturaLabel}.`,
+        subject: `Folletos ${hito} — ${r.bloque_nombre}`,
+        html: `
           <p>Reporte de folletos <strong>${hito}</strong> del bloque <strong>${r.bloque_nombre}</strong>.</p>
           <p>Apertura: ${aperturaLabel}</p>
           <p>Desglose por sede:</p>
           <ul>${sedeLines || '<li>Sin matrículas aún</li>'}</ul>
           <p>Total: <strong>${r.total}</strong> folleto${r.total !== 1 ? 's' : ''}.</p>
           ${r.milestone === 'final' ? '<p><strong>Este es el conteo definitivo para imprimir.</strong></p>' : ''}
-        `
-        for (const rc of recipients) {
-          if (!rc.email) continue
-          await sendEmail({
-            to: { email: rc.email, name: rc.name },
-            subject: `Folletos ${hito} — ${r.bloque_nombre}`,
-            html, kind: 'transactional',
-          }).catch(e => console.warn('sendEmail folleto-bloque falló:', e))
-        }
-      }
+        `,
+      })
     }
 
     return NextResponse.json({ fired: results.length, results })

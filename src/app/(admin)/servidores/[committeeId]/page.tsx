@@ -33,11 +33,11 @@ export default function CommitteeDetailPage() {
   const { committeeId } = useParams<{ committeeId: string }>()
   const router = useRouter()
   const toast = useToast()
-  const { committees: MOCK_COMMITTEES, vacancies: MOCK_VACANCIES, goalsByCommittee, refetch } = useServers()
+  const { committees, vacancies, goalsByCommittee, refetch } = useServers('committees', 'vacancies', 'goals')
 
   const committee = useMemo(
-    () => MOCK_COMMITTEES.find(c => c.id === committeeId),
-    [MOCK_COMMITTEES, committeeId]
+    () => committees.find(c => c.id === committeeId),
+    [committees, committeeId]
   )
   // El comité de Dirigentes (de estudios) muestra una pestaña extra con el
   // resumen de estudios de cada servidor.
@@ -112,8 +112,8 @@ export default function CommitteeDetailPage() {
   const [showGoalForm, setShowGoalForm] = useState(false)
 
   const committeeVacancies = useMemo(
-    () => MOCK_VACANCIES.filter(v => v.committee_id === committeeId),
-    [MOCK_VACANCIES, committeeId]
+    () => vacancies.filter(v => v.committee_id === committeeId),
+    [vacancies, committeeId]
   )
 
   const allCommitteeMembers = useMemo(

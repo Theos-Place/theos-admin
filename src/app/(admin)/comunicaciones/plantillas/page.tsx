@@ -28,7 +28,7 @@ const CHANNEL_FILTERS: { key: 'all' | CommunicationChannel; label: string }[] = 
 export default function PlantillasPage() {
   const router = useRouter()
   const toast = useToast()
-  const { templates, error, refetch } = useCommunications()
+  const { templates, error, refetch } = useCommunications('templates')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
   const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null)

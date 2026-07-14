@@ -269,7 +269,7 @@ function GroupedStudyBadges({ codes, editing, onRemove }: { codes: string[]; edi
 // ─── Configuración editable del dirigente (estudios que imparte + zonas) ─────────
 function DirigenteConfigCard({ memberId }: { memberId: string }) {
   const toast = useToast()
-  const { studyTypes, leaders } = useStudies()
+  const { studyTypes, leaders } = useStudies('plans', 'leaders')
   const { activeSedes: SEDES } = useSedes()
   const { hasRole } = useAuth()
   const canEdit = hasRole('admin', 'direccion', 'coordinador_dirigentes')

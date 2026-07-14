@@ -19,7 +19,7 @@ export default function EditarPlantillaPage() {
   const router = useRouter()
   const params = useParams()
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : ''
-  const { templates, loading } = useCommunications()
+  const { templates, loading } = useCommunications('templates')
 
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
