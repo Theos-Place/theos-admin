@@ -250,7 +250,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                     <p className="text-[13px] text-navy font-body">
                       <span className="font-medium">{entry.actor}</span>{' '}
                       {entry.action === 'assigned' ? 'asignó' : 'revocó'}{' '}
-                      <span className="font-medium">"{role?.name ?? entry.role}"</span>
+                      <span className="font-medium">“{role?.name ?? entry.role}”</span>
                     </p>
                     <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
                       {formatDate(entry.date)}
@@ -275,7 +275,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
           <Modal onClose={() => setConfirmAdd(null)} titleId="modal-confirmar-rol" width={384}>
             <div className="px-6 py-5">
               <p id="modal-confirmar-rol" className="text-sm font-bold text-navy mb-1 font-display">
-                ¿Agregar rol "{role.name}" a {user.member_name.split(' ')[0]}?
+                ¿Agregar rol “{role.name}” a {user.member_name.split(' ')[0]}?
               </p>
               <p className="text-[12px] text-navy-light/55 leading-relaxed mb-3 font-body">
                 Este rol le dará acceso a: {role.description}

@@ -1,6 +1,7 @@
 'use client' // Los error boundaries deben ser Client Components
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 
 export default function Error({
@@ -11,7 +12,7 @@ export default function Error({
   unstable_retry: () => void
 }) {
   useEffect(() => {
-    // En producción: enviar a servicio de monitoreo (Sentry, etc.)
+    Sentry.captureException(error) // no-op sin NEXT_PUBLIC_SENTRY_DSN
     console.error('[app/error]', error)
   }, [error])
 

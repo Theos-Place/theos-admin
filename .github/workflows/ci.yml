@@ -1,0 +1,30 @@
+# CI mínimo (revisión best practices 2026-07-13, B5): typecheck + lint con
+# ratchet. Vercel ya corre `next build` (que incluye typecheck) en el deploy,
+# pero el lint YA NO corre en el build de Next 16 — sin esta verja, errores
+# nuevos de lint llegan a producción sin que nadie los vea.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint (ratchet)
+        # errores = 0 SIEMPRE. Warnings: 161 es la deuda actual (2026-07-13,
+        # casi todo react-hooks/set-state-in-effect degradado a warn) — bajar
+        # este número conforme se migren casos; NUNCA subirlo.
+        run: npx eslint src --max-warnings=161
+      - name: Tests
+        run: npm test --if-present

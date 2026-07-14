@@ -43,7 +43,7 @@ export function ModalDarDeBaja({
         </div>
         <div className="space-y-1">
           <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-            Escribí "<span className="font-semibold text-navy">{memberName}</span>" para confirmar
+            Escribí “<span className="font-semibold text-navy">{memberName}</span>” para confirmar
           </label>
           <input
             className={cn(inputCls, 'font-body')}

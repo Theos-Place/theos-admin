@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mergeMembers } from '@/lib/supabase/queries/members'
 import { requireRoles } from '@/lib/auth/guard'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(
   req: NextRequest,
@@ -15,6 +16,10 @@ export async function POST(
     if (body.duplicate_id === id) return NextResponse.json({ error: 'No se puede fusionar consigo mismo' }, { status: 400 })
 
     await mergeMembers(id, body.duplicate_id, { fields: body.fields, soft: body.soft })
+    await logAudit({
+      actorUserId: auth.ctx.userId, action: 'MERGE', entityType: 'members',
+      entityId: id, newData: { duplicate_id: body.duplicate_id, soft: Boolean(body.soft) },
+    })
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('POST /api/members/[id]/merge:', error)

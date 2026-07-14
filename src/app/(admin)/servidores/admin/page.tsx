@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, Upload } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -572,12 +574,12 @@ export default function ServidoresAdminPage() {
             PUESTOS se eliminó (el catálogo se mantiene como está en la BD). */}
         {hasRole('admin', ...STAFF_IMPORT_ROLES) && (
           <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-            <a
+            <Link
               href="/servidores/admin/importar-vacantes"
               className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <Upload size={14} /> Importar vacantes
-            </a>
+            </Link>
           </div>
         )}
       </div>

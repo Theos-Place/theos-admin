@@ -90,16 +90,19 @@ export type DbImportBatch = {
 
 // ── Queries ────────────────────────────────────────────────
 
+// Hint de FK obligatorio: desde la migración 105 payments tiene DOS FKs a
+// members (member_id y reviewed_by) y el embed sin hint es ambiguo para
+// PostgREST (bug latente detectado al regenerar tipos, 2026-07-13).
 const PAYMENT_SELECT = `
   id, member_id, entity_type, event_id, study_group_id, amount, payment_method,
   status, gateway_ref, sinpe_confirmation, scholarship_id, paid_at, description, created_at,
-  member:members(first_name, last_name, cedula),
+  member:members!payments_member_id_fkey(first_name, last_name, cedula),
   event:events(title),
   study_group:study_groups(name)
 `
 // Con búsqueda el join al miembro es inner: filtramos por nombre/cédula y los
 // pagos sin miembro (no buscables por persona) quedan fuera.
-const PAYMENT_SELECT_SEARCH = PAYMENT_SELECT.replace('member:members(', 'member:members!inner(')
+const PAYMENT_SELECT_SEARCH = PAYMENT_SELECT.replace('member:members!payments_member_id_fkey(', 'member:members!payments_member_id_fkey!inner(')
 
 export async function getPayments(): Promise<DbPayment[]> {
   const supabase = createAdminClient()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assignMemberRole, revokeMemberRole } from '@/lib/supabase/queries/members'
 import { requireRoles } from '@/lib/auth/guard'
+import { logAudit } from '@/lib/audit'
 import { ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 
@@ -20,6 +21,10 @@ export async function POST(
     const { role } = await req.json()
     if (!VALID_ROLES.has(role)) return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })
     await assignMemberRole(memberId, role)
+    await logAudit({
+      actorUserId: auth.ctx.userId, action: 'ROLE_CHANGE', entityType: 'member_roles',
+      entityId: memberId, newData: { role, op: 'assign' },
+    })
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
     console.error('POST /api/accesos/[memberId]/roles:', error)
@@ -40,6 +45,10 @@ export async function DELETE(
     const { role } = await req.json()
     if (!VALID_ROLES.has(role)) return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })
     await revokeMemberRole(memberId, role)
+    await logAudit({
+      actorUserId: auth.ctx.userId, action: 'ROLE_CHANGE', entityType: 'member_roles',
+      entityId: memberId, newData: { role, op: 'revoke' },
+    })
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('DELETE /api/accesos/[memberId]/roles:', error)

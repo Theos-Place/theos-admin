@@ -228,7 +228,7 @@ export default function AccesosPage() {
           className="flex items-center gap-2 px-5 py-3 border-b text-[12px] text-navy-light/60 border-outline bg-navy/2 font-body"
         >
           <span className="text-teal-deep shrink-0">ℹ️</span>
-          Todos los miembros tienen el rol <span className="font-medium text-navy-light/80">"Miembro"</span> por defecto. Los roles adicionales amplían sus permisos.
+          Todos los miembros tienen el rol <span className="font-medium text-navy-light/80">“Miembro”</span> por defecto. Los roles adicionales amplían sus permisos.
         </div>
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">

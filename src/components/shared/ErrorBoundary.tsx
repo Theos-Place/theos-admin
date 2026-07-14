@@ -1,6 +1,7 @@
 'use client'
 
 import { Component, type ReactNode, type ErrorInfo } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 
 interface Props {
@@ -24,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // En producción: enviar a servicio de monitoreo (Sentry, etc.)
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } }) // no-op sin DSN
     console.error('[ErrorBoundary]', error, info.componentStack)
   }
 

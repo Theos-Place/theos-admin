@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
+import { pingHealthcheck } from '@/lib/health'
 import { processBloqueMilestones } from '@/lib/supabase/queries/bloques'
 import { notifyFolletoRecipients } from '@/lib/supabase/queries/folletos'
 
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    await pingHealthcheck('HEALTHCHECK_URL_FOLLETO_BLOCKS')
     return NextResponse.json({ fired: results.length, results })
   } catch (error) {
     console.error('POST /api/cron/folleto-blocks:', error)

@@ -1,3 +1,8 @@
+// Tipos generados de la BD (supabase gen types / MCP generate_typescript_types).
+// REGENERAR después de CADA migración: sin esto la capa de queries pierde el
+// typecheck y aparecen los casts "as unknown as" (ver revisión 2026-07-13).
+// Generado: 2026-07-13 (migraciones 001-110).
+
 export type Json =
   | string
   | number
@@ -249,6 +254,48 @@ export type Database = {
           ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
+        }
+        Relationships: []
+      }
+      capacitacion_bloques: {
+        Row: {
+          anio: number
+          confirmacion_sent_at: string | null
+          created_at: string | null
+          estado: string
+          fecha_apertura: string
+          fecha_cierre_matricula: string
+          final_sent_at: string | null
+          id: string
+          nombre: string
+          preliminar_sent_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          anio: number
+          confirmacion_sent_at?: string | null
+          created_at?: string | null
+          estado?: string
+          fecha_apertura: string
+          fecha_cierre_matricula: string
+          final_sent_at?: string | null
+          id?: string
+          nombre: string
+          preliminar_sent_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          anio?: number
+          confirmacion_sent_at?: string | null
+          created_at?: string | null
+          estado?: string
+          fecha_apertura?: string
+          fecha_cierre_matricula?: string
+          final_sent_at?: string | null
+          id?: string
+          nombre?: string
+          preliminar_sent_at?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1260,6 +1307,89 @@ export type Database = {
           {
             foreignKeyName: "finance_requests_study_group_id_fkey"
             columns: ["study_group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folleto_requests: {
+        Row: {
+          available_at: string
+          bloque_id: string | null
+          close_date: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string | null
+          id: string
+          quantity: number
+          sede: string | null
+          source_group_id: string | null
+          source_plan_code: string | null
+          status: string
+          target_level_code: string | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          available_at: string
+          bloque_id?: string | null
+          close_date: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string | null
+          id?: string
+          quantity?: number
+          sede?: string | null
+          source_group_id?: string | null
+          source_plan_code?: string | null
+          status?: string
+          target_level_code?: string | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Update: {
+          available_at?: string
+          bloque_id?: string | null
+          close_date?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string | null
+          id?: string
+          quantity?: number
+          sede?: string | null
+          source_group_id?: string | null
+          source_plan_code?: string | null
+          status?: string
+          target_level_code?: string | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folleto_requests_bloque_id_fkey"
+            columns: ["bloque_id"]
+            isOneToOne: false
+            referencedRelation: "capacitacion_bloques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folleto_requests_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folleto_requests_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folleto_requests_source_group_id_fkey"
+            columns: ["source_group_id"]
             isOneToOne: false
             referencedRelation: "study_groups"
             referencedColumns: ["id"]
@@ -2393,19 +2523,27 @@ export type Database = {
         Row: {
           amount: number
           category_id: string | null
+          concept: string | null
           created_at: string | null
           currency: string | null
           description: string | null
+          enrollment_id: string | null
           entity_type: string | null
           event_id: string | null
+          folleto_request_id: string | null
           gateway_ref: string | null
           id: string
           member_id: string | null
           paid_at: string | null
           payment_date: string
           payment_method: string | null
+          receipt_path: string | null
           recorded_by: string | null
           reference_code: string | null
+          rejection_reason: string | null
+          review_status: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           scholarship: boolean | null
           scholarship_id: string | null
           scholarship_reason: string | null
@@ -2417,19 +2555,27 @@ export type Database = {
         Insert: {
           amount: number
           category_id?: string | null
+          concept?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          enrollment_id?: string | null
           entity_type?: string | null
           event_id?: string | null
+          folleto_request_id?: string | null
           gateway_ref?: string | null
           id?: string
           member_id?: string | null
           paid_at?: string | null
           payment_date?: string
           payment_method?: string | null
+          receipt_path?: string | null
           recorded_by?: string | null
           reference_code?: string | null
+          rejection_reason?: string | null
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           scholarship?: boolean | null
           scholarship_id?: string | null
           scholarship_reason?: string | null
@@ -2441,19 +2587,27 @@ export type Database = {
         Update: {
           amount?: number
           category_id?: string | null
+          concept?: string | null
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          enrollment_id?: string | null
           entity_type?: string | null
           event_id?: string | null
+          folleto_request_id?: string | null
           gateway_ref?: string | null
           id?: string
           member_id?: string | null
           paid_at?: string | null
           payment_date?: string
           payment_method?: string | null
+          receipt_path?: string | null
           recorded_by?: string | null
           reference_code?: string | null
+          rejection_reason?: string | null
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           scholarship?: boolean | null
           scholarship_id?: string | null
           scholarship_reason?: string | null
@@ -2471,10 +2625,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "payments_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "study_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "payments_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_folleto_request_id_fkey"
+            columns: ["folleto_request_id"]
+            isOneToOne: false
+            referencedRelation: "folleto_requests"
             referencedColumns: ["id"]
           },
           {
@@ -2487,6 +2655,20 @@ export type Database = {
           {
             foreignKeyName: "payments_member_id_fkey"
             columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "vw_asistentes"
             referencedColumns: ["id"]
@@ -3996,6 +4178,14 @@ export type Database = {
       }
     }
     Functions: {
+      approve_applications: { Args: { app_ids: string[] }; Returns: number }
+      block_folletos_by_sede: {
+        Args: { p_apertura: string }
+        Returns: {
+          cantidad: number
+          sede: string
+        }[]
+      }
       campaign_student_counts: {
         Args: never
         Returns: {

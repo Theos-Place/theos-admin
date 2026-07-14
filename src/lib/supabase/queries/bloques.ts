@@ -1,5 +1,4 @@
 import 'server-only'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { bloqueMilestones, MILESTONE_TO_TIPO, bloqueEstadoActual, addDays, type BloqueMilestone, type BloqueEstado } from '@/lib/studies/bloques'
 
@@ -8,11 +7,6 @@ function crToday(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date())
 }
 
-// capacitacion_bloques y las columnas nuevas de folleto_requests no están en los
-// tipos generados → cliente laxo.
-function looseClient(): SupabaseClient {
-  return createAdminClient() as unknown as SupabaseClient
-}
 
 export type DbBloque = {
   id: string
@@ -30,7 +24,7 @@ export type DbBloque = {
 export type SedeCount = { sede: string; cantidad: number }
 
 export async function getBloques(): Promise<DbBloque[]> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('capacitacion_bloques')
     .select('id, nombre, anio, fecha_apertura, fecha_cierre_matricula, estado, preliminar_sent_at, confirmacion_sent_at, final_sent_at, created_at')
@@ -46,7 +40,7 @@ export async function getBloques(): Promise<DbBloque[]> {
 export async function createBloque(input: {
   nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
 }): Promise<{ id: string }> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const estado = bloqueEstadoActual(input.fecha_apertura, input.fecha_cierre_matricula, crToday())
   const { data, error } = await supabase.from('capacitacion_bloques').insert({ ...input, estado }).select('id').single()
   if (error) throw error
@@ -58,8 +52,11 @@ export async function createBloque(input: {
 export async function updateBloque(id: string, patch: Partial<{
   nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
 }>): Promise<void> {
-  const supabase = looseClient()
-  const row: Record<string, unknown> = { ...patch, updated_at: new Date().toISOString() }
+  const supabase = createAdminClient()
+  const row: Partial<{
+    nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
+    estado: string; updated_at: string
+  }> = { ...patch, updated_at: new Date().toISOString() }
   if (patch.fecha_apertura && patch.fecha_cierre_matricula) {
     row.estado = bloqueEstadoActual(patch.fecha_apertura, patch.fecha_cierre_matricula, crToday())
   }
@@ -68,7 +65,7 @@ export async function updateBloque(id: string, patch: Partial<{
 }
 
 export async function deleteBloque(id: string): Promise<void> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('capacitacion_bloques').delete().eq('id', id)
   if (error) throw error
 }
@@ -77,7 +74,7 @@ export async function deleteBloque(id: string): Promise<void> {
  *  Lanza si el RPC falla: un [] silencioso haría que el cron marque hitos como
  *  enviados sin haber creado ningún reporte. */
 export async function countBlockBySede(aperturaIso: string): Promise<SedeCount[]> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase.rpc('block_folletos_by_sede', { p_apertura: aperturaIso })
   if (error) throw new Error(`countBlockBySede: ${error.message}`)
   return ((data ?? []) as Array<{ sede: string; cantidad: number }>).map(r => ({ sede: r.sede, cantidad: Number(r.cantidad) }))
@@ -103,7 +100,7 @@ export type MilestoneResult = {
  *  cuenta por sede, crea las folleto_requests de preapertura y marca el hito. Devuelve
  *  los hitos disparados (para notificar + correo). `todayIso` en zona CR. */
 export async function processBloqueMilestones(todayIso: string): Promise<MilestoneResult[]> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const results: MilestoneResult[] = []
   // Todos los bloques: el match de fecha del hito + el dedup (_sent_at) controlan
   // qué dispara. (El estado es derivado; ya no se filtra por él.)
@@ -167,7 +164,7 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
         // crear los reportes con éxito.
         const { error: markErr } = await supabase
           .from('capacitacion_bloques')
-          .update({ [sentCol[m]]: new Date().toISOString() })
+          .update({ [sentCol[m]]: new Date().toISOString() } as Record<typeof sentCol[BloqueMilestone], string>)
           .eq('id', b.id)
         if (markErr) throw markErr
 

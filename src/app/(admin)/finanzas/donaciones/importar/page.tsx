@@ -330,7 +330,7 @@ export default function ImportarDonacionesPage() {
                 />
                 <div>
                   <p className="text-sm font-medium font-body text-navy">
-                    Actualizar estado "Donador" en perfiles
+                    Actualizar estado “Donador” en perfiles
                   </p>
                   <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
                     Marcará como donadores a los miembros identificados en esta importación

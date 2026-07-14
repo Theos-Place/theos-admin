@@ -67,6 +67,7 @@ export async function getAlerts(): Promise<ActiveAlert[]> {
         // def.table es una unión de nombres de tabla; fijar un literal evita que
         // TS expanda toda la unión (instanciación excesiva) — el valor real es
         // el de def.table en runtime. q queda 'any' a propósito (acceso dinámico).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- acceso dinámico documentado arriba
         let q: any = supabase.from(def.table as 'members').select('*', { count: 'exact', head: true })
         if (def.filter) q = q.eq(def.filter.column, def.filter.value)
         if (def.refine) q = def.refine(q)

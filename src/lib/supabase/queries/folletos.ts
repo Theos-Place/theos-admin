@@ -1,14 +1,8 @@
 import 'server-only'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ROLES } from '@/lib/auth/roles'
 import type { FolletoState } from '@/lib/studies/folletos'
 
-// folleto_requests aún no está en los tipos generados (database.ts). Cliente laxo
-// (sin genérico Database) solo para operar esa tabla sin romper el type-check.
-function looseClient(): SupabaseClient {
-  return createAdminClient() as unknown as SupabaseClient
-}
 
 export type DbFolletoRequest = {
   id: string
@@ -83,14 +77,14 @@ export async function createFolletoRequest(input: {
   available_at: string
   confirmed_by: string | null
 }): Promise<{ id: string }> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase.from('folleto_requests').insert(input).select('id').single()
   if (error) throw error
   return data as { id: string }
 }
 
 export async function getFolletoRequests(filters: { sede?: string; status?: FolletoState; tipo?: string } = {}): Promise<DbFolletoRequest[]> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   let q = supabase
     .from('folleto_requests')
     .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, source_group:study_groups(name), bloque:capacitacion_bloques(nombre)')
@@ -110,7 +104,7 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
 /** Cambio de estado (individual o en lote). */
 export async function setFolletoRequestsStatus(ids: string[], status: FolletoState): Promise<{ updated: number }> {
   if (ids.length === 0) return { updated: 0 }
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { error, count } = await supabase
     .from('folleto_requests')
     .update({ status, updated_at: new Date().toISOString() }, { count: 'exact' })

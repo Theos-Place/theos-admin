@@ -1,15 +1,9 @@
 import 'server-only'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { nextLevelCode } from '@/lib/studies/folletos'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
-// Columnas nuevas de payments (comprobante) no están en los tipos generados →
-// cliente laxo para esas operaciones.
-function looseClient(): SupabaseClient {
-  return createAdminClient() as unknown as SupabaseClient
-}
 
 export type PaymentConcept = 'matricula' | 'folletos'
 export type PaymentReviewStatus = 'en_revision' | 'aprobado' | 'rechazado'
@@ -39,7 +33,7 @@ export async function createComprobantePayment(input: {
   reference_code: string | null
   receipt_path: string
 }): Promise<{ id: string }> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('payments')
     .insert({
@@ -69,7 +63,7 @@ export async function createComprobantePayment(input: {
  *  grupo que cierra. Idempotente: si ya existe un grupo del plan siguiente
  *  con el mismo dirigente/horario/zona sin finalizar, se reutiliza. */
 async function findOrCreateSuccessorGroup(
-  supabase: SupabaseClient,
+  supabase: ReturnType<typeof createAdminClient>,
   src: {
     id: string; name: string | null; leader_id: string | null; co_leader_id: string | null
     zone: string | null; schedule_days: string[] | null; schedule_time: string | null
@@ -130,7 +124,7 @@ export async function autoEnrollApprovedToNextLevel(
   approvedMemberIds: string[],
 ): Promise<{ enrolled: number; next_level: string | null; amount: number }> {
   if (approvedMemberIds.length === 0) return { enrolled: 0, next_level: null, amount: 0 }
-  const supabase = looseClient()
+  const supabase = createAdminClient()
 
   // Grupo origen completo (para heredar dirigente/horario/zona) + nivel siguiente.
   const { data: g } = await supabase
@@ -211,10 +205,10 @@ export async function submitEnrollmentComprobante(input: {
   receipt_path: string
   reference_code: string | null
 }): Promise<{ id: string } | null> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data: enr } = await supabase
     .from('study_enrollments')
-    .select('member_id, group_id, group:study_groups(plan:study_plans(cost)), plan_direct:study_plans!study_enrollments_plan_id_fkey(cost)')
+    .select('member_id, group_id, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(cost)), plan_direct:study_plans!study_enrollments_plan_id_fkey(cost)')
     .eq('id', input.enrollment_id)
     .maybeSingle()
   if (!enr) return null
@@ -288,7 +282,7 @@ export async function submitEnrollmentComprobante(input: {
 /** Cola de pagos en revisión, con nombre del miembro y detección de referencia
  *  duplicada (posible comprobante reutilizado). */
 export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('payments')
     .select('id, member_id, amount, currency, concept, reference_code, receipt_path, created_at, member:members!payments_member_id_fkey(first_name, last_name)')
@@ -336,7 +330,7 @@ export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
  *  este registro). Devuelve false si el pago ya no estaba en revisión (otro
  *  revisor lo procesó): antes esto respondía éxito falso. */
 export async function approvePayment(id: string, reviewerMemberId: string | null): Promise<boolean> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const now = new Date().toISOString()
   const { data, error } = await supabase
     .from('payments')
@@ -364,7 +358,7 @@ export async function approvePayment(id: string, reviewerMemberId: string | null
 /** Rechaza: review_status=rechazado + motivo. Devuelve datos del pago para avisar
  *  a la persona (correo + notificación). */
 export async function rejectPayment(id: string, reviewerMemberId: string | null, reason: string): Promise<{ member_id: string; concept: PaymentConcept | null } | null> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('payments')
     .update({ review_status: 'rechazado', rejection_reason: reason, reviewed_by: reviewerMemberId, reviewed_at: new Date().toISOString() })
@@ -379,7 +373,7 @@ export async function rejectPayment(id: string, reviewerMemberId: string | null,
 
 /** Path del comprobante + dueño, para el chequeo de permiso en la ruta de la imagen. */
 export async function getPaymentReceiptMeta(id: string): Promise<{ member_id: string; receipt_path: string | null } | null> {
-  const supabase = looseClient()
+  const supabase = createAdminClient()
   const { data } = await supabase.from('payments').select('member_id, receipt_path').eq('id', id).maybeSingle()
   return (data as { member_id: string; receipt_path: string | null } | null) ?? null
 }

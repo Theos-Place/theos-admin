@@ -194,6 +194,8 @@ export default function ImportarVacantesPage() {
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
           </div>
           <div className="flex flex-col items-center gap-2">
+            {/* Descarga de un route handler (no una página): Link no aplica. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/api/servers/vacancies/import-template"
               className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium border border-[var(--outline-variant)] text-navy font-body hover:bg-surface-low transition-colors"

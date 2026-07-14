@@ -42,7 +42,7 @@ export function RowActionsMenu({
     const menuH = menuRef.current?.offsetHeight ?? actions.length * 40 + 8
     const vw = window.innerWidth, vh = window.innerHeight
     const MARGIN = 8, GAP = 6
-    let left = Math.min(Math.max(MARGIN, r.right - width), vw - width - MARGIN)
+    const left = Math.min(Math.max(MARGIN, r.right - width), vw - width - MARGIN)
     let top = r.bottom + GAP
     if (top + menuH > vh - MARGIN) top = Math.max(MARGIN, r.top - menuH - GAP)
     setPos({ top, left })

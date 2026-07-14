@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
+import { logAudit } from '@/lib/audit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { approvePayment, rejectPayment } from '@/lib/supabase/queries/payments'
 import { sendEmail } from '@/lib/email/provider'
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (action === 'approve') {
       const approved = await approvePayment(id, auth.ctx.memberId)
       if (!approved) return NextResponse.json({ error: 'El pago ya no está en revisión.' }, { status: 409 })
+      await logAudit({ actorUserId: auth.ctx.userId, action: 'APPROVE', entityType: 'payments', entityId: id })
       return NextResponse.json({ ok: true })
     }
 
@@ -25,6 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (!motivo) return NextResponse.json({ error: 'El motivo de rechazo es obligatorio.' }, { status: 400 })
       const rejected = await rejectPayment(id, auth.ctx.memberId, motivo)
       if (!rejected) return NextResponse.json({ error: 'El pago ya no está en revisión.' }, { status: 409 })
+      await logAudit({ actorUserId: auth.ctx.userId, action: 'REJECT', entityType: 'payments', entityId: id, newData: { reason: motivo } })
 
       // Avisar a la persona (best-effort): notificación interna + correo con el motivo.
       try {

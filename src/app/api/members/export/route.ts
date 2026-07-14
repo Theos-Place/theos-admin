@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
+import { logAudit } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
 import { getMemberIds, getMembersByIds } from '@/lib/supabase/queries/members'
 
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
     const active_attendance = searchParams.get('active_attendance')
 
     // Filtros avanzados serializados como JSON (validados como array).
-    let conditions
+    let conditions: import('@/types/filters').FilterCondition[] | undefined
     const rawConditions = searchParams.get('conditions')
     if (rawConditions) {
       try {
@@ -44,6 +45,19 @@ export async function GET(req: NextRequest) {
       active_attendance: active_attendance === 'true' ? true : undefined,
     })
     const members = await getMembersByIds(ids)
+
+    // Rastro de auditoría: exportar el padrón (PII de miles de personas) debe
+    // registrar quién, con qué filtros y cuántos registros (Ley 8968).
+    await logAudit({
+      actorUserId: auth.ctx.userId, action: 'EXPORT', entityType: 'members',
+      newData: {
+        total,
+        filters: {
+          search: search ?? null, is_active, is_donor, is_server, active_attendance,
+          conditions: conditions?.length ?? 0,
+        },
+      },
+    })
 
     return NextResponse.json({ members, total })
   } catch (error) {
