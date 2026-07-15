@@ -38,7 +38,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
     <div className="py-4 px-[22px] flex flex-col gap-2.5">
       <div className="flex justify-end">
         <Link
-          href={`/servidores/vacantes/nueva?comite=${committeeId}`}
+          href={`/servidores/vacantes/solicitar?comite=${committeeId}`}
           className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
         >
           <Plus size={13} />

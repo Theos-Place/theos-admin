@@ -17,6 +17,7 @@ import { CapacityBar } from '@/components/events/CapacityBar'
 import { FilterChips } from '@/components/shared/FilterChips'
 import { Tabs } from '@/components/shared/Tabs'
 import { CalendarGrid } from '@/components/events/CalendarGrid'
+import { MonthNav } from '@/components/events/MonthNav'
 import { recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
@@ -140,18 +141,18 @@ function EventosContent() {
     }).length
   }, 0)
 
-  // Lista/Grid: próximas OCURRENCIAS (los recurrentes se cuentan por día, no una
-  // sola vez) dentro de una ventana de 90 días hacia adelante. Filtro por tipo.
-  // Los realizados se ven únicamente en el calendario (con opacidad/badge).
+  // Lista/Grid: OCURRENCIAS del mes seleccionado (mismo mes/año que el
+  // calendario — los recurrentes se cuentan por día, no una sola vez). Filtro
+  // por tipo. Realizados incluidos (con badge), igual que en el calendario.
   const listRows = useMemo(() => {
-    const from = new Date(); from.setHours(0, 0, 0, 0)
-    const to = new Date(from); to.setDate(to.getDate() + 90)
-    const up = eventsInRange(merged, from, to)
+    const up = monthEvents(merged, currentMonth, currentYear)
     return typeFilter === 'all' ? up : up.filter(e => e.event_type === typeFilter)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [merged, typeFilter])
+  }, [merged, typeFilter, currentMonth, currentYear])
 
   const visibleRows = listRows.slice(0, visibleCount)
+
+  // Cambiar de mes/año reinicia la paginación (mismo criterio que el filtro de tipo).
+  useEffect(() => { setVisibleCount(PAGE_SIZE) }, [currentMonth, currentYear])
 
   function handlePrev() {
     if (currentMonth === 0) {
@@ -184,11 +185,9 @@ function EventosContent() {
     [merged, currentMonth, currentYear],
   )
 
-  // Contador del header según la vista activa.
+  // Contador del header — mismo mes que la navegación, en las 3 vistas.
   const headerCount = view === 'calendar' ? calendarMonthEvents.length : listRows.length
-  const headerNoun = view === 'calendar'
-    ? `evento${calendarMonthEvents.length !== 1 ? 's' : ''} este mes`
-    : `evento${listRows.length !== 1 ? 's' : ''} próximo${listRows.length !== 1 ? 's' : ''}`
+  const headerNoun = `evento${headerCount !== 1 ? 's' : ''} este mes`
 
   return (
     <div className="space-y-6">
@@ -286,14 +285,27 @@ function EventosContent() {
         onChange={setView}
       />
 
-      {/* Lista y Grid: solo próximos; único filtro = tipo de evento */}
+      {/* Lista y Grid: mismo selector de mes que el calendario + filtro de tipo */}
       {(view === 'list' || view === 'grid') && (
-        <FilterChips
-          chips={typeFilters}
-          activeKey={typeFilter}
-          onSelect={k => setTypeFilter(k as EventType | 'all')}
-          ariaLabel="Filtrar eventos por tipo"
-        />
+        <>
+          <MonthNav
+            month={currentMonth}
+            year={currentYear}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onPrevYear={() => setCurrentYear(y => y - 1)}
+            onNextYear={() => setCurrentYear(y => y + 1)}
+            onToday={handleToday}
+            onSetMonth={setCurrentMonth}
+            onSetYear={setCurrentYear}
+          />
+          <FilterChips
+            chips={typeFilters}
+            activeKey={typeFilter}
+            onSelect={k => setTypeFilter(k as EventType | 'all')}
+            ariaLabel="Filtrar eventos por tipo"
+          />
+        </>
       )}
 
       {/* Vista Lista */}
@@ -419,14 +431,14 @@ function EventosContent() {
           </ul>
 
           {listRows.length === 0 && (
-            <EmptyState icon={Calendar} title="No hay eventos próximos con ese filtro" />
+            <EmptyState icon={Calendar} title="No hay eventos este mes con ese filtro" />
           )}
 
           {/* Paginación: contador + cargar más */}
           {listRows.length > 0 && (
             <div className="flex flex-col items-center gap-2 px-4 py-4 border-t border-[var(--outline-variant)]">
               <p className="text-[12px] text-navy-light/60 font-body">
-                Mostrando {Math.min(visibleCount, listRows.length)} de {listRows.length} próximos
+                Mostrando {Math.min(visibleCount, listRows.length)} de {listRows.length} este mes
               </p>
               {listRows.length > visibleCount && (
                 <button
@@ -441,12 +453,12 @@ function EventosContent() {
         </div>
       )}
 
-      {/* Vista Grid: cards con flyer (misma data que la lista: próximos, 15) */}
+      {/* Vista Grid: cards con flyer (misma data que la lista: mes seleccionado) */}
       {view === 'grid' && (
         <div className="space-y-4">
           {listRows.length === 0 ? (
             <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-              <EmptyState icon={Calendar} title="No hay eventos próximos con ese filtro" />
+              <EmptyState icon={Calendar} title="No hay eventos este mes con ese filtro" />
             </div>
           ) : (
             <>
@@ -457,7 +469,7 @@ function EventosContent() {
               </div>
               <div className="flex flex-col items-center gap-2">
                 <p className="text-[12px] text-navy-light/60 font-body">
-                  Mostrando {Math.min(visibleCount, listRows.length)} de {listRows.length} próximos
+                  Mostrando {Math.min(visibleCount, listRows.length)} de {listRows.length} este mes
                 </p>
                 {listRows.length > visibleCount && (
                   <button

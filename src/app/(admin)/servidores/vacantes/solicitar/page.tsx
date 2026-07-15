@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Minus, Plus, ShoppingCart, Check, Info, Lock, Loader2 } from 'lucide-react'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -9,6 +10,9 @@ import {
   isVacancyRequestWindowOpen,
   VACANCY_REQUEST_WINDOW_TOOLTIP,
 } from '@/lib/servers/request-window'
+
+const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
+const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60 font-display'
 
 type FlatPosition = {
   id: string
@@ -19,17 +23,29 @@ type FlatPosition = {
 
 type Committee = { id: string; name: string }
 
-export default function SolicitarVacantesPage() {
+function SolicitarVacantesContent() {
+  const params = useSearchParams()
+  const preselectedCommittee = params.get('comite') ?? ''
+
   const [scope, setScope] = useState<{ all: boolean; ids: string[] } | null>(null)
   const [positions, setPositions] = useState<FlatPosition[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
-  const [committeeId, setCommitteeId] = useState('')
+  const [committeeId, setCommitteeId] = useState(preselectedCommittee)
   const [cart, setCart] = useState<Record<string, number>>({}) // position_id → cantidad
+
+  // Datos de la vacante (compartidos por todos los puestos del carrito).
+  const [schedule, setSchedule] = useState('')
+  const [commitment, setCommitment] = useState('')
+  const [location, setLocation] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
+  const [notes, setNotes] = useState('')
+  const [featured, setFeatured] = useState(false)
+
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState<{ rows: number; slots: number } | null>(null)
+  const [saved, setSaved] = useState<{ rows: number; slots: number; status: 'creado' | 'aprobado' } | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -101,11 +117,20 @@ export default function SolicitarVacantesPage() {
       const res = await fetch('/api/servers/vacancies/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ committee_id: committeeId, items }),
+        body: JSON.stringify({
+          committee_id: committeeId,
+          items,
+          schedule: schedule.trim() || undefined,
+          commitment: commitment.trim() || undefined,
+          location: location.trim() || undefined,
+          notes: notes.trim() || undefined,
+          expires_at: expiresAt || undefined,
+          is_featured: featured,
+        }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudieron enviar las vacantes.')
-      setSaved({ rows: data.rows, slots: data.slots })
+      setSaved({ rows: data.rows, slots: data.slots, status: data.status })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error desconocido')
     } finally {
@@ -133,9 +158,14 @@ export default function SolicitarVacantesPage() {
             <Check size={24} className="text-teal-deep" />
           </div>
           <div>
-            <p className="text-xl font-bold text-navy font-display">Vacantes enviadas</p>
+            <p className="text-xl font-bold text-navy font-display">
+              {saved.status === 'aprobado' ? 'Vacantes publicadas' : 'Vacantes enviadas'}
+            </p>
             <p className="mt-1 text-sm text-navy-light/70 font-body">
               {saved.slots} vacante{saved.slots !== 1 ? 's' : ''} en {saved.rows} puesto{saved.rows !== 1 ? 's' : ''}.
+              {saved.status === 'aprobado'
+                ? ' Ya quedaron visibles para que los miembros apliquen.'
+                : ' Quedaron pendientes de revisión.'}
             </p>
           </div>
           <div className="flex items-center justify-center gap-2">
@@ -255,6 +285,39 @@ export default function SolicitarVacantesPage() {
         </section>
       )}
 
+      {/* Sección 3: Datos de la vacante (comunes al carrito) */}
+      {committeeId && totalSlots > 0 && (
+        <section className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
+          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Detalles de la vacante</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label className={labelCls}>Ubicación / sede</label>
+              <input className={inputCls} placeholder="Sede / lugar (opcional)" value={location} onChange={e => setLocation(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className={labelCls}>Horario</label>
+              <input className={inputCls} placeholder="Ej. Domingos 8am–12pm" value={schedule} onChange={e => setSchedule(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className={labelCls}>Compromiso esperado</label>
+              <input className={inputCls} placeholder="Ej. 2 domingos al mes" value={commitment} onChange={e => setCommitment(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className={labelCls}>Expira</label>
+              <input type="date" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+            </div>
+            <label className="flex items-center gap-2 pb-1 self-end cursor-pointer">
+              <input type="checkbox" className="accent-coral" checked={featured} onChange={e => setFeatured(e.target.checked)} />
+              <span className="text-sm text-navy font-body">Destacada</span>
+            </label>
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Justificación / notas internas (opcional)</label>
+            <textarea className={cn(inputCls, 'resize-none')} rows={3} placeholder="¿Por qué se necesita?" value={notes} onChange={e => setNotes(e.target.value)} />
+          </div>
+        </section>
+      )}
+
       {/* Enviar */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -301,5 +364,13 @@ export default function SolicitarVacantesPage() {
 
       {error && <p className="text-sm text-coral font-body">{error}</p>}
     </div>
+  )
+}
+
+export default function SolicitarVacantesPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-[var(--fg-muted)]">Cargando…</div>}>
+      <SolicitarVacantesContent />
+    </Suspense>
   )
 }

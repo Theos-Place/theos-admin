@@ -8,10 +8,18 @@ import { isVacancyRequestWindowOpen } from '@/lib/servers/request-window'
 type Body = {
   committee_id?: string
   items?: Array<{ position_id?: string; quantity?: number }>
+  schedule?: string
+  commitment?: string
+  location?: string
+  notes?: string
+  expires_at?: string
+  is_featured?: boolean
 }
 
 // POST: el líder de comité (o coordinación/admin) envía el "carrito" de cupos.
-// Crea una vacante por puesto con slots_total = cantidad, estado 'creado'.
+// Crea una vacante por puesto con slots_total = cantidad. Los roles
+// administrativos globales (staff/coordinación) quedan aprobados y publicados
+// de una; los líderes de comité quedan 'creado' (pendiente de revisión).
 // Notifica al líder del comité (confirmación) y a los coordinadores (nueva solicitud).
 export async function POST(req: NextRequest) {
   const auth = await requireRoles() // autenticado; el permiso real es por comité (abajo)
@@ -39,7 +47,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { rows, slots } = await createVacancyRequests(committeeId, items)
+    const { rows, slots, status } = await createVacancyRequests(committeeId, items, {
+      schedule: body.schedule?.trim() || null,
+      commitment: body.commitment?.trim() || null,
+      location: body.location?.trim() || null,
+      notes: body.notes?.trim() || null,
+      expires_at: body.expires_at || null,
+      is_featured: !!body.is_featured,
+      autoApprove: globalAdmin,
+    })
     if (rows === 0) {
       return NextResponse.json({ error: 'Ningún puesto válido para este comité.' }, { status: 400 })
     }
@@ -88,7 +104,7 @@ export async function POST(req: NextRequest) {
       console.warn('No se pudieron enviar las notificaciones de la solicitud de vacantes:', e)
     }
 
-    return NextResponse.json({ ok: true, rows, slots }, { status: 201 })
+    return NextResponse.json({ ok: true, rows, slots, status }, { status: 201 })
   } catch (error) {
     console.error('POST /api/servers/vacancies/request:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

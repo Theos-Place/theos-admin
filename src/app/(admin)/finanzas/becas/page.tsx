@@ -360,7 +360,7 @@ function ReviewRequestModal({ request, onClose, onDone }: {
         <p className="text-sm text-navy-light/70 font-body">
           <strong className="text-navy">{request.member_name}</strong> solicitó una beca para <strong className="text-navy">{request.entity_name ?? '—'}</strong>.
         </p>
-        <p className="text-[13px] text-navy-light/70 font-body italic">"{request.reason}"</p>
+        <p className="text-[13px] text-navy-light/70 font-body italic">&quot;{request.reason}&quot;</p>
 
         {!action && (
           <div className="grid grid-cols-1 gap-2 pt-1">

@@ -174,7 +174,7 @@ export function NotificationsBell() {
               onClick={() => setOpen(false)}
               className="text-[12px] text-navy-light/60 hover:text-navy transition-colors font-body"
             >
-              Ver todas las alertas →
+              Ver todas las notificaciones →
             </Link>
           </div>
         </div>

@@ -151,7 +151,7 @@ export default function ServidoresPage() {
           </p>
         </div>
         <Link
-          href="/servidores/vacantes/nueva"
+          href="/servidores/vacantes/solicitar"
           className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
         >
           <Plus size={14} />

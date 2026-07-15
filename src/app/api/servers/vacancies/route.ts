@@ -13,7 +13,9 @@ export async function GET(req: NextRequest) {
       const auth = await requireRoles()
       if (auth.res) return auth.res
       const all = await getVacancies()
-      return NextResponse.json(all.filter(v => v.status === 'published'))
+      // 'aprobado' (nuevo flujo de solicitud) es funcionalmente equivalente a
+      // 'published' (flujo legacy): ambos son "visible y aplicable".
+      return NextResponse.json(all.filter(v => v.status === 'published' || v.status === 'aprobado'))
     }
     const auth = await requireModuleView('servidores')
     if (auth.res) return auth.res

@@ -34,7 +34,6 @@ import {
   CreditCard,
   GraduationCap,
   Shield,
-  Bell,
   Wrench,
   CalendarRange,
   CalendarCheck,
@@ -107,7 +106,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // con 403 simplemente no hay badge.
   const [openRequests, setOpenRequests] = useState(0)
   const [openFinanceRequests, setOpenFinanceRequests] = useState(0)
-  const [unreadNotifs, setUnreadNotifs] = useState(0)
   useEffect(() => {
     let alive = true
     fetch('/api/studies/requests?count=open')
@@ -117,10 +115,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     fetch('/api/finance/requests?count=open')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (alive && d) setOpenFinanceRequests(d.count ?? 0) })
-      .catch(() => {})
-    fetch('/api/notifications/internal')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && Array.isArray(d)) setUnreadNotifs(d.filter((n: { read: boolean }) => !n.read).length) })
       .catch(() => {})
     return () => { alive = false }
   }, [pathname])
@@ -174,7 +168,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // múltiples roles: coordinador_estudios + comunicaciones ve comunicaciones).
   const ALL_NAV: NavModule[] = [
     { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, subs: [],                 module: null },
-    { href: '/notificaciones', label: 'Notificaciones', icon: Bell,            subs: [],                 module: null, badge: unreadNotifs },
     { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros', summaryLabel: 'Buscar miembros' },
     { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
     // module: null → visible para cualquier autenticado (como Dashboard/Notificaciones).

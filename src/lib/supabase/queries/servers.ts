@@ -357,16 +357,30 @@ export async function createVacancy(input: VacancyWriteInput): Promise<{ id: str
   return data as { id: string }
 }
 
+export type VacancyRequestExtra = {
+  schedule?: string | null
+  commitment?: string | null
+  location?: string | null
+  notes?: string | null
+  expires_at?: string | null
+  is_featured?: boolean
+  /** Roles administrativos globales (staff/coordinación): la solicitud queda
+   *  aprobada y publicada de una, sin pasar por la bandeja de revisión. */
+  autoApprove?: boolean
+}
+
 /** Crea las vacantes de una solicitud (carrito del comité): una vacante por
- *  puesto con `slots_total = cantidad` y estado 'creado'. Devuelve filas creadas
- *  y total de cupos. Ignora ítems con cantidad <= 0. */
+ *  puesto con `slots_total = cantidad`. Estado 'creado' (pendiente de revisión)
+ *  salvo `autoApprove` (roles globales), que queda 'aprobado' y publicada de una.
+ *  Devuelve filas creadas y total de cupos. Ignora ítems con cantidad <= 0. */
 export async function createVacancyRequests(
   committeeId: string,
   items: Array<{ position_id: string; quantity: number }>,
-): Promise<{ rows: number; slots: number }> {
+  extra: VacancyRequestExtra = {},
+): Promise<{ rows: number; slots: number; status: 'creado' | 'aprobado' }> {
   const supabase = createAdminClient()
   const valid = items.filter(i => i.position_id && Number(i.quantity) > 0)
-  if (valid.length === 0) return { rows: 0, slots: 0 }
+  if (valid.length === 0) return { rows: 0, slots: 0, status: 'creado' }
 
   const { data: positions, error: pErr } = await supabase
     .from('service_positions').select('id, title, area_id').in('id', valid.map(i => i.position_id))
@@ -374,6 +388,8 @@ export async function createVacancyRequests(
   const posById = new Map(
     ((positions ?? []) as Array<{ id: string; title: string; area_id: string }>).map(p => [p.id, p]),
   )
+  const status: 'creado' | 'aprobado' = extra.autoApprove ? 'aprobado' : 'creado'
+  const publishedAt = extra.autoApprove ? new Date().toISOString() : null
   // Defensa: el puesto debe pertenecer al comité indicado.
   const rows = valid
     .filter(i => posById.get(i.position_id)?.area_id === committeeId)
@@ -382,13 +398,20 @@ export async function createVacancyRequests(
       position_id: i.position_id,
       title: posById.get(i.position_id)!.title,
       slots_total: Math.floor(Number(i.quantity)),
-      status: 'creado' as const,
+      status,
+      published_at: publishedAt,
+      schedule: extra.schedule ?? null,
+      commitment: extra.commitment ?? null,
+      location: extra.location ?? null,
+      notes: extra.notes ?? null,
+      expires_at: extra.expires_at ?? null,
+      is_featured: extra.is_featured ?? false,
     }))
-  if (rows.length === 0) return { rows: 0, slots: 0 }
+  if (rows.length === 0) return { rows: 0, slots: 0, status }
 
   const { error } = await supabase.from('vacancies').insert(rows)
   if (error) throw error
-  return { rows: rows.length, slots: rows.reduce((s, r) => s + r.slots_total, 0) }
+  return { rows: rows.length, slots: rows.reduce((s, r) => s + r.slots_total, 0), status }
 }
 
 export async function updateVacancy(id: string, patch: Partial<VacancyWriteInput>): Promise<void> {
@@ -462,9 +485,14 @@ export async function setVacanciesStatus(
 ): Promise<{ updated: number }> {
   if (ids.length === 0) return { updated: 0 }
   const supabase = createAdminClient()
+  // Al aprobar, la vacante queda publicada de una (mismo criterio que el
+  // auto-aprobado de staff): sin este sello, 'aprobado' nunca sería visible
+  // ni aplicable para los miembros.
+  const row: Record<string, unknown> = { status }
+  if (status === 'aprobado') row.published_at = new Date().toISOString()
   const { error, count } = await supabase
     .from('vacancies')
-    .update({ status }, { count: 'exact' })
+    .update(row as Updatable<'vacancies'>, { count: 'exact' })
     .in('id', ids)
   if (error) throw error
   return { updated: count ?? ids.length }

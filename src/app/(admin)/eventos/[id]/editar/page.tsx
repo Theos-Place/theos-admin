@@ -461,7 +461,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             </p>
           )}
           <label className="flex items-center gap-3 cursor-pointer">
-            <button type="button" role="switch" aria-checked={isVirtual} aria-label="Evento virtual" onClick={() => setIsVirtual(v => !v)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isVirtual ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isVirtual ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+            <button type="button" role="switch" aria-checked={isVirtual} aria-label="Evento virtual" onClick={() => setIsVirtual(v => !v)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isVirtual ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isVirtual ? 'translate-x-4' : 'translate-x-0.5')} /></button>
             <span className="text-sm text-navy font-body">Virtual</span>
           </label>
           {!isVirtual && (
@@ -478,7 +478,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           )}
           <div className="space-y-2">
             <label className="flex items-center gap-3 cursor-pointer">
-              <button type="button" role="switch" aria-checked={isRecurring} aria-label="Evento recurrente" onClick={() => { const next = !isRecurring; setIsRecurring(next); if (!next) setRecurrenceRule(null) }} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isRecurring ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isRecurring ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+              <button type="button" role="switch" aria-checked={isRecurring} aria-label="Evento recurrente" onClick={() => { const next = !isRecurring; setIsRecurring(next); if (!next) setRecurrenceRule(null) }} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isRecurring ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isRecurring ? 'translate-x-4' : 'translate-x-0.5')} /></button>
               <span className="text-sm text-navy font-body">Recurrente</span>
             </label>
             {isRecurring && (
@@ -527,7 +527,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       <Section id="registration" title="④ Inscripciones" open={openSections.has('registration')} onToggle={() => toggleSection('registration')}>
         <div className="space-y-4">
           <label className="flex items-center gap-3 cursor-pointer">
-            <button type="button" role="switch" aria-checked={requiresRegistration} aria-label="Requiere inscripción" onClick={() => setRequiresRegistration(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', requiresRegistration ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresRegistration ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+            <button type="button" role="switch" aria-checked={requiresRegistration} aria-label="Requiere inscripción" onClick={() => setRequiresRegistration(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', requiresRegistration ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresRegistration ? 'translate-x-4' : 'translate-x-0.5')} /></button>
             <span className="text-sm text-navy font-body">Requiere inscripción</span>
           </label>
           {requiresRegistration && (
@@ -547,7 +547,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       <Section id="finance" title="⑤ Financiero" open={openSections.has('finance')} onToggle={() => toggleSection('finance')}>
         <div className="space-y-4">
           <label className="flex items-center gap-3 cursor-pointer">
-            <button type="button" role="switch" aria-checked={requiresPayment} aria-label="Requiere pago" onClick={() => setRequiresPayment(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', requiresPayment ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresPayment ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+            <button type="button" role="switch" aria-checked={requiresPayment} aria-label="Requiere pago" onClick={() => setRequiresPayment(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', requiresPayment ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresPayment ? 'translate-x-4' : 'translate-x-0.5')} /></button>
             <span className="text-sm text-navy font-body">Evento con cobro</span>
           </label>
           {requiresPayment && (
@@ -568,7 +568,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                 <p className="text-[11px] text-navy-light/60 font-body">Se aplica a servidores activos de los comités organizadores.</p>
               </div>
               <label className="flex items-center gap-3 cursor-pointer">
-                <button type="button" role="switch" aria-checked={!serversPay} aria-label="Servidores exentos de pago" onClick={() => setServersPay(s => !s)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', !serversPay ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', !serversPay ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+                <button type="button" role="switch" aria-checked={!serversPay} aria-label="Servidores exentos de pago" onClick={() => setServersPay(s => !s)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', !serversPay ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', !serversPay ? 'translate-x-4' : 'translate-x-0.5')} /></button>
                 <span className="text-sm text-navy font-body">Servidores exentos de pago</span>
               </label>
             </div>

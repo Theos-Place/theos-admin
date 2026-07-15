@@ -138,7 +138,7 @@ function SolicitarPuestoContent() {
 
       <div className="rounded-2xl px-4 py-3 bg-amber-50 border border-amber-200">
         <p className="text-[12px] text-amber-800 font-body">
-          Esto crea una solicitud que <strong>Staff debe aprobar</strong>. Al aprobarla, el puesto se agrega al catálogo. Si el puesto ya existe, mejor <Link href="/servidores/vacantes/nueva" className="underline">solicitá una vacante</Link>.
+          Esto crea una solicitud que <strong>Staff debe aprobar</strong>. Al aprobarla, el puesto se agrega al catálogo. Si el puesto ya existe, mejor <Link href="/servidores/vacantes/solicitar" className="underline">solicitá una vacante</Link>.
         </p>
       </div>
 
