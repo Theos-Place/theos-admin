@@ -98,8 +98,14 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
       const supabase = createClient()
       const { error } = await supabase.auth.updateUser({ password: newPass })
       if (error) {
-        // Supabase puede pedir reautenticación reciente para cambios sensibles.
-        setError('No se pudo actualizar la contraseña. Cerrá sesión, volvé a ingresar e intentá de nuevo.')
+        // 'same_password': Supabase rechaza si la nueva es igual a la actual —
+        // no es un problema de sesión, "cerrar sesión y volver a entrar" no lo
+        // arregla. El resto sí suele ser sesión vieja (requiere reautenticación).
+        setError(
+          error.code === 'same_password'
+            ? 'La nueva contraseña debe ser diferente a la actual.'
+            : 'No se pudo actualizar la contraseña. Cerrá sesión, volvé a ingresar e intentá de nuevo.'
+        )
         return
       }
       setNewPass(''); setConfirm('')
