@@ -15,7 +15,8 @@ import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequest
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
-import { MATRICULA_MIN_CHARLAS, type EligibilityResult, type EligibleGroup, type MemberStudyProfile } from '@/lib/studies/eligibility'
+import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
+import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 import { formatDateLong } from '@/lib/format'
 
 type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'campaña'
@@ -134,6 +135,7 @@ export default function MatriculaPage() {
   const isDonor = profile?.is_donor ?? false
   const isActiveServer = profile?.is_server ?? false
   const charlaCount = profile?.charla_count ?? 0
+  const attendanceActive = profile?.attendance_active ?? false
   const availableCount = eligibilityResults.filter(r => r.is_eligible && r.available_groups.length > 0).length
 
   async function handleEnroll(scholarship?: { scholarship_id?: string; coupon_code?: string }) {
@@ -267,7 +269,7 @@ export default function MatriculaPage() {
             <div className="space-y-1.5">
               <CommitmentRow met={isDonor}                    label="Donador/a activo/a" />
               <CommitmentRow met={!!isActiveServer}           label="Servidor/a en comité" />
-              <CommitmentRow met={charlaCount >= MATRICULA_MIN_CHARLAS} label={`Asistencia a charlas, últimos 6 meses (${charlaCount}/${MATRICULA_MIN_CHARLAS})`} />
+              <CommitmentRow met={attendanceActive} label={`Asistencia activa: ≥${ATTENDANCE_MIN_CHARLAS} charlas en los últimos ${ATTENDANCE_MONTHS} meses, con al menos una en los últimos ${ATTENDANCE_RECENCY_DAYS} días (llevás ${charlaCount})`} />
             </div>
           </div>
         </div>

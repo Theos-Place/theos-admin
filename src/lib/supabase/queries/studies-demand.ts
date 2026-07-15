@@ -102,11 +102,11 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     }
   }
 
-  // Compromisos: asistencia = ≥1 check-in de charla por mes en los últimos
-  // ATTENDANCE_MONTHS_STUDIES (6) meses — ventana de ESTUDIOS.
-  const { getActiveAttendanceMemberIds, getServerMemberIds, ATTENDANCE_MONTHS_STUDIES } = await import('./members')
+  // Compromisos: asistencia = criterio único (≥6 charlas en 6 meses, con al
+  // menos una en los últimos 60 días).
+  const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
   const [attendanceIds, serverIds] = await Promise.all([
-    requirements.includes('asistencia') ? getActiveAttendanceMemberIds(ATTENDANCE_MONTHS_STUDIES) : Promise.resolve([]),
+    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
     requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
   ])
   const attendanceSet = new Set(attendanceIds)

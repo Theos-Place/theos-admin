@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
 import type { DbMember, DbMemberEnriched } from './members'
 import { getAreaNameMap, parentAreaName } from './_area-map'
-import { attendanceCountSatisfiesCriteria } from '@/lib/attendance'
+import { meetsAttendanceCriteria } from '@/lib/attendance'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
 
@@ -547,7 +547,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     family,
     wallet_pass_id: (memberRow.wallet_pass_id as string | null) ?? null,
     attendance_months: charlaMonths,
-    attendance_active: attendanceCountSatisfiesCriteria(charlaCheckins.map(c => c.checked_in_at ?? '')),
+    attendance_active: meetsAttendanceCriteria(charlaCheckins.map(c => c.checked_in_at ?? '')),
     last_charla_checkin: lastCharlaCheckin,
     led_groups: ledGroups,
     led_studies: ledStudies,

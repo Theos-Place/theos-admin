@@ -4,7 +4,7 @@ import type { FilterCondition } from '@/types/filters'
 import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
 import { esComiteDirigentes } from '@/lib/dirigentes'
-import { getActiveAttendanceMemberIds, ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MIN_CHARLAS_GENERAL } from '@/lib/supabase/queries/members-attendance'
+import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -113,11 +113,10 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // Criterio de asistencia activa: extraído a ./members-attendance. Re-exportado
 // acá para no tocar a los consumidores (que importan del barrel members).
 export {
-  ATTENDANCE_MONTHS_GENERAL,
-  ATTENDANCE_MONTHS_STUDIES,
-  ATTENDANCE_MIN_CHARLAS_GENERAL,
-  lastCompleteMonthsKeys,
-  attendanceMonthsSatisfyCriteria,
+  ATTENDANCE_MONTHS,
+  ATTENDANCE_MIN_CHARLAS,
+  ATTENDANCE_RECENCY_DAYS,
+  meetsAttendanceCriteria,
   getActiveAttendanceMemberIds,
 } from '@/lib/supabase/queries/members-attendance'
 
@@ -153,7 +152,7 @@ export async function getMemberCounts(): Promise<MemberCounts> {
     totalP,
     countWhere('is_donor', true),
     getServerMemberIds(),          // ya resiliente (devuelve [])
-    getActiveAttendanceMemberIds(ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MIN_CHARLAS_GENERAL),// ya resiliente (devuelve [])
+    getActiveAttendanceMemberIds(),// ya resiliente (devuelve [])
   ])
   return { total, donadores, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
 }
@@ -342,10 +341,10 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         break
       }
       case 'attendance': {
-        // Sin refinamiento → criterio de asistencia activa (≥6 charlas en 6 meses).
+        // Sin refinamiento → criterio de asistencia activa (≥6 charlas en 6 meses, con al menos una en los últimos 60 días).
         const hasRefine = !!(c.eventType || c.from || c.to || (c.sedes && c.sedes.length) || c.camp || (c.qtyOp && c.qtyOp !== 'any'))
         if (!hasRefine) {
-          res.include.push(new Set(await getActiveAttendanceMemberIds(ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MIN_CHARLAS_GENERAL)))
+          res.include.push(new Set(await getActiveAttendanceMemberIds()))
           break
         }
         // Cuenta asistencias por miembro filtrando por tipo de evento (id real de
@@ -531,7 +530,7 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
   // .in('id', [...]) en la query (un array de cientos/miles revienta la URL).
   const intersectSets: Array<Set<string>> = []
   if (active_attendance) {
-    const aids = await getActiveAttendanceMemberIds(ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MIN_CHARLAS_GENERAL)
+    const aids = await getActiveAttendanceMemberIds()
     if (aids.length === 0) return { ids: [], total: 0 }
     intersectSets.push(new Set(aids))
   }

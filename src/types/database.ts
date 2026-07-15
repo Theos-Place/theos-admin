@@ -4298,7 +4298,7 @@ export type Database = {
     }
     Functions: {
       active_attendance_member_ids: {
-        Args: { p_min_count?: number; p_months: string[]; p_oldest: string }
+        Args: { p_min_count: number; p_oldest: string; p_recency_since: string }
         Returns: {
           member_id: string
         }[]

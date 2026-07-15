@@ -1,7 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
-import { ATTENDANCE_MIN_CHARLAS_GENERAL, attendanceWindowStart } from '@/lib/attendance'
+import { attendanceWindowStart, meetsAttendanceCriteria } from '@/lib/attendance'
 
 // Export de aplicantes de las vacantes seleccionadas (punto 6). Una fila por
 // APLICACIÓN (persona + el puesto al que aplicó). Los multivaluados (estudios,
@@ -92,10 +92,10 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
     studiesByMember.set(e.member_id, set)
   }
 
-  // 5) Sede (más asistida, canónica, últimos 12 meses) + miembro activo (>= 6
-  //    check-ins de charla en los últimos 6 meses).
+  // 5) Sede (más asistida, canónica, últimos 12 meses) + miembro activo
+  //    (criterio único: >= 6 check-ins de charla en los últimos 6 meses, con
+  //    al menos uno en los últimos 60 días).
   const start12 = attendanceWindowStart(12)
-  const start6 = attendanceWindowStart(6)
   const { data: chk } = await supabase
     .from('event_checkins')
     .select('member_id, checked_in_at, events!inner(event_type, title)')
@@ -103,7 +103,7 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
     .in('member_id', memberIds)
     .gte('checked_in_at', start12)
   const sedeTally = new Map<string, Map<string, number>>() // member → sede → count
-  const recentCount = new Map<string, number>()            // member → charlas últimos 6m
+  const recentDates = new Map<string, string[]>()          // member → fechas de charla (≤12m)
   for (const c of (chk ?? []) as Array<{ member_id: string; checked_in_at: string | null; events: unknown }>) {
     if (!c.checked_in_at) continue
     const ev = one(c.events) as { title: string | null } | null
@@ -114,7 +114,9 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
       t.set(name, (t.get(name) ?? 0) + 1)
       sedeTally.set(c.member_id, t)
     }
-    if (c.checked_in_at >= start6) recentCount.set(c.member_id, (recentCount.get(c.member_id) ?? 0) + 1)
+    const arr = recentDates.get(c.member_id) ?? []
+    arr.push(c.checked_in_at)
+    recentDates.set(c.member_id, arr)
   }
   const sedeOf = (memberId: string): string => {
     const t = sedeTally.get(memberId)
@@ -130,7 +132,7 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
     const nombre = m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : ''
     const com = a.vacancy?.committee?.name ?? ''
     const puesto = a.vacancy?.position || a.vacancy?.title || ''
-    const active = (recentCount.get(a.applicant_id) ?? 0) >= ATTENDANCE_MIN_CHARLAS_GENERAL
+    const active = meetsAttendanceCriteria(recentDates.get(a.applicant_id) ?? [])
     return {
       member_id: a.applicant_id,
       nombre,

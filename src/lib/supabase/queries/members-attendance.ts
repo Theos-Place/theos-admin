@@ -2,68 +2,41 @@
 // Extraído de members.ts (auditoría 2026-06: archivos gigantes). Re-exportado
 // por members.ts para no tocar a los consumidores.
 import { createAdminClient } from '@/lib/supabase/admin'
-import { ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MIN_CHARLAS_GENERAL } from '@/lib/attendance'
+import { attendanceWindowStart, attendanceRecencyStart, meetsAttendanceCriteria, ATTENDANCE_MIN_CHARLAS } from '@/lib/attendance'
 
-// Ventanas del criterio — fuente única en @/lib/attendance (módulo puro, importable
-// desde cliente). Re-exportadas para los consumidores server.
-export { ATTENDANCE_MONTHS_GENERAL, ATTENDANCE_MONTHS_STUDIES, ATTENDANCE_MIN_CHARLAS_GENERAL } from '@/lib/attendance'
+// Fuente única del criterio en @/lib/attendance (módulo puro, importable
+// desde cliente). Re-exportado para los consumidores server.
+export { ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_RECENCY_DAYS, meetsAttendanceCriteria } from '@/lib/attendance'
 
-/** Últimos N meses calendario COMPLETOS (YYYY-MM), excluyendo el mes en curso:
- *  incluirlo dejaría a todo el mundo afuera los primeros días de cada mes. */
-export function lastCompleteMonthsKeys(n = ATTENDANCE_MONTHS_GENERAL, now = new Date()): string[] {
-  const out: string[] = []
-  const d = new Date(now.getFullYear(), now.getMonth() - 1, 1) // mes anterior
-  for (let i = 0; i < n; i++) {
-    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-    d.setMonth(d.getMonth() - 1)
-  }
-  return out
-}
-
-/** Criterio de asistencia activa: dado el set de meses (YYYY-MM) con al menos un
- *  check-in de CHARLA, exige cobertura de los últimos `months` meses completos.
- *  `months` default = GENERAL (12); estudios pasa STUDIES (6). */
-export function attendanceMonthsSatisfyCriteria(monthsSet: Iterable<string>, months = ATTENDANCE_MONTHS_GENERAL, now = new Date()): boolean {
-  const set = monthsSet instanceof Set ? monthsSet : new Set(monthsSet)
-  return lastCompleteMonthsKeys(months, now).every((m) => set.has(m))
-}
-
-/** Ids de miembros con asistencia activa. Dos modos según `minCount`:
- *   · CONTEO (general): pasá `minCount` → ≥ `minCount` check-ins de CHARLA en los
- *     últimos `months` meses completos (≈1 por mes). Usado por la lista/chip.
- *   · COBERTURA (estudios): sin `minCount` → ≥1 check-in en CADA uno de los
- *     últimos `months` meses. Usado por demanda de estudios.
- *  Devuelve [] si falla — nunca lanza. */
-export async function getActiveAttendanceMemberIds(
-  months = ATTENDANCE_MONTHS_GENERAL,
-  minCount?: number,
-): Promise<string[]> {
+/** Ids de miembros que cumplen el criterio ÚNICO de asistencia activa: ≥6
+ *  check-ins de charla en los últimos 6 meses Y al menos uno en los últimos
+ *  60 días. Mismo criterio para filtros, sede, dashboard, elegibilidad de
+ *  estudios, invitaciones y matrícula. Devuelve [] si falla — nunca lanza. */
+export async function getActiveAttendanceMemberIds(): Promise<string[]> {
   try {
     const supabase = createAdminClient()
-    const monthsKeys = lastCompleteMonthsKeys(months)
-    const oldest = `${monthsKeys[monthsKeys.length - 1]}-01` // inicio del mes más viejo
+    const oldest = attendanceWindowStart()
+    const recentSince = attendanceRecencyStart()
 
-    // A16 (auditoría de rendimiento): el agregado en SQL resuelve en ~37 ms y
-    // UN round trip lo que el loop de abajo hacía en ~19 round trips (95 ms
-    // por llamada, la query más cara de producción). El loop queda como
-    // fallback por si el RPC no está desplegado.
+    // A16 (auditoría de rendimiento): el agregado en SQL resuelve en un solo
+    // round trip lo que el loop de abajo hacía en ~19 round trips. El loop
+    // queda como fallback por si el RPC no está desplegado.
     const { data: rpcData, error: rpcErr } = await supabase.rpc('active_attendance_member_ids', {
       p_oldest: `${oldest}T00:00:00Z`,
-      p_months: monthsKeys,
-      p_min_count: (minCount ?? null) as unknown as number, // NULL = modo cobertura
+      p_min_count: ATTENDANCE_MIN_CHARLAS,
+      p_recency_since: recentSince,
     })
     if (!rpcErr && rpcData) {
       return (rpcData as Array<{ member_id: string }>).map(r => r.member_id)
     }
     console.warn('active_attendance_member_ids RPC no disponible, usando fallback:', rpcErr?.message)
-    const byMemberMonths = new Map<string, Set<string>>() // cobertura
-    const byMemberCount = new Map<string, number>()        // conteo
+    const byMember = new Map<string, string[]>()
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabase
         .from('event_checkins')
         .select('member_id, checked_in_at, events!inner(event_type)')
         .eq('events.event_type', 'charla')
-        .gte('checked_in_at', oldest)
+        .gte('checked_in_at', `${oldest}T00:00:00Z`)
         .order('id')
         .range(from, from + 999)
       if (error) {
@@ -72,22 +45,14 @@ export async function getActiveAttendanceMemberIds(
       }
       for (const r of (data ?? []) as Array<{ member_id: string | null; checked_in_at: string | null }>) {
         if (!r?.member_id || !r?.checked_in_at) continue
-        if (minCount != null) {
-          byMemberCount.set(r.member_id, (byMemberCount.get(r.member_id) ?? 0) + 1)
-        } else {
-          const mo = r.checked_in_at.slice(0, 7)
-          if (!byMemberMonths.has(r.member_id)) byMemberMonths.set(r.member_id, new Set())
-          byMemberMonths.get(r.member_id)!.add(mo)
-        }
+        const arr = byMember.get(r.member_id) ?? []
+        arr.push(r.checked_in_at)
+        byMember.set(r.member_id, arr)
       }
       if ((data ?? []).length < 1000) break
     }
     const out: string[] = []
-    if (minCount != null) {
-      for (const [id, n] of byMemberCount) if (n >= minCount) out.push(id)
-    } else {
-      for (const [id, set] of byMemberMonths) if (attendanceMonthsSatisfyCriteria(set, months)) out.push(id)
-    }
+    for (const [id, dates] of byMember) if (meetsAttendanceCriteria(dates)) out.push(id)
     return out
   } catch (e) {
     console.warn('getActiveAttendanceMemberIds:', e)

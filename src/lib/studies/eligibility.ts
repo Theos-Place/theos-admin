@@ -2,6 +2,7 @@
 // Versión server-side de la lógica que antes vivía en enrollment-eligibility.ts (mock).
 
 import type { StudyType, StudyGroup } from '@/types/study'
+import { ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 
 export type EligibilityResult = {
   study_code: string
@@ -40,8 +41,11 @@ export type MemberStudyProfile = {
   pending_payment_codes?: string[]
   is_donor: boolean
   is_server: boolean
-  /** Check-ins de charla en los últimos 6 meses (ventana de matrícula). */
+  /** Check-ins de charla en los últimos ATTENDANCE_MONTHS meses (solo informativo). */
   charla_count: number
+  /** Criterio único de asistencia activa (ver @/lib/attendance): ≥ATTENDANCE_MIN_CHARLAS
+   *  charlas en ATTENDANCE_MONTHS meses, con al menos una en ATTENDANCE_RECENCY_DAYS días. */
+  attendance_active: boolean
   /** Códigos de planes invitation_only con invitación ACTIVA para este miembro. */
   invited_codes?: string[]
   /** Excepciones de matrícula activas: code → requisitos perdonados
@@ -50,11 +54,6 @@ export type MemberStudyProfile = {
   /** Edad del miembro (para filtrar grupos con rango de edad). null = sin fecha. */
   member_age?: number | null
 }
-
-/** Asistencia mínima para MATRICULAR: 12 charlas en los últimos 6 meses.
- *  Deliberadamente más estricto y separado del criterio general del sistema
- *  (cobertura mensual) — decisión de producto 2026-06-11. */
-export const MATRICULA_MIN_CHARLAS = 12
 
 const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles',
@@ -151,9 +150,9 @@ export function computeEligibility(
       else reasons_blocked.push('Requiere servir activamente en un comité')
     }
     if (study.req_attendee) {
-      if (profile.charla_count >= MATRICULA_MIN_CHARLAS) reasons_met.push('Asistís regularmente a las charlas ✓')
+      if (profile.attendance_active) reasons_met.push('Asistís regularmente a las charlas ✓')
       else if (isWaived('attendance')) reasons_met.push('Requisito de asistencia eximido por excepción ✓')
-      else reasons_blocked.push(`Requiere asistencia regular: al menos ${MATRICULA_MIN_CHARLAS} charlas con check-in en los últimos 6 meses (llevás ${profile.charla_count})`)
+      else reasons_blocked.push(`Requiere asistencia activa: al menos ${ATTENDANCE_MIN_CHARLAS} charlas con check-in en los últimos ${ATTENDANCE_MONTHS} meses, con al menos una en los últimos ${ATTENDANCE_RECENCY_DAYS} días (llevás ${profile.charla_count} en los últimos ${ATTENDANCE_MONTHS} meses)`)
     }
 
     const is_eligible = reasons_blocked.length === 0

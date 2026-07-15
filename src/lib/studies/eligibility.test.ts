@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeEligibility, isRelocationEligibleCode, MATRICULA_MIN_CHARLAS, type MemberStudyProfile } from './eligibility'
+import { computeEligibility, isRelocationEligibleCode, type MemberStudyProfile } from './eligibility'
 import type { StudyType, StudyGroup } from '@/types/study'
 
 // ── Factories mínimas ─────────────────────────────────────────────────────────
@@ -52,6 +52,7 @@ function profile(over: Partial<MemberStudyProfile> = {}): MemberStudyProfile {
     is_donor: false,
     is_server: false,
     charla_count: 0,
+    attendance_active: false,
     ...over,
   }
 }
@@ -114,16 +115,16 @@ describe('computeEligibility — compromisos', () => {
     expect(r.reasons_blocked.some(m => m.includes('charlas'))).toBe(true)
   })
 
-  it(`asistencia exige ${MATRICULA_MIN_CHARLAS} charlas: ${MATRICULA_MIN_CHARLAS - 1} no alcanza, ${MATRICULA_MIN_CHARLAS} sí`, () => {
-    const casi = computeEligibility([dis1], [], profile({ is_donor: true, charla_count: MATRICULA_MIN_CHARLAS - 1 }))
+  it('asistencia exige el criterio único (attendance_active): sin cumplirlo bloquea, cumpliéndolo pasa', () => {
+    const casi = computeEligibility([dis1], [], profile({ is_donor: true, attendance_active: false }))
     expect(of(casi, 'DIS1').is_eligible).toBe(false)
-    const justo = computeEligibility([dis1], [], profile({ is_donor: true, charla_count: MATRICULA_MIN_CHARLAS }))
+    const justo = computeEligibility([dis1], [], profile({ is_donor: true, attendance_active: true }))
     expect(of(justo, 'DIS1').is_eligible).toBe(true)
   })
 
   it('excepción de matrícula exime requisitos puntuales', () => {
     const res = computeEligibility([dis1], [], profile({
-      charla_count: MATRICULA_MIN_CHARLAS,
+      attendance_active: true,
       exceptions: { DIS1: ['donor'] },
     }))
     const r = of(res, 'DIS1')
