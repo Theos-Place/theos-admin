@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/events/DatePicker'
 
 interface RecurrenceSelectorProps {
   value: string | null
   onChange: (v: string | null) => void
   /** Fecha de inicio del evento (YYYY-MM-DD) para sugerir día/posición mensual. */
   startDate?: string
+  /** Último día (YYYY-MM-DD) en que la serie genera ocurrencias — '' = sin fin. */
+  endDate?: string
+  onEndDateChange?: (v: string) => void
 }
 
 const DAYS = [
@@ -57,7 +61,7 @@ function parseRule(rule: string | null) {
   return null
 }
 
-export function RecurrenceSelector({ value, onChange, startDate }: RecurrenceSelectorProps) {
+export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndDateChange }: RecurrenceSelectorProps) {
   const sug = suggestFromDate(startDate)
   const parsed = parseRule(value)
 
@@ -180,6 +184,31 @@ export function RecurrenceSelector({ value, onChange, startDate }: RecurrenceSel
             </select>
             <span className="text-sm text-navy-light/70 font-body">de cada mes</span>
           </label>
+        </div>
+      )}
+
+      {/* Fin de la recurrencia (opcional) */}
+      {onEndDateChange && (
+        <div className="space-y-1.5 pt-1">
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Termina el (opcional)</p>
+          <div className="flex items-center gap-2 max-w-xs">
+            <DatePicker
+              value={endDate ?? ''}
+              onChange={onEndDateChange}
+              min={startDate}
+              placeholder="Sin fecha de fin"
+            />
+            {endDate && (
+              <button
+                type="button"
+                onClick={() => onEndDateChange('')}
+                className="shrink-0 text-[12px] text-navy-light/60 hover:text-coral transition-colors font-body"
+              >
+                Quitar
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-navy-light/60 font-body">Sin fecha, la serie se repite indefinidamente.</p>
         </div>
       )}
     </div>

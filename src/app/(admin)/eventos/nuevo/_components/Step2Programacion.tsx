@@ -15,6 +15,7 @@ interface Step2Props {
   location_map_url: string
   is_recurring: boolean
   recurrence_rule: string | null
+  recurrence_end: string
   onStartDateChange: (v: string) => void
   onStartTimeChange: (v: string) => void
   onEndDateChange: (v: string) => void
@@ -25,6 +26,7 @@ interface Step2Props {
   onLocationMapUrlChange: (v: string) => void
   onToggleRecurring: () => void
   onRecurrenceRuleChange: (v: string | null) => void
+  onRecurrenceEndChange: (v: string) => void
 }
 
 export function Step2Programacion({
@@ -38,6 +40,7 @@ export function Step2Programacion({
   location_map_url,
   is_recurring,
   recurrence_rule,
+  recurrence_end,
   onStartDateChange,
   onStartTimeChange,
   onEndDateChange,
@@ -48,6 +51,7 @@ export function Step2Programacion({
   onLocationMapUrlChange,
   onToggleRecurring,
   onRecurrenceRuleChange,
+  onRecurrenceEndChange,
 }: Step2Props) {
   // Validación: el fin nunca puede ser anterior al inicio (fecha + hora).
   const startTs = start_date ? new Date(`${start_date}T${start_time || '00:00'}`).getTime() : null
@@ -176,6 +180,8 @@ export function Step2Programacion({
               value={recurrence_rule}
               onChange={onRecurrenceRuleChange}
               startDate={start_date}
+              endDate={recurrence_end}
+              onEndDateChange={onRecurrenceEndChange}
             />
           </div>
         )}

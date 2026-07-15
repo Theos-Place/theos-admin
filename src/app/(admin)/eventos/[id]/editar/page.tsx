@@ -12,6 +12,7 @@ import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
 import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
+import { ymdCR } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
@@ -156,6 +157,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [location, setLocation] = useState(event?.location ?? '')
   const [isRecurring, setIsRecurring] = useState(event?.is_recurring ?? false)
   const [recurrenceRule, setRecurrenceRule] = useState<string | null>(event?.recurrence_rule ?? null)
+  const [recurrenceEnd, setRecurrenceEnd] = useState<string>(event?.recurrence_end ? ymdCR(new Date(event.recurrence_end)) : '')
   const [subEvents, setSubEvents] = useState<SubEventInput[]>(
     event?.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity) })) ?? []
   )
@@ -198,6 +200,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setLocation(event.location ?? '')
     setIsRecurring(event.is_recurring ?? false)
     setRecurrenceRule(event.recurrence_rule ?? null)
+    setRecurrenceEnd(event.recurrence_end ? ymdCR(new Date(event.recurrence_end)) : '')
     setSubEvents(event.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity) })))
     setRequiresRegistration(event.requires_registration ?? false)
     setMaxCapacity(String(event.max_capacity ?? ''))
@@ -264,7 +267,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       start_date: startDate, start_time: startTime,
       end_date: endDate, end_time: endTime,
       is_virtual: isVirtual, virtual_link: virtualLink, location,
-      is_recurring: isRecurring, recurrence_rule: recurrenceRule,
+      is_recurring: isRecurring, recurrence_rule: recurrenceRule, recurrence_end: recurrenceEnd,
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
       requires_payment: requiresPayment, payment_amount: paymentAmount,
       server_price: serverPrice, servers_pay: serversPay,
@@ -478,12 +481,18 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           )}
           <div className="space-y-2">
             <label className="flex items-center gap-3 cursor-pointer">
-              <button type="button" role="switch" aria-checked={isRecurring} aria-label="Evento recurrente" onClick={() => { const next = !isRecurring; setIsRecurring(next); if (!next) setRecurrenceRule(null) }} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isRecurring ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isRecurring ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+              <button type="button" role="switch" aria-checked={isRecurring} aria-label="Evento recurrente" onClick={() => { const next = !isRecurring; setIsRecurring(next); if (!next) { setRecurrenceRule(null); setRecurrenceEnd('') } }} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', isRecurring ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isRecurring ? 'translate-x-4' : 'translate-x-0.5')} /></button>
               <span className="text-sm text-navy font-body">Recurrente</span>
             </label>
             {isRecurring && (
               <div className="pl-12">
-                <RecurrenceSelector value={recurrenceRule} onChange={setRecurrenceRule} startDate={startDate} />
+                <RecurrenceSelector
+                  value={recurrenceRule}
+                  onChange={setRecurrenceRule}
+                  startDate={startDate}
+                  endDate={recurrenceEnd}
+                  onEndDateChange={setRecurrenceEnd}
+                />
               </div>
             )}
           </div>

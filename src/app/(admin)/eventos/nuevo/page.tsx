@@ -37,6 +37,7 @@ interface FormData {
   location_map_url: string
   is_recurring: boolean
   recurrence_rule: string | null
+  recurrence_end: string
   sub_events: SubEventInput[]
   requires_registration: boolean
   max_capacity: string
@@ -117,6 +118,7 @@ function NuevoEventoForm() {
     location_map_url: '',
     is_recurring: false,
     recurrence_rule: null,
+    recurrence_end: '',
     sub_events: [],
     requires_registration: false,
     max_capacity: '',
@@ -333,6 +335,7 @@ function NuevoEventoForm() {
               location_map_url={form.location_map_url}
               is_recurring={form.is_recurring}
               recurrence_rule={form.recurrence_rule}
+              recurrence_end={form.recurrence_end}
               onStartDateChange={v => {
                 setForm(prev => ({
                   ...prev,
@@ -358,9 +361,13 @@ function NuevoEventoForm() {
               onToggleRecurring={() => {
                 const next = !form.is_recurring
                 set('is_recurring', next)
-                if (!next) set('recurrence_rule', null) // apagar limpia la regla
+                if (!next) {
+                  set('recurrence_rule', null) // apagar limpia la regla
+                  set('recurrence_end', '')
+                }
               }}
               onRecurrenceRuleChange={v => set('recurrence_rule', v)}
+              onRecurrenceEndChange={v => set('recurrence_end', v)}
             />
           )}
 

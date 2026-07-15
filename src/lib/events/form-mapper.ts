@@ -8,6 +8,13 @@ function combineDateTime(date?: string, time?: string): string | null {
   return new Date(`${date}T${time || '00:00'}`).toISOString()
 }
 
+/** Fin de la recurrencia: último día completo en que aplica (23:59:59 hora CR
+ *  fija, UTC-6), para que la ocurrencia de ese día no quede excluida. */
+function endOfDayCR(date?: string): string | null {
+  if (!date) return null
+  return new Date(`${date}T23:59:59-06:00`).toISOString()
+}
+
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v))
 
 /** Ids de comités organizadores (m2m). El form envía `organizing_committee_ids`. */
@@ -41,6 +48,7 @@ export function formToWriteInput(body: Record<string, unknown>): EventWriteInput
     virtual_url: (body.virtual_link as string) || null,
     is_recurring: Boolean(body.is_recurring),
     recurrence_rule: (body.recurrence_rule as string) || null,
+    recurrence_end: endOfDayCR(body.recurrence_end as string),
     requires_registration: Boolean(body.requires_registration),
     max_capacity: num(body.max_capacity),
     requires_payment: Boolean(body.requires_payment),
@@ -61,7 +69,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
     name: 'title', event_type: 'event_type', description: 'description', committee: 'committee_id',
     location: 'location', location_map_url: 'location_url', is_virtual: 'is_virtual',
     virtual_link: 'virtual_url',
-    is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule',
+    is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule', recurrence_end: 'recurrence_end',
     requires_registration: 'requires_registration', max_capacity: 'max_capacity',
     requires_payment: 'requires_payment', payment_amount: 'payment_amount',
     server_price: 'server_price', servers_pay: 'servers_pay',
