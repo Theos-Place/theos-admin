@@ -9,6 +9,9 @@ export interface AuthUser {
   role: string | null
   roles: RoleId[]
   member_id: string | null
+  /** Ids de miembros de la misma familia (mismo family_unit_id) — para saber
+   *  qué perfiles puede ver además del propio. */
+  family_member_ids: string[]
 }
 
 interface AuthState {

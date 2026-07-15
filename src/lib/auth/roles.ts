@@ -78,6 +78,15 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'becas',
+    name: 'Becas',
+    description: 'Gestión de becas y cupones de descuento',
+    color: '#3DB97A',
+    permissions: [
+      { module: 'becas', actions: ['view', 'edit'], scope: 'all' },
+    ],
+  },
+  {
     id: 'editor_perfiles',
     name: 'Editor de Perfiles',
     description: 'Crear y editar perfiles de miembros',
@@ -181,6 +190,7 @@ export const ROLES: Role[] = [
       { module: 'finanzas', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'miembros', actions: ['view'],                             scope: 'all' },
       { module: 'revision_pagos', actions: ['view', 'edit'],               scope: 'all' },
+      { module: 'becas', actions: ['view', 'edit'],                        scope: 'all' },
     ],
   },
   {

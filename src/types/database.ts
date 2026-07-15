@@ -1,8 +1,3 @@
-// Tipos generados de la BD (supabase gen types / MCP generate_typescript_types).
-// REGENERAR después de CADA migración: sin esto la capa de queries pierde el
-// typecheck y aparecen los casts "as unknown as" (ver revisión 2026-07-13).
-// Generado: 2026-07-13 (migraciones 001-120).
-
 export type Json =
   | string
   | number
@@ -1226,9 +1221,12 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string | null
+          entity_type: string | null
+          event_id: string | null
           id: string
           member_id: string
           payment_id: string | null
+          plan_id: string | null
           reason: string
           request_type: string
           review_notes: string | null
@@ -1241,9 +1239,12 @@ export type Database = {
         Insert: {
           amount?: number | null
           created_at?: string | null
+          entity_type?: string | null
+          event_id?: string | null
           id?: string
           member_id: string
           payment_id?: string | null
+          plan_id?: string | null
           reason: string
           request_type: string
           review_notes?: string | null
@@ -1256,9 +1257,12 @@ export type Database = {
         Update: {
           amount?: number | null
           created_at?: string | null
+          entity_type?: string | null
+          event_id?: string | null
           id?: string
           member_id?: string
           payment_id?: string | null
+          plan_id?: string | null
           reason?: string
           request_type?: string
           review_notes?: string | null
@@ -1269,6 +1273,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "finance_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "finance_requests_member_id_fkey"
             columns: ["member_id"]
@@ -1288,6 +1299,13 @@ export type Database = {
             columns: ["payment_id"]
             isOneToOne: false
             referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_requests_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
             referencedColumns: ["id"]
           },
           {
@@ -2533,6 +2551,7 @@ export type Database = {
           enrollment_id: string | null
           entity_type: string | null
           event_id: string | null
+          event_registration_id: string | null
           folleto_request_id: string | null
           gateway_ref: string | null
           id: string
@@ -2565,6 +2584,7 @@ export type Database = {
           enrollment_id?: string | null
           entity_type?: string | null
           event_id?: string | null
+          event_registration_id?: string | null
           folleto_request_id?: string | null
           gateway_ref?: string | null
           id?: string
@@ -2597,6 +2617,7 @@ export type Database = {
           enrollment_id?: string | null
           entity_type?: string | null
           event_id?: string | null
+          event_registration_id?: string | null
           folleto_request_id?: string | null
           gateway_ref?: string | null
           id?: string
@@ -2639,6 +2660,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_event_registration_id_fkey"
+            columns: ["event_registration_id"]
+            isOneToOne: false
+            referencedRelation: "event_registrations"
             referencedColumns: ["id"]
           },
           {
@@ -2938,70 +2966,151 @@ export type Database = {
           },
         ]
       }
+      scholarship_redemptions: {
+        Row: {
+          enrollment_id: string | null
+          event_registration_id: string | null
+          final_amount: number
+          id: string
+          member_id: string
+          redeemed_at: string
+          scholarship_id: string
+        }
+        Insert: {
+          enrollment_id?: string | null
+          event_registration_id?: string | null
+          final_amount: number
+          id?: string
+          member_id: string
+          redeemed_at?: string
+          scholarship_id: string
+        }
+        Update: {
+          enrollment_id?: string | null
+          event_registration_id?: string | null
+          final_amount?: number
+          id?: string
+          member_id?: string
+          redeemed_at?: string
+          scholarship_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scholarship_redemptions_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "study_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scholarship_redemptions_event_registration_id_fkey"
+            columns: ["event_registration_id"]
+            isOneToOne: false
+            referencedRelation: "event_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scholarship_redemptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scholarship_redemptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scholarship_redemptions_scholarship_id_fkey"
+            columns: ["scholarship_id"]
+            isOneToOne: false
+            referencedRelation: "scholarships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scholarships: {
         Row: {
-          amount: number
+          amount: number | null
+          approval_type: string | null
           approved_at: string | null
           approved_by: string | null
+          code: string | null
           created_at: string | null
           created_by: string | null
           discount_type: string | null
           discount_value: number | null
           entity_type: string | null
           event_id: string | null
+          expires_at: string | null
           final_amount: number | null
           id: string
           is_used: boolean | null
-          member_id: string
+          kind: string
+          member_id: string | null
           notes: string | null
           original_amount: number | null
-          reason: string
+          plan_id: string | null
+          reason: string | null
+          request_id: string | null
           status: string | null
-          study_group_id: string | null
           updated_at: string | null
           used_at: string | null
         }
         Insert: {
-          amount: number
+          amount?: number | null
+          approval_type?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          code?: string | null
           created_at?: string | null
           created_by?: string | null
           discount_type?: string | null
           discount_value?: number | null
           entity_type?: string | null
           event_id?: string | null
+          expires_at?: string | null
           final_amount?: number | null
           id?: string
           is_used?: boolean | null
-          member_id: string
+          kind?: string
+          member_id?: string | null
           notes?: string | null
           original_amount?: number | null
-          reason: string
+          plan_id?: string | null
+          reason?: string | null
+          request_id?: string | null
           status?: string | null
-          study_group_id?: string | null
           updated_at?: string | null
           used_at?: string | null
         }
         Update: {
-          amount?: number
+          amount?: number | null
+          approval_type?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          code?: string | null
           created_at?: string | null
           created_by?: string | null
           discount_type?: string | null
           discount_value?: number | null
           entity_type?: string | null
           event_id?: string | null
+          expires_at?: string | null
           final_amount?: number | null
           id?: string
           is_used?: boolean | null
-          member_id?: string
+          kind?: string
+          member_id?: string | null
           notes?: string | null
           original_amount?: number | null
-          reason?: string
+          plan_id?: string | null
+          reason?: string | null
+          request_id?: string | null
           status?: string | null
-          study_group_id?: string | null
           updated_at?: string | null
           used_at?: string | null
         }
@@ -3028,10 +3137,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "scholarships_study_group_id_fkey"
-            columns: ["study_group_id"]
+            foreignKeyName: "scholarships_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "study_groups"
+            referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scholarships_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "finance_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -4259,6 +4375,10 @@ export type Database = {
       prune_audit_log: { Args: never; Returns: undefined }
       refresh_donor_flags: { Args: never; Returns: undefined }
       refresh_member_sedes: { Args: never; Returns: undefined }
+      register_for_event: {
+        Args: { p_event_id: string; p_member_id: string }
+        Returns: Json
+      }
       report_charla_attendance: {
         Args: never
         Returns: {

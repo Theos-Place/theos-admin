@@ -7,7 +7,7 @@ export type EventStatus = 'upcoming' | 'in_progress' | 'finished' | 'cancelled' 
  * Payment status for event registrations.
  * Note: different from the finance PaymentStatus in @/types/finance.
  */
-export type EventPaymentStatus = 'pending' | 'paid' | 'exempted'
+export type EventPaymentStatus = 'pending' | 'paid' | 'exempted' | 'expired'
 
 export type AttendanceType = 'participant' | 'server'
 

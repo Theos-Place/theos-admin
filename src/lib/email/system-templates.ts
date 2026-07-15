@@ -16,6 +16,7 @@ export type { TemplateData }
 export type SystemTemplateKey =
   | 'form_asignado' | 'form_completado'
   | 'matricula_estudiante' | 'matricula_dirigente' | 'inicio_capacitacion'
+  | 'beca_aprobada' | 'beca_aprobada_parcial' | 'beca_rechazada'
 
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */
@@ -25,6 +26,18 @@ const FALLBACK: Record<string, { subject: string; html: string }> = {
   matricula_estudiante: { subject: 'Tu matrícula fue confirmada', html: '<p>Hola {{nombre}}, tu matrícula en "{{nombre_capacitacion}}" fue confirmada. Inicia el {{fecha_inicio}}.</p>' },
   matricula_dirigente: { subject: 'Nuevo estudiante en tu capacitación', html: '<p>Hola {{nombre_dirigente}}, {{nombre_estudiante}} se matriculó en "{{nombre_capacitacion}}".</p>' },
   inicio_capacitacion: { subject: 'Tu capacitación está por comenzar', html: '<p>Hola {{nombre}}, tu capacitación "{{nombre_capacitacion}}" inicia el {{fecha_inicio}}.</p>' },
+  beca_aprobada: {
+    subject: '¡Tu beca fue aprobada!',
+    html: '<p>Hola {{nombre}},</p><p>¡Tenemos buenas noticias! Tu solicitud de beca para {{nombre_estudio_evento}} fue aprobada.</p><p>Se te asignó un descuento de {{descuento}} que podés aplicar al momento de hacer tu pago.</p>',
+  },
+  beca_aprobada_parcial: {
+    subject: 'Novedades sobre tu solicitud de beca',
+    html: '<p>Hola {{nombre}},</p><p>Revisamos tu solicitud de beca para {{nombre_estudio_evento}} y pudimos aprobarte un apoyo parcial.</p><p>Se te asignó un descuento de {{descuento}} que podés aplicar al momento de hacer tu pago.</p>',
+  },
+  beca_rechazada: {
+    subject: 'Sobre tu solicitud de beca',
+    html: '<p>Hola {{nombre}},</p><p>Gracias por tu solicitud de beca para {{nombre_estudio_evento}}. En esta ocasión no pudimos aprobarla.</p><p>Motivo: {{motivo_rechazo}}</p>',
+  },
 }
 
 /** Devuelve {subject, html} de la plantilla del sistema (BD; fallback embebido). */

@@ -29,9 +29,12 @@ import type {
 const REQUEST_SELECT = `
   id, member_id, request_type, study_group_id, payment_id, amount, reason, status,
   reviewed_by, reviewed_at, review_notes, created_at, updated_at,
+  entity_type, plan_id, event_id,
   member:members!finance_requests_member_id_fkey(first_name, last_name),
   reviewer:members!finance_requests_reviewed_by_fkey(first_name, last_name),
   study_group:study_groups(name),
+  plan:study_plans!finance_requests_plan_id_fkey(name),
+  event:events!finance_requests_event_id_fkey(title),
   payment:payments(amount, paid_at, description, entity_type),
   history:finance_request_status_history(from_status, to_status, notes, created_at, actor:members(first_name, last_name))
 `
@@ -50,9 +53,14 @@ type DbRow = {
   review_notes: string | null
   created_at: string
   updated_at: string
+  entity_type: 'study_plan' | 'event' | null
+  plan_id: string | null
+  event_id: string | null
   member: { first_name: string | null; last_name: string | null } | null
   reviewer: { first_name: string | null; last_name: string | null } | null
   study_group: { name: string | null } | null
+  plan: { name: string | null } | { name: string | null }[] | null
+  event: { title: string | null } | { title: string | null }[] | null
   payment: { amount: number | null; paid_at: string | null; description: string | null; entity_type: string | null } | null
   history: Array<{
     from_status: string | null
@@ -61,6 +69,10 @@ type DbRow = {
     created_at: string
     actor: { first_name: string | null; last_name: string | null } | null
   }> | null
+}
+
+function one<T>(v: T | T[] | null): T | null {
+  return Array.isArray(v) ? (v[0] ?? null) : v
 }
 
 function fullName(p: { first_name: string | null; last_name: string | null } | null): string {
@@ -77,6 +89,8 @@ function paymentLabel(p: DbRow['payment']): string | null {
 }
 
 function toDomain(r: DbRow): FinanceRequest {
+  const plan = one(r.plan)
+  const event = one(r.event)
   return {
     id: r.id,
     member_id: r.member_id,
@@ -95,6 +109,10 @@ function toDomain(r: DbRow): FinanceRequest {
     review_notes: r.review_notes,
     created_at: r.created_at,
     updated_at: r.updated_at,
+    entity_type: r.entity_type,
+    plan_id: r.plan_id,
+    event_id: r.event_id,
+    entity_name: plan?.name ?? event?.title ?? null,
     history: (r.history ?? [])
       .map(h => ({
         from_status: h.from_status as FinanceRequestStatus | null,
@@ -147,6 +165,9 @@ export async function createFinanceRequest(input: FinanceRequestWriteInput): Pro
       payment_id: input.payment_id ?? null,
       amount: input.amount ?? null,
       reason: input.reason,
+      entity_type: input.entity_type ?? null,
+      plan_id: input.entity_type === 'study_plan' ? (input.plan_id ?? null) : null,
+      event_id: input.entity_type === 'event' ? (input.event_id ?? null) : null,
     })
     .select(REQUEST_SELECT)
     .single()

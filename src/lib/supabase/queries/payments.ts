@@ -5,7 +5,7 @@ import { nextLevelCode } from '@/lib/studies/folletos'
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
 
-export type PaymentConcept = 'matricula' | 'folletos'
+export type PaymentConcept = 'matricula' | 'folletos' | 'evento'
 export type PaymentReviewStatus = 'en_revision' | 'aprobado' | 'rechazado'
 
 export type PaymentQueueRow = {
@@ -13,6 +13,7 @@ export type PaymentQueueRow = {
   member_id: string
   member_name: string
   concept: PaymentConcept | null
+  event_name: string | null
   amount: number
   currency: string
   reference_code: string | null
@@ -275,6 +276,9 @@ export async function submitEnrollmentComprobante(input: {
     .maybeSingle()
 
   if (existing) {
+    // NO tocar `amount`: el pago pendiente ya existente (creado por enrollMember,
+    // con beca ya descontada si aplicó) tiene el monto correcto — recalcularlo acá
+    // con el costo de lista lo pisaría y borraría el descuento.
     const eid = (existing as { id: string }).id
     const { error } = await supabase.from('payments').update({
       receipt_path: input.receipt_path,
@@ -282,7 +286,6 @@ export async function submitEnrollmentComprobante(input: {
       payment_method: 'comprobante',
       review_status: 'en_revision',
       rejection_reason: null,
-      amount,
     }).eq('id', eid)
     if (error) throw error
     return { id: eid }
@@ -317,13 +320,97 @@ export async function submitEnrollmentComprobante(input: {
   return { id: (data as { id: string }).id }
 }
 
+/** Sube el comprobante de una inscripción a evento: análoga a
+ *  submitEnrollmentComprobante (matrícula) — reusa el pago pendiente existente
+ *  si lo hay, mismo guard de doble-submit (índice único parcial, migración 121),
+ *  monto resuelto server-side con registrationPricing (nunca del cliente). */
+export async function submitEventComprobante(input: {
+  event_registration_id: string
+  receipt_path: string
+  reference_code: string | null
+}): Promise<{ id: string } | null> {
+  const supabase = createAdminClient()
+  const { data: reg } = await supabase
+    .from('event_registrations')
+    .select('event_id, member_id')
+    .eq('id', input.event_registration_id)
+    .maybeSingle()
+  if (!reg) return null
+  const { event_id, member_id } = reg as { event_id: string; member_id: string }
+
+  const { registrationPricing } = await import('./events')
+  const pricing = await registrationPricing(event_id, member_id)
+  const amount = pricing.price
+
+  const { data: inReview } = await supabase
+    .from('payments')
+    .select('id')
+    .eq('event_registration_id', input.event_registration_id)
+    .eq('concept', 'evento')
+    .eq('review_status', 'en_revision')
+    .limit(1)
+  if ((inReview ?? []).length > 0) throw new Error('COMPROBANTE_EN_REVISION')
+
+  const { data: existing } = await supabase
+    .from('payments')
+    .select('id')
+    .eq('event_registration_id', input.event_registration_id)
+    .eq('concept', 'evento')
+    .eq('status', 'pending')
+    .or('review_status.is.null,review_status.eq.rechazado')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (existing) {
+    // NO tocar `amount`: si este pago ya existía (evento con beca aplicada al
+    // registrarse, migración de becas), su monto YA está descontado — recalcularlo
+    // acá con el precio de lista lo pisaría y borraría el descuento.
+    const eid = (existing as { id: string }).id
+    const { error } = await supabase.from('payments').update({
+      receipt_path: input.receipt_path,
+      reference_code: input.reference_code,
+      payment_method: 'comprobante',
+      review_status: 'en_revision',
+      rejection_reason: null,
+    }).eq('id', eid)
+    if (error) throw error
+    return { id: eid }
+  }
+
+  const { data, error } = await supabase.from('payments').insert({
+    member_id,
+    amount,
+    currency: 'CRC',
+    payment_method: 'comprobante',
+    concept: 'evento',
+    event_registration_id: input.event_registration_id,
+    entity_type: 'event',
+    reference_code: input.reference_code,
+    receipt_path: input.receipt_path,
+    status: 'pending',
+    review_status: 'en_revision',
+  }).select('id').single()
+  if (error) {
+    // 23505 = índice único parcial (migración 121): otro comprobante de esta
+    // inscripción ya está en revisión.
+    if ((error as { code?: string }).code === '23505') throw new Error('COMPROBANTE_EN_REVISION')
+    throw error
+  }
+  return { id: (data as { id: string }).id }
+}
+
 /** Cola de pagos en revisión, con nombre del miembro y detección de referencia
  *  duplicada (posible comprobante reutilizado). */
 export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('payments')
-    .select('id, member_id, amount, currency, concept, reference_code, receipt_path, created_at, member:members!payments_member_id_fkey(first_name, last_name)')
+    .select(`
+      id, member_id, amount, currency, concept, reference_code, receipt_path, created_at,
+      member:members!payments_member_id_fkey(first_name, last_name),
+      event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title))
+    `)
     .eq('review_status', 'en_revision')
     .order('created_at', { ascending: true })
   if (error) throw error
@@ -347,12 +434,16 @@ export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
   return rows.map(r => {
     const m = Array.isArray(r.member) ? r.member[0] : r.member
     const mm = m as { first_name: string; last_name: string } | null
+    const er = Array.isArray(r.event_registration) ? r.event_registration[0] : r.event_registration
+    const erRow = er as { event: { title: string } | { title: string }[] | null } | null
+    const ev = erRow ? (Array.isArray(erRow.event) ? erRow.event[0] : erRow.event) : null
     const ref = (r.reference_code as string | null)?.trim() ?? null
     return {
       id: r.id as string,
       member_id: r.member_id as string,
       member_name: mm ? `${mm.first_name} ${mm.last_name}`.trim() : '—',
       concept: (r.concept as PaymentConcept | null) ?? null,
+      event_name: (ev as { title: string } | null)?.title ?? null,
       amount: Number(r.amount ?? 0),
       currency: (r.currency as string) ?? 'CRC',
       reference_code: ref,

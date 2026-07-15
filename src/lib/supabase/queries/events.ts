@@ -336,7 +336,7 @@ export async function updateEvent(
   return updated
 }
 
-type PaymentStatus = 'pending' | 'paid' | 'exempted'
+type PaymentStatus = 'pending' | 'paid' | 'exempted' | 'expired'
 
 /**
  * Precio aplicable y exención para inscribir a un miembro:
@@ -378,13 +378,74 @@ export class AlreadyRegisteredError extends Error {
 /** Inscribe a un miembro en un evento. UNIQUE(event_id, member_id) evita duplicados
  *  (se traduce a AlreadyRegisteredError). Controla cupo contra max_capacity.
  *  Si el evento es pago, exige pago completado (paid) o exención; los servidores
- *  exentos se inscriben como 'exempted' automáticamente. */
+ *  exentos se inscriben como 'exempted' automáticamente.
+ *
+ *  Si el caller FUERZA payment_status a 'paid'/'exempted' (staff registrando una
+ *  excepción manual), o el evento no requiere pago, o el miembro está exento:
+ *  insert directo, como siempre. Si el evento requiere pago, no hay exención, y
+ *  el caller no fuerza nada (autoservicio): la inscripción se RESERVA vía el RPC
+ *  transaccional register_for_event (migración 121) — payment_status='pending',
+ *  pendiente de comprobante, sin condición de carrera en el conteo de cupo. */
 export async function createRegistration(
   eventId: string,
-  input: { member_id: string; payment_status?: PaymentStatus },
-): Promise<{ id: string }> {
+  input: { member_id: string; payment_status?: PaymentStatus; scholarship_id?: string; coupon_code?: string },
+): Promise<{ id: string; amount: number }> {
   const supabase = createAdminClient()
   const pricing = await registrationPricing(eventId, input.member_id)
+
+  const forced = input.payment_status === 'paid' || input.payment_status === 'exempted'
+  const hasScholarshipInput = !!(input.scholarship_id || input.coupon_code)
+
+  // Beca/cupón (opcional): recalcula el precio ANTES de reservar/insertar. Se
+  // consume incluso si el resultado queda en ₡0 (mismo criterio que matrícula).
+  let appliedScholarship: { id: string; kind: 'asignada' | 'generica' } | null = null
+  let finalAmount = pricing.price
+  if (!forced && pricing.requiresPayment && !pricing.exempt && hasScholarshipInput) {
+    const { resolveScholarshipForApplication, computeDiscountedAmount } = await import('./scholarships')
+    const resolved = await resolveScholarshipForApplication(input.member_id, 'event', eventId, input)
+    finalAmount = computeDiscountedAmount(pricing.price, resolved.discount_type, resolved.discount_value)
+    appliedScholarship = { id: resolved.id, kind: resolved.kind }
+  }
+
+  if (appliedScholarship && finalAmount === 0) {
+    // Descuento total: inscripción directa, sin comprobante ni reserva RPC.
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .insert({ event_id: eventId, member_id: input.member_id, payment_status: 'paid' })
+      .select('id').single()
+    if (error) {
+      if ((error as { code?: string }).code === '23505') throw new AlreadyRegisteredError()
+      throw error
+    }
+    const { consumeScholarship } = await import('./scholarships')
+    await consumeScholarship(appliedScholarship, input.member_id, 0, { eventRegistrationId: (data as { id: string }).id })
+    return { id: (data as { id: string }).id, amount: 0 }
+  }
+
+  if (!forced && pricing.requiresPayment && !pricing.exempt) {
+    const { data, error } = await supabase.rpc('register_for_event', {
+      p_event_id: eventId, p_member_id: input.member_id,
+    })
+    if (error) throw error
+    const result = data as { code: string; id?: string }
+    if (result.code === 'event_full') throw new EventFullError()
+    if (result.code === 'already_registered') throw new AlreadyRegisteredError()
+    if (result.code === 'event_not_found') throw new Error('Evento no encontrado')
+    const registrationId = result.id!
+
+    if (appliedScholarship) {
+      // El monto con descuento debe quedar fijo desde el registro (a diferencia
+      // del camino sin beca, que crea el payment recién al subir el comprobante).
+      await supabase.from('payments').insert({
+        member_id: input.member_id, amount: finalAmount, currency: 'CRC', payment_method: 'comprobante',
+        concept: 'evento', event_registration_id: registrationId, entity_type: 'event',
+        status: 'pending', scholarship_id: appliedScholarship.id,
+      })
+      const { consumeScholarship } = await import('./scholarships')
+      await consumeScholarship(appliedScholarship, input.member_id, finalAmount, { eventRegistrationId: registrationId })
+    }
+    return { id: registrationId, amount: finalAmount }
+  }
 
   let status: PaymentStatus = input.payment_status ?? 'pending'
   if (pricing.requiresPayment) {
@@ -398,6 +459,7 @@ export async function createRegistration(
 
   // Control de cupo (best-effort: check-then-insert; sin constraint en BD una
   // carrera exacta puede pasarse por 1, pero cierra el caso normal de overbooking).
+  // Excluye 'expired' (cupo liberado tras rechazo sin resubir, migración 121).
   const { data: ev } = await supabase
     .from('events').select('max_capacity').eq('id', eventId).maybeSingle()
   const maxCapacity = (ev as { max_capacity: number | null } | null)?.max_capacity
@@ -406,6 +468,7 @@ export async function createRegistration(
       .from('event_registrations')
       .select('id', { count: 'exact', head: true })
       .eq('event_id', eventId)
+      .in('payment_status', ['pending', 'paid', 'exempted'])
     if ((count ?? 0) >= maxCapacity) throw new EventFullError()
   }
 
@@ -418,7 +481,7 @@ export async function createRegistration(
     if ((error as { code?: string }).code === '23505') throw new AlreadyRegisteredError()
     throw error
   }
-  return data as { id: string }
+  return { id: (data as { id: string }).id, amount: pricing.price }
 }
 
 /** Cambia el estado de pago de una inscripción. */
@@ -445,6 +508,48 @@ export async function deleteRegistration(eventId: string, memberId: string): Pro
     .eq('event_id', eventId)
     .eq('member_id', memberId)
   if (error) throw error
+}
+
+/** Libera cupos "atascados": inscripciones a evento con pago rechazado hace más
+ *  de 72h que no resubieron. Para el cron de expiración (espejo de
+ *  expirePendingStudyEnrollments en studies.ts). */
+export async function expirePendingEventRegistrations(): Promise<{ expired: number }> {
+  const supabase = createAdminClient()
+  const cutoff = new Date(Date.now() - 72 * 3600 * 1000).toISOString()
+
+  const { data: candidates } = await supabase
+    .from('payments')
+    .select('event_registration_id')
+    .eq('concept', 'evento').eq('review_status', 'rechazado')
+    .lt('reviewed_at', cutoff)
+    .not('event_registration_id', 'is', null)
+  const regIds = [...new Set(
+    (candidates ?? [])
+      .map((p: { event_registration_id: string | null }) => p.event_registration_id)
+      .filter((rid): rid is string => !!rid),
+  )]
+  if (regIds.length === 0) return { expired: 0 }
+
+  // Excluir las que ya tienen un comprobante MÁS NUEVO en revisión (resubieron a tiempo).
+  const { data: reReviewed } = await supabase
+    .from('payments').select('event_registration_id')
+    .in('event_registration_id', regIds).eq('review_status', 'en_revision')
+  const reReviewedIds = new Set(
+    (reReviewed ?? [])
+      .map((r: { event_registration_id: string | null }) => r.event_registration_id)
+      .filter((rid): rid is string => !!rid),
+  )
+  const stillPending = regIds.filter(id => !reReviewedIds.has(id))
+  if (stillPending.length === 0) return { expired: 0 }
+
+  const { data, error } = await supabase
+    .from('event_registrations')
+    .update({ payment_status: 'expired' })
+    .in('id', stillPending)
+    .eq('payment_status', 'pending')
+    .select('id')
+  if (error) throw error
+  return { expired: (data ?? []).length }
 }
 
 // ── Tipos de evento (catálogo event_types) ─────────────────

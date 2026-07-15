@@ -21,10 +21,12 @@ const pageTitles: Record<string, string> = {
   '/dirigentes':     'Dirigentes',
   '/empleados':      'Empleados',
   '/finanzas':       'Finanzas',
+  '/finanzas/becas': 'Becas',
   '/comunicaciones': 'Comunicaciones',
   '/formularios':    'Formularios',
   '/reportes':       'Reportes',
   '/matricula':      'Matrícula',
+  '/mis-eventos':    'Inscripción a eventos',
   '/notificaciones': 'Notificaciones',
   '/accesos':        'Accesos',
   '/configuracion':  'Configuración',
@@ -68,10 +70,20 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // Excepción: /estudios/folletos tiene su propio permiso (rol 'folletos' sin
   // módulo estudios) — espejo del sidebar, que muestra el ítem con ese permiso.
   if (pathname.startsWith('/estudios/folletos') && can('folletos', 'view')) return <>{children}</>
+  // Excepción: /finanzas/becas tiene su propio permiso ('becas'), asignable sin
+  // depender del módulo finanzas completo.
+  if (pathname.startsWith('/finanzas/becas') && can('becas', 'view')) return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // El padrón exige alcance más allá de 'own' (espejo del guard de la API);
-  // el rol base 'miembro' ve su perfil desde otras vistas, no el listado.
-  if (prefix === '/miembros' && getScope('miembros') === 'own') return <AccessDenied />
+  // el rol base 'miembro' ve su perfil o el de su familia desde ACÁ mismo
+  // (/miembros/{id} de detalle), no el listado completo (/miembros).
+  if (prefix === '/miembros' && getScope('miembros') === 'own') {
+    const detailMatch = pathname.match(/^\/miembros\/([0-9a-f-]{36})$/i)
+    const targetId = detailMatch?.[1]
+    const allowedIds = [user.member_id, ...(user.family_member_ids ?? [])]
+    const isOwnOrFamily = !!targetId && allowedIds.includes(targetId)
+    if (!isOwnOrFamily) return <AccessDenied />
+  }
   return <>{children}</>
 }
 

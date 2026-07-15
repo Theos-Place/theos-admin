@@ -18,6 +18,7 @@ export type RoleId =
   | 'reportes'
   | 'folletos'
   | 'revision_pagos'
+  | 'becas'
 
 export type Permission = {
   module: string

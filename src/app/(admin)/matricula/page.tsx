@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
-  XCircle, Calendar, DollarSign, X, AlertCircle,
-  CreditCard, Smartphone, BookOpen, ArrowRight,
+  XCircle, Calendar, DollarSign, X, AlertCircle, Loader2, Check,
+  BookOpen, ArrowRight,
 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { PaymentMethodSelector, type PaymentMethodValue } from '@/components/shared/PaymentMethodSelector'
+import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
@@ -57,8 +59,11 @@ export default function MatriculaPage() {
   const [search, setSearch]               = useState('')
   const [expandedStudy, setExpandedStudy] = useState<string | null>(null)
   const [confirmModal, setConfirmModal]   = useState<ConfirmState | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'sinpe'>('sinpe')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const [enrolling, setEnrolling]         = useState(false)
+  const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; studyName: string; amount: number } | null>(null)
+  const [scholarshipTarget, setScholarshipTarget] = useState<{ entity_type: 'study_plan'; id: string; name: string } | null>(null)
+  const [enrollError, setEnrollError] = useState<string | null>(null)
 
   const [eligibilityResults, setEligibilityResults] = useState<EligibilityResult[]>([])
   const [profile, setProfile] = useState<MemberStudyProfile | null>(null)
@@ -123,7 +128,7 @@ export default function MatriculaPage() {
   const charlaCount = profile?.charla_count ?? 0
   const availableCount = eligibilityResults.filter(r => r.is_eligible && r.available_groups.length > 0).length
 
-  async function handleEnroll() {
+  async function handleEnroll(scholarship?: { scholarship_id?: string; coupon_code?: string }) {
     if (!confirmModal || !effectiveMemberId || enrolling) return
     const { group, study } = confirmModal
     setEnrolling(true)
@@ -131,12 +136,22 @@ export default function MatriculaPage() {
       const res = await fetch(`/api/studies/groups/${group.group_id}/enrollments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: effectiveMemberId }),
+        body: JSON.stringify({ member_id: effectiveMemberId, ...scholarship }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      router.push(`/matricula/confirmacion?group=${group.group_id}&study=${study.study_code}`)
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
+      setConfirmModal(null)
+      if (data?.status === 'pendiente_de_pago') {
+        // Con costo: pedir el comprobante en el momento, no solo mandar a la
+        // pantalla de éxito (la matrícula no queda activa hasta que se apruebe).
+        setPendingReceipt({ enrollmentId: data.enrollment_id, studyName: study.study_name, amount: data.amount })
+        setEnrolling(false)
+      } else {
+        router.push(`/matricula/confirmacion?group=${group.group_id}&study=${study.study_code}`)
+      }
     } catch (err) {
       console.error('No se pudo matricular:', err)
+      setEnrollError(err instanceof Error ? err.message : 'No se pudo matricular.')
       setEnrolling(false)
     }
   }
@@ -366,6 +381,11 @@ export default function MatriculaPage() {
                       onEnroll={group => {
                         setConfirmModal({ group, study: result })
                         setPaymentMethod('sinpe')
+                        setEnrollError(null)
+                      }}
+                      onRequestScholarship={() => {
+                        const plan = studyTypes.find(s => s.code === result.study_code)
+                        if (plan?.plan_id) setScholarshipTarget({ entity_type: 'study_plan', id: plan.plan_id, name: plan.name })
                       }}
                     />
                   ))}
@@ -385,6 +405,28 @@ export default function MatriculaPage() {
           onPaymentChange={setPaymentMethod}
           onCancel={() => setConfirmModal(null)}
           onConfirm={handleEnroll}
+          enrolling={enrolling}
+          error={enrollError}
+          memberId={effectiveMemberId}
+          planId={studyTypes.find(s => s.code === confirmModal.study.study_code)?.plan_id ?? null}
+        />
+      )}
+
+      {/* Comprobante de pago inmediato (matrícula con costo, recién creada) */}
+      {pendingReceipt && (
+        <ReceiptModal
+          enrollmentId={pendingReceipt.enrollmentId}
+          studyName={pendingReceipt.studyName}
+          amount={pendingReceipt.amount}
+          onDone={() => setPendingReceipt(null)}
+        />
+      )}
+
+      {scholarshipTarget && effectiveMemberId && (
+        <ScholarshipRequestModal
+          memberId={effectiveMemberId}
+          fixedTarget={scholarshipTarget}
+          onClose={() => setScholarshipTarget(null)}
         />
       )}
     </div>
@@ -438,13 +480,14 @@ function CommitmentRow({ met, label }: { met: boolean; label: string }) {
 }
 
 function StudyCard({
-  result, stageMeta, expanded, onToggleExpand, onEnroll,
+  result, stageMeta, expanded, onToggleExpand, onEnroll, onRequestScholarship,
 }: {
   result: EligibilityResult
   stageMeta: { label: string; bg: string; text: string }
   expanded: boolean
   onToggleExpand: () => void
   onEnroll: (group: EligibleGroup) => void
+  onRequestScholarship: () => void
 }) {
   const studyType = result.available_groups[0]
 
@@ -510,6 +553,15 @@ function StudyCard({
               <DollarSign size={12} />
               Gratuito
             </span>
+          )}
+          {studyType?.requires_payment && (studyType.cost ?? 0) > 0 && (
+            <button
+              type="button"
+              onClick={onRequestScholarship}
+              className="ml-auto text-[11px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+            >
+              ¿Necesitás ayuda para pagar? Solicitar beca
+            </button>
           )}
         </div>
 
@@ -641,16 +693,46 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
   )
 }
 
+type ApplicableScholarship = { id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }
+
 function ConfirmModal({
-  study, group, paymentMethod, onPaymentChange, onCancel, onConfirm,
+  study, group, paymentMethod, onPaymentChange, onCancel, onConfirm, enrolling, error, memberId, planId,
 }: {
   study: EligibilityResult
   group: EligibleGroup
-  paymentMethod: 'card' | 'sinpe'
-  onPaymentChange: (m: 'card' | 'sinpe') => void
+  paymentMethod: PaymentMethodValue
+  onPaymentChange: (m: PaymentMethodValue) => void
   onCancel: () => void
-  onConfirm: () => void
+  onConfirm: (scholarship?: { scholarship_id?: string; coupon_code?: string }) => void
+  enrolling: boolean
+  error: string | null
+  memberId: string | null
+  planId: string | null
 }) {
+  const [applicable, setApplicable] = useState<ApplicableScholarship | null>(null)
+  const [useScholarship, setUseScholarship] = useState(true)
+  const [couponCode, setCouponCode] = useState('')
+
+  useEffect(() => {
+    if (!memberId || !planId || !(group.requires_payment && group.cost)) return
+    fetch(`/api/scholarships/applicable?member_id=${memberId}&entity_type=study_plan&entity_id=${planId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setApplicable(d?.scholarship ?? null))
+      .catch(() => setApplicable(null))
+  }, [memberId, planId, group.requires_payment, group.cost])
+
+  const discountedAmount = applicable && group.cost
+    ? Math.max(0, applicable.discount_type === 'percentage'
+      ? Math.round(group.cost * (1 - applicable.discount_value / 100))
+      : Math.round(group.cost - applicable.discount_value))
+    : null
+
+  function handleConfirm() {
+    if (applicable && useScholarship) onConfirm({ scholarship_id: applicable.id })
+    else if (couponCode.trim()) onConfirm({ coupon_code: couponCode.trim() })
+    else onConfirm()
+  }
+
   return (
     <Modal onClose={onCancel} titleId="confirmar-matricula-title" width={448}>
       <div className="p-6 space-y-5">
@@ -689,67 +771,151 @@ function ConfirmModal({
         >
           <AlertCircle size={14} className="text-coral shrink-0 mt-0.5" />
           <p className="text-[12px] text-navy-light/70 font-body">
-            Al confirmar tu matrícula, un administrador procesará tu inscripción y recibirás un mensaje de confirmación.
+            {group.requires_payment && group.cost
+              ? 'Al confirmar, te vamos a pedir el comprobante de pago para completar la matrícula.'
+              : 'Al confirmar tu matrícula, un administrador procesará tu inscripción y recibirás un mensaje de confirmación.'}
           </p>
         </div>
 
-        {/* Método de pago */}
+        {/* Beca: asignada aplicable, o código genérico */}
         {group.requires_payment && group.cost && (
           <div className="space-y-2">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-              Método de pago
-            </p>
-            <div className="space-y-2">
-              {([
-                { value: 'sinpe', label: 'SINPE Móvil', icon: Smartphone },
-                { value: 'card',  label: 'Tarjeta de crédito/débito', icon: CreditCard },
-              ] as const).map(opt => (
-                <label
-                  key={opt.value}
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer transition-all',
-                    paymentMethod === opt.value
-                      ? 'bg-navy text-white'
-                      : 'bg-surface-low text-navy hover:bg-navy/5'
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    value={opt.value}
-                    checked={paymentMethod === opt.value}
-                    onChange={() => onPaymentChange(opt.value)}
-                    className="sr-only"
-                  />
-                  <opt.icon size={15} />
-                  <span className="text-[13px] font-body">{opt.label}</span>
-                  <div className={cn(
-                    'ml-auto h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all',
-                    paymentMethod === opt.value ? 'border-white' : 'border-navy-light/30'
-                  )}>
-                    {paymentMethod === opt.value && <div className="h-2 w-2 rounded-full bg-white" />}
-                  </div>
-                </label>
-              ))}
-            </div>
+            {applicable ? (
+              <label className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-teal-soft/10 border border-teal-deep/20 cursor-pointer">
+                <input type="checkbox" checked={useScholarship} onChange={e => setUseScholarship(e.target.checked)} />
+                <span className="text-[13px] text-navy font-body">
+                  Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `₡${applicable.discount_value.toLocaleString('es-CR')}`} de descuento)
+                  {discountedAmount != null && <span className="block text-[11px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
+                </span>
+              </label>
+            ) : (
+              <div className="space-y-1">
+                <label htmlFor="coupon-code" className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">¿Tenés un código de descuento?</label>
+                <input
+                  id="coupon-code" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="Opcional"
+                  className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                />
+              </div>
+            )}
           </div>
         )}
+
+        {/* Método de pago */}
+        {group.requires_payment && group.cost && (
+          <PaymentMethodSelector value={paymentMethod} onChange={onPaymentChange} />
+        )}
+
+        {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
         {/* Botones */}
         <div className="flex gap-2 pt-1">
           <button
             onClick={onCancel}
+            disabled={enrolling}
             className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body"
           >
             Cancelar
           </button>
           <button
-            onClick={onConfirm}
-            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body"
+            onClick={handleConfirm}
+            disabled={enrolling}
+            className={cn('flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body', enrolling && 'opacity-50 cursor-not-allowed')}
           >
-            Confirmar matrícula
+            {enrolling ? 'Matriculando…' : 'Confirmar matrícula'}
           </button>
         </div>
+      </div>
+    </Modal>
+  )
+}
+
+// Comprobante inmediato tras matricular una matrícula con costo (queda
+// 'pendiente_de_pago' hasta que se apruebe). Mismo patrón que PayMatriculaButton
+// del perfil del miembro, pero abierto de una vez en vez de requerir un click extra.
+function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
+  enrollmentId: string; studyName: string; amount: number; onDone: () => void
+}) {
+  const [file, setFile] = useState<File | null>(null)
+  const [reference, setReference] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit() {
+    if (busy || !file) return
+    setBusy(true); setError(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('enrollment_id', enrollmentId)
+      fd.append('reference', reference.trim())
+      const res = await fetch('/api/payments', { method: 'POST', body: fd })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el comprobante.')
+      setDone(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally { setBusy(false) }
+  }
+
+  return (
+    <Modal onClose={() => !busy && onDone()} titleId="comprobante-matricula-title" width={420}>
+      <div className="p-6 space-y-4">
+        {done ? (
+          <div className="text-center space-y-3 py-4">
+            <div className="flex justify-center">
+              <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-teal/15">
+                <Check size={26} className="text-teal-deep" />
+              </div>
+            </div>
+            <p className="text-base font-bold text-navy font-display">Comprobante enviado</p>
+            <p className="text-[13px] text-navy-light/70 font-body">
+              Tu matrícula de {studyName} quedó pendiente de aprobación de pago. Te avisamos si hay algún problema.
+            </p>
+            <button onClick={onDone} className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Listo</button>
+          </div>
+        ) : (
+          <>
+            <h3 id="comprobante-matricula-title" className="text-base font-bold text-navy font-display">Pagar matrícula</h3>
+            <p className="text-[13px] text-navy-light/70 font-body">
+              {studyName} — {formatCRC(amount)}. Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia.
+            </p>
+            <div className="space-y-1">
+              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>
+              <input
+                type="file"
+                accept="image/*"
+                aria-label="Comprobante de pago"
+                onChange={e => setFile(e.target.files?.[0] ?? null)}
+                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[12px] file:text-navy"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="mat-pay-ref" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Número de referencia</label>
+              <input
+                id="mat-pay-ref"
+                value={reference}
+                onChange={e => setReference(e.target.value)}
+                placeholder="Ej. 2026070212345"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+            </div>
+            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={submit}
+                disabled={busy || !file}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
+              </button>
+              <button onClick={onDone} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
+                Más tarde
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </Modal>
   )

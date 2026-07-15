@@ -21,7 +21,7 @@ import { MemberAdminTab } from './_components/MemberAdminTab'
 import { MemberRecommendations } from './_components/MemberRecommendations'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
-import type { StudyRow, ServiceRow, EventoRow, DonacionRow } from './_components/MemberParticipationTab'
+import type { StudyRow, ServiceRow, EventoRow, DonacionRow, EventRegistrationRow } from './_components/MemberParticipationTab'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -83,6 +83,8 @@ export default function MiembroDetailPage() {
     ledStudies: false,
     servicio: false,
     eventos: false,
+    eventRegistrations: false,
+    misBecas: false,
     donaciones: false,
   })
 
@@ -179,17 +181,32 @@ export default function MiembroDetailPage() {
     })),
   [member])
 
+  const eventRegistrationRows: EventRegistrationRow[] = useMemo(() =>
+    (member?.event_registration_history ?? []).map(r => ({
+      registrationId: r.registration_id,
+      eventId: r.event_id,
+      eventName: r.event_name,
+      eventDate: r.event_date,
+      requiresPayment: r.requires_payment,
+      cost: r.cost,
+      paymentStatus: r.payment_status,
+      reviewStatus: r.review_status,
+    })),
+  [member])
+
   // ── Sortable tables ──────────────────────────────────────────────────────────
   const estudiosTable  = useSortableTable(estudiosRows)
   const servicioTable  = useSortableTable(servicioRows)
   const eventosTable   = useSortableTable(eventosRows)
   const donacionesTable = useSortableTable(donacionesRows)
+  const eventRegistrationTable = useSortableTable(eventRegistrationRows)
 
   // ── Pagination ───────────────────────────────────────────────────────────────
   const [visibleEstudios,  setVisibleEstudios]  = useState(LOAD_MORE)
   const [visibleServicio,  setVisibleServicio]  = useState(LOAD_MORE)
   const [visibleEventos,   setVisibleEventos]   = useState(LOAD_MORE)
   const [visibleDonaciones, setVisibleDonaciones] = useState(LOAD_MORE)
+  const [visibleEventRegistrations, setVisibleEventRegistrations] = useState(LOAD_MORE)
 
   // ── Estados de carga (van DESPUÉS de todos los hooks por reglas de React) ──
   if (isNotFound) notFound()
@@ -289,14 +306,17 @@ export default function MiembroDetailPage() {
           servicioTable={servicioTable}
           eventosTable={eventosTable}
           donacionesTable={donacionesTable}
+          eventRegistrationTable={eventRegistrationTable}
           visibleEstudios={visibleEstudios}
           visibleServicio={visibleServicio}
           visibleEventos={visibleEventos}
           visibleDonaciones={visibleDonaciones}
+          visibleEventRegistrations={visibleEventRegistrations}
           onLoadMoreEstudios={() => setVisibleEstudios(v => v + LOAD_MORE)}
           onLoadMoreServicio={() => setVisibleServicio(v => v + LOAD_MORE)}
           onLoadMoreEventos={() => setVisibleEventos(v => v + LOAD_MORE)}
           onLoadMoreDonaciones={() => setVisibleDonaciones(v => v + LOAD_MORE)}
+          onLoadMoreEventRegistrations={() => setVisibleEventRegistrations(v => v + LOAD_MORE)}
           hasFinanceRole={hasFinanceRole}
           revealDonations={revealDonations}
           onToggleRevealDonations={() => setRevealDonations(r => !r)}

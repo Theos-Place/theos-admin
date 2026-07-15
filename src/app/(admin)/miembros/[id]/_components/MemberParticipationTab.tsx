@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { useState } from 'react'
-import { Lock, ChevronDown, ChevronUp, CreditCard, Loader2, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Lock, ChevronDown, ChevronUp, CreditCard, Loader2, Check, GraduationCap } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
@@ -77,6 +77,12 @@ export type StudyRow = { code: string; name: string; startYear: number; startLab
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
+export type EventRegistrationRow = {
+  registrationId: string; eventId: string; eventName: string; eventDate: string
+  requiresPayment: boolean; cost: number
+  paymentStatus: 'pending' | 'paid' | 'exempted' | 'expired'
+  reviewStatus: string | null
+}
 
 type SortableTableResult<T> = {
   sorted: T[]
@@ -90,6 +96,8 @@ type OpenSections = {
   ledStudies: boolean
   servicio: boolean
   eventos: boolean
+  eventRegistrations: boolean
+  misBecas: boolean
   donaciones: boolean
 }
 
@@ -101,14 +109,17 @@ type Props = {
   servicioTable: SortableTableResult<ServiceRow>
   eventosTable: SortableTableResult<EventoRow>
   donacionesTable: SortableTableResult<DonacionRow>
+  eventRegistrationTable: SortableTableResult<EventRegistrationRow>
   visibleEstudios: number
   visibleServicio: number
   visibleEventos: number
   visibleDonaciones: number
+  visibleEventRegistrations: number
   onLoadMoreEstudios: () => void
   onLoadMoreServicio: () => void
   onLoadMoreEventos: () => void
   onLoadMoreDonaciones: () => void
+  onLoadMoreEventRegistrations: () => void
   hasFinanceRole: boolean
   revealDonations: boolean
   onToggleRevealDonations: () => void
@@ -125,14 +136,17 @@ export function MemberParticipationTab({
   servicioTable,
   eventosTable,
   donacionesTable,
+  eventRegistrationTable,
   visibleEstudios,
   visibleServicio,
   visibleEventos,
   visibleDonaciones,
+  visibleEventRegistrations,
   onLoadMoreEstudios,
   onLoadMoreServicio,
   onLoadMoreEventos,
   onLoadMoreDonaciones,
+  onLoadMoreEventRegistrations,
   hasFinanceRole,
   revealDonations,
   onToggleRevealDonations,
@@ -435,6 +449,99 @@ export function MemberParticipationTab({
         )}
       </SectionAccordion>
 
+      {/* Mis inscripciones a eventos (con pago) */}
+      <SectionAccordion
+        title="Mis inscripciones a eventos"
+        open={openSections.eventRegistrations}
+        onToggle={() => onToggleSection('eventRegistrations')}
+      >
+        {eventRegistrationTable.sorted.length === 0 ? (
+          <p className="px-4 py-4 text-sm text-navy-light/60 font-body">Sin inscripciones a eventos.</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--outline-variant)]">
+                    {([['eventName', 'Evento'], ['eventDate', 'Fecha']] as [keyof EventRegistrationRow, string][]).map(([key, label]) => (
+                      <th
+                        key={key}
+                        onClick={() => eventRegistrationTable.toggleSort(key)}
+                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/60 cursor-pointer hover:text-navy transition-colors select-none font-display"
+                      >
+                        {label}{' '}
+                        <span className="opacity-50">
+                          {eventRegistrationTable.sortKey === key ? (eventRegistrationTable.sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                        </span>
+                      </th>
+                    ))}
+                    <th className="px-4 py-2.5" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {eventRegistrationTable.sorted.slice(0, visibleEventRegistrations).map((row, i) => (
+                    <tr
+                      key={row.registrationId}
+                      style={i < Math.min(visibleEventRegistrations, eventRegistrationTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                      className="hover:bg-surface-low transition-colors"
+                    >
+                      <td className="px-4 py-2.5 text-navy-light/70 font-body">{row.eventName}</td>
+                      <td className="px-4 py-2.5 text-navy-light/60 text-xs font-body">{formatDate(row.eventDate)}</td>
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          {row.requiresPayment && (
+                            row.paymentStatus === 'paid' ? (
+                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">Pagado</span>
+                            ) : row.paymentStatus === 'exempted' ? (
+                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">Exento</span>
+                            ) : row.paymentStatus === 'expired' ? (
+                              <span className="rounded-full bg-coral-soft/20 text-coral px-2.5 py-0.5 text-[11px] font-semibold font-display">Reserva vencida</span>
+                            ) : row.reviewStatus === 'en_revision' ? (
+                              <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">Pago en revisión</span>
+                            ) : (
+                              <span className="inline-flex items-center gap-2">
+                                {row.cost > 0 && (
+                                  <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
+                                    Pendiente: ₡{row.cost.toLocaleString('es-CR')}
+                                  </span>
+                                )}
+                                <PayEventRegistrationButton
+                                  registrationId={row.registrationId}
+                                  retry={row.reviewStatus === 'rechazado'}
+                                />
+                              </span>
+                            )
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {visibleEventRegistrations < eventRegistrationTable.sorted.length && (
+              <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
+                <button
+                  onClick={onLoadMoreEventRegistrations}
+                  className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
+                >
+                  Cargar {LOAD_MORE} más (quedan {eventRegistrationTable.sorted.length - visibleEventRegistrations})
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </SectionAccordion>
+
+      {/* Mis becas (solicitudes de beca: solicitada/aprobada/rechazada) */}
+      <SectionAccordion
+        title="Mis becas"
+        open={openSections.misBecas}
+        onToggle={() => onToggleSection('misBecas')}
+      >
+        <MemberScholarshipRequests memberId={memberId} />
+      </SectionAccordion>
+
       {/* Donaciones */}
       <SectionAccordion
         title="Donaciones"
@@ -622,5 +729,155 @@ function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: string; ret
         </Modal>
       )}
     </>
+  )
+}
+
+// ── Botón de pago de inscripción a evento por comprobante (clon de PayMatriculaButton) ──
+function PayEventRegistrationButton({ registrationId, retry }: { registrationId: string; retry: boolean }) {
+  const [open, setOpen] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [reference, setReference] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit() {
+    if (busy || !file) return
+    setBusy(true); setError(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('reference', reference.trim())
+      const res = await fetch(`/api/event-registrations/${registrationId}/comprobante`, { method: 'POST', body: fd })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el comprobante.')
+      setDone(true); setOpen(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally { setBusy(false) }
+  }
+
+  if (done) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">
+        <Check size={11} /> Comprobante enviado
+      </span>
+    )
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[11px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
+      >
+        <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar inscripción'}
+      </button>
+      {open && (
+        <Modal onClose={() => !busy && setOpen(false)} titleId="pay-event-title" width={420}>
+          <div className="p-6 space-y-4">
+            <h3 id="pay-event-title" className="text-base font-bold text-navy font-display">Pagar inscripción</h3>
+            <p className="text-[13px] text-navy-light/70 font-body">
+              Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
+            </p>
+            <div className="space-y-1">
+              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>
+              <input
+                type="file"
+                accept="image/*"
+                aria-label="Comprobante de pago"
+                onChange={e => setFile(e.target.files?.[0] ?? null)}
+                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[12px] file:text-navy"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="pay-event-ref" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Número de referencia</label>
+              <input
+                id="pay-event-ref"
+                value={reference}
+                onChange={e => setReference(e.target.value)}
+                placeholder="Ej. 2026070212345"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+            </div>
+            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={submit}
+                disabled={busy || !file}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
+              </button>
+              <button onClick={() => setOpen(false)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </>
+  )
+}
+
+// ── "Mis becas": solicitudes de beca del miembro (solicitada/aprobada/rechazada) ──
+type ScholarshipRequestRow = {
+  id: string
+  entity_name: string | null
+  status: 'open' | 'in_review' | 'resolved' | 'rejected'
+  reason: string
+  review_notes: string | null
+  created_at: string
+}
+
+const REQUEST_STATUS_LABEL: Record<string, string> = {
+  open: 'Solicitada', in_review: 'En revisión', resolved: 'Aprobada', rejected: 'Rechazada',
+}
+const REQUEST_STATUS_BADGE: Record<string, string> = {
+  open: 'bg-amber-50 text-amber-700', in_review: 'bg-amber-50 text-amber-700',
+  resolved: 'bg-teal-soft/30 text-teal-deep', rejected: 'bg-coral-soft/20 text-coral',
+}
+
+function MemberScholarshipRequests({ memberId }: { memberId: string }) {
+  const [rows, setRows] = useState<ScholarshipRequestRow[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    fetch(`/api/finance/requests?type=scholarship&member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: ScholarshipRequestRow[]) => { if (alive) setRows(Array.isArray(d) ? d : []) })
+      .catch(() => { if (alive) setRows([]) })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [memberId])
+
+  if (loading) {
+    return <p className="px-4 py-6 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+  }
+  if (rows.length === 0) {
+    return (
+      <p className="px-4 py-6 text-sm text-navy-light/60 font-body flex items-center gap-2">
+        <GraduationCap size={14} /> Sin solicitudes de beca.
+      </p>
+    )
+  }
+  return (
+    <div className="divide-y divide-[var(--outline-variant)]">
+      {rows.map(r => (
+        <div key={r.id} className="px-4 py-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium text-navy font-body">{r.entity_name ?? '—'}</p>
+            <p className="text-[12px] text-navy-light/60 font-body">{formatDate(r.created_at)}</p>
+            {r.status === 'rejected' && r.review_notes && (
+              <p className="text-[12px] text-coral font-body mt-1">Motivo: {r.review_notes}</p>
+            )}
+          </div>
+          <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display shrink-0', REQUEST_STATUS_BADGE[r.status])}>
+            {REQUEST_STATUS_LABEL[r.status]}
+          </span>
+        </div>
+      ))}
+    </div>
   )
 }

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useRowSelection } from '@/hooks/useRowSelection'
+import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
@@ -9,11 +11,14 @@ import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 
+type PaymentConcept = 'matricula' | 'folletos' | 'evento'
+
 type QueueRow = {
   id: string
   member_id: string
   member_name: string
-  concept: 'matricula' | 'folletos' | null
+  concept: PaymentConcept | null
+  event_name: string | null
   amount: number
   currency: string
   reference_code: string | null
@@ -22,7 +27,8 @@ type QueueRow = {
   duplicate_reference: boolean
 }
 
-const CONCEPT_LABEL: Record<string, string> = { matricula: 'Matrícula', folletos: 'Folletos' }
+const CONCEPT_LABEL: Record<string, string> = { matricula: 'Matrícula', folletos: 'Folletos', evento: 'Evento' }
+type ConceptFilter = 'all' | PaymentConcept
 
 function money(amount: number, currency: string) {
   return `${currency === 'USD' ? '$' : '₡'}${amount.toLocaleString('es-CR')}`
@@ -36,11 +42,16 @@ export default function RevisionPagosPage() {
 
   const [rows, setRows] = useState<QueueRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [conceptFilter, setConceptFilter] = useState<ConceptFilter>('all')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [approveTarget, setApproveTarget] = useState<QueueRow | null>(null)
   const [reject, setReject] = useState<QueueRow | null>(null)
   const [reason, setReason] = useState('')
   const [receipt, setReceipt] = useState<{ row: QueueRow; url: string | null; loading: boolean } | null>(null)
+
+  const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | null>(null)
+  const [bulkReason, setBulkReason] = useState('')
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const refetch = useCallback(() => {
     setLoading(true)
@@ -51,6 +62,12 @@ export default function RevisionPagosPage() {
       .finally(() => setLoading(false))
   }, [])
   useEffect(() => { if (canView) refetch() }, [canView, refetch])
+
+  const filtered = useMemo(
+    () => (conceptFilter === 'all' ? rows : rows.filter(r => r.concept === conceptFilter)),
+    [rows, conceptFilter],
+  )
+  const sel = useRowSelection(filtered.map(r => r.id))
 
   const openReceipt = useCallback(async (row: QueueRow) => {
     setReceipt({ row, url: null, loading: true })
@@ -96,6 +113,31 @@ export default function RevisionPagosPage() {
     } finally { setBusyId(null) }
   }
 
+  async function doBulk() {
+    if (!bulkAction || bulkBusy) return
+    if (bulkAction === 'reject' && !bulkReason.trim()) return
+    setBulkBusy(true)
+    try {
+      const res = await fetch('/api/payments/bulk', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: sel.selectedIds, action: bulkAction, reason: bulkAction === 'reject' ? bulkReason.trim() : undefined }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo completar la acción en lote.')
+      const okCount = bulkAction === 'approve' ? data.approved : data.rejected
+      const failCount = (data.failed ?? []).length
+      toast(
+        failCount > 0
+          ? `${okCount} pago${okCount !== 1 ? 's' : ''} ${bulkAction === 'approve' ? 'aprobado' : 'rechazado'}${okCount !== 1 ? 's' : ''}, ${failCount} no se pudo${failCount !== 1 ? 'ieron' : ''} procesar.`
+          : `${okCount} pago${okCount !== 1 ? 's' : ''} ${bulkAction === 'approve' ? 'aprobado' : 'rechazado'}${okCount !== 1 ? 's' : ''}.`,
+        failCount > 0 ? 'error' : 'success',
+      )
+      setBulkAction(null); setBulkReason(''); sel.clear(); refetch()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
+    } finally { setBulkBusy(false) }
+  }
+
   if (!canView) return <AccessDenied />
 
   return (
@@ -112,26 +154,78 @@ export default function RevisionPagosPage() {
         </div>
       </div>
 
+      {/* Filtro por concepto */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {([['all', 'Todos'], ['matricula', 'Matrícula'], ['evento', 'Evento'], ['folletos', 'Folletos']] as [ConceptFilter, string][]).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setConceptFilter(id)}
+            className={cn(
+              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
+              conceptFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {canReview && sel.count > 0 && (
+        <BulkActionBar count={sel.count} onClear={sel.clear} noun="pagos">
+          <button
+            onClick={() => setBulkAction('approve')}
+            className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity font-body"
+          >
+            Aprobar seleccionados
+          </button>
+          <button
+            onClick={() => { setBulkAction('reject'); setBulkReason('') }}
+            className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[12px] hover:bg-white/10 transition-colors font-body"
+          >
+            Rechazar seleccionados
+          </button>
+        </BulkActionBar>
+      )}
+
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
           <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
-        ) : rows.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <EmptyState icon={CreditCard} title="No hay pagos en revisión" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
+                  {canReview && (
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        aria-label="Seleccionar todos"
+                        checked={sel.allSelected}
+                        ref={el => { if (el) el.indeterminate = sel.someSelected }}
+                        onChange={sel.toggleAll}
+                      />
+                    </th>
+                  )}
                   {['Persona', 'Concepto', 'Monto esperado', 'Referencia', 'Comprobante', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r, idx) => (
+                {filtered.map((r, idx) => (
                   <tr key={r.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
+                    {canReview && (
+                      <td className="px-4 py-3">
+                        <input type="checkbox" aria-label={`Seleccionar pago de ${r.member_name}`} checked={sel.isSelected(r.id)} onChange={() => sel.toggle(r.id)} />
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.member_name}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.concept ? CONCEPT_LABEL[r.concept] : '—'}</td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
+                      {r.concept ? CONCEPT_LABEL[r.concept] : '—'}
+                      {r.concept === 'evento' && r.event_name && <span className="block text-[11px] text-navy-light/60">{r.event_name}</span>}
+                    </td>
                     <td className="px-4 py-3 text-sm text-navy font-body tabular-nums">{money(r.amount, r.currency)}</td>
                     <td className="px-4 py-3 text-[13px] font-body">
                       <span className="text-navy-light/80">{r.reference_code ?? '—'}</span>
@@ -204,7 +298,7 @@ export default function RevisionPagosPage() {
             <p className="text-sm text-navy-light/70 font-body">
               ¿Aprobar el pago de <strong className="text-navy">{approveTarget.member_name}</strong>
               {approveTarget.concept ? ` (${CONCEPT_LABEL[approveTarget.concept]})` : ''} por {money(approveTarget.amount, approveTarget.currency)}?
-              El pago quedará como pagado y activará lo que corresponda (p. ej. la matrícula).
+              El pago quedará como pagado y activará lo que corresponda (p. ej. la matrícula o la inscripción al evento).
             </p>
             <div className="flex gap-2 pt-1">
               <button
@@ -246,6 +340,48 @@ export default function RevisionPagosPage() {
                 {busyId ? <><Loader2 size={15} className="animate-spin" /> Rechazando…</> : 'Rechazar y avisar'}
               </button>
               <button onClick={() => setReject(null)} disabled={!!busyId} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Confirmación de acción en lote (aprobar/rechazar seleccionados) */}
+      {bulkAction && (
+        <Modal onClose={() => !bulkBusy && setBulkAction(null)} titleId="bulk-title" width={440}>
+          <div className="p-6 space-y-3">
+            <h3 id="bulk-title" className="text-base font-bold text-navy font-display">
+              {bulkAction === 'approve' ? 'Aprobar' : 'Rechazar'} {sel.count} pago{sel.count !== 1 ? 's' : ''}
+            </h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              {bulkAction === 'approve'
+                ? 'Cada pago quedará como pagado y activará lo que corresponda (matrícula, inscripción a evento, etc.).'
+                : 'Se avisará a cada persona con el mismo motivo para que vuelva a subir el comprobante.'}
+              {' '}Si algún pago ya fue procesado por otro revisor mientras tanto, se reporta sin afectar al resto.
+            </p>
+            {bulkAction === 'reject' && (
+              <textarea
+                autoFocus
+                value={bulkReason}
+                onChange={e => setBulkReason(e.target.value)}
+                rows={3}
+                placeholder="Motivo del rechazo (obligatorio, aplica a todos los seleccionados)…"
+                aria-label="Motivo del rechazo en lote"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
+              />
+            )}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={doBulk}
+                disabled={bulkBusy || (bulkAction === 'reject' && !bulkReason.trim())}
+                className={cn(
+                  'flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2',
+                  bulkAction === 'approve' ? 'bg-teal-deep hover:opacity-90' : 'bg-coral hover:bg-coral-deep',
+                  (bulkBusy || (bulkAction === 'reject' && !bulkReason.trim())) && 'opacity-50 cursor-not-allowed',
+                )}
+              >
+                {bulkBusy ? <><Loader2 size={15} className="animate-spin" /> Procesando…</> : `${bulkAction === 'approve' ? 'Aprobar' : 'Rechazar'} seleccionados`}
+              </button>
+              <button onClick={() => setBulkAction(null)} disabled={bulkBusy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
             </div>
           </div>
         </Modal>

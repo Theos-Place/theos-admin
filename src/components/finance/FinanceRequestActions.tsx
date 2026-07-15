@@ -4,16 +4,16 @@ import { useState } from 'react'
 import { GraduationCap, RotateCcw, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
 import { cn } from '@/lib/utils'
-import type { FinanceRequestType } from '@/types/finance'
 
 /**
  * Botones "Solicitar beca" / "Solicitar devolución" en el perfil del miembro.
- * Visibles para cualquier rol; los datos (grupos del miembro, pagos pagados)
- * se calculan para el miembro del perfil.
+ * Visibles para cualquier rol; los datos (pagos pagados) se calculan para el
+ * miembro del perfil. La devolución sigue deshabilitada (próximamente); la
+ * beca abre ScholarshipRequestModal (destino a elegir: estudio o evento).
  */
 
-type GroupOption = { group_id: string; group_name: string; plan_code: string | null }
 type PaymentOption = { id: string; label: string }
 
 const MIN_REASON = 20
@@ -22,15 +22,13 @@ const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb
 
 export function FinanceRequestActions({ memberId }: { memberId: string }) {
   const toast = useToast()
-  const [openModal, setOpenModal] = useState<FinanceRequestType | null>(null)
-  const [groups, setGroups] = useState<GroupOption[]>([])
+  const [showScholarshipModal, setShowScholarshipModal] = useState(false)
+  const [openRefund, setOpenRefund] = useState(false)
   const [payments, setPayments] = useState<PaymentOption[]>([])
   const [dataLoading, setDataLoading] = useState(false)
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
 
-  const [groupId, setGroupId] = useState('')
   const [paymentId, setPaymentId] = useState('')
-  const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -38,49 +36,28 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
   function loadData() {
     if (loadedFor === memberId || dataLoading) return
     setDataLoading(true)
-    Promise.all([
-      // Grupos del miembro (inscripciones activas) + grupos abiertos a matrícula.
-      fetch(`/api/studies/eligibility?member_id=${memberId}`),
-      // Filtro server-side: antes bajaba los ~2,000 grupos y filtraba en el
-      // cliente por status === 'open', que además NO es un estado real
-      // (en_matricula/en_curso/finalizado) — la lista siempre quedaba vacía.
-      fetch('/api/studies/groups?status=en_matricula&all=1'),
-      fetch(`/api/finance/requests/payment-options?member_id=${memberId}`),
-    ])
-      .then(async ([e, g, p]) => {
-        const enrolled: GroupOption[] = e.ok ? ((await e.json()).active_enrollments ?? []) : []
-        const gJson = g.ok ? await g.json() : []
-        const allGroups = (Array.isArray(gJson) ? gJson : (gJson.groups ?? [])) as Array<{ id: string; name: string; plan: { code: string | null } | null }>
-        const open = allGroups
-          .map(gr => ({ group_id: gr.id, group_name: gr.name, plan_code: gr.plan?.code ?? null }))
-        // inscrito o por inscribirse, sin duplicados
-        const seen = new Set(enrolled.map(x => x.group_id))
-        setGroups([...enrolled, ...open.filter(o => !seen.has(o.group_id))])
-        if (p.ok) setPayments(await p.json())
-        setLoadedFor(memberId)
-      })
+    fetch(`/api/finance/requests/payment-options?member_id=${memberId}`)
+      .then(async p => { if (p.ok) setPayments(await p.json()); setLoadedFor(memberId) })
       .catch(() => {})
       .finally(() => setDataLoading(false))
   }
 
-  function open(type: FinanceRequestType) {
-    setGroupId('')
+  function openRefundModal() {
     setPaymentId('')
-    setAmount('')
     setReason('')
     setError('')
-    setOpenModal(type)
+    setOpenRefund(true)
     loadData()
   }
 
-  const refundBlocked = openModal === 'refund' && !dataLoading && loadedFor === memberId && payments.length === 0
+  const refundBlocked = !dataLoading && loadedFor === memberId && payments.length === 0
 
-  async function submit() {
+  async function submitRefund() {
     if (reason.trim().length < MIN_REASON) {
       setError(`Contanos un poco más: la razón debe tener al menos ${MIN_REASON} caracteres.`)
       return
     }
-    if (openModal === 'refund' && !paymentId) {
+    if (!paymentId) {
       setError('Seleccioná el pago a devolver.')
       return
     }
@@ -92,10 +69,8 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           member_id: memberId,
-          request_type: openModal,
-          study_group_id: openModal === 'scholarship' ? (groupId || null) : null,
-          payment_id: openModal === 'refund' ? paymentId : null,
-          amount: openModal === 'scholarship' && amount ? Number(amount) : null,
+          request_type: 'refund',
+          payment_id: paymentId,
           reason: reason.trim(),
         }),
       })
@@ -103,7 +78,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
         const body = await res.json().catch(() => null)
         throw new Error(body?.error ?? 'No se pudo enviar la solicitud')
       }
-      setOpenModal(null)
+      setOpenRefund(false)
       toast('Solicitud enviada. El equipo de finanzas la revisará pronto.', 'success')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo enviar la solicitud')
@@ -114,24 +89,20 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
 
   return (
     <>
-      {/* Beca y devolución deshabilitadas por ahora (próximamente). */}
       <div className="flex gap-2 flex-wrap">
         <button
           type="button"
-          disabled
-          onClick={() => open('scholarship')}
-          title="Próximamente"
-          aria-label="Solicitar beca (próximamente)"
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy-light/50 font-body opacity-50 cursor-not-allowed"
+          onClick={() => setShowScholarshipModal(true)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-3.5 py-2 text-[13px] text-coral font-body hover:bg-coral/20 transition-colors"
         >
           <GraduationCap size={13} />
           Solicitar beca
-          <span className="text-[10px]">· Próximamente</span>
         </button>
+        {/* Devolución deshabilitada por ahora (próximamente). */}
         <button
           type="button"
           disabled
-          onClick={() => open('refund')}
+          onClick={openRefundModal}
           title="Próximamente"
           aria-label="Solicitar devolución (próximamente)"
           className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy-light/50 font-body opacity-50 cursor-not-allowed"
@@ -142,12 +113,14 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
         </button>
       </div>
 
-      {openModal && (
-        <Modal onClose={() => setOpenModal(null)} titleId="finance-request-title">
+      {showScholarshipModal && (
+        <ScholarshipRequestModal memberId={memberId} onClose={() => setShowScholarshipModal(false)} />
+      )}
+
+      {openRefund && (
+        <Modal onClose={() => setOpenRefund(false)} titleId="finance-request-title">
           <div className="p-6 space-y-4">
-            <h2 id="finance-request-title" className="text-lg font-semibold text-navy font-display">
-              {openModal === 'scholarship' ? 'Solicitar beca' : 'Solicitar devolución'}
-            </h2>
+            <h2 id="finance-request-title" className="text-lg font-semibold text-navy font-display">Solicitar devolución</h2>
 
             {dataLoading || loadedFor !== memberId ? (
               <div className="flex items-center justify-center py-8">
@@ -163,78 +136,46 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                   </div>
                 )}
 
-                {openModal === 'scholarship' && (
+                {!refundBlocked && (
                   <>
                     <div>
-                      <label htmlFor="schol-group" className={LABEL_CLS}>Grupo de estudio</label>
-                      <select id="schol-group" value={groupId} onChange={e => setGroupId(e.target.value)} className={SELECT_CLS}>
-                        <option value="">Por definir</option>
-                        {groups.map(g => (
-                          <option key={g.group_id} value={g.group_id}>
-                            {g.group_name}{g.plan_code ? ` (${g.plan_code})` : ''}
-                          </option>
-                        ))}
+                      <label htmlFor="refund-payment" className={LABEL_CLS}>Pago a devolver <span className="text-coral">*</span></label>
+                      <select id="refund-payment" value={paymentId} onChange={e => setPaymentId(e.target.value)} className={SELECT_CLS}>
+                        <option value="">Seleccionar pago…</option>
+                        {payments.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                       </select>
-                      <p className="mt-1 text-[11px] text-navy-light/60 font-body">
-                        Grupos donde está inscrito o con matrícula abierta.
-                      </p>
                     </div>
                     <div>
-                      <label htmlFor="schol-amount" className={LABEL_CLS}>Monto solicitado (opcional, ₡)</label>
-                      <input
-                        id="schol-amount"
-                        type="number"
-                        min={0}
-                        value={amount}
-                        onChange={e => setAmount(e.target.value)}
-                        placeholder="Ej: 15000"
-                        className={cn(SELECT_CLS, 'placeholder:text-navy-light/50')}
+                      <label htmlFor="finance-reason" className={LABEL_CLS}>
+                        Razón <span className="text-coral">*</span>
+                      </label>
+                      <textarea
+                        id="finance-reason"
+                        value={reason}
+                        onChange={e => setReason(e.target.value)}
+                        rows={3}
+                        placeholder="Contanos por qué (mínimo 20 caracteres)…"
+                        className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')}
                       />
+                      <p className={cn('mt-1 text-[11px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/60' : 'text-success')}>
+                        {reason.trim().length}/{MIN_REASON} caracteres mínimos
+                      </p>
                     </div>
                   </>
-                )}
-
-                {openModal === 'refund' && !refundBlocked && (
-                  <div>
-                    <label htmlFor="refund-payment" className={LABEL_CLS}>Pago a devolver <span className="text-coral">*</span></label>
-                    <select id="refund-payment" value={paymentId} onChange={e => setPaymentId(e.target.value)} className={SELECT_CLS}>
-                      <option value="">Seleccionar pago…</option>
-                      {payments.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                {!refundBlocked && (
-                  <div>
-                    <label htmlFor="finance-reason" className={LABEL_CLS}>
-                      Razón <span className="text-coral">*</span>
-                    </label>
-                    <textarea
-                      id="finance-reason"
-                      value={reason}
-                      onChange={e => setReason(e.target.value)}
-                      rows={3}
-                      placeholder="Contanos por qué (mínimo 20 caracteres)…"
-                      className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')}
-                    />
-                    <p className={cn('mt-1 text-[11px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/60' : 'text-success')}>
-                      {reason.trim().length}/{MIN_REASON} caracteres mínimos
-                    </p>
-                  </div>
                 )}
 
                 {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
                 <div className="flex justify-end gap-2 pt-1">
                   <button
-                    onClick={() => setOpenModal(null)}
+                    onClick={() => setOpenRefund(false)}
                     className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors"
                   >
                     {refundBlocked ? 'Cerrar' : 'Cancelar'}
                   </button>
                   {!refundBlocked && (
                     <button
-                      onClick={submit}
+                      onClick={submitRefund}
                       disabled={submitting}
                       className="rounded-full bg-coral px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60"
                     >

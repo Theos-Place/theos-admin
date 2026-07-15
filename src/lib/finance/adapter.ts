@@ -1,9 +1,9 @@
 // Adapta filas de Supabase a los tipos de dominio de finanzas.
 
 import type {
-  DbPayment, DbDonation, DbRefund, DbScholarship, DbImportBatch,
+  DbPayment, DbDonation, DbRefund, DbImportBatch,
 } from '@/lib/supabase/queries/finance'
-import type { Payment, Donation, Refund, Scholarship, ImportBatch } from '@/types/finance'
+import type { Payment, Donation, Refund, ImportBatch } from '@/types/finance'
 
 function fullName(m: { first_name: string; last_name: string } | null): string {
   return m ? `${m.first_name} ${m.last_name}`.trim() : ''
@@ -65,27 +65,6 @@ export function toDomainRefund(db: DbRefund): Refund {
     processed_at: db.processed_at,
     processed_by: db.processed_by,
     sinpe_pending: db.sinpe_pending,
-    notes: db.notes,
-  }
-}
-
-export function toDomainScholarship(db: DbScholarship): Scholarship {
-  const entityType = db.entity_type ?? (db.event_id ? 'event' : 'study_group')
-  return {
-    id: db.id,
-    member_id: db.member_id,
-    member_name: fullName(db.member),
-    entity_type: entityType,
-    entity_id: db.event_id ?? db.study_group_id ?? '',
-    entity_name: entityName(db.event, db.study_group),
-    discount_type: db.discount_type ?? 'fixed',
-    discount_value: db.discount_value ?? 0,
-    original_amount: db.original_amount ?? 0,
-    final_amount: db.final_amount ?? 0,
-    is_used: db.is_used,
-    used_at: db.used_at,
-    created_by: db.created_by ?? '',
-    created_at: db.created_at,
     notes: db.notes,
   }
 }

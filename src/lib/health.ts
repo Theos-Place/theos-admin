@@ -8,7 +8,7 @@ import 'server-only'
  * Best-effort y no-op si la variable no está configurada — los crons nunca
  * deben fallar por culpa del monitoreo.
  */
-export async function pingHealthcheck(envKey: 'HEALTHCHECK_URL_FOLLETO_BLOCKS' | 'HEALTHCHECK_URL_START_REMINDERS' | 'HEALTHCHECK_URL_LEADER_ABSENCE' | 'HEALTHCHECK_URL_STORAGE_ORPHANS'): Promise<void> {
+export async function pingHealthcheck(envKey: 'HEALTHCHECK_URL_FOLLETO_BLOCKS' | 'HEALTHCHECK_URL_START_REMINDERS' | 'HEALTHCHECK_URL_LEADER_ABSENCE' | 'HEALTHCHECK_URL_STORAGE_ORPHANS' | 'HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE'): Promise<void> {
   const url = process.env[envKey]
   if (!url) return
   try {

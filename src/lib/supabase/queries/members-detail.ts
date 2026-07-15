@@ -92,6 +92,12 @@ export type DbMemberFull = DbMemberEnriched & {
   /** Sede calculada por asistencia a charlas (últimos 12 meses). null = sin sede. */
   attendance_sede: { name: string; count: number } | null
   study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number }>
+  event_registration_history: Array<{
+    registration_id: string; event_id: string; event_name: string; event_date: string
+    requires_payment: boolean; cost: number
+    payment_status: 'pending' | 'paid' | 'exempted' | 'expired'
+    review_status: string | null
+  }>
   attendance: DbAttendance[]
   service_history: DbService[]
   donations: DbDonation[]
@@ -308,6 +314,47 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     }
   }
 
+  // Inscripciones a eventos con pago (para "Mis inscripciones a eventos" del perfil).
+  // event_registrations/payments.event_registration_id son columnas nuevas fuera
+  // de los tipos generados → cliente laxo (mismo patrón que paymentStatusByEnrollment).
+  const looseEvents = supabase as unknown as SupabaseClient
+  const { data: eventRegs } = await looseEvents
+    .from('event_registrations')
+    .select('id, event_id, payment_status, registered_at, events(title, starts_at, payment_amount, requires_payment)')
+    .eq('member_id', id)
+    .order('registered_at', { ascending: false })
+  const eventRegRows = (eventRegs ?? []) as unknown as Array<{
+    id: string; event_id: string; payment_status: string; registered_at: string
+    events: { title: string; starts_at: string; payment_amount: number | null; requires_payment: boolean }
+      | { title: string; starts_at: string; payment_amount: number | null; requires_payment: boolean }[] | null
+  }>
+  const eventRegistrationIds = eventRegRows.map(r => r.id)
+  const reviewStatusByEventRegistration = new Map<string, string>()
+  if (eventRegistrationIds.length) {
+    const { data: evPays } = await looseEvents
+      .from('payments').select('event_registration_id, review_status, created_at')
+      .in('event_registration_id', eventRegistrationIds).eq('concept', 'evento')
+      .order('created_at', { ascending: false })
+    for (const p of (evPays ?? []) as Array<{ event_registration_id: string | null; review_status: string | null }>) {
+      if (p.event_registration_id && p.review_status && !reviewStatusByEventRegistration.has(p.event_registration_id)) {
+        reviewStatusByEventRegistration.set(p.event_registration_id, p.review_status)
+      }
+    }
+  }
+  const eventRegistrationHistory = eventRegRows.map(r => {
+    const ev = Array.isArray(r.events) ? r.events[0] : r.events
+    return {
+      registration_id: r.id,
+      event_id: r.event_id,
+      event_name: ev?.title ?? '',
+      event_date: ev?.starts_at ?? r.registered_at,
+      requires_payment: !!ev?.requires_payment,
+      cost: Number(ev?.payment_amount ?? 0),
+      payment_status: r.payment_status as 'pending' | 'paid' | 'exempted' | 'expired',
+      review_status: reviewStatusByEventRegistration.get(r.id) ?? null,
+    }
+  })
+
   // Historial de estudios con fecha real (del grupo si existe; si no, de la inscripción).
   const studyHistory = enrollments
     .filter(e => planOf(e)?.code && !ledByMember(e))
@@ -482,6 +529,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     current_study_week: currentStudyWeek,
     completed_studies: completedStudies,
     study_history: studyHistory,
+    event_registration_history: eventRegistrationHistory,
     active_service: activeVolunteer && activeVolunteer.service_positions
       ? {
           position: activeVolunteer.service_positions.title,

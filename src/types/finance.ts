@@ -53,24 +53,6 @@ export type Refund = {
   notes: string | null
 }
 
-export type Scholarship = {
-  id: string
-  member_id: string
-  member_name: string
-  entity_type: 'study_group' | 'event'
-  entity_id: string
-  entity_name: string
-  discount_type: 'percentage' | 'fixed'
-  discount_value: number
-  original_amount: number
-  final_amount: number
-  is_used: boolean
-  used_at: string | null
-  created_by: string
-  created_at: string
-  notes: string | null
-}
-
 export type ImportBatch = {
   id: string
   filename: string
@@ -96,6 +78,8 @@ export type FinanceRequestHistoryEntry = {
   created_at: string
 }
 
+export type FinanceRequestEntityType = 'study_plan' | 'event'
+
 export type FinanceRequest = {
   id: string
   member_id: string
@@ -115,6 +99,11 @@ export type FinanceRequest = {
   created_at: string
   updated_at: string
   history: FinanceRequestHistoryEntry[]
+  /** Destino de la beca (solo request_type='scholarship'). */
+  entity_type: FinanceRequestEntityType | null
+  plan_id: string | null
+  event_id: string | null
+  entity_name: string | null
 }
 
 export type FinanceRequestWriteInput = {
@@ -124,4 +113,7 @@ export type FinanceRequestWriteInput = {
   payment_id?: string | null
   amount?: number | null
   reason: string
+  entity_type?: FinanceRequestEntityType | null
+  plan_id?: string | null
+  event_id?: string | null
 }

@@ -37,6 +37,7 @@ import {
   Bell,
   Wrench,
   CalendarRange,
+  CalendarCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -60,7 +61,6 @@ const FINANZAS_SUB: SubItem[] = [
   { href: '/finanzas/donaciones',  label: 'Donaciones',   icon: Heart           },
   { href: '/finanzas/pagos',       label: 'Pagos',        icon: CreditCard      },
   { href: '/finanzas/devoluciones',label: 'Devoluciones', icon: ArrowLeftRight  },
-  { href: '/finanzas/becas',       label: 'Becas',        icon: GraduationCap   },
   { href: '/finanzas/reportes',    label: 'Reportes',     icon: BarChart2       },
   { href: '/finanzas/solicitudes', label: 'Solicitudes',  icon: Inbox           },
 ]
@@ -148,9 +148,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     ...(can('folletos', 'view') ? [{ href: '/estudios/folletos', label: 'Folletos', icon: FileText }] : []),
   ]
   const finanzasSub: SubItem[] = [
-    ...FINANZAS_SUB.map(s => s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s),
+    // Suite completa de finanzas: solo con el módulo 'finanzas' (becas/revision_pagos
+    // solas NO destapan donaciones/pagos/devoluciones/reportes/solicitudes).
+    ...(can('finanzas', 'view')
+      ? FINANZAS_SUB.map(s => s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s)
+      : []),
     // Revisión de pagos: quienes tienen el permiso revision_pagos (dentro de Finanzas).
     ...(can('revision_pagos', 'view') ? [{ href: '/pagos/revision', label: 'Revisión de pagos', icon: CreditCard }] : []),
+    // Becas: quienes tienen el permiso becas (dentro de Finanzas, aunque no tengan el módulo completo).
+    ...(can('becas', 'view') ? [{ href: '/finanzas/becas', label: 'Becas', icon: GraduationCap }] : []),
   ]
 
   // Mantenimiento de áreas/comités/puestos: solo para roles de admin de servidores.
@@ -171,6 +177,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/notificaciones', label: 'Notificaciones', icon: Bell,            subs: [],                 module: null, badge: unreadNotifs },
     { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros', summaryLabel: 'Buscar miembros' },
     { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
+    // module: null → visible para cualquier autenticado (como Dashboard/Notificaciones).
+    // Cualquier miembro (staff o no) puede querer inscribirse a un evento personal;
+    // no cae bajo /eventos a propósito, para no exponerle el módulo de gestión.
+    { href: '/mis-eventos',    label: 'Inscripción a eventos', icon: CalendarCheck, subs: [], module: null },
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: EVENTOS_SUB,        module: 'eventos' },
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
     { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores' },
@@ -186,7 +196,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const NAV = ALL_NAV.filter(m => {
     if (!m.module) return true
     if (m.href === '/estudios') return can('estudios', 'view') || can('folletos', 'view')
-    if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view')
+    if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view')
     if (m.href === '/miembros') return can('miembros', 'view') && getScope('miembros') !== 'own'
     return can(m.module, 'view')
   })

@@ -78,6 +78,13 @@ export type Member = {
   roles: MemberRole[]
   completed_studies: string[]
   study_history?: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number }>
+  /** Inscripciones a eventos con pago (comprobante). Solo viene del detalle. */
+  event_registration_history?: Array<{
+    registration_id: string; event_id: string; event_name: string; event_date: string
+    requires_payment: boolean; cost: number
+    payment_status: 'pending' | 'paid' | 'exempted' | 'expired'
+    review_status: string | null
+  }>
   current_study: string | null
   current_study_week?: number | null
   sede: string

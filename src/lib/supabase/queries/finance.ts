@@ -57,26 +57,6 @@ export type DbRefund = {
   processed_by: string | null
 }
 
-export type DbScholarship = {
-  id: string
-  member_id: string
-  member: { first_name: string; last_name: string } | null
-  entity_type: 'study_group' | 'event' | null
-  study_group_id: string | null
-  event_id: string | null
-  study_group: GroupRef
-  event: EventRef
-  discount_type: 'percentage' | 'fixed' | null
-  discount_value: number | null
-  original_amount: number | null
-  final_amount: number | null
-  is_used: boolean
-  used_at: string | null
-  created_by: string | null
-  created_at: string
-  notes: string | null
-}
-
 export type DbImportBatch = {
   id: string
   filename: string
@@ -256,22 +236,6 @@ export async function getRefunds(): Promise<DbRefund[]> {
   return (data ?? []) as DbRefund[]
 }
 
-export async function getScholarships(): Promise<DbScholarship[]> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('scholarships')
-    .select(`
-      id, member_id, entity_type, study_group_id, event_id, discount_type, discount_value,
-      original_amount, final_amount, is_used, used_at, created_by, created_at, notes,
-      member:members(first_name, last_name),
-      study_group:study_groups(name),
-      event:events(title)
-    `)
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return (data ?? []) as DbScholarship[]
-}
-
 export async function getImportBatches(): Promise<DbImportBatch[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
@@ -325,57 +289,6 @@ export async function confirmSinpePayment(
     .eq('id', id)
     .eq('status', 'pending')
     .eq('payment_method', 'sinpe')
-    .select('id')
-  if (error) throw error
-  return (data ?? []).length > 0
-}
-
-export type ScholarshipWriteInput = {
-  member_id: string
-  entity_type?: 'study_group' | 'event' | null
-  study_group_id?: string | null
-  event_id?: string | null
-  discount_type: 'percentage' | 'fixed'
-  discount_value: number
-  original_amount: number
-  final_amount: number
-  reason?: string | null
-  notes?: string | null
-  created_by?: string | null
-}
-
-export async function createScholarship(input: ScholarshipWriteInput): Promise<{ id: string }> {
-  const supabase = createAdminClient()
-  // scholarships.amount y reason son NOT NULL en el esquema original.
-  const row = {
-    ...input,
-    amount: input.original_amount - input.final_amount,
-    reason: input.reason ?? input.notes ?? 'Beca',
-    status: 'approved' as const,
-  }
-  const { data, error } = await supabase.from('scholarships').insert(row).select('id').single()
-  if (error) throw error
-  return data as { id: string }
-}
-
-export async function markScholarshipUsed(id: string): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase
-    .from('scholarships')
-    .update({ is_used: true, used_at: new Date().toISOString() })
-    .eq('id', id)
-  if (error) throw error
-}
-
-/** Revoca (borra) una beca SIN usar. Una beca ya aplicada a un pago no se
- *  revoca — el descuento ya ocurrió. Devuelve false si no había fila sin usar. */
-export async function revokeScholarship(id: string): Promise<boolean> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('scholarships')
-    .delete()
-    .eq('id', id)
-    .eq('is_used', false)
     .select('id')
   if (error) throw error
   return (data ?? []).length > 0

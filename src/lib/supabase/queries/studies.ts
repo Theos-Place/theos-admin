@@ -61,7 +61,7 @@ export type DbGroupEnriched = {
   age_max: number | null
   enrollments: Array<{
     member_id: string
-    status: 'enrolled' | 'waitlist' | 'completed' | 'dropped' | 'transferred'
+    status: 'enrolled' | 'waitlist' | 'completed' | 'dropped' | 'transferred' | 'pendiente_de_pago' | 'expirada'
     grade: number | null
     /** Resultado del cierre: 'aprobado' o 'reprobado: <motivo>'. */
     notes: string | null
@@ -164,8 +164,8 @@ function toListItem(g: RawListGroup): DbGroupListItem {
     // tenga inscripción en su propio grupo.
     if (e.member_id === g.leader_id || e.member_id === g.co_leader_id) continue
     if (e.status === 'enrolled' || e.status === 'completed') counts.enrolled++
-    else if (e.status === 'waitlist') counts.pending++
-    else counts.withdrawn++ // dropped | transferred
+    else if (e.status === 'waitlist' || e.status === 'pendiente_de_pago') counts.pending++
+    else counts.withdrawn++ // dropped | transferred | expirada
   }
   const { enrollments: _omit, ...rest } = g
   return { ...rest, enrollment_counts: counts }
@@ -855,13 +855,16 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
 }
 
 // Inscripciones
-export async function enrollMember(groupId: string, memberId: string): Promise<void> {
+export async function enrollMember(
+  groupId: string, memberId: string,
+  scholarshipInput?: { scholarship_id?: string; coupon_code?: string },
+): Promise<{ status: 'enrolled' | 'pendiente_de_pago'; enrollment_id: string; amount: number }> {
   const supabase = createAdminClient()
   const { data: g } = await supabase
     .from('study_groups')
-    .select('plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation)')
+    .select('plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation, cost, requires_payment)')
     .eq('id', groupId).maybeSingle()
-  const plan = (g as { plan: { id: string; requires_invitation: boolean | null } | null } | null)?.plan
+  const plan = (g as { plan: { id: string; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null)?.plan
   // Guard: si ya existe una matrícula 'pendiente_de_pago' para este plan
   // (auto-matrícula al cerrar el nivel anterior), inscribirse a un grupo la
   // saltaría creando una matrícula activa sin pagar. El camino correcto es
@@ -902,10 +905,49 @@ export async function enrollMember(groupId: string, memberId: string): Promise<v
   const existingStatus = (existing as { status: string } | null)?.status
   if (existingStatus === 'completed') throw new Error('YA_COMPLETADO')
   if (existingStatus === 'pendiente_de_pago') throw new Error('PAGO_PENDIENTE')
-  const { error } = await supabase
+
+  // Costo real: sale siempre del plan (study_groups no tiene columnas propias
+  // de costo). Cualquier matrícula con costo queda pendiente de comprobante,
+  // sin importar si la hace el propio miembro o el staff.
+  const amount = Number(plan?.cost ?? 0)
+  const requiresPayment = !!plan?.requires_payment && amount > 0
+
+  // Beca/cupón (opcional): recalcula el monto ANTES de decidir el estado. Se
+  // resuelve incluso si el resultado queda en 0 — la matrícula gratis por beca
+  // igual consume el uso (registrar que se usó, sin importar el residual).
+  let finalAmount = amount
+  let appliedScholarship: { id: string; kind: 'asignada' | 'generica' } | null = null
+  if (requiresPayment && scholarshipInput && (scholarshipInput.scholarship_id || scholarshipInput.coupon_code) && plan?.id) {
+    const { resolveScholarshipForApplication, computeDiscountedAmount } = await import('./scholarships')
+    const resolved = await resolveScholarshipForApplication(memberId, 'study_plan', plan.id, scholarshipInput)
+    finalAmount = computeDiscountedAmount(amount, resolved.discount_type, resolved.discount_value)
+    appliedScholarship = { id: resolved.id, kind: resolved.kind }
+  }
+  const requiresPaymentFinal = requiresPayment && finalAmount > 0
+  const status = requiresPaymentFinal ? 'pendiente_de_pago' : 'enrolled'
+
+  const { data: enr, error } = await supabase
     .from('study_enrollments')
-    .upsert({ group_id: groupId, member_id: memberId, status: 'enrolled' }, { onConflict: 'group_id,member_id' })
+    .upsert({ group_id: groupId, member_id: memberId, status }, { onConflict: 'group_id,member_id' })
+    .select('id').single()
   if (error) throw error
+  const enrollmentId = (enr as { id: string }).id
+
+  if (requiresPaymentFinal) {
+    // Pago pendiente sin comprobante todavía (mismo patrón que
+    // autoEnrollApprovedToNextLevel) — se completa cuando suba el comprobante.
+    await supabase.from('payments').insert({
+      member_id: memberId, amount: finalAmount, currency: 'CRC', payment_method: 'comprobante',
+      concept: 'matricula', enrollment_id: enrollmentId,
+      study_group_id: groupId, entity_type: 'study_group', status: 'pending',
+      scholarship_id: appliedScholarship?.id ?? null,
+    })
+  }
+  if (appliedScholarship) {
+    const { consumeScholarship } = await import('./scholarships')
+    await consumeScholarship(appliedScholarship, memberId, finalAmount, { enrollmentId })
+  }
+
   // Consumir invitación/excepción activa del plan del grupo al matricularse.
   if (plan?.id) {
     if (plan.requires_invitation) {
@@ -916,6 +958,8 @@ export async function enrollMember(groupId: string, memberId: string): Promise<v
     const { markExceptionUsed } = await import('./study-exceptions')
     await markExceptionUsed(memberId, plan.id)
   }
+
+  return { status, enrollment_id: enrollmentId, amount: finalAmount }
 }
 
 /** Retira una inscripción ACTIVA (enrolled/pendiente_de_pago/waitlist).
@@ -1005,4 +1049,46 @@ export async function updateLeader(id: string, patch: Partial<LeaderWriteInput>)
   const supabase = createAdminClient()
   const { error } = await supabase.from('study_leaders').update(patch).eq('id', id)
   if (error) throw error
+}
+
+/** Libera cupos "atascados": matrículas pendientes de pago con comprobante
+ *  rechazado hace más de 72h que no resubieron. Para el cron de expiración
+ *  (espejo de expirePendingEventRegistrations en events.ts). */
+export async function expirePendingStudyEnrollments(): Promise<{ expired: number }> {
+  const supabase = createAdminClient()
+  const cutoff = new Date(Date.now() - 72 * 3600 * 1000).toISOString()
+
+  const { data: candidates } = await supabase
+    .from('payments')
+    .select('enrollment_id')
+    .eq('concept', 'matricula').eq('review_status', 'rechazado')
+    .lt('reviewed_at', cutoff)
+    .not('enrollment_id', 'is', null)
+  const enrollmentIds = [...new Set(
+    (candidates ?? [])
+      .map((p: { enrollment_id: string | null }) => p.enrollment_id)
+      .filter((eid): eid is string => !!eid),
+  )]
+  if (enrollmentIds.length === 0) return { expired: 0 }
+
+  // Excluir las que ya tienen un comprobante MÁS NUEVO en revisión (resubieron a tiempo).
+  const { data: reReviewed } = await supabase
+    .from('payments').select('enrollment_id')
+    .in('enrollment_id', enrollmentIds).eq('review_status', 'en_revision')
+  const reReviewedIds = new Set(
+    (reReviewed ?? [])
+      .map((r: { enrollment_id: string | null }) => r.enrollment_id)
+      .filter((eid): eid is string => !!eid),
+  )
+  const stillPending = enrollmentIds.filter(id => !reReviewedIds.has(id))
+  if (stillPending.length === 0) return { expired: 0 }
+
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .update({ status: 'expirada' })
+    .in('id', stillPending)
+    .eq('status', 'pendiente_de_pago')
+    .select('id')
+  if (error) throw error
+  return { expired: (data ?? []).length }
 }

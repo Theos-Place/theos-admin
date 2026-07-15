@@ -31,8 +31,14 @@ type GroupRow = {
   enrollments: Array<{ status: string; member: { first_name: string | null; last_name: string | null } | null }>
 }
 
-/** Envía matricula_estudiante (al alumno) y matricula_dirigente (a cada dirigente). */
-export async function notifyEnrollment(groupId: string, memberId: string): Promise<void> {
+/** Envía matricula_estudiante (al alumno) y matricula_dirigente (a cada dirigente).
+ *  Si la matrícula quedó 'pendiente_de_pago' (tiene costo, sin comprobante
+ *  aún), NO se avisa todavía — sería anunciar "ya estás matriculado" cuando no
+ *  es cierto; el aviso real llega cuando se aprueba el pago (in-app). */
+export async function notifyEnrollment(
+  groupId: string, memberId: string, status: 'enrolled' | 'pendiente_de_pago' = 'enrolled',
+): Promise<void> {
+  if (status === 'pendiente_de_pago') return
   try {
     const supabase = createAdminClient()
     const [{ data: g }, { data: m }] = await Promise.all([

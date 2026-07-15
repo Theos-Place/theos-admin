@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { enrollMember, withdrawMember, setEnrollmentGrade } from '@/lib/supabase/queries/studies'
 import { notifyEnrollment } from '@/lib/email/enrollment-notify'
+import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
 
-// POST: inscribe un miembro. Body: { member_id }
+// POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
+// Autoservicio real: cualquier autenticado puede matricularse a sí mismo; el
+// staff (STUDY_ADMIN_ROLES) puede matricular a otro pasando su member_id
+// (anti-suplantación vía resolveTargetMemberId).
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    const auth = await requireRoles() // solo exige sesión; quién matricula A OTROS se resuelve abajo
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    const { member_id } = await req.json()
-    await enrollMember(id, member_id)
+    const { member_id, scholarship_id, coupon_code } = await req.json()
+    const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
+    if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
+    const result = await enrollMember(id, targetMemberId, { scholarship_id, coupon_code })
     // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
-    await notifyEnrollment(id, member_id)
-    return NextResponse.json({ ok: true }, { status: 201 })
+    await notifyEnrollment(id, targetMemberId, result.status)
+    return NextResponse.json({ ok: true, ...result }, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_COMPLETADO') {
       return NextResponse.json(
@@ -30,6 +37,8 @@ export async function POST(
         { status: 409 },
       )
     }
+    const scholarshipRes = scholarshipErrorResponse(error)
+    if (scholarshipRes) return scholarshipRes
     console.error('POST enrollments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

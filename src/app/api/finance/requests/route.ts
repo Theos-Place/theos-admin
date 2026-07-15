@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView, resolveTargetMemberId } from '@/lib/auth/guard'
 import {
   getFinanceRequests, countOpenFinanceRequests, createFinanceRequest, notifyFinanceRolesOfRequest,
 } from '@/lib/supabase/queries/finance-requests'
@@ -8,12 +8,23 @@ import type { FinanceRequestStatus, FinanceRequestType } from '@/types/finance'
 const TYPES = new Set(['scholarship', 'refund'])
 const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
 
-// GET: lista (solo finanzas/admin). ?count=open devuelve solo el conteo.
+// GET: el propio perfil se consulta sin permiso extra (?member_id=propio, p.ej.
+// "Mis becas"); cualquier otra consulta exige módulo finanzas o becas (según
+// pantalla: /finanzas/solicitudes ve todo, /finanzas/becas solo scholarship).
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles('finanzas')
+    const auth = await requireRoles() // solo exige sesión
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
+    const memberIdParam = searchParams.get('member_id')
+    const isOwnProfile = !!memberIdParam && memberIdParam === auth.ctx.memberId
+    if (!isOwnProfile) {
+      const finanzas = await requireModuleView('finanzas')
+      if (finanzas.res) {
+        const becas = await requireModuleView('becas')
+        if (becas.res) return becas.res
+      }
+    }
     if (searchParams.get('count') === 'open') {
       return NextResponse.json({ count: await countOpenFinanceRequests() })
     }
@@ -55,6 +66,18 @@ export async function POST(req: NextRequest) {
     if (body.request_type === 'refund' && !body.payment_id) {
       return NextResponse.json({ error: 'Se requiere el pago a devolver' }, { status: 400 })
     }
+    if (body.request_type === 'scholarship') {
+      const entityType = body.entity_type
+      if (entityType !== 'study_plan' && entityType !== 'event') {
+        return NextResponse.json({ error: 'Se requiere indicar si es para un estudio o un evento' }, { status: 400 })
+      }
+      if (entityType === 'study_plan' && !body.plan_id) {
+        return NextResponse.json({ error: 'Se requiere el estudio' }, { status: 400 })
+      }
+      if (entityType === 'event' && !body.event_id) {
+        return NextResponse.json({ error: 'Se requiere el evento' }, { status: 400 })
+      }
+    }
 
     const request = await createFinanceRequest({
       member_id: memberId,
@@ -63,6 +86,9 @@ export async function POST(req: NextRequest) {
       payment_id: body.payment_id ?? null,
       amount: typeof body.amount === 'number' && body.amount > 0 ? body.amount : null,
       reason,
+      entity_type: body.request_type === 'scholarship' ? body.entity_type : null,
+      plan_id: body.plan_id ?? null,
+      event_id: body.event_id ?? null,
     })
 
     try { await notifyFinanceRolesOfRequest(request) } catch (e) {

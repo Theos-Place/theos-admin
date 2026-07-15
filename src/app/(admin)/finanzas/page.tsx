@@ -62,7 +62,7 @@ export default function FinanzasPage() {
     const d = new Date(p.created_at)
     return (now.getTime() - d.getTime()) < 7 * 24 * 60 * 60 * 1000
   })
-  const unusedScholarships = scholarships.filter(s => !s.is_used).length
+  const unusedScholarships = scholarships.filter(s => s.status === 'active').length
 
   const recentPayments = [...payments]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())

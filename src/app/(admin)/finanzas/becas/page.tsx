@@ -1,312 +1,435 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import { GraduationCap, Plus, Check, AlertTriangle } from 'lucide-react'
+import { GraduationCap, Plus, Loader2, AlertTriangle } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
+import { useRowSelection } from '@/hooks/useRowSelection'
+import { BulkActionBar } from '@/components/shared/BulkActionBar'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { ErrorState } from '@/components/shared/ErrorState'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
-import { FilterChips } from '@/components/shared/FilterChips'
-import { FinanceGuard } from '@/components/finance/FinanceGuard'
-import { AmountDisplay } from '@/components/finance/AmountDisplay'
-import { type Scholarship } from '@/types/finance'
-import { useFinance } from '@/hooks/useFinance'
-import { TOAST_MS } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
+import type { FinanceRequest } from '@/types/finance'
+
+type Scholarship = {
+  id: string
+  kind: 'asignada' | 'generica'
+  member_id: string | null
+  member_name: string | null
+  entity_type: 'study_plan' | 'event'
+  entity_name: string
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  code: string | null
+  expires_at: string | null
+  approval_type: 'total' | 'parcial' | null
+  status: 'active' | 'used' | 'revoked'
+  used_count: number
+  created_at: string
+}
+
+function formatDiscount(type: 'percentage' | 'fixed', value: number): string {
+  return type === 'percentage' ? `${value}%` : `₡${value.toLocaleString('es-CR')}`
+}
+
+const STATUS_LABEL: Record<string, string> = { active: 'Activa', used: 'Usada', revoked: 'Revocada' }
+const STATUS_BADGE: Record<string, string> = {
+  active: 'bg-teal-soft/30 text-teal-deep', used: 'bg-navy/10 text-navy', revoked: 'bg-coral-soft/20 text-coral',
+}
 
 export default function BecasPage() {
-  const { scholarships: allScholarships, error, refetch, loading } = useFinance('scholarships')
-  const [scholarships, setScholarships] = useState<Scholarship[]>([])
-  useEffect(() => { setScholarships(allScholarships) }, [allScholarships])
-  const [typeFilter, setTypeFilter] = useState<'all' | 'percentage' | 'fixed'>('all')
-  const [entityFilter, setEntityFilter] = useState<'all' | 'event' | 'study_group'>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unused' | 'used'>('all')
-  const [confirmRevoke, setConfirmRevoke] = useState<Scholarship | null>(null)
+  const { can } = usePermissions()
+  const canView = can('becas', 'view')
+  const canEdit = can('becas', 'edit')
   const toast = useToast()
 
-  const activeCount = scholarships.filter(s => !s.is_used).length
-  const usedCount = scholarships.filter(s => s.is_used).length
-  const totalDiscounted = scholarships
-    .filter(s => s.is_used)
-    .reduce((sum, s) => sum + (s.original_amount - s.final_amount), 0)
+  const [tab, setTab] = useState<'cupones' | 'solicitudes'>('cupones')
 
-  const filtered = useMemo(() => {
-    return scholarships.filter(s => {
-      const matchType = typeFilter === 'all' || s.discount_type === typeFilter
-      const matchEntity = entityFilter === 'all' || s.entity_type === entityFilter
-      const matchStatus = statusFilter === 'all' || (statusFilter === 'unused' ? !s.is_used : s.is_used)
-      return matchType && matchEntity && matchStatus
-    })
-  }, [scholarships, typeFilter, entityFilter, statusFilter])
+  // ── Cupones/becas ────────────────────────────────────────────────────────
+  const [coupons, setCoupons] = useState<Scholarship[]>([])
+  const [couponsLoading, setCouponsLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'used' | 'revoked'>('all')
 
-  const [revoking, setRevoking] = useState(false)
-  async function handleRevoke(s: Scholarship) {
-    if (revoking) return
-    setRevoking(true)
+  const refetchCoupons = useCallback(() => {
+    setCouponsLoading(true)
+    fetch('/api/scholarships/coupons?kind=generica')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(d => setCoupons(d?.items ?? []))
+      .catch(() => setCoupons([]))
+      .finally(() => setCouponsLoading(false))
+  }, [])
+  useEffect(() => { if (canView && tab === 'cupones') refetchCoupons() }, [canView, tab, refetchCoupons])
+
+  const filteredCoupons = useMemo(
+    () => (statusFilter === 'all' ? coupons : coupons.filter(c => c.status === statusFilter)),
+    [coupons, statusFilter],
+  )
+  const sel = useRowSelection(filteredCoupons.filter(c => c.status === 'active').map(c => c.id))
+
+  const [confirmRevoke, setConfirmRevoke] = useState<Scholarship | null>(null)
+  const [warnUsed, setWarnUsed] = useState<Scholarship | null>(null)
+  const [bulkRevoking, setBulkRevoking] = useState(false)
+
+  function requestRevoke(c: Scholarship) {
+    if (c.used_count > 0) { setWarnUsed(c); return }
+    setConfirmRevoke(c)
+  }
+  async function doRevoke() {
+    if (!confirmRevoke) return
+    const res = await fetch(`/api/scholarships/${confirmRevoke.id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const d = await res.json().catch(() => null)
+      toast(d?.error ?? 'No se pudo revocar.', 'error')
+    } else {
+      toast('Cupón revocado.', 'success')
+      refetchCoupons()
+    }
+    setConfirmRevoke(null)
+  }
+  async function bulkRevoke() {
+    setBulkRevoking(true)
+    let ok = 0, failed = 0
+    for (const id of sel.selectedIds) {
+      const res = await fetch(`/api/scholarships/${id}`, { method: 'DELETE' })
+      if (res.ok) ok++; else failed++
+    }
+    toast(failed > 0 ? `${ok} revocados, ${failed} no se pudieron revocar.` : `${ok} cupones revocados.`, failed > 0 ? 'error' : 'success')
+    sel.clear()
+    setBulkRevoking(false)
+    refetchCoupons()
+  }
+
+  // ── Solicitudes de beca ──────────────────────────────────────────────────
+  const [requests, setRequests] = useState<FinanceRequest[]>([])
+  const [requestsLoading, setRequestsLoading] = useState(true)
+  const refetchRequests = useCallback(() => {
+    setRequestsLoading(true)
+    fetch('/api/finance/requests?type=scholarship')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then((d: FinanceRequest[]) => setRequests(Array.isArray(d) ? d : []))
+      .catch(() => setRequests([]))
+      .finally(() => setRequestsLoading(false))
+  }, [])
+  useEffect(() => { if (canView && tab === 'solicitudes') refetchRequests() }, [canView, tab, refetchRequests])
+
+  const [reviewTarget, setReviewTarget] = useState<FinanceRequest | null>(null)
+
+  if (!canView) return <AccessDenied />
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 shadow-[var(--shadow-md)]">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+              <GraduationCap size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Becas</h1>
+              <p className="mt-0.5 text-sm text-white/70 font-body">Cupones genéricos y solicitudes asignadas</p>
+            </div>
+          </div>
+          {canEdit && tab === 'cupones' && (
+            <Link
+              href="/finanzas/becas/nueva"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            >
+              <Plus size={15} /> Crear cupón
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {([['cupones', 'Cupones genéricos'], ['solicitudes', 'Solicitudes asignadas']] as const).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={cn(
+              'rounded-full px-4 py-2 text-[13px] font-medium border transition-all font-display',
+              tab === id ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'cupones' && (
+        <>
+          <div className="flex items-center gap-2 flex-wrap">
+            {([['all', 'Todos'], ['active', 'Activos'], ['used', 'Usados'], ['revoked', 'Revocados']] as const).map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setStatusFilter(id)}
+                className={cn(
+                  'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
+                  statusFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {canEdit && sel.count > 0 && (
+            <BulkActionBar count={sel.count} onClear={sel.clear} noun="cupones">
+              <button
+                onClick={bulkRevoke}
+                disabled={bulkRevoking}
+                className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[12px] hover:bg-white/10 transition-colors font-body disabled:opacity-50"
+              >
+                {bulkRevoking ? 'Revocando…' : 'Revocar seleccionados'}
+              </button>
+            </BulkActionBar>
+          )}
+
+          <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            {couponsLoading ? (
+              <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+            ) : filteredCoupons.length === 0 ? (
+              <EmptyState icon={GraduationCap} title="No hay cupones" />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr>
+                      {canEdit && (
+                        <th className="px-4 py-3 text-left">
+                          <input type="checkbox" aria-label="Seleccionar todos" checked={sel.allSelected}
+                            ref={el => { if (el) el.indeterminate = sel.someSelected }} onChange={sel.toggleAll} />
+                        </th>
+                      )}
+                      {['Código', 'Destino', 'Descuento', 'Vencimiento', 'Usos', 'Estado', ''].map(h => (
+                        <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCoupons.map((c, idx) => (
+                      <tr key={c.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
+                        {canEdit && (
+                          <td className="px-4 py-3">
+                            {c.status === 'active' && (
+                              <input type="checkbox" aria-label={`Seleccionar ${c.code}`} checked={sel.isSelected(c.id)} onChange={() => sel.toggle(c.id)} />
+                            )}
+                          </td>
+                        )}
+                        <td className="px-4 py-3 text-sm font-mono font-medium text-navy">{c.code}</td>
+                        <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{c.entity_name}</td>
+                        <td className="px-4 py-3 text-sm text-navy font-body">{formatDiscount(c.discount_type, c.discount_value)}</td>
+                        <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.expires_at ? formatDate(c.expires_at) : '—'}</td>
+                        <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.used_count}</td>
+                        <td className="px-4 py-3">
+                          <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', STATUS_BADGE[c.status])}>{STATUS_LABEL[c.status]}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {canEdit && c.status === 'active' && (
+                            <button
+                              onClick={() => requestRevoke(c)}
+                              className="rounded-full border border-coral/40 text-coral px-3 py-1 text-[12px] hover:bg-coral/5 transition-colors font-body"
+                            >
+                              Revocar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {tab === 'solicitudes' && (
+        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+          {requestsLoading ? (
+            <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+          ) : requests.length === 0 ? (
+            <EmptyState icon={GraduationCap} title="No hay solicitudes de beca" />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    {['Persona', 'Destino', 'Motivo', 'Estado', ''].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map((r, idx) => (
+                    <tr key={r.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
+                      <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.member_name}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.entity_name ?? '—'}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body max-w-xs truncate" title={r.reason}>{r.reason}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
+                          r.status === 'resolved' ? 'bg-teal-soft/30 text-teal-deep'
+                          : r.status === 'rejected' ? 'bg-coral-soft/20 text-coral'
+                          : 'bg-amber-50 text-amber-700')}>
+                          {r.status === 'open' ? 'Abierta' : r.status === 'in_review' ? 'En revisión' : r.status === 'resolved' ? 'Aprobada' : 'Rechazada'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {canEdit && (r.status === 'open' || r.status === 'in_review') && (
+                          <button
+                            onClick={() => setReviewTarget(r)}
+                            className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity font-body"
+                          >
+                            Revisar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      <DeleteConfirmModal
+        open={!!confirmRevoke}
+        title="Revocar cupón"
+        description={`Se revocará el cupón "${confirmRevoke?.code}". Esta acción no se puede deshacer.`}
+        onConfirm={doRevoke}
+        onCancel={() => setConfirmRevoke(null)}
+      />
+      <ActiveWarningModal
+        open={!!warnUsed}
+        title="No se puede revocar"
+        message={`El cupón "${warnUsed?.code}" ya fue usado ${warnUsed?.used_count} vez/veces. No se puede revocar un cupón con usos registrados.`}
+        onClose={() => setWarnUsed(null)}
+      />
+
+      {reviewTarget && (
+        <ReviewRequestModal
+          request={reviewTarget}
+          onClose={() => setReviewTarget(null)}
+          onDone={() => { setReviewTarget(null); refetchRequests() }}
+        />
+      )}
+    </div>
+  )
+}
+
+function ReviewRequestModal({ request, onClose, onDone }: {
+  request: FinanceRequest; onClose: () => void; onDone: () => void
+}) {
+  const toast = useToast()
+  const [action, setAction] = useState<'approve_total' | 'approve_parcial' | 'reject' | null>(null)
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
+  const [discountValue, setDiscountValue] = useState('')
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function submit() {
+    if (busy || !action) return
+    setBusy(true)
     try {
-      const res = await fetch(`/api/finance/scholarships/${s.id}`, { method: 'DELETE' })
-      if (!res.ok) {
-        const d = await res.json().catch(() => null)
-        throw new Error(d?.error)
-      }
-      setScholarships(prev => prev.filter(sc => sc.id !== s.id))
-      toast(`Beca revocada para ${s.member_name}`, 'success')
+      const body = action === 'reject'
+        ? { action: 'reject', reason: reason.trim() }
+        : { action: 'approve', discount_type: discountType, discount_value: Number(discountValue), approval_type: action === 'approve_parcial' ? 'parcial' : 'total' }
+      const res = await fetch(`/api/scholarships/requests/${request.id}/review`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo procesar la solicitud.')
+      toast('Solicitud procesada.', 'success')
+      onDone()
     } catch (e) {
-      toast(e instanceof Error && e.message ? e.message : 'No se pudo revocar la beca', 'error')
+      toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
     } finally {
-      setRevoking(false)
-      setConfirmRevoke(null)
+      setBusy(false)
     }
   }
 
   return (
-    <FinanceGuard>
-      <div className="space-y-6">
+    <Modal onClose={() => !busy && onClose()} titleId="review-request-title" width={460}>
+      <div className="p-6 space-y-4">
+        <h3 id="review-request-title" className="text-base font-bold text-navy font-display">Revisar solicitud de beca</h3>
+        <p className="text-sm text-navy-light/70 font-body">
+          <strong className="text-navy">{request.member_name}</strong> solicitó una beca para <strong className="text-navy">{request.entity_name ?? '—'}</strong>.
+        </p>
+        <p className="text-[13px] text-navy-light/70 font-body italic">"{request.reason}"</p>
 
-        {/* Header */}
-        <div
-          className="rounded-2xl px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-navy shadow-[var(--shadow-md)]"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(255,255,255,0.10)]">
-              <GraduationCap size={20} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
-                Becas y cupones
-              </h1>
-              <p className="text-[12px] text-white/70 mt-0.5 font-body">
-                Descuentos y apoyos económicos
-              </p>
-            </div>
+        {!action && (
+          <div className="grid grid-cols-1 gap-2 pt-1">
+            <button onClick={() => setAction('approve_total')} className="rounded-xl bg-teal-deep px-4 py-2.5 text-sm text-white hover:opacity-90 transition-opacity font-body">Aprobar total</button>
+            <button onClick={() => setAction('approve_parcial')} className="rounded-xl border border-teal-deep text-teal-deep px-4 py-2.5 text-sm hover:bg-teal-deep/5 transition-colors font-body">Aprobar parcial</button>
+            <button onClick={() => setAction('reject')} className="rounded-xl border border-coral/40 text-coral px-4 py-2.5 text-sm hover:bg-coral/5 transition-colors font-body">Rechazar</button>
           </div>
-          <Link
-            href="/finanzas/becas/nueva"
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 self-start sm:self-auto bg-coral font-body shadow-[0_8px_24px_rgba(239,85,84,0.30)]"
-          >
-            <Plus size={15} />
-            Nueva beca
-          </Link>
-        </div>
+        )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Becas activas</p>
-            <p className="text-4xl font-extrabold font-display text-[#3DB97A]">{activeCount}</p>
-          </div>
-          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Usadas</p>
-            <p className="text-4xl font-extrabold font-display text-teal-deep">{usedCount}</p>
-          </div>
-          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Total descontado</p>
-            <p className="text-xl font-extrabold font-display text-navy">
-              <AmountDisplay amount={totalDiscounted} defaultHidden={false} />
-            </p>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3">
-          <FilterChips
-            ariaLabel="Filtrar por tipo de descuento"
-            activeKey={typeFilter}
-            onSelect={k => setTypeFilter(k as typeof typeFilter)}
-            chips={[
-              { key: 'all', label: 'Todos' },
-              { key: 'percentage', label: 'Porcentaje' },
-              { key: 'fixed', label: 'Monto fijo' },
-            ]}
-          />
-          <FilterChips
-            ariaLabel="Filtrar por entidad"
-            activeKey={entityFilter}
-            onSelect={k => setEntityFilter(k as typeof entityFilter)}
-            chips={[
-              { key: 'all', label: 'Todos' },
-              { key: 'event', label: 'Eventos' },
-              { key: 'study_group', label: 'Grupos' },
-            ]}
-          />
-          <FilterChips
-            ariaLabel="Filtrar por estado"
-            activeKey={statusFilter}
-            onSelect={k => setStatusFilter(k as typeof statusFilter)}
-            chips={[
-              { key: 'all', label: 'Todos' },
-              { key: 'unused', label: 'Sin usar' },
-              { key: 'used', label: 'Usada' },
-            ]}
-          />
-        </div>
-
-        {/* Table */}
-        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-[var(--outline-variant)]">
-                  {['Miembro', 'Entidad', 'Tipo descuento', 'Valor', 'Monto final', 'Estado', 'Creada por', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((s, i) => (
-                  <tr key={s.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
-                    <td className="px-5 py-4">
-                      <p className="text-[13px] font-medium font-body text-navy">{s.member_name}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="text-[13px] font-body text-navy">{s.entity_name}</p>
-                      <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
-                        {s.entity_type === 'event' ? 'Evento' : 'Grupo'}
-                      </p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-                        style={{ color: s.discount_type === 'percentage' ? '#519DA2' : '#3DB97A', background: s.discount_type === 'percentage' ? 'rgba(81,157,162,0.12)' : 'rgba(61,185,122,0.10)' }}>
-                        {s.discount_type === 'percentage' ? `${s.discount_value}%` : 'Monto fijo'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="text-[13px] font-medium font-body text-navy">
-                        {s.discount_type === 'percentage'
-                          ? `${s.discount_value}%`
-                          : `₡${s.discount_value.toLocaleString('es-CR')}`
-                        }
-                      </p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <AmountDisplay amount={s.final_amount} defaultHidden={false} />
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
-                        style={{ color: s.is_used ? '#519DA2' : '#3DB97A', background: s.is_used ? 'rgba(81,157,162,0.12)' : 'rgba(61,185,122,0.10)' }}>
-                        {s.is_used ? 'Usada' : 'Sin usar'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{s.created_by}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(s.created_at)}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        {!s.is_used && (
-                          <button
-                            onClick={() => setConfirmRevoke(s)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
-                          >
-                            Revocar
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={9}>
-                      {error
-                        ? <ErrorState message={error} onRetry={refetch} />
-                        : loading
-                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
-                          : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile: tarjetas */}
-          <ul className="md:hidden">
-            {filtered.map((s, i) => (
-              <li
-                key={s.id}
-                className="px-4 py-3 space-y-2.5"
-                style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-medium font-body text-navy truncate">{s.member_name}</p>
-                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{s.entity_name}</p>
-                    <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">
-                      {s.discount_type === 'percentage' ? `${s.discount_value}%` : `₡${s.discount_value.toLocaleString('es-CR')}`}
-                      {' · '}{formatDate(s.created_at)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <p className="text-[13px] font-medium font-body text-navy">
-                      <AmountDisplay amount={s.final_amount} defaultHidden={false} />
-                    </p>
-                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
-                      style={{ color: s.is_used ? '#519DA2' : '#3DB97A', background: s.is_used ? 'rgba(81,157,162,0.12)' : 'rgba(61,185,122,0.10)' }}>
-                      {s.is_used ? 'Usada' : 'Sin usar'}
-                    </span>
-                  </div>
-                </div>
-                {!s.is_used && (
-                  <div className="flex">
-                    <button
-                      onClick={() => setConfirmRevoke(s)}
-                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
-                    >
-                      Revocar
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-            {filtered.length === 0 && (
-              <li>
-                {error
-                  ? <ErrorState message={error} onRetry={refetch} />
-                  : loading
-                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
-                          : <EmptyState icon={GraduationCap} title="No hay becas que coincidan con los filtros" />}
-              </li>
+        {(action === 'approve_total' || action === 'approve_parcial') && (
+          <div className="space-y-3">
+            {action === 'approve_parcial' && (
+              <div className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-amber-50 border border-amber-200">
+                <AlertTriangle size={14} className="text-amber-700 shrink-0 mt-0.5" />
+                <p className="text-[12px] text-amber-800 font-body">Estás marcando esta aprobación como <strong>parcial</strong> — el miembro recibirá el email correspondiente.</p>
+              </div>
             )}
-          </ul>
-        </div>
-      </div>
-
-      {/* Revoke confirm modal */}
-      {confirmRevoke && (
-        <Modal onClose={() => setConfirmRevoke(null)} titleId="revocar-beca" width={384}>
-          <div className="px-6 py-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-[rgba(239,85,84,0.10)]">
-                <AlertTriangle size={18} className="text-coral" />
-              </div>
-              <div>
-                <p id="revocar-beca" className="text-sm font-bold font-display text-navy">¿Revocar esta beca?</p>
-                <p className="text-[12px] font-body text-[rgba(22,20,64,0.60)]">Esta acción no se puede deshacer</p>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setDiscountType('percentage')}
+                className={cn('rounded-xl border px-3 py-2 text-[13px] font-body', discountType === 'percentage' ? 'border-coral bg-coral/5' : 'border-outline')}
+              >Porcentaje</button>
+              <button
+                onClick={() => setDiscountType('fixed')}
+                className={cn('rounded-xl border px-3 py-2 text-[13px] font-body', discountType === 'fixed' ? 'border-coral bg-coral/5' : 'border-outline')}
+              >Monto fijo</button>
             </div>
-            <p className="text-[13px] leading-relaxed font-body text-[rgba(22,20,64,0.70)]">
-              La beca de <strong>{confirmRevoke.member_name}</strong> para <strong>{confirmRevoke.entity_name}</strong> será eliminada.
-            </p>
+            <input
+              type="number" min={0} value={discountValue} onChange={e => setDiscountValue(e.target.value)}
+              placeholder={discountType === 'percentage' ? 'Ej. 50' : 'Ej. 10000'}
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+            />
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setAction(null)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Atrás</button>
+              <button
+                onClick={submit} disabled={busy || !discountValue || Number(discountValue) <= 0}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body bg-teal-deep hover:opacity-90', (busy || !discountValue) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busy ? 'Aprobando…' : `Aprobar ${action === 'approve_parcial' ? 'parcial' : 'total'}`}
+              </button>
+            </div>
           </div>
-          <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
-            <button onClick={() => setConfirmRevoke(null)}
-              className="flex-1 rounded-full border py-2.5 text-sm border-[var(--outline-variant)] font-body text-[rgba(22,20,64,0.70)]">
-              Cancelar
-            </button>
-            <button onClick={() => handleRevoke(confirmRevoke)}
-              className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body">
-              Revocar
-            </button>
-          </div>
-        </Modal>
-      )}
+        )}
 
-    </FinanceGuard>
+        {action === 'reject' && (
+          <div className="space-y-3">
+            <textarea
+              autoFocus value={reason} onChange={e => setReason(e.target.value)} rows={3}
+              placeholder="Motivo del rechazo (obligatorio)…" aria-label="Motivo del rechazo"
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
+            />
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setAction(null)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Atrás</button>
+              <button
+                onClick={submit} disabled={busy || !reason.trim()}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body bg-coral hover:bg-coral-deep', (busy || !reason.trim()) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busy ? 'Rechazando…' : 'Rechazar y avisar'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!action && (
+          <div className="flex justify-end pt-1">
+            <button onClick={onClose} className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors">Cerrar</button>
+          </div>
+        )}
+      </div>
+    </Modal>
   )
 }

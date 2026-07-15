@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type {
-  DbPayment, DbDonation, DbRefund, DbScholarship, DbImportBatch,
+  DbPayment, DbDonation, DbRefund, DbImportBatch,
 } from '@/lib/supabase/queries/finance'
 import {
-  toDomainPayment, toDomainDonation, toDomainRefund, toDomainScholarship, toDomainImportBatch,
+  toDomainPayment, toDomainDonation, toDomainRefund, toDomainImportBatch,
 } from '@/lib/finance/adapter'
-import type { Payment, Donation, Refund, Scholarship, ImportBatch } from '@/types/finance'
+import type { Payment, Donation, Refund, ImportBatch } from '@/types/finance'
+import type { Scholarship } from '@/lib/supabase/queries/scholarships'
 
 export type FinanceSlice = 'payments' | 'donations' | 'refunds' | 'scholarships' | 'importBatches'
 
@@ -36,7 +37,7 @@ export function useFinance(...slices: FinanceSlice[]) {
   const [dbPayments, setDbPayments]   = useState<DbPayment[]>([])
   const [dbDonations, setDbDonations] = useState<DbDonation[]>([])
   const [dbRefunds, setDbRefunds]     = useState<DbRefund[]>([])
-  const [dbScholar, setDbScholar]     = useState<DbScholarship[]>([])
+  const [dbScholar, setDbScholar]     = useState<Scholarship[]>([])
   const [dbBatches, setDbBatches]     = useState<DbImportBatch[]>([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState<string | null>(null)
@@ -60,7 +61,7 @@ export function useFinance(...slices: FinanceSlice[]) {
         if (slice === 'payments') setDbPayments(rows as DbPayment[])
         else if (slice === 'donations') setDbDonations(rows as DbDonation[])
         else if (slice === 'refunds') setDbRefunds(rows as DbRefund[])
-        else if (slice === 'scholarships') setDbScholar(rows as DbScholarship[])
+        else if (slice === 'scholarships') setDbScholar(rows as Scholarship[])
         else setDbBatches(rows as DbImportBatch[])
       }
     } catch (e) {
@@ -78,7 +79,7 @@ export function useFinance(...slices: FinanceSlice[]) {
   const payments: Payment[]         = useMemo(() => dbPayments.map(toDomainPayment), [dbPayments])
   const donations: Donation[]       = useMemo(() => dbDonations.map(toDomainDonation), [dbDonations])
   const refunds: Refund[]           = useMemo(() => dbRefunds.map(toDomainRefund), [dbRefunds])
-  const scholarships: Scholarship[] = useMemo(() => dbScholar.map(toDomainScholarship), [dbScholar])
+  const scholarships: Scholarship[] = dbScholar
   const importBatches: ImportBatch[] = useMemo(() => dbBatches.map(toDomainImportBatch), [dbBatches])
 
   return { payments, donations, refunds, scholarships, importBatches, loading, error, refetch }

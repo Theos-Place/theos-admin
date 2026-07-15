@@ -4,6 +4,7 @@
     { "path": "/api/cron/folleto-blocks", "schedule": "0 13 * * *" },
     { "path": "/api/studies/start-reminders", "schedule": "30 13 * * *" },
     { "path": "/api/notifications/leader-absence-check", "schedule": "0 14 * * *" },
-    { "path": "/api/cron/storage-orphans", "schedule": "0 15 * * 1" }
+    { "path": "/api/cron/storage-orphans", "schedule": "0 15 * * 1" },
+    { "path": "/api/cron/payment-holds-expire", "schedule": "0 16 * * *" }
   ]
 }

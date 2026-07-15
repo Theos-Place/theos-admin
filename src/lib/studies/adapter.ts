@@ -49,8 +49,8 @@ function mapParticipantStatus(
   s: DbGroupEnriched['enrollments'][number]['status'],
 ): GroupParticipant['status'] {
   if (s === 'enrolled' || s === 'completed') return 'enrolled'
-  if (s === 'waitlist') return 'pending'
-  return 'withdrawn' // dropped | transferred
+  if (s === 'waitlist' || s === 'pendiente_de_pago') return 'pending'
+  return 'withdrawn' // dropped | transferred | expirada
 }
 
 /** Entrada del adapter de grupos: detalle (enrollments completos) o item de

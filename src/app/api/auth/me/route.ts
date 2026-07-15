@@ -29,7 +29,7 @@ export async function GET() {
     if (!member) {
       // Usuario de auth sin member enlazado: sin acceso a módulos.
       return NextResponse.json({
-        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null },
+        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [] },
       })
     }
 
@@ -38,6 +38,20 @@ export async function GET() {
       .select('role')
       .eq('member_id', member.id)
       .eq('is_active', true)
+
+    // Ids de familia (mismo family_unit_id) — para que el cliente sepa qué
+    // perfiles puede ver además del propio (espejo de canViewMemberProfile).
+    const { data: ownUnits } = await admin
+      .from('family_members').select('family_unit_id').eq('member_id', member.id)
+    const unitIds = (ownUnits ?? []).map(r => (r as { family_unit_id: string }).family_unit_id)
+    let familyMemberIds: string[] = []
+    if (unitIds.length) {
+      const { data: shared } = await admin
+        .from('family_members').select('member_id').in('family_unit_id', unitIds)
+      familyMemberIds = [...new Set(
+        (shared ?? []).map(r => (r as { member_id: string }).member_id).filter(id => id !== member.id),
+      )]
+    }
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
     // por defecto (solo ve su propio perfil) si no tiene otros roles activos.
@@ -52,6 +66,7 @@ export async function GET() {
         roles,
         role: roles[0] ?? null,
         member_id: member.id,
+        family_member_ids: familyMemberIds,
       },
     })
   } catch (error) {
