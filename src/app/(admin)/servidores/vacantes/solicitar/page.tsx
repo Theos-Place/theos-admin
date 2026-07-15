@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Minus, Plus, ShoppingCart, Check, Info, Lock, Loader2 } from 'lucide-react'
+import { ChevronLeft, Minus, Plus, ShoppingCart, Check, Info, Lock, Loader2, FilePlus2 } from 'lucide-react'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import {
   isVacancyRequestWindowOpen,
@@ -363,6 +363,11 @@ function SolicitarVacantesContent() {
       </div>
 
       {error && <p className="text-sm text-coral font-body">{error}</p>}
+
+      <p className="text-[12px] text-navy-light/60 font-body flex items-center gap-1.5">
+        <FilePlus2 size={13} /> ¿No existe el puesto que buscás?{' '}
+        <Link href="/servidores/puestos/solicitar" className="text-coral hover:underline">Solicitalo acá</Link>.
+      </p>
     </div>
   )
 }
