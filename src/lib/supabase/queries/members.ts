@@ -584,6 +584,11 @@ export type UserAccessRow = {
   member_email: string
   member_initials: string
   roles: string[]
+  /** origen ('manual'|'automatico') de cada rol activo — para la UI de /accesos. */
+  role_origins: Record<string, 'manual' | 'automatico'>
+  /** Cantidad de puestos activos que respaldan cada rol automático (solo
+   *  presente para roles con origen 'automatico'). */
+  role_position_counts: Record<string, number>
   granted_by: string
   granted_at: string
   last_login: string | null
@@ -593,19 +598,30 @@ export type UserAccessRow = {
 /** Miembros que tienen al menos un rol asignado en member_roles (gestión de accesos). */
 export async function getUserAccess(): Promise<UserAccessRow[]> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('member_roles')
-    .select('member_id, role, is_active, granted_at, member:members!member_roles_member_id_fkey(first_name, last_name, email)')
-    .order('granted_at', { ascending: false })
+  const [{ data, error }, { data: grantsData }] = await Promise.all([
+    supabase
+      .from('member_roles')
+      .select('member_id, role, is_active, origen, granted_at, member:members!member_roles_member_id_fkey(first_name, last_name, email)')
+      .order('granted_at', { ascending: false }),
+    supabase.from('member_role_position_grants').select('member_id, role'),
+  ])
   if (error) throw error
 
   const rows = (data ?? []) as Array<{
     member_id: string
     role: string
     is_active: boolean
+    origen: string
     granted_at: string | null
     member: { first_name: string | null; last_name: string | null; email: string | null } | null
   }>
+
+  // Cantidad de puestos que respaldan cada (member_id, role).
+  const grantCounts = new Map<string, number>()
+  for (const g of (grantsData ?? []) as Array<{ member_id: string; role: string }>) {
+    const key = `${g.member_id}|${g.role}`
+    grantCounts.set(key, (grantCounts.get(key) ?? 0) + 1)
+  }
 
   const byMember = new Map<string, UserAccessRow>()
   for (const r of rows) {
@@ -621,6 +637,8 @@ export async function getUserAccess(): Promise<UserAccessRow[]> {
         member_email: r.member?.email ?? '',
         member_initials: initials,
         roles: [],
+        role_origins: {},
+        role_position_counts: {},
         granted_by: 'Sistema',
         granted_at: r.granted_at ?? new Date().toISOString(),
         last_login: null,
@@ -628,25 +646,33 @@ export async function getUserAccess(): Promise<UserAccessRow[]> {
       }
       byMember.set(r.member_id, entry)
     }
-    if (r.is_active && !entry.roles.includes(r.role)) entry.roles.push(r.role)
+    if (r.is_active && !entry.roles.includes(r.role)) {
+      entry.roles.push(r.role)
+      entry.role_origins[r.role] = r.origen === 'automatico' ? 'automatico' : 'manual'
+      const count = grantCounts.get(`${r.member_id}|${r.role}`) ?? 0
+      if (count > 0) entry.role_position_counts[r.role] = count
+    }
     if (r.is_active) entry.is_active = true
   }
   // Solo miembros con al menos un rol activo.
   return Array.from(byMember.values()).filter(u => u.roles.length > 0)
 }
 
-/** Asigna (o reactiva) un rol a un miembro en member_roles. */
+/** Asigna (o reactiva) un rol a un miembro en member_roles. Siempre queda como
+ *  origen 'manual' — es la vía explícita de /accesos; si el rol venía de un
+ *  puesto (automático), esta acción lo "adopta" como manual para que no se
+ *  retire solo si luego se libera el puesto que lo respaldaba. */
 export async function assignMemberRole(memberId: string, role: string): Promise<void> {
   const supabase = createAdminClient()
   const { data: existing } = await supabase
     .from('member_roles').select('id').eq('member_id', memberId).eq('role', role).maybeSingle()
   if (existing) {
     const { error } = await supabase.from('member_roles')
-      .update({ is_active: true, revoked_at: null }).eq('id', (existing as { id: string }).id)
+      .update({ is_active: true, revoked_at: null, origen: 'manual' }).eq('id', (existing as { id: string }).id)
     if (error) throw error
   } else {
     const { error } = await supabase.from('member_roles')
-      .insert({ member_id: memberId, role, is_active: true })
+      .insert({ member_id: memberId, role, is_active: true, origen: 'manual' })
     if (error) throw error
   }
 }

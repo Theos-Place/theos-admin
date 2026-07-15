@@ -41,6 +41,11 @@ export type UserAccess = {
   member_email: string
   member_initials: string
   roles: RoleId[]
+  /** origen ('manual'|'automatico') de cada rol activo — para mostrar de dónde
+   *  viene un rol (asignado a mano vs. otorgado por un puesto de servicio). */
+  role_origins?: Partial<Record<RoleId, 'manual' | 'automatico'>>
+  /** Cantidad de puestos activos que respaldan un rol automático. */
+  role_position_counts?: Partial<Record<RoleId, number>>
   granted_by: string
   granted_at: string
   last_login: string | null

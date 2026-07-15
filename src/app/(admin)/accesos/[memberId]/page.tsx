@@ -150,21 +150,39 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
             {displayRoles.map(rid => {
               const role = ROLES.find(r => r.id === rid)
               if (!role) return null
+              const isAutomatic = user.role_origins?.[rid] === 'automatico'
+              const positionCount = user.role_position_counts?.[rid] ?? 0
               return (
                 <div
                   key={rid}
                   className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-surface-low border border-outline"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="h-3 w-3 rounded-full shrink-0" style={{ background: role.color }} />
-                    <div>
-                      <p className="text-sm font-medium text-navy font-body">{role.name}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-navy font-body flex items-center gap-1.5 flex-wrap">
+                        {role.name}
+                        {isAutomatic && (
+                          <span
+                            className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep font-body"
+                            title={`Otorgado automáticamente por ${positionCount} puesto${positionCount === 1 ? '' : 's'} de servicio activo${positionCount === 1 ? '' : 's'}.`}
+                          >
+                            Automático · {positionCount} puesto{positionCount === 1 ? '' : 's'}
+                          </span>
+                        )}
+                      </p>
                       <p className="text-[12px] text-navy-light/60 font-body">{role.description}</p>
+                      {isAutomatic && (
+                        <p className="text-[11px] text-navy-light/60 font-body mt-0.5">
+                          Viene de un puesto de servicio — para quitarlo, sacá a la persona del puesto. Quitarlo acá lo revoca igual, pero puede volver a activarse si el puesto se reasigna.
+                        </p>
+                      )}
                     </div>
                   </div>
                   <button
                     onClick={() => handleRevoke(rid)}
                     className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-all shrink-0"
+                    aria-label={`Revocar rol ${role.name}`}
                   >
                     <X size={14} />
                   </button>

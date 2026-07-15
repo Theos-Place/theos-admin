@@ -272,7 +272,17 @@ export default function AccesosPage() {
                       {(() => {
                         const extra = u.roles.filter(r => r !== 'miembro')
                         if (extra.length === 0) return <RoleBadge roleId="miembro" small />
-                        return extra.map(rid => <RoleBadge key={rid} roleId={rid} small />)
+                        return extra.map(rid => (
+                          <span key={rid} className="inline-flex items-center gap-1">
+                            <RoleBadge roleId={rid} small />
+                            {u.role_origins?.[rid] === 'automatico' && (
+                              <span
+                                className="h-1.5 w-1.5 rounded-full bg-teal-deep shrink-0"
+                                title="Automático — otorgado por un puesto de servicio"
+                              />
+                            )}
+                          </span>
+                        ))
                       })()}
                     </div>
                   </td>

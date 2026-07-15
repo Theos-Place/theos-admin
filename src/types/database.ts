@@ -1986,6 +1986,52 @@ export type Database = {
           },
         ]
       }
+      member_role_position_grants: {
+        Row: {
+          granted_at: string
+          id: string
+          member_id: string
+          position_id: string
+          role: string
+        }
+        Insert: {
+          granted_at?: string
+          id?: string
+          member_id: string
+          position_id: string
+          role: string
+        }
+        Update: {
+          granted_at?: string
+          id?: string
+          member_id?: string
+          position_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_role_position_grants_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_role_position_grants_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_role_position_grants_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "service_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_roles: {
         Row: {
           granted_at: string | null
@@ -1993,6 +2039,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           member_id: string | null
+          origen: string
           revoked_at: string | null
           revoked_by: string | null
           role: string
@@ -2004,6 +2051,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           member_id?: string | null
+          origen?: string
           revoked_at?: string | null
           revoked_by?: string | null
           role: string
@@ -2015,6 +2063,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           member_id?: string | null
+          origen?: string
           revoked_at?: string | null
           revoked_by?: string | null
           role?: string
@@ -4357,6 +4406,10 @@ export type Database = {
           reasons: string[]
         }[]
       }
+      grant_position_role: {
+        Args: { p_member_id: string; p_position_id: string; p_role: string }
+        Returns: undefined
+      }
       immutable_unaccent: { Args: { "": string }; Returns: string }
       merge_members: {
         Args: { dup_id: string; keep_id: string; soft?: boolean }
@@ -4397,6 +4450,10 @@ export type Database = {
           new_members: number
           title: string
         }[]
+      }
+      revoke_position_role: {
+        Args: { p_member_id: string; p_position_id: string; p_role: string }
+        Returns: undefined
       }
       study_dashboard_stats: {
         Args: never

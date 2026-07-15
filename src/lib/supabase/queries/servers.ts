@@ -440,18 +440,38 @@ export async function createApplication(input: {
   if (error) throw error
 }
 
+/** Sincroniza roles automáticos por puesto (encargado_eventos, lider_comite)
+ *  para las aplicaciones aprobadas en `ids` — mismo mapeo que assignVolunteer,
+ *  aplicado tras approve_applications (individual o en lote). Idempotente:
+ *  seguro de llamar aunque la aplicación ya estuviera aprobada antes. */
+async function syncRolesForApprovedApplications(ids: string[], actorUserId?: string): Promise<void> {
+  if (ids.length === 0) return
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('applications')
+    .select('applicant_id, vacancy:vacancies(position_id)')
+    .in('id', ids)
+  const { syncRolesOnAssign } = await import('./position-role-sync')
+  for (const row of (data ?? []) as Array<{ applicant_id: string; vacancy: { position_id: string | null } | { position_id: string | null }[] | null }>) {
+    const vacancy = Array.isArray(row.vacancy) ? row.vacancy[0] : row.vacancy
+    if (vacancy?.position_id) await syncRolesOnAssign(row.applicant_id, vacancy.position_id, actorUserId)
+  }
+}
+
 /** Cambia el estado de una aplicación. Al APROBAR, todo (estado + activación del
  *  servidor + slots_filled) ocurre en una sola transacción vía la función
  *  approve_applications (5b): reactiva sin duplicar y NO dispara correos. */
 export async function setApplicationStatus(
   id: string,
   status: 'pending' | 'reviewing' | 'approved' | 'rejected',
+  actorUserId?: string,
 ): Promise<void> {
   const supabase = createAdminClient()
   if (status === 'approved') {
     // RPC fuera de los tipos generados (migración 103) → cast localizado.
     const { error } = await supabase.rpc('approve_applications' as never, { app_ids: [id] } as never)
     if (error) throw error
+    await syncRolesForApprovedApplications([id], actorUserId)
     return
   }
   const { error } = await supabase.from('applications').update({ status }).eq('id', id)
@@ -469,11 +489,12 @@ export async function rejectApplications(ids: string[]): Promise<void> {
 /** Aprueba varias aplicaciones a la vez (bulk, 5b). Cada aprobación activa al
  *  aplicante como servidor del puesto/comité de su vacante, en una sola
  *  transacción. Devuelve cuántos servidores se activaron. No dispara correos. */
-export async function approveApplications(ids: string[]): Promise<{ activated: number }> {
+export async function approveApplications(ids: string[], actorUserId?: string): Promise<{ activated: number }> {
   if (ids.length === 0) return { activated: 0 }
   const supabase = createAdminClient()
   const { data, error } = await supabase.rpc('approve_applications' as never, { app_ids: ids } as never)
   if (error) throw error
+  await syncRolesForApprovedApplications(ids, actorUserId)
   return { activated: typeof data === 'number' ? data : 0 }
 }
 
@@ -735,7 +756,7 @@ export async function importServicePositions(rows: ImportPositionRow[]): Promise
 }
 
 // Servidores (volunteers en una posición)
-export async function assignVolunteer(positionId: string, memberId: string): Promise<void> {
+export async function assignVolunteer(positionId: string, memberId: string, actorUserId?: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('volunteers')
@@ -746,9 +767,11 @@ export async function assignVolunteer(positionId: string, memberId: string): Pro
       { onConflict: 'member_id,position_id' },
     )
   if (error) throw error
+  const { syncRolesOnAssign } = await import('./position-role-sync')
+  await syncRolesOnAssign(memberId, positionId, actorUserId)
 }
 
-export async function removeVolunteer(positionId: string, memberId: string): Promise<void> {
+export async function removeVolunteer(positionId: string, memberId: string, actorUserId?: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('volunteers')
@@ -756,6 +779,8 @@ export async function removeVolunteer(positionId: string, memberId: string): Pro
     .eq('position_id', positionId)
     .eq('member_id', memberId)
   if (error) throw error
+  const { syncRolesOnRemove } = await import('./position-role-sync')
+  await syncRolesOnRemove(memberId, positionId, actorUserId)
 }
 
 // ── Solicitudes de puesto nuevo (position_requests) ──────────────────────────

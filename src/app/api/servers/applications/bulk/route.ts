@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (list.length === 0) return NextResponse.json({ error: 'No hay aplicaciones seleccionadas.' }, { status: 400 })
 
     if (action === 'approve') {
-      const { activated } = await approveApplications(list)
+      const { activated } = await approveApplications(list, auth.ctx.userId)
       return NextResponse.json({ ok: true, approved: list.length, activated })
     }
     if (action === 'reject') {

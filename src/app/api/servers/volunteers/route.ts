@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     if (auth.res) return auth.res
   try {
     const { position_id, member_id } = await req.json()
-    await assignVolunteer(position_id, member_id)
+    await assignVolunteer(position_id, member_id, auth.ctx.userId)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
     console.error('POST /api/servers/volunteers:', error)
@@ -22,7 +22,7 @@ export async function DELETE(req: NextRequest) {
     if (auth.res) return auth.res
   try {
     const { position_id, member_id } = await req.json()
-    await removeVolunteer(position_id, member_id)
+    await removeVolunteer(position_id, member_id, auth.ctx.userId)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('DELETE /api/servers/volunteers:', error)

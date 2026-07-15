@@ -13,7 +13,7 @@ export async function PUT(
   try {
     const { id } = await params
     const { status } = await req.json()
-    await setApplicationStatus(id, status)
+    await setApplicationStatus(id, status, auth.ctx.userId)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/servers/applications/[id]:', error)
