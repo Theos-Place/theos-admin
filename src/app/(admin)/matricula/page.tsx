@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
   XCircle, Calendar, DollarSign, X, AlertCircle, Loader2, Check,
-  BookOpen, ArrowRight,
+  BookOpen, ArrowRight, Sparkles,
 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
@@ -119,6 +119,14 @@ export default function MatriculaPage() {
   const grouped = STAGE_ORDER
     .map(stage => ({ stage, items: filteredResults.filter(r => r.stage === stage) }))
     .filter(g => g.items.length > 0)
+
+  // Cuando una etapa (tab específico) no tiene nada matriculable, explicamos por
+  // qué en vez de dejarlo vacío — reutiliza reasons_met/reasons_blocked que ya
+  // calcula computeEligibility, sin reimplementar ningún requisito.
+  const stageResultsForEmptyState = useMemo(() => {
+    if (activeFilter === 'all' || activeFilter === 'available') return null
+    return eligibilityResults.filter(r => r.stage === activeFilter)
+  }, [eligibilityResults, activeFilter])
 
   // Métricas del perfil (datos reales)
   const completedStudies = studyTypes.filter(s => profile?.completed_codes.includes(s.code))
@@ -265,20 +273,22 @@ export default function MatriculaPage() {
         </div>
       </div>
 
-      {/* Acceso al plan de estudios completo */}
+      {/* Acceso al plan de estudios completo — destacado a propósito: es la
+          referencia de "qué pide cada estudio", no un link secundario. */}
       <Link
         href="/estudios/plan"
-        className="group flex items-center gap-4 rounded-2xl bg-surface-card px-6 py-5 shadow-card hover:shadow-card-lg transition-shadow"
+        className="group flex items-center gap-4 rounded-2xl px-6 py-5 border-2 border-coral/25 bg-coral/5 hover:bg-coral/10 hover:border-coral/40 transition-colors"
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy/8">
-          <BookOpen size={22} className="text-navy" strokeWidth={1.75} />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-coral/15">
+          <BookOpen size={22} className="text-coral-deep" strokeWidth={1.75} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em]">
-            Ver el plan de estudios completo
+          <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em] flex items-center gap-1.5">
+            <Sparkles size={15} className="text-coral shrink-0" />
+            Explorá el plan de estudios completo
           </p>
-          <p className="text-[13px] text-navy-light/60 font-body">
-            Conocé el camino de formación y qué estudio sigue
+          <p className="text-[13px] text-navy-light/70 font-body">
+            Todos los estudios de Theos Place, con los compromisos que pide cada uno — donador, servicio, asistencia y qué estudio va primero.
           </p>
         </div>
         <ArrowRight size={18} className="shrink-0 text-coral transition-transform group-hover:translate-x-1" />
@@ -337,17 +347,24 @@ export default function MatriculaPage() {
           </button>
         </div>
       ) : grouped.length === 0 ? (
-        <div
-          className="rounded-2xl p-12 text-center bg-surface-card shadow-card"
-        >
-          <GraduationCap size={28} className="text-navy-light/60 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-navy-light/60 font-body">
-            Por ahora no hay grupos abiertos para matricular
-          </p>
-          <p className="text-[13px] text-navy-light/60 mt-1 font-body">
-            Podés reportar tu interés desde tu perfil — el equipo de estudios analiza la demanda para abrir grupos
-          </p>
-        </div>
+        stageResultsForEmptyState && stageResultsForEmptyState.length > 0 ? (
+          <StageRequirementsEmptyState
+            stage={activeFilter}
+            results={stageResultsForEmptyState}
+          />
+        ) : (
+          <div
+            className="rounded-2xl p-12 text-center bg-surface-card shadow-card"
+          >
+            <GraduationCap size={28} className="text-navy-light/60 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-navy-light/60 font-body">
+              Por ahora no hay grupos abiertos para matricular
+            </p>
+            <p className="text-[13px] text-navy-light/60 mt-1 font-body">
+              Podés reportar tu interés desde tu perfil — el equipo de estudios analiza la demanda para abrir grupos
+            </p>
+          </div>
+        )
       ) : (
         <div className="space-y-6">
           {grouped.map(({ stage, items }) => {
@@ -459,6 +476,81 @@ function MemberPicker({ selected, onSelect }: {
           onSelect={m => onSelect({ id: m.id, name: `${m.first_name} ${m.last_name}` })}
         />
       )}
+    </div>
+  )
+}
+
+// Mensaje de un tab de etapa sin nada matriculable: por qué, y qué le falta a
+// ESTA persona puntualmente — a partir de reasons_met/reasons_blocked que ya
+// trae cada EligibilityResult (computeEligibility), sin recalcular requisitos.
+function StageRequirementsEmptyState({ stage, results }: { stage: FilterTab; results: EligibilityResult[] }) {
+  const meta = STAGE_META[stage] ?? STAGE_META.niveles
+  const met = new Set<string>()
+  const blocked = new Set<string>()
+  let anyEligible = false
+  for (const r of results) {
+    if (r.is_eligible) anyEligible = true
+    r.reasons_met.forEach(m => met.add(m))
+    if (!r.is_eligible) r.reasons_blocked.forEach(b => blocked.add(b))
+  }
+
+  return (
+    <div className="rounded-2xl p-8 bg-surface-card shadow-card">
+      <div className="flex items-start gap-3 mb-5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: meta.bg }}>
+          <GraduationCap size={18} style={{ color: meta.text }} />
+        </div>
+        <div>
+          <p className="text-base font-bold text-navy font-display">
+            {anyEligible
+              ? `Ya cumplís los requisitos de ${meta.label}`
+              : `Para acceder a los estudios de ${meta.label} te falta:`}
+          </p>
+          <p className="text-[13px] text-navy-light/60 font-body mt-0.5">
+            {anyEligible
+              ? 'Todavía no hay grupos abiertos en este momento — apenas se abra uno vas a poder matricularte.'
+              : 'Estos son los compromisos que pide esta etapa. Te avisamos apenas los cumplas.'}
+          </p>
+        </div>
+      </div>
+
+      {(met.size > 0 || blocked.size > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {met.size > 0 && (
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Ya cumplís</p>
+              <div className="space-y-1.5">
+                {[...met].map((m, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <CheckCircle2 size={13} className="text-teal-deep shrink-0 mt-0.5" />
+                    <span className="text-[13px] text-navy font-body">{m}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {blocked.size > 0 && (
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Te falta</p>
+              <div className="space-y-1.5">
+                {[...blocked].map((b, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <XCircle size={13} className="text-red-400 shrink-0 mt-0.5" />
+                    <span className="text-[13px] text-navy-light/70 font-body">{b}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <Link
+        href="/estudios/plan"
+        className="mt-6 inline-flex items-center gap-1.5 text-[13px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+      >
+        Ver todos los estudios y sus compromisos <ArrowRight size={13} />
+      </Link>
     </div>
   )
 }
