@@ -2179,7 +2179,9 @@ export type Database = {
           photo_url: string | null
           province: string | null
           search_text: string | null
+          sede_case: string | null
           sede_id: string | null
+          sede_last_checkin: string | null
           smart_link_token: string | null
           unsubscribe_token: string
           updated_at: string | null
@@ -2225,7 +2227,9 @@ export type Database = {
           photo_url?: string | null
           province?: string | null
           search_text?: string | null
+          sede_case?: string | null
           sede_id?: string | null
+          sede_last_checkin?: string | null
           smart_link_token?: string | null
           unsubscribe_token?: string
           updated_at?: string | null
@@ -2271,7 +2275,9 @@ export type Database = {
           photo_url?: string | null
           province?: string | null
           search_text?: string | null
+          sede_case?: string | null
           sede_id?: string | null
+          sede_last_checkin?: string | null
           smart_link_token?: string | null
           unsubscribe_token?: string
           updated_at?: string | null

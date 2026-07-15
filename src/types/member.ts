@@ -88,8 +88,15 @@ export type Member = {
   current_study: string | null
   current_study_week?: number | null
   sede: string
-  /** Sede calculada por asistencia a charlas (últimos 12 meses). null = sin sede. */
-  attendance_sede?: { name: string; count: number } | null
+  /** Sede calculada por asistencia — criterio único (src/lib/sede-attendance.ts):
+   *  activo = más asistida en los últimos 6 meses; inactivo = más asistida en
+   *  los 6 meses previos a su última asistencia. null = nunca asistió. Solo
+   *  viene poblado en el detalle (Fase 2b). */
+  attendance_sede?: { name: string; case: 'activo' | 'inactivo'; lastCheckin: string } | null
+  /** Sede/caso/última-asistencia precalculados por el cron (para list view,
+   *  sin round-trip extra) — mismo algoritmo, ver src/lib/sede-attendance.ts. */
+  sede_case?: 'activo' | 'inactivo' | null
+  sede_last_checkin?: string | null
   age: number
   tipos_evento: string[]
   comites: string[]

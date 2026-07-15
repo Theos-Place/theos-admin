@@ -5,6 +5,7 @@ import type { StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
 import { formatDate } from '@/lib/format'
+import { formatSedeRecency } from '@/lib/sede-attendance'
 
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
@@ -68,9 +69,9 @@ export function MemberSummaryTab({
           <p className="text-sm font-medium text-navy font-body">
             {member.attendance_sede ? member.attendance_sede.name : 'Sin sede asignada'}
           </p>
-          {member.attendance_sede && (
+          {member.attendance_sede?.case === 'inactivo' && (
             <p className="text-[11px] text-navy-light/60 font-body mt-0.5">
-              {member.attendance_sede.count} charla{member.attendance_sede.count !== 1 ? 's' : ''} · últimos 12 meses
+              última actividad {formatSedeRecency(member.attendance_sede.lastCheckin)}
             </p>
           )}
         </div>

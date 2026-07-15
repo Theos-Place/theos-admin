@@ -55,6 +55,8 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
     current_study: enriched?.current_study ?? null,
     current_study_week: enriched?.current_study_week ?? null,
     sede: enriched?.sede?.code ?? '',
+    sede_case: (enriched as DbMemberEnriched | null)?.sede_case ?? null,
+    sede_last_checkin: (enriched as DbMemberEnriched | null)?.sede_last_checkin ?? null,
     es_dirigente: esDirigente,
     is_dirigente: enriched?.is_dirigente ?? esDirigente,
 

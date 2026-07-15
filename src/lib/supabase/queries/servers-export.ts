@@ -1,7 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
-import { attendanceWindowStart, meetsAttendanceCriteria } from '@/lib/attendance'
+import { computeMemberSede } from '@/lib/sede-attendance'
+import { meetsAttendanceCriteria } from '@/lib/attendance'
 
 // Export de aplicantes de las vacantes seleccionadas (punto 6). Una fila por
 // APLICACIÓN (persona + el puesto al que aplicó). Los multivaluados (estudios,
@@ -92,39 +92,25 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
     studiesByMember.set(e.member_id, set)
   }
 
-  // 5) Sede (más asistida, canónica, últimos 12 meses) + miembro activo
-  //    (criterio único: >= 6 check-ins de charla en los últimos 6 meses, con
-  //    al menos uno en los últimos 60 días).
-  const start12 = attendanceWindowStart(12)
+  // 5) Sede (criterio único, src/lib/sede-attendance.ts — activo = más
+  //    asistida en 6 meses; inactivo = más asistida en los 6 meses previos a
+  //    la última asistencia) + miembro activo (criterio único: >= 6 check-ins
+  //    de charla en los últimos 6 meses, con al menos uno en los últimos 60 días).
+  //    Historial completo (sin recorte de fecha): el caso inactivo puede
+  //    necesitar mirar más de 12 meses atrás.
   const { data: chk } = await supabase
     .from('event_checkins')
     .select('member_id, checked_in_at, events!inner(event_type, title)')
     .eq('events.event_type', 'charla')
     .in('member_id', memberIds)
-    .gte('checked_in_at', start12)
-  const sedeTally = new Map<string, Map<string, number>>() // member → sede → count
-  const recentDates = new Map<string, string[]>()          // member → fechas de charla (≤12m)
+  const checkinsByMember = new Map<string, Array<{ checked_in_at: string | null; title: string | null }>>()
   for (const c of (chk ?? []) as Array<{ member_id: string; checked_in_at: string | null; events: unknown }>) {
-    if (!c.checked_in_at) continue
     const ev = one(c.events) as { title: string | null } | null
-    const canonical = ev?.title ? canonicalCharlaTitle(ev.title) : null
-    if (canonical) {
-      const name = canonical.replace(/^Charla\s+/, '')
-      const t = sedeTally.get(c.member_id) ?? new Map<string, number>()
-      t.set(name, (t.get(name) ?? 0) + 1)
-      sedeTally.set(c.member_id, t)
-    }
-    const arr = recentDates.get(c.member_id) ?? []
-    arr.push(c.checked_in_at)
-    recentDates.set(c.member_id, arr)
+    const arr = checkinsByMember.get(c.member_id) ?? []
+    arr.push({ checked_in_at: c.checked_in_at, title: ev?.title ?? null })
+    checkinsByMember.set(c.member_id, arr)
   }
-  const sedeOf = (memberId: string): string => {
-    const t = sedeTally.get(memberId)
-    if (!t) return ''
-    let best = '', bestN = -1
-    for (const [name, n] of t) if (n > bestN) { best = name; bestN = n }
-    return best
-  }
+  const sedeOf = (memberId: string): string => computeMemberSede(checkinsByMember.get(memberId) ?? [])?.name ?? ''
 
   // 6) Armar filas (una por aplicación).
   return appRows.map(a => {
@@ -132,7 +118,7 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
     const nombre = m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : ''
     const com = a.vacancy?.committee?.name ?? ''
     const puesto = a.vacancy?.position || a.vacancy?.title || ''
-    const active = meetsAttendanceCriteria(recentDates.get(a.applicant_id) ?? [])
+    const active = meetsAttendanceCriteria((checkinsByMember.get(a.applicant_id) ?? []).map(c => c.checked_in_at ?? ''))
     return {
       member_id: a.applicant_id,
       nombre,

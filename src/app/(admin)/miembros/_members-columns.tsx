@@ -6,6 +6,8 @@ import { type Member } from '@/types/member'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import type { FilterCondition } from '@/types/filters'
 import { initialsFromParts, calcAge } from '@/lib/format'
+import { sedeLabel } from '@/lib/sedes'
+import { formatSedeRecency } from '@/lib/sede-attendance'
 
 export function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -139,7 +141,23 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.area ?? '',
   },
   {
-    key: 'sede', label: 'Sede principal', defaultVisible: false,
+    key: 'sede', label: 'Sede principal', defaultVisible: false, exportable: true,
+    render: m => {
+      if (!m.sede) return <span className="text-navy-light/60 text-[12px]">—</span>
+      const label = sedeLabel(m.sede)
+      const isInactive = m.sede_case === 'inactivo' && m.sede_last_checkin
+      return (
+        <span className="font-body text-[13px]">
+          {label}
+          {isInactive && (
+            <span className="text-navy-light/55">
+              {' · última actividad '}{formatSedeRecency(m.sede_last_checkin!)}
+            </span>
+          )}
+        </span>
+      )
+    },
+    exportValue: m => m.sede ? sedeLabel(m.sede) : '',
   },
   {
     key: 'join_date', label: 'Fecha de ingreso', defaultVisible: false,

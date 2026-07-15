@@ -53,6 +53,11 @@ export type DbMember = {
 /** DbMember + datos relacionados que se traen en una sola query para el list view. */
 export type DbMemberEnriched = DbMember & {
   sede: { code: string; name: string } | null
+  /** Caso del cálculo de sede (cron refresh_member_sedes, mismo algoritmo que
+   *  src/lib/sede-attendance.ts): 'activo' = asistió en los últimos 6 meses;
+   *  'inactivo' = se usó su último período activo. null = sin sede. */
+  sede_case: 'activo' | 'inactivo' | null
+  sede_last_checkin: string | null
   roles: MemberRole[]
   /** Sub-estado del rol 'dirigente' activo (null si no es dirigente). */
   estado_dirigente: 'activo' | 'en_descanso' | 'disponible' | null
@@ -808,6 +813,8 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       ?.study_groups?.plan?.name ?? null
 
     const sede = (row.sede as { code: string; name: string } | null) ?? null
+    const sedeCase = (row.sede_case as 'activo' | 'inactivo' | null) ?? null
+    const sedeLastCheckin = (row.sede_last_checkin as string | null) ?? null
 
     // Meses (YYYY-MM) con al menos una asistencia — para el filtro "Activo (asistencia)".
     const checkins = (row.event_checkins as Array<{ checked_in_at: string | null }> | null) ?? []
@@ -824,6 +831,8 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     return {
       ...(row as DbMember),
       sede,
+      sede_case: sedeCase,
+      sede_last_checkin: sedeLastCheckin,
       roles: activeRoles,
       estado_dirigente: estadoDirigente,
       is_dirigente: isDirigente,

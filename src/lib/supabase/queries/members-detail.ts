@@ -8,7 +8,7 @@ import type { DbMember, DbMemberEnriched } from './members'
 import { getAreaNameMap, parentAreaName } from './_area-map'
 import { meetsAttendanceCriteria } from '@/lib/attendance'
 import { esComiteDirigentes } from '@/lib/dirigentes'
-import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
+import { computeMemberSede, type MemberSedeResult } from '@/lib/sede-attendance'
 
 // ── Helpers para detail view ──────────────────────────────────────────────────
 
@@ -89,8 +89,10 @@ export type DbFamilyMember = {
 }
 
 export type DbMemberFull = DbMemberEnriched & {
-  /** Sede calculada por asistencia a charlas (últimos 12 meses). null = sin sede. */
-  attendance_sede: { name: string; count: number } | null
+  /** Sede calculada por asistencia a charlas — criterio único (src/lib/sede-attendance.ts):
+   *  activo = más asistida en los últimos 6 meses; inactivo = más asistida en
+   *  los 6 meses previos a su última asistencia. null = nunca asistió. */
+  attendance_sede: MemberSedeResult | null
   study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number }>
   event_registration_history: Array<{
     registration_id: string; event_id: string; event_name: string; event_date: string
@@ -383,6 +385,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   const currentStudy = currentEnrollment?.study_groups?.plan?.name ?? null
   const currentStudyWeek = currentEnrollment?.study_groups?.current_week ?? null
   const sede = (memberRow.sede as { code: string; name: string } | null) ?? null
+  const sedeCase = (memberRow.sede_case as 'activo' | 'inactivo' | null) ?? null
+  const sedeLastCheckin = (memberRow.sede_last_checkin as string | null) ?? null
 
   // 4. Aplanar histórico
   const attendance: DbAttendance[] = (checkinsRes.data ?? []).map((c) => {
@@ -481,33 +485,19 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   ))
   const lastCharlaCheckin = charlaCheckins.find(c => c.checked_in_at)?.checked_in_at ?? null
 
-  // Sede calculada: charla a la que MÁS asistió en los últimos 12 meses (sede
-  // canónica derivada del título). Empate → la más reciente. Sin charlas en 12
-  // meses → null ("Sin sede asignada"). Decisión 2026: la sede es dinámica por
-  // asistencia, no el sede_id estático del perfil.
-  const attendance_sede = (() => {
-    const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 12)
-    const cutoffMs = cutoff.getTime()
-    const tally = new Map<string, { count: number; last: string }>()
-    for (const c of (checkinsRes.data ?? []) as Array<{ checked_in_at: string | null; events: { title: string; event_type: string } | null }>) {
-      if (c.events?.event_type !== 'charla' || !c.checked_in_at) continue
-      if (new Date(c.checked_in_at).getTime() < cutoffMs) continue
-      const canonical = canonicalCharlaTitle(c.events.title)
-      if (!canonical) continue
-      const name = canonical.replace(/^Charla\s+/, '') // "Charla Heredia" → "Heredia"
-      const cur = tally.get(name) ?? { count: 0, last: '' }
-      cur.count++
-      if (c.checked_in_at > cur.last) cur.last = c.checked_in_at
-      tally.set(name, cur)
-    }
-    let best: { name: string; count: number; last: string } | null = null
-    for (const [name, v] of tally) {
-      if (!best || v.count > best.count || (v.count === best.count && v.last > best.last)) {
-        best = { name, count: v.count, last: v.last }
-      }
-    }
-    return best ? { name: best.name, count: best.count } : null
-  })()
+  // Sede calculada: criterio único (src/lib/sede-attendance.ts) — activo =
+  // más asistida en los últimos 6 meses; inactivo = más asistida en los 6
+  // meses previos a su última asistencia. Decisión 2026: la sede es dinámica
+  // por asistencia, no el sede_id estático del perfil (ese lo mantiene el
+  // cron refresh_member_sedes con el mismo algoritmo, para listas/filtros).
+  const attendance_sede = computeMemberSede(
+    (checkinsRes.data ?? [])
+      .filter(c => (c as { events: { event_type: string } | null }).events?.event_type === 'charla')
+      .map(c => {
+        const row = c as { checked_in_at: string | null; events: { title: string } | null }
+        return { checked_in_at: row.checked_in_at, title: row.events?.title ?? null }
+      }),
+  )
 
   // Familia: dos queries — primero los family_unit_id del miembro, después
   // los OTROS miembros de esos units.
@@ -516,6 +506,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   return {
     ...(memberRow as DbMember),
     sede,
+    sede_case: sedeCase,
+    sede_last_checkin: sedeLastCheckin,
     attendance_sede,
     roles: activeRoles,
     estado_dirigente: estadoDirigente,
