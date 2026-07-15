@@ -36,7 +36,6 @@ import {
   Shield,
   Wrench,
   CalendarRange,
-  CalendarCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -164,17 +163,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     ? [{ href: '/formularios', label: 'Formularios', icon: FileText }, ...COMUNICACIONES_SUB]
     : COMUNICACIONES_SUB
 
+  // "Crear evento"/"Tipos de evento" son de gestión — ocultos si no se tiene
+  // el módulo, aunque el ítem padre "Eventos" sí se muestre a todos.
+  const eventosSub: SubItem[] = can('eventos', 'view') ? EVENTOS_SUB : []
+
   // Cada módulo se muestra solo si el rol tiene 'view' sobre él (can combina
   // múltiples roles: coordinador_estudios + comunicaciones ve comunicaciones).
   const ALL_NAV: NavModule[] = [
     { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, subs: [],                 module: null },
     { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros', summaryLabel: 'Buscar miembros' },
     { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
-    // module: null → visible para cualquier autenticado (como Dashboard/Notificaciones).
-    // Cualquier miembro (staff o no) puede querer inscribirse a un evento personal;
-    // no cae bajo /eventos a propósito, para no exponerle el módulo de gestión.
-    { href: '/mis-eventos',    label: 'Inscripción a eventos', icon: CalendarCheck, subs: [], module: null },
-    { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: EVENTOS_SUB,        module: 'eventos' },
+    // Eventos es visible para cualquier autenticado: sin el permiso del módulo,
+    // la propia página muestra solo la inscripción a eventos (antes vivía
+    // aparte en /mis-eventos); "Crear evento"/"Tipos de evento" siguen ocultos.
+    { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: eventosSub,        module: 'eventos' },
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
     { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores' },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
@@ -191,6 +193,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     if (m.href === '/estudios') return can('estudios', 'view') || can('folletos', 'view')
     if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view')
     if (m.href === '/miembros') return can('miembros', 'view') && getScope('miembros') !== 'own'
+    // Eventos: visible para cualquier autenticado (auto-inscripción), aunque
+    // no tenga el módulo de gestión.
+    if (m.href === '/eventos') return true
     return can(m.module, 'view')
   })
 

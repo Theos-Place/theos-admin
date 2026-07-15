@@ -26,7 +26,6 @@ const pageTitles: Record<string, string> = {
   '/formularios':    'Formularios',
   '/reportes':       'Reportes',
   '/matricula':      'Matrícula',
-  '/mis-eventos':    'Inscripción a eventos',
   '/notificaciones': 'Notificaciones',
   '/accesos':        'Accesos',
   '/configuracion':  'Configuración',
@@ -73,6 +72,11 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // Excepción: /finanzas/becas tiene su propio permiso ('becas'), asignable sin
   // depender del módulo finanzas completo.
   if (pathname.startsWith('/finanzas/becas') && can('becas', 'view')) return <>{children}</>
+  // Excepción: /eventos (raíz) es también la pantalla de auto-inscripción de
+  // cualquier miembro (antes /mis-eventos aparte); la propia página decide qué
+  // mostrar según el permiso. Las subrutas de gestión (/eventos/nuevo,
+  // /eventos/[id]/editar, etc.) siguen exigiendo el módulo normalmente.
+  if (pathname === '/eventos') return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // El padrón exige alcance más allá de 'own' (espejo del guard de la API);
   // el rol base 'miembro' ve su perfil o el de su familia desde ACÁ mismo

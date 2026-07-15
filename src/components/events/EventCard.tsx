@@ -4,14 +4,27 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, Clock, MapPin, Repeat } from 'lucide-react'
 import type { AdminEvent } from '@/types/event'
+import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
 import { useEventTypeStyle } from '@/hooks/useEventTypes'
 
+interface EventCardProps {
+  event: AdminEvent
+  /** Si false, la card no navega al detalle administrativo (miembros sin
+   *  permiso sobre el módulo eventos no pueden verlo). */
+  linkToDetail?: boolean
+  /** Elegibilidad de inscripción del usuario actual para este evento —
+   *  ausente si el evento no requiere inscripción. */
+  eligibility?: EventEligibilityResult
+  onRegister?: () => void
+  onRequestScholarship?: () => void
+}
+
 /** Card grande y visual de un evento para la vista Grid. */
-export function EventCard({ event }: { event: AdminEvent }) {
+export function EventCard({ event, linkToDetail = true, eligibility, onRegister, onRequestScholarship }: EventCardProps) {
   const typeColor = useEventTypeStyle()(event.event_type).color
   const past = isPastEvent(event)
   const start = new Date(event.start_at)
@@ -23,11 +36,8 @@ export function EventCard({ event }: { event: AdminEvent }) {
     ? `/eventos/${event.id}?date=${encodeURIComponent(event.start_at)}`
     : `/eventos/${event.id}`
 
-  return (
-    <Link
-      href={href}
-      className="group flex flex-col overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)] transition-shadow hover:shadow-[var(--shadow-lg)]"
-    >
+  const body = (
+    <>
       {/* Flyer o placeholder */}
       <div className="relative h-36 w-full overflow-hidden">
         {event.flyer_url ? (
@@ -74,6 +84,46 @@ export function EventCard({ event }: { event: AdminEvent }) {
           )}
         </div>
       </div>
-    </Link>
+    </>
+  )
+
+  return (
+    <div className="flex flex-col overflow-hidden rounded-2xl bg-surface-card shadow-[var(--shadow-md)] transition-shadow hover:shadow-[var(--shadow-lg)]">
+      {linkToDetail ? (
+        <Link href={href} className="group flex flex-col">{body}</Link>
+      ) : (
+        <div className="flex flex-col">{body}</div>
+      )}
+      {eligibility && (
+        <div className="border-t border-[var(--outline-variant)] p-3">
+          {eligibility.is_eligible ? (
+            <button
+              type="button"
+              onClick={onRegister}
+              className="w-full rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2 text-[13px] font-medium text-coral transition-colors font-body"
+            >
+              Inscribirme
+            </button>
+          ) : eligibility.already_registered ? (
+            <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[12px] font-medium text-teal-deep font-body">
+              Ya inscrito/a
+            </span>
+          ) : (
+            <span className="block text-center text-[11px] text-navy-light/60 font-body">
+              {eligibility.reasons_blocked[0] ?? 'No disponible'}
+            </span>
+          )}
+          {eligibility.requires_payment && !eligibility.exempt && eligibility.is_eligible && onRequestScholarship && (
+            <button
+              type="button"
+              onClick={onRequestScholarship}
+              className="mt-1.5 w-full text-center text-[11px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+            >
+              ¿Necesitás ayuda para pagar? Solicitar beca
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

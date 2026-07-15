@@ -17,6 +17,17 @@ export type EventEligibilityResult = {
   spots_available: number | null
   is_eligible: boolean
   reasons_blocked: string[]
+  // Campos de despliegue (calendario/lista/cuadrícula) — quien no gestiona el
+  // módulo eventos arma su vista solo con este resultado, sin /api/events.
+  event_type: string
+  ends_at: string | null
+  location: string | null
+  flyer_url: string | null
+  is_recurring: boolean
+  recurrence_rule: string | null
+  max_capacity: number | null
+  status: DbEventEnriched['status']
+  registrations_count: number
 }
 
 /** Elegibilidad simple de inscripción a eventos (sin prerequisitos de estudio,
@@ -55,6 +66,15 @@ export function computeEventEligibility(
       spots_available: e.max_capacity != null && e.max_capacity > 0 ? Math.max(0, e.max_capacity - occupied) : null,
       is_eligible: !alreadyRegistered && !isFull,
       reasons_blocked,
+      event_type: e.event_type,
+      ends_at: e.ends_at,
+      location: e.location,
+      flyer_url: e.flyer_url,
+      is_recurring: e.is_recurring,
+      recurrence_rule: e.recurrence_rule,
+      max_capacity: e.max_capacity,
+      status: e.status,
+      registrations_count: occupied,
     }
   })
 }

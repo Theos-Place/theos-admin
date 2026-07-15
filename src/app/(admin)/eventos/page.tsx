@@ -6,9 +6,12 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
+import { usePermissions } from '@/hooks/usePermissions'
 import { useEventTypes, useEventTypeStyle } from '@/hooks/useEventTypes'
 import { type EventType, type AdminEvent } from '@/data/event-config'
 import { useEvents, useAllEventsLight } from '@/hooks/useEvents'
+import type { EventEligibilityResult } from '@/lib/events/eligibility'
+import { useEventRegistration } from '@/components/events/useEventRegistration'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
@@ -22,7 +25,7 @@ import { recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
 import { downloadBlob } from '@/lib/export'
-import { Plus, Calendar, Download, Code, ExternalLink, Repeat } from 'lucide-react'
+import { Plus, Calendar, Download, Code, ExternalLink, Repeat, CheckCircle2, X } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { CheckSquare } from 'lucide-react'
 
@@ -60,13 +63,79 @@ function downloadAllEventsICS(events: AdminEvent[]) {
   downloadBlob(ics, `theos-eventos-${new Date().toISOString().split('T')[0]}.ics`, 'text/calendar;charset=utf-8')
 }
 
+/** Convierte un resultado de elegibilidad en un AdminEvent mínimo, suficiente
+ *  para las 3 vistas (calendario/lista/cuadrícula) — usado cuando el usuario
+ *  no tiene el módulo eventos y por lo tanto no puede llamar /api/events. */
+function eligibilityToStubEvent(e: EventEligibilityResult): AdminEvent {
+  return {
+    id: e.event_id,
+    name: e.title,
+    event_type: e.event_type as EventType,
+    committee_id: '',
+    description: '',
+    start_at: e.starts_at,
+    end_at: e.ends_at ?? e.starts_at,
+    location: e.location ?? '',
+    location_map_url: null,
+    is_virtual: false,
+    virtual_url: null,
+    requires_registration: true,
+    max_capacity: e.max_capacity,
+    requires_payment: e.requires_payment,
+    payment_amount: e.requires_payment ? e.price : null,
+    server_price: null,
+    servers_pay: true,
+    organizing_committee_ids: [],
+    requires_survey: false,
+    status: e.status,
+    is_recurring: e.is_recurring,
+    recurrence_rule: e.recurrence_rule,
+    recurrence_end: null,
+    parent_event_id: null,
+    exception_dates: [],
+    sub_events: [],
+    registrations: Array.from({ length: e.registrations_count }),
+    checkins: [],
+    volunteer_bookings: [],
+    cancellation_reason: null,
+    flyer_url: e.flyer_url,
+    is_active: true,
+  } as unknown as AdminEvent
+}
+
 function EventosContent() {
   const router = useRouter()
   // Dos fuentes: activos con relaciones (stats, próximos) + TODOS en liviano
   // (históricos para calendario y "Realizados"). Se fusionan por id.
-  const { hasRole } = useAuth()
+  const { user, hasRole } = useAuth()
+  const { can } = usePermissions()
+  // Sin permiso sobre el módulo: vista de solo inscripción (antes vivía en la
+  // página aparte /mis-eventos) — mismas 3 vistas, sin acciones de gestión.
+  const canManage = can('eventos', 'view')
   const canShare = hasRole('comunicaciones', 'direccion', 'admin')
   const canCheckin = hasRole('encargado_eventos', 'direccion', 'admin')
+
+  // Elegibilidad de inscripción del propio usuario — disponible para
+  // cualquiera con member_id, gestione o no el módulo (un miembro del staff
+  // también puede inscribirse a un evento como cualquier otro miembro).
+  const memberId = user?.member_id ?? null
+  const [eligibility, setEligibility] = useState<EventEligibilityResult[]>([])
+  const [eligRefresh, setEligRefresh] = useState(0)
+  useEffect(() => {
+    if (!memberId) return
+    let alive = true
+    fetch(`/api/eventos/elegibilidad?member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive) setEligibility(d?.eligibility ?? []) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [memberId, eligRefresh])
+  const eligibilityByEventId = useMemo(
+    () => new Map(eligibility.map(e => [e.event_id, e])),
+    [eligibility],
+  )
+  const { openRegister, requestScholarship, successEvent, clearSuccess, modals: registrationModals } =
+    useEventRegistration(memberId, () => setEligRefresh(k => k + 1))
   // Filtros de tipo desde la BD (no el mock): si se agrega un tipo, aparece solo.
   const eventTypes = useEventTypes()
   const typeStyle = useEventTypeStyle()
@@ -74,8 +143,12 @@ function EventosContent() {
     () => [{ key: 'all', label: 'Todos' }, ...eventTypes.map(t => ({ key: t.id, label: t.name }))],
     [eventTypes],
   )
-  const { events, loading } = useEvents()
+  const { events, loading: loadingManage } = useEvents()
   const { events: allEventsLight } = useAllEventsLight()
+  // Sin permiso de gestión: no hay /api/events (403), así que el calendario/
+  // lista/cuadrícula se arman con la propia elegibilidad — misma limitación
+  // que tenía /mis-eventos (solo eventos abiertos a inscripción).
+  const loading = canManage ? loadingManage : false
   // Vista en URL (?view=) + recuerdo en localStorage; default calendario.
   const [viewRaw, setViewRaw] = useUrlFilter('view', 'calendar')
   const view: EventView = (['calendar', 'list', 'grid'] as const).includes(viewRaw as EventView)
@@ -113,14 +186,21 @@ function EventosContent() {
     setVisibleCount(PAGE_SIZE)
   }
 
+  // Sin permiso de gestión, la vista se arma solo con la elegibilidad propia
+  // (eventos abiertos a inscripción) — nunca con /api/events.
+  const memberEvents: AdminEvent[] = useMemo(
+    () => eligibility.map(eligibilityToStubEvent),
+    [eligibility],
+  )
   const merged = useMemo(() => {
+    if (!canManage) return memberEvents
     const fullById = new Map(events.map(e => [e.id, e]))
     const result = allEventsLight.map(e => fullById.get(e.id) ?? e)
     if (result.length === 0) return events // el liviano aún no llega
     const seen = new Set(result.map(e => e.id))
     for (const e of events) if (!seen.has(e.id)) result.push(e)
     return result
-  }, [events, allEventsLight])
+  }, [canManage, memberEvents, events, allEventsLight])
 
   // Ocurrencias del mes en curso (recurrentes contados por día).
   const thisMonthEvents = monthEvents(merged, now.getMonth(), now.getFullYear())
@@ -237,18 +317,33 @@ function EventosContent() {
               Check-in
             </Link>
           )}
-          <Link
-            href="/eventos/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
-          >
-            <Plus size={14} />
-            Crear evento
-          </Link>
+          {canManage && (
+            <Link
+              href="/eventos/nuevo"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
+            >
+              <Plus size={14} />
+              Crear evento
+            </Link>
+          )}
         </div>
       </div>
 
+      {/* Confirmación de inscripción (gratis/exenta — la que requiere pago abre el comprobante aparte) */}
+      {successEvent && (
+        <div className="rounded-2xl p-5 flex items-start gap-3 bg-teal/10 border border-teal-deep/20">
+          <CheckCircle2 size={20} className="text-teal-deep shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-navy font-body">¡Inscripción confirmada!</p>
+            <p className="text-[13px] text-navy-light/70 font-body">Quedaste inscrito/a en {successEvent}.</p>
+          </div>
+          <button onClick={clearSuccess} className="ml-auto text-navy-light/60 hover:text-navy"><X size={16} /></button>
+        </div>
+      )}
 
-      {/* Stats cards */}
+
+      {/* Stats cards — solo gestión (inscritos/check-ins no le sirven a un miembro) */}
+      {canManage && (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Este mes', value: thisMonthEvents.length, color: 'text-navy' },
@@ -273,6 +368,7 @@ function EventosContent() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Toggle Vista */}
       <Tabs
@@ -315,7 +411,7 @@ function EventosContent() {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  {['Evento', 'Tipo', 'Fecha', 'Capacidad', 'Inscritos', 'Estado', ''].map(h => (
+                  {['Evento', 'Tipo', 'Fecha', 'Capacidad', 'Inscritos', 'Estado', 'Inscripción'].map(h => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
@@ -331,12 +427,14 @@ function EventosContent() {
                   const startDate = new Date(event.start_at)
                   const past = isPastEvent(event)
                   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
+                  const elig = eligibilityByEventId.get(event.id)
                   return (
                     <tr
                       key={`${event.id}-${event.start_at}`}
-                      onClick={() => router.push(`/eventos/${event.id}`)}
+                      onClick={canManage ? () => router.push(`/eventos/${event.id}`) : undefined}
                       className={cn(
-                        'hover:bg-navy/5 transition-colors cursor-pointer',
+                        'transition-colors',
+                        canManage && 'hover:bg-navy/5 cursor-pointer',
                         idx % 2 === 1 ? 'bg-surface-low/40' : ''
                       )}
                     >
@@ -375,12 +473,29 @@ function EventosContent() {
                         {past ? <RealizadoBadge /> : <EventStatusBadge status={event.status} />}
                       </td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                        <Link
-                          href={`/eventos/${event.id}`}
-                          className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
-                        >
-                          →
-                        </Link>
+                        <div className="flex items-center justify-end gap-2">
+                          {elig?.is_eligible ? (
+                            <button
+                              type="button"
+                              onClick={() => openRegister(elig)}
+                              className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-coral bg-coral/10 hover:bg-coral/20 transition-colors font-body whitespace-nowrap"
+                            >
+                              Inscribirme
+                            </button>
+                          ) : elig?.already_registered ? (
+                            <span className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
+                              Ya inscrito/a
+                            </span>
+                          ) : null}
+                          {canManage && (
+                            <Link
+                              href={`/eventos/${event.id}`}
+                              className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                            >
+                              →
+                            </Link>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -396,11 +511,12 @@ function EventosContent() {
               const startDate = new Date(event.start_at)
               const past = isPastEvent(event)
               const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
+              const elig = eligibilityByEventId.get(event.id)
               return (
                 <li
                   key={`${event.id}-${event.start_at}`}
-                  onClick={() => router.push(`/eventos/${event.id}`)}
-                  className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
+                  onClick={canManage ? () => router.push(`/eventos/${event.id}`) : undefined}
+                  className={cn('flex items-center gap-3 px-4 py-3', canManage && 'active:bg-surface-low cursor-pointer')}
                   style={idx < visibleRows.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   {event.flyer_url ? (
@@ -424,6 +540,19 @@ function EventosContent() {
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <EventTypeBadge type={event.event_type} size="sm" />
                     {past ? <RealizadoBadge /> : <EventStatusBadge status={event.status} size="sm" />}
+                    {elig?.is_eligible ? (
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); openRegister(elig) }}
+                        className="rounded-lg px-2 py-0.5 text-[10px] font-medium text-coral bg-coral/10 font-body whitespace-nowrap"
+                      >
+                        Inscribirme
+                      </button>
+                    ) : elig?.already_registered ? (
+                      <span className="rounded-lg px-2 py-0.5 text-[10px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
+                        Ya inscrito/a
+                      </span>
+                    ) : null}
                   </div>
                 </li>
               )
@@ -464,7 +593,14 @@ function EventosContent() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleRows.map(event => (
-                  <EventCard key={`${event.id}-${event.start_at}`} event={event} />
+                  <EventCard
+                    key={`${event.id}-${event.start_at}`}
+                    event={event}
+                    linkToDetail={canManage}
+                    eligibility={eligibilityByEventId.get(event.id)}
+                    onRegister={() => { const e = eligibilityByEventId.get(event.id); if (e) openRegister(e) }}
+                    onRequestScholarship={() => { const e = eligibilityByEventId.get(event.id); if (e) requestScholarship(e) }}
+                  />
                 ))}
               </div>
               <div className="flex flex-col items-center gap-2">
@@ -492,7 +628,7 @@ function EventosContent() {
           month={currentMonth}
           year={currentYear}
           onEventClick={(id, occ) => router.push(occ ? `/eventos/${id}?date=${encodeURIComponent(occ)}` : `/eventos/${id}`)}
-          onDayClick={(ymd) => router.push(`/eventos/nuevo?date=${ymd}`)}
+          onDayClick={canManage ? (ymd) => router.push(`/eventos/nuevo?date=${ymd}`) : undefined}
           onPrev={handlePrev}
           onNext={handleNext}
           onPrevYear={() => setCurrentYear(y => y - 1)}
@@ -500,8 +636,13 @@ function EventosContent() {
           onToday={handleToday}
           onSetMonth={setCurrentMonth}
           onSetYear={setCurrentYear}
+          canViewDetail={canManage}
+          eligibilityByEventId={eligibilityByEventId}
+          onRegister={openRegister}
         />
       )}
+
+      {registrationModals}
     </div>
   )
 }

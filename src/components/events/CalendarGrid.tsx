@@ -8,6 +8,7 @@ import { isPastEvent } from '@/lib/events/expand-recurrence'
 import { Popover } from '@/components/shared/Popover'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
+import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { MapPin, Clock, ExternalLink, Repeat, ChevronRight } from 'lucide-react'
 
 // Las ocurrencias virtuales de recurrentes traen occurrence_key (mismo id que
@@ -28,6 +29,12 @@ interface CalendarGridProps {
   onToday: () => void
   onSetMonth: (month: number) => void
   onSetYear: (year: number) => void
+  /** Si false, el popover de evento no ofrece "Ver detalle completo" (el
+   *  usuario no tiene permiso sobre el módulo eventos). */
+  canViewDetail?: boolean
+  /** Elegibilidad de inscripción del usuario actual, por event_id. */
+  eligibilityByEventId?: Map<string, EventEligibilityResult>
+  onRegister?: (eligibility: EventEligibilityResult) => void
 }
 
 const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -50,7 +57,10 @@ type PopoverState =
   | { kind: 'event'; event: CalendarEvent; rect: DOMRect }
   | null
 
-export function CalendarGrid({ events, month, year, onEventClick, onDayClick, onPrev, onNext, onPrevYear, onNextYear, onToday, onSetMonth, onSetYear }: CalendarGridProps) {
+export function CalendarGrid({
+  events, month, year, onEventClick, onDayClick, onPrev, onNext, onPrevYear, onNextYear, onToday, onSetMonth, onSetYear,
+  canViewDetail = true, eligibilityByEventId, onRegister,
+}: CalendarGridProps) {
   const typeStyle = useEventTypeStyle()
   const today = new Date()
   // Años del selector: 2020 → año siguiente al actual, incluyendo el visible.
@@ -324,13 +334,38 @@ export function CalendarGrid({ events, month, year, onEventClick, onDayClick, on
                 </div>
               )}
 
-              <button
-                onClick={() => goToEvent(ev)}
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-navy px-4 py-2 text-sm text-white hover:bg-navy-light transition-colors font-body"
-              >
-                Ver detalle completo
-                <ChevronRight size={15} />
-              </button>
+              {(() => {
+                const elig = eligibilityByEventId?.get(ev.id)
+                if (!elig) return null
+                if (elig.is_eligible) {
+                  return (
+                    <button
+                      onClick={() => { setPop(null); onRegister?.(elig) }}
+                      className="w-full rounded-full bg-coral/10 hover:bg-coral/20 px-4 py-2 text-sm font-medium text-coral transition-colors font-body"
+                    >
+                      Inscribirme
+                    </button>
+                  )
+                }
+                if (elig.already_registered) {
+                  return (
+                    <span className="block text-center rounded-full bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
+                      Ya inscrito/a
+                    </span>
+                  )
+                }
+                return null
+              })()}
+
+              {canViewDetail && (
+                <button
+                  onClick={() => goToEvent(ev)}
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-navy px-4 py-2 text-sm text-white hover:bg-navy-light transition-colors font-body"
+                >
+                  Ver detalle completo
+                  <ChevronRight size={15} />
+                </button>
+              )}
             </div>
           </Popover>
         )
