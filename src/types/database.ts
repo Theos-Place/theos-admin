@@ -1764,37 +1764,60 @@ export type Database = {
       }
       member_admin_data: {
         Row: {
-          approved_to_lead_studies: boolean
-          approved_to_lead_studies_at: string | null
-          approved_to_lead_studies_by: string | null
+          not_recommended_to_lead_studies: boolean
+          not_recommended_to_lead_studies_at: string | null
+          not_recommended_to_lead_studies_by: string | null
+          authorized_virtual_studies: boolean
+          authorized_virtual_studies_at: string | null
+          authorized_virtual_studies_by: string | null
           member_id: string
           updated_at: string
         }
         Insert: {
-          approved_to_lead_studies?: boolean
-          approved_to_lead_studies_at?: string | null
-          approved_to_lead_studies_by?: string | null
+          not_recommended_to_lead_studies?: boolean
+          not_recommended_to_lead_studies_at?: string | null
+          not_recommended_to_lead_studies_by?: string | null
+          authorized_virtual_studies?: boolean
+          authorized_virtual_studies_at?: string | null
+          authorized_virtual_studies_by?: string | null
           member_id: string
           updated_at?: string
         }
         Update: {
-          approved_to_lead_studies?: boolean
-          approved_to_lead_studies_at?: string | null
-          approved_to_lead_studies_by?: string | null
+          not_recommended_to_lead_studies?: boolean
+          not_recommended_to_lead_studies_at?: string | null
+          not_recommended_to_lead_studies_by?: string | null
+          authorized_virtual_studies?: boolean
+          authorized_virtual_studies_at?: string | null
+          authorized_virtual_studies_by?: string | null
           member_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "member_admin_data_approved_to_lead_studies_by_fkey"
-            columns: ["approved_to_lead_studies_by"]
+            foreignKeyName: "member_admin_data_not_recommended_to_lead_studies_by_fkey"
+            columns: ["not_recommended_to_lead_studies_by"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "member_admin_data_approved_to_lead_studies_by_fkey"
-            columns: ["approved_to_lead_studies_by"]
+            foreignKeyName: "member_admin_data_not_recommended_to_lead_studies_by_fkey"
+            columns: ["not_recommended_to_lead_studies_by"]
+            isOneToOne: false
+            referencedRelation: "vw_asistentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_admin_data_authorized_virtual_studies_by_fkey"
+            columns: ["authorized_virtual_studies_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_admin_data_authorized_virtual_studies_by_fkey"
+            columns: ["authorized_virtual_studies_by"]
             isOneToOne: false
             referencedRelation: "vw_asistentes"
             referencedColumns: ["id"]
@@ -3476,6 +3499,7 @@ export type Database = {
           ends_at: string | null
           id: string
           is_leader_training: boolean | null
+          is_virtual: boolean
           leader_id: string | null
           location: string | null
           max_students: number | null
@@ -3502,6 +3526,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           is_leader_training?: boolean | null
+          is_virtual?: boolean
           leader_id?: string | null
           location?: string | null
           max_students?: number | null
@@ -3528,6 +3553,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           is_leader_training?: boolean | null
+          is_virtual?: boolean
           leader_id?: string | null
           location?: string | null
           max_students?: number | null
@@ -3863,51 +3889,72 @@ export type Database = {
           current_group_id: string | null
           existing_group_id: string | null
           id: string
+          last_class_attended: string | null
+          last_leader_name: string | null
           member_id: string
+          needed_study_code: string | null
           plan_id: string | null
           proposed_location: string | null
           proposed_schedule: string | null
           reason: string
           request_type: string
+          resolved_group_id: string | null
+          resulting_enrollment_id: string | null
+          resulting_folleto_request_id: string | null
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
           updated_at: string | null
+          wants_folleto: boolean
         }
         Insert: {
           created_at?: string | null
           current_group_id?: string | null
           existing_group_id?: string | null
           id?: string
+          last_class_attended?: string | null
+          last_leader_name?: string | null
           member_id: string
+          needed_study_code?: string | null
           plan_id?: string | null
           proposed_location?: string | null
           proposed_schedule?: string | null
           reason: string
           request_type: string
+          resolved_group_id?: string | null
+          resulting_enrollment_id?: string | null
+          resulting_folleto_request_id?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null
+          wants_folleto?: boolean
         }
         Update: {
           created_at?: string | null
           current_group_id?: string | null
           existing_group_id?: string | null
           id?: string
+          last_class_attended?: string | null
+          last_leader_name?: string | null
           member_id?: string
+          needed_study_code?: string | null
           plan_id?: string | null
           proposed_location?: string | null
           proposed_schedule?: string | null
           reason?: string
           request_type?: string
+          resolved_group_id?: string | null
+          resulting_enrollment_id?: string | null
+          resulting_folleto_request_id?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null
+          wants_folleto?: boolean
         }
         Relationships: [
           {
@@ -3943,6 +3990,27 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_requests_resolved_group_id_fkey"
+            columns: ["resolved_group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_requests_resulting_enrollment_id_fkey"
+            columns: ["resulting_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "study_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_requests_resulting_folleto_request_id_fkey"
+            columns: ["resulting_folleto_request_id"]
+            isOneToOne: false
+            referencedRelation: "folleto_requests"
             referencedColumns: ["id"]
           },
           {

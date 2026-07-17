@@ -70,6 +70,9 @@ export type StudyGroup = {
   whatsapp_group_url: string | null
   is_leader_training?: boolean
   training_modality?: string | null
+  /** Grupo virtual: solo visible/matriculable para miembros autorizados
+   *  (member_admin_data.authorized_virtual_studies). */
+  is_virtual?: boolean
 }
 
 export type LeaderEvaluation = {
@@ -164,6 +167,16 @@ export type StudyRequest = {
   created_at: string
   updated_at: string
   history: StudyRequestHistoryEntry[]
+  /** Campos propios de reubicación (request_type = 'relocation'). */
+  needed_study_code: string | null
+  last_class_attended: string | null
+  last_leader_name: string | null
+  wants_folleto: boolean
+  /** Resolución real: grupo elegido por el encargado + lo que generó. */
+  resolved_group_id: string | null
+  resolved_group_name: string | null
+  resulting_enrollment_id: string | null
+  resulting_folleto_request_id: string | null
 }
 
 export type StudyRequestWriteInput = {
@@ -175,4 +188,8 @@ export type StudyRequestWriteInput = {
   proposed_location?: string | null
   proposed_schedule?: string | null
   reason: string
+  needed_study_code?: string | null
+  last_class_attended?: string | null
+  last_leader_name?: string | null
+  wants_folleto?: boolean
 }
