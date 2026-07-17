@@ -1,15 +1,5 @@
 import type { NextConfig } from "next";
 
-// Origen de Supabase para permitirlo en connect-src. Passkeys y MFA corren en el
-// browser (auth.passkey.*, auth.mfa.*), que llama directo a *.supabase.co.
-const supabaseOrigin = (() => {
-  try {
-    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin
-  } catch {
-    return 'https://*.supabase.co'
-  }
-})()
-
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -40,26 +30,9 @@ const securityHeaders = [
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains',
   }] : []),
-  {
-    // style-src mantiene 'unsafe-inline': Radix posiciona popovers/menus con
-    // atributos style, y quedan ~145 estilos inline legítimos (colores que
-    // vienen de datos, tamaños/posiciones runtime). Los estáticos ya migraron
-    // a clases con tokens. 'unsafe-eval' solo en dev (HMR); producción no lo usa.
-    key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      // Fotos/flyers viven en Supabase Storage; data:/blob: para previews locales.
-      `img-src 'self' data: blob: ${supabaseOrigin}`,
-      `connect-src 'self' ${supabaseOrigin}`,
-      "frame-src 'self'",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join('; '),
-  },
+  // La CSP se setea POR REQUEST en src/proxy.ts (nonce en script-src, B17
+  // cerrado 2026-07-17) — un header estático no puede llevar nonce. La
+  // política vive en src/lib/csp.ts.
 ]
 
 const nextConfig: NextConfig = {

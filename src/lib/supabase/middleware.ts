@@ -7,7 +7,9 @@ import { NextResponse, type NextRequest } from 'next/server'
  * createServerClient y getUser(), o la sesión se puede perder.
  */
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request })
+  // Forma canónica { request: { headers } } (Next la exige para propagar
+  // headers custom del middleware — el nonce CSP — al SSR en producción).
+  let response = NextResponse.next({ request: { headers: request.headers } })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +21,7 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.next({ request })
+          response = NextResponse.next({ request: { headers: request.headers } })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           )

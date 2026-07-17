@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { buildCsp, newNonce } from '@/lib/csp'
 
 // Rutas accesibles sin sesión.
 const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos']
@@ -21,6 +22,15 @@ function redirectTo(request: NextRequest, response: NextResponse, pathname: stri
 }
 
 export async function proxy(request: NextRequest) {
+  // CSP con nonce por request (B17): se setea en los headers del REQUEST antes
+  // de updateSession — su NextResponse.next({ request }) los propaga al SSR,
+  // donde Next lee el nonce y lo estampa en sus scripts. La misma política va
+  // también en el response para que el browser la aplique.
+  const nonce = newNonce()
+  const csp = buildCsp(nonce)
+  request.headers.set('content-security-policy', csp)
+  request.headers.set('x-nonce', nonce)
+
   const { response, user, needsMfa } = await updateSession(request)
   const { pathname } = request.nextUrl
 
@@ -46,6 +56,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  response.headers.set('Content-Security-Policy', csp)
   return response
 }
 
