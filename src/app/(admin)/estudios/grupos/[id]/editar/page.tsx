@@ -204,7 +204,8 @@ function EditarForm({ group, studyType, refetch }: {
               onChange={setZone}
               allowEmpty
               emptyLabel="Sin zona"
-              placeholder="Buscar zona o escribir una nueva…"
+              allowCreate={false}
+              placeholder="Buscar zona…"
             />
           </div>
 

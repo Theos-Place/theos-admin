@@ -242,7 +242,8 @@ export default function NuevoGrupoPage() {
                 items={[{ value: 'all', label: 'Todas las zonas' }, ...SEDES.map(s => ({ value: s.id, label: s.name }))]}
                 value={zoneSel}
                 onChange={setZoneSel}
-                placeholder="Buscar zona o escribir una nueva…"
+                allowCreate={false}
+                placeholder="Buscar zona…"
               />
             </div>
 
