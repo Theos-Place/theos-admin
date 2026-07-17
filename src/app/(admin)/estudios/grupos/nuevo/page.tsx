@@ -72,10 +72,10 @@ export default function NuevoGrupoPage() {
     setStep1(prev => ({ ...prev, [key]: value }))
   }
 
+  // Un grupo tiene un único día: seleccionar reemplaza; volver a tocar el
+  // mismo lo quita. Se guarda igual como array (schedule_days) con 0 o 1 día.
   function toggleDay(d: string) {
-    setS1('days', step1.days.includes(d)
-      ? step1.days.filter(x => x !== d)
-      : [...step1.days, d])
+    setS1('days', step1.days.includes(d) ? [] : [d])
   }
 
   const studyType = studyTypes.find(s => s.id === step1.study_type_id)
@@ -274,7 +274,7 @@ export default function NuevoGrupoPage() {
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
-                Días preferidos
+                Día preferido
               </label>
               <div className="flex gap-1.5 flex-wrap">
                 {DAYS.map(d => (
@@ -482,7 +482,7 @@ export default function NuevoGrupoPage() {
                 <p className="text-navy font-body">{zoneSel.kind === 'empty' ? '—' : zoneSel.label}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Días</p>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Día</p>
                 <p className="text-navy font-body">{step1.days.length > 0 ? step1.days.map(d => DAY_LABELS[d]).join(', ') : '—'}</p>
               </div>
               <div>

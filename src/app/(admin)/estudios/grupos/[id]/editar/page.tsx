@@ -86,8 +86,10 @@ function EditarForm({ group, studyType, refetch }: {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Un grupo tiene un único día: seleccionar reemplaza; volver a tocar el
+  // mismo lo quita. Se guarda igual como array (schedule_days) con 0 o 1 día.
   function toggleDay(d: string) {
-    setDays(prev => (prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]))
+    setDays(prev => (prev.includes(d) ? [] : [d]))
   }
 
   async function handleSave() {
@@ -209,9 +211,9 @@ function EditarForm({ group, studyType, refetch }: {
             />
           </div>
 
-          {/* Días */}
+          {/* Día */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls}>Días</label>
+            <label className={labelCls}>Día</label>
             <div className="flex gap-1.5 flex-wrap">
               {DAYS.map(d => (
                 <button
