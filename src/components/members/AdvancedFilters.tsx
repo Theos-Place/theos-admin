@@ -169,6 +169,7 @@ function ConditionsList({
 function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   const { studyTypes } = useStudyPlans() // catálogo real de la BD
   const [study, setStudy] = useState('')
+  const [mode, setMode] = useState<'taken' | 'not_taken'>('taken')
   const [status, setStatus] = useState<StudyStatus>('completed')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -190,35 +191,77 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
       </div>
 
       <div>
-        <Label>Estado</Label>
-        <RadioGroup<StudyStatus>
-          options={[
-            { value: 'completed',   label: 'Completado' },
-            { value: 'in_progress', label: 'En progreso' },
-            { value: 'any',         label: 'Cualquiera' },
-          ]}
-          value={status}
-          onChange={setStatus}
-        />
+        <Label>Modalidad</Label>
+        <div className="flex rounded-xl bg-surface-low p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => setMode('taken')}
+            aria-pressed={mode === 'taken'}
+            className={cn(
+              'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium font-display transition-all',
+              mode === 'taken' ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy',
+            )}
+          >
+            Ha llevado
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('not_taken')}
+            aria-pressed={mode === 'not_taken'}
+            className={cn(
+              'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium font-display transition-all',
+              mode === 'not_taken' ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy',
+            )}
+          >
+            No ha llevado
+          </button>
+        </div>
+        {mode === 'not_taken' && (
+          <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">
+            Excluye a quienes ya lo completaron o lo están cursando ahora mismo.
+          </p>
+        )}
       </div>
 
-      {status === 'completed' && (
-        <div>
-          <Label>Rango de fechas</Label>
-          <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
-        </div>
+      {mode === 'taken' && (
+        <>
+          <div>
+            <Label>Estado</Label>
+            <RadioGroup<Exclude<StudyStatus, 'not_taken'>>
+              options={[
+                { value: 'completed',   label: 'Completado' },
+                { value: 'in_progress', label: 'En progreso' },
+                { value: 'any',         label: 'Cualquiera' },
+              ]}
+              value={status === 'not_taken' ? 'completed' : status}
+              onChange={setStatus}
+            />
+          </div>
+
+          {status === 'completed' && (
+            <div>
+              <Label>Rango de fechas</Label>
+              <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
+            </div>
+          )}
+        </>
       )}
 
       <AddBtn
         disabled={!study}
         onClick={() => {
           if (!study) return
+          const finalStatus: StudyStatus = mode === 'not_taken' ? 'not_taken' : status
           addCondition({
-            group: 'study', type: 'study', study, status,
-            from: status === 'completed' ? (from || null) : null,
-            to: status === 'completed' ? (to || null) : null,
+            group: 'study', type: 'study', study, status: finalStatus,
+            from: finalStatus === 'completed' ? (from || null) : null,
+            to: finalStatus === 'completed' ? (to || null) : null,
           })
           setStudy('')
+          setMode('taken')
+          setStatus('completed')
+          setFrom('')
+          setTo('')
         }}
       />
     </div>

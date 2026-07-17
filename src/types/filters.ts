@@ -1,4 +1,4 @@
-export type StudyStatus = 'completed' | 'in_progress' | 'any'
+export type StudyStatus = 'completed' | 'in_progress' | 'any' | 'not_taken'
 export type AttendanceType = 'participant' | 'server' | 'any'
 export type ServiceStatus = 'active' | 'historical' | 'any'
 export type FormResponseStatus = 'filled' | 'not_filled' | 'any'

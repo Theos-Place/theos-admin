@@ -16,6 +16,7 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
       const inProgress = m.current_study === c.study
       if (c.status === 'completed') return inCompleted
       if (c.status === 'in_progress') return inProgress
+      if (c.status === 'not_taken') return !inCompleted && !inProgress
       return inCompleted || inProgress
     }
     case 'attendance': {

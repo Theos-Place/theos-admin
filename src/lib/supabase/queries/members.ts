@@ -310,6 +310,13 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
   for (const c of conditions) {
     switch (c.type) {
       case 'study': {
+        // Inverso: NO lo completó y NO lo está cursando ahora — mismo universo
+        // que 'any' ('completed'+'enrolled'), pero como EXCLUDE en vez de
+        // INCLUDE. Sin rango de fecha (no aplica a "nunca lo llevó").
+        if (c.status === 'not_taken') {
+          res.exclude.push(await idsByEnrollment(c.study, ['completed', 'enrolled']))
+          break
+        }
         const statuses = c.status === 'completed' ? ['completed']
           : c.status === 'in_progress' ? ['enrolled']
           : ['completed', 'enrolled']

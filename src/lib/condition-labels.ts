@@ -7,6 +7,7 @@ export function conditionLabel(c: FilterCondition): string {
       const name = c.study ? studyLabel(c.study) : '?'
       if (c.status === 'completed') return `Completó: ${name}`
       if (c.status === 'in_progress') return `En progreso: ${name}`
+      if (c.status === 'not_taken') return `No llevó: ${name}`
       return `Estudio: ${name}`
     }
     case 'attendance': {
