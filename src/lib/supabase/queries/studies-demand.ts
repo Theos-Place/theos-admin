@@ -39,8 +39,9 @@ const LEVEL_TO_STAGE: Record<string, string> = {
  * Categoría B "elegibles": completaron el prerequisito, no están inscritos ni
  * completaron el objetivo, no están en A, y cumplen los compromisos.
  *
- * Compromisos por etapa del estudio OBJETIVO:
- *   inicial    → donador + asistencia activa (1 check-in/mes en los últimos 6 meses)
+ * Compromisos por etapa del estudio OBJETIVO (mismos mínimos que la
+ * elegibilidad de matrícula — ver studies-eligibility.ts):
+ *   inicial    → asistencia activa (NO pide donador)
  *   intermedia → donador + asistencia activa + servidor activo en comité
  *
  * Zona: sede del miembro; si no tiene, su provincia.
@@ -61,7 +62,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
 
   const stage = LEVEL_TO_STAGE[plan.level] ?? plan.level
   const requirements =
-    stage === 'inicial' ? ['donador', 'asistencia']
+    stage === 'inicial' ? ['asistencia']
     : stage === 'intermedia' ? ['donador', 'asistencia', 'servidor']
     : stage === 'niveles' ? ['asistencia'] // niveles: solo asistencia
     : []

@@ -208,7 +208,7 @@ export default function AnalisisPage() {
           aria-label="Estudio a analizar"
         >
           <option value="">Seleccionar estudio...</option>
-          <optgroup label="Etapa Inicial (requiere: donador + asistencia)">
+          <optgroup label="Etapa Inicial (requiere: asistencia)">
             {STUDY_TYPES.filter(s => s.stage === 'inicial' && !s.is_archived && s.is_curricular !== false).map(s => (
               <option key={s.id} value={s.id}>
                 {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
