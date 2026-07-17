@@ -8,8 +8,13 @@ import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 
 /** Botón "Invitar a estudio" en el perfil — solo roles de estudios. Invita al
- *  miembro a un estudio invitation_only (study_plans.requires_invitation). */
-export function InviteToStudyButton({ memberId, memberName = 'esta persona' }: { memberId: string; memberName?: string }) {
+ *  miembro a un estudio invitation_only (study_plans.requires_invitation).
+ *  `blocked` = el miembro está marcado "no recomendado para dar estudios":
+ *  no puede recibir invitaciones (CDEB u otro invitation_only) — guard de UI,
+ *  el server también lo rechaza aunque se salte esto. */
+export function InviteToStudyButton({
+  memberId, memberName = 'esta persona', blocked = false,
+}: { memberId: string; memberName?: string; blocked?: boolean }) {
   const { hasRole, loaded } = useAuth()
   const { studyTypes } = useStudyPlans()
   const [open, setOpen] = useState(false)
@@ -27,6 +32,14 @@ export function InviteToStudyButton({ memberId, memberName = 'esta persona' }: {
 
   if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return null
   if (invitationPlans.length === 0) return null
+
+  if (blocked) {
+    return (
+      <p className="text-[12px] text-navy-light/60 font-body italic">
+        No recomendado para dar estudios: no se puede invitar a la formación de dirigentes (CDEB).
+      </p>
+    )
+  }
 
   async function submit() {
     if (!planId || saving) return

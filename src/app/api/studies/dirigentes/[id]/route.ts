@@ -30,6 +30,12 @@ export async function PATCH(
     }
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'DIRIGENTE_NO_RECOMENDADO') {
+      return NextResponse.json(
+        { error: 'Esta persona está marcada como no recomendada para dar estudios.' },
+        { status: 400 },
+      )
+    }
     console.error('PATCH /api/studies/dirigentes/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

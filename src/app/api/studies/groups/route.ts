@@ -92,6 +92,12 @@ export async function POST(req: NextRequest) {
     const group = await createGroup(input)
     return NextResponse.json(group, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'DIRIGENTE_NO_RECOMENDADO') {
+      return NextResponse.json(
+        { error: 'El dirigente o co-dirigente elegido está marcado como no recomendado para dar estudios.' },
+        { status: 400 },
+      )
+    }
     console.error('POST /api/studies/groups:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

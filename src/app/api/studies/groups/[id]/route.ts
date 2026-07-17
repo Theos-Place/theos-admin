@@ -44,6 +44,12 @@ export async function PUT(
     await updateGroup(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'DIRIGENTE_NO_RECOMENDADO') {
+      return NextResponse.json(
+        { error: 'El dirigente o co-dirigente elegido está marcado como no recomendado para dar estudios.' },
+        { status: 400 },
+      )
+    }
     console.error('PUT /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

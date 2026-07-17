@@ -3,13 +3,20 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Database } from '@/types/database'
 
 // Datos administrativos del miembro. SOLO roles administrativos (el miembro
-// NUNCA accede, ni lectura). La escritura de approved_to_lead_studies se
-// restringe además a coordinador_estudios y admin.
+// NUNCA accede, ni lectura). La escritura de not_recommended_to_lead_studies
+// se restringe además a coordinador_estudios y admin; la de
+// authorized_virtual_studies a coordinador_estudios, coordinador_dirigentes y
+// admin (no direccion, no el propio miembro).
 
 function isStudyAdmin(roles: string[]): boolean {
   return roles.some(r => (STUDY_ADMIN_ROLES as string[]).includes(r))
+}
+
+function canEditVirtualAuth(roles: string[]): boolean {
+  return roles.includes('admin') || roles.includes('coordinador_estudios') || roles.includes('coordinador_dirigentes')
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,23 +29,37 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('member_admin_data')
-      .select('approved_to_lead_studies, approved_to_lead_studies_at, approver:members!member_admin_data_approved_to_lead_studies_by_fkey(first_name, last_name)')
+      .select(`
+        not_recommended_to_lead_studies, not_recommended_to_lead_studies_at,
+        marker:members!member_admin_data_not_recommended_to_lead_studies_by_fkey(first_name, last_name),
+        authorized_virtual_studies, authorized_virtual_studies_at,
+        virtual_approver:members!member_admin_data_authorized_virtual_studies_by_fkey(first_name, last_name)
+      `)
       .eq('member_id', id)
       .maybeSingle()
     if (error) throw error
     const row = data as {
-      approved_to_lead_studies: boolean
-      approved_to_lead_studies_at: string | null
-      approver: { first_name: string | null; last_name: string | null } | null
+      not_recommended_to_lead_studies: boolean
+      not_recommended_to_lead_studies_at: string | null
+      marker: { first_name: string | null; last_name: string | null } | null
+      authorized_virtual_studies: boolean
+      authorized_virtual_studies_at: string | null
+      virtual_approver: { first_name: string | null; last_name: string | null } | null
     } | null
     const canApprove = auth.ctx.roles.includes('admin') || auth.ctx.roles.includes('coordinador_estudios')
     return NextResponse.json({
-      approved_to_lead_studies: row?.approved_to_lead_studies ?? false,
-      approved_at: row?.approved_to_lead_studies_at ?? null,
-      approved_by_name: row?.approver
-        ? [row.approver.first_name, row.approver.last_name].filter(Boolean).join(' ') || null
+      not_recommended_to_lead_studies: row?.not_recommended_to_lead_studies ?? false,
+      marked_at: row?.not_recommended_to_lead_studies_at ?? null,
+      marked_by_name: row?.marker
+        ? [row.marker.first_name, row.marker.last_name].filter(Boolean).join(' ') || null
         : null,
       can_edit: canApprove, // el resto de roles administrativos lo ve read-only
+      authorized_virtual_studies: row?.authorized_virtual_studies ?? false,
+      authorized_virtual_studies_at: row?.authorized_virtual_studies_at ?? null,
+      authorized_virtual_studies_by_name: row?.virtual_approver
+        ? [row.virtual_approver.first_name, row.virtual_approver.last_name].filter(Boolean).join(' ') || null
+        : null,
+      can_edit_virtual: canEditVirtualAuth(auth.ctx.roles),
     })
   } catch (error) {
     console.error('GET /api/members/[id]/admin-data:', error)
@@ -49,24 +70,47 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireRoles()
   if (auth.res) return auth.res
-  // Aprobar para dar estudios: solo coordinador_estudios y admin.
-  const canApprove = auth.ctx.roles.includes('admin') || auth.ctx.roles.includes('coordinador_estudios')
-  if (!canApprove) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   const { id } = await params
   if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
   try {
-    const body = (await req.json().catch(() => ({}))) as { approved_to_lead_studies?: boolean }
-    if (typeof body.approved_to_lead_studies !== 'boolean') {
+    const body = (await req.json().catch(() => ({}))) as {
+      not_recommended_to_lead_studies?: boolean
+      authorized_virtual_studies?: boolean
+    }
+    const hasApproval = 'not_recommended_to_lead_studies' in body
+    const hasVirtual = 'authorized_virtual_studies' in body
+    if (!hasApproval && !hasVirtual) {
       return NextResponse.json({ error: 'Valor inválido' }, { status: 400 })
     }
+    // Marcar como no recomendado para dar estudios: solo coordinador_estudios y admin.
+    if (hasApproval) {
+      const canApprove = auth.ctx.roles.includes('admin') || auth.ctx.roles.includes('coordinador_estudios')
+      if (!canApprove) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+      if (typeof body.not_recommended_to_lead_studies !== 'boolean') {
+        return NextResponse.json({ error: 'Valor inválido' }, { status: 400 })
+      }
+    }
+    // Autorizar estudios virtuales: coordinador_estudios, coordinador_dirigentes y admin.
+    if (hasVirtual) {
+      if (!canEditVirtualAuth(auth.ctx.roles)) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+      if (typeof body.authorized_virtual_studies !== 'boolean') {
+        return NextResponse.json({ error: 'Valor inválido' }, { status: 400 })
+      }
+    }
     const supabase = createAdminClient()
-    const { error } = await supabase.from('member_admin_data').upsert({
-      member_id: id,
-      approved_to_lead_studies: body.approved_to_lead_studies,
-      approved_to_lead_studies_by: auth.ctx.memberId,
-      approved_to_lead_studies_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'member_id' })
+    const now = new Date().toISOString()
+    const update: Database['public']['Tables']['member_admin_data']['Insert'] = { member_id: id, updated_at: now }
+    if (hasApproval) {
+      update.not_recommended_to_lead_studies = body.not_recommended_to_lead_studies
+      update.not_recommended_to_lead_studies_by = auth.ctx.memberId
+      update.not_recommended_to_lead_studies_at = now
+    }
+    if (hasVirtual) {
+      update.authorized_virtual_studies = body.authorized_virtual_studies
+      update.authorized_virtual_studies_by = auth.ctx.memberId
+      update.authorized_virtual_studies_at = now
+    }
+    const { error } = await supabase.from('member_admin_data').upsert(update, { onConflict: 'member_id' })
     if (error) throw error
     return NextResponse.json({ ok: true })
   } catch (error) {

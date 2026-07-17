@@ -84,6 +84,18 @@ export async function createInvitation(input: {
   member_id: string; plan_id: string; invited_by?: string | null; notes?: string | null
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
+
+  // Guard: marcado "no recomendado para dar estudios" → excluido de invitaciones
+  // (CDEB y cualquier otro plan invitation_only).
+  const { data: adminData } = await supabase
+    .from('member_admin_data')
+    .select('not_recommended_to_lead_studies')
+    .eq('member_id', input.member_id)
+    .maybeSingle()
+  if ((adminData as { not_recommended_to_lead_studies?: boolean } | null)?.not_recommended_to_lead_studies) {
+    throw new Error('MIEMBRO_NO_RECOMENDADO')
+  }
+
   const { data: existing } = await supabase
     .from('study_invitations').select('id')
     .eq('member_id', input.member_id).eq('plan_id', input.plan_id).eq('status', 'active').maybeSingle()

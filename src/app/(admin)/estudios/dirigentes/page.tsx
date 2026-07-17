@@ -102,7 +102,7 @@ export default function DirigentesPage() {
   const [confirm, setConfirm] = useState<{ active: boolean; ids: string[] } | null>(null)
   const [applying, setApplying] = useState(false)
   const [studyBulk, setStudyBulk] = useState<StudyBulk | null>(null)
-  const [skippedWarn, setSkippedWarn] = useState<string[] | null>(null)
+  const [skippedWarn, setSkippedWarn] = useState<{ ids: string[]; reason: 'active_groups' | 'not_recommended' } | null>(null)
 
 
   const filtered = useMemo(() => {
@@ -180,9 +180,12 @@ export default function DirigentesPage() {
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json() as { skipped?: string[] }
+      const wasActivating = confirm.active
       sel.clear()
       setConfirm(null)
-      if (data.skipped && data.skipped.length > 0) setSkippedWarn(data.skipped)
+      if (data.skipped && data.skipped.length > 0) {
+        setSkippedWarn({ ids: data.skipped, reason: wasActivating ? 'not_recommended' : 'active_groups' })
+      }
       refetch()
     } catch (e) {
       console.error('No se pudo aplicar el cambio masivo:', e)
@@ -375,11 +378,13 @@ export default function DirigentesPage() {
         />
       )}
 
-      {/* Omitidos al desactivar (tenían grupo activo) */}
+      {/* Omitidos al desactivar (tenían grupo activo) o al activar (no recomendados) */}
       <ActiveWarningModal
         open={!!skippedWarn}
-        title="Algunos no se desactivaron"
-        message={`${skippedWarn?.length ?? 0} dirigente(s) tienen un grupo en curso/abierto y se mantuvieron activos: ${(skippedWarn ?? []).map(id => nameById.get(id)).filter(Boolean).join(', ')}`}
+        title={skippedWarn?.reason === 'not_recommended' ? 'Algunos no se activaron' : 'Algunos no se desactivaron'}
+        message={skippedWarn?.reason === 'not_recommended'
+          ? `${skippedWarn?.ids.length ?? 0} dirigente(s) están marcados como no recomendados para dar estudios y no se activaron: ${(skippedWarn?.ids ?? []).map(id => nameById.get(id)).filter(Boolean).join(', ')}`
+          : `${skippedWarn?.ids.length ?? 0} dirigente(s) tienen un grupo en curso/abierto y se mantuvieron activos: ${(skippedWarn?.ids ?? []).map(id => nameById.get(id)).filter(Boolean).join(', ')}`}
         onClose={() => setSkippedWarn(null)}
       />
     </div>

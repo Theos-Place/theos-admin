@@ -22,8 +22,12 @@ export async function POST(req: NextRequest) {
       skipped = ids.filter(id => blocked.has(id))
       toApply = ids.filter(id => !blocked.has(id))
     }
-    const updated = toApply.length ? await bulkSetDirigenteActive(toApply, body.active) : 0
-    return NextResponse.json({ ok: true, updated, skipped })
+    // Al activar, bulkSetDirigenteActive omite (sin abortar el lote) a quienes
+    // estén marcados "no recomendado para dar estudios" — se reportan en `skipped`
+    // igual que el caso de "tiene grupo activo" (direcciones mutuamente excluyentes).
+    const result = toApply.length ? await bulkSetDirigenteActive(toApply, body.active) : { updated: 0, skipped: [] }
+    skipped = [...skipped, ...result.skipped]
+    return NextResponse.json({ ok: true, updated: result.updated, skipped })
   } catch (error) {
     console.error('POST /api/studies/dirigentes/bulk-status:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

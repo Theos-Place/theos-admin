@@ -57,6 +57,7 @@ export type DbGroupEnriched = {
   whatsapp_group_url: string | null
   is_leader_training: boolean | null
   training_modality: string | null
+  is_virtual: boolean | null
   age_min: number | null
   age_max: number | null
   enrollments: Array<{
@@ -300,7 +301,7 @@ export async function getStudyGroupsWithEnrollments(): Promise<DbGroupEnriched[]
 const GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
-  is_leader_training, training_modality,
+  is_leader_training, training_modality, is_virtual,
   age_min, age_max,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
@@ -317,7 +318,7 @@ const GROUP_SELECT = `
 const LIST_GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
-  is_leader_training, training_modality,
+  is_leader_training, training_modality, is_virtual,
   age_min, age_max,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
@@ -329,7 +330,7 @@ const LIST_GROUP_SELECT = `
 const LIST_GROUP_MEMBERS_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
-  is_leader_training, training_modality,
+  is_leader_training, training_modality, is_virtual,
   age_min, age_max,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
@@ -475,12 +476,37 @@ export async function addDirigente(memberId: string, active: boolean): Promise<v
   }
 }
 
+/** Ids (de `memberIds`) marcados como "no recomendado para dar estudios"
+ *  (member_admin_data.not_recommended_to_lead_studies). Usado como guard antes
+ *  de activar/asignar a alguien como dirigente. */
+async function notRecommendedIds(
+  supabase: ReturnType<typeof createAdminClient>,
+  memberIds: string[],
+): Promise<Set<string>> {
+  if (memberIds.length === 0) return new Set()
+  const { data, error } = await supabase
+    .from('member_admin_data')
+    .select('member_id')
+    .in('member_id', memberIds)
+    .eq('not_recommended_to_lead_studies', true)
+  if (error) throw error
+  return new Set(((data ?? []) as Array<{ member_id: string }>).map(r => r.member_id))
+}
+
 /** Activa/desactiva manualmente a un dirigente. Estado = servidor activo en el
  *  Comité de Dirigentes. ACTIVAR: study_leaders.is_active + voluntario activo del
  *  comité + rol 'dirigente'. DESACTIVAR: study_leaders inactivo + sale del comité
- *  (voluntariado inactive) + se revoca el rol 'dirigente'. No pisa su config. */
+ *  (voluntariado inactive) + se revoca el rol 'dirigente'. No pisa su config.
+ *  Guard: no se puede ACTIVAR a alguien marcado "no recomendado para dar
+ *  estudios" (member_admin_data.not_recommended_to_lead_studies) — lanza
+ *  'DIRIGENTE_NO_RECOMENDADO'. Desactivar siempre está permitido. */
 export async function setDirigenteActive(memberId: string, active: boolean): Promise<void> {
   const supabase = createAdminClient()
+
+  if (active) {
+    const blocked = await notRecommendedIds(supabase, [memberId])
+    if (blocked.has(memberId)) throw new Error('DIRIGENTE_NO_RECOMENDADO')
+  }
 
   // study_leaders: actualizar estado sin tocar el resto (o crear si no existe).
   const { data: existing } = await supabase
@@ -527,24 +553,26 @@ export async function setDirigenteActive(memberId: string, active: boolean): Pro
   const { assignMemberRole, revokeMemberRole } = await import('./members')
   if (active) await assignMemberRole(memberId, 'dirigente')
   else await revokeMemberRole(memberId, 'dirigente')
-
-  // Regla de negocio: todo dirigente está aprobado para dar estudios. Al activar
-  // prendemos el flag; al desactivar NO lo tocamos (es independiente y puede
-  // aplicar a no-dirigentes — se gestiona aparte con el toggle manual).
-  if (active) {
-    const { error } = await supabase.from('member_admin_data').upsert(
-      { member_id: memberId, approved_to_lead_studies: true, approved_to_lead_studies_at: new Date().toISOString() },
-      { onConflict: 'member_id' },
-    )
-    if (error) throw error
-  }
 }
 
-/** Cambio de estado masivo de dirigentes. Devuelve cuántos se procesaron. */
-export async function bulkSetDirigenteActive(memberIds: string[], active: boolean): Promise<number> {
-  let n = 0
-  for (const id of memberIds) { await setDirigenteActive(id, active); n++ }
-  return n
+/** Cambio de estado masivo de dirigentes. Los marcados "no recomendado para dar
+ *  estudios" se omiten (solo aplica al ACTIVAR) y se devuelven en `skipped`, sin
+ *  abortar el resto del lote. */
+export async function bulkSetDirigenteActive(
+  memberIds: string[], active: boolean,
+): Promise<{ updated: number; skipped: string[] }> {
+  let updated = 0
+  const skipped: string[] = []
+  for (const id of memberIds) {
+    try {
+      await setDirigenteActive(id, active)
+      updated++
+    } catch (e) {
+      if (e instanceof Error && e.message === 'DIRIGENTE_NO_RECOMENDADO') skipped.push(id)
+      else throw e
+    }
+  }
+  return { updated, skipped }
 }
 
 // ── Mutaciones ─────────────────────────────────────────────
@@ -628,6 +656,19 @@ async function activateLeaders(
 ): Promise<void> {
   const ids = Array.from(new Set(memberIds.filter((x): x is string => !!x)))
   for (const memberId of ids) await setDirigenteActive(memberId, true)
+}
+
+/** Guard previo a crear/editar un grupo con leader_id/co_leader_id: rechaza si
+ *  alguno está marcado "no recomendado para dar estudios" — ANTES de escribir
+ *  el grupo (evita dejarlo a medias con un dirigente bloqueado ya asignado). */
+async function assertLeadersRecommended(
+  supabase: ReturnType<typeof createAdminClient>,
+  memberIds: Array<string | null | undefined>,
+): Promise<void> {
+  const ids = Array.from(new Set(memberIds.filter((x): x is string => !!x)))
+  if (ids.length === 0) return
+  const blocked = await notRecommendedIds(supabase, ids)
+  if (blocked.size > 0) throw new Error('DIRIGENTE_NO_RECOMENDADO')
 }
 
 /** Miembros (de `ids`) que son leader o co-líder de un grupo en curso/abierto.
@@ -716,6 +757,7 @@ export async function bulkUpdateLeaderStudies(
 
 export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
+  await assertLeadersRecommended(supabase, [input.leader_id, input.co_leader_id])
   const { data, error } = await supabase.from('study_groups').insert(input as Insertable<'study_groups'>).select('id').single()
   if (error) throw error
   await activateLeaders(supabase, [input.leader_id, input.co_leader_id])
@@ -724,9 +766,12 @@ export async function createGroup(input: GroupWriteInput): Promise<{ id: string 
 
 export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): Promise<void> {
   const supabase = createAdminClient()
+  // Solo valida/activa si el patch trae una asignación de dirigente.
+  if ('leader_id' in patch || 'co_leader_id' in patch) {
+    await assertLeadersRecommended(supabase, [patch.leader_id, patch.co_leader_id])
+  }
   const { error } = await supabase.from('study_groups').update(patch).eq('id', id)
   if (error) throw error
-  // Solo activa si el patch trae una asignación de dirigente.
   if ('leader_id' in patch || 'co_leader_id' in patch) {
     await activateLeaders(supabase, [patch.leader_id, patch.co_leader_id])
   }
@@ -862,9 +907,21 @@ export async function enrollMember(
   const supabase = createAdminClient()
   const { data: g } = await supabase
     .from('study_groups')
-    .select('plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation, cost, requires_payment)')
+    .select('is_virtual, plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation, cost, requires_payment)')
     .eq('id', groupId).maybeSingle()
-  const plan = (g as { plan: { id: string; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null)?.plan
+  const group = g as { is_virtual: boolean | null; plan: { id: string; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
+  const plan = group?.plan
+  // Guard: grupo virtual sin autorización del miembro — server-side, no
+  // depende de que la UI ya lo haya filtrado (se puede saltar el fetch).
+  if (group?.is_virtual) {
+    const { data: adminData } = await supabase
+      .from('member_admin_data')
+      .select('authorized_virtual_studies')
+      .eq('member_id', memberId)
+      .maybeSingle()
+    const authorized = !!(adminData as { authorized_virtual_studies?: boolean } | null)?.authorized_virtual_studies
+    if (!authorized) throw new Error('GRUPO_VIRTUAL_NO_AUTORIZADO')
+  }
   // Guard: si ya existe una matrícula 'pendiente_de_pago' para este plan
   // (auto-matrícula al cerrar el nivel anterior), inscribirse a un grupo la
   // saltaría creando una matrícula activa sin pagar. El camino correcto es

@@ -35,6 +35,12 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'MIEMBRO_NO_RECOMENDADO') {
+      return NextResponse.json(
+        { error: 'Esta persona está marcada como no recomendada para dar estudios y no puede recibir esta invitación.' },
+        { status: 403 },
+      )
+    }
     console.error('POST /api/studies/invitations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

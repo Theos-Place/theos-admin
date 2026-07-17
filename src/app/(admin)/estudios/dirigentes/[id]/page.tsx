@@ -85,12 +85,15 @@ function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: s
         body: JSON.stringify({ active: !active }),
       })
       if (res.status === 409) { setConfirm(false); setWarn(true); return }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error || `HTTP ${res.status}`)
+      }
       setConfirm(false)
       onChanged()
     } catch (e) {
       console.error('No se pudo cambiar el estado:', e)
-      toast(`No se pudo ${active ? 'desactivar' : 'activar'} al dirigente. Intentá de nuevo.`, 'error')
+      toast(e instanceof Error ? e.message : `No se pudo ${active ? 'desactivar' : 'activar'} al dirigente. Intentá de nuevo.`, 'error')
     }
     finally { setSaving(false) }
   }
