@@ -96,3 +96,10 @@ export function getInitials(name: string | null | undefined): string {
 export function initialsFromParts(first: string | null | undefined, last: string | null | undefined): string {
   return ((first?.[0] ?? '') + (last?.[0] ?? '')).toUpperCase()
 }
+
+/** Monto en colones sin decimales: "₡50 000" (es-CR usa espacio de miles).
+ *  QA 2026-07-17: fuente única — antes había 2 copias locales + ~30 template
+ *  strings inline con el mismo patrón. */
+export function formatCRC(amount: number): string {
+  return `₡${amount.toLocaleString('es-CR')}`
+}

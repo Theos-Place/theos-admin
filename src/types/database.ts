@@ -14,75 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      application_status_history: {
-        Row: {
-          application_id: string
-          assigned_to: string | null
-          changed_by: string | null
-          created_at: string | null
-          from_status: string | null
-          id: string
-          notes: string | null
-          to_status: string | null
-        }
-        Insert: {
-          application_id: string
-          assigned_to?: string | null
-          changed_by?: string | null
-          created_at?: string | null
-          from_status?: string | null
-          id?: string
-          notes?: string | null
-          to_status?: string | null
-        }
-        Update: {
-          application_id?: string
-          assigned_to?: string | null
-          changed_by?: string | null
-          created_at?: string | null
-          from_status?: string | null
-          id?: string
-          notes?: string | null
-          to_status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "application_status_history_application_id_fkey"
-            columns: ["application_id"]
-            isOneToOne: false
-            referencedRelation: "applications"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "application_status_history_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "application_status_history_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "vw_asistentes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "application_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "application_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "vw_asistentes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       applications: {
         Row: {
           applicant_id: string
@@ -1095,75 +1026,6 @@ export type Database = {
           name?: string | null
         }
         Relationships: []
-      }
-      family_unlink_requests: {
-        Row: {
-          created_at: string | null
-          family_unit_id: string | null
-          id: string
-          processed_at: string | null
-          processed_by: string | null
-          reason: string | null
-          requester_id: string | null
-          status: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          family_unit_id?: string | null
-          id?: string
-          processed_at?: string | null
-          processed_by?: string | null
-          reason?: string | null
-          requester_id?: string | null
-          status?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          family_unit_id?: string | null
-          id?: string
-          processed_at?: string | null
-          processed_by?: string | null
-          reason?: string | null
-          requester_id?: string | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "family_unlink_requests_family_unit_id_fkey"
-            columns: ["family_unit_id"]
-            isOneToOne: false
-            referencedRelation: "family_units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "family_unlink_requests_processed_by_fkey"
-            columns: ["processed_by"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "family_unlink_requests_processed_by_fkey"
-            columns: ["processed_by"]
-            isOneToOne: false
-            referencedRelation: "vw_asistentes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "family_unlink_requests_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "family_unlink_requests_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "vw_asistentes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       finance_request_status_history: {
         Row: {
@@ -3505,7 +3367,6 @@ export type Database = {
           max_students: number | null
           name: string
           plan_id: string
-          schedule: string | null
           schedule_days: string[] | null
           schedule_time: string | null
           sede: string | null
@@ -3532,7 +3393,6 @@ export type Database = {
           max_students?: number | null
           name: string
           plan_id: string
-          schedule?: string | null
           schedule_days?: string[] | null
           schedule_time?: string | null
           sede?: string | null
@@ -3559,7 +3419,6 @@ export type Database = {
           max_students?: number | null
           name?: string
           plan_id?: string
-          schedule?: string | null
           schedule_days?: string[] | null
           schedule_time?: string | null
           sede?: string | null

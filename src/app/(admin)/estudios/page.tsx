@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
+import { toYmdLocal } from '@/lib/format'
 import {
   Users, Clock, AlertTriangle, TrendingUp,
   BookOpen, UserCheck, BarChart2, ListChecks, LayoutList, Inbox,
@@ -62,8 +63,10 @@ export default function EstudiosPage() {
   // el número del box coincide con la lista al hacer clic. Comparación por
   // fecha (slice 10) para evitar drift.
   const closingSoon = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10)
-    const in30Str = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
+    // QA 2026-07-17: fecha LOCAL del navegador (CR), no UTC — toISOString()
+    // corría la ventana un día entre 6pm y medianoche.
+    const todayStr = toYmdLocal(new Date())
+    const in30Str = toYmdLocal(new Date(Date.now() + 30 * 86400000))
     return groups.filter(g => {
       if (!g.end_date || g.status === 'finalizado') return false
       const d = g.end_date.slice(0, 10)

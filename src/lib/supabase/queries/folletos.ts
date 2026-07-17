@@ -116,16 +116,25 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
   })) as DbFolletoRequest[]
 }
 
-/** Cambio de estado (individual o en lote). */
+/** Cambio de estado (individual o en lote). QA 2026-07-17: el flujo es LINEAL
+ *  (creada → en_impresion → enviado_entregado → cerrada) y la UI solo ofrece
+ *  "avanzar al siguiente" — el update se condiciona al estado PREDECESOR, así
+ *  un request repetido/adulterado no salta pasos ni retrocede. Las filas que
+ *  no estaban en el estado esperado se omiten (se refleja en `updated`). */
 export async function setFolletoRequestsStatus(ids: string[], status: FolletoState): Promise<{ updated: number }> {
   if (ids.length === 0) return { updated: 0 }
+  const { FOLLETO_STATES } = await import('@/lib/studies/folletos')
+  const idx = FOLLETO_STATES.indexOf(status)
+  if (idx <= 0) return { updated: 0 } // 'creada' es inicial: no se llega por transición
+  const prev = FOLLETO_STATES[idx - 1]
   const supabase = createAdminClient()
   const { error, count } = await supabase
     .from('folleto_requests')
     .update({ status, updated_at: new Date().toISOString() }, { count: 'exact' })
     .in('id', ids)
+    .eq('status', prev)
   if (error) throw error
-  return { updated: count ?? ids.length }
+  return { updated: count ?? 0 }
 }
 
 /** Notifica (campana + correo) a quienes tienen el permiso de folletos.

@@ -1,5 +1,6 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
+import { ymdCR } from '@/lib/format'
 import type { Json } from '@/types/database'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
@@ -231,8 +232,10 @@ export async function getStudyGroups(
   const f = opts.filters ?? {}
   const { planId, searchOr } = await resolveGroupFilters(supabase, f)
   // Ventana "prontos a cerrar": [hoy, hoy+30d] — idéntico al conteo del dashboard.
-  const closeFrom = new Date().toISOString().slice(0, 10)
-  const closeTo = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
+  // QA 2026-07-17: fechas en zona CR — con toISOString() (UTC) la ventana se
+  // corría un día entre 6pm y medianoche hora CR.
+  const closeFrom = ymdCR()
+  const closeTo = ymdCR(new Date(Date.now() + 30 * 86400000))
 
   if (opts.page !== undefined || opts.pageSize !== undefined) {
     const page = Math.max(1, opts.page ?? 1)

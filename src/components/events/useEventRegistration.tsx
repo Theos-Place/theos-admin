@@ -6,12 +6,8 @@ import { Modal } from '@/components/shared/Modal'
 import { PaymentMethodSelector, type PaymentMethodValue } from '@/components/shared/PaymentMethodSelector'
 import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
 import { cn } from '@/lib/utils'
-import { formatDateLong } from '@/lib/format'
+import { formatDateLong, formatCRC } from '@/lib/format'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
-
-function formatCRC(amount: number): string {
-  return `₡${amount.toLocaleString('es-CR')}`
-}
 
 type RegisterResult = { id: string; amount: number; pricing: { requiresPayment: boolean; exempt: boolean } }
 type ApplicableScholarship = { id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }

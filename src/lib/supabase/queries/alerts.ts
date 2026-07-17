@@ -50,11 +50,8 @@ const ALERT_DEFS: AlertDef[] = [
     filter: { column: 'status', value: 'pendiente' }, url: '/empleados',
     message: n => `${n} solicitud${n !== 1 ? 'es' : ''} de vacaciones por aprobar`,
   },
-  {
-    id: 'family-unlink', type: 'info', table: 'family_unlink_requests',
-    filter: { column: 'status', value: 'pending' }, url: '/miembros',
-    message: n => `${n} solicitud${n !== 1 ? 'es' : ''} de desvinculación familiar`,
-  },
+  // QA 2026-07-17: la alerta de family_unlink_requests se quitó — la tabla no
+  // tenía write-path en la app (0 filas siempre) y se eliminó en la mig 135.
 ]
 
 export type ActiveAlert = { id: string; type: AlertType; message: string; url: string; count: number }

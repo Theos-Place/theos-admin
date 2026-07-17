@@ -33,6 +33,14 @@ function one<T>(v: T | T[] | null | undefined): T | null {
   return Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
 }
 
+// QA 2026-07-17: los .in('member_id', ...) van troceados a ≤300 ids — un set
+// grande de aplicantes reventaba por URL gigante (mismo antecedente del 500).
+function chunk<T>(arr: T[], size = 300): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+  return out
+}
+
 export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<ApplicantExportRow[]> {
   if (vacancyIds.length === 0) return []
   const supabase = createAdminClient()
@@ -52,22 +60,27 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
   const memberIds = [...new Set(appRows.map(a => a.applicant_id))]
 
   // 2) Perfiles.
-  const { data: members } = await supabase
-    .from('members')
-    .select('id, cedula, first_name, last_name, email, phone, province')
-    .in('id', memberIds)
-  const memberById = new Map(
-    ((members ?? []) as Array<Record<string, string | null>>).map(m => [m.id as string, m]),
-  )
+  const memberById = new Map<string, Record<string, string | null>>()
+  for (const slice of chunk(memberIds)) {
+    const { data: members } = await supabase
+      .from('members')
+      .select('id, cedula, first_name, last_name, email, phone, province')
+      .in('id', slice)
+    for (const m of (members ?? []) as Array<Record<string, string | null>>) memberById.set(m.id as string, m)
+  }
 
   // 3) Servicios activos (volunteers status='active') → "Comité — Puesto".
-  const { data: vols } = await supabase
-    .from('volunteers')
-    .select('member_id, status, position:service_positions!volunteers_position_id_fkey(title, area:areas!service_positions_area_id_fkey(name))')
-    .in('member_id', memberIds)
-    .eq('status', 'active')
   const servicesByMember = new Map<string, string[]>()
-  for (const v of (vols ?? []) as Array<{ member_id: string; position: unknown }>) {
+  const allVols: Array<{ member_id: string; position: unknown }> = []
+  for (const slice of chunk(memberIds)) {
+    const { data: vols } = await supabase
+      .from('volunteers')
+      .select('member_id, status, position:service_positions!volunteers_position_id_fkey(title, area:areas!service_positions_area_id_fkey(name))')
+      .in('member_id', slice)
+      .eq('status', 'active')
+    allVols.push(...((vols ?? []) as Array<{ member_id: string; position: unknown }>))
+  }
+  for (const v of allVols) {
     const pos = one(v.position) as { title: string | null; area: { name: string } | { name: string }[] | null } | null
     const area = one(pos?.area)
     const label = [area?.name, pos?.title].filter(Boolean).join(' — ')
@@ -78,12 +91,16 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
   }
 
   // 4) Historial de estudios (study_enrollments → plan por grupo o directo).
-  const { data: enr } = await supabase
-    .from('study_enrollments')
-    .select('member_id, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)), plan_direct:study_plans!study_enrollments_plan_id_fkey(name)')
-    .in('member_id', memberIds)
   const studiesByMember = new Map<string, Set<string>>()
-  for (const e of (enr ?? []) as Array<{ member_id: string; group: unknown; plan_direct: unknown }>) {
+  const allEnr: Array<{ member_id: string; group: unknown; plan_direct: unknown }> = []
+  for (const slice of chunk(memberIds)) {
+    const { data: enr } = await supabase
+      .from('study_enrollments')
+      .select('member_id, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)), plan_direct:study_plans!study_enrollments_plan_id_fkey(name)')
+      .in('member_id', slice)
+    allEnr.push(...((enr ?? []) as Array<{ member_id: string; group: unknown; plan_direct: unknown }>))
+  }
+  for (const e of allEnr) {
     const grp = one(e.group) as { plan: { name: string } | { name: string }[] | null } | null
     const planName = one(grp?.plan)?.name ?? one(e.plan_direct as { name: string } | null)?.name ?? null
     if (!planName) continue
@@ -98,13 +115,17 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
   //    de charla en los últimos 6 meses, con al menos uno en los últimos 60 días).
   //    Historial completo (sin recorte de fecha): el caso inactivo puede
   //    necesitar mirar más de 12 meses atrás.
-  const { data: chk } = await supabase
-    .from('event_checkins')
-    .select('member_id, checked_in_at, events!inner(event_type, title)')
-    .eq('events.event_type', 'charla')
-    .in('member_id', memberIds)
   const checkinsByMember = new Map<string, Array<{ checked_in_at: string | null; title: string | null }>>()
-  for (const c of (chk ?? []) as Array<{ member_id: string; checked_in_at: string | null; events: unknown }>) {
+  const allChk: Array<{ member_id: string; checked_in_at: string | null; events: unknown }> = []
+  for (const slice of chunk(memberIds)) {
+    const { data: chk } = await supabase
+      .from('event_checkins')
+      .select('member_id, checked_in_at, events!inner(event_type, title)')
+      .eq('events.event_type', 'charla')
+      .in('member_id', slice)
+    allChk.push(...((chk ?? []) as Array<{ member_id: string; checked_in_at: string | null; events: unknown }>))
+  }
+  for (const c of allChk) {
     const ev = one(c.events) as { title: string | null } | null
     const arr = checkinsByMember.get(c.member_id) ?? []
     arr.push({ checked_in_at: c.checked_in_at, title: ev?.title ?? null })

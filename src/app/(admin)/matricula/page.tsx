@@ -18,7 +18,7 @@ import { useStudyPlans } from '@/hooks/useStudyPlans'
 import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
 import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
-import { formatDateLong } from '@/lib/format'
+import { formatDateLong, formatCRC } from '@/lib/format'
 
 type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'campaña'
 
@@ -38,10 +38,6 @@ const FILTER_TABS_BASE: { id: FilterTab; label: string }[] = [
   { id: 'inicial',     label: 'Etapa Inicial' },
   { id: 'intermedia',  label: 'Etapa Intermedia' },
 ]
-
-function formatCRC(amount: number): string {
-  return `₡${amount.toLocaleString('es-CR')}`
-}
 
 type ConfirmState = { group: EligibleGroup; study: EligibilityResult }
 
