@@ -131,6 +131,23 @@ describe('computeEligibility — compromisos', () => {
     expect(r.is_eligible).toBe(true)
     expect(r.by_exception).toBe(true)
   })
+
+  it('Etapa Intermedia exige el criterio de asistencia REFORZADO, no el general', () => {
+    const dis2 = plan({ code: 'DIS2', stage: 'intermedia', req_donor: true, req_server: true, req_attendee: true })
+    // Cumple el criterio general (6) pero no el reforzado (12): sigue bloqueado.
+    const soloGeneral = computeEligibility([dis2], [], profile({
+      is_donor: true, is_server: true, attendance_active: true, attendance_active_intermedia: false,
+    }))
+    const r1 = of(soloGeneral, 'DIS2')
+    expect(r1.is_eligible).toBe(false)
+    expect(r1.reasons_blocked.some(m => m.includes('12 charlas'))).toBe(true)
+
+    // Cumple el reforzado: pasa.
+    const cumpleReforzado = computeEligibility([dis2], [], profile({
+      is_donor: true, is_server: true, attendance_active: true, attendance_active_intermedia: true,
+    }))
+    expect(of(cumpleReforzado, 'DIS2').is_eligible).toBe(true)
+  })
 })
 
 describe('computeEligibility — invitación y grupos', () => {

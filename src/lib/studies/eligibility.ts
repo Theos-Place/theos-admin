@@ -2,7 +2,7 @@
 // Versión server-side de la lógica que antes vivía en enrollment-eligibility.ts (mock).
 
 import type { StudyType, StudyGroup } from '@/types/study'
-import { ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
+import { ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MIN_CHARLAS_INTERMEDIA, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 
 export type EligibilityResult = {
   study_code: string
@@ -47,6 +47,10 @@ export type MemberStudyProfile = {
   /** Criterio único de asistencia activa (ver @/lib/attendance): ≥ATTENDANCE_MIN_CHARLAS
    *  charlas en ATTENDANCE_MONTHS meses, con al menos una en ATTENDANCE_RECENCY_DAYS días. */
   attendance_active: boolean
+  /** Criterio REFORZADO, exclusivo de Etapa Intermedia (ver
+   *  ATTENDANCE_MIN_CHARLAS_INTERMEDIA): el doble de asistencias, misma ventana
+   *  y misma condición de recencia. El resto de etapas usa `attendance_active`. */
+  attendance_active_intermedia?: boolean
   /** Códigos de planes invitation_only con invitación ACTIVA para este miembro. */
   invited_codes?: string[]
   /** Excepciones de matrícula activas: code → requisitos perdonados
@@ -154,9 +158,16 @@ export function computeEligibility(
       else reasons_blocked.push('Requiere servir activamente en un comité')
     }
     if (study.req_attendee) {
-      if (profile.attendance_active) reasons_met.push('Asistís regularmente a las charlas ✓')
+      // Etapa Intermedia usa el criterio de asistencia REFORZADO (el doble de
+      // asistencias, misma ventana y misma recencia) — el resto de etapas
+      // sigue con el criterio general. Mismo helper (meetsAttendanceCriteria),
+      // solo cambia el mínimo exigido.
+      const isIntermedia = study.stage === 'intermedia'
+      const attendanceOk = isIntermedia ? !!profile.attendance_active_intermedia : profile.attendance_active
+      const minCharlas = isIntermedia ? ATTENDANCE_MIN_CHARLAS_INTERMEDIA : ATTENDANCE_MIN_CHARLAS
+      if (attendanceOk) reasons_met.push('Asistís regularmente a las charlas ✓')
       else if (isWaived('attendance')) reasons_met.push('Requisito de asistencia eximido por excepción ✓')
-      else reasons_blocked.push(`Requiere asistencia activa: al menos ${ATTENDANCE_MIN_CHARLAS} charlas con check-in en los últimos ${ATTENDANCE_MONTHS} meses, con al menos una en los últimos ${ATTENDANCE_RECENCY_DAYS} días (llevás ${profile.charla_count} en los últimos ${ATTENDANCE_MONTHS} meses)`)
+      else reasons_blocked.push(`Requiere asistencia activa: al menos ${minCharlas} charlas con check-in en los últimos ${ATTENDANCE_MONTHS} meses, con al menos una en los últimos ${ATTENDANCE_RECENCY_DAYS} días (llevás ${profile.charla_count} en los últimos ${ATTENDANCE_MONTHS} meses)`)
     }
 
     const is_eligible = reasons_blocked.length === 0

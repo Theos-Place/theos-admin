@@ -14,6 +14,13 @@ export const ATTENDANCE_MONTHS = 6
 export const ATTENDANCE_MIN_CHARLAS = 6
 export const ATTENDANCE_RECENCY_DAYS = 60
 
+/** Criterio de asistencia REFORZADO, exclusivo de la elegibilidad de estudios
+ *  de Etapa Intermedia: el doble de asistencias del criterio general (12 en
+ *  vez de 6), con la MISMA ventana (6 meses) y la MISMA condición de
+ *  recencia (≥1 en los últimos 60 días). El resto del sistema (asistencia
+ *  general, otras etapas) sigue con ATTENDANCE_MIN_CHARLAS. */
+export const ATTENDANCE_MIN_CHARLAS_INTERMEDIA = ATTENDANCE_MIN_CHARLAS * 2
+
 /** Inicio (YYYY-MM-01) del mes completo más viejo de la ventana: últimos `months`
  *  meses calendario COMPLETOS, excluyendo el mes en curso (incluirlo dejaría a
  *  todo el mundo afuera los primeros días de cada mes). */

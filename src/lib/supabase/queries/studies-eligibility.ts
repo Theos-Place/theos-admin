@@ -13,12 +13,15 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   is_server: boolean
   charla_count: number
   attendance_active: boolean
+  /** Criterio reforzado, solo para Etapa Intermedia: el doble de asistencias
+   *  (ver ATTENDANCE_MIN_CHARLAS_INTERMEDIA) sobre la MISMA ventana. */
+  attendance_active_intermedia: boolean
   invited_codes: string[]
   member_age: number | null
   authorized_virtual_studies: boolean
 }> {
   const supabase = createAdminClient()
-  const { attendanceWindowStart, meetsAttendanceCriteria } = await import('@/lib/attendance')
+  const { attendanceWindowStart, meetsAttendanceCriteria, ATTENDANCE_MIN_CHARLAS_INTERMEDIA } = await import('@/lib/attendance')
   const oldest = attendanceWindowStart()
   const { activeInvitationCodesForMember } = await import('./study-invitations')
   const [memberRes, enrRes, volRes, chkRes, invitedCodes, adminDataRes] = await Promise.all([
@@ -64,6 +67,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     is_server: (volRes.data ?? []).length > 0,
     charla_count: charlaDates.filter(Boolean).length,
     attendance_active: meetsAttendanceCriteria(charlaDates),
+    attendance_active_intermedia: meetsAttendanceCriteria(charlaDates, { minCount: ATTENDANCE_MIN_CHARLAS_INTERMEDIA }),
     invited_codes: invitedCodes,
     member_age: birth ? calcAge(birth) : null,
     authorized_virtual_studies: Boolean((adminDataRes.data as { authorized_virtual_studies?: boolean } | null)?.authorized_virtual_studies),
@@ -76,8 +80,9 @@ export type MemberStudyEligibility = {
   /** Planes que el miembro puede solicitar: no llevados + prerequisito + compromisos.
    *  `via_exception` = habilitado (total o parcialmente) por una excepción activa. */
   eligible_plans: Array<{ id: string; code: string; name: string; stage: string; via_exception?: boolean }>
-  /** Compromisos del miembro (para mensajes de la UI). */
-  commitments: { is_donor: boolean; attendance_active: boolean; is_server: boolean }
+  /** Compromisos del miembro (para mensajes de la UI). `attendance_active_intermedia`
+   *  es el criterio reforzado que aplica específicamente a Etapa Intermedia. */
+  commitments: { is_donor: boolean; attendance_active: boolean; attendance_active_intermedia: boolean; is_server: boolean }
 }
 
 const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
@@ -92,15 +97,17 @@ const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
  *  - el miembro no lo llevó (sin inscripción completed ni enrolled), y
  *  - cumple el prerequisito de la cadena (completed del prereq), y
  *  - cumple los compromisos de la etapa (mínimo real, sin exceso):
- *    niveles = ninguno; inicial = asistencia activa (criterio único: ≥6
+ *    niveles = ninguno; inicial = asistencia activa (criterio general: ≥6
  *    charlas en 6 meses, con al menos una en 60 días); intermedia = + donador
- *    + servidor activo; campañas = ninguno.
+ *    + servidor activo, con asistencia REFORZADA (≥12 charlas en 6 meses,
+ *    misma condición de recencia — ver ATTENDANCE_MIN_CHARLAS_INTERMEDIA);
+ *    campañas = ninguno.
  */
 export async function getEligibleStudiesForMember(memberId: string): Promise<MemberStudyEligibility> {
   const supabase = createAdminClient()
 
   // Asistencia: criterio único vía helper central (@/lib/attendance).
-  const { attendanceWindowStart, meetsAttendanceCriteria } = await import('@/lib/attendance')
+  const { attendanceWindowStart, meetsAttendanceCriteria, ATTENDANCE_MIN_CHARLAS_INTERMEDIA } = await import('@/lib/attendance')
   const oldest = attendanceWindowStart()
 
   const [memberRes, enrRes, volRes, chkRes, plansRes] = await Promise.all([
@@ -146,6 +153,8 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   // Asistencia activa: criterio único vía helper central (@/lib/attendance).
   const charlaDates = ((chkRes.data ?? []) as Array<{ checked_in_at: string }>).map(c => c.checked_in_at)
   const attendance_active = meetsAttendanceCriteria(charlaDates)
+  // Etapa Intermedia: criterio reforzado (el doble de asistencias), misma ventana.
+  const attendance_active_intermedia = meetsAttendanceCriteria(charlaDates, { minCount: ATTENDANCE_MIN_CHARLAS_INTERMEDIA })
 
   const is_donor = Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor)
   const is_server = (volRes.data ?? []).length > 0
@@ -161,9 +170,10 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   const meetsStage = (stage: string, waived: (req: string) => boolean): boolean => {
     const donorOk = is_donor || waived('donor')
     const attOk = attendance_active || waived('attendance')
+    const attOkIntermedia = attendance_active_intermedia || waived('attendance')
     const serverOk = is_server || waived('server')
     if (stage === 'inicial') return attOk // inicial: solo asistencia (NO donador)
-    if (stage === 'intermedia') return donorOk && attOk && serverOk
+    if (stage === 'intermedia') return donorOk && attOkIntermedia && serverOk // asistencia reforzada (≥12)
     if (stage === 'niveles') return true // niveles: sin compromisos
     return true // campañas: sin compromisos
   }
@@ -211,6 +221,6 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   return {
     active_enrollments,
     eligible_plans,
-    commitments: { is_donor, attendance_active, is_server },
+    commitments: { is_donor, attendance_active, attendance_active_intermedia, is_server },
   }
 }
