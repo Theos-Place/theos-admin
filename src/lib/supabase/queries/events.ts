@@ -700,11 +700,31 @@ export async function deleteVolunteer(eventId: string, memberId: string): Promis
 
 /** Registra un check-in en un evento. attendance_type NO se persiste: se deriva
  *  al leer (es "server" si el miembro es voluntario del evento). */
+export class NotRegisteredError extends Error {
+  constructor() { super('Este evento es pago: la persona debe estar inscrita antes del check-in.') }
+}
+
 export async function createCheckin(
   eventId: string,
   input: { member_id?: string | null; guest_name?: string | null; sub_event_id?: string | null; method?: 'manual' | 'qr' | 'smart_link' },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
+
+  // Gate ÚNICO server-side (Fase 1): en un evento PAGO el check-in exige que la
+  // persona ya tenga inscripción (cualquier payment_status). Antes esto vivía
+  // solo en el cliente y los caminos divergían (QR bloqueaba, familia no) — el
+  // servidor no lo validaba. Ahora es la fuente de verdad para los 3 métodos.
+  if (input.member_id) {
+    const { data: ev } = await supabase
+      .from('events').select('requires_payment').eq('id', eventId).maybeSingle()
+    if ((ev as { requires_payment?: boolean } | null)?.requires_payment) {
+      const { data: reg } = await supabase
+        .from('event_registrations').select('id')
+        .eq('event_id', eventId).eq('member_id', input.member_id).limit(1).maybeSingle()
+      if (!reg) throw new NotRegisteredError()
+    }
+  }
+
   const { data, error } = await supabase
     .from('event_checkins')
     .insert({

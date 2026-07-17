@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { createCheckin, deleteCheckin, getEventAttendeeIds } from '@/lib/supabase/queries/events'
+import { createCheckin, deleteCheckin, getEventAttendeeIds, NotRegisteredError } from '@/lib/supabase/queries/events'
 
 // GET: asistentes (member_ids con check-in) de un evento. Para elegir audiencia
 // en comunicaciones. Devuelve { count, member_ids }.
@@ -49,6 +49,10 @@ export async function POST(
         { error: 'Esta persona ya tiene check-in en este evento.', code: 'duplicate' },
         { status: 409 },
       )
+    }
+    // Evento pago sin inscripción previa: mismo caso para los 3 métodos.
+    if (error instanceof NotRegisteredError) {
+      return NextResponse.json({ error: error.message, code: 'not_registered' }, { status: 409 })
     }
     console.error('POST /api/events/[id]/checkins:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

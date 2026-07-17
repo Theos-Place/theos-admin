@@ -95,6 +95,9 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [showNewPerson, setShowNewPerson] = useState(false)
   const [familyCheckin, setFamilyCheckin] = useState<{ member: { id: string; name: string }; family: { member_id: string; name: string; relation: string }[] } | null>(null)
   const [checkingFamily, setCheckingFamily] = useState(false)
+  // Persona NO inscrita en un evento pago (los 3 métodos convergen acá). En
+  // Fase 2 abre el modal de cobro en sitio; en Fase 1 avisa de forma consistente.
+  const [cobroTarget, setCobroTarget] = useState<{ id: string; name: string } | null>(null)
   // ¿El miembro seleccionado es servidor de algún comité organizador? (gating de "Servidor")
   const [serverInfo, setServerInfo] = useState<{ hasCommittees: boolean; isServer: boolean } | null>(null)
 
@@ -163,9 +166,13 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const registeredIds = new Set(event.registrations.map(r => r.member_id))
   const searchResults = memberResults
 
-  // Persiste un check-in (optimista con rollback). Reutilizado por el flujo
-  // individual, el de familia y el de persona nueva.
-  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub): Promise<'ok' | 'dup' | 'error'> {
+  // Persiste un check-in (optimista con rollback). CHOKE POINT ÚNICO de los tres
+  // métodos (QR, nombre/cédula, familia, persona nueva) — acá vive el gate de
+  // "evento pago requiere inscripción" para que TODOS se comporten igual
+  // (Fase 1). 'not_registered' = evento pago y la persona no está inscrita.
+  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub): Promise<'ok' | 'dup' | 'error' | 'not_registered'> {
+    // Gate cliente (feedback inmediato sin round-trip); el server lo re-valida.
+    if (event!.requires_payment && !registeredIds.has(m.id)) return 'not_registered'
     const subEventId = subEvent // null = evento padre; o el subevento elegido para esta persona
     const nowIso = new Date().toISOString()       // fecha real del check-in (válida)
     const tempId = `tmp:${nowIso}:${m.id}`        // id temporal para rollback/replace
@@ -188,7 +195,11 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ member_id: m.id, sub_event_id: subEventId, method }),
       })
-      if (res.status === 409) { rollback(); return 'dup' } // ya estaba registrado
+      if (res.status === 409) {
+        rollback()
+        const data = await res.json().catch(() => null) as { code?: string } | null
+        return data?.code === 'not_registered' ? 'not_registered' : 'dup'
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       // Reemplaza el id optimista por el real (para poder eliminarlo luego).
       const data = await res.json().catch(() => null) as { id?: string } | null
@@ -215,21 +226,27 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     if (!UUID_RE.test(memberId)) { scanFeedback(false); flash('error', 'QR no válido'); return }
     const already = checkins.find(c => c.member_id === memberId)
     if (already) { scanFeedback(false); flash('dup', `${already.member_name} ya estaba registrado`); return }
-    // Eventos pagos: solo se permite check-in de inscritos.
-    if (event!.requires_payment && !registeredIds.has(memberId)) {
-      scanFeedback(false); flash('error', 'No inscrito: este evento es pago y requiere inscripción previa'); return
-    }
     try {
       const res = await fetch(`/api/members/${memberId}`)
       if (!res.ok) { scanFeedback(false); flash('error', 'El QR no corresponde a ningún miembro'); return }
       const mem = await res.json() as { first_name: string; last_name: string }
       const name = `${mem.first_name} ${mem.last_name}`.trim()
+      // El gate de "evento pago requiere inscripción" vive en persistCheckin
+      // (mismo camino que nombre/cédula). 'not_registered' → cobro en sitio.
       const r = await persistCheckin({ id: memberId, name }, 'participant', 'qr')
       const dest = targetSub ? subName(targetSub) : null
       if (r === 'ok') { scanFeedback(true); flash('ok', `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`) }
       else if (r === 'dup') { scanFeedback(false); flash('dup', `${name} ya estaba registrado`) }
+      else if (r === 'not_registered') { scanFeedback(false); requestCobro({ id: memberId, name }) }
       else { scanFeedback(false); flash('error', 'No se pudo registrar') }
     } catch { scanFeedback(false); flash('error', 'Error al registrar') }
+  }
+
+  // Persona no inscrita en evento pago: punto único al que llegan los 3 métodos.
+  // Fase 2 lo convierte en el modal de cobro en sitio (2 caminos).
+  function requestCobro(m: { id: string; name: string }) {
+    setSelectedMember(null)
+    setCobroTarget(m)
   }
 
   // Al elegir un miembro existente: si tiene familia, ofrecer registrar a todos.
@@ -250,19 +267,27 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     const member = selectedMember
     setSelectedMember(null)
     setQuery('')
-    await persistCheckin(member, type)
+    const r = await persistCheckin(member, type)
+    if (r === 'not_registered') requestCobro(member)
   }
 
   // Registra varios miembros (familia) al evento. Cada entrada lleva su subevento.
+  // Los no inscritos de un evento pago se reportan (mismo gate que los otros
+  // métodos) — el cobro en sitio es por persona, no en lote.
   async function registerFamily(entries: Array<{ id: string; name: string; sub_event_id: string | null }>) {
     if (!familyCheckin) return
     setCheckingFamily(true)
+    const notRegistered: string[] = []
     for (const e of entries) {
-      await persistCheckin({ id: e.id, name: e.name }, 'participant', 'manual', e.sub_event_id)
+      const r = await persistCheckin({ id: e.id, name: e.name }, 'participant', 'manual', e.sub_event_id)
+      if (r === 'not_registered') notRegistered.push(e.name)
     }
     setCheckingFamily(false)
     setFamilyCheckin(null)
     setQuery('')
+    if (notRegistered.length > 0) {
+      setScanMsg({ kind: 'error', text: `Sin inscripción en este evento pago: ${notRegistered.join(', ')}. Cobralos por separado.` })
+    }
   }
 
   // Elimina un check-in (basurero). Confirmación corta vía modal.
@@ -309,10 +334,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           ? { allow: true, notice: null }
           : { allow: false, notice: 'Solo servidores activos del comité organizador pueden marcarse como servidor.' }
 
-  // Eventos pagos: el check-in se limita a la lista de inscritos. Sin pago → abierto.
-  const checkinRestrictedToRegistered = event.requires_payment
-  const selectedRegistered = selectedMember ? registeredIds.has(selectedMember.id) : false
-  const selectedBlocked = checkinRestrictedToRegistered && !!selectedMember && !selectedRegistered
+  // Eventos pagos: el gate "solo inscritos" vive en persistCheckin (choke point)
+  // y en el server; un no inscrito cae en requestCobro (cobro en sitio, Fase 2).
   // Fecha mostrada: la de la ocurrencia (?date=) si viene, si no la del evento.
   const eventDate = occParam ? new Date(occParam) : new Date(event.start_at)
   const headerDate = isNaN(eventDate.getTime())
@@ -418,20 +441,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           />
 
           {/* Selección de miembro / resultados de búsqueda */}
-          {selectedMember && selectedBlocked ? (
-            <div className="rounded-2xl bg-surface-card p-6 text-center shadow-[var(--shadow-sm)] space-y-3">
-              <p className="text-navy font-medium font-body">{selectedMember.name}</p>
-              <p className="text-sm text-navy-light/70 font-body">
-                Este evento es pago: el check-in solo está disponible para personas inscritas. Inscribila primero desde la pestaña Inscripciones (ahí se registra el pago).
-              </p>
-              <button
-                onClick={() => { setSelectedMember(null); setQuery('') }}
-                className="inline-flex rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-              >
-                Entendido
-              </button>
-            </div>
-          ) : selectedMember ? (
+          {selectedMember ? (
             <div className="flex justify-center">
               <CheckinCard
                 member={selectedMember}
@@ -548,6 +558,29 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           onRegister={registerFamily}
           onClose={() => setFamilyCheckin(null)}
         />
+      )}
+
+      {/* No inscrito en evento pago (Fase 1: aviso; Fase 2: cobro en sitio). */}
+      {cobroTarget && (
+        <Modal onClose={() => setCobroTarget(null)} titleId="cobro-title" width={420}>
+          <div className="p-6 space-y-4">
+            <h3 id="cobro-title" className="text-base font-bold text-navy font-display">
+              {cobroTarget.name} no está inscrita
+            </h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              Este evento es pago y {cobroTarget.name} no tiene inscripción. Para hacerle
+              check-in hay que registrar el cobro primero.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => { setCobroTarget(null); setQuery('') }}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Confirmar eliminación de check-in */}
@@ -696,7 +729,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
   onClose: () => void
   onCreated: (member: { id: string; name: string }) => void
   onCheckedIn: () => void
-  persistCheckin: (m: { id: string; name: string }, type: AttendanceType) => Promise<'ok' | 'dup' | 'error'>
+  persistCheckin: (m: { id: string; name: string }, type: AttendanceType) => Promise<'ok' | 'dup' | 'error' | 'not_registered'>
 }) {
   const parts = initialName.split(' ')
   const [firstName, setFirstName] = useState(parts[0] ?? '')
@@ -776,7 +809,17 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
       })
       if (!famRes.ok) throw new Error('Se crearon los miembros pero falló la creación de la familia.')
 
-      for (const m of toCheckin) await persistCheckin(m, 'participant')
+      // Evento pago: los recién creados no están inscritos → el gate los frena.
+      // Se reporta (el cobro en sitio es individual, no en este alta en lote).
+      const notReg: string[] = []
+      for (const m of toCheckin) {
+        const r = await persistCheckin(m, 'participant')
+        if (r === 'not_registered') notReg.push(m.name)
+      }
+      if (notReg.length > 0) {
+        setError(`Evento pago: falta inscribir/cobrar a ${notReg.join(', ')} desde el check-in individual.`)
+        return
+      }
       onCheckedIn()
     } catch (err) {
       console.error('Error creando persona/familia:', err)
