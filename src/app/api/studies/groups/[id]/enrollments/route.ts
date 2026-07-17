@@ -73,12 +73,19 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    // Simétrico con el POST (Fase 3a): cualquier autenticado puede retirar su
+    // PROPIA matrícula (p. ej. cancelar el alta con costo si no completa el
+    // pago); el staff (STUDY_ADMIN_ROLES) puede retirar a otro pasando su
+    // member_id. resolveTargetMemberId corta la suplantación. withdrawMember
+    // ya protege 'completed' (NO_RETIRABLE) y cancela el pago pendiente.
+    const auth = await requireRoles()
     if (auth.res) return auth.res
   try {
     const { id } = await params
     const { member_id, reason } = await req.json()
-    await withdrawMember(id, member_id, reason)
+    const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
+    if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
+    await withdrawMember(id, targetMemberId, reason)
     return NextResponse.json({ ok: true })
   } catch (error) {
     if (error instanceof Error && error.message === 'NO_RETIRABLE') {

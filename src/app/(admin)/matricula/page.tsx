@@ -59,7 +59,7 @@ export default function MatriculaPage() {
   const [confirmModal, setConfirmModal]   = useState<ConfirmState | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const [enrolling, setEnrolling]         = useState(false)
-  const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; studyName: string; amount: number } | null>(null)
+  const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; groupId: string; memberId: string; studyName: string; amount: number } | null>(null)
   const [scholarshipTarget, setScholarshipTarget] = useState<{ entity_type: 'study_plan'; id: string; name: string } | null>(null)
   const [enrollError, setEnrollError] = useState<string | null>(null)
 
@@ -149,9 +149,18 @@ export default function MatriculaPage() {
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
       setConfirmModal(null)
       if (data?.status === 'pendiente_de_pago') {
-        // Con costo: pedir el comprobante en el momento, no solo mandar a la
-        // pantalla de éxito (la matrícula no queda activa hasta que se apruebe).
-        setPendingReceipt({ enrollmentId: data.enrollment_id, studyName: study.study_name, amount: data.amount })
+        // Con costo: pedir el comprobante en el momento. La matrícula NO queda
+        // activa hasta que finanzas apruebe el pago. Ya no se ofrece "pagar
+        // después" en el alta manual (Fase 3a): o sube el comprobante o cancela
+        // (se anula la matrícula recién creada). El diferido legítimo es solo el
+        // automático N2-N4 al cerrar un grupo.
+        setPendingReceipt({
+          enrollmentId: data.enrollment_id,
+          groupId: group.group_id,
+          memberId: effectiveMemberId,
+          studyName: study.study_name,
+          amount: data.amount,
+        })
         setEnrolling(false)
       } else {
         router.push(`/matricula/confirmacion?group=${group.group_id}&study=${study.study_code}`)
@@ -440,6 +449,8 @@ export default function MatriculaPage() {
       {pendingReceipt && (
         <ReceiptModal
           enrollmentId={pendingReceipt.enrollmentId}
+          groupId={pendingReceipt.groupId}
+          memberId={pendingReceipt.memberId}
           studyName={pendingReceipt.studyName}
           amount={pendingReceipt.amount}
           onDone={() => setPendingReceipt(null)}
@@ -968,14 +979,18 @@ function ConfirmModal({
 // Comprobante inmediato tras matricular una matrícula con costo (queda
 // 'pendiente_de_pago' hasta que se apruebe). Mismo patrón que PayMatriculaButton
 // del perfil del miembro, pero abierto de una vez en vez de requerir un click extra.
-function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
-  enrollmentId: string; studyName: string; amount: number; onDone: () => void
+function ReceiptModal({ enrollmentId, groupId, memberId, studyName, amount, onDone }: {
+  enrollmentId: string; groupId: string; memberId: string; studyName: string; amount: number; onDone: () => void
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Cancelar = anular la matrícula recién creada (Fase 3a: ya no hay "pagar
+  // después"). Confirmación en dos pasos para no perder el alta por accidente.
+  const [confirmingCancel, setConfirmingCancel] = useState(false)
+  const [canceling, setCanceling] = useState(false)
 
   async function submit() {
     if (busy || !file) return
@@ -994,8 +1009,36 @@ function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
     } finally { setBusy(false) }
   }
 
+  // Anula la matrícula pendiente (retiro): el server también cancela su pago
+  // pendiente para que no quede huérfano en la cola de finanzas.
+  async function cancelEnrollment() {
+    if (canceling) return
+    setCanceling(true); setError(null)
+    try {
+      const res = await fetch(`/api/studies/groups/${groupId}/enrollments`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId, reason: 'Matrícula cancelada: no se completó el pago.' }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(data?.error || 'No se pudo cancelar la matrícula.')
+      }
+      onDone()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+      setCanceling(false)
+      setConfirmingCancel(false)
+    }
+  }
+
   return (
-    <Modal onClose={() => !busy && onDone()} titleId="comprobante-matricula-title" width={420}>
+    <Modal
+      // El cierre por fondo/Esc no debe dejar una matrícula pendiente sin
+      // decisión: abre la confirmación de cancelar en vez de cerrar en silencio.
+      onClose={() => { if (!busy && !canceling && !done) setConfirmingCancel(true); else if (done) onDone() }}
+      titleId="comprobante-matricula-title" width={420}
+    >
       <div className="p-6 space-y-4">
         {done ? (
           <div className="text-center space-y-3 py-4">
@@ -1037,18 +1080,47 @@ function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
               />
             </div>
             {error && <p className="text-[12px] text-coral font-body">{error}</p>}
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={submit}
-                disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
-              >
-                {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
-              </button>
-              <button onClick={onDone} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
-                Más tarde
-              </button>
-            </div>
+            {confirmingCancel ? (
+              <div className="rounded-xl bg-coral/7 border border-coral/20 p-3 space-y-3">
+                <p className="text-[13px] text-navy font-body">
+                  Si cancelás, se anula la matrícula de {studyName}. La persona
+                  puede volver a matricularse después.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmingCancel(false)}
+                    disabled={canceling}
+                    className="flex-1 rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    onClick={cancelEnrollment}
+                    disabled={canceling}
+                    className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', canceling && 'opacity-50 cursor-not-allowed')}
+                  >
+                    {canceling ? <><Loader2 size={15} className="animate-spin" /> Cancelando…</> : 'Sí, cancelar matrícula'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={submit}
+                  disabled={busy || !file}
+                  className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+                >
+                  {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
+                </button>
+                <button
+                  onClick={() => setConfirmingCancel(true)}
+                  disabled={busy}
+                  className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
