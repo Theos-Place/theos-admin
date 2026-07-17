@@ -4,6 +4,7 @@ import { type PaidPosition } from '@/types/employee'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryBadge } from '@/components/employees/SalaryBadge'
 import { cn } from '@/lib/utils'
+import { formatCRC } from '@/lib/format'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -135,7 +136,7 @@ export function StepContractForm({
               <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
               <p className="text-[12px] text-amber-700 font-body">
                 El salario está fuera del rango aprobado para este puesto{selectedPosition.salary_min != null && selectedPosition.salary_max != null
-                  ? ` (₡${selectedPosition.salary_min.toLocaleString('es-CR')} — ₡${selectedPosition.salary_max.toLocaleString('es-CR')})`
+                  ? ` (${formatCRC(selectedPosition.salary_min)} — ${formatCRC(selectedPosition.salary_max)})`
                   : ''}. Se requiere aprobación adicional.
               </p>
             </div>

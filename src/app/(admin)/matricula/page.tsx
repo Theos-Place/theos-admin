@@ -919,7 +919,7 @@ function ConfirmModal({
               <label className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-teal-soft/10 border border-teal-deep/20 cursor-pointer">
                 <input type="checkbox" checked={useScholarship} onChange={e => setUseScholarship(e.target.checked)} />
                 <span className="text-[13px] text-navy font-body">
-                  Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `₡${applicable.discount_value.toLocaleString('es-CR')}`} de descuento)
+                  Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `${formatCRC(applicable.discount_value)}`} de descuento)
                   {discountedAmount != null && <span className="block text-[11px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
                 </span>
               </label>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatCRC } from '@/lib/format'
 
 interface SalaryBadgeProps {
   /** null = monto restringido (solo finanzas lo recibe): se muestra oculto sin botón. */
@@ -15,7 +16,7 @@ export function SalaryBadge({ amount, className, size = 'md' }: SalaryBadgeProps
   const [visible, setVisible] = useState(false)
 
   const restricted = amount == null
-  const formatted = restricted ? '₡ ••••••' : `₡${amount.toLocaleString('es-CR')}`
+  const formatted = restricted ? '₡ ••••••' : `${formatCRC(amount)}`
   const hidden = '₡ ••••••'
 
   const textSize = size === 'lg' ? 'text-2xl' : size === 'sm' ? 'text-[12px]' : 'text-sm'

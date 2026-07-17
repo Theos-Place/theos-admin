@@ -13,7 +13,7 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatCRC } from '@/lib/format'
 import type { FinanceRequest } from '@/types/finance'
 
 type Scholarship = {
@@ -34,7 +34,7 @@ type Scholarship = {
 }
 
 function formatDiscount(type: 'percentage' | 'fixed', value: number): string {
-  return type === 'percentage' ? `${value}%` : `₡${value.toLocaleString('es-CR')}`
+  return type === 'percentage' ? `${value}%` : `${formatCRC(value)}`
 }
 
 const STATUS_LABEL: Record<string, string> = { active: 'Activa', used: 'Usada', revoked: 'Revocada' }

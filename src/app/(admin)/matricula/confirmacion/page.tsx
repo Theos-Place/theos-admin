@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { CheckCircle2, GraduationCap, MessageCircle } from 'lucide-react'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { toDomainStudyGroup, toDomainStudyType } from '@/lib/studies/adapter'
-import { formatDateLong } from '@/lib/format'
+import { formatDateLong, formatCRC } from '@/lib/format'
 
 const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles',
@@ -118,7 +118,7 @@ function ConfirmacionContent() {
               { label: 'Inicio',    value: formatDateLong(group.start_date) },
               { label: 'Duración',  value: `${study.weeks} semanas` },
               ...(studyType?.requires_payment && studyType.cost
-                ? [{ label: 'Costo', value: `₡${studyType.cost.toLocaleString('es-CR')}` }]
+                ? [{ label: 'Costo', value: `${formatCRC(studyType.cost)}` }]
                 : []),
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center gap-3 px-4 py-2.5 border-outline">

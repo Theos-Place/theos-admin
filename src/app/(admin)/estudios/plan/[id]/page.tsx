@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { Archive, Pencil, Search, X, Bus, ChevronLeft, Plus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { formatCRC } from '@/lib/format'
 
 const PAGE_SIZE = 10
 
@@ -344,7 +345,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               <p className={sectionLabelCls}>Costo</p>
               <p className="mt-1 text-sm font-semibold text-navy font-body">
                 {view.requires_payment
-                  ? `₡${(view.cost ?? 0).toLocaleString('es-CR')}`
+                  ? `${formatCRC((view.cost ?? 0))}`
                   : 'Gratuito'}
               </p>
             </div>

@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { formatCRC } from '@/lib/format'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -55,7 +56,7 @@ export function ModalAjusteSalarial({
             <h2 id="modal-ajuste-salarial" className="text-base font-bold text-navy font-display">Registrar ajuste salarial</h2>
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Salario actual</label>
-              <p className="text-sm text-navy font-mono">{currentSalary != null ? `₡${currentSalary.toLocaleString('es-CR')}` : '₡ ••••••'}</p>
+              <p className="text-sm text-navy font-mono">{currentSalary != null ? `${formatCRC(currentSalary)}` : '₡ ••••••'}</p>
             </div>
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Nuevo salario <span className="text-coral">*</span></label>

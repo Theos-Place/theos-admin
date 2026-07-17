@@ -25,7 +25,7 @@ import { EventServersTab } from './_components/EventServersTab'
 import type { VolunteerBooking } from './_components/EventServersTab'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { getInitials } from '@/lib/format'
+import { getInitials, formatCRC } from '@/lib/format'
 
 /** Envío REAL vía el módulo de comunicaciones (correo + notificación interna
  *  a los inscritos con miembro asociado). El botón que abre este modal está
@@ -660,10 +660,10 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                   Ingresos estimados
                 </p>
                 <p className="text-4xl font-extrabold text-navy tabular-nums font-display">
-                  ₡{incomeEstimate.toLocaleString()}
+                  {formatCRC(incomeEstimate)}
                 </p>
                 <p className="text-[12px] text-navy-light/60 mt-2 font-body">
-                  {checkinCount} asistentes × ₡{event.payment_amount.toLocaleString()}
+                  {checkinCount} asistentes × {formatCRC(event.payment_amount)}
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>

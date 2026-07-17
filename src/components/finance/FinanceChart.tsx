@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import type { Payment, Donation } from '@/types/finance'
+import { formatCRC } from '@/lib/format'
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
 
@@ -90,12 +91,12 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
                   <div
                     className="rounded-t-md transition-all duration-300 cursor-pointer w-[44%] bg-navy opacity-[0.85]"
                     style={{ height: pH }}
-                    title={`Pagos: ₡${pv.toLocaleString('es-CR')}`}
+                    title={`Pagos: ${formatCRC(pv)}`}
                   />
                   <div
                     className="rounded-t-md transition-all duration-300 cursor-pointer w-[44%] bg-teal-deep opacity-[0.85]"
                     style={{ height: dH }}
-                    title={`Donaciones: ₡${dv.toLocaleString('es-CR')}`}
+                    title={`Donaciones: ${formatCRC(dv)}`}
                   />
                 </div>
                 <span className="text-[11px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
@@ -117,8 +118,8 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
           }}
         >
           <p className="font-semibold mb-1">{tooltip.label}</p>
-          <p className="text-[rgba(255,255,255,0.75)]">Pagos: ₡{tooltip.payments.toLocaleString('es-CR')}</p>
-          <p className="text-[rgba(255,255,255,0.75)]">Donaciones: ₡{tooltip.donations.toLocaleString('es-CR')}</p>
+          <p className="text-[rgba(255,255,255,0.75)]">Pagos: {formatCRC(tooltip.payments)}</p>
+          <p className="text-[rgba(255,255,255,0.75)]">Donaciones: {formatCRC(tooltip.donations)}</p>
         </div>
       )}
     </div>

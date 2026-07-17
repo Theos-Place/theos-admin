@@ -7,6 +7,7 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { Tabs } from '@/components/shared/Tabs'
 import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
+import { formatCRC } from '@/lib/format'
 
 // Etiquetas en español para la tabla (los values crudos venían de la BD).
 const METHOD_LABEL: Record<string, string> = {
@@ -287,7 +288,7 @@ export default function ReportesPage() {
                     <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-[rgba(22,20,64,0.03)]'}`}>
                       <p className="text-[12px] font-medium font-body text-navy">{m.name}</p>
                       <p className="text-[11px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
-                        ₡{m.total.toLocaleString('es-CR')}
+                        {formatCRC(m.total)}
                       </p>
                     </div>
                   ))}
@@ -314,7 +315,7 @@ export default function ReportesPage() {
                         </td>
                         <td className="px-5 py-3.5">
                           <p className={`text-[13px] font-body ${m.total > 0 ? 'text-navy' : 'text-navy/60'}`}>
-                            {m.total > 0 ? `₡${m.total.toLocaleString('es-CR')}` : '—'}
+                            {m.total > 0 ? `${formatCRC(m.total)}` : '—'}
                           </p>
                         </td>
                         <td className="px-5 py-3.5">

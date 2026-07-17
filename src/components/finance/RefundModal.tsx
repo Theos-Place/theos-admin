@@ -4,6 +4,7 @@ import { AlertTriangle, Info } from 'lucide-react'
 import type { PaymentMethod } from '@/types/finance'
 import { Modal } from '@/components/shared/Modal'
 import { AmountDisplay } from './AmountDisplay'
+import { formatCRC } from '@/lib/format'
 
 interface RefundModalProps {
   isOpen: boolean
@@ -115,7 +116,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
                 max={payment.amount}
                 value={partialAmount}
                 onChange={e => setPartialAmount(e.target.value)}
-                placeholder={`Máx. ₡${payment.amount.toLocaleString('es-CR')}`}
+                placeholder={`Máx. ${formatCRC(payment.amount)}`}
                 className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
               />
             </div>

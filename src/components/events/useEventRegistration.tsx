@@ -147,7 +147,7 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
               <label className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-teal-soft/10 border border-teal-deep/20 cursor-pointer">
                 <input type="checkbox" checked={useScholarship} onChange={e => setUseScholarship(e.target.checked)} />
                 <span className="text-[13px] text-navy font-body">
-                  Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `₡${applicable.discount_value.toLocaleString('es-CR')}`} de descuento)
+                  Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `${formatCRC(applicable.discount_value)}`} de descuento)
                   {discountedAmount != null && <span className="block text-[11px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
                 </span>
               </label>
@@ -219,7 +219,7 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
           <>
             <h3 id="comprobante-evento-title" className="text-base font-bold text-navy font-display">Pagar inscripción</h3>
             <p className="text-[13px] text-navy-light/70 font-body">
-              {eventTitle} — {`₡${amount.toLocaleString('es-CR')}`}. Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia.
+              {eventTitle} — {`${formatCRC(amount)}`}. Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia.
             </p>
             <div className="space-y-1">
               <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>

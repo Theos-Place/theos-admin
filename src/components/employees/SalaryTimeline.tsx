@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { SalaryChange } from '@/types/employee'
+import { formatCRC } from '@/lib/format'
 
 interface SalaryTimelineProps {
   history: SalaryChange[]
@@ -59,7 +60,7 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
                 {new Date(item.date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
               </p>
               <p className="text-sm font-semibold text-navy font-display">
-                {item.salary != null ? `₡${item.salary.toLocaleString('es-CR')}` : '₡ ••••••'}
+                {item.salary != null ? `${formatCRC(item.salary)}` : '₡ ••••••'}
                 {pct && (
                   <span className="ml-2 text-[11px] font-medium text-teal-deep">
                     +{pct}%

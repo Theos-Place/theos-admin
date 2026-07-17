@@ -5,6 +5,7 @@ import { type ContractType } from '@/types/employee'
 import { type PaidPosition } from '@/types/employee'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { cn } from '@/lib/utils'
+import { formatCRC } from '@/lib/format'
 
 type DocKey = 'contrato' | 'cedula' | 'ccss'
 
@@ -89,7 +90,7 @@ export function StepDocuments({
             },
             {
               label: 'Salario',
-              value: salary ? `₡${parseFloat(salary).toLocaleString('es-CR')}` : '—',
+              value: salary ? `${formatCRC(parseFloat(salary))}` : '—',
             },
           ].map(({ label, value }) => (
             <div key={label}>

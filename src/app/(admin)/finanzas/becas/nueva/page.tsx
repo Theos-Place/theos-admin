@@ -9,6 +9,7 @@ import { useToast } from '@/components/shared/Toast'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
+import { formatCRC } from '@/lib/format'
 
 type EntityOption = { id: string; name: string; amount: number }
 
@@ -128,7 +129,7 @@ export default function NuevoCuponPage() {
               <div className="flex items-center gap-3 rounded-xl p-3.5 bg-teal-soft/10 border border-teal-deep/25">
                 <div className="flex-1">
                   <p className="text-sm font-medium font-body text-navy">{selectedEntity.name}</p>
-                  <p className="text-[12px] text-navy-light/60 font-body">₡{selectedEntity.amount.toLocaleString('es-CR')}</p>
+                  <p className="text-[12px] text-navy-light/60 font-body">{formatCRC(selectedEntity.amount)}</p>
                 </div>
                 <button onClick={() => { setSelectedEntity(null); setEntityQuery('') }} aria-label="Quitar destino seleccionado">
                   <X size={16} className="text-navy-light/60" />
@@ -152,7 +153,7 @@ export default function NuevoCuponPage() {
                       <button key={e.id} onClick={() => { setSelectedEntity(e); setEntityQuery('') }}
                         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-[var(--outline-variant)]">
                         <p className="text-[13px] font-body text-navy">{e.name}</p>
-                        <p className="text-[12px] text-teal-deep font-body">₡{e.amount.toLocaleString('es-CR')}</p>
+                        <p className="text-[12px] text-teal-deep font-body">{formatCRC(e.amount)}</p>
                       </button>
                     ))}
                   </div>
@@ -223,16 +224,16 @@ export default function NuevoCuponPage() {
               <div className="px-5 py-4 space-y-2 bg-navy/[0.03]">
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-navy-light/60">Costo original:</span>
-                  <span className="text-navy">₡{originalAmount.toLocaleString('es-CR')}</span>
+                  <span className="text-navy">{formatCRC(originalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-navy-light/60">Descuento ({discountType === 'percentage' ? `${percentage}%` : 'fijo'}):</span>
-                  <span className="text-coral">-₡{discountAmount.toLocaleString('es-CR')}</span>
+                  <span className="text-coral">-{formatCRC(discountAmount)}</span>
                 </div>
                 <div className="h-px bg-navy/10" />
                 <div className="flex justify-between text-sm font-bold font-body">
                   <span className="text-navy">Costo final por persona:</span>
-                  <span className="text-teal-deep">₡{finalAmount.toLocaleString('es-CR')}</span>
+                  <span className="text-teal-deep">{formatCRC(finalAmount)}</span>
                 </div>
               </div>
               {isFullScholarship && (

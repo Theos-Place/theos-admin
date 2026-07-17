@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { updateFinanceRequestStatus } from '@/lib/supabase/queries/finance-requests'
 import { sendSystemEmail } from '@/lib/email/system-templates'
+import { formatCRC } from '@/lib/format'
 
 const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
   SCHOLARSHIP_NOT_FOUND: 'La beca indicada no existe o no aplica para tu cuenta.',
@@ -63,7 +64,7 @@ export function computeDiscountedAmount(original: number, type: DiscountType, va
 
 export function formatDiscount(type: DiscountType, value: number): string {
   if (type === 'percentage') return `${value}%`
-  return `₡${value.toLocaleString('es-CR')}`
+  return `${formatCRC(value)}`
 }
 
 const SELECT = `

@@ -6,7 +6,7 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import type { AdminEvent } from '@/data/event-config'
-import { getInitials } from '@/lib/format'
+import { getInitials, formatCRC } from '@/lib/format'
 import { generateCSV } from '@/lib/export'
 
 type Event = AdminEvent
@@ -378,7 +378,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
               <span className="font-semibold">{payFor.name}</span> — evento con cobro.
               {payFor.pricing.isServer && <span className="text-[12px] text-navy-light/70"> (precio servidor)</span>}
             </p>
-            <p className="text-2xl font-extrabold text-coral font-display">₡{payFor.pricing.price.toLocaleString('es-CR')}</p>
+            <p className="text-2xl font-extrabold text-coral font-display">{formatCRC(payFor.pricing.price)}</p>
             <p className="text-[12px] text-navy-light/60 font-body">La inscripción solo se completa al registrar el pago o marcarla exenta.</p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -386,7 +386,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
                 disabled={adding === payFor.id}
                 className="rounded-full bg-coral px-4 py-2 text-[12px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
               >
-                Registrar pago ₡{payFor.pricing.price.toLocaleString('es-CR')}
+                Registrar pago {formatCRC(payFor.pricing.price)}
               </button>
               <button
                 onClick={() => inscribir(payFor.id, 'exempted')}

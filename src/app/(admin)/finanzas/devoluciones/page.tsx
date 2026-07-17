@@ -9,7 +9,7 @@ import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { type Refund, type RefundStatus } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
 import { useToast } from '@/components/shared/Toast'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatCRC } from '@/lib/format'
 
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
   const cfg: Record<RefundStatus, { label: string; color: string; bg: string }> = {
@@ -334,7 +334,7 @@ export default function DevolucionesPage() {
             </div>
             <div className="px-6 py-5 space-y-4">
               <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
-                Devolución de <strong>₡{completeTarget.amount.toLocaleString('es-CR')}</strong> a <strong>{completeTarget.member_name}</strong>
+                Devolución de <strong>{formatCRC(completeTarget.amount)}</strong> a <strong>{completeTarget.member_name}</strong>
               </p>
               <div>
                 <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>

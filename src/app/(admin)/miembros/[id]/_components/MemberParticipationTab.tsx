@@ -6,7 +6,7 @@ import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatCRC } from '@/lib/format'
 
 const LOAD_MORE = 10
 
@@ -240,7 +240,7 @@ export function MemberParticipationTab({
                             <span className="inline-flex items-center gap-2">
                               {row.cost > 0 && (
                                 <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
-                                  Pendiente: ₡{row.cost.toLocaleString('es-CR')}
+                                  Pendiente: {formatCRC(row.cost)}
                                 </span>
                               )}
                               <PayMatriculaButton
@@ -502,7 +502,7 @@ export function MemberParticipationTab({
                               <span className="inline-flex items-center gap-2">
                                 {row.cost > 0 && (
                                   <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
-                                    Pendiente: ₡{row.cost.toLocaleString('es-CR')}
+                                    Pendiente: {formatCRC(row.cost)}
                                   </span>
                                 )}
                                 <PayEventRegistrationButton

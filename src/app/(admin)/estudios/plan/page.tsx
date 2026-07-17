@@ -13,10 +13,11 @@ import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
 import { ExpandableDescription } from '@/components/studies/ExpandableDescription'
 import { ChevronRight, ArrowDown, Plus, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatCRC } from '@/lib/format'
 
 function formatCost(cost: number) {
   if (cost === 0) return 'Gratis'
-  return `₡${cost.toLocaleString('es-CR')}`
+  return formatCRC(cost)
 }
 
 function StageLabel({ children, color }: { children: React.ReactNode; color: 'navy' | 'teal' | 'coral' | 'purple' }) {

@@ -18,6 +18,7 @@ import type { RoleId } from '@/lib/auth/roles'
 import { type EventType } from '@/data/event-config'
 import { useEvents } from '@/hooks/useEvents'
 import { useDashboard } from '@/hooks/useDashboard'
+import { formatCRC } from '@/lib/format'
 
 // Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
 const EMPTY_STATS = {
@@ -572,7 +573,7 @@ export default function DashboardPage() {
                 <span className="text-[13px] text-navy/60 font-body">Pagos recibidos</span>
                 <span className="text-[13px] font-semibold text-navy font-body">
                   {showAmounts
-                    ? `₡${DASHBOARD_STATS.finance.income_this_month.toLocaleString('es-CR')}`
+                    ? `${formatCRC(DASHBOARD_STATS.finance.income_this_month)}`
                     : '₡ •••,•••'}
                 </span>
               </div>

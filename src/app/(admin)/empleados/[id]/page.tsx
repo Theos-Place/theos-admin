@@ -25,6 +25,7 @@ import { TabHistorial } from './_components/TabHistorial'
 import { ModalAjusteSalarial } from './_components/ModalAjusteSalarial'
 import { ModalDarDeBaja } from './_components/ModalDarDeBaja'
 import { ModalVacaciones } from './_components/ModalVacaciones'
+import { formatCRC } from '@/lib/format'
 
 type Tab = 'resumen' | 'contrato' | 'vacaciones' | 'documentos' | 'historial'
 
@@ -199,7 +200,7 @@ export default function EmpleadoDetailPage() {
     ...employee.salary_history.map(s => ({
       date: s.date,
       type: 'salary' as const,
-      label: `Ajuste salarial: ${s.previous_salary != null ? `₡${s.previous_salary.toLocaleString('es-CR')}` : '₡ ••••••'} → ${s.new_salary != null ? `₡${s.new_salary.toLocaleString('es-CR')}` : '₡ ••••••'}`,
+      label: `Ajuste salarial: ${s.previous_salary != null ? `${formatCRC(s.previous_salary)}` : '₡ ••••••'} → ${s.new_salary != null ? `${formatCRC(s.new_salary)}` : '₡ ••••••'}`,
       sub:   s.reason,
       icon:  DollarSign,
       color: 'bg-teal-soft/30 text-teal-deep',

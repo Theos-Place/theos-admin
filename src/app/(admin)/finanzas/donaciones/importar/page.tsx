@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { CloudUpload, Download, Check, CheckCircle2, AlertCircle, XCircle, ArrowLeft, ChevronRight } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { generateCSV } from '@/lib/export'
+import { formatCRC } from '@/lib/format'
 
 interface PreviewRow {
   cedula: string
@@ -272,7 +273,7 @@ export default function ImportarDonacionesPage() {
                         </td>
                         <td className="px-5 py-3">
                           <p className="text-[13px] font-medium text-navy font-body">
-                            ₡{row.amount.toLocaleString('es-CR')}
+                            {formatCRC(row.amount)}
                           </p>
                         </td>
                       </tr>
@@ -311,7 +312,7 @@ export default function ImportarDonacionesPage() {
                 { label: 'Total filas', value: `${rows.length}` },
                 { label: 'Con cédula', value: `${conCedula}` },
                 { label: 'Sin cédula', value: `${sinCedula}` },
-                { label: 'Monto total', value: `₡${rows.reduce((s, r) => s + r.amount, 0).toLocaleString('es-CR')}` },
+                { label: 'Monto total', value: `${formatCRC(rows.reduce((s, r) => s + r.amount, 0))}` },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between text-sm font-body">
                   <span className="text-[rgba(22,20,64,0.55)]">{label}</span>

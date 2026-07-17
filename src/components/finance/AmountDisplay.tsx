@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import { formatCRC } from '@/lib/format'
 
 export function AmountDisplay({ amount, defaultHidden = true, revealed: externalRevealed }: {
   /** null = monto restringido (solo rol finanzas lo recibe): oculto sin toggle. */
@@ -18,7 +19,7 @@ export function AmountDisplay({ amount, defaultHidden = true, revealed: external
   return (
     <span className="inline-flex items-center gap-1">
       {isRevealed
-        ? `₡${amount.toLocaleString('es-CR')}`
+        ? `${formatCRC(amount)}`
         : '₡ •••,•••'
       }
       {externalRevealed === undefined && (

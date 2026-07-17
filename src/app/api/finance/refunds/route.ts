@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { getRefunds, createRefund, type RefundWriteInput } from '@/lib/supabase/queries/finance'
+import { formatCRC } from '@/lib/format'
 
 export async function GET() {
   try {
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'El monto debe ser mayor a cero' }, { status: 400 })
       case 'exceeds':
         return NextResponse.json(
-          { error: `El monto excede lo devolvible de este pago (máximo ₡${Number(result.max).toLocaleString('es-CR')}).` },
+          { error: `El monto excede lo devolvible de este pago (máximo ${formatCRC(Number(result.max))}).` },
           { status: 400 },
         )
     }

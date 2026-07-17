@@ -2,6 +2,7 @@
 
 import { useOrg } from '@/lib/org'
 import { SummaryRow } from './shared'
+import { formatCRC } from '@/lib/format'
 
 type SubEventInput = { id: string; name: string; max_capacity: string }
 
@@ -73,7 +74,7 @@ export function EventSummary(p: EventSummaryProps) {
         />
         <SummaryRow
           label="Cobro"
-          value={p.requires_payment && p.payment_amount ? `₡${Number(p.payment_amount).toLocaleString('es-CR')}` : 'Gratuito'}
+          value={p.requires_payment && p.payment_amount ? `${formatCRC(Number(p.payment_amount))}` : 'Gratuito'}
         />
       </div>
     </div>

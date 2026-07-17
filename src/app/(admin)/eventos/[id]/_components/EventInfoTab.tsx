@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { useOrg } from '@/lib/org'
 import type { AdminEvent } from '@/data/event-config'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
+import { formatCRC } from '@/lib/format'
 
 type Event = AdminEvent
 
@@ -100,7 +101,7 @@ export function EventInfoTab({
           {[
             { label: 'Recurrente', value: event.is_recurring ? event.recurrence_rule ?? 'Sí' : 'No' },
             { label: 'Encuesta', value: event.requires_survey ? 'Requerida' : 'No' },
-            { label: 'Pago', value: event.requires_payment ? `₡${event.payment_amount?.toLocaleString()}` : 'Gratuito' },
+            { label: 'Pago', value: event.requires_payment ? formatCRC(event.payment_amount ?? 0) : 'Gratuito' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between text-sm">
               <span className="text-navy-light/60 font-body">{label}</span>
