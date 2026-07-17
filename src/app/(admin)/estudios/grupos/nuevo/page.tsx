@@ -37,6 +37,7 @@ type Step1 = {
   capacity: string
   start_date: string
   signup_deadline: string
+  is_virtual: boolean
 }
 
 export default function NuevoGrupoPage() {
@@ -58,6 +59,7 @@ export default function NuevoGrupoPage() {
     capacity: '10',
     start_date: '',
     signup_deadline: '',
+    is_virtual: false,
   })
   const [selectedLeader, setSelectedLeader] = useState('')
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
@@ -111,6 +113,7 @@ export default function NuevoGrupoPage() {
           age_max: step1.age_to ? Number(step1.age_to) : null,
           starts_at: step1.start_date || null,
           status: initialStatus,
+          is_virtual: step1.is_virtual,
         }),
       })
       if (!res.ok) throw new Error('Error creando el grupo')
@@ -338,6 +341,20 @@ export default function NuevoGrupoPage() {
 
             {/* "Fecha límite de inscripción" se quitó: no existe en la BD y el
                 valor se descartaba en silencio. */}
+
+            <div className="col-span-1 sm:col-span-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-coral"
+                  checked={step1.is_virtual}
+                  onChange={e => setS1('is_virtual', e.target.checked)}
+                />
+                <span className="text-sm text-navy-light/70 font-body">
+                  Grupo <strong>virtual</strong> (solo lo ven miembros autorizados para estudios virtuales)
+                </span>
+              </label>
+            </div>
           </div>
 
           <div className="flex flex-col items-end gap-1.5 pt-2">
@@ -482,6 +499,10 @@ export default function NuevoGrupoPage() {
               <div>
                 <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Capacidad</p>
                 <p className="text-navy font-body">{step1.capacity} personas</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Modalidad</p>
+                <p className="text-navy font-body">{step1.is_virtual ? 'Virtual' : 'Presencial'}</p>
               </div>
               <div>
                 <label className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display block" htmlFor="nuevo-grupo-estado">Estado inicial</label>

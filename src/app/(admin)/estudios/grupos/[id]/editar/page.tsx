@@ -82,6 +82,7 @@ function EditarForm({ group, studyType, refetch }: {
   const [coLeaderId, setCoLeaderId] = useState(group.co_leader_id ?? '')
   const [waUrl, setWaUrl] = useState(group.whatsapp_group_url ?? '')
   const [status, setStatus] = useState<GroupStatus>(group.status)
+  const [isVirtual, setIsVirtual] = useState(group.is_virtual ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -111,6 +112,7 @@ function EditarForm({ group, studyType, refetch }: {
           ends_at: endDate || null,
           whatsapp_group_url: waUrl || null,
           status,
+          is_virtual: isVirtual,
         }),
       })
       if (!res.ok) {
@@ -255,6 +257,21 @@ function EditarForm({ group, studyType, refetch }: {
           <div className="col-span-2 space-y-1">
             <label className={labelCls}>Ubicación</label>
             <input className={inputCls} placeholder="Edificio Meridiano, Escazú" value={location} onChange={e => setLocation(e.target.value)} />
+          </div>
+
+          {/* Modalidad virtual */}
+          <div className="col-span-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="accent-coral"
+                checked={isVirtual}
+                onChange={e => setIsVirtual(e.target.checked)}
+              />
+              <span className="text-sm text-navy-light/70 font-body">
+                Grupo <strong>virtual</strong> (solo lo ven miembros autorizados para estudios virtuales)
+              </span>
+            </label>
           </div>
 
           {/* Fechas */}

@@ -37,6 +37,12 @@ export async function POST(
         { status: 409 },
       )
     }
+    if (error instanceof Error && error.message === 'GRUPO_VIRTUAL_NO_AUTORIZADO') {
+      return NextResponse.json(
+        { error: 'Este grupo es virtual y el miembro no tiene autorización para estudios virtuales.' },
+        { status: 403 },
+      )
+    }
     const scholarshipRes = scholarshipErrorResponse(error)
     if (scholarshipRes) return scholarshipRes
     console.error('POST enrollments:', error)

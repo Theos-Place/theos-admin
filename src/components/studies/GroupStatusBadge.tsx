@@ -18,6 +18,15 @@ export function LeaderTrainingBadge({ modality, className }: { modality?: string
   )
 }
 
+/** Chip: el grupo es virtual (is_virtual = true). */
+export function VirtualGroupBadge({ className }: { className?: string }) {
+  return (
+    <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium font-display bg-teal-soft/40 text-teal-deep', className)}>
+      Virtual
+    </span>
+  )
+}
+
 /** Chip derivado: el grupo no tiene dirigente asignado (leader_id IS NULL).
  *  No es un estado guardado — desaparece al asignar dirigente. */
 export function NoLeaderBadge({ className }: { className?: string }) {

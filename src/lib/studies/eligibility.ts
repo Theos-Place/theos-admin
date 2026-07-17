@@ -31,6 +31,7 @@ export type EligibleGroup = {
   start_date: string
   requires_payment: boolean
   cost: number | null
+  is_virtual: boolean
 }
 
 export type MemberStudyProfile = {
@@ -53,6 +54,9 @@ export type MemberStudyProfile = {
   exceptions?: Record<string, string[]>
   /** Edad del miembro (para filtrar grupos con rango de edad). null = sin fecha. */
   member_age?: number | null
+  /** Autorización administrativa para ver/matricularse en grupos virtuales
+   *  (member_admin_data.authorized_virtual_studies). Por defecto false. */
+  authorized_virtual_studies?: boolean
 }
 
 const DAY_LABELS: Record<string, string> = {
@@ -166,7 +170,10 @@ export function computeEligibility(
             const ageOk = isWaived('age') || profile.member_age == null
               || ((g.age_min == null || profile.member_age >= g.age_min)
                 && (g.age_max == null || profile.member_age <= g.age_max))
-            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity && ageOk
+            // Grupos virtuales: ocultos por completo salvo autorización activa
+            // del miembro — no se ofrecen ni se pueden matricular sin ella.
+            const virtualOk = !g.is_virtual || !!profile.authorized_virtual_studies
+            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity && ageOk && virtualOk
           })
           .map(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length
@@ -182,6 +189,7 @@ export function computeEligibility(
               start_date: g.start_date,
               requires_payment: study.requires_payment,
               cost: study.cost ?? null,
+              is_virtual: !!g.is_virtual,
             }
           })
       : []

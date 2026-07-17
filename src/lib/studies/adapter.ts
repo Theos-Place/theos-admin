@@ -117,6 +117,7 @@ export function toDomainStudyGroup(db: DbGroupForDomain): StudyGroup {
     whatsapp_group_url: db.whatsapp_group_url,
     is_leader_training: db.is_leader_training ?? false,
     training_modality: db.training_modality ?? null,
+    is_virtual: db.is_virtual ?? false,
   }
 }
 

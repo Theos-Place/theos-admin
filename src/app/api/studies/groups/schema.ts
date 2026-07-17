@@ -23,6 +23,7 @@ export const groupWriteSchema = z
     age_max: z.number().int().min(0).max(120).nullish(),
     current_week: z.number().int().min(0).max(52).optional(),
     whatsapp_group_url: z.string().trim().nullish(),
+    is_virtual: z.boolean().optional(),
   })
   .strict()
 
