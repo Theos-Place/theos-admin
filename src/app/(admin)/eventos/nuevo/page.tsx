@@ -210,10 +210,17 @@ function NuevoEventoForm() {
   async function handlePublish() {
     setSubmitting(true)
     try {
+      // QA 2026-07-17: un sub-evento escrito en el formulario inline pero sin
+      // confirmar con el botón "Agregar" se descartaba en silencio al publicar.
+      // Se auto-incluye (la intención del usuario es clara: lo escribió).
+      const pendingSub = showSubEventForm && newSubName.trim()
+        ? [{ id: `sub-${Date.now()}`, name: newSubName.trim(), max_capacity: newSubCap || '50' }]
+        : []
+      const sub_events = [...form.sub_events, ...pendingSub]
       const res = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, flyer }),
+        body: JSON.stringify({ ...form, sub_events, flyer }),
       })
       if (!res.ok) {
         const detail = await res.json().catch(() => null) as { error?: string } | null

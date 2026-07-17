@@ -4485,6 +4485,10 @@ export type Database = {
         Returns: undefined
       }
       immutable_unaccent: { Args: { "": string }; Returns: string }
+      increment_vacation_days_used: {
+        Args: { p_delta: number; p_employee_id: string }
+        Returns: undefined
+      }
       merge_members: {
         Args: { dup_id: string; keep_id: string; soft?: boolean }
         Returns: undefined

@@ -1,6 +1,7 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
+import { todayCR } from '@/lib/format'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -763,7 +764,9 @@ export async function assignVolunteer(positionId: string, memberId: string, acto
     .upsert(
       // end_date: null limpia la fecha de baja al REACTIVAR (removeVolunteer la
       // setea; sin esto el registro quedaba activo con fin en el pasado).
-      { position_id: positionId, member_id: memberId, status: 'active', start_date: new Date().toISOString().slice(0, 10), end_date: null },
+      // QA 2026-07-17: fecha en zona CR — toISOString() (UTC) fechaba la
+      // asignación al día siguiente entre 6pm y medianoche hora CR.
+      { position_id: positionId, member_id: memberId, status: 'active', start_date: todayCR(), end_date: null },
       { onConflict: 'member_id,position_id' },
     )
   if (error) throw error
@@ -775,7 +778,7 @@ export async function removeVolunteer(positionId: string, memberId: string, acto
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('volunteers')
-    .update({ status: 'inactive', end_date: new Date().toISOString().slice(0, 10) })
+    .update({ status: 'inactive', end_date: todayCR() })
     .eq('position_id', positionId)
     .eq('member_id', memberId)
   if (error) throw error

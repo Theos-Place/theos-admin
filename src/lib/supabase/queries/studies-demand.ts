@@ -2,6 +2,11 @@
 // Extraído de studies.ts (auditoría 2026-06: archivos gigantes). Re-exportado por
 // studies.ts para no tocar a los consumidores.
 import { createAdminClient } from '@/lib/supabase/admin'
+// Mapa nivel→etapa y compromisos por etapa: fuente única (QA 2026-07-17 —
+// antes esta copia local exigía asistencia para 'niveles' cuando la
+// elegibilidad de matrícula no exige nada, y los números no cuadraban).
+import { LEVEL_TO_STAGE, requirementsForStage } from '@/lib/studies/eligibility'
+import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
 
 export type StudyDemandRow = {
   zone: string
@@ -23,10 +28,6 @@ export type StudyDemandResult = {
     prerequisite: string | null
     requirements: string[]
   }
-}
-
-const LEVEL_TO_STAGE: Record<string, string> = {
-  niveles: 'niveles', etapa_inicial: 'inicial', etapa_intermedia: 'intermedia', campanas: 'campaña',
 }
 
 /**
@@ -61,11 +62,12 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   const prereq = plan.prerequisite_code
 
   const stage = LEVEL_TO_STAGE[plan.level] ?? plan.level
-  const requirements =
-    stage === 'inicial' ? ['asistencia']
-    : stage === 'intermedia' ? ['donador', 'asistencia', 'servidor']
-    : stage === 'niveles' ? ['asistencia'] // niveles: solo asistencia
-    : []
+  const stageReq = requirementsForStage(stage)
+  const requirements = [
+    ...(stageReq.donor ? ['donador'] : []),
+    ...(stageReq.attendance !== 'none' ? ['asistencia'] : []),
+    ...(stageReq.server ? ['servidor'] : []),
+  ]
 
   const studyInfo = {
     code: plan.code,
@@ -103,11 +105,12 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     }
   }
 
-  // Compromisos: asistencia = criterio único (≥6 charlas en 6 meses, con al
-  // menos una en los últimos 60 días).
+  // Compromisos: asistencia con el mínimo de la etapa (general = 6; Etapa
+  // Intermedia = criterio reforzado de 12), mismo criterio que la elegibilidad.
+  const attendanceMin = stageReq.attendance === 'intermedia' ? ATTENDANCE_MIN_CHARLAS_INTERMEDIA : undefined
   const { getActiveAttendanceMemberIds, getServerMemberIds } = await import('./members')
   const [attendanceIds, serverIds] = await Promise.all([
-    requirements.includes('asistencia') ? getActiveAttendanceMemberIds() : Promise.resolve([]),
+    requirements.includes('asistencia') ? getActiveAttendanceMemberIds(attendanceMin) : Promise.resolve([]),
     requirements.includes('servidor') ? getServerMemberIds() : Promise.resolve([]),
   ])
   const attendanceSet = new Set(attendanceIds)
@@ -117,7 +120,9 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   // demanda se estima por los compromisos de la etapa (asistencia + donador
   // + servidor según corresponda), excluyendo a quien ya lo cursa o completó.
   if (!prereq) {
-    if (requirements.length === 0) return emptyResult // campañas: sin criterios
+    // Niveles y campañas no piden compromisos → sin universo de candidatos
+    // para estimar demanda (la UI de análisis solo ofrece inicial/intermedia).
+    if (requirements.length === 0) return emptyResult
 
     let candidateIds = requirements.includes('asistencia') ? attendanceIds : serverIds
     if (requirements.includes('servidor')) candidateIds = candidateIds.filter(id => serverSet.has(id))

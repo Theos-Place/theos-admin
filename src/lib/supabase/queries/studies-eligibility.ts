@@ -2,6 +2,9 @@
 // studies.ts (auditoría 2026-06: archivos gigantes). Re-exportado por studies.ts.
 import { createAdminClient } from '@/lib/supabase/admin'
 import { calcAge } from '@/lib/format'
+// Mapa nivel→etapa y compromisos por etapa: fuente única en
+// @/lib/studies/eligibility (QA 2026-07-17, antes duplicados acá).
+import { LEVEL_TO_STAGE, requirementsForStage } from '@/lib/studies/eligibility'
 
 /** Perfil académico de un miembro para calcular elegibilidad de matrícula.
  *  Devuelve los CÓDIGOS de plan (no nombres) y los compromisos reales. */
@@ -85,10 +88,6 @@ export type MemberStudyEligibility = {
   commitments: { is_donor: boolean; attendance_active: boolean; attendance_active_intermedia: boolean; is_server: boolean }
 }
 
-const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
-  niveles: 'niveles', etapa_inicial: 'inicial', etapa_intermedia: 'intermedia', campanas: 'campaña',
-}
-
 /**
  * Elegibilidad de estudios de UN miembro, centralizada para los modales de
  * solicitud (perfil del miembro y flujo del coordinador).
@@ -167,15 +166,15 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     return (req: string) => !!w && (w.includes('all') || w.includes(req))
   }
 
+  // Compromisos por etapa: fuente única (requirementsForStage) para no volver
+  // a divergir de la demanda ni del resto del sistema (QA 2026-07-17).
   const meetsStage = (stage: string, waived: (req: string) => boolean): boolean => {
-    const donorOk = is_donor || waived('donor')
-    const attOk = attendance_active || waived('attendance')
-    const attOkIntermedia = attendance_active_intermedia || waived('attendance')
-    const serverOk = is_server || waived('server')
-    if (stage === 'inicial') return attOk // inicial: solo asistencia (NO donador)
-    if (stage === 'intermedia') return donorOk && attOkIntermedia && serverOk // asistencia reforzada (≥12)
-    if (stage === 'niveles') return true // niveles: sin compromisos
-    return true // campañas: sin compromisos
+    const req = requirementsForStage(stage)
+    if (req.donor && !(is_donor || waived('donor'))) return false
+    if (req.server && !(is_server || waived('server'))) return false
+    if (req.attendance === 'general' && !(attendance_active || waived('attendance'))) return false
+    if (req.attendance === 'intermedia' && !(attendance_active_intermedia || waived('attendance'))) return false
+    return true
   }
 
   const plans = (plansRes.data ?? []) as Array<{
@@ -205,7 +204,7 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   }
   const eligible_plans = plans
     .filter(p => p.code)
-    .map(p => ({ ...p, stage: ELIG_LEVEL_TO_STAGE[p.level] ?? p.level }))
+    .map(p => ({ ...p, stage: LEVEL_TO_STAGE[p.level] ?? p.level }))
     .filter(p => {
       const waived = waivedFor(p.id)
       return (

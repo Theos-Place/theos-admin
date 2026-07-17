@@ -57,6 +57,9 @@ export async function PATCH(
         if (error instanceof Error && error.message === 'PAGO_PENDIENTE') {
           return NextResponse.json({ error: 'El miembro ya tiene una matrícula pendiente de pago para este estudio.' }, { status: 409 })
         }
+        if (error instanceof Error && error.message === 'YA_MATRICULADO') {
+          return NextResponse.json({ error: 'El miembro ya está matriculado en ese grupo.' }, { status: 409 })
+        }
         throw error
       }
     }
@@ -72,6 +75,9 @@ export async function PATCH(
     )
     return NextResponse.json(updated)
   } catch (error) {
+    if (error instanceof Error && error.message === 'YA_RESUELTA') {
+      return NextResponse.json({ error: 'Esta solicitud ya fue resuelta o rechazada; refrescá la página.' }, { status: 409 })
+    }
     console.error('PATCH /api/studies/requests/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

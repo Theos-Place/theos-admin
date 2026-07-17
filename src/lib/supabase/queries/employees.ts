@@ -240,12 +240,11 @@ export async function setVacationStatus(id: string, status: VacationRecordStatus
     : rec.status === 'aprobado' ? -rec.days
     : 0
   if (delta !== 0) {
-    const { data: emp, error: eErr } = await supabase
-      .from('employees').select('vacation_days_used').eq('id', rec.employee_id).single()
-    if (eErr) throw eErr
-    const used = (emp as { vacation_days_used: number }).vacation_days_used ?? 0
+    // QA 2026-07-17: incremento atómico en BD (RPC, migración 134) — el
+    // read-then-write anterior perdía un ajuste cuando dos solicitudes del
+    // mismo empleado se aprobaban casi simultáneamente (lost update).
     const { error: uErr } = await supabase
-      .from('employees').update({ vacation_days_used: Math.max(0, used + delta) }).eq('id', rec.employee_id)
+      .rpc('increment_vacation_days_used', { p_employee_id: rec.employee_id, p_delta: delta })
     if (uErr) throw uErr
   }
 }

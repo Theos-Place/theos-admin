@@ -218,7 +218,11 @@ export async function autoEnrollApprovedToNextLevel(
     if (!free) {
       const enrollmentId = (enr as { id: string }).id
       // Pago pendiente asociado (sin comprobante aún; el alumno lo completa).
-      await supabase.from('payments').insert({
+      // QA 2026-07-17: si el pago no se pudo crear, revertir ESA inscripción y
+      // seguir con el resto del lote (best-effort) — el retry de reconciliación
+      // (YA_CERRADO) la repara. Sin esto quedaba una matrícula pendiente_de_pago
+      // invisible para finanzas.
+      const { error: payErr } = await supabase.from('payments').insert({
         member_id: memberId,
         amount,
         currency: 'CRC',
@@ -227,6 +231,11 @@ export async function autoEnrollApprovedToNextLevel(
         enrollment_id: enrollmentId,
         status: 'pending',
       })
+      if (payErr) {
+        console.warn('auto-enroll pago falló, revirtiendo inscripción:', payErr.message)
+        await supabase.from('study_enrollments').delete().eq('id', enrollmentId)
+        continue
+      }
     }
     enrolled++
   }

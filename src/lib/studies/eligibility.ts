@@ -4,6 +4,32 @@
 import type { StudyType, StudyGroup } from '@/types/study'
 import { ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MIN_CHARLAS_INTERMEDIA, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 
+/** Mapa nivel de BD → etapa de dominio. Fuente ÚNICA (QA 2026-07-17: estaba
+ *  triplicado en adapter.ts, studies-demand.ts y studies-eligibility.ts). */
+export const LEVEL_TO_STAGE: Record<string, StudyType['stage']> = {
+  niveles: 'niveles',
+  etapa_inicial: 'inicial',
+  etapa_intermedia: 'intermedia',
+  campanas: 'campaña',
+}
+
+/** Compromisos MÍNIMOS por etapa — fuente ÚNICA para elegibilidad de
+ *  solicitudes (meetsStage) y análisis de demanda (QA 2026-07-17: había tres
+ *  copias con una discrepancia real en 'niveles': la demanda exigía asistencia
+ *  y la elegibilidad no exigía nada).
+ *  attendance: 'none' | 'general' (≥6 charlas) | 'intermedia' (≥12, reforzado). */
+export type StageRequirements = {
+  donor: boolean
+  server: boolean
+  attendance: 'none' | 'general' | 'intermedia'
+}
+
+export function requirementsForStage(stage: string): StageRequirements {
+  if (stage === 'inicial') return { donor: false, server: false, attendance: 'general' }
+  if (stage === 'intermedia') return { donor: true, server: true, attendance: 'intermedia' }
+  return { donor: false, server: false, attendance: 'none' } // niveles y campañas: sin compromisos
+}
+
 export type EligibilityResult = {
   study_code: string
   study_name: string

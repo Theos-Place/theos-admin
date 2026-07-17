@@ -993,12 +993,23 @@ export async function enrollMember(
   if (requiresPaymentFinal) {
     // Pago pendiente sin comprobante todavía (mismo patrón que
     // autoEnrollApprovedToNextLevel) — se completa cuando suba el comprobante.
-    await supabase.from('payments').insert({
+    // QA 2026-07-17: si el pago no se pudo crear, revertir la inscripción —
+    // una matrícula pendiente_de_pago sin fila en payments es invisible para
+    // finanzas y la API habría respondido éxito igual.
+    const { error: payErr } = await supabase.from('payments').insert({
       member_id: memberId, amount: finalAmount, currency: 'CRC', payment_method: 'comprobante',
       concept: 'matricula', enrollment_id: enrollmentId,
       study_group_id: groupId, entity_type: 'study_group', status: 'pending',
       scholarship_id: appliedScholarship?.id ?? null,
     })
+    if (payErr) {
+      if (existingStatus) {
+        await supabase.from('study_enrollments').update({ status: existingStatus }).eq('id', enrollmentId)
+      } else {
+        await supabase.from('study_enrollments').delete().eq('id', enrollmentId)
+      }
+      throw payErr
+    }
   }
   if (appliedScholarship) {
     const { consumeScholarship } = await import('./scholarships')

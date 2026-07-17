@@ -200,13 +200,19 @@ export async function updateStudyRequestStatus(
     patch.reviewed_at = new Date().toISOString()
     patch.review_notes = reviewNotes ?? null
   }
+  // QA 2026-07-17: solo transiciona desde estados abiertos — una solicitud
+  // resuelta/rechazada no se puede re-tomar ni re-rechazar (la resolución de
+  // una reubicación ya matriculó gente). Condicional en el UPDATE (no solo en
+  // la lectura de arriba) para que dos revisores simultáneos no la pisen.
   const { data, error } = await supabase
     .from('study_requests')
     .update(patch as Updatable<'study_requests'>)
     .eq('id', id)
+    .in('status', ['open', 'in_review'])
     .select(REQUEST_SELECT)
-    .single()
+    .maybeSingle()
   if (error) throw error
+  if (!data) throw new Error('YA_RESUELTA')
 
   // Historial de cambios (best-effort: no bloquea la acción si falla).
   const { error: hErr } = await supabase.from('study_request_status_history').insert({
@@ -263,13 +269,17 @@ export async function assignStudyRequest(
     .from('study_requests').select('status').eq('id', id).maybeSingle()
   const fromStatus = (before as { status: StudyRequestStatus } | null)?.status ?? null
 
+  // QA 2026-07-17: no se puede asignar una solicitud ya resuelta/rechazada —
+  // la regresaría a in_review. Condicional en el UPDATE (anti-carrera).
   const { data, error } = await supabase
     .from('study_requests')
     .update({ status: 'in_review', reviewed_by: assigneeMemberId, updated_at: new Date().toISOString() })
     .eq('id', id)
+    .in('status', ['open', 'in_review'])
     .select(REQUEST_SELECT)
-    .single()
+    .maybeSingle()
   if (error) throw error
+  if (!data) throw new Error('YA_RESUELTA')
 
   // Historial (best-effort): "Abierta → En revisión · por [asignador] — Asignada a [nombre]".
   const { error: hErr } = await supabase.from('study_request_status_history').insert({
@@ -345,14 +355,32 @@ export async function resolveStudyRequest(
   const targetGroupId = opts.target_group_id
   if (!targetGroupId) throw new Error('GRUPO_REQUERIDO')
 
+  // QA 2026-07-17: guard del DESTINO antes de tocar nada — mismos guards que
+  // enrollMember. Sin esto, el upsert del camino con folleto resucitaba una
+  // inscripción 'completed' (pisando el registro académico) o degradaba una
+  // 'enrolled' a pendiente_de_pago.
+  const { data: destEnr } = await supabase
+    .from('study_enrollments')
+    .select('id, status')
+    .eq('group_id', targetGroupId)
+    .eq('member_id', row.member_id)
+    .maybeSingle()
+  const prevDest = destEnr as { id: string; status: string } | null
+  if (prevDest?.status === 'completed') throw new Error('YA_COMPLETADO')
+  if (prevDest?.status === 'pendiente_de_pago') throw new Error('PAGO_PENDIENTE')
+  if (prevDest?.status === 'enrolled') throw new Error('YA_MATRICULADO')
+
   // Transfiere la inscripción actual (si había una activa) al grupo destino.
+  // QA 2026-07-17: si esta escritura falla hay que abortar ANTES de matricular
+  // — seguir dejaba al miembro activo en dos grupos a la vez.
   if (row.current_group_id) {
-    await supabase
+    const { error: trErr } = await supabase
       .from('study_enrollments')
       .update({ status: 'transferred', transferred_to: targetGroupId, updated_at: new Date().toISOString() })
       .eq('group_id', row.current_group_id)
       .eq('member_id', row.member_id)
       .in('status', ['enrolled', 'pendiente_de_pago', 'waitlist'])
+    if (trErr) throw trErr
   }
 
   let enrollmentId: string
@@ -367,7 +395,7 @@ export async function resolveStudyRequest(
     const amount = Number(plan?.cost ?? 0)
 
     // Mismo patrón de upsert que enrollMember: re-activa una fila existente
-    // (group,member) legítimamente (ej. reubicación repetida).
+    // (group,member) legítimamente (ej. reincorporación tras dropped).
     const { data: enr, error: enrErr } = await supabase
       .from('study_enrollments')
       .upsert({
@@ -378,11 +406,22 @@ export async function resolveStudyRequest(
     if (enrErr) throw enrErr
     enrollmentId = (enr as { id: string }).id
 
-    await supabase.from('payments').insert({
+    // QA 2026-07-17: si el pago no se pudo crear, revertir la inscripción — una
+    // matrícula pendiente_de_pago sin fila en payments es invisible para
+    // finanzas y la API habría respondido éxito.
+    const { error: payErr } = await supabase.from('payments').insert({
       member_id: row.member_id, amount, currency: 'CRC', payment_method: 'comprobante',
       concept: 'folletos', enrollment_id: enrollmentId, study_group_id: targetGroupId,
       status: 'pending',
     })
+    if (payErr) {
+      if (prevDest) {
+        await supabase.from('study_enrollments').update({ status: prevDest.status }).eq('id', enrollmentId)
+      } else {
+        await supabase.from('study_enrollments').delete().eq('id', enrollmentId)
+      }
+      throw payErr
+    }
 
     const { getSedeForGroup } = await import('./folletos')
     const sede = await getSedeForGroup(targetGroupId)

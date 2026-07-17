@@ -6,13 +6,8 @@ import type {
 import type {
   StudyType, StudyGroup, GroupParticipant, StudyLeader, LeaderEvaluation,
 } from '@/types/study'
-
-const LEVEL_TO_STAGE: Record<DbStudyPlan['level'], StudyType['stage']> = {
-  niveles: 'niveles',
-  etapa_inicial: 'inicial',
-  etapa_intermedia: 'intermedia',
-  campanas: 'campaña',
-}
+// Mapa nivel→etapa: fuente única en eligibility.ts (QA 2026-07-17).
+import { LEVEL_TO_STAGE } from '@/lib/studies/eligibility'
 
 export function toDomainStudyType(db: DbStudyPlan): StudyType {
   // El frontend usa `id` como clave de catálogo (== code en el mock).
