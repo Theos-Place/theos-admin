@@ -142,6 +142,96 @@ export async function createFamily(input: { name: string; members: Array<{ membe
   return { id: unitId }
 }
 
+/** Vincula a `linkMemberId` con la familia de `ownerId` (acción directa, sin
+ *  flujo de solicitud). Si el owner ya pertenece a una unidad familiar, agrega
+ *  al nuevo integrante ahí; si no, crea la unidad y suma al owner como
+ *  'Titular'. El vínculo es recíproco: ambos comparten family_unit_id, así que
+ *  cada uno ve al otro en su perfil. Lanza VINCULO_A_SI_MISMO / YA_VINCULADO. */
+export async function linkFamilyMember(
+  ownerId: string, linkMemberId: string, relation: string, actorMemberId: string | null,
+): Promise<{ family_unit_id: string }> {
+  if (ownerId === linkMemberId) throw new Error('VINCULO_A_SI_MISMO')
+  const supabase = createAdminClient()
+
+  // Unidad familiar existente del owner (la más antigua si tuviera varias).
+  const { data: ownUnits, error: uErr } = await supabase
+    .from('family_members')
+    .select('family_unit_id, created_at')
+    .eq('member_id', ownerId)
+    .order('created_at', { ascending: true })
+  if (uErr) throw uErr
+
+  let unitId = (ownUnits ?? [])
+    .map((r: { family_unit_id: string | null }) => r.family_unit_id)
+    .find((x): x is string => !!x)
+
+  if (!unitId) {
+    // Sin unidad: crearla y sumar al owner como Titular (misma convención que el alta).
+    const { data: owner } = await supabase.from('members').select('last_name').eq('id', ownerId).maybeSingle()
+    const lastName = (owner as { last_name: string | null } | null)?.last_name?.trim()
+    const { data: unit, error: cErr } = await supabase
+      .from('family_units')
+      .insert({ name: lastName ? `Familia ${lastName}` : 'Familia' })
+      .select('id')
+      .single()
+    if (cErr) throw cErr
+    unitId = (unit as { id: string }).id
+    const { error: tErr } = await supabase
+      .from('family_members')
+      .insert({ family_unit_id: unitId, member_id: ownerId, relation: 'Titular', linked_by: actorMemberId })
+    if (tErr) throw tErr
+  }
+
+  const { error: insErr } = await supabase
+    .from('family_members')
+    .insert({ family_unit_id: unitId, member_id: linkMemberId, relation, linked_by: actorMemberId })
+  if (insErr) {
+    if ((insErr as { code?: string }).code === '23505') throw new Error('YA_VINCULADO')
+    throw insErr
+  }
+  return { family_unit_id: unitId }
+}
+
+/** Desvincula a `linkMemberId` de la familia de `ownerId` (acción directa).
+ *  Quita su fila de la(s) unidad(es) que comparte con el owner; si una unidad
+ *  queda con ≤1 integrante, la elimina (unidad huérfana). Lanza SIN_VINCULO. */
+export async function unlinkFamilyMember(ownerId: string, linkMemberId: string): Promise<void> {
+  if (ownerId === linkMemberId) throw new Error('SIN_VINCULO')
+  const supabase = createAdminClient()
+
+  // Unidades del owner.
+  const { data: ownRows, error: oErr } = await supabase
+    .from('family_members').select('family_unit_id').eq('member_id', ownerId)
+  if (oErr) throw oErr
+  const ownerUnits = new Set((ownRows ?? []).map((r: { family_unit_id: string | null }) => r.family_unit_id).filter(Boolean) as string[])
+  if (ownerUnits.size === 0) throw new Error('SIN_VINCULO')
+
+  // Unidades COMPARTIDAS (donde también está el otro miembro).
+  const { data: linkRows, error: lErr } = await supabase
+    .from('family_members').select('family_unit_id').eq('member_id', linkMemberId)
+  if (lErr) throw lErr
+  const shared = (linkRows ?? [])
+    .map((r: { family_unit_id: string | null }) => r.family_unit_id)
+    .filter((x): x is string => !!x && ownerUnits.has(x))
+  if (shared.length === 0) throw new Error('SIN_VINCULO')
+
+  // Quitar al integrante de esas unidades.
+  const { error: delErr } = await supabase
+    .from('family_members').delete().eq('member_id', linkMemberId).in('family_unit_id', shared)
+  if (delErr) throw delErr
+
+  // Limpiar unidades que quedaron con ≤1 integrante (cascade borra la fila restante).
+  for (const unitId of shared) {
+    const { count, error: cErr } = await supabase
+      .from('family_members').select('id', { count: 'exact', head: true }).eq('family_unit_id', unitId)
+    if (cErr) { console.warn('unlinkFamilyMember conteo unidad:', cErr.message); continue }
+    if ((count ?? 0) <= 1) {
+      const { error: duErr } = await supabase.from('family_units').delete().eq('id', unitId)
+      if (duErr) console.warn('unlinkFamilyMember borrar unidad huérfana:', duErr.message)
+    }
+  }
+}
+
 /** Devuelve los OTROS integrantes de la(s) familia(s) de un miembro (para check-in). */
 export async function getMemberFamily(memberId: string): Promise<Array<{ member_id: string; name: string; relation: string }>> {
   const supabase = createAdminClient()

@@ -351,7 +351,7 @@ export default function MiembroDetailPage() {
 
       {/* TAB: Familia */}
       {activeTab === 'familia' && (
-        <MemberFamilyTab member={member} />
+        <MemberFamilyTab member={member} onChanged={refetch} />
       )}
 
       {/* TAB: Espiritual (propio miembro o roles administrativos) */}

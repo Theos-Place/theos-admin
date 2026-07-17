@@ -887,7 +887,8 @@ export type {
 // ./members-mutations. Re-exportadas acá para no tocar a los consumidores. ─────
 export {
   findMemberByCedulaOrEmail, mergeMembers, getDuplicatePairs, dismissDuplicatePair,
-  createMember, createFamily, getMemberFamily, updateMember, deactivateMember,
+  createMember, createFamily, getMemberFamily, linkFamilyMember, unlinkFamilyMember,
+  updateMember, deactivateMember,
   MEMBER_WRITE_FIELDS, normalizeEmail,
 } from '@/lib/supabase/queries/members-mutations'
 export type { DuplicateMember, DuplicatePair } from '@/lib/supabase/queries/members-mutations'
