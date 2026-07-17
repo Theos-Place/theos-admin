@@ -58,13 +58,14 @@ export default function EstudiosPage() {
   const pendingLeaderGroups = useMemo(() => groups.filter(g => !g.leader_id && g.status !== 'finalizado'), [groups])
   // Mismo criterio EXACTO que el conteo del dashboard (`closing_soon`) y que el
   // filtro `closing_soon` del API de grupos: ends_at no nulo, entre hoy y +30
-  // días, CUALQUIER estado (no solo en curso). Así el número del box coincide con
-  // la lista al hacer clic. Comparación por fecha (slice 10) para evitar drift.
+  // días, sin contar los ya finalizados (si ya cerró, no está "por cerrar"). Así
+  // el número del box coincide con la lista al hacer clic. Comparación por
+  // fecha (slice 10) para evitar drift.
   const closingSoon = useMemo(() => {
     const todayStr = new Date().toISOString().slice(0, 10)
     const in30Str = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
     return groups.filter(g => {
-      if (!g.end_date) return false
+      if (!g.end_date || g.status === 'finalizado') return false
       const d = g.end_date.slice(0, 10)
       return d >= todayStr && d <= in30Str
     })

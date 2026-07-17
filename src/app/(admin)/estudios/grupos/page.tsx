@@ -120,8 +120,8 @@ export default function GruposPage() {
   }, [searchInput])
 
   // Deep-link de las alertas del dashboard. Para que el conteo del filtro coincida
-  // EXACTO con el de la alerta (que no filtra por estado), al entrar por estos
-  // links se limpia el filtro de estado (muestra todos los estados).
+  // EXACTO con el de la alerta, al entrar por estos links se limpia el filtro de
+  // estado explícito (closing_soon ya excluye 'finalizado' del lado del servidor).
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
     const f = p.get('filter')
