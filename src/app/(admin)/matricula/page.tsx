@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
   XCircle, Calendar, DollarSign, X, AlertCircle, Loader2, Check,
-  BookOpen, ArrowRight, Sparkles,
+  BookOpen, ArrowRight, Sparkles, Info,
 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
@@ -270,7 +270,11 @@ export default function MatriculaPage() {
             <div className="space-y-1.5">
               <CommitmentRow met={isDonor}                    label="Donador/a activo/a" />
               <CommitmentRow met={!!isActiveServer}           label="Servidor/a en comité" />
-              <CommitmentRow met={attendanceActive} label={`Asistencia activa: ≥${ATTENDANCE_MIN_CHARLAS} charlas en los últimos ${ATTENDANCE_MONTHS} meses, con al menos una en los últimos ${ATTENDANCE_RECENCY_DAYS} días (llevás ${charlaCount})`} />
+              <CommitmentRow
+                met={attendanceActive}
+                label="Asistencia activa"
+                info={`Al menos ${ATTENDANCE_MIN_CHARLAS} charlas en los últimos ${ATTENDANCE_MONTHS} meses, con al menos una en los últimos ${ATTENDANCE_RECENCY_DAYS} días (llevás ${charlaCount}).`}
+              />
             </div>
           </div>
         </div>
@@ -581,9 +585,9 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
   )
 }
 
-function CommitmentRow({ met, label }: { met: boolean; label: string }) {
+function CommitmentRow({ met, label, info }: { met: boolean; label: string; info?: string }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       {met
         ? <CheckCircle2 size={13} className="text-teal-deep shrink-0" />
         : <XCircle size={13} className="text-navy-light/60 shrink-0" />
@@ -593,6 +597,16 @@ function CommitmentRow({ met, label }: { met: boolean; label: string }) {
       >
         {label}
       </span>
+      {info && (
+        <span
+          tabIndex={0}
+          title={info}
+          aria-label={info}
+          className="cursor-help text-navy-light/50 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80"
+        >
+          <Info size={12} />
+        </span>
+      )}
     </div>
   )
 }
