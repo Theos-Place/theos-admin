@@ -72,6 +72,11 @@ export default function RevisionPagosPage() {
   const [bulkReason, setBulkReason] = useState('')
   const [bulkBusy, setBulkBusy] = useState(false)
 
+  // Detalle del tiquete (Fase 3b) + cierre manual con motivo.
+  const [detail, setDetail] = useState<QueueRow | null>(null)
+  const [closeTarget, setCloseTarget] = useState<QueueRow | null>(null)
+  const [closeReason, setCloseReason] = useState('')
+
   const refetch = useCallback(() => {
     setLoading(true)
     const params = new URLSearchParams()
@@ -129,6 +134,41 @@ export default function RevisionPagosPage() {
       if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo rechazar.')
       toast(`Pago de ${reject.member_name} rechazado. Se avisó a la persona.`, 'success')
       setReject(null); setReason(''); refetch()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
+    } finally { setBusyId(null) }
+  }
+
+  // Transición de estado sin motivo (poner en revisión / devolver a pendiente).
+  async function transition(row: QueueRow, action: 'start_review' | 'reopen') {
+    if (busyId) return
+    setBusyId(row.id)
+    try {
+      const res = await fetch(`/api/payments/${row.id}/review`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo cambiar el estado.')
+      toast(action === 'start_review' ? `Tiquete de ${row.member_name} puesto en revisión.` : `Tiquete de ${row.member_name} devuelto a pendiente.`, 'success')
+      setDetail(null)
+      refetch()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
+    } finally { setBusyId(null) }
+  }
+
+  // Cierre manual sin cobro (status=failed) con motivo obligatorio.
+  async function doClose() {
+    if (!closeTarget || busyId || !closeReason.trim()) return
+    setBusyId(closeTarget.id)
+    try {
+      const res = await fetch(`/api/payments/${closeTarget.id}/review`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'close', reason: closeReason.trim() }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo cerrar el tiquete.')
+      toast(`Tiquete de ${closeTarget.member_name} cerrado sin cobro.`, 'success')
+      setCloseTarget(null); setCloseReason(''); setDetail(null); refetch()
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
     } finally { setBusyId(null) }
@@ -296,24 +336,32 @@ export default function RevisionPagosPage() {
                       </button>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {canReview && r.queue_status === 'en_revision' && (
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setApproveTarget(r)}
-                            disabled={busyId === r.id}
-                            className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
-                          >
-                            {busyId === r.id ? '…' : 'Aprobar'}
-                          </button>
-                          <button
-                            onClick={() => { setReject(r); setReason('') }}
-                            disabled={busyId === r.id}
-                            className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[12px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
-                          >
-                            Rechazar
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        {canReview && r.queue_status === 'en_revision' && (
+                          <>
+                            <button
+                              onClick={() => setApproveTarget(r)}
+                              disabled={busyId === r.id}
+                              className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                            >
+                              {busyId === r.id ? '…' : 'Aprobar'}
+                            </button>
+                            <button
+                              onClick={() => { setReject(r); setReason('') }}
+                              disabled={busyId === r.id}
+                              className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[12px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
+                            >
+                              Rechazar
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => setDetail(r)}
+                          className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                        >
+                          Abrir
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   )
@@ -337,6 +385,134 @@ export default function RevisionPagosPage() {
             ) : (
               <p className="text-sm text-coral font-body py-6">No se pudo cargar el comprobante.</p>
             )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Detalle del tiquete + transiciones de estado (Fase 3b) */}
+      {detail && (() => {
+        const badge = QUEUE_STATUS_BADGE[detail.queue_status]
+        const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
+        const rows2: [string, string][] = [
+          ['Persona', detail.member_name],
+          ['Origen', detail.concept ? CONCEPT_LABEL[detail.concept] : 'Pago'],
+          ['Descripción', detail.description],
+          ['Monto esperado', money(detail.amount, detail.currency)],
+          ['Referencia', detail.reference_code ?? '—'],
+          ['Creado', fmtDate(detail.created_at)],
+          ['Última gestión', fmtDate(detail.reviewed_at)],
+        ]
+        return (
+        <Modal onClose={() => !busyId && setDetail(null)} titleId="detail-title" width={480}>
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="detail-title" className="text-base font-bold text-navy font-display">Tiquete de pago</h3>
+              <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold font-body', badge.cls)}>{badge.label}</span>
+            </div>
+
+            <div className="rounded-xl border border-outline overflow-hidden">
+              {rows2.map(([label, value], i) => (
+                <div key={label} className={cn('flex gap-3 px-4 py-2.5', i > 0 && 'border-t border-outline')}>
+                  <span className="w-32 shrink-0 text-[11px] uppercase tracking-wider text-navy-light/60 font-display">{label}</span>
+                  <span className="text-[13px] text-navy font-body">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {detail.receipt_path && (
+              <button
+                onClick={() => openReceipt(detail)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                <ImageIcon size={13} /> Ver comprobante
+              </button>
+            )}
+
+            {canReview ? (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {detail.queue_status === 'pendiente' && (
+                  <button
+                    onClick={() => transition(detail, 'start_review')}
+                    disabled={busyId === detail.id}
+                    className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                  >
+                    {busyId === detail.id ? '…' : 'Poner en revisión'}
+                  </button>
+                )}
+                {detail.queue_status === 'en_revision' && (
+                  <>
+                    <button
+                      onClick={() => { const r = detail; setDetail(null); setApproveTarget(r) }}
+                      disabled={busyId === detail.id}
+                      className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => { const r = detail; setDetail(null); setReject(r); setReason('') }}
+                      disabled={busyId === detail.id}
+                      className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[12px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
+                    >
+                      Rechazar
+                    </button>
+                    <button
+                      onClick={() => transition(detail, 'reopen')}
+                      disabled={busyId === detail.id}
+                      className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                    >
+                      Devolver a pendiente
+                    </button>
+                  </>
+                )}
+                {detail.queue_status !== 'cerrado' && (
+                  <button
+                    onClick={() => { setCloseTarget(detail); setCloseReason('') }}
+                    disabled={busyId === detail.id}
+                    className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                  >
+                    Cerrar sin cobro
+                  </button>
+                )}
+                {detail.queue_status === 'cerrado' && (
+                  <p className="text-[13px] text-navy-light/60 font-body">Este tiquete ya está cerrado.</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[13px] text-navy-light/60 font-body">Solo lectura: no tenés permiso para gestionar pagos.</p>
+            )}
+          </div>
+        </Modal>
+        )
+      })()}
+
+      {/* Cierre manual sin cobro (motivo obligatorio) */}
+      {closeTarget && (
+        <Modal onClose={() => !busyId && setCloseTarget(null)} titleId="close-title" width={440}>
+          <div className="p-6 space-y-3">
+            <h3 id="close-title" className="text-base font-bold text-navy font-display">Cerrar tiquete sin cobro</h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              El tiquete de <strong className="text-navy">{closeTarget.member_name}</strong> se cierra sin registrar pago
+              (no activa matrícula ni inscripción). Queda en el historial con el motivo.
+            </p>
+            <textarea
+              autoFocus
+              value={closeReason}
+              onChange={e => setCloseReason(e.target.value)}
+              rows={3}
+              placeholder="Motivo del cierre (obligatorio)…"
+              aria-label="Motivo del cierre"
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
+            />
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={doClose}
+                disabled={!closeReason.trim() || !!busyId}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (!closeReason.trim() || !!busyId) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busyId ? <><Loader2 size={15} className="animate-spin" /> Cerrando…</> : 'Cerrar tiquete'}
+              </button>
+              <button onClick={() => setCloseTarget(null)} disabled={!!busyId} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+            </div>
           </div>
         </Modal>
       )}

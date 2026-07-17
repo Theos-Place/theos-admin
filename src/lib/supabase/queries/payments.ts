@@ -557,6 +557,58 @@ export async function rejectPayment(id: string, reviewerMemberId: string | null,
   return row
 }
 
+/** Transiciones MANUALES de un tiquete de la cola de finanzas, para seguimiento
+ *  (Fase 3b). Complementan el flujo de comprobante (approve/reject):
+ *   - 'start_review' → pendiente ➜ en revisión: finanzas empieza a gestionar el
+ *     cobro (p. ej. un cobro en sitio pendiente que se va a conciliar). Habilita
+ *     luego aprobar/rechazar.
+ *   - 'reopen'       → en revisión ➜ pendiente: deshace lo anterior, SIN avisar
+ *     a la persona (a diferencia de rechazar, que pide motivo y notifica).
+ *   - 'close'        → cierra el tiquete SIN pago (status 'failed') con motivo.
+ *     NO activa matrícula/inscripción (no toca approve_payment) — sirve para
+ *     tiquetes que no se van a cobrar. Cae en el bucket 'cerrado'.
+ *  Devuelve false si la fila ya no estaba en el estado esperado (otro revisor la
+ *  movió) → la ruta responde 409. */
+export async function transitionPaymentQueue(
+  id: string,
+  action: 'start_review' | 'reopen' | 'close',
+  reviewerMemberId: string | null,
+  reason?: string,
+): Promise<boolean> {
+  const supabase = createAdminClient()
+  const now = new Date().toISOString()
+
+  if (action === 'start_review') {
+    const { data, error } = await supabase
+      .from('payments')
+      .update({ review_status: 'en_revision' })
+      .eq('id', id).eq('status', 'pending')
+      .or('review_status.is.null,review_status.eq.rechazado')
+      .select('id').maybeSingle()
+    if (error) throw error
+    return !!data
+  }
+
+  if (action === 'reopen') {
+    const { data, error } = await supabase
+      .from('payments')
+      .update({ review_status: null, rejection_reason: null })
+      .eq('id', id).eq('status', 'pending').eq('review_status', 'en_revision')
+      .select('id').maybeSingle()
+    if (error) throw error
+    return !!data
+  }
+
+  // close: solo desde 'pending' (cualquier review_status). Cierra sin cobrar.
+  const { data, error } = await supabase
+    .from('payments')
+    .update({ status: 'failed', rejection_reason: reason ?? null, reviewed_by: reviewerMemberId, reviewed_at: now })
+    .eq('id', id).eq('status', 'pending')
+    .select('id').maybeSingle()
+  if (error) throw error
+  return !!data
+}
+
 /** Path del comprobante + dueño, para el chequeo de permiso en la ruta de la imagen. */
 export async function getPaymentReceiptMeta(id: string): Promise<{ member_id: string; receipt_path: string | null } | null> {
   const supabase = createAdminClient()
