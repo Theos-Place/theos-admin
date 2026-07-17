@@ -76,12 +76,16 @@ type Props<R extends BaseRequest> = {
   renderDetails: (r: R) => React.ReactNode
   /** Pista al resolver (ej. link para crear la beca/devolución real). */
   renderResolveHint?: (r: R) => React.ReactNode
+  /** Formulario extra requerido para "Resolver" en ciertos tipos (ej. elegir el
+   *  grupo destino de una reubicación). `onChange` se llama con el payload a
+   *  fusionar en el PATCH, o `null` mientras no sea válido — bloquea el submit. */
+  renderResolveExtra?: (r: R, onChange: (payload: Record<string, unknown> | null) => void) => React.ReactNode
   /** Habilita "Asignar a un coordinador": URL que lista los asignables. */
   assigneesUrl?: string
 }
 
 export function RequestBoard<R extends BaseRequest>({
-  requests, loading, tabs, typeLabel, endpointBase, onUpdated, renderDetails, renderResolveHint, assigneesUrl,
+  requests, loading, tabs, typeLabel, endpointBase, onUpdated, renderDetails, renderResolveHint, renderResolveExtra, assigneesUrl,
 }: Props<R>) {
   const toast = useToast()
   const [tab, setTab] = useState(tabs[0]?.key ?? '')
@@ -93,6 +97,7 @@ export function RequestBoard<R extends BaseRequest>({
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null)
   const [actionTarget, setActionTarget] = useState<{ req: R; action: 'resolve' | 'reject' } | null>(null)
   const [notes, setNotes] = useState('')
+  const [resolveExtra, setResolveExtra] = useState<Record<string, unknown> | null>(null)
   const [submitting, setSubmitting] = useState(false)
   // Asignación a coordinador de dirigentes
   const [assignTarget, setAssignTarget] = useState<R | null>(null)
@@ -211,13 +216,13 @@ export function RequestBoard<R extends BaseRequest>({
     }
   }
 
-  async function doAction(req: R, action: 'take' | 'resolve' | 'reject', reviewNotes?: string) {
+  async function doAction(req: R, action: 'take' | 'resolve' | 'reject', reviewNotes?: string, extra?: Record<string, unknown> | null) {
     setSubmitting(true)
     try {
       const res = await fetch(`${endpointBase}/${req.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, review_notes: reviewNotes || undefined }),
+        body: JSON.stringify({ action, review_notes: reviewNotes || undefined, ...(extra ?? {}) }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => null)
@@ -438,7 +443,7 @@ export function RequestBoard<R extends BaseRequest>({
                                     </button>
                                   )}
                                   <button
-                                    onClick={() => { setActionTarget({ req: r, action: 'resolve' }); setNotes('') }}
+                                    onClick={() => { setActionTarget({ req: r, action: 'resolve' }); setNotes(''); setResolveExtra(null) }}
                                     disabled={submitting}
                                     className="rounded-full bg-success/12 px-4 py-1.5 text-[13px] text-success font-body font-medium hover:bg-success/20 transition-colors disabled:opacity-60"
                                   >
@@ -546,6 +551,9 @@ export function RequestBoard<R extends BaseRequest>({
             {actionTarget.action === 'resolve' && renderResolveHint && (
               <div className="mb-4">{renderResolveHint(actionTarget.req)}</div>
             )}
+            {actionTarget.action === 'resolve' && renderResolveExtra && (
+              <div className="mb-4">{renderResolveExtra(actionTarget.req, setResolveExtra)}</div>
+            )}
             <label htmlFor="request-review-notes" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">
               Notas {actionTarget.action === 'resolve' ? 'de resolución' : 'del rechazo'} (opcional)
             </label>
@@ -567,8 +575,8 @@ export function RequestBoard<R extends BaseRequest>({
                 Cancelar
               </button>
               <button
-                onClick={() => doAction(actionTarget.req, actionTarget.action, notes)}
-                disabled={submitting}
+                onClick={() => doAction(actionTarget.req, actionTarget.action, notes, actionTarget.action === 'resolve' ? resolveExtra : undefined)}
+                disabled={submitting || (actionTarget.action === 'resolve' && !!renderResolveExtra && resolveExtra === null)}
                 className={cn(
                   'rounded-full px-5 py-2 text-sm text-white font-body font-medium transition-colors disabled:opacity-60',
                   actionTarget.action === 'resolve' ? 'bg-success hover:bg-[#2f9c64]' : 'bg-coral hover:bg-coral-deep',

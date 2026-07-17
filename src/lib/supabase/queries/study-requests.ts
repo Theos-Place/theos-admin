@@ -29,11 +29,14 @@ const REQUEST_SELECT = `
   id, member_id, request_type, plan_id, existing_group_id, current_group_id,
   proposed_location, proposed_schedule, reason, status,
   reviewed_by, reviewed_at, review_notes, created_at, updated_at,
+  needed_study_code, last_class_attended, last_leader_name, wants_folleto,
+  resolved_group_id, resulting_enrollment_id, resulting_folleto_request_id,
   member:members!study_requests_member_id_fkey(first_name, last_name),
   reviewer:members!study_requests_reviewed_by_fkey(first_name, last_name),
   plan:study_plans(name),
   existing_group:study_groups!study_requests_existing_group_id_fkey(name),
   current_group:study_groups!study_requests_current_group_id_fkey(name),
+  resolved_group:study_groups!study_requests_resolved_group_id_fkey(name),
   history:study_request_status_history(from_status, to_status, notes, created_at, actor:members(first_name, last_name))
 `
 
@@ -53,11 +56,19 @@ type DbRequestRow = {
   review_notes: string | null
   created_at: string
   updated_at: string
+  needed_study_code: string | null
+  last_class_attended: string | null
+  last_leader_name: string | null
+  wants_folleto: boolean
+  resolved_group_id: string | null
+  resulting_enrollment_id: string | null
+  resulting_folleto_request_id: string | null
   member: { first_name: string | null; last_name: string | null } | null
   reviewer: { first_name: string | null; last_name: string | null } | null
   plan: { name: string | null } | null
   existing_group: { name: string | null } | null
   current_group: { name: string | null } | null
+  resolved_group: { name: string | null } | null
   history: Array<{
     from_status: string | null
     to_status: string
@@ -93,6 +104,14 @@ function toDomain(r: DbRequestRow): StudyRequest {
     review_notes: r.review_notes,
     created_at: r.created_at,
     updated_at: r.updated_at,
+    needed_study_code: r.needed_study_code,
+    last_class_attended: r.last_class_attended,
+    last_leader_name: r.last_leader_name,
+    wants_folleto: r.wants_folleto,
+    resolved_group_id: r.resolved_group_id,
+    resolved_group_name: r.resolved_group?.name ?? null,
+    resulting_enrollment_id: r.resulting_enrollment_id,
+    resulting_folleto_request_id: r.resulting_folleto_request_id,
     history: (r.history ?? [])
       .map(h => ({
         from_status: h.from_status as StudyRequestStatus | null,
@@ -147,6 +166,10 @@ export async function createStudyRequest(input: StudyRequestWriteInput): Promise
       proposed_location: input.proposed_location ?? null,
       proposed_schedule: input.proposed_schedule ?? null,
       reason: input.reason,
+      needed_study_code: input.needed_study_code ?? null,
+      last_class_attended: input.last_class_attended ?? null,
+      last_leader_name: input.last_leader_name ?? null,
+      wants_folleto: input.wants_folleto ?? false,
     })
     .select(REQUEST_SELECT)
     .single()
@@ -212,9 +235,9 @@ const TYPE_LABEL_NOTIF: Record<StudyRequestType, string> = {
   study_interest: 'interés en estudio',
 }
 
-/** Asigna la solicitud a un coordinador de dirigentes: pasa a in_review con
- *  reviewed_by = el ASIGNADO (no quien asigna); el historial registra quién
- *  asignó, y el asignado recibe una notificación interna. */
+/** Asigna la solicitud a un coordinador (de dirigentes o de estudios): pasa a
+ *  in_review con reviewed_by = el ASIGNADO (no quien asigna); el historial
+ *  registra quién asignó, y el asignado recibe una notificación interna. */
 export async function assignStudyRequest(
   id: string,
   assigneeMemberId: string,
@@ -222,16 +245,17 @@ export async function assignStudyRequest(
 ): Promise<StudyRequest> {
   const supabase = createAdminClient()
 
-  // El asignado debe tener rol coordinador_dirigentes activo.
+  // El asignado debe tener rol activo de coordinador_dirigentes o coordinador_estudios.
   const { data: roleRow, error: roleErr } = await supabase
     .from('member_roles')
     .select('member_id, member:members!member_roles_member_id_fkey(first_name, last_name)')
     .eq('member_id', assigneeMemberId)
-    .eq('role', 'coordinador_dirigentes')
+    .in('role', ['coordinador_dirigentes', 'coordinador_estudios'])
     .eq('is_active', true)
+    .limit(1)
     .maybeSingle()
   if (roleErr) throw roleErr
-  if (!roleRow) throw new Error('La persona asignada no tiene rol activo de coordinador de dirigentes')
+  if (!roleRow) throw new Error('La persona asignada debe tener rol activo de coordinador de dirigentes o coordinador de estudios')
   const assigneeName = fullName((roleRow as { member: { first_name: string | null; last_name: string | null } | null }).member)
 
   // Estado anterior, para el historial.
@@ -274,6 +298,156 @@ export async function assignStudyRequest(
     from_status: fromStatus,
     to_status: 'in_review',
     notes: `Asignada a ${assigneeName}`,
+    changed_by_name: null,
+    created_at: new Date().toISOString(),
+  }]
+  return result
+}
+
+/**
+ * Resuelve una solicitud. Para 'study_interest' es solo un cambio de estado
+ * (comportamiento histórico). Para 'relocation' es una ACCIÓN real: matricula
+ * al miembro en el grupo elegido por el encargado (`target_group_id`,
+ * obligatorio), transfiere la inscripción anterior si había una activa, y —
+ * si marcó "Ocupo folleto" al pedir la reubicación — fuerza la matrícula a
+ * 'pendiente_de_pago' (costo = study_plans.cost del plan destino, el mismo
+ * campo que usa la matrícula normal), crea el pago pendiente (concept
+ * 'folletos') y el tiquete de folleto en la cola existente (mismo flujo de
+ * impresión/entrega que los folletos de cierre de grupo).
+ */
+export async function resolveStudyRequest(
+  id: string,
+  resolverMemberId: string,
+  opts: { target_group_id?: string | null; review_notes?: string | null },
+): Promise<StudyRequest> {
+  const supabase = createAdminClient()
+
+  const { data: reqRow, error: reqErr } = await supabase
+    .from('study_requests')
+    .select('request_type, member_id, current_group_id, wants_folleto, status')
+    .eq('id', id).maybeSingle()
+  if (reqErr) throw reqErr
+  const row = reqRow as {
+    request_type: StudyRequestType
+    member_id: string
+    current_group_id: string | null
+    wants_folleto: boolean
+    status: StudyRequestStatus
+  } | null
+  if (!row) throw new Error('NOT_FOUND')
+  if (row.status === 'resolved' || row.status === 'rejected') throw new Error('YA_RESUELTA')
+
+  // study_interest: sin acción de matrícula, solo el flujo de estado de siempre.
+  if (row.request_type !== 'relocation') {
+    return updateStudyRequestStatus(id, 'resolved', resolverMemberId, opts.review_notes)
+  }
+
+  const targetGroupId = opts.target_group_id
+  if (!targetGroupId) throw new Error('GRUPO_REQUERIDO')
+
+  // Transfiere la inscripción actual (si había una activa) al grupo destino.
+  if (row.current_group_id) {
+    await supabase
+      .from('study_enrollments')
+      .update({ status: 'transferred', transferred_to: targetGroupId, updated_at: new Date().toISOString() })
+      .eq('group_id', row.current_group_id)
+      .eq('member_id', row.member_id)
+      .in('status', ['enrolled', 'pendiente_de_pago', 'waitlist'])
+  }
+
+  let enrollmentId: string
+  let folletoRequestId: string | null = null
+
+  if (row.wants_folleto) {
+    const { data: g } = await supabase
+      .from('study_groups')
+      .select('plan:study_plans!study_groups_plan_id_fkey(id, code, cost)')
+      .eq('id', targetGroupId).maybeSingle()
+    const plan = (g as { plan: { id: string; code: string | null; cost: number } | null } | null)?.plan
+    const amount = Number(plan?.cost ?? 0)
+
+    // Mismo patrón de upsert que enrollMember: re-activa una fila existente
+    // (group,member) legítimamente (ej. reubicación repetida).
+    const { data: enr, error: enrErr } = await supabase
+      .from('study_enrollments')
+      .upsert({
+        member_id: row.member_id, group_id: targetGroupId, plan_id: plan?.id ?? null,
+        status: 'pendiente_de_pago', enrolled_at: new Date().toISOString(),
+      }, { onConflict: 'group_id,member_id' })
+      .select('id').single()
+    if (enrErr) throw enrErr
+    enrollmentId = (enr as { id: string }).id
+
+    await supabase.from('payments').insert({
+      member_id: row.member_id, amount, currency: 'CRC', payment_method: 'comprobante',
+      concept: 'folletos', enrollment_id: enrollmentId, study_group_id: targetGroupId,
+      status: 'pending',
+    })
+
+    const { getSedeForGroup } = await import('./folletos')
+    const sede = await getSedeForGroup(targetGroupId)
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date())
+    const { data: fr, error: frErr } = await supabase
+      .from('folleto_requests')
+      .insert({
+        target_level_code: plan?.code ?? null,
+        quantity: 1,
+        sede,
+        close_date: today,
+        available_at: today,
+        tipo: 'reubicacion',
+        confirmed_by: resolverMemberId,
+      })
+      .select('id').single()
+    if (frErr) throw frErr
+    folletoRequestId = (fr as { id: string }).id
+  } else {
+    const { enrollMember } = await import('./studies')
+    const result = await enrollMember(targetGroupId, row.member_id)
+    enrollmentId = result.enrollment_id
+  }
+
+  try {
+    const { notifyEnrollment } = await import('@/lib/email/enrollment-notify')
+    await notifyEnrollment(targetGroupId, row.member_id, row.wants_folleto ? 'pendiente_de_pago' : 'enrolled')
+  } catch (e) {
+    console.warn('resolveStudyRequest: notifyEnrollment falló:', e)
+  }
+
+  const { data: before } = await supabase.from('study_requests').select('status').eq('id', id).maybeSingle()
+  const fromStatus = (before as { status: StudyRequestStatus } | null)?.status ?? null
+
+  const { data, error } = await supabase
+    .from('study_requests')
+    .update({
+      status: 'resolved',
+      reviewed_by: resolverMemberId,
+      reviewed_at: new Date().toISOString(),
+      review_notes: opts.review_notes ?? null,
+      resolved_group_id: targetGroupId,
+      resulting_enrollment_id: enrollmentId,
+      resulting_folleto_request_id: folletoRequestId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select(REQUEST_SELECT)
+    .single()
+  if (error) throw error
+
+  const { error: hErr } = await supabase.from('study_request_status_history').insert({
+    request_id: id,
+    from_status: fromStatus,
+    to_status: 'resolved',
+    changed_by: resolverMemberId,
+    notes: opts.review_notes ?? (row.wants_folleto ? 'Matriculado con folleto pendiente de pago' : 'Matriculado'),
+  })
+  if (hErr) console.warn('resolveStudyRequest: historial falló:', hErr.message)
+
+  const result = toDomain(data as DbRequestRow)
+  result.history = [...result.history, {
+    from_status: fromStatus,
+    to_status: 'resolved',
+    notes: opts.review_notes ?? null,
     changed_by_name: null,
     created_at: new Date().toISOString(),
   }]

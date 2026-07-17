@@ -12,23 +12,41 @@ import { cn } from '@/lib/utils'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 
 type PaymentConcept = 'matricula' | 'folletos' | 'evento'
+type QueueStatus = 'pendiente' | 'en_revision' | 'cerrado'
 
 type QueueRow = {
   id: string
   member_id: string
   member_name: string
   concept: PaymentConcept | null
-  event_name: string | null
+  description: string
   amount: number
   currency: string
   reference_code: string | null
   receipt_path: string | null
   created_at: string
+  reviewed_at: string | null
+  queue_status: QueueStatus
   duplicate_reference: boolean
 }
 
 const CONCEPT_LABEL: Record<string, string> = { matricula: 'Matrícula', folletos: 'Folletos', evento: 'Evento' }
 type ConceptFilter = 'all' | PaymentConcept
+
+// 'all' = lo accionable (pendiente + en_revision) — mismo criterio del backend
+// cuando no se manda status. 'cerrado' es historial, acotado server-side.
+type StatusTab = 'all' | QueueStatus
+const STATUS_TABS: { key: StatusTab; label: string }[] = [
+  { key: 'all', label: 'Todos los activos' },
+  { key: 'pendiente', label: 'Pendientes' },
+  { key: 'en_revision', label: 'En revisión' },
+  { key: 'cerrado', label: 'Cerrados' },
+]
+const QUEUE_STATUS_BADGE: Record<QueueStatus, { label: string; cls: string }> = {
+  pendiente: { label: 'Pendiente', cls: 'bg-amber-50 text-amber-700' },
+  en_revision: { label: 'En revisión', cls: 'bg-coral/10 text-coral' },
+  cerrado: { label: 'Cerrado', cls: 'bg-teal-soft/30 text-teal-deep' },
+}
 
 function money(amount: number, currency: string) {
   return `${currency === 'USD' ? '$' : '₡'}${amount.toLocaleString('es-CR')}`
@@ -42,6 +60,7 @@ export default function RevisionPagosPage() {
 
   const [rows, setRows] = useState<QueueRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<StatusTab>('all')
   const [conceptFilter, setConceptFilter] = useState<ConceptFilter>('all')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [approveTarget, setApproveTarget] = useState<QueueRow | null>(null)
@@ -55,19 +74,21 @@ export default function RevisionPagosPage() {
 
   const refetch = useCallback(() => {
     setLoading(true)
-    fetch('/api/payments/queue')
+    const params = new URLSearchParams()
+    if (statusFilter !== 'all') params.set('status', statusFilter)
+    if (conceptFilter !== 'all') params.set('concept', conceptFilter)
+    fetch(`/api/payments/queue?${params.toString()}`)
       .then(r => (r.ok ? r.json() : Promise.reject()))
       .then((d: QueueRow[]) => setRows(Array.isArray(d) ? d : []))
       .catch(() => setRows([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [statusFilter, conceptFilter])
   useEffect(() => { if (canView) refetch() }, [canView, refetch])
 
-  const filtered = useMemo(
-    () => (conceptFilter === 'all' ? rows : rows.filter(r => r.concept === conceptFilter)),
-    [rows, conceptFilter],
-  )
-  const sel = useRowSelection(filtered.map(r => r.id))
+  // La selección en lote solo tiene sentido sobre lo que se puede aprobar/rechazar.
+  const filtered = rows
+  const selectableIds = useMemo(() => filtered.filter(r => r.queue_status === 'en_revision').map(r => r.id), [filtered])
+  const sel = useRowSelection(selectableIds)
 
   const openReceipt = useCallback(async (row: QueueRow) => {
     setReceipt({ row, url: null, loading: true })
@@ -148,10 +169,28 @@ export default function RevisionPagosPage() {
             <CreditCard size={22} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Revisión de pagos</h1>
-            <p className="mt-0.5 text-sm text-white/70 font-body">{rows.length} pago{rows.length !== 1 ? 's' : ''} en revisión</p>
+            <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Pagos pendientes</h1>
+            <p className="mt-0.5 text-sm text-white/70 font-body">
+              {rows.length} pago{rows.length !== 1 ? 's' : ''} · {STATUS_TABS.find(t => t.key === statusFilter)?.label.toLowerCase()}
+            </p>
           </div>
         </div>
+      </div>
+
+      {/* Filtro por estado de la cola */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {STATUS_TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setStatusFilter(t.key)}
+            className={cn(
+              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
+              statusFilter === t.key ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {/* Filtro por concepto */}
@@ -161,8 +200,8 @@ export default function RevisionPagosPage() {
             key={id}
             onClick={() => setConceptFilter(id)}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-              conceptFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+              'rounded-full px-3 py-1 text-[11px] font-medium border transition-all font-display',
+              conceptFilter === id ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
             )}
           >
             {label}
@@ -191,7 +230,7 @@ export default function RevisionPagosPage() {
         {loading ? (
           <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
         ) : filtered.length === 0 ? (
-          <EmptyState icon={CreditCard} title="No hay pagos en revisión" />
+          <EmptyState icon={CreditCard} title="No hay pagos con estos filtros" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -205,28 +244,40 @@ export default function RevisionPagosPage() {
                         checked={sel.allSelected}
                         ref={el => { if (el) el.indeterminate = sel.someSelected }}
                         onChange={sel.toggleAll}
+                        disabled={selectableIds.length === 0}
                       />
                     </th>
                   )}
-                  {['Persona', 'Concepto', 'Monto esperado', 'Referencia', 'Comprobante', ''].map(h => (
+                  {['Persona', 'Descripción', 'Monto esperado', 'Estado', 'Referencia', 'Comprobante', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r, idx) => (
+                {filtered.map((r, idx) => {
+                  const badge = QUEUE_STATUS_BADGE[r.queue_status]
+                  return (
                   <tr key={r.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
                     {canReview && (
                       <td className="px-4 py-3">
-                        <input type="checkbox" aria-label={`Seleccionar pago de ${r.member_name}`} checked={sel.isSelected(r.id)} onChange={() => sel.toggle(r.id)} />
+                        {r.queue_status === 'en_revision' && (
+                          <input type="checkbox" aria-label={`Seleccionar pago de ${r.member_name}`} checked={sel.isSelected(r.id)} onChange={() => sel.toggle(r.id)} />
+                        )}
                       </td>
                     )}
                     <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.member_name}</td>
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                      {r.concept ? CONCEPT_LABEL[r.concept] : '—'}
-                      {r.concept === 'evento' && r.event_name && <span className="block text-[11px] text-navy-light/60">{r.event_name}</span>}
+                      {r.concept && (
+                        <span className="mr-1.5 inline-flex items-center rounded-md bg-navy/6 px-1.5 py-0.5 text-[10px] font-semibold text-navy font-display align-middle">
+                          {CONCEPT_LABEL[r.concept]}
+                        </span>
+                      )}
+                      {r.description}
                     </td>
                     <td className="px-4 py-3 text-sm text-navy font-body tabular-nums">{money(r.amount, r.currency)}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold font-body', badge.cls)}>{badge.label}</span>
+                    </td>
                     <td className="px-4 py-3 text-[13px] font-body">
                       <span className="text-navy-light/80">{r.reference_code ?? '—'}</span>
                       {r.duplicate_reference && (
@@ -245,7 +296,7 @@ export default function RevisionPagosPage() {
                       </button>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {canReview && (
+                      {canReview && r.queue_status === 'en_revision' && (
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setApproveTarget(r)}
@@ -265,7 +316,8 @@ export default function RevisionPagosPage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

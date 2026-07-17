@@ -67,6 +67,21 @@ export async function getLeaderSedeForGroup(groupId: string): Promise<string | n
   return one?.name ?? null
 }
 
+/** Sede resuelta para un grupo: primero el perfil del dirigente (líder); si no
+ *  tiene sede, la zona propia del grupo. Usado para folletos generados fuera
+ *  del cierre de grupo (ej. reubicación individual), donde no hay un grupo
+ *  "de origen" cuyo líder mirar por defecto. */
+export async function getSedeForGroup(groupId: string): Promise<string | null> {
+  const leaderSede = await getLeaderSedeForGroup(groupId)
+  if (leaderSede) return leaderSede
+  const supabase = createAdminClient()
+  const { data: g } = await supabase.from('study_groups').select('zone').eq('id', groupId).maybeSingle()
+  const zoneCode = (g as { zone: string | null } | null)?.zone
+  if (!zoneCode) return null
+  const { data: s } = await supabase.from('sedes').select('name').eq('code', zoneCode).maybeSingle()
+  return (s as { name: string } | null)?.name ?? null
+}
+
 export async function createFolletoRequest(input: {
   source_group_id: string
   source_plan_code: string

@@ -7,6 +7,8 @@ import type { StudyRequestStatus, StudyRequestType } from '@/types/study'
 
 const TYPES = new Set(['relocation', 'study_interest'])
 const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
+const NEEDED_STUDY_CODES = new Set(['N2', 'N3', 'N4', 'DIS2', 'DIS3'])
+const CLASS_OPTIONS = new Set([...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'no_recuerda'])
 
 // GET: lista (solo coordinadores/admin). ?count=open devuelve solo el conteo.
 export async function GET(req: NextRequest) {
@@ -57,6 +59,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'La razón debe tener al menos 20 caracteres' }, { status: 400 })
     }
 
+    // Campos propios de reubicación: obligatorios solo para ese tipo.
+    let neededStudyCode: string | null = null
+    let lastClassAttended: string | null = null
+    let lastLeaderName: string | null = null
+    let wantsFolleto = false
+    if (body.request_type === 'relocation') {
+      if (!NEEDED_STUDY_CODES.has(body?.needed_study_code)) {
+        return NextResponse.json({ error: 'Seleccioná el estudio que necesitás (N2, N3, N4, Discípulos 2 o Discípulos 3)' }, { status: 400 })
+      }
+      if (!CLASS_OPTIONS.has(body?.last_class_attended)) {
+        return NextResponse.json({ error: 'Seleccioná en cuál clase quedaste' }, { status: 400 })
+      }
+      lastLeaderName = typeof body?.last_leader_name === 'string' ? body.last_leader_name.trim() : ''
+      if (!lastLeaderName) {
+        return NextResponse.json({ error: 'Indicá tu último dirigente' }, { status: 400 })
+      }
+      neededStudyCode = body.needed_study_code
+      lastClassAttended = body.last_class_attended
+      wantsFolleto = body?.wants_folleto === true
+    }
+
     const request = await createStudyRequest({
       member_id: memberId,
       request_type: body.request_type,
@@ -66,6 +89,10 @@ export async function POST(req: NextRequest) {
       proposed_location: body.proposed_location?.trim() || null,
       proposed_schedule: body.proposed_schedule?.trim() || null,
       reason,
+      needed_study_code: neededStudyCode,
+      last_class_attended: lastClassAttended,
+      last_leader_name: lastLeaderName,
+      wants_folleto: wantsFolleto,
     })
 
     // Notificaciones internas a los coordinadores configurados (best-effort:

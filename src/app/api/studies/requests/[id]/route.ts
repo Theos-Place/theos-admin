@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { updateStudyRequestStatus, assignStudyRequest } from '@/lib/supabase/queries/study-requests'
+import { updateStudyRequestStatus, assignStudyRequest, resolveStudyRequest } from '@/lib/supabase/queries/study-requests'
 
-const ACTIONS: Record<string, 'in_review' | 'resolved' | 'rejected'> = {
+const ACTIONS: Record<string, 'in_review' | 'rejected'> = {
   take: 'in_review',
-  resolve: 'resolved',
   reject: 'rejected',
 }
 
-// PATCH: { action: 'take' | 'resolve' | 'reject', review_notes? }
+// PATCH: { action: 'take' | 'assign' | 'resolve' | 'reject', review_notes?, ... }
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -30,6 +29,36 @@ export async function PATCH(
       }
       const updated = await assignStudyRequest(id, body.assignee_member_id, auth.ctx.memberId)
       return NextResponse.json(updated)
+    }
+
+    // resolve: en 'relocation' es una acción real (matricula en target_group_id,
+    // con folleto+pago pendiente si aplica); en 'study_interest' sigue siendo
+    // solo un cambio de estado.
+    if (body?.action === 'resolve') {
+      try {
+        const updated = await resolveStudyRequest(id, auth.ctx.memberId, {
+          target_group_id: typeof body?.target_group_id === 'string' ? body.target_group_id : null,
+          review_notes: typeof body?.review_notes === 'string' ? body.review_notes.trim() || null : null,
+        })
+        return NextResponse.json(updated)
+      } catch (error) {
+        if (error instanceof Error && error.message === 'GRUPO_REQUERIDO') {
+          return NextResponse.json({ error: 'Elegí el grupo destino para reubicar a la persona.' }, { status: 400 })
+        }
+        if (error instanceof Error && error.message === 'NOT_FOUND') {
+          return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 })
+        }
+        if (error instanceof Error && error.message === 'YA_RESUELTA') {
+          return NextResponse.json({ error: 'Esta solicitud ya fue resuelta o rechazada.' }, { status: 409 })
+        }
+        if (error instanceof Error && error.message === 'YA_COMPLETADO') {
+          return NextResponse.json({ error: 'El miembro ya completó este estudio en ese grupo.' }, { status: 409 })
+        }
+        if (error instanceof Error && error.message === 'PAGO_PENDIENTE') {
+          return NextResponse.json({ error: 'El miembro ya tiene una matrícula pendiente de pago para este estudio.' }, { status: 409 })
+        }
+        throw error
+      }
     }
 
     const status = ACTIONS[body?.action as string]

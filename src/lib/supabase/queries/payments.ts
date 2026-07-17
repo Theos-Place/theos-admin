@@ -8,17 +8,26 @@ export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 export type PaymentConcept = 'matricula' | 'folletos' | 'evento'
 export type PaymentReviewStatus = 'en_revision' | 'aprobado' | 'rechazado'
 
+/** Bucket de la cola de finanzas, derivado de (status, review_status):
+ *   pendiente   → status='pending', sin comprobante (o rechazado, esperando reintento)
+ *   en_revision → status='pending', comprobante subido, esperando aprobación
+ *   cerrado     → status ya no es 'pending' (paid/refunded/partial_refund/failed) */
+export type PaymentQueueStatus = 'pendiente' | 'en_revision' | 'cerrado'
+
 export type PaymentQueueRow = {
   id: string
   member_id: string
   member_name: string
   concept: PaymentConcept | null
-  event_name: string | null
+  /** Qué es el pago: nombre del estudio (matrícula/folleto) o del evento. */
+  description: string
   amount: number
   currency: string
   reference_code: string | null
   receipt_path: string | null
   created_at: string
+  reviewed_at: string | null
+  queue_status: PaymentQueueStatus
   duplicate_reference: boolean
 }
 
@@ -400,19 +409,52 @@ export async function submitEventComprobante(input: {
   return { id: (data as { id: string }).id }
 }
 
-/** Cola de pagos en revisión, con nombre del miembro y detección de referencia
- *  duplicada (posible comprobante reutilizado). */
-export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
+function computeQueueStatus(status: string, reviewStatus: string | null): PaymentQueueStatus {
+  if (status !== 'pending') return 'cerrado'
+  return reviewStatus === 'en_revision' ? 'en_revision' : 'pendiente'
+}
+
+/**
+ * Cola de pagos pendientes de finanzas: cualquier fila de `payments` con
+ * concept no nulo cae acá automáticamente (matrícula, folletos, evento — y
+ * cualquier fuente futura que inserte un pago 'pending'), sin wiring extra por
+ * fuente. Tres estados (ver PaymentQueueStatus). Por defecto trae lo
+ * ACCIONABLE (pendiente + en_revision); 'cerrado' es historial y se limita a
+ * los últimos 300 para no cargar años de pagos aprobados.
+ */
+export async function getPendingPaymentsQueue(filters: {
+  status?: PaymentQueueStatus
+  concept?: PaymentConcept
+} = {}): Promise<PaymentQueueRow[]> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
+  let q = supabase
     .from('payments')
     .select(`
       id, member_id, amount, currency, concept, reference_code, receipt_path, created_at,
+      status, review_status, reviewed_at,
       member:members!payments_member_id_fkey(first_name, last_name),
-      event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title))
+      event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
+      enrollment:study_enrollments!payments_enrollment_id_fkey(
+        group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
+        plan_direct:study_plans!study_enrollments_plan_id_fkey(name)
+      )
     `)
-    .eq('review_status', 'en_revision')
-    .order('created_at', { ascending: true })
+    .not('concept', 'is', null)
+
+  if (filters.concept) q = q.eq('concept', filters.concept)
+
+  if (filters.status === 'en_revision') q = q.eq('status', 'pending').eq('review_status', 'en_revision')
+  else if (filters.status === 'pendiente') q = q.eq('status', 'pending').or('review_status.is.null,review_status.eq.rechazado')
+  else if (filters.status === 'cerrado') q = q.neq('status', 'pending')
+  else q = q.eq('status', 'pending') // sin filtro: todo lo accionable (pendiente + en_revision)
+
+  if (filters.status === 'cerrado') {
+    q = q.order('reviewed_at', { ascending: false }).limit(300)
+  } else {
+    q = q.order('created_at', { ascending: true }) // FIFO para lo accionable
+  }
+
+  const { data, error } = await q
   if (error) throw error
 
   const rows = (data ?? []) as Array<Record<string, unknown>>
@@ -437,18 +479,38 @@ export async function getPaymentsQueue(): Promise<PaymentQueueRow[]> {
     const er = Array.isArray(r.event_registration) ? r.event_registration[0] : r.event_registration
     const erRow = er as { event: { title: string } | { title: string }[] | null } | null
     const ev = erRow ? (Array.isArray(erRow.event) ? erRow.event[0] : erRow.event) : null
+    const eventTitle = (ev as { title: string } | null)?.title ?? null
+
+    const enr = Array.isArray(r.enrollment) ? r.enrollment[0] : r.enrollment
+    const enrRow = enr as {
+      group: { plan: { name: string } | { name: string }[] | null } | { plan: unknown }[] | null
+      plan_direct: { name: string } | { name: string }[] | null
+    } | null
+    const grp = enrRow ? (Array.isArray(enrRow.group) ? enrRow.group[0] : enrRow.group) : null
+    const gplan = grp ? (Array.isArray((grp as { plan: unknown }).plan) ? (grp as { plan: { name: string }[] }).plan[0] : (grp as { plan: { name: string } | null }).plan) : null
+    const dplan = enrRow ? (Array.isArray(enrRow.plan_direct) ? enrRow.plan_direct[0] : enrRow.plan_direct) : null
+    const studyName = (gplan as { name: string } | null)?.name ?? (dplan as { name: string } | null)?.name ?? null
+
+    const concept = (r.concept as PaymentConcept | null) ?? null
+    const description = concept === 'evento' ? (eventTitle ?? 'Evento')
+      : concept === 'folletos' ? (studyName ? `Folleto — ${studyName}` : 'Folleto')
+      : concept === 'matricula' ? (studyName ?? 'Matrícula')
+      : 'Pago'
+
     const ref = (r.reference_code as string | null)?.trim() ?? null
     return {
       id: r.id as string,
       member_id: r.member_id as string,
       member_name: mm ? `${mm.first_name} ${mm.last_name}`.trim() : '—',
-      concept: (r.concept as PaymentConcept | null) ?? null,
-      event_name: (ev as { title: string } | null)?.title ?? null,
+      concept,
+      description,
       amount: Number(r.amount ?? 0),
       currency: (r.currency as string) ?? 'CRC',
       reference_code: ref,
       receipt_path: (r.receipt_path as string | null) ?? null,
       created_at: r.created_at as string,
+      reviewed_at: (r.reviewed_at as string | null) ?? null,
+      queue_status: computeQueueStatus(r.status as string, r.review_status as string | null),
       duplicate_reference: !!ref && dupSet.has(ref),
     }
   })

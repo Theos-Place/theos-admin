@@ -5,8 +5,13 @@ import { ArrowLeftRight, BookOpen, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { isRelocationEligibleCode } from '@/lib/studies/eligibility'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { useDirigentes } from '@/hooks/useDirigentes'
 import { cn } from '@/lib/utils'
 import type { StudyRequestType } from '@/types/study'
+
+const NEEDED_STUDY_CODES = ['N2', 'N3', 'N4', 'DIS2', 'DIS3'] as const
+const CLASS_OPTIONS = [...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'no_recuerda'] as const
 
 /**
  * Botones "Solicitar reubicación" / "Me interesa un estudio" (este último
@@ -37,6 +42,8 @@ const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb
 
 export function StudyRequestActions({ memberId }: { memberId: string }) {
   const toast = useToast()
+  const { studyTypes } = useStudyPlans()
+  const { dirigentes } = useDirigentes()
   const [openModal, setOpenModal] = useState<StudyRequestType | null>(null)
   const [eligibility, setEligibility] = useState<Eligibility | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
@@ -50,6 +57,11 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   const [location, setLocation] = useState('')
   const [schedule, setSchedule] = useState('')
   const [reason, setReason] = useState('')
+  // Reubicación: contexto extra para que el encargado resuelva sin llamar al miembro.
+  const [neededStudyCode, setNeededStudyCode] = useState('')
+  const [lastClassAttended, setLastClassAttended] = useState('')
+  const [lastLeaderName, setLastLeaderName] = useState('')
+  const [wantsFolleto, setWantsFolleto] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -77,6 +89,10 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
     setLocation('')
     setSchedule('')
     setReason('')
+    setNeededStudyCode('')
+    setLastClassAttended('')
+    setLastLeaderName('')
+    setWantsFolleto(false)
     setError('')
     setOpenModal(type)
     loadData()
@@ -103,6 +119,11 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
       setError('Seleccioná el plan de estudio.')
       return
     }
+    if (openModal === 'relocation') {
+      if (!neededStudyCode) { setError('Seleccioná el estudio que necesitás.'); return }
+      if (!lastClassAttended) { setError('Seleccioná en cuál clase quedaste.'); return }
+      if (!lastLeaderName.trim()) { setError('Indicá tu último dirigente.'); return }
+    }
     setError('')
     setSubmitting(true)
     try {
@@ -118,6 +139,10 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
           proposed_location: openModal === 'study_interest' ? (location || null) : null,
           proposed_schedule: openModal === 'study_interest' ? (schedule || null) : null,
           reason: reason.trim(),
+          needed_study_code: openModal === 'relocation' ? neededStudyCode : undefined,
+          last_class_attended: openModal === 'relocation' ? lastClassAttended : undefined,
+          last_leader_name: openModal === 'relocation' ? lastLeaderName.trim() : undefined,
+          wants_folleto: openModal === 'relocation' ? wantsFolleto : undefined,
         }),
       })
       if (!res.ok) {
@@ -197,7 +222,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                     <p className="text-[13px] text-coral font-body">
                       No hay estudios disponibles para solicitar: o ya los llevaste,
                       o falta cumplir el prerequisito o los compromisos de la etapa
-                      (donador y asistencia; servidor para la etapa intermedia).
+                      (asistencia; donador y servidor para la etapa intermedia).
                     </p>
                   </div>
                 )}
@@ -227,6 +252,69 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                         Solo niveles (N1–N4), discipulados (DIS1–DIS3) y SCJ admiten reubicación.
                       </p>
                     </div>
+
+                    <div>
+                      <label htmlFor="relocation-needed-study" className={LABEL_CLS}>
+                        Estudio que necesito <span className="text-coral">*</span>
+                      </label>
+                      <select
+                        id="relocation-needed-study"
+                        value={neededStudyCode}
+                        onChange={e => setNeededStudyCode(e.target.value)}
+                        className={SELECT_CLS}
+                      >
+                        <option value="">Seleccionar…</option>
+                        {NEEDED_STUDY_CODES.map(code => (
+                          <option key={code} value={code}>
+                            {code} — {studyTypes.find(s => s.code === code)?.name ?? code}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="relocation-last-class" className={LABEL_CLS}>
+                        En cuál clase quedé <span className="text-coral">*</span>
+                      </label>
+                      <select
+                        id="relocation-last-class"
+                        value={lastClassAttended}
+                        onChange={e => setLastClassAttended(e.target.value)}
+                        className={SELECT_CLS}
+                      >
+                        <option value="">Seleccionar…</option>
+                        {CLASS_OPTIONS.map(c => (
+                          <option key={c} value={c}>{c === 'no_recuerda' ? 'No me acuerdo' : `Clase ${c}`}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="relocation-last-leader" className={LABEL_CLS}>
+                        Último dirigente <span className="text-coral">*</span>
+                      </label>
+                      <input
+                        id="relocation-last-leader"
+                        list="relocation-dirigentes-list"
+                        value={lastLeaderName}
+                        onChange={e => setLastLeaderName(e.target.value)}
+                        placeholder="Buscá o escribí el nombre…"
+                        className={cn(SELECT_CLS, 'placeholder:text-navy-light/50')}
+                      />
+                      <datalist id="relocation-dirigentes-list">
+                        {dirigentes.map(d => <option key={d.member_id} value={d.member_name} />)}
+                      </datalist>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={wantsFolleto}
+                        onChange={e => setWantsFolleto(e.target.checked)}
+                        className="accent-coral h-3.5 w-3.5"
+                      />
+                      <span className="text-sm text-navy-light/70 font-body">Ocupo folleto</span>
+                    </label>
                   </>
                 )}
 

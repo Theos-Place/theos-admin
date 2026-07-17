@@ -7,6 +7,7 @@ import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { RequestBoard } from '@/components/shared/RequestBoard'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { RelocationResolveGroupPicker } from '@/components/studies/RelocationResolveGroupPicker'
 import type { StudyRequest } from '@/types/study'
 import { getInitials } from '@/lib/format'
 
@@ -22,6 +23,11 @@ const TYPE_LABEL: Record<string, string> = {
 
 function initials(name: string) {
   return getInitials(name) || '—'
+}
+
+function classLabel(v: string | null): string {
+  if (!v) return ''
+  return v === 'no_recuerda' ? 'No recuerda la clase' : `Quedó en la clase ${v}`
 }
 
 export default function SolicitudesPage() {
@@ -101,7 +107,20 @@ export default function SolicitudesPage() {
               <span className="inline-flex items-center gap-1.5">
                 <span className="font-medium text-navy">{r.current_group_name ?? 'Sin grupo actual'}</span>
                 <ArrowRight size={13} className="text-navy-light/60" />
-                <span className="font-medium text-navy">{r.existing_group_name ?? 'Grupo por definir'}</span>
+                <span className="font-medium text-navy">
+                  {r.status === 'resolved' ? (r.resolved_group_name ?? '—') : (r.needed_study_code ?? r.existing_group_name ?? 'Grupo por definir')}
+                </span>
+              </span>
+            )}
+            {r.request_type === 'relocation' && r.last_class_attended && (
+              <span>{classLabel(r.last_class_attended)}</span>
+            )}
+            {r.request_type === 'relocation' && r.last_leader_name && (
+              <span>Último dirigente: {r.last_leader_name}</span>
+            )}
+            {r.request_type === 'relocation' && r.wants_folleto && (
+              <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display">
+                Ocupa folleto
               </span>
             )}
             {r.request_type !== 'relocation' && (
@@ -126,6 +145,11 @@ export default function SolicitudesPage() {
               </span>
             )}
           </>
+        )}
+        renderResolveExtra={(r, onChange) => (
+          r.request_type === 'relocation'
+            ? <RelocationResolveGroupPicker request={r} onChange={onChange} />
+            : null
         )}
       />
 
