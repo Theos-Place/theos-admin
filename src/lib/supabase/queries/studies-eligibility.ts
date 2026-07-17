@@ -15,12 +15,13 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   attendance_active: boolean
   invited_codes: string[]
   member_age: number | null
+  authorized_virtual_studies: boolean
 }> {
   const supabase = createAdminClient()
   const { attendanceWindowStart, meetsAttendanceCriteria } = await import('@/lib/attendance')
   const oldest = attendanceWindowStart()
   const { activeInvitationCodesForMember } = await import('./study-invitations')
-  const [memberRes, enrRes, volRes, chkRes, invitedCodes] = await Promise.all([
+  const [memberRes, enrRes, volRes, chkRes, invitedCodes, adminDataRes] = await Promise.all([
     supabase.from('members').select('is_donor, birth_date').eq('id', memberId).maybeSingle(),
     supabase
       .from('study_enrollments')
@@ -34,6 +35,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
       .eq('events.event_type', 'charla')
       .gte('checked_in_at', `${oldest}T00:00:00Z`),
     activeInvitationCodesForMember(memberId),
+    supabase.from('member_admin_data').select('authorized_virtual_studies').eq('member_id', memberId).maybeSingle(),
   ])
 
   // Completados/actual resueltos por grupo O por plan directo (inscripciones sin
@@ -64,6 +66,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     attendance_active: meetsAttendanceCriteria(charlaDates),
     invited_codes: invitedCodes,
     member_age: birth ? calcAge(birth) : null,
+    authorized_virtual_studies: Boolean((adminDataRes.data as { authorized_virtual_studies?: boolean } | null)?.authorized_virtual_studies),
   }
 }
 
@@ -88,9 +91,10 @@ const ELIG_LEVEL_TO_STAGE: Record<string, string> = {
  * Un plan es solicitable si:
  *  - el miembro no lo llevó (sin inscripción completed ni enrolled), y
  *  - cumple el prerequisito de la cadena (completed del prereq), y
- *  - cumple los compromisos de la etapa: inicial = donador + asistencia activa
- *    (criterio único: ≥6 charlas en 6 meses, con al menos una en 60 días);
- *    intermedia = + servidor activo.
+ *  - cumple los compromisos de la etapa (mínimo real, sin exceso):
+ *    niveles = ninguno; inicial = asistencia activa (criterio único: ≥6
+ *    charlas en 6 meses, con al menos una en 60 días); intermedia = + donador
+ *    + servidor activo; campañas = ninguno.
  */
 export async function getEligibleStudiesForMember(memberId: string): Promise<MemberStudyEligibility> {
   const supabase = createAdminClient()
@@ -158,9 +162,9 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     const donorOk = is_donor || waived('donor')
     const attOk = attendance_active || waived('attendance')
     const serverOk = is_server || waived('server')
-    if (stage === 'inicial') return donorOk && attOk
+    if (stage === 'inicial') return attOk // inicial: solo asistencia (NO donador)
     if (stage === 'intermedia') return donorOk && attOk && serverOk
-    if (stage === 'niveles') return attOk // niveles: solo asistencia
+    if (stage === 'niveles') return true // niveles: sin compromisos
     return true // campañas: sin compromisos
   }
 

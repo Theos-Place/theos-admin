@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
+import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 import { formatDateLong } from '@/lib/format'
 
@@ -349,10 +350,14 @@ export default function MatriculaPage() {
           </button>
         </div>
       ) : grouped.length === 0 ? (
-        stageResultsForEmptyState && stageResultsForEmptyState.length > 0 ? (
+        // Niveles y Campañas no piden compromisos — si el tab queda vacío es
+        // por otra razón (sin grupos abiertos), nunca por requisitos.
+        stageResultsForEmptyState && stageResultsForEmptyState.length > 0
+          && activeFilter !== 'niveles' && activeFilter !== 'campaña' ? (
           <StageRequirementsEmptyState
             stage={activeFilter}
             results={stageResultsForEmptyState}
+            studyTypes={studyTypes}
           />
         ) : (
           <div
@@ -482,15 +487,34 @@ function MemberPicker({ selected, onSelect }: {
   )
 }
 
+// ¿Es este estudio la "puerta de entrada" real de su etapa? — su prerequisito
+// no pertenece a la MISMA etapa (o no tiene). Los estudios cuyo prerequisito
+// es OTRO estudio de la misma etapa (ej. Discípulos 2 pide Discípulos 1) son
+// pasos internos de la cadena, no el mínimo real para entrar a la etapa — si
+// se incluyeran, el mensaje agregado mostraría de más (ej. pedir a la vez SCJ,
+// Discípulos 1, Discípulos 2 y Panorama para "Etapa Intermedia", cuando el
+// único requisito real de entrada es SCJ).
+function isStageGateway(r: EligibilityResult, studyTypes: StudyType[]): boolean {
+  const study = studyTypes.find(s => s.code === r.study_code)
+  if (!study?.prerequisite) return true
+  const prereq = studyTypes.find(s => s.code === study.prerequisite)
+  return !prereq || prereq.stage !== study.stage
+}
+
 // Mensaje de un tab de etapa sin nada matriculable: por qué, y qué le falta a
 // ESTA persona puntualmente — a partir de reasons_met/reasons_blocked que ya
 // trae cada EligibilityResult (computeEligibility), sin recalcular requisitos.
-function StageRequirementsEmptyState({ stage, results }: { stage: FilterTab; results: EligibilityResult[] }) {
+// Acotado a los estudios "puerta de entrada" de la etapa (ver isStageGateway)
+// para no mezclar los prerequisitos internos de la cadena con el mínimo real.
+function StageRequirementsEmptyState({ stage, results, studyTypes }: {
+  stage: FilterTab; results: EligibilityResult[]; studyTypes: StudyType[]
+}) {
   const meta = STAGE_META[stage] ?? STAGE_META.niveles
+  const gateway = results.filter(r => isStageGateway(r, studyTypes))
   const met = new Set<string>()
   const blocked = new Set<string>()
   let anyEligible = false
-  for (const r of results) {
+  for (const r of gateway) {
     if (r.is_eligible) anyEligible = true
     r.reasons_met.forEach(m => met.add(m))
     if (!r.is_eligible) r.reasons_blocked.forEach(b => blocked.add(b))
@@ -511,7 +535,7 @@ function StageRequirementsEmptyState({ stage, results }: { stage: FilterTab; res
           <p className="text-[13px] text-navy-light/60 font-body mt-0.5">
             {anyEligible
               ? 'Todavía no hay grupos abiertos en este momento — apenas se abra uno vas a poder matricularte.'
-              : 'Estos son los compromisos que pide esta etapa. Te avisamos apenas los cumplas.'}
+              : 'Estos son los compromisos que pide esta etapa.'}
           </p>
         </div>
       </div>
@@ -737,7 +761,14 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
       <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1.5">
         <div>
           <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Zona</p>
-          <p className="text-[13px] font-medium text-navy capitalize font-body">{group.zone}</p>
+          <p className="text-[13px] font-medium text-navy capitalize font-body flex items-center gap-1.5">
+            {group.zone}
+            {group.is_virtual && (
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium font-display bg-teal-soft/40 text-teal-deep normal-case">
+                Virtual
+              </span>
+            )}
+          </p>
         </div>
         <div>
           <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Horario</p>
