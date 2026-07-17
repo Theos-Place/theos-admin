@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { Modal } from '@/components/shared/Modal'
-import { getInitials, toYmdLocal } from '@/lib/format'
+import { getInitials, toYmdLocal, formatCRC } from '@/lib/format'
 
 // El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
 // no forma parte del bundle inicial de la página.
@@ -77,7 +77,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const router = useRouter()
   const { can } = usePermissions()
   const canCheckin = can('eventos', 'edit') // encargado_eventos, direccion, admin
-  const { event, loading } = useEvent(id)
+  const { event, loading, refetch } = useEvent(id)
   // Fecha de ESTA ocurrencia (si venimos de una recurrente con ?date=), para el header.
   const occParam = useSearchParams().get('date')
   // Subevento destino del check-in (null = evento padre).
@@ -97,7 +97,9 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [checkingFamily, setCheckingFamily] = useState(false)
   // Persona NO inscrita en un evento pago (los 3 métodos convergen acá). En
   // Fase 2 abre el modal de cobro en sitio; en Fase 1 avisa de forma consistente.
-  const [cobroTarget, setCobroTarget] = useState<{ id: string; name: string } | null>(null)
+  const [cobroTarget, setCobroTarget] = useState<{ id: string; name: string; method: 'manual' | 'qr' } | null>(null)
+  // Camino en curso del cobro en sitio ('pending' | 'verified'), para el estado del botón.
+  const [cobroSubmitting, setCobroSubmitting] = useState<'pending' | 'verified' | null>(null)
   // ¿El miembro seleccionado es servidor de algún comité organizador? (gating de "Servidor")
   const [serverInfo, setServerInfo] = useState<{ hasCommittees: boolean; isServer: boolean } | null>(null)
 
@@ -237,16 +239,50 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       const dest = targetSub ? subName(targetSub) : null
       if (r === 'ok') { scanFeedback(true); flash('ok', `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`) }
       else if (r === 'dup') { scanFeedback(false); flash('dup', `${name} ya estaba registrado`) }
-      else if (r === 'not_registered') { scanFeedback(false); requestCobro({ id: memberId, name }) }
+      else if (r === 'not_registered') { scanFeedback(false); requestCobro({ id: memberId, name }, 'qr') }
       else { scanFeedback(false); flash('error', 'No se pudo registrar') }
     } catch { scanFeedback(false); flash('error', 'Error al registrar') }
   }
 
   // Persona no inscrita en evento pago: punto único al que llegan los 3 métodos.
-  // Fase 2 lo convierte en el modal de cobro en sitio (2 caminos).
-  function requestCobro(m: { id: string; name: string }) {
+  // Abre el modal de cobro en sitio (Fase 2, 2 caminos).
+  function requestCobro(m: { id: string; name: string }, method: 'manual' | 'qr' = 'manual') {
     setSelectedMember(null)
-    setCobroTarget(m)
+    setCobroTarget({ ...m, method })
+  }
+
+  // Cobro en sitio + check-in de una persona no inscrita (Fase 2).
+  //   'pending'  → inscribe con pago pendiente + correo + check-in.
+  //   'verified' → inscribe con pago aprobado (comprobante ya visto) + check-in.
+  // Tras el éxito refresca el evento (trae inscripción + check-in reales).
+  async function submitOnsiteCharge(mode: 'pending' | 'verified') {
+    if (!cobroTarget || cobroSubmitting) return
+    const target = cobroTarget
+    setCobroSubmitting(mode)
+    try {
+      const res = await fetch(`/api/events/${id}/onsite-charge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: target.id, mode, method: target.method }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null) as { error?: string } | null
+        setScanMsg({ kind: 'error', text: data?.error ?? 'No se pudo registrar el cobro' })
+        return
+      }
+      setCobroTarget(null)
+      setQuery('')
+      await refetch()
+      const msg = mode === 'verified'
+        ? `✓ ${target.name}: pago verificado y check-in`
+        : `✓ ${target.name}: cobro enviado y check-in`
+      setScanMsg({ kind: 'ok', text: msg })
+      setTimeout(() => setScanMsg(m => (m?.text === msg ? null : m)), 3500)
+    } catch {
+      setScanMsg({ kind: 'error', text: 'Error al registrar el cobro' })
+    } finally {
+      setCobroSubmitting(null)
+    }
   }
 
   // Al elegir un miembro existente: si tiene familia, ofrecer registrar a todos.
@@ -560,23 +596,62 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         />
       )}
 
-      {/* No inscrito en evento pago (Fase 1: aviso; Fase 2: cobro en sitio). */}
+      {/* Cobro en sitio de un no inscrito en evento pago (Fase 2, 2 caminos). */}
       {cobroTarget && (
-        <Modal onClose={() => setCobroTarget(null)} titleId="cobro-title" width={420}>
-          <div className="p-6 space-y-4">
-            <h3 id="cobro-title" className="text-base font-bold text-navy font-display">
-              {cobroTarget.name} no está inscrita
-            </h3>
-            <p className="text-sm text-navy-light/70 font-body">
-              Este evento es pago y {cobroTarget.name} no tiene inscripción. Para hacerle
-              check-in hay que registrar el cobro primero.
-            </p>
+        <Modal onClose={() => !cobroSubmitting && setCobroTarget(null)} titleId="cobro-title" width={460}>
+          <div className="p-6 space-y-5">
+            <div className="space-y-1.5">
+              <h3 id="cobro-title" className="text-base font-bold text-navy font-display">
+                Cobro en sitio — {cobroTarget.name}
+              </h3>
+              <p className="text-sm text-navy-light/70 font-body">
+                No tiene inscripción en este evento pago. Registrá el cobro y le hacés
+                check-in de una vez.
+                {event.payment_amount != null && event.payment_amount > 0 && (
+                  <> Monto del evento: <strong className="text-navy">{formatCRC(event.payment_amount)}</strong>.</>
+                )}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {/* Camino 1 — enviar cobro a la persona */}
+              <button
+                onClick={() => submitOnsiteCharge('pending')}
+                disabled={!!cobroSubmitting}
+                className="w-full text-left rounded-xl border border-[var(--outline-variant)] p-4 hover:border-coral/60 hover:bg-surface-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <p className="text-sm font-semibold text-navy font-body">
+                  {cobroSubmitting === 'pending' ? 'Registrando…' : 'Enviar cobro a la persona'}
+                </p>
+                <p className="text-[13px] text-navy-light/70 font-body mt-1">
+                  Inscribe con pago pendiente, le llega un correo para subir el comprobante
+                  y hace check-in ya. Queda en la cola de finanzas.
+                </p>
+              </button>
+
+              {/* Camino 2 — pago verificado en sitio */}
+              <button
+                onClick={() => submitOnsiteCharge('verified')}
+                disabled={!!cobroSubmitting}
+                className="w-full text-left rounded-xl border border-coral bg-coral/5 p-4 hover:bg-coral/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <p className="text-sm font-semibold text-coral-deep font-body">
+                  {cobroSubmitting === 'verified' ? 'Registrando…' : 'Marcar pago verificado en sitio'}
+                </p>
+                <p className="text-[13px] text-navy-light/70 font-body mt-1">
+                  Ya viste el comprobante en su teléfono. Registra el pago como aprobado
+                  (con tu nombre y la hora) y hace check-in.
+                </p>
+              </button>
+            </div>
+
             <div className="flex justify-end">
               <button
                 onClick={() => { setCobroTarget(null); setQuery('') }}
-                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+                disabled={!!cobroSubmitting}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
               >
-                Entendido
+                Cancelar
               </button>
             </div>
           </div>

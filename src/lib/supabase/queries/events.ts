@@ -740,6 +740,140 @@ export async function createCheckin(
   return data as { id: string }
 }
 
+export type OnsiteChargeMode = 'pending' | 'verified'
+
+/** Fase 2 — Cobro en sitio + check-in para eventos pagos.
+ *  Cuando alguien llega al evento SIN inscripción previa, el encargado cobra en
+ *  el momento y hace el check-in sin bloquear la fila. Dos caminos:
+ *   - 'pending'  → "Enviar cobro a la persona": inscribe con payment_status
+ *     'pending' + crea el pago pendiente por comprobante (cae en la cola de
+ *     finanzas como pendiente). El check-in queda hecho; el pago se concilia
+ *     después cuando la persona sube el comprobante y finanzas lo aprueba.
+ *   - 'verified' → "Marcar pago verificado en sitio": el encargado YA vio el
+ *     comprobante en el celular de la persona. Inscribe con payment_status
+ *     'paid' + pago aprobado, con traza de quién (recorded_by/reviewed_by) y
+ *     cuándo. NO es un check-in gratis: el pago queda reflejado como aprobado.
+ *  Ambos caminos hacen el check-in de una vez y usan el método actual
+ *  (comprobante); dejar `payment_method` como parámetro deja lista la estructura
+ *  para sumar otro método (Tilopay) sin rehacer. Servidor exento o evento sin
+ *  costo → se inscribe/hace check-in sin cobro. Idempotente: si la persona ya
+ *  estaba inscrita, reutiliza su inscripción y no duplica el pago. */
+export async function onsiteChargeAndCheckin(
+  eventId: string,
+  input: {
+    member_id: string
+    mode: OnsiteChargeMode
+    method?: 'manual' | 'qr' | 'smart_link'
+    sub_event_id?: string | null
+    actor_member_id?: string | null
+  },
+): Promise<{
+  checkin_id: string
+  registration_id: string | null
+  amount: number
+  exempt: boolean
+  charged: boolean
+  mode: OnsiteChargeMode
+}> {
+  const supabase = createAdminClient()
+  const { member_id, mode } = input
+  const actor = input.actor_member_id ?? null
+  const now = new Date().toISOString()
+
+  const pricing = await registrationPricing(eventId, member_id)
+
+  // ¿Ya estaba inscrita? (idempotencia: el gate solo debería mandar aquí a NO
+  // inscritos, pero si por carrera ya existe, la reutilizamos sin duplicar).
+  const { data: existing } = await supabase
+    .from('event_registrations').select('id')
+    .eq('event_id', eventId).eq('member_id', member_id).limit(1).maybeSingle()
+  let registrationId: string | null = (existing as { id: string } | null)?.id ?? null
+
+  // Evento sin costo real (gratis o servidor exento): inscribe (exento cuando
+  // aplica) y hace check-in, SIN generar cobro.
+  const noCharge = !pricing.requiresPayment || pricing.exempt
+
+  if (!registrationId) {
+    if (noCharge) {
+      if (pricing.requiresPayment) {
+        // Servidor exento de un evento pago → inscripción 'exempted'.
+        const r = await createRegistration(eventId, { member_id, payment_status: 'exempted' })
+        registrationId = r.id
+      }
+      // Evento gratis: no hace falta inscripción para el check-in (no hay gate).
+    } else if (mode === 'verified') {
+      const r = await createRegistration(eventId, { member_id, payment_status: 'paid' })
+      registrationId = r.id
+    } else {
+      // 'pending': reserva la inscripción vía RPC (payment_status='pending').
+      const r = await createRegistration(eventId, { member_id })
+      registrationId = r.id
+    }
+  }
+
+  // Pago (solo si hay costo real). Evita duplicar si ya hay un pago para la
+  // inscripción (misma lógica que auto-matrícula).
+  let charged = false
+  if (!noCharge && registrationId) {
+    const { data: existingPay } = await supabase
+      .from('payments').select('id')
+      .eq('event_registration_id', registrationId).limit(1).maybeSingle()
+    if (!existingPay) {
+      const base = {
+        member_id,
+        amount: pricing.price,
+        currency: 'CRC',
+        // Único método por ahora; cuando entre Tilopay, este valor pasa a venir
+        // del camino elegido (comprobante | tilopay) sin tocar el resto del flujo.
+        payment_method: 'comprobante',
+        concept: 'evento',
+        entity_type: 'event',
+        event_registration_id: registrationId,
+        recorded_by: actor,
+      }
+      const row = mode === 'verified'
+        ? {
+            ...base,
+            status: 'paid',
+            review_status: 'aprobado',
+            reviewed_by: actor,
+            reviewed_at: now,
+            paid_at: now,
+            description: 'Cobro verificado en sitio (check-in de evento)',
+          }
+        : {
+            ...base,
+            status: 'pending',
+            description: 'Cobro en sitio pendiente de comprobante (check-in de evento)',
+          }
+      const { error: payErr } = await supabase.from('payments').insert(row)
+      if (payErr) {
+        // Sin pago no puede quedar la inscripción pagada/pendiente huérfana en
+        // 'verified' (desbalancea finanzas): revertimos la inscripción que
+        // creamos aquí y propagamos el error (no check-in silencioso).
+        if (!existing) await supabase.from('event_registrations').delete().eq('id', registrationId)
+        throw payErr
+      }
+      charged = true
+    }
+  }
+
+  const checkin = await createCheckin(eventId, {
+    member_id,
+    sub_event_id: input.sub_event_id ?? null,
+    method: input.method ?? 'manual',
+  })
+
+  return {
+    checkin_id: checkin.id,
+    registration_id: registrationId,
+    amount: noCharge ? 0 : pricing.price,
+    exempt: pricing.exempt,
+    charged,
+    mode,
+  }
+}
+
 /** Deshace un check-in: borra la fila de event_checkins. Borrado duro — el
  *  check-in no requiere auditoría (se puede volver a registrar). Acotado al
  *  evento para evitar borrar de otro evento por un id ajeno. */
