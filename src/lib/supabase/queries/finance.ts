@@ -255,7 +255,9 @@ export type PaymentWriteInput = {
   study_group_id?: string | null
   amount: number
   payment_method?: PaymentMethod | null
-  status?: PaymentStatus
+  // Obligatorio y explícito: un pago no debe nacer con el default de la columna
+  // (auditoría db §1). El estado inicial normal es 'pending'.
+  status: PaymentStatus
   gateway_ref?: string | null
   sinpe_confirmation?: string | null
   scholarship_id?: string | null

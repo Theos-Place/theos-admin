@@ -14,7 +14,6 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
     id: db.id,
     name: db.title,
     event_type: db.event_type as EventType,
-    committee_id: db.committee_id ?? '',
     description: db.description ?? '',
     start_at: db.starts_at,
     end_at: db.ends_at ?? db.starts_at,
