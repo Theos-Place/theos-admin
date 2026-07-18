@@ -1,6 +1,11 @@
-// Cálculo ÚNICO de la sede de un miembro por asistencia a charlas (módulo
-// PURO, sin server — importable desde componentes cliente). Fuente de verdad
-// para perfil, lista y export; usa los nombres canónicos de sedes-canonical.ts.
+// Cálculo de la sede de un miembro por asistencia a charlas (módulo PURO, sin
+// server — importable desde componentes cliente). Se usa en vivo para perfil,
+// lista y export; usa los nombres canónicos de sedes-canonical.ts.
+//
+// ⚠️ Esta es UNA de dos implementaciones espejo de la misma regla (la otra es la
+// función SQL refresh_member_sedes(), cron masivo para 22k+ miembros). El
+// CONTRATO compartido y sus casos están en sede-rule-fixtures.ts: si cambiás la
+// regla, actualizá computeMemberSede + refresh_member_sedes + los fixtures.
 //
 // Reglas (decisión 2026-07-15):
 //  · Activo (asistió en los últimos 6 meses calendario): sede = charla más

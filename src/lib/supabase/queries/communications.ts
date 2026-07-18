@@ -626,9 +626,11 @@ export async function processPendingEmails(
   const names = new Map<string, string>()
   const firstNames = new Map<string, string>()
   const tokens = new Map<string, string>()
-  if (memberIds.length) {
+  // Chunking por 300: memberIds puede llegar a ~DAILY_LIMIT (5000) en un run,
+  // y un .in() con miles de ids revienta la query (auditoría db 2026-07-18).
+  for (let i = 0; i < memberIds.length; i += 300) {
     const { data: members } = await supabase
-      .from('members').select('id, first_name, last_name, unsubscribe_token').in('id', memberIds)
+      .from('members').select('id, first_name, last_name, unsubscribe_token').in('id', memberIds.slice(i, i + 300))
     for (const m of (members ?? []) as Array<{ id: string; first_name: string; last_name: string; unsubscribe_token: string }>) {
       names.set(m.id, `${m.first_name} ${m.last_name}`.trim())
       firstNames.set(m.id, m.first_name ?? '')
@@ -724,14 +726,20 @@ export async function retryFailedEmails(broadcastId: string): Promise<number> {
     .map(l => l.id)
   if (!retryIds.length) return 0
 
-  const { data, error } = await supabase
-    .from('message_logs')
-    .update({ status: 'pending', scheduled_date: todayStr(), last_error: null })
-    .in('id', retryIds)
-    .in('status', ['failed', 'bounced'])
-    .select('id')
-  if (error) throw error
-  return data?.length ?? 0
+  // Chunking por 300: un broadcast con muchos fallos genera miles de retryIds;
+  // un .in() masivo en el UPDATE revienta la query (auditoría db 2026-07-18).
+  let requeued = 0
+  for (let i = 0; i < retryIds.length; i += 300) {
+    const { data, error } = await supabase
+      .from('message_logs')
+      .update({ status: 'pending', scheduled_date: todayStr(), last_error: null })
+      .in('id', retryIds.slice(i, i + 300))
+      .in('status', ['failed', 'bounced'])
+      .select('id')
+    if (error) throw error
+    requeued += data?.length ?? 0
+  }
+  return requeued
 }
 
 export type QueueStats = {
