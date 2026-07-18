@@ -46,7 +46,6 @@ export type AdminEvent = {
   id: string
   name: string
   event_type: EventType
-  committee_id: string
   description: string
   start_at: string
   end_at: string

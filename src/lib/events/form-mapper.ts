@@ -39,7 +39,6 @@ export function formToWriteInput(body: Record<string, unknown>): EventWriteInput
     title: String(body.name ?? ''),
     event_type: String(body.event_type ?? ''),
     description: (body.description as string) || null,
-    committee_id: (body.committee as string) || null,
     starts_at: combineDateTime(body.start_date as string, body.start_time as string) ?? new Date().toISOString(),
     ends_at: combineDateTime(body.end_date as string, body.end_time as string),
     location: (body.location as string) || null,
@@ -66,7 +65,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   const full = formToWriteInput(body)
   const out: Partial<EventWriteInput> = {}
   const map: Record<string, keyof EventWriteInput> = {
-    name: 'title', event_type: 'event_type', description: 'description', committee: 'committee_id',
+    name: 'title', event_type: 'event_type', description: 'description',
     location: 'location', location_map_url: 'location_url', is_virtual: 'is_virtual',
     virtual_link: 'virtual_url',
     is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule', recurrence_end: 'recurrence_end',

@@ -24,7 +24,6 @@ export type DbEventEnriched = {
   parent_event_id: string | null
   max_capacity: number | null
   flyer_url: string | null
-  committee_id: string | null
   is_virtual: boolean
   virtual_url: string | null
   requires_registration: boolean
@@ -241,7 +240,6 @@ export type EventWriteInput = {
   parent_event_id?: string | null
   max_capacity?: number | null
   flyer_url?: string | null
-  committee_id?: string | null
   is_virtual?: boolean
   virtual_url?: string | null
   requires_registration?: boolean
@@ -613,15 +611,14 @@ type VolunteerStatus = 'confirmed' | 'pending' | 'cancelled'
 /** Asigna un servidor (voluntario) a un evento. UNIQUE(event_id, member_id). */
 /**
  * ¿El miembro es servidor ACTIVO del comité (o de una sub-área del comité)?
- * `committee` es el NOMBRE del comité tal como se guarda en events.committee_id
- * (el form lo llena con el nombre del área, no con su UUID). Se resuelve el
- * nombre → área. Si el nombre no corresponde a ningún área no se puede validar
- * → se permite (regla permisiva).
+ * `committee` viene de la relación m2m `event_organizing_committees` (id de área,
+ * vía eventOrganizingCommitteeIds). Se acepta también un nombre de área por
+ * compatibilidad. Si no se resuelve a ningún área no se puede validar → se
+ * permite (regla permisiva).
  */
 export async function memberServesCommittee(memberId: string, committee: string): Promise<boolean> {
   const supabase = createAdminClient()
-  // events.committee_id ahora guarda el id del área-comité; históricos podrían
-  // traer el nombre. Se resuelve a id de área en ambos casos.
+  // `committee` normalmente es el id del área-comité; se acepta también el nombre.
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(committee)
   let committeeAreaId: string | null = isUuid ? committee : null
   if (!committeeAreaId) {
@@ -938,7 +935,6 @@ function toWriteInput(e: DbEventEnriched): EventWriteInput {
     recurrence_end: e.recurrence_end,
     max_capacity: e.max_capacity,
     flyer_url: e.flyer_url,
-    committee_id: e.committee_id,
     is_virtual: e.is_virtual,
     virtual_url: e.virtual_url,
     requires_registration: e.requires_registration,

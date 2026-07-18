@@ -822,7 +822,6 @@ export type Database = {
       events: {
         Row: {
           cancellation_reason: string | null
-          committee_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -856,7 +855,6 @@ export type Database = {
         }
         Insert: {
           cancellation_reason?: string | null
-          committee_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -890,7 +888,6 @@ export type Database = {
         }
         Update: {
           cancellation_reason?: string | null
-          committee_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null

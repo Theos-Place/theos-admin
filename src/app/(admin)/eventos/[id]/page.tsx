@@ -595,7 +595,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           onResetModal={resetModal}
           onConfirmAssignment={confirmAssignment}
           serverToast={serverToast}
-          noCommittee={!event.committee_id}
+          noCommittee={event.organizing_committee_ids.length === 0}
         />
       )}
 

@@ -51,7 +51,6 @@ export async function GET(req: Request) {
       flyer_url: e.flyer_url,
       cancellation_reason: null,
       is_active: e.is_active,
-      committee_id: null,
       sub_events: [],
       registrations: [],
       checkins: [],

@@ -71,7 +71,6 @@ function eligibilityToStubEvent(e: EventEligibilityResult): AdminEvent {
     id: e.event_id,
     name: e.title,
     event_type: e.event_type as EventType,
-    committee_id: '',
     description: '',
     start_at: e.starts_at,
     end_at: e.ends_at ?? e.starts_at,
