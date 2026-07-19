@@ -3,7 +3,7 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { buildCsp, newNonce } from '@/lib/csp'
 
 // Rutas accesibles sin sesión.
-const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos']
+const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos', '/vacantes']
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
