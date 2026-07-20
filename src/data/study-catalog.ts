@@ -87,7 +87,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     code: 'PREMAT',
     name: 'Prematrimonial',
     stage: 'inicial',
-    prerequisite: 'N4',
+    prerequisite: 'N2',
     weeks: 10,
     level: 'Intermedio',
     requires_cedula: true,
