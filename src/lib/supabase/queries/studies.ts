@@ -1,5 +1,6 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
+import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
 import { ymdCR } from '@/lib/format'
 import type { Json } from '@/types/database'
 
@@ -910,10 +911,18 @@ export async function enrollMember(
   const supabase = createAdminClient()
   const { data: g } = await supabase
     .from('study_groups')
-    .select('is_virtual, plan:study_plans!study_groups_plan_id_fkey(id, requires_invitation, cost, requires_payment)')
+    .select('is_virtual, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
     .eq('id', groupId).maybeSingle()
-  const group = g as { is_virtual: boolean | null; plan: { id: string; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
+  const group = g as { is_virtual: boolean | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
   const plan = group?.plan
+
+  // Guard: planes que EXIGEN cédula (ej. PREMAT). Bloqueante server-side: no se
+  // puede matricular sin cédula registrada. La UI avisa antes (matrícula).
+  if (plan?.code && REQUIRES_CEDULA_CODES.has(plan.code)) {
+    const { data: mem } = await supabase.from('members').select('cedula').eq('id', memberId).maybeSingle()
+    const ced = (mem as { cedula?: string | null } | null)?.cedula
+    if (!ced || !String(ced).trim()) throw new Error('CEDULA_REQUERIDA')
+  }
   // Guard: grupo virtual sin autorización del miembro — server-side, no
   // depende de que la UI ya lo haya filtrado (se puede saltar el fetch).
   if (group?.is_virtual) {

@@ -12,6 +12,10 @@ export interface AuthUser {
   /** Ids de miembros de la misma familia (mismo family_unit_id) — para saber
    *  qué perfiles puede ver además del propio. */
   family_member_ids: string[]
+  /** ¿El miembro tiene cédula registrada? false → recordatorio (banner). */
+  has_cedula: boolean
+  /** Perfil de sistema (cuenta institucional): excluido del recordatorio de cédula. */
+  is_system: boolean
 }
 
 interface AuthState {

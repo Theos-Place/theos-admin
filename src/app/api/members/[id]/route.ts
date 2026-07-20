@@ -41,11 +41,22 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
+    // Autenticado. STAFF de padrón edita cualquier ficha; un miembro sin ese rol
+    // solo puede editar SU PROPIA ficha (self-service para completar su cédula).
+    const auth = await requireRoles()
     if (auth.res) return auth.res
   try {
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
+
+    const STAFF_ROLES = ['editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios']
+    const isStaff = auth.ctx.roles.some(r => STAFF_ROLES.includes(r))
+    const isAdmin = auth.ctx.roles.includes('admin')
+    const isSelf = !!auth.ctx.memberId && auth.ctx.memberId === id
+    if (!isStaff && !isAdmin && !isSelf) {
+      return NextResponse.json({ error: 'No podés editar este perfil.' }, { status: 403 })
+    }
+
     const body = await req.json()
 
     // Mismo tratamiento que el alta: allowlist de columnas, teléfonos solo
@@ -53,13 +64,27 @@ export async function PUT(
     // UNIQUE en cédula/correo — sin esto, editar crea los duplicados que el
     // alta previene con 409).
     const { MEMBER_WRITE_FIELDS, normalizeEmail, findMemberByCedulaOrEmail } = await import('@/lib/supabase/queries/members')
+    // El miembro editando su propia ficha solo toca datos personales (no flags
+    // de gestión como is_donor/is_active, reservados a staff).
+    const SELF_ONLY_EXCLUDE = new Set(['is_donor', 'is_active'])
+    const allowedFields = (isStaff || isAdmin)
+      ? MEMBER_WRITE_FIELDS
+      : MEMBER_WRITE_FIELDS.filter(f => !SELF_ONLY_EXCLUDE.has(f))
     const updates: Record<string, unknown> = {}
-    for (const k of MEMBER_WRITE_FIELDS) if (k in body) updates[k] = body[k]
+    for (const k of allowedFields) if (k in body) updates[k] = body[k]
+    // Toggle "perfil de sistema": solo admin puede marcarlo.
+    if (isAdmin && 'is_system' in body) updates.is_system = !!body.is_system
     const { normalizePhoneOrNull } = await import('@/lib/phone')
     if ('phone' in updates) updates.phone = normalizePhoneOrNull(updates.phone as string)
     if ('emergency_contact_phone' in updates) updates.emergency_contact_phone = normalizePhoneOrNull(updates.emergency_contact_phone as string)
     if ('email' in updates) updates.email = normalizeEmail(updates.email)
     if ('cedula' in updates && typeof updates.cedula === 'string') updates.cedula = updates.cedula.trim() || null
+
+    // Validación de formato de cédula (server-side): si se envía no vacía.
+    const { isValidCedula, CEDULA_FORMAT_MESSAGE } = await import('@/lib/cedula')
+    if (typeof updates.cedula === 'string' && updates.cedula && !isValidCedula(updates.cedula)) {
+      return NextResponse.json({ error: CEDULA_FORMAT_MESSAGE, code: 'cedula_invalida' }, { status: 400 })
+    }
 
     const cedula = typeof updates.cedula === 'string' ? updates.cedula : ''
     const email = typeof updates.email === 'string' ? updates.email : ''
