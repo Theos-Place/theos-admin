@@ -2032,6 +2032,7 @@ export type Database = {
           cedula: string | null
           cedula_dup_legacy: boolean
           cedula_normalized: string | null
+          is_system: boolean
           created_at: string | null
           deactivated_at: string | null
           deactivated_by: string | null
@@ -2080,6 +2081,7 @@ export type Database = {
           cedula?: string | null
           cedula_dup_legacy?: boolean
           cedula_normalized?: string | null
+          is_system?: boolean
           created_at?: string | null
           deactivated_at?: string | null
           deactivated_by?: string | null
@@ -2128,6 +2130,7 @@ export type Database = {
           cedula?: string | null
           cedula_dup_legacy?: boolean
           cedula_normalized?: string | null
+          is_system?: boolean
           created_at?: string | null
           deactivated_at?: string | null
           deactivated_by?: string | null

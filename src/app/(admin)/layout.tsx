@@ -11,6 +11,7 @@ import { OrgProvider } from '@/lib/org'
 import { AuthProvider, useAuth } from '@/lib/auth/auth-context'
 import { usePermissions } from '@/hooks/usePermissions'
 import { ToastProvider } from '@/components/shared/Toast'
+import { CedulaReminderBanner } from '@/components/members/CedulaReminderBanner'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':      'Dashboard',
@@ -82,11 +83,14 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // el rol base 'miembro' ve su perfil o el de su familia desde ACÁ mismo
   // (/miembros/{id} de detalle), no el listado completo (/miembros).
   if (prefix === '/miembros' && getScope('miembros') === 'own') {
-    const detailMatch = pathname.match(/^\/miembros\/([0-9a-f-]{36})$/i)
-    const targetId = detailMatch?.[1]
+    // Detalle: propio o familia. Editar (/editar): SOLO la propia ficha
+    // (self-service para completar cédula/datos), no la de familia.
+    const m = pathname.match(/^\/miembros\/([0-9a-f-]{36})(\/editar)?$/i)
+    const targetId = m?.[1]
+    const isEdit = !!m?.[2]
     const allowedIds = [user.member_id, ...(user.family_member_ids ?? [])]
-    const isOwnOrFamily = !!targetId && allowedIds.includes(targetId)
-    if (!isOwnOrFamily) return <AccessDenied />
+    const ok = !!targetId && (isEdit ? targetId === user.member_id : allowedIds.includes(targetId))
+    if (!ok) return <AccessDenied />
   }
   return <>{children}</>
 }
@@ -111,6 +115,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               viewport en mobile; clip (no hidden) no crea contenedor de scroll, así
               que no rompe los position:sticky internos (p. ej. la barra de editar). */}
           <main className="flex-1 p-4 lg:p-6 min-w-0 overflow-x-clip">
+            <CedulaReminderBanner />
             <ErrorBoundary>
               <ModuleGuard pathname={pathname}>
                 {children}

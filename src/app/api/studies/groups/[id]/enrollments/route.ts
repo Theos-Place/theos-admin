@@ -43,6 +43,12 @@ export async function POST(
         { status: 403 },
       )
     }
+    if (error instanceof Error && error.message === 'CEDULA_REQUERIDA') {
+      return NextResponse.json(
+        { error: 'Este curso requiere la cédula registrada. Completala en tu perfil para poder inscribirte.', code: 'cedula_requerida' },
+        { status: 409 },
+      )
+    }
     const scholarshipRes = scholarshipErrorResponse(error)
     if (scholarshipRes) return scholarshipRes
     console.error('POST enrollments:', error)

@@ -2,6 +2,7 @@
 // de duplicados, familia). Extraído de members.ts (auditoría 2026-06: archivos
 // gigantes). Re-exportado por members.ts para no tocar a los consumidores.
 import { createAdminClient } from '@/lib/supabase/admin'
+import { normalizeCedula } from '@/lib/cedula'
 import type { DbMember } from './members'
 
 /** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
@@ -29,7 +30,7 @@ export function normalizeEmail(raw: unknown): string | null {
 export async function findMemberByCedulaOrEmail(cedula: string | null, email: string | null, excludeId?: string) {
   if (!cedula && !email) return null
   const supabase = createAdminClient()
-  const lookup = (col: 'cedula' | 'email', val: string, ci = false) => {
+  const lookup = (col: 'cedula_normalized' | 'email', val: string, ci = false) => {
     let q = supabase.from('members').select('id')
     // ilike sin comodines = igualdad case-insensitive; se escapan %_\ del input.
     q = ci ? q.ilike(col, val.replace(/[\\%_]/g, m => `\\${m}`)) : q.eq(col, val)
@@ -37,8 +38,10 @@ export async function findMemberByCedulaOrEmail(cedula: string | null, email: st
     return q.limit(1).maybeSingle()
   }
 
+  // La cédula se compara NORMALIZADA (misma base que el índice único parcial
+  // members_cedula_norm_uniq): así "1-1234-5678" y "112345678" colisionan.
   const [byCedula, byEmail] = await Promise.all([
-    cedula ? lookup('cedula', cedula.trim()) : null,
+    cedula ? lookup('cedula_normalized', normalizeCedula(cedula)) : null,
     email ? lookup('email', email.trim(), true) : null,
   ])
   if (byCedula?.error) throw byCedula.error

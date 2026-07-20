@@ -22,14 +22,14 @@ export async function GET() {
 
     const { data: member } = await admin
       .from('members')
-      .select('id, first_name, last_name, email')
+      .select('id, first_name, last_name, email, cedula, is_system')
       .eq('auth_user_id', user.id)
       .maybeSingle()
 
     if (!member) {
       // Usuario de auth sin member enlazado: sin acceso a módulos.
       return NextResponse.json({
-        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [] },
+        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false },
       })
     }
 
@@ -67,6 +67,10 @@ export async function GET() {
         role: roles[0] ?? null,
         member_id: member.id,
         family_member_ids: familyMemberIds,
+        // Recordatorio de cédula: has_cedula=false dispara el banner (salvo
+        // perfiles de sistema, que nunca tienen cédula por diseño).
+        has_cedula: !!(member.cedula && String(member.cedula).trim()),
+        is_system: !!member.is_system,
       },
     })
   } catch (error) {

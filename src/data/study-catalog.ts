@@ -14,6 +14,8 @@ export type StudyCatalogItem = {
   req_server?: boolean
   req_attendee?: boolean
   requires_grade?: boolean
+  /** Exige cédula registrada del miembro para inscribirse (gate bloqueante). */
+  requires_cedula?: boolean
   auto_promote?: boolean
   next_study_id?: string
   is_archived?: boolean
@@ -88,6 +90,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     prerequisite: 'N4',
     weeks: 10,
     level: 'Intermedio',
+    requires_cedula: true,
     description: 'El Curso Prematrimonial es un proceso de diez semanas en el que un matrimonio con experiencia guía a una pareja de creyentes que están comprometidos y desean prepararse espiritualmente para el matrimonio, entendiendo que este es un pacto sagrado de amor y fidelidad delante de Dios. Cada sesión ayuda a establecer a Dios como el centro sobre el cual se edifica toda la familia, guiando a los futuros esposos a tomar decisiones sabias en áreas espirituales, emocionales y prácticas.',
     commitments: 'Sin compromisos adicionales',
   },

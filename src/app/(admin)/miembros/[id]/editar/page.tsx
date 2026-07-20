@@ -9,6 +9,7 @@ import { sedeLabel } from '@/lib/sedes'
 import { useMember } from '@/hooks/useMember'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { normalizePhoneOrNull } from '@/lib/phone'
+import { isValidCedula, CEDULA_FORMAT_MESSAGE } from '@/lib/cedula'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
@@ -43,6 +44,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   const [emergencyContactPhone, setEmergencyContactPhone] = useState(member?.emergency_contact_phone ?? '')
   const [saving,                setSaving]                = useState(false)
   const [toast,                 setToast]                 = useState(false)
+  const [cedulaErr,             setCedulaErr]             = useState('')
+  const [highlightCedula,       setHighlightCedula]       = useState(false)
+  const [isSystem,              setIsSystem]              = useState(false)
 
   // ── Modal desactivar ───────────────────────────────────────────────────────
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false)
@@ -71,6 +75,18 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     setMedicamentos(member.medicamentos ?? '')
     setEmergencyContactName(member.emergency_contact_name ?? '')
     setEmergencyContactPhone(member.emergency_contact_phone ?? '')
+    setIsSystem(member.is_system ?? false)
+  }, [member])
+
+  // Recordatorio de cédula (banner): ?completar=cedula resalta el campo y hace
+  // scroll/focus para que la persona lo complete de una.
+  useEffect(() => {
+    if (!member) return
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).get('completar') !== 'cedula') return
+    setHighlightCedula(true)
+    const el = document.getElementById('edit-cedula')
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); (el as HTMLInputElement).focus() }
   }, [member])
 
   if (!member) {
@@ -89,11 +105,21 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   }
 
   async function handleSave() {
+    // Validación de formato de cédula (si se ingresó): misma regla que el server.
+    const ced = cedula.trim()
+    if (ced && !isValidCedula(ced)) {
+      setCedulaErr(CEDULA_FORMAT_MESSAGE)
+      setHighlightCedula(true)
+      document.getElementById('edit-cedula')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    setCedulaErr('')
     setSaving(true)
     const payload = {
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       cedula: cedula.trim() || null,
+      ...(isAdmin ? { is_system: isSystem } : {}),
       email: email.trim() || null,
       phone: normalizePhoneOrNull(phone),
       birth_date: birthDate || null,
@@ -119,6 +145,12 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       })
       if (res.status === 409) {
         notify('Ya existe otro miembro con esa cédula o correo.', 'error')
+        setSaving(false)
+        return
+      }
+      if (res.status === 400) {
+        const d = await res.json().catch(() => null) as { error?: string } | null
+        notify(d?.error || 'Datos inválidos.', 'error')
         setSaving(false)
         return
       }
@@ -186,6 +218,18 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
+            {/* Perfil de sistema — solo admin. Excluye la cuenta del recordatorio
+                de cédula (cuentas institucionales que nunca tienen cédula). */}
+            {isAdmin && (
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-[12px] text-[var(--fg-muted)] font-body">Sistema:</span>
+                <label className="toggle cursor-pointer" title="Marcar como perfil de sistema (cuenta institucional)">
+                  <input type="checkbox" checked={isSystem} onChange={() => setIsSystem(v => !v)} />
+                  <div className="toggle-track" />
+                </label>
+              </div>
+            )}
+
             <button className="btn btn-ghost" onClick={() => router.back()}>
               Cancelar
             </button>
@@ -240,11 +284,14 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 <label className="form-label" htmlFor="edit-cedula">Cédula</label>
                 <input
                   id="edit-cedula"
-                  className="form-input"
+                  className={`form-input${highlightCedula || cedulaErr ? ' ring-2 ring-coral/40 border-coral/50' : ''}`}
                   value={cedula}
-                  onChange={e => setCedula(e.target.value)}
+                  onChange={e => { setCedula(e.target.value); if (cedulaErr) setCedulaErr(''); if (highlightCedula) setHighlightCedula(false) }}
                   placeholder="Ej: 1-1234-5678"
+                  aria-invalid={!!cedulaErr}
                 />
+                {cedulaErr && <p className="mt-1 text-[12px] text-coral-deep font-body">{cedulaErr}</p>}
+                {highlightCedula && !cedulaErr && <p className="mt-1 text-[12px] text-coral-deep font-body">Completá tu número de cédula acá.</p>}
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="edit-birth-date">Fecha de nacimiento</label>
