@@ -50,8 +50,16 @@ export default function LoginPage() {
   // Sugerencia de passkey tras el primer login (solo si aplica).
   const [showPasskeyModal, setShowPasskeyModal] = useState(false)
 
+  // Destino post-login: respeta ?redirect si es un path interno seguro (evita
+  // open-redirect), si no cae al dashboard. Usado por el login-gate de /vacantes.
+  function postLoginDest(): string {
+    if (typeof window === 'undefined') return '/dashboard'
+    const r = new URLSearchParams(window.location.search).get('redirect')
+    return r && r.startsWith('/') && !r.startsWith('//') ? r : '/dashboard'
+  }
+
   function goToDashboard() {
-    router.push('/dashboard')
+    router.push(postLoginDest())
     router.refresh()
   }
 
@@ -73,7 +81,7 @@ export default function LoginPage() {
         setAuthError('No se pudo autenticar con huella. Intentá con tu contraseña.')
         return
       }
-      router.push('/dashboard')
+      router.push(postLoginDest())
       router.refresh()
     } catch {
       setAuthError('No se pudo autenticar con huella. Intentá con tu contraseña.')
@@ -166,7 +174,7 @@ export default function LoginPage() {
         setMfaError('Código incorrecto. Intentá de nuevo.')
         return
       }
-      router.push('/dashboard')
+      router.push(postLoginDest())
       router.refresh()
     } catch {
       setMfaError('Código incorrecto. Intentá de nuevo.')
