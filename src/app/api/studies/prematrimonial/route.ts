@@ -21,13 +21,14 @@ export async function GET() {
   }
 }
 
-// POST (multipart): crea la solicitud + el pago por comprobante. La inicia el
-// miembro logueado (requester); cubre a la pareja.
+// POST (multipart): crea la solicitud + el pago por comprobante. Normalmente la
+// inicia el miembro logueado (requester); cubre a la pareja. Un admin/direccion
+// puede inscribir EN NOMBRE DE otro miembro (flujo "Ver disponibilidad como")
+// pasando on_behalf_of — solo esos roles, validado server-side.
 export async function POST(req: NextRequest) {
   const auth = await requireRoles()
   if (auth.res) return auth.res
-  const requester = auth.ctx.memberId
-  if (!requester) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
+  if (!auth.ctx.memberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
   if (!rateLimit(`premat:${clientIp(req)}`, 5, 60_000)) {
     return NextResponse.json({ error: 'Demasiadas solicitudes. Esperá un momento.' }, { status: 429 })
   }
@@ -36,6 +37,19 @@ export async function POST(req: NextRequest) {
     const file = form.get('receipt')
     const referenceCode = (form.get('reference_code') as string | null)?.trim() || null
     const spouseMemberId = (form.get('spouse_member_id') as string | null)?.trim() || ''
+
+    // Requester efectivo: el logueado, salvo que un admin/direccion inscriba a
+    // otro (on_behalf_of). Cualquier otro rol que intente el override → 403.
+    const onBehalfOf = (form.get('on_behalf_of') as string | null)?.trim() || ''
+    const admin = createAdminClient()
+    let requester = auth.ctx.memberId
+    if (onBehalfOf && onBehalfOf !== auth.ctx.memberId) {
+      const isPrivileged = auth.ctx.roles.includes('admin') || auth.ctx.roles.includes('direccion')
+      if (!isPrivileged) return NextResponse.json({ error: 'No autorizado para inscribir a otro miembro.' }, { status: 403 })
+      const { data: target } = await admin.from('members').select('id').eq('id', onBehalfOf).maybeSingle()
+      if (!target) return NextResponse.json({ error: 'No se encontró el miembro a inscribir.' }, { status: 404 })
+      requester = onBehalfOf
+    }
     let logistica, ceremonia
     try {
       logistica = JSON.parse((form.get('logistica') as string) || '{}')
@@ -44,21 +58,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 })
     }
 
-    // Requisito: quien inscribe debe tener cédula (bloqueante para esta acción).
-    const admin = createAdminClient()
+    // Requisito: quien se inscribe debe tener cédula (bloqueante para esta acción).
     const { data: me } = await admin.from('members').select('cedula').eq('id', requester).maybeSingle()
     if (!me?.cedula || !String(me.cedula).trim()) {
-      return NextResponse.json({ error: 'Necesitás registrar tu cédula antes de inscribirte.', code: 'cedula_requerida' }, { status: 409 })
+      return NextResponse.json({ error: 'El miembro debe tener la cédula registrada antes de inscribirse.', code: 'cedula_requerida' }, { status: 409 })
     }
 
-    // Cónyuge: debe existir y no ser uno mismo.
-    if (!spouseMemberId) return NextResponse.json({ error: 'Falta seleccionar a tu pareja.' }, { status: 400 })
-    if (spouseMemberId === requester) return NextResponse.json({ error: 'No podés seleccionarte a vos mismo.' }, { status: 400 })
+    // Cónyuge: debe existir y no ser el mismo que se inscribe.
+    if (!spouseMemberId) return NextResponse.json({ error: 'Falta seleccionar a la pareja.' }, { status: 400 })
+    if (spouseMemberId === requester) return NextResponse.json({ error: 'La pareja no puede ser el mismo miembro que se inscribe.' }, { status: 400 })
 
     // Requisito N2 para AMBOS (server-side, sobre los member_id — confiable).
     const [reqN2, spouseN2] = await Promise.all([hasCompletedN2(requester), hasCompletedN2(spouseMemberId)])
     if (!reqN2 || !spouseN2) {
-      const quien = !reqN2 && !spouseN2 ? 'Ninguno de los dos tiene' : !reqN2 ? 'Vos no tenés' : 'Tu pareja no tiene'
+      const quien = !reqN2 && !spouseN2 ? 'Ninguno de los dos tiene' : !reqN2 ? 'El miembro no tiene' : 'La pareja no tiene'
       return NextResponse.json({ error: `${quien} el Nivel 2 completado, requisito del curso prematrimonial.`, code: 'requisito_n2' }, { status: 409 })
     }
 
