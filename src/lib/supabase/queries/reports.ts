@@ -6,19 +6,24 @@ import { buildGrowthReport, type GrowthAggRow, type GrowthReport } from '@/lib/r
 import { buildDiscipulosReport, type DmFlagRow, type DmMilestoneRow, type DiscipulosReport } from '@/lib/reports/discipulos'
 import { buildRetencionReport, type GroupAttRow, type RetencionReport } from '@/lib/reports/retencion'
 
-// RPCs pesadas de reportes. Sus resultados se cachean en la tabla
-// report_snapshots (refrescada por el cron /api/cron/report-snapshots), así las
-// páginas no re-agregan sobre 160k+ check-ins en cada carga. `report_key` de la
-// caché = nombre del RPC.
-type ReportRpc =
-  | 'report_charla_attendance'
-  | 'report_member_growth'
-  | 'get_dm_flags'
-  | 'get_dm_milestones'
-  | 'get_group_attendance'
+// Caché de reportes (tabla report_snapshots, refrescada por el cron nocturno
+// /api/cron/report-snapshots). Dos estrategias según el peso del dataset:
+//   · charla/growth: se cachean las filas AGREGADAS (pocas: ~3k) y se arma el
+//     payload por request (barato, y permite filtrar por año/sede en memoria).
+//   · discípulos/retención: la agregación cruda es enorme (23k / 17k filas), así
+//     que el cron guarda el PAYLOAD YA CALCULADO (unos KB) y el request lo
+//     devuelve casi directo. El filtrado por cohorte se hace en el cliente.
+
+type AggRpc = 'report_charla_attendance' | 'report_member_growth'
+type HeavyRpc = 'get_dm_flags' | 'get_dm_milestones' | 'get_group_attendance'
+
+// Keys en report_snapshots. Para charla/growth = nombre del RPC (filas). Para
+// los pesados = payload final ya construido.
+const KEY_DISCIPULOS = 'discipulos_payload'
+const KEY_RETENCION = 'retencion_payload'
 
 /** Trae TODAS las filas de un RPC paginando (.range corta en 1000). */
-async function fetchAllRpc<T>(supabase: SupabaseClient, rpcName: ReportRpc): Promise<T[]> {
+async function fetchAllRpc<T>(supabase: SupabaseClient, rpcName: AggRpc | HeavyRpc): Promise<T[]> {
   const rows: T[] = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase.rpc(rpcName).range(from, from + 999)
@@ -30,69 +35,82 @@ async function fetchAllRpc<T>(supabase: SupabaseClient, rpcName: ReportRpc): Pro
   return rows
 }
 
-/** Lee el dataset cacheado; si no hay snapshot todavía (primera vez, o cron aún
- *  no corrió), cae al RPC en vivo para no romper. */
-async function loadDataset<T>(supabase: SupabaseClient, rpcName: ReportRpc): Promise<T[]> {
+async function readSnapshot<T>(supabase: SupabaseClient, key: string): Promise<T | null> {
   const { data, error } = await supabase
-    .from('report_snapshots')
-    .select('data')
-    .eq('report_key', rpcName)
-    .maybeSingle()
-  if (!error && data?.data) return data.data as T[]
+    .from('report_snapshots').select('data').eq('report_key', key).maybeSingle()
+  if (error || !data?.data) return null
+  return data.data as T
+}
+
+async function writeSnapshot(supabase: SupabaseClient, key: string, value: unknown, rowCount: number): Promise<void> {
+  const { error } = await supabase.from('report_snapshots').upsert({
+    report_key: key, data: value as unknown as Json, row_count: rowCount, updated_at: new Date().toISOString(),
+  })
+  if (error) throw new Error(`upsert ${key}: ${error.message}`)
+}
+
+/** Filas agregadas cacheadas (charla/growth); fallback al RPC en vivo. */
+async function loadAggRows<T>(supabase: SupabaseClient, rpcName: AggRpc): Promise<T[]> {
+  const cached = await readSnapshot<T[]>(supabase, rpcName)
+  if (cached) return cached
   return fetchAllRpc<T>(supabase, rpcName)
 }
 
-/** Refresca la caché de todos los datasets de reportes. La usa el cron nocturno.
- *  Devuelve el conteo de filas por dataset (para logging/healthcheck). */
-export async function refreshReportSnapshots(): Promise<Record<ReportRpc, number>> {
+// ── Cómputo en vivo de los reportes pesados (lo usa el cron) ──
+async function computeDiscipulos(supabase: SupabaseClient): Promise<DiscipulosReport> {
+  const [flags, milestones] = await Promise.all([
+    fetchAllRpc<DmFlagRow>(supabase, 'get_dm_flags'),
+    fetchAllRpc<DmMilestoneRow>(supabase, 'get_dm_milestones'),
+  ])
+  return buildDiscipulosReport(flags, milestones)
+}
+async function computeRetencion(supabase: SupabaseClient): Promise<RetencionReport> {
+  const rows = await fetchAllRpc<GroupAttRow>(supabase, 'get_group_attendance')
+  return buildRetencionReport(rows)
+}
+
+/** Refresca toda la caché de reportes. La usa el cron nocturno. */
+export async function refreshReportSnapshots(): Promise<Record<string, number>> {
   const supabase = createAdminClient()
-  const keys: ReportRpc[] = [
-    'report_charla_attendance', 'report_member_growth',
-    'get_dm_flags', 'get_dm_milestones', 'get_group_attendance',
-  ]
-  const counts = {} as Record<ReportRpc, number>
-  for (const key of keys) {
-    const rows = await fetchAllRpc<unknown>(supabase, key)
-    const { error } = await supabase
-      .from('report_snapshots')
-      .upsert({ report_key: key, data: rows as unknown as Json, row_count: rows.length, updated_at: new Date().toISOString() })
-    if (error) throw new Error(`upsert ${key}: ${error.message}`)
-    counts[key] = rows.length
+  const counts: Record<string, number> = {}
+
+  for (const rpc of ['report_charla_attendance', 'report_member_growth'] as AggRpc[]) {
+    const rows = await fetchAllRpc<unknown>(supabase, rpc)
+    await writeSnapshot(supabase, rpc, rows, rows.length)
+    counts[rpc] = rows.length
   }
+  const disc = await computeDiscipulos(supabase)
+  await writeSnapshot(supabase, KEY_DISCIPULOS, disc, disc.total)
+  counts[KEY_DISCIPULOS] = disc.total
+
+  const ret = await computeRetencion(supabase)
+  await writeSnapshot(supabase, KEY_RETENCION, ret, ret.years.length)
+  counts[KEY_RETENCION] = ret.years.length
+
   return counts
 }
 
-/** Reporte de Control de Asistencia por sede. Lee el agregado compacto cacheado
- *  y calcula las series para (año, sede) server-side. */
+/** Control de Asistencia por sede: filas agregadas cacheadas → series (año, sede). */
 export async function getCharlaAttendanceReport(opts: { year?: number; sede?: string } = {}): Promise<CharlaReport> {
   const supabase = createAdminClient()
-  const rows = await loadDataset<CharlaAggRow>(supabase, 'report_charla_attendance')
-  return buildCharlaReport(rows, opts)
+  return buildCharlaReport(await loadAggRows<CharlaAggRow>(supabase, 'report_charla_attendance'), opts)
 }
 
-/** Reporte de Crecimiento (personas nuevas). Lee el agregado cacheado y calcula
- *  las series para (año, sede). */
+/** Crecimiento (personas nuevas): filas agregadas cacheadas → series (año, sede). */
 export async function getMemberGrowthReport(opts: { year?: number; sede?: string } = {}): Promise<GrowthReport> {
   const supabase = createAdminClient()
-  const rows = await loadDataset<GrowthAggRow>(supabase, 'report_member_growth')
-  return buildGrowthReport(rows, opts)
+  return buildGrowthReport(await loadAggRows<GrowthAggRow>(supabase, 'report_member_growth'), opts)
 }
 
-/** Reporte de Discípulos Multiplicadores. Lee los flags por-persona y los hitos
- *  cacheados, y arma el payload para el año de cohorte seleccionado. */
-export async function getDiscipulosReport(opts: { cohortYear?: number } = {}): Promise<DiscipulosReport> {
+/** Discípulos Multiplicadores: payload final cacheado (fallback a cómputo en
+ *  vivo la primera vez). El filtro de cohorte lo hace el cliente sobre el payload. */
+export async function getDiscipulosReport(): Promise<DiscipulosReport> {
   const supabase = createAdminClient()
-  const [flags, milestones] = await Promise.all([
-    loadDataset<DmFlagRow>(supabase, 'get_dm_flags'),
-    loadDataset<DmMilestoneRow>(supabase, 'get_dm_milestones'),
-  ])
-  return buildDiscipulosReport(flags, milestones, opts)
+  return (await readSnapshot<DiscipulosReport>(supabase, KEY_DISCIPULOS)) ?? computeDiscipulos(supabase)
 }
 
-/** Reporte de Retención y Transición. Lee las filas por persona/año/grupo
- *  cacheadas y arma únicos, retención, flujo y proyección. */
+/** Retención y Transición: payload final cacheado (fallback a cómputo en vivo). */
 export async function getRetencionReport(): Promise<RetencionReport> {
   const supabase = createAdminClient()
-  const rows = await loadDataset<GroupAttRow>(supabase, 'get_group_attendance')
-  return buildRetencionReport(rows)
+  return (await readSnapshot<RetencionReport>(supabase, KEY_RETENCION)) ?? computeRetencion(supabase)
 }

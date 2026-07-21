@@ -8,7 +8,6 @@ import {
 } from 'recharts'
 import { KpiCard } from '@/components/reportes/KpiCard'
 import { ChartCard } from '@/components/reportes/ChartCard'
-import { UpdatingBadge } from '@/components/reportes/UpdatingBadge'
 import { cn } from '@/lib/utils'
 import type { DiscipulosReport } from '@/lib/reports/discipulos'
 
@@ -28,24 +27,20 @@ const fmt = (n: number) => n.toLocaleString('es-CR')
 export default function ReporteDiscipulosPage() {
   const [report, setReport] = useState<DiscipulosReport | null>(null)
   const [cohortYear, setCohortYear] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // El fetch NO cambia estado de forma síncrona (todos los setState van en
-  // .then/.catch/.finally), así que se puede llamar desde el effect inicial sin
-  // disparar cascadas de render. El estado "loading" arranca en true.
-  const fetchReport = useCallback((y: number | null) => {
-    const qs = y ? `?cohortYear=${y}` : ''
-    fetch(`/api/reports/discipulos${qs}`)
+  // Un solo fetch: el payload trae TODOS los cohortes (cohortTable), así que
+  // cambiar de año se resuelve en memoria — no vuelve a pegarle al servidor.
+  const fetchReport = useCallback(() => {
+    fetch('/api/reports/discipulos')
       .then(r => { if (!r.ok) throw new Error('Error cargando el reporte'); return r.json() as Promise<DiscipulosReport> })
       .then(d => { setReport(d); setCohortYear(d.cohortYear); setError(null) })
       .catch(e => setError(e instanceof Error ? e.message : 'Error'))
-      .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { fetchReport(null) }, [fetchReport])
+  useEffect(() => { fetchReport() }, [fetchReport])
 
-  function onCohortYear(y: number) { setCohortYear(y); setLoading(true); fetchReport(y) }
+  function onCohortYear(y: number) { setCohortYear(y) }
 
   if (!report) {
     return (
@@ -65,8 +60,10 @@ export default function ReporteDiscipulosPage() {
     )
   }
 
-  const { total, dm, criteria, venn, milestones, cohortYears, cohort, cohortTable } = report
+  const { total, dm, criteria, venn, milestones, cohortYears, cohortTable } = report
   const dmPct = total > 0 ? Math.round((dm / total) * 1000) / 10 : 0
+  // Cohorte seleccionada: se deriva de cohortTable en memoria (sin refetch).
+  const cohort = cohortTable.find(r => r.year === cohortYear) ?? report.cohort
 
   // Combinaciones para las barras (excluye la triple, que es el DM/hero).
   const comboData = [
@@ -78,8 +75,7 @@ export default function ReporteDiscipulosPage() {
   const milestoneData = milestones.map(m => ({ ...m, meses: Math.round((m.avgDays / 30.44) * 10) / 10 }))
 
   return (
-    <div className={loading ? 'opacity-60 transition-opacity pointer-events-none space-y-5' : 'transition-opacity space-y-5'}>
-      <UpdatingBadge show={loading} />
+    <div className="space-y-5">
       {/* Header */}
       <div>
         <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/60 hover:text-navy transition-colors font-body">
