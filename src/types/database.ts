@@ -4390,6 +4390,16 @@ export type Database = {
         Args: { p_event_id: string; p_member_id: string }
         Returns: Json
       }
+      get_group_attendance: {
+        Args: never
+        Returns: {
+          person_id: string
+          yr: number
+          grp: string
+          visits: number
+          max_age: number
+        }[]
+      }
       get_dm_flags: {
         Args: { ref_date?: string }
         Returns: {

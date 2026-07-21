@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { buildCharlaReport, type CharlaAggRow, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { buildGrowthReport, type GrowthAggRow, type GrowthReport } from '@/lib/reports/member-growth'
 import { buildDiscipulosReport, type DmFlagRow, type DmMilestoneRow, type DiscipulosReport } from '@/lib/reports/discipulos'
+import { buildRetencionReport, type GroupAttRow, type RetencionReport } from '@/lib/reports/retencion'
 
 /** Reporte de Control de Asistencia por sede. Trae el agregado compacto del RPC
  *  (no check-ins crudos) y calcula las series para (año, sede) server-side. */
@@ -54,4 +55,20 @@ export async function getDiscipulosReport(opts: { cohortYear?: number } = {}): P
   const { data: msData, error: msError } = await supabase.rpc('get_dm_milestones')
   if (msError) throw msError
   return buildDiscipulosReport(flags, (msData ?? []) as DmMilestoneRow[], opts)
+}
+
+/** Reporte de Retención y Transición en Grupos. Trae las filas por persona/año/
+ *  grupo del RPC `get_group_attendance` (paginado) y arma únicos, retención,
+ *  flujo de transición y proyección server-side. */
+export async function getRetencionReport(): Promise<RetencionReport> {
+  const supabase = createAdminClient()
+  const rows: GroupAttRow[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase.rpc('get_group_attendance').range(from, from + 999)
+    if (error) throw error
+    const batch = (data ?? []) as GroupAttRow[]
+    rows.push(...batch)
+    if (batch.length < 1000) break
+  }
+  return buildRetencionReport(rows)
 }
