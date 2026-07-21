@@ -5,6 +5,7 @@ import { FileStack, Loader2, Check } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { useDirigentes } from '@/hooks/useDirigentes'
+import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { cn } from '@/lib/utils'
 
@@ -12,8 +13,6 @@ const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 
 const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
 
 type Sede = { id: string; name: string; is_active?: boolean }
-
-const OTHER_LEADER = '__other__'
 
 /** Botón + modal para crear una solicitud de folletos MANUAL (caso especial).
  *  Entra a la misma cola (tipo 'manual'). onCreated permite refrescar la lista. */
@@ -25,8 +24,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
   const [level, setLevel] = useState('')
   const [quantity, setQuantity] = useState('')
   const [sede, setSede] = useState('')
-  const [leaderName, setLeaderName] = useState('')
-  const [otherLeader, setOtherLeader] = useState(false)
+  const [leader, setLeader] = useState<ComboValue>({ kind: 'empty' })
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -40,24 +38,24 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
   const activeSedes = sedes.filter(s => s.is_active !== false)
 
   function reset() {
-    setLevel(''); setQuantity(''); setSede(''); setLeaderName(''); setOtherLeader(false); setNote(''); setError('')
+    setLevel(''); setQuantity(''); setSede(''); setLeader({ kind: 'empty' }); setNote(''); setError('')
   }
 
   async function submit() {
     const q = Number(quantity)
-    const name = leaderName.trim()
+    // El combobox devuelve un dirigente registrado (existing → linkea id) o un
+    // nombre libre escrito (new → solo nombre, sin id).
+    const name = leader.kind === 'empty' ? '' : leader.label.trim()
+    const leaderId = leader.kind === 'existing' ? leader.value : null
     if (!level) { setError('Seleccioná el folleto/nivel.'); return }
     if (!Number.isInteger(q) || q <= 0) { setError('La cantidad debe ser mayor a 0.'); return }
     if (!sede) { setError('Seleccioná la sede de entrega.'); return }
     if (!name) { setError('Indicá el dirigente a quien entregar.'); return }
-    // Si el nombre coincide con un dirigente registrado, se linkea su id; si no
-    // (dirigente "otro" digitado), va solo el nombre.
-    const match = dirigentes.find(d => d.member_name.trim().toLowerCase() === name.toLowerCase())
     setError(''); setSubmitting(true)
     try {
       const res = await fetch('/api/studies/folletos/manual', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_level_code: level, quantity: q, sede, target_leader_id: match?.member_id ?? null, target_leader_name: name, note: note.trim() || null }),
+        body: JSON.stringify({ target_level_code: level, quantity: q, sede, target_leader_id: leaderId, target_leader_name: name, note: note.trim() || null }),
       })
       const d = await res.json().catch(() => null)
       if (!res.ok) throw new Error(d?.error || 'No se pudo crear la solicitud')
@@ -107,29 +105,17 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
             </div>
 
             <div>
-              <label htmlFor="mf-leader" className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral">*</span></label>
-              <select
-                id="mf-leader"
-                value={otherLeader ? OTHER_LEADER : leaderName}
-                onChange={e => {
-                  if (e.target.value === OTHER_LEADER) { setOtherLeader(true); setLeaderName('') }
-                  else { setOtherLeader(false); setLeaderName(e.target.value) }
-                }}
-                className={SELECT_CLS}
-              >
-                <option value="">Seleccionar dirigente…</option>
-                {dirigentes.map(d => <option key={d.member_id} value={d.member_name}>{d.member_name}</option>)}
-                <option value={OTHER_LEADER}>➕ Otra persona (no está en la lista)</option>
-              </select>
-              {otherLeader && (
-                <input
-                  value={leaderName}
-                  onChange={e => setLeaderName(e.target.value)}
-                  placeholder="Nombre de la persona"
-                  className={cn(SELECT_CLS, 'mt-2 placeholder:text-navy-light/50')}
-                  autoFocus
-                />
-              )}
+              <label className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral">*</span></label>
+              <Combobox
+                items={dirigentes.map(d => ({ value: d.member_id, label: d.member_name }))}
+                value={leader}
+                onChange={setLeader}
+                allowCreate
+                createLabel={t => `Agregar “${t}” (no está en la lista)`}
+                placeholder="Buscá un dirigente o escribí un nombre…"
+                ariaLabel="Dirigente a quien entregar"
+              />
+              <p className="mt-1 text-[11px] text-navy-light/60 font-body">Escribí para buscar; si no aparece, podés agregar el nombre igual.</p>
             </div>
 
             <div>
