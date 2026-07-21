@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { RequestBoard } from '@/components/shared/RequestBoard'
+import { RequestTabs } from '@/components/shared/RequestTabs'
+import { PrematrimonialQueue } from '@/components/studies/PrematrimonialQueue'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { RelocationResolveGroupPicker } from '@/components/studies/RelocationResolveGroupPicker'
 import type { StudyRequest } from '@/types/study'
@@ -37,6 +39,7 @@ export default function SolicitudesPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [createOpen, setCreateOpen] = useState(false)
   const [createFor, setCreateFor] = useState<MemberHit | null>(null)
+  const [section, setSection] = useState<'estudios' | 'prematrimonial'>('estudios')
 
   const allowed = hasRole('coordinador_estudios', 'coordinador_dirigentes', 'admin')
 
@@ -84,15 +87,26 @@ export default function SolicitudesPage() {
             Reubicaciones e intereses de estudio de los miembros
           </p>
         </div>
-        <button
-          onClick={() => { setCreateFor(null); setCreateOpen(true) }}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white font-body hover:bg-coral-deep transition-colors shrink-0"
-        >
-          <Plus size={14} />
-          Crear solicitud
-        </button>
+        {section === 'estudios' && (
+          <button
+            onClick={() => { setCreateFor(null); setCreateOpen(true) }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white font-body hover:bg-coral-deep transition-colors shrink-0"
+          >
+            <Plus size={14} />
+            Crear solicitud
+          </button>
+        )}
       </div>
 
+      {/* Tabs de sección: solicitudes de estudio (reubicaciones/intereses) y
+          la cola de prematrimonial (flujo propio). */}
+      <RequestTabs
+        tabs={[{ key: 'estudios', label: 'Solicitudes de estudio' }, { key: 'prematrimonial', label: 'Prematrimonial' }]}
+        active={section}
+        onChange={k => setSection(k as 'estudios' | 'prematrimonial')}
+      />
+
+      {section === 'prematrimonial' ? <PrematrimonialQueue /> : (
       <RequestBoard
         requests={requests}
         loading={loading}
@@ -152,6 +166,7 @@ export default function SolicitudesPage() {
             : null
         )}
       />
+      )}
 
       {/* Modal "Crear solicitud" a nombre de otra persona */}
       {createOpen && (
