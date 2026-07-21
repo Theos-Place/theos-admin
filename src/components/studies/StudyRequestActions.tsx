@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { ArrowLeftRight, BookOpen, Loader2, Info } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
-import { isRelocationEligibleCode } from '@/lib/studies/eligibility'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useDirigentes } from '@/hooks/useDirigentes'
+import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { StudyRequestType } from '@/types/study'
@@ -23,7 +23,6 @@ type Eligibility = {
   eligible_plans: EligiblePlan[]
   commitments: { is_donor: boolean; attendance_active: boolean; is_server: boolean }
 }
-type Group = { id: string; name: string; status: string; plan: { code: string | null } | null }
 /** Opción del dropdown de interés: TODOS los estudios no llevados, con su
  *  elegibilidad y (si no es elegible) qué le falta al miembro. */
 type StudyOption = { plan_id: string; code: string; name: string; stage: string; is_eligible: boolean; missing: string[] }
@@ -39,7 +38,6 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   const { activeSedes } = useSedes()
   const [openModal, setOpenModal] = useState<StudyRequestType | null>(null)
   const [eligibility, setEligibility] = useState<Eligibility | null>(null)
-  const [groups, setGroups] = useState<Group[]>([])
   const [dataLoading, setDataLoading] = useState(false)
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
 
@@ -49,8 +47,6 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   const [optionsLoaded, setOptionsLoaded] = useState(false)
 
   const [planId, setPlanId] = useState('')
-  const [targetGroupId, setTargetGroupId] = useState('')
-  const [currentGroupId, setCurrentGroupId] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   // Interés v2: día(s) hasta 2, horario, zona (sede existente o "otra").
   const [days, setDays] = useState<string[]>([])
@@ -60,7 +56,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   // Reubicación
   const [neededStudyCode, setNeededStudyCode] = useState('')
   const [lastClassAttended, setLastClassAttended] = useState('')
-  const [lastLeaderName, setLastLeaderName] = useState('')
+  const [lastLeader, setLastLeader] = useState<ComboValue>({ kind: 'empty' })
   const [wantsFolleto, setWantsFolleto] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -79,26 +75,22 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   function loadData() {
     if (loadedFor === memberId || dataLoading) return
     setDataLoading(true)
-    Promise.all([fetch(`/api/studies/eligibility?member_id=${memberId}`), fetch('/api/studies/groups')])
-      .then(async ([e, g]) => {
-        if (e.ok) setEligibility(await e.json())
-        if (g.ok) setGroups(((await g.json()) as Group[]).filter(gr => gr.status === 'en_matricula' || gr.status === 'en_curso'))
-        setLoadedFor(memberId)
-      })
+    fetch(`/api/studies/eligibility?member_id=${memberId}`)
+      .then(async e => { if (e.ok) setEligibility(await e.json()); setLoadedFor(memberId) })
       .catch(() => {})
       .finally(() => setDataLoading(false))
   }
 
   function open(type: StudyRequestType) {
-    setPlanId(''); setTargetGroupId(''); setCurrentGroupId(null); setReason('')
+    setPlanId(''); setReason('')
     setDays([]); setTime(''); setZoneSel(''); setZoneOther('')
-    setNeededStudyCode(''); setLastClassAttended(''); setLastLeaderName(''); setWantsFolleto(false)
+    setNeededStudyCode(''); setLastClassAttended(''); setLastLeader({ kind: 'empty' }); setWantsFolleto(false)
     setError(''); setOpenModal(type); loadData()
   }
 
   const activeEnrollments = eligibility?.active_enrollments ?? []
-  const relocationTargets = groups.filter(g => isRelocationEligibleCode(g.plan?.code))
-  const effectiveCurrentGroup = currentGroupId ?? activeEnrollments[0]?.group_id ?? ''
+  // Grupo de origen: el primer estudio activo del miembro (ya no se elige a mano).
+  const effectiveCurrentGroup = activeEnrollments[0]?.group_id ?? ''
 
   const relocationBlocked = !dataLoading && eligibility !== null && activeEnrollments.length === 0
   // Interés: se bloquea solo si no hay NINGÚN estudio no llevado (nada que pedir).
@@ -121,7 +113,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
       if (reason.trim().length < MIN_REASON) { setError(`Contanos un poco más: la razón debe tener al menos ${MIN_REASON} caracteres.`); return }
       if (!neededStudyCode) { setError('Seleccioná el estudio que necesitás.'); return }
       if (!lastClassAttended) { setError('Seleccioná en cuál clase quedaste.'); return }
-      if (!lastLeaderName.trim()) { setError('Indicá tu último dirigente.'); return }
+      if (lastLeader.kind === 'empty' || !lastLeader.label.trim()) { setError('Indicá tu último dirigente.'); return }
     }
     setError(''); setSubmitting(true)
     try {
@@ -131,7 +123,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
           member_id: memberId,
           request_type: openModal,
           plan_id: planId || null,
-          existing_group_id: targetGroupId || null,
+          existing_group_id: null,
           current_group_id: openModal === 'relocation' ? (effectiveCurrentGroup || null) : null,
           // Interés: zona en proposed_location, día(s)/horario estructurados,
           // y la elegibilidad capturada para el coordinador.
@@ -143,7 +135,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
           reason: openModal === 'relocation' ? reason.trim() : undefined,
           needed_study_code: openModal === 'relocation' ? neededStudyCode : undefined,
           last_class_attended: openModal === 'relocation' ? lastClassAttended : undefined,
-          last_leader_name: openModal === 'relocation' ? lastLeaderName.trim() : undefined,
+          last_leader_name: openModal === 'relocation' ? (lastLeader.kind === 'empty' ? '' : lastLeader.label.trim()) : undefined,
           wants_folleto: openModal === 'relocation' ? wantsFolleto : undefined,
         }),
       })
@@ -222,25 +214,6 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                 {openModal === 'relocation' && !relocationBlocked && (
                   <>
                     <div>
-                      <label htmlFor="current-group" className={LABEL_CLS}>Grupo actual</label>
-                      <select id="current-group" value={effectiveCurrentGroup} onChange={e => setCurrentGroupId(e.target.value)} className={SELECT_CLS}>
-                        <option value="">Sin estudio seleccionado</option>
-                        {activeEnrollments.map(en => (
-                          <option key={en.group_id} value={en.group_id}>{en.group_name}{en.plan_code ? ` (${en.plan_code})` : ''}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="target-group" className={LABEL_CLS}>Grupo al que quiere ir (opcional)</label>
-                      <select id="target-group" value={targetGroupId} onChange={e => setTargetGroupId(e.target.value)} className={SELECT_CLS}>
-                        <option value="">Que el coordinador decida</option>
-                        {relocationTargets.filter(g => g.id !== effectiveCurrentGroup).map(g => (
-                          <option key={g.id} value={g.id}>{g.name}{g.plan?.code ? ` (${g.plan.code})` : ''}</option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-[11px] text-navy-light/60 font-body">Solo niveles (N1–N4), discipulados (DIS1–DIS3) y SCJ admiten reubicación.</p>
-                    </div>
-                    <div>
                       <label htmlFor="relocation-needed-study" className={LABEL_CLS}>Estudio que necesito <span className="text-coral">*</span></label>
                       <select id="relocation-needed-study" value={neededStudyCode} onChange={e => setNeededStudyCode(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar…</option>
@@ -255,9 +228,16 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="relocation-last-leader" className={LABEL_CLS}>Último dirigente <span className="text-coral">*</span></label>
-                      <input id="relocation-last-leader" list="relocation-dirigentes-list" value={lastLeaderName} onChange={e => setLastLeaderName(e.target.value)} placeholder="Buscá o escribí el nombre…" className={cn(SELECT_CLS, 'placeholder:text-navy-light/50')} />
-                      <datalist id="relocation-dirigentes-list">{dirigentes.map(d => <option key={d.member_id} value={d.member_name} />)}</datalist>
+                      <label className={LABEL_CLS}>Último dirigente <span className="text-coral">*</span></label>
+                      <Combobox
+                        items={dirigentes.map(d => ({ value: d.member_id, label: d.member_name }))}
+                        value={lastLeader}
+                        onChange={setLastLeader}
+                        allowCreate
+                        createLabel={t => `Usar “${t}” (no está en la lista)`}
+                        placeholder="Buscá un dirigente o escribí el nombre…"
+                        ariaLabel="Último dirigente"
+                      />
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={wantsFolleto} onChange={e => setWantsFolleto(e.target.checked)} className="accent-coral h-3.5 w-3.5" />
