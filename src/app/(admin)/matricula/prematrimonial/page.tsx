@@ -77,9 +77,8 @@ export default function PrematrimonialWizardPage() {
   const toggle = (arr: string[], set: (v: string[]) => void, v: string) =>
     set(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v])
 
-  // Datos del que se inscribe: el miembro visto (onBehalf) o el usuario logueado.
-  const enrolleeName = onBehalf ? (enrollee?.name ?? 'miembro') : (user?.name ?? '')
-  const enrolleeEmail = onBehalf ? (enrollee?.email ?? '') : (user?.email ?? '')
+  // Nombre del que se inscribe: el miembro visto (onBehalf) o el usuario logueado.
+  const enrolleeName = onBehalf ? (enrollee?.name ?? 'este miembro') : (user?.name ?? '')
   // En onBehalf esperamos a tener los datos del miembro para decidir la cédula
   // (mientras carga, no bloqueamos). Fuera de onBehalf, la del usuario.
   const hasCedula = onBehalf ? (enrollee?.has_cedula ?? true) : (user?.has_cedula ?? true)
@@ -159,35 +158,23 @@ export default function PrematrimonialWizardPage() {
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal/15"><Heart size={20} className="text-teal-deep" /></div>
         <div>
           <h1 className="text-xl font-bold text-navy font-display">Inscripción al Curso Prematrimonial</h1>
-          <p className="text-[13px] text-navy-light/70 font-body">Paso {step} de 5</p>
+          <p className="text-[13px] text-navy-light/70 font-body">Paso {step} de 4</p>
         </div>
       </div>
 
       <div className="rounded-2xl bg-white p-6 ring-1 ring-navy/10">
-        {/* PASO 1 — datos del que se inscribe */}
+        {/* PASO 1 — pareja (la confirmación de cédula ya la garantiza el gate
+            previo, así que no hay una pantalla aparte para eso) */}
         {step === 1 && (
           <div className="space-y-3">
             {onBehalf && (
               <div className="flex items-start gap-2 rounded-xl border border-coral/25 bg-coral/5 px-3 py-2.5 text-[13px] text-navy font-body">
                 <UserCog size={16} className="mt-0.5 shrink-0 text-coral-deep" />
-                <span>Estás inscribiendo <strong>en nombre de otro miembro</strong> (desde “Ver disponibilidad como”). La solicitud y el pago quedan a nombre de esta persona.</span>
+                <span>Estás inscribiendo <strong>en nombre de {enrolleeName}</strong> (desde “Ver disponibilidad como”). La solicitud y el pago quedan a nombre de esta persona.</span>
               </div>
             )}
-            <h2 className="font-semibold text-navy font-display">{onBehalf ? 'Datos del miembro' : 'Tus datos'}</h2>
-            <p className="text-sm text-navy-light/70 font-body">{onBehalf ? 'Se toman del perfil del miembro.' : 'Se toman de tu perfil.'} El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda.</p>
-            <div className="rounded-xl bg-surface-low p-4 text-sm text-navy font-body">
-              <p><strong>{enrolleeName}</strong></p>
-              <p className="text-navy-light/70">{enrolleeEmail}</p>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-teal-deep"><Check size={14} /> Cédula registrada</p>
-            </div>
-          </div>
-        )}
-
-        {/* PASO 2 — pareja */}
-        {step === 2 && (
-          <div className="space-y-3">
-            <h2 className="font-semibold text-navy font-display">Tu pareja</h2>
-            <p className="text-sm text-navy-light/70 font-body">Tu pareja debe ser miembro con Nivel 2. Buscala por cédula, correo o teléfono.</p>
+            <h2 className="font-semibold text-navy font-display">La pareja</h2>
+            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con Nivel 2 — buscala por cédula, correo o teléfono.</p>
             <div className="flex gap-2">
               <input value={spouseQuery} onChange={e => setSpouseQuery(e.target.value)} placeholder="Cédula, correo o teléfono"
                 className="flex-1 rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />
@@ -206,8 +193,8 @@ export default function PrematrimonialWizardPage() {
           </div>
         )}
 
-        {/* PASO 3 — logística */}
-        {step === 3 && (
+        {/* PASO 2 — logística */}
+        {step === 2 && (
           <div className="space-y-4">
             <h2 className="font-semibold text-navy font-display">Disponibilidad y logística</h2>
             <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Días disponibles</p>
@@ -226,8 +213,8 @@ export default function PrematrimonialWizardPage() {
           </div>
         )}
 
-        {/* PASO 4 — ceremonia */}
-        {step === 4 && (
+        {/* PASO 3 — ceremonia */}
+        {step === 3 && (
           <div className="space-y-4">
             <h2 className="font-semibold text-navy font-display">La ceremonia</h2>
             <div>
@@ -249,8 +236,8 @@ export default function PrematrimonialWizardPage() {
           </div>
         )}
 
-        {/* PASO 5 — pago */}
-        {step === 5 && (
+        {/* PASO 4 — pago */}
+        {step === 4 && (
           <div className="space-y-4">
             <h2 className="font-semibold text-navy font-display">Pago — ₡25.000 por pareja</h2>
             <div className="rounded-xl bg-surface-low p-4 text-[13px] text-navy font-body space-y-1">
@@ -283,8 +270,8 @@ export default function PrematrimonialWizardPage() {
             className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-navy-light/70 hover:bg-navy/5 font-body">
             <ArrowLeft size={15} /> {step === 1 ? 'Salir' : 'Atrás'}
           </button>
-          {step < 5 ? (
-            <button type="button" disabled={step === 2 && !spouse}
+          {step < 4 ? (
+            <button type="button" disabled={step === 1 && !spouse}
               onClick={() => setStep(s => s + 1)}
               className="inline-flex items-center gap-1.5 rounded-full bg-teal px-5 py-2 text-sm font-medium text-white disabled:opacity-50 font-body">
               Continuar <ArrowRight size={15} />
