@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Heart, Loader2, Check, X, Users, MapPin, Clock, Calendar, Home } from 'lucide-react'
+import { Loader2, Check, X, Users, MapPin, Clock, Calendar, Home } from 'lucide-react'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
 
@@ -28,7 +28,7 @@ const STATUS_STYLE: Record<Req['status'], string> = {
 }
 const nm = (m: Req['requester']) => m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : '—'
 
-export default function PrematrimonialQueuePage() {
+export function PrematrimonialQueue() {
   const notify = useToast()
   const [items, setItems] = useState<Req[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,14 +83,10 @@ export default function PrematrimonialQueuePage() {
   }
 
   return (
-    <div className="page">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal/15"><Heart size={20} className="text-teal-deep" /></div>
-        <div>
-          <h1 className="text-xl font-bold text-navy font-display">Solicitudes de Prematrimonial</h1>
-          <p className="text-[13px] text-navy-light/70 font-body">Tomá una solicitud pendiente y armá el grupo con la pareja.</p>
-        </div>
-      </div>
+    <div>
+      <p className="mb-4 text-sm text-navy-light/70 font-body">
+        Solicitudes de curso prematrimonial. Tomá una pendiente y armá el grupo con la pareja.
+      </p>
 
       {loading && <p className="py-12 text-center text-sm text-navy-light/60 font-body">Cargando…</p>}
       {!loading && items.length === 0 && <p className="py-12 text-center text-sm text-navy-light/60 font-body">No hay solicitudes.</p>}
