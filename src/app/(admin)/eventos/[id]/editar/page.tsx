@@ -208,7 +208,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setPaymentAmount(event.payment_amount ? String(event.payment_amount) : '')
     setServerPrice(event.server_price != null ? String(event.server_price) : '')
     setServersPay(event.servers_pay ?? true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [event, occParam])
 
   if (!event) {

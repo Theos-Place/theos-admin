@@ -17,7 +17,7 @@
  * Como el resto de queries, corre server-side con service role; la
  * autorización vive en requireRoles() de cada ruta API.
  */
-import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
 import type {
   StudyRequest, StudyRequestWriteInput, StudyRequestStatus, StudyRequestType,
 } from '@/types/study'

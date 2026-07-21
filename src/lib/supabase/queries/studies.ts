@@ -1,4 +1,4 @@
-import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
 import { ymdCR } from '@/lib/format'

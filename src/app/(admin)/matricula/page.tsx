@@ -306,24 +306,6 @@ export default function MatriculaPage() {
         <ArrowRight size={18} className="shrink-0 text-coral transition-transform group-hover:translate-x-1" />
       </Link>
 
-      {/* Inscripción al curso prematrimonial — flujo propio (pareja + logística
-          + ceremonia + pago por comprobante). */}
-      <Link
-        href="/matricula/prematrimonial"
-        className="group flex items-center gap-4 rounded-2xl px-6 py-5 border-2 border-teal/25 bg-teal/5 hover:bg-teal/10 hover:border-teal/40 transition-colors"
-      >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal/15">
-          <Heart size={22} className="text-teal-deep" strokeWidth={1.75} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em]">Curso Prematrimonial</p>
-          <p className="text-[13px] text-navy-light/70 font-body">
-            Inscribite con tu pareja. Requiere Nivel 2 de ambos y tiene su propio formulario (logística, ceremonia y pago).
-          </p>
-        </div>
-        <ArrowRight size={18} className="shrink-0 text-teal-deep transition-transform group-hover:translate-x-1" />
-      </Link>
-
       {/* Filtros */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -355,6 +337,27 @@ export default function MatriculaPage() {
           />
         </div>
       </div>
+
+      {/* Inscripción al curso prematrimonial — pertenece al bloque inicial, por
+          eso solo se muestra en el tab "Todos" o "Etapa Inicial". Flujo propio
+          (pareja + logística + ceremonia + pago por comprobante). */}
+      {(activeFilter === 'all' || activeFilter === 'inicial') && (
+        <Link
+          href="/matricula/prematrimonial"
+          className="group flex items-center gap-4 rounded-2xl px-6 py-5 border-2 border-teal/25 bg-teal/5 hover:bg-teal/10 hover:border-teal/40 transition-colors"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal/15">
+            <Heart size={22} className="text-teal-deep" strokeWidth={1.75} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em]">Curso Prematrimonial</p>
+            <p className="text-[13px] text-navy-light/70 font-body">
+              Inscribite con tu pareja. Requiere Nivel 2 de ambos y tiene su propio formulario (logística, ceremonia y pago).
+            </p>
+          </div>
+          <ArrowRight size={18} className="shrink-0 text-teal-deep transition-transform group-hover:translate-x-1" />
+        </Link>
+      )}
 
       {/* Lista de estudios */}
       {loading ? (

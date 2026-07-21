@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireModuleView } from '@/lib/auth/guard'
 import { getMessageRecipients } from '@/lib/supabase/queries/communications'
 
 // GET: destinatarios reales de un broadcast (message_logs).

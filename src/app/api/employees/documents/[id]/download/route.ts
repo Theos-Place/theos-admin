@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireModuleView } from '@/lib/auth/guard'
 import { getEmployeeDocSignedUrl } from '@/lib/supabase/queries/employees'
 
 // GET: redirige a una URL firmada temporal del documento privado.

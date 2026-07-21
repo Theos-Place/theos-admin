@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireModuleView } from '@/lib/auth/guard'
 import { getCommittees } from '@/lib/supabase/queries/servers'
 
 export async function GET() {
