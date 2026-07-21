@@ -65,9 +65,13 @@ export function buildRetencionReport(rows: GroupAttRow[]): RetencionReport {
   // person → main group → set de años; y person → main group → edad máxima.
   const personGroupYears = new Map<string, Map<MainGroup, Set<number>>>()
   const personGroupMaxAge = new Map<string, Map<MainGroup, number>>()
-  // Únicos por (grupo principal, año) y (subgrupo G1, año).
+  // Únicos por (grupo principal, año).
   const uniqMain = new Map<MainGroup, Map<number, Set<string>>>()
-  const uniqSub = new Map<string, Map<number, Set<string>>>()
+  // Para subgrupos de G1: subgrupo DOMINANTE de cada persona/año (el de mayor
+  // edad alcanzada; desempate por visitas). Así cada persona-año cuenta en UN
+  // solo subgrupo y la suma de G1a+G1b+G1c cuadra con el único consolidado de G1
+  // (una persona que cruzó de subgrupo dentro del año no se cuenta dos veces).
+  const g1Best = new Map<string, { grp: string; age: number; visits: number }>()
 
   for (const r of rows) {
     const mg = mainOf(r.grp)
@@ -84,11 +88,13 @@ export function buildRetencionReport(rows: GroupAttRow[]): RetencionReport {
     let um = uniqMain.get(mg); if (!um) { um = new Map(); uniqMain.set(mg, um) }
     let us = um.get(r.yr); if (!us) { us = new Set(); um.set(r.yr, us) }
     us.add(r.person_id)
-    // únicos subgrupo G1
+    // subgrupo dominante de G1
     if (r.grp === 'G1a' || r.grp === 'G1b' || r.grp === 'G1c') {
-      let sm = uniqSub.get(r.grp); if (!sm) { sm = new Map(); uniqSub.set(r.grp, sm) }
-      let ss = sm.get(r.yr); if (!ss) { ss = new Set(); sm.set(r.yr, ss) }
-      ss.add(r.person_id)
+      const k = `${r.person_id}|${r.yr}`
+      const cur = g1Best.get(k)
+      if (!cur || r.max_age > cur.age || (r.max_age === cur.age && r.visits > cur.visits)) {
+        g1Best.set(k, { grp: r.grp, age: r.max_age, visits: r.visits })
+      }
     }
   }
 
@@ -99,8 +105,15 @@ export function buildRetencionReport(rows: GroupAttRow[]): RetencionReport {
     MAIN_GROUPS.map(g => [g, seriesOf(uniqMain.get(g))]),
   ) as Record<MainGroup, YearCount[]>
 
+  // Conteo de subgrupos G1 desde el dominante (cada persona-año en uno solo).
+  const subCounts = new Map<string, Map<number, number>>()
+  for (const [k, v] of g1Best) {
+    const yr = Number(k.split('|')[1])
+    let sm = subCounts.get(v.grp); if (!sm) { sm = new Map(); subCounts.set(v.grp, sm) }
+    sm.set(yr, (sm.get(yr) ?? 0) + 1)
+  }
   const g1Subgroups = Object.fromEntries(
-    G1_SUBS.map(g => [g, seriesOf(uniqSub.get(g))]),
+    G1_SUBS.map(g => [g, years.map(y => ({ year: y, count: subCounts.get(g)?.get(y) ?? 0 }))]),
   ) as Record<string, YearCount[]>
 
   // ── Retención año a año: en (G, Y) y también en (G, Y+1) ──
