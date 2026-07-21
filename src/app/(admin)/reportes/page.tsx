@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { BarChart2, ChevronRight, Users, type LucideIcon } from 'lucide-react'
+import { BarChart2, ChevronRight, Users, TrendingUp, type LucideIcon } from 'lucide-react'
 
 // Catálogo de reportes disponibles. Para agregar uno nuevo: sumar una entrada acá
 // y crear su página en /reportes/<slug>. El índice no necesita rediseño.
@@ -20,6 +20,13 @@ const REPORTS: ReportTile[] = [
     title: 'Discípulos Multiplicadores',
     description: 'Personas que asisten comprometidas, sirven y donan. Traslape de criterios, tiempo a hitos y foto por cohorte.',
     icon: Users,
+    ready: true,
+  },
+  {
+    href: '/reportes/retencion',
+    title: 'Retención y Transición',
+    description: 'Asistentes por grupo etario, retención año a año, flujo al cambiar de grupo (transición/dropout) y proyección a 2030.',
+    icon: TrendingUp,
     ready: true,
   },
 ]
