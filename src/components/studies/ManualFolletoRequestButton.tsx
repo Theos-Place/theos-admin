@@ -11,7 +11,9 @@ import { cn } from '@/lib/utils'
 const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30'
 const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
 
-type Sede = { id: string; name: string }
+type Sede = { id: string; name: string; is_active?: boolean }
+
+const OTHER_LEADER = '__other__'
 
 /** Botón + modal para crear una solicitud de folletos MANUAL (caso especial).
  *  Entra a la misma cola (tipo 'manual'). onCreated permite refrescar la lista. */
@@ -24,6 +26,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
   const [quantity, setQuantity] = useState('')
   const [sede, setSede] = useState('')
   const [leaderName, setLeaderName] = useState('')
+  const [otherLeader, setOtherLeader] = useState(false)
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -33,8 +36,11 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
     fetch('/api/sedes').then(r => (r.ok ? r.json() : [])).then((d: Sede[]) => setSedes(Array.isArray(d) ? d : [])).catch(() => {})
   }, [open, sedes.length])
 
+  // Solo sedes vigentes (activas); la tabla incluye históricas/inactivas.
+  const activeSedes = sedes.filter(s => s.is_active !== false)
+
   function reset() {
-    setLevel(''); setQuantity(''); setSede(''); setLeaderName(''); setNote(''); setError('')
+    setLevel(''); setQuantity(''); setSede(''); setLeaderName(''); setOtherLeader(false); setNote(''); setError('')
   }
 
   async function submit() {
@@ -96,24 +102,34 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
               <label htmlFor="mf-sede" className={LABEL_CLS}>Sede de entrega <span className="text-coral">*</span></label>
               <select id="mf-sede" value={sede} onChange={e => setSede(e.target.value)} className={SELECT_CLS}>
                 <option value="">Seleccionar sede…</option>
-                {sedes.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                {activeSedes.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
             </div>
 
             <div>
               <label htmlFor="mf-leader" className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral">*</span></label>
-              <input
+              <select
                 id="mf-leader"
-                list="mf-dirigentes-list"
-                value={leaderName}
-                onChange={e => setLeaderName(e.target.value)}
-                placeholder="Buscá un dirigente o escribí otro…"
-                className={cn(SELECT_CLS, 'placeholder:text-navy-light/50')}
-              />
-              <datalist id="mf-dirigentes-list">
-                {dirigentes.map(d => <option key={d.member_id} value={d.member_name} />)}
-              </datalist>
-              <p className="mt-1 text-[11px] text-navy-light/60 font-body">Podés elegir de la lista o escribir uno que no aparezca.</p>
+                value={otherLeader ? OTHER_LEADER : leaderName}
+                onChange={e => {
+                  if (e.target.value === OTHER_LEADER) { setOtherLeader(true); setLeaderName('') }
+                  else { setOtherLeader(false); setLeaderName(e.target.value) }
+                }}
+                className={SELECT_CLS}
+              >
+                <option value="">Seleccionar dirigente…</option>
+                {dirigentes.map(d => <option key={d.member_id} value={d.member_name}>{d.member_name}</option>)}
+                <option value={OTHER_LEADER}>➕ Otra persona (no está en la lista)</option>
+              </select>
+              {otherLeader && (
+                <input
+                  value={leaderName}
+                  onChange={e => setLeaderName(e.target.value)}
+                  placeholder="Nombre de la persona"
+                  className={cn(SELECT_CLS, 'mt-2 placeholder:text-navy-light/50')}
+                  autoFocus
+                />
+              )}
             </div>
 
             <div>
