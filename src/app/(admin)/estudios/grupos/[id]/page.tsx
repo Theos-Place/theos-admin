@@ -2,15 +2,20 @@
 
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useAuth } from '@/hooks/useAuth'
+import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge, VirtualGroupBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Users } from 'lucide-react'
+import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
@@ -238,16 +243,41 @@ function SendMessageModal({ groupName, memberIds, onClose }: {
 
 export default function GrupoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const router = useRouter()
   const { group, studyTypes, refetch, loading } = useGroup(id)
   const { can } = usePermissions()
+  const { user: actor } = useAuth()
+  const toast = useToast()
   // El envío usa los endpoints de comunicaciones, que exigen ese rol.
   const canSendMessage = can('comunicaciones', 'create')
+  // Crear/editar/eliminar grupos: STUDY_ADMIN + editor_grupos_estudio.
+  const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
   const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string } | null>(null)
   const [withdrawing, setWithdrawing] = useState(false)
   const [withdrawError, setWithdrawError] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [activeWarn, setActiveWarn] = useState<string | null>(null)
+
+  // Eliminar grupo (regla global de borrado): el server responde 409 si hay
+  // personas activas → se muestra el ActiveWarningModal; si no, se borra y volvemos.
+  async function confirmDeleteGroup() {
+    if (deleting) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/studies/groups/${id}`, { method: 'DELETE' })
+      const body = await res.json().catch(() => null)
+      if (res.status === 409) { setDeleteOpen(false); setActiveWarn(body?.error ?? 'El grupo tiene personas activas.'); return }
+      if (!res.ok) throw new Error(body?.error ?? 'No se pudo eliminar')
+      toast('Grupo eliminado.', 'success')
+      router.push('/estudios/grupos')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo eliminar el grupo.', 'error')
+    } finally { setDeleting(false) }
+  }
 
   async function confirmWithdraw() {
     if (!withdrawTarget || withdrawing) return
@@ -379,6 +409,22 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </Modal>
       )}
+
+      <DeleteConfirmModal
+        open={deleteOpen}
+        title="Eliminar grupo"
+        description={`Vas a eliminar el grupo "${group.name ?? ''}". Esta acción no se puede deshacer. Escribí "eliminar" para confirmar.`}
+        loading={deleting}
+        onConfirm={confirmDeleteGroup}
+        onCancel={() => setDeleteOpen(false)}
+      />
+      <ActiveWarningModal
+        open={!!activeWarn}
+        title="No se puede eliminar el grupo"
+        message={activeWarn ?? ''}
+        onClose={() => setActiveWarn(null)}
+      />
+
       {showSendMessage && (
         <SendMessageModal
           groupName={group.name ?? 'de estudio'}
@@ -418,22 +464,32 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <WeekProgressBar current={group.current_week} total={studyType.weeks} className="w-48" />
             )}
           </div>
-          <div className="flex gap-2">
-            {group.status === 'en_curso' && (
+          {canManageGroups && (
+            <div className="flex gap-2">
+              {group.status === 'en_curso' && (
+                <Link
+                  href={`/estudios/grupos/${id}/cierre`}
+                  className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+                >
+                  Cierre de estudio
+                </Link>
+              )}
               <Link
-                href={`/estudios/grupos/${id}/cierre`}
-                className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+                href={`/estudios/grupos/${id}/editar`}
+                className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors flex items-center border-[var(--outline-variant)] font-body"
+                aria-label="Editar grupo"
               >
-                Cierre de estudio
+                <Edit2 size={14} />
               </Link>
-            )}
-            <Link
-              href={`/estudios/grupos/${id}/editar`}
-              className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors flex items-center border-[var(--outline-variant)] font-body"
-            >
-              <Edit2 size={14} />
-            </Link>
-          </div>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="rounded-xl border px-3.5 py-2 text-sm text-coral hover:bg-coral/10 transition-colors flex items-center border-coral/30 font-body"
+                aria-label="Eliminar grupo"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

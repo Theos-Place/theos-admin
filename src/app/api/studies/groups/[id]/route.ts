@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
-import { updateGroup, getGroupById } from '@/lib/supabase/queries/studies'
+import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
+import { updateGroup, getGroupById, deleteGroup, countActiveEnrollments } from '@/lib/supabase/queries/studies'
 import { groupWriteSchema } from '../schema'
 
 export async function GET(
@@ -30,7 +31,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    const auth = await requireRoles(...GROUP_ADMIN_ROLES)
     if (auth.res) return auth.res
   try {
     const { id } = await params
@@ -51,6 +52,35 @@ export async function PUT(
       )
     }
     console.error('PUT /api/studies/groups/[id]:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+// DELETE: elimina un grupo. Regla global de borrado: si tiene personas activas
+// (matriculadas / en espera / con pago pendiente) NO se borra (409); la UI
+// muestra el ActiveWarningModal. Sin activos, la UI pide confirmación por
+// palabra clave (DeleteConfirmModal) antes de llamar acá.
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRoles(...GROUP_ADMIN_ROLES)
+  if (auth.res) return auth.res
+  try {
+    const { id } = await params
+    const group = await getGroupById(id)
+    if (!group) return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 })
+    const active = await countActiveEnrollments(id)
+    if (active > 0) {
+      return NextResponse.json(
+        { error: `El grupo tiene ${active} persona${active !== 1 ? 's' : ''} activa${active !== 1 ? 's' : ''}. Reubicá o dá de baja a esas personas antes de eliminarlo.`, code: 'activos', active_count: active },
+        { status: 409 },
+      )
+    }
+    await deleteGroup(id)
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('DELETE /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

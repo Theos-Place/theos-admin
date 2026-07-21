@@ -10,6 +10,30 @@ export const STUDY_ADMIN_ROLES: RoleId[] = [
   'coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin',
 ]
 
+/** Roles que pueden crear/editar/eliminar GRUPOS de estudio. Es STUDY_ADMIN más
+ *  el rol acotado 'editor_grupos_estudio' (solo grupos, nada más de estudios).
+ *  Reutilizar en los guards de UI y de API de grupos (crear/editar/eliminar). */
+export const GROUP_ADMIN_ROLES: RoleId[] = [...STUDY_ADMIN_ROLES, 'editor_grupos_estudio']
+
+/** Delegación acotada de permisos: el coordinador de estudios puede asignar/quitar
+ *  SOLO estos tres roles a otras personas (poder de administración acotado). El
+ *  resto de los permisos siguen siendo exclusivos de 'admin'. Fuente única para
+ *  UI y validación server-side — no escalable a otros roles. */
+export const COORDINADOR_ESTUDIOS_DELEGABLE: RoleId[] = [
+  'editor_perfiles', 'editor_grupos_estudio', 'folletos',
+]
+
+/** Qué roles puede asignar/quitar un actor según SUS roles:
+ *   · 'all'  → admin: cualquiera.
+ *   · Set    → coordinador_estudios: solo los delegados.
+ *   · Set()  → nadie (sin permiso de gestión de accesos).
+ *  La usan el endpoint de accesos (server) y la UI de accesos (para filtrar). */
+export function assignableRoleIds(actorRoles: RoleId[]): 'all' | Set<RoleId> {
+  if (actorRoles.includes('admin')) return 'all'
+  if (actorRoles.includes('coordinador_estudios')) return new Set(COORDINADOR_ESTUDIOS_DELEGABLE)
+  return new Set<RoleId>()
+}
+
 /** Roles que administran servidores: comités, áreas, puestos y aplicaciones
  *  (mantenimiento CRUD, importación, asignación de responsables). Reutilizar en
  *  guards de UI (usePermissions/hasRole) y de API (requireRoles). */
@@ -93,6 +117,19 @@ export const ROLES: Role[] = [
     color: '#E9B949',
     permissions: [
       { module: 'miembros', actions: ['view', 'create', 'edit'], scope: 'all' },
+    ],
+  },
+  {
+    id: 'editor_grupos_estudio',
+    name: 'Editor de Grupos de Estudio',
+    description: 'Ver, crear, editar y eliminar grupos de estudio',
+    color: '#519DA2',
+    // Solo 'view' a nivel módulo (para ver la sección/detalle de grupos). El
+    // crear/editar/eliminar se autoriza por rol explícito (GROUP_ADMIN_ROLES) en
+    // los endpoints de grupos, así el poder queda acotado a grupos y no se
+    // extiende al plan ni a los tipos de estudio.
+    permissions: [
+      { module: 'estudios', actions: ['view'], scope: 'all' },
     ],
   },
   {

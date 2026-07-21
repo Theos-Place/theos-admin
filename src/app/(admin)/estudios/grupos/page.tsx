@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import type { GroupStatus, StudyGroup, StudyType } from '@/types/study'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { useAuth } from '@/hooks/useAuth'
+import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import type { DbGroupListItem } from '@/lib/supabase/queries/studies'
 import { toDomainStudyGroup } from '@/lib/studies/adapter'
@@ -99,6 +101,8 @@ export default function GruposPage() {
   // studyTypes: catálogo liviano (34 filas), NO trae los ~1.680 grupos.
   const { studyTypes: STUDY_TYPES, error: typesError } = useStudyPlans()
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
+  const { user: actor } = useAuth()
+  const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
   const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>(['en_matricula', 'en_curso'])
@@ -217,13 +221,15 @@ export default function GruposPage() {
             allColumns={STUDY_GROUP_COLUMNS}
             filename="grupos-estudio-theos"
           />
-          <Link
-            href="/estudios/grupos/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-          >
-            <Plus size={14} />
-            Nuevo grupo
-          </Link>
+          {canManageGroups && (
+            <Link
+              href="/estudios/grupos/nuevo"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            >
+              <Plus size={14} />
+              Nuevo grupo
+            </Link>
+          )}
         </div>
       </div>
 

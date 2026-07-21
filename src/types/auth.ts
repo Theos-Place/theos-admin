@@ -19,6 +19,7 @@ export type RoleId =
   | 'folletos'
   | 'revision_pagos'
   | 'becas'
+  | 'editor_grupos_estudio'
 
 export type Permission = {
   module: string
