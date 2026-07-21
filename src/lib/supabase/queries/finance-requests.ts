@@ -21,7 +21,7 @@
  * Notificaciones: a diferencia de estudios (lista configurable), acá se
  * notifica directo a todos los miembros con rol activo finanzas o admin.
  */
-import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
 import type {
   FinanceRequest, FinanceRequestWriteInput, FinanceRequestStatus, FinanceRequestType,
 } from '@/types/finance'

@@ -211,7 +211,10 @@ export default function FolletosPage() {
                           <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/50"> · → {levelLabel(r.target_level_code)}</span>}</>
                         ) : r.tipo === 'manual' ? (
                           <>
-                            <span>{r.target_level_code ? levelLabel(r.target_level_code) : '—'}{r.target_leader ? ` · ${[r.target_leader.first_name, r.target_leader.last_name].filter(Boolean).join(' ')}` : ''}</span>
+                            {(() => {
+                              const leader = r.target_leader_name || (r.target_leader ? [r.target_leader.first_name, r.target_leader.last_name].filter(Boolean).join(' ') : '')
+                              return <span>{r.target_level_code ? levelLabel(r.target_level_code) : '—'}{leader ? ` · ${leader}` : ''}</span>
+                            })()}
                             {r.note && <span className="block text-navy-light/50 text-[12px] italic">“{r.note}”</span>}
                           </>
                         ) : (r.bloque?.nombre ?? '—')}

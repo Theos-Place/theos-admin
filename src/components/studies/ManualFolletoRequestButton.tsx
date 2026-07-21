@@ -23,7 +23,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
   const [level, setLevel] = useState('')
   const [quantity, setQuantity] = useState('')
   const [sede, setSede] = useState('')
-  const [leaderId, setLeaderId] = useState('')
+  const [leaderName, setLeaderName] = useState('')
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -34,20 +34,24 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
   }, [open, sedes.length])
 
   function reset() {
-    setLevel(''); setQuantity(''); setSede(''); setLeaderId(''); setNote(''); setError('')
+    setLevel(''); setQuantity(''); setSede(''); setLeaderName(''); setNote(''); setError('')
   }
 
   async function submit() {
     const q = Number(quantity)
+    const name = leaderName.trim()
     if (!level) { setError('Seleccioná el folleto/nivel.'); return }
     if (!Number.isInteger(q) || q <= 0) { setError('La cantidad debe ser mayor a 0.'); return }
     if (!sede) { setError('Seleccioná la sede de entrega.'); return }
-    if (!leaderId) { setError('Seleccioná el dirigente a quien entregar.'); return }
+    if (!name) { setError('Indicá el dirigente a quien entregar.'); return }
+    // Si el nombre coincide con un dirigente registrado, se linkea su id; si no
+    // (dirigente "otro" digitado), va solo el nombre.
+    const match = dirigentes.find(d => d.member_name.trim().toLowerCase() === name.toLowerCase())
     setError(''); setSubmitting(true)
     try {
       const res = await fetch('/api/studies/folletos/manual', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_level_code: level, quantity: q, sede, target_leader_id: leaderId, note: note.trim() || null }),
+        body: JSON.stringify({ target_level_code: level, quantity: q, sede, target_leader_id: match?.member_id ?? null, target_leader_name: name, note: note.trim() || null }),
       })
       const d = await res.json().catch(() => null)
       if (!res.ok) throw new Error(d?.error || 'No se pudo crear la solicitud')
@@ -98,10 +102,18 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
 
             <div>
               <label htmlFor="mf-leader" className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral">*</span></label>
-              <select id="mf-leader" value={leaderId} onChange={e => setLeaderId(e.target.value)} className={SELECT_CLS}>
-                <option value="">Seleccionar dirigente…</option>
-                {dirigentes.map(d => <option key={d.member_id} value={d.member_id}>{d.member_name}</option>)}
-              </select>
+              <input
+                id="mf-leader"
+                list="mf-dirigentes-list"
+                value={leaderName}
+                onChange={e => setLeaderName(e.target.value)}
+                placeholder="Buscá un dirigente o escribí otro…"
+                className={cn(SELECT_CLS, 'placeholder:text-navy-light/50')}
+              />
+              <datalist id="mf-dirigentes-list">
+                {dirigentes.map(d => <option key={d.member_id} value={d.member_name} />)}
+              </datalist>
+              <p className="mt-1 text-[11px] text-navy-light/60 font-body">Podés elegir de la lista o escribir uno que no aparezca.</p>
             </div>
 
             <div>

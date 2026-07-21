@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.

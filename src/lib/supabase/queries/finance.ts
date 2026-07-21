@@ -1,5 +1,5 @@
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
-import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.

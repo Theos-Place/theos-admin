@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireModuleView } from '@/lib/auth/guard'
 import { getImportBatches } from '@/lib/supabase/queries/finance'
 
 export async function GET() {
