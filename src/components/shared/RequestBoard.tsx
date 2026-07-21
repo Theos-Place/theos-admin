@@ -246,8 +246,9 @@ export function RequestBoard<R extends BaseRequest>({
 
   return (
     <div className="space-y-5">
-      {/* Tabs por tipo */}
-      <RequestTabs tabs={tabs} active={tab} counts={countByTab} onChange={setTab} />
+      {/* Tabs por tipo — se ocultan si el board recibe un solo tipo (el tabbing
+          lo controla la página, ej. solicitudes de estudio con tabs planos). */}
+      {tabs.length > 1 && <RequestTabs tabs={tabs} active={tab} counts={countByTab} onChange={setTab} />}
 
       {/* Filtros: estado + rango de fechas + orden */}
       <div className="flex items-center gap-2 flex-wrap">

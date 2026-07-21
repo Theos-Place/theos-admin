@@ -39,7 +39,7 @@ export default function SolicitudesPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [createOpen, setCreateOpen] = useState(false)
   const [createFor, setCreateFor] = useState<MemberHit | null>(null)
-  const [section, setSection] = useState<'estudios' | 'prematrimonial'>('estudios')
+  const [section, setSection] = useState<'prematrimonial' | 'relocation' | 'study_interest'>('prematrimonial')
 
   const allowed = hasRole('coordinador_estudios', 'coordinador_dirigentes', 'admin')
 
@@ -87,7 +87,7 @@ export default function SolicitudesPage() {
             Reubicaciones e intereses de estudio de los miembros
           </p>
         </div>
-        {section === 'estudios' && (
+        {section !== 'prematrimonial' && (
           <button
             onClick={() => { setCreateFor(null); setCreateOpen(true) }}
             className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white font-body hover:bg-coral-deep transition-colors shrink-0"
@@ -98,19 +98,24 @@ export default function SolicitudesPage() {
         )}
       </div>
 
-      {/* Tabs de sección: solicitudes de estudio (reubicaciones/intereses) y
-          la cola de prematrimonial (flujo propio). */}
+      {/* Tres tabs planos: prematrimonial (flujo propio), reubicaciones e
+          intereses de estudio (RequestBoard, un tipo por tab). */}
       <RequestTabs
-        tabs={[{ key: 'estudios', label: 'Solicitudes de estudio' }, { key: 'prematrimonial', label: 'Prematrimonial' }]}
+        tabs={[
+          { key: 'prematrimonial', label: 'Prematrimonial' },
+          { key: 'relocation', label: 'Reubicaciones' },
+          { key: 'study_interest', label: 'Intereses de estudio' },
+        ]}
         active={section}
-        onChange={k => setSection(k as 'estudios' | 'prematrimonial')}
+        onChange={k => setSection(k as 'prematrimonial' | 'relocation' | 'study_interest')}
       />
 
       {section === 'prematrimonial' ? <PrematrimonialQueue /> : (
       <RequestBoard
+        key={section}
         requests={requests}
         loading={loading}
-        tabs={TABS}
+        tabs={TABS.filter(t => t.key === section)}
         typeLabel={TYPE_LABEL}
         endpointBase="/api/studies/requests"
         assigneesUrl="/api/studies/requests/assignees"
