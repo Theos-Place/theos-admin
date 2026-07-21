@@ -8,6 +8,7 @@ import {
 import { ReportShell } from '@/components/reportes/ReportShell'
 import { KpiCard } from '@/components/reportes/KpiCard'
 import { ChartCard } from '@/components/reportes/ChartCard'
+import { UpdatingBadge } from '@/components/reportes/UpdatingBadge'
 import { Tabs } from '@/components/shared/Tabs'
 import { ALL_SEDES, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
@@ -128,6 +129,7 @@ export default function ReporteAsistenciaPage() {
 
   return (
     <div className={loading ? 'opacity-60 transition-opacity pointer-events-none' : 'transition-opacity'}>
+      <UpdatingBadge show={loading} />
       <ReportShell
         title="Crecimiento y Asistencia"
         description="Personas nuevas y check-ins a charlas por sede. Fuente: perfiles (fecha de registro) y eventos de tipo charla; la sede se deriva de la asistencia."

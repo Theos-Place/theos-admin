@@ -8,6 +8,7 @@ import {
 } from 'recharts'
 import { KpiCard } from '@/components/reportes/KpiCard'
 import { ChartCard } from '@/components/reportes/ChartCard'
+import { UpdatingBadge } from '@/components/reportes/UpdatingBadge'
 import { cn } from '@/lib/utils'
 import type { DiscipulosReport } from '@/lib/reports/discipulos'
 
@@ -78,6 +79,7 @@ export default function ReporteDiscipulosPage() {
 
   return (
     <div className={loading ? 'opacity-60 transition-opacity pointer-events-none space-y-5' : 'transition-opacity space-y-5'}>
+      <UpdatingBadge show={loading} />
       {/* Header */}
       <div>
         <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/60 hover:text-navy transition-colors font-body">
