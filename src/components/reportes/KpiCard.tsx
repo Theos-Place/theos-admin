@@ -29,8 +29,23 @@ export function KpiCard({
       )}>
         {label}
         {info && (
-          <span tabIndex={0} title={info} aria-label={info} className="cursor-help text-navy-light/50 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80">
-            <Info size={12} />
+          <span className="group/info relative inline-flex">
+            <span
+              tabIndex={0}
+              role="button"
+              aria-label={info}
+              className="cursor-help text-navy-light/50 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80"
+            >
+              <Info size={12} />
+            </span>
+            {/* Tooltip propio: visible en hover, foco de teclado y tap (no el
+                `title` nativo, que no aparece en móvil y es lento). */}
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute left-1/2 top-full z-30 mt-1.5 w-48 -translate-x-1/2 rounded-lg bg-navy px-2.5 py-1.5 text-[11px] font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-[var(--shadow-lg)] transition-opacity duration-150 font-body group-hover/info:opacity-100 group-focus-within/info:opacity-100"
+            >
+              {info}
+            </span>
           </span>
         )}
       </p>
