@@ -19,8 +19,11 @@ export type DbFolletoRequest = {
   confirmed_by: string | null
   confirmed_at: string | null
   created_at: string
+  note: string | null
+  target_leader_id: string | null
   source_group: { name: string | null } | null
   bloque: { nombre: string } | null
+  target_leader: { first_name: string | null; last_name: string | null } | null
 }
 
 /** Ids de rol que otorgan el módulo 'folletos' (derivado de ROLES, no hardcodeado). */
@@ -98,11 +101,40 @@ export async function createFolletoRequest(input: {
   return data as { id: string }
 }
 
+/** Solicitud de folletos MANUAL (caso especial, no ligada a cierre): entra a la
+ *  misma cola con tipo 'manual'. Guarda cantidad, sede, dirigente destinatario y
+ *  nota. close_date/available_at = hoy (no hay cierre que las derive). */
+export async function createManualFolletoRequest(input: {
+  target_level_code: string
+  quantity: number
+  sede: string | null
+  target_leader_id: string | null
+  note: string | null
+  today: string
+  confirmed_by: string | null
+}): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('folleto_requests').insert({
+    tipo: 'manual',
+    target_level_code: input.target_level_code,
+    quantity: input.quantity,
+    sede: input.sede,
+    target_leader_id: input.target_leader_id,
+    note: input.note,
+    close_date: input.today,
+    available_at: input.today,
+    status: 'creada',
+    confirmed_by: input.confirmed_by,
+  }).select('id').single()
+  if (error) throw error
+  return data as { id: string }
+}
+
 export async function getFolletoRequests(filters: { sede?: string; status?: FolletoState; tipo?: string } = {}): Promise<DbFolletoRequest[]> {
   const supabase = createAdminClient()
   let q = supabase
     .from('folleto_requests')
-    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, source_group:study_groups(name), bloque:capacitacion_bloques(nombre)')
+    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, source_group:study_groups(name), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
     .order('created_at', { ascending: false })
   if (filters.sede) q = q.eq('sede', filters.sede)
   if (filters.status) q = q.eq('status', filters.status)
@@ -113,6 +145,7 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
     ...row,
     source_group: Array.isArray(row.source_group) ? (row.source_group[0] ?? null) : row.source_group,
     bloque: Array.isArray(row.bloque) ? (row.bloque[0] ?? null) : row.bloque,
+    target_leader: Array.isArray(row.target_leader) ? (row.target_leader[0] ?? null) : row.target_leader,
   })) as DbFolletoRequest[]
 }
 

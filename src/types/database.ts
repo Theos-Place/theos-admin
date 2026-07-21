@@ -1206,6 +1206,8 @@ export type Database = {
           status: string
           target_level_code: string | null
           tipo: string
+          note: string | null
+          target_leader_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1223,6 +1225,8 @@ export type Database = {
           status?: string
           target_level_code?: string | null
           tipo?: string
+          note?: string | null
+          target_leader_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1240,6 +1244,8 @@ export type Database = {
           status?: string
           target_level_code?: string | null
           tipo?: string
+          note?: string | null
+          target_leader_id?: string | null
           updated_at?: string | null
         }
         Relationships: [

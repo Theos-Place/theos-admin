@@ -34,13 +34,14 @@ export const MILESTONE_TO_TIPO: Record<BloqueMilestone, string> = {
 }
 
 // ── Etiquetas de tipo de folleto ─────────────────────────────────────────────
-export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final'
+export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final' | 'manual'
 
 export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
   cierre: 'Cierre',
   preapertura_preliminar: 'Preapertura · Preliminar',
   preapertura_confirmacion: 'Preapertura · Confirmación',
   preapertura_final: 'Preapertura · Final',
+  manual: 'Manual (caso especial)',
 }
 
 export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
@@ -48,6 +49,7 @@ export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
   preapertura_preliminar: 'bg-amber-50 text-amber-700',
   preapertura_confirmacion: 'bg-teal-deep/10 text-teal-deep',
   preapertura_final: 'bg-coral/10 text-coral',
+  manual: 'bg-coral/15 text-coral-deep',
 }
 
 // ── Estado derivado de fechas (no manual) ────────────────────────────────────
