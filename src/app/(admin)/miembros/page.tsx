@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useUrlFilter, useUrlFlag } from '@/hooks/useUrlFilter'
 import {
@@ -24,7 +23,6 @@ import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { useMembers } from '@/hooks/useMembers'
 import { toDomainMember } from '@/lib/members/adapter'
 import type { MemberCounts } from '@/lib/supabase/queries/members'
-import type { FilterCondition } from '@/types/filters'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
 import { QueryBar } from '@/components/members/QueryBar'
 import { type Member } from '@/types/member'

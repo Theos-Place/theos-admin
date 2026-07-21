@@ -6,7 +6,6 @@ import { useEmployees } from '@/hooks/useEmployees'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryBadge } from '@/components/employees/SalaryBadge'
 import { useOrg } from '@/lib/org'
-import { cn } from '@/lib/utils'
 import { Plus, Lock } from 'lucide-react'
 
 export default function PuestosPage() {

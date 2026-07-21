@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { Image as ImageIcon } from 'lucide-react'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { cn } from '@/lib/utils'
@@ -153,6 +152,7 @@ export function EventInfoTab({
             )
           ) : (
             <div className="relative rounded-xl overflow-hidden border border-[var(--outline-variant)]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- preview local (blob/dataURL de un archivo recién elegido); next/image no lo optimiza. */}
               <img src={flyerPreview} alt="Flyer del evento" className="w-full object-cover max-h-40" />
               {canEditFlyer && (
                 <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2 bg-[rgba(22,20,64,0.6)]">

@@ -89,7 +89,6 @@ export function MemberHeader({
   onCommunicate,
   menuOpen,
   onMenuToggle,
-  onMenuClose,
   canDeactivate = false,
   onDeactivate,
   onMerge,

@@ -33,15 +33,6 @@ type FormState = {
   is_active: boolean
 }
 
-function IconPreview({ icon, size = 16, className, color }: { icon: string; size?: number; className?: string; color?: string }) {
-  const Icon = ICON_MAP[icon] ?? Mic
-  return (
-    <span style={color ? { color } : undefined} className={className}>
-      <Icon size={size} />
-    </span>
-  )
-}
-
 function TypeModal({
   initial,
   onSave,

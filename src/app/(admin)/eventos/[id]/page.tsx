@@ -429,8 +429,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
   const arcPct = attendanceRate / 100
   const circumference = 2 * Math.PI * 40
-  const dashOffset = circumference * (1 - arcPct * 0.75)
-  const dashArray = circumference * 0.75
 
   return (
     <div className="space-y-5">

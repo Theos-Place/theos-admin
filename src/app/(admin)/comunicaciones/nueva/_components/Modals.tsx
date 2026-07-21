@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { CommunicationChannel, MessageTemplate, CommunicationMessage } from '@/types/communication'
+import type { CommunicationChannel, MessageTemplate } from '@/types/communication'
 import type { MemberList } from '@/types/member-list'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import type { RecipientState } from '@/components/communications/RecipientSelector'

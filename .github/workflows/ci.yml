@@ -22,9 +22,10 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Lint (ratchet)
-        # errores = 0 SIEMPRE. Warnings: 161 es la deuda actual (2026-07-13,
-        # casi todo react-hooks/set-state-in-effect degradado a warn) — bajar
-        # este número conforme se migren casos; NUNCA subirlo.
-        run: npx eslint src --max-warnings=161
+        # errores = 0 SIEMPRE. Warnings: 107 es la deuda actual (2026-07-20:
+        # limpiados los 42 no-unused-vars y 3 no-img-element; el resto son
+        # react-hooks/* degradados a warn) — bajar este número conforme se
+        # migren casos; NUNCA subirlo.
+        run: npx eslint src --max-warnings=107
       - name: Tests
         run: npm test --if-present

@@ -7,7 +7,7 @@ import type { Application, ApplicationStatus } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { TOAST_LONG_MS } from '@/lib/constants'
-import { ChevronLeft, X, Check, Users } from 'lucide-react'
+import { X, Check, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 

@@ -194,8 +194,6 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     }
   }
 
-  const backHref = formId ? `/formularios/${formId}` : '/formularios'
-
   return (
     <div className="flex flex-col md:h-[calc(100vh-4rem)] -mx-6 -mt-6">
       {/* Top bar */}

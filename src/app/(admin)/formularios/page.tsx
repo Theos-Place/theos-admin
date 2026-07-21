@@ -6,7 +6,6 @@ import { type FormTemplate } from '@/types/forms'
 import { useForms } from '@/hooks/useForms'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
-import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { FilterChips } from '@/components/shared/FilterChips'
 import { cn } from '@/lib/utils'
 import {
@@ -18,10 +17,8 @@ import {
   UserCheck,
   MoreHorizontal,
   Eye,
-  Edit,
   Copy,
   Archive,
-  Calendar,
   MessageSquare,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'

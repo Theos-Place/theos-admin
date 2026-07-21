@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useOrg } from '@/lib/org'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
@@ -11,7 +10,6 @@ const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy o
 
 export default function NuevoPuestoPage() {
   const { areas: AREAS, adminCommittees } = useOrg()
-  const router = useRouter()
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState<string | null>(null)

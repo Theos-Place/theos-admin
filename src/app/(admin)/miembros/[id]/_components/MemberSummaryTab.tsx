@@ -42,7 +42,6 @@ export function MemberSummaryTab({
   member,
   currentStudyEntry,
   currentWeek,
-  lastStudyEntry,
 }: Props) {
   const { studyTypes } = useStudyPlans()
   // Todos los servicios activos del miembro (comité + puesto), no solo el primero.

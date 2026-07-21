@@ -2,7 +2,6 @@
 
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { usePermissions } from '@/hooks/usePermissions'
 import { sedeLabel } from '@/lib/sedes'
