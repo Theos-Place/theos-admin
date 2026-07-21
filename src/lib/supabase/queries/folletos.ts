@@ -21,6 +21,7 @@ export type DbFolletoRequest = {
   created_at: string
   note: string | null
   target_leader_id: string | null
+  target_leader_name: string | null
   source_group: { name: string | null } | null
   bloque: { nombre: string } | null
   target_leader: { first_name: string | null; last_name: string | null } | null
@@ -109,6 +110,7 @@ export async function createManualFolletoRequest(input: {
   quantity: number
   sede: string | null
   target_leader_id: string | null
+  target_leader_name: string | null
   note: string | null
   today: string
   confirmed_by: string | null
@@ -120,6 +122,7 @@ export async function createManualFolletoRequest(input: {
     quantity: input.quantity,
     sede: input.sede,
     target_leader_id: input.target_leader_id,
+    target_leader_name: input.target_leader_name,
     note: input.note,
     close_date: input.today,
     available_at: input.today,
@@ -134,7 +137,7 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
   const supabase = createAdminClient()
   let q = supabase
     .from('folleto_requests')
-    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, source_group:study_groups(name), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
+    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups(name), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
     .order('created_at', { ascending: false })
   if (filters.sede) q = q.eq('sede', filters.sede)
   if (filters.status) q = q.eq('status', filters.status)
