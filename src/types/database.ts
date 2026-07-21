@@ -3101,6 +3101,27 @@ export type Database = {
           },
         ]
       }
+      report_snapshots: {
+        Row: {
+          report_key: string
+          data: Json
+          row_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          report_key: string
+          data: Json
+          row_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          report_key?: string
+          data?: Json
+          row_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sedes: {
         Row: {
           age_group: string | null
