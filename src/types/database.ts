@@ -1086,7 +1086,7 @@ export type Database = {
           member_id: string
           payment_id: string | null
           plan_id: string | null
-          reason: string
+          reason: string | null
           request_type: string
           review_notes: string | null
           reviewed_at: string | null
@@ -1104,7 +1104,7 @@ export type Database = {
           member_id: string
           payment_id?: string | null
           plan_id?: string | null
-          reason: string
+          reason: string | null
           request_type: string
           review_notes?: string | null
           reviewed_at?: string | null
@@ -3755,7 +3755,7 @@ export type Database = {
           plan_id: string | null
           proposed_location: string | null
           proposed_schedule: string | null
-          reason: string
+          reason: string | null
           request_type: string
           resolved_group_id: string | null
           resulting_enrollment_id: string | null
@@ -3766,6 +3766,10 @@ export type Database = {
           status: string
           updated_at: string | null
           wants_folleto: boolean
+          proposed_days: string[]
+          proposed_time: string | null
+          was_eligible: boolean | null
+          eligibility_note: string | null
         }
         Insert: {
           created_at?: string | null
@@ -3779,7 +3783,7 @@ export type Database = {
           plan_id?: string | null
           proposed_location?: string | null
           proposed_schedule?: string | null
-          reason: string
+          reason: string | null
           request_type: string
           resolved_group_id?: string | null
           resulting_enrollment_id?: string | null
@@ -3790,6 +3794,10 @@ export type Database = {
           status?: string
           updated_at?: string | null
           wants_folleto?: boolean
+          proposed_days?: string[]
+          proposed_time?: string | null
+          was_eligible?: boolean | null
+          eligibility_note?: string | null
         }
         Update: {
           created_at?: string | null
@@ -3803,7 +3811,7 @@ export type Database = {
           plan_id?: string | null
           proposed_location?: string | null
           proposed_schedule?: string | null
-          reason?: string
+          reason?: string | null
           request_type?: string
           resolved_group_id?: string | null
           resulting_enrollment_id?: string | null
@@ -3814,6 +3822,10 @@ export type Database = {
           status?: string
           updated_at?: string | null
           wants_folleto?: boolean
+          proposed_days?: string[]
+          proposed_time?: string | null
+          was_eligible?: boolean | null
+          eligibility_note?: string | null
         }
         Relationships: [
           {

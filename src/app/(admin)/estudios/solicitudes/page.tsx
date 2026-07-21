@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Lock, Loader2, ArrowRight, MapPin, Clock, BookOpen, Plus, X } from 'lucide-react'
+import { Lock, Loader2, ArrowRight, MapPin, Clock, BookOpen, Plus, X, Calendar, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
@@ -156,6 +156,22 @@ export default function SolicitudesPage() {
               <span className="inline-flex items-center gap-1.5">
                 <Clock size={13} className="text-navy-light/60" />
                 {r.proposed_schedule}
+              </span>
+            )}
+            {r.request_type === 'study_interest' && r.proposed_days.length > 0 && (
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar size={13} className="text-navy-light/60" />
+                {r.proposed_days.join(', ')}{r.proposed_time ? ` · ${r.proposed_time}` : ''}
+              </span>
+            )}
+            {r.request_type === 'study_interest' && r.was_eligible === true && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 font-display">
+                <CheckCircle2 size={11} /> Elegible al solicitar
+              </span>
+            )}
+            {r.request_type === 'study_interest' && r.was_eligible === false && (
+              <span className="inline-flex items-start gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-[11px] text-amber-700 font-body">
+                <AlertCircle size={12} className="mt-0.5 shrink-0" /> No elegible: {r.eligibility_note || 'faltan requisitos'}
               </span>
             )}
           </>

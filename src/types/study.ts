@@ -158,8 +158,13 @@ export type StudyRequest = {
   current_group_name: string | null
   proposed_location: string | null
   proposed_schedule: string | null
-  reason: string
+  reason: string | null
   status: StudyRequestStatus
+  /** Interés de estudio v2: día(s) (hasta 2), horario y elegibilidad capturada. */
+  proposed_days: string[]
+  proposed_time: string | null
+  was_eligible: boolean | null
+  eligibility_note: string | null
   reviewed_by: string | null
   reviewed_by_name: string | null
   reviewed_at: string | null
@@ -187,9 +192,15 @@ export type StudyRequestWriteInput = {
   current_group_id?: string | null
   proposed_location?: string | null
   proposed_schedule?: string | null
-  reason: string
+  /** Razón: obligatoria en reubicación; en interés de estudio ya no se pide. */
+  reason?: string | null
   needed_study_code?: string | null
   last_class_attended?: string | null
   last_leader_name?: string | null
   wants_folleto?: boolean
+  /** Interés de estudio v2: día(s) (hasta 2), horario, y elegibilidad capturada. */
+  proposed_days?: string[]
+  proposed_time?: string | null
+  was_eligible?: boolean | null
+  eligibility_note?: string | null
 }
