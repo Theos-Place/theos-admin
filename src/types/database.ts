@@ -4390,6 +4390,25 @@ export type Database = {
         Args: { p_event_id: string; p_member_id: string }
         Returns: Json
       }
+      get_dm_flags: {
+        Args: { ref_date?: string }
+        Returns: {
+          person_id: string
+          es_comprometido: boolean
+          sirve: boolean
+          dona: boolean
+          es_dm: boolean
+          cohort_year: number
+        }[]
+      }
+      get_dm_milestones: {
+        Args: never
+        Returns: {
+          milestone: string
+          avg_days: number
+          n: number
+        }[]
+      }
       report_charla_attendance: {
         Args: never
         Returns: {
