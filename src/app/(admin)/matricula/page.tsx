@@ -343,7 +343,7 @@ export default function MatriculaPage() {
           (pareja + logística + ceremonia + pago por comprobante). */}
       {(activeFilter === 'all' || activeFilter === 'inicial') && (
         <Link
-          href="/matricula/prematrimonial"
+          href={selectedMember ? `/matricula/prematrimonial?member_id=${selectedMember.id}` : '/matricula/prematrimonial'}
           className="group flex items-center gap-4 rounded-2xl px-6 py-5 border-2 border-teal/25 bg-teal/5 hover:bg-teal/10 hover:border-teal/40 transition-colors"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal/15">
@@ -352,7 +352,9 @@ export default function MatriculaPage() {
           <div className="flex-1 min-w-0">
             <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em]">Curso Prematrimonial</p>
             <p className="text-[13px] text-navy-light/70 font-body">
-              Inscribite con tu pareja. Requiere Nivel 2 de ambos y tiene su propio formulario (logística, ceremonia y pago).
+              {selectedMember
+                ? `Inscribí a ${selectedMember.name} con su pareja. Requiere Nivel 2 de ambos y tiene su propio formulario (logística, ceremonia y pago).`
+                : 'Inscribite con tu pareja. Requiere Nivel 2 de ambos y tiene su propio formulario (logística, ceremonia y pago).'}
             </p>
           </div>
           <ArrowRight size={18} className="shrink-0 text-teal-deep transition-transform group-hover:translate-x-1" />

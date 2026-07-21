@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Heart, Search, Check, IdCard, ArrowLeft, ArrowRight, Loader2, AlertCircle, Upload } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Heart, Search, Check, IdCard, ArrowLeft, ArrowRight, Loader2, AlertCircle, Upload, UserCog } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+
+type Enrollee = { member_id: string; name: string; email: string | null; has_cedula: boolean; has_n2: boolean }
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
 const TIMES = ['Tarde', 'Noche']
@@ -22,9 +24,28 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 export default function PrematrimonialWizardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loaded } = useAuth()
   const [step, setStep] = useState(1)
   const [error, setError] = useState('')
+
+  // Modo admin "en nombre de": llega ?member_id de "Ver disponibilidad como".
+  // Solo aplica si el usuario es admin/direccion y el id es de OTRO miembro.
+  const requestedMemberId = searchParams.get('member_id')?.trim() || ''
+  const isPrivileged = (user?.roles ?? []).some(r => r === 'admin' || r === 'direccion')
+  const onBehalf = !!requestedMemberId && requestedMemberId !== user?.member_id && isPrivileged
+  const [enrollee, setEnrollee] = useState<Enrollee | null>(null)
+  const [enrolleeError, setEnrolleeError] = useState('')
+
+  useEffect(() => {
+    if (!onBehalf) return
+    let alive = true
+    fetch(`/api/studies/prematrimonial/enrollee?member_id=${encodeURIComponent(requestedMemberId)}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('No se pudo cargar el miembro.')))
+      .then((d: Enrollee) => { if (alive) setEnrollee(d) })
+      .catch(() => { if (alive) setEnrolleeError('No se pudo cargar el miembro a inscribir.') })
+    return () => { alive = false }
+  }, [onBehalf, requestedMemberId])
 
   // Paso 2 — pareja
   const [spouseQuery, setSpouseQuery] = useState('')
@@ -56,14 +77,19 @@ export default function PrematrimonialWizardPage() {
   const toggle = (arr: string[], set: (v: string[]) => void, v: string) =>
     set(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v])
 
-  const hasCedula = user?.has_cedula ?? true
+  // Datos del que se inscribe: el miembro visto (onBehalf) o el usuario logueado.
+  const enrolleeName = onBehalf ? (enrollee?.name ?? 'miembro') : (user?.name ?? '')
+  const enrolleeEmail = onBehalf ? (enrollee?.email ?? '') : (user?.email ?? '')
+  // En onBehalf esperamos a tener los datos del miembro para decidir la cédula
+  // (mientras carga, no bloqueamos). Fuera de onBehalf, la del usuario.
+  const hasCedula = onBehalf ? (enrollee?.has_cedula ?? true) : (user?.has_cedula ?? true)
 
   async function searchSpouse() {
     setSpouseMsg(''); setSpouse(null); setSearching(true)
     try {
       const res = await fetch('/api/studies/prematrimonial/spouse-search', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: spouseQuery.trim() }),
+        body: JSON.stringify({ query: spouseQuery.trim(), ...(onBehalf ? { on_behalf_of: requestedMemberId } : {}) }),
       })
       const d = await res.json()
       if (d.found) setSpouse({ id: d.spouse_member_id, name: d.name, has_n2: d.has_n2 })
@@ -84,6 +110,7 @@ export default function PrematrimonialWizardPage() {
       fd.set('logistica', JSON.stringify({ available_days: days, available_times: times, zones, can_host: canHost, host_address: hostAddress.trim() || null, host_maps_url: hostMaps.trim() || null }))
       fd.set('ceremonia', JSON.stringify({ ceremony_date: ceremonyDate || null, ceremony_date_defined: dateDefined, venue_defined: venueDefined, venue_outside_gam: venueOutsideGam, officiant: officiant || null, comments: comments.trim() || null }))
       fd.set('receipt', file)
+      if (onBehalf) fd.set('on_behalf_of', requestedMemberId)
       const res = await fetch('/api/studies/prematrimonial', { method: 'POST', body: fd })
       const d = await res.json().catch(() => null)
       if (!res.ok) { setError(d?.error || 'No se pudo enviar la inscripción.'); setSubmitting(false); return }
@@ -91,14 +118,34 @@ export default function PrematrimonialWizardPage() {
     } catch { setError('No se pudo enviar. Intentá de nuevo.'); setSubmitting(false) }
   }
 
-  if (loaded && !hasCedula) {
+  if (onBehalf && enrolleeError) {
+    return (
+      <div className="page max-w-2xl mx-auto">
+        <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6 text-center">
+          <AlertCircle className="mx-auto mb-3 text-coral-deep" size={28} />
+          <h2 className="text-lg font-bold text-navy font-display">No se pudo cargar el miembro</h2>
+          <p className="mt-2 text-sm text-navy-light/70 font-body">{enrolleeError}</p>
+          <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
+            <ArrowLeft size={14} /> Volver a matrícula
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Bloqueo por cédula: en onBehalf lo evaluamos solo cuando ya cargó el miembro.
+  if (loaded && (!onBehalf || enrollee) && !hasCedula) {
     return (
       <div className="page max-w-2xl mx-auto">
         <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6 text-center">
           <IdCard className="mx-auto mb-3 text-coral-deep" size={28} />
-          <h2 className="text-lg font-bold text-navy font-display">Necesitás registrar tu cédula</h2>
-          <p className="mt-2 text-sm text-navy-light/70 font-body">La inscripción al prematrimonial requiere tu cédula. Completala en tu perfil y volvé.</p>
-          <Link href={`/miembros/${user?.member_id}/editar?completar=cedula`} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
+          <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? 'El miembro necesita cédula registrada' : 'Necesitás registrar tu cédula'}</h2>
+          <p className="mt-2 text-sm text-navy-light/70 font-body">
+            {onBehalf
+              ? `Antes de inscribir a ${enrolleeName} al prematrimonial, su cédula debe estar registrada en el perfil.`
+              : 'La inscripción al prematrimonial requiere tu cédula. Completala en tu perfil y volvé.'}
+          </p>
+          <Link href={`/miembros/${onBehalf ? requestedMemberId : user?.member_id}/editar?completar=cedula`} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
             <IdCard size={14} /> Completar cédula
           </Link>
         </div>
@@ -117,14 +164,20 @@ export default function PrematrimonialWizardPage() {
       </div>
 
       <div className="rounded-2xl bg-white p-6 ring-1 ring-navy/10">
-        {/* PASO 1 — tus datos */}
+        {/* PASO 1 — datos del que se inscribe */}
         {step === 1 && (
           <div className="space-y-3">
-            <h2 className="font-semibold text-navy font-display">Tus datos</h2>
-            <p className="text-sm text-navy-light/70 font-body">Se toman de tu perfil. El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda.</p>
+            {onBehalf && (
+              <div className="flex items-start gap-2 rounded-xl border border-coral/25 bg-coral/5 px-3 py-2.5 text-[13px] text-navy font-body">
+                <UserCog size={16} className="mt-0.5 shrink-0 text-coral-deep" />
+                <span>Estás inscribiendo <strong>en nombre de otro miembro</strong> (desde “Ver disponibilidad como”). La solicitud y el pago quedan a nombre de esta persona.</span>
+              </div>
+            )}
+            <h2 className="font-semibold text-navy font-display">{onBehalf ? 'Datos del miembro' : 'Tus datos'}</h2>
+            <p className="text-sm text-navy-light/70 font-body">{onBehalf ? 'Se toman del perfil del miembro.' : 'Se toman de tu perfil.'} El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda.</p>
             <div className="rounded-xl bg-surface-low p-4 text-sm text-navy font-body">
-              <p><strong>{user?.name}</strong></p>
-              <p className="text-navy-light/70">{user?.email}</p>
+              <p><strong>{enrolleeName}</strong></p>
+              <p className="text-navy-light/70">{enrolleeEmail}</p>
               <p className="mt-1 inline-flex items-center gap-1.5 text-teal-deep"><Check size={14} /> Cédula registrada</p>
             </div>
           </div>

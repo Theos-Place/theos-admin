@@ -8,20 +8,29 @@ export async function POST(req: NextRequest) {
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
-    const { query } = await req.json()
+    const body = await req.json()
+    const query = body?.query
     if (typeof query !== 'string' || !query.trim()) {
       return NextResponse.json({ error: 'Ingresá cédula, correo o teléfono de tu pareja.' }, { status: 400 })
+    }
+    // Miembro que se inscribe (para excluirlo como su propia pareja). Un admin/
+    // direccion puede buscar en nombre de otro (on_behalf_of); otros roles no.
+    let enrolleeId = auth.ctx.memberId
+    const onBehalfOf = typeof body?.on_behalf_of === 'string' ? body.on_behalf_of.trim() : ''
+    if (onBehalfOf && onBehalfOf !== auth.ctx.memberId) {
+      const isPrivileged = auth.ctx.roles.includes('admin') || auth.ctx.roles.includes('direccion')
+      if (isPrivileged) enrolleeId = onBehalfOf
     }
     const spouse = await findSpouseByContact(query)
     if (!spouse) {
       return NextResponse.json({
         found: false,
-        message: 'No encontramos a tu pareja en el sistema. Verificá los datos o escribí a estudios@theosplace.org',
+        message: 'No encontramos a la pareja en el sistema. Verificá los datos o escribí a estudios@theosplace.org',
       })
     }
-    // No puede ser uno mismo.
-    if (spouse.id === auth.ctx.memberId) {
-      return NextResponse.json({ found: false, message: 'No podés seleccionarte a vos mismo como pareja.' })
+    // No puede ser el mismo miembro que se inscribe.
+    if (spouse.id === enrolleeId) {
+      return NextResponse.json({ found: false, message: 'La pareja no puede ser el mismo miembro que se inscribe.' })
     }
     const hasN2 = await hasCompletedN2(spouse.id)
     // Solo el nombre (y si cumple el requisito). Nada más.
