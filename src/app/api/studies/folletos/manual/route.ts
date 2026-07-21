@@ -17,7 +17,10 @@ export async function POST(req: NextRequest) {
     const levelCode = typeof body?.target_level_code === 'string' ? body.target_level_code.trim() : ''
     const quantity = Number(body?.quantity)
     const sede = typeof body?.sede === 'string' ? body.sede.trim() : ''
+    // Dirigente: nombre libre (autofill) — obligatorio; el id solo si coincide
+    // con un dirigente registrado (opcional, para linkear). "Otro" = solo nombre.
     const targetLeaderId = typeof body?.target_leader_id === 'string' && body.target_leader_id ? body.target_leader_id : null
+    const targetLeaderName = typeof body?.target_leader_name === 'string' ? body.target_leader_name.trim().slice(0, 200) : ''
     const note = typeof body?.note === 'string' ? (body.note.trim().slice(0, 1000) || null) : null
 
     if (!levelCode || !VALID_CODES.has(levelCode)) {
@@ -27,13 +30,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'La cantidad debe ser un número mayor a 0.' }, { status: 400 })
     }
     if (!sede) return NextResponse.json({ error: 'Indicá la sede de entrega.' }, { status: 400 })
-    if (!targetLeaderId) return NextResponse.json({ error: 'Indicá el dirigente a quien se entrega.' }, { status: 400 })
+    if (!targetLeaderName) return NextResponse.json({ error: 'Indicá el dirigente a quien se entrega.' }, { status: 400 })
 
     const created = await createManualFolletoRequest({
       target_level_code: levelCode,
       quantity,
       sede,
       target_leader_id: targetLeaderId,
+      target_leader_name: targetLeaderName,
       note,
       today: ymdCR(),
       confirmed_by: auth.ctx.memberId,

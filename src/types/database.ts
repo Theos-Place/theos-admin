@@ -1208,6 +1208,7 @@ export type Database = {
           tipo: string
           note: string | null
           target_leader_id: string | null
+          target_leader_name: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1227,6 +1228,7 @@ export type Database = {
           tipo?: string
           note?: string | null
           target_leader_id?: string | null
+          target_leader_name?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1246,6 +1248,7 @@ export type Database = {
           tipo?: string
           note?: string | null
           target_leader_id?: string | null
+          target_leader_name?: string | null
           updated_at?: string | null
         }
         Relationships: [
