@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
 import {
-  getStudyRequests, countOpenStudyRequests, createStudyRequest, notifyRecipientsOfRequest,
+  getStudyRequests, countOpenStudyRequests, createStudyRequest, notifyRecipientsOfRequest, hasOpenStudyInterest,
 } from '@/lib/supabase/queries/study-requests'
 import type { StudyRequestStatus, StudyRequestType } from '@/types/study'
 
@@ -55,8 +55,27 @@ export async function POST(req: NextRequest) {
     if (!memberId || !TYPES.has(body?.request_type)) {
       return NextResponse.json({ error: 'Se requiere member_id y request_type válido' }, { status: 400 })
     }
-    if (reason.length < 20) {
-      return NextResponse.json({ error: 'La razón debe tener al menos 20 caracteres' }, { status: 400 })
+
+    // Interés de estudio v2: máximo 1 solicitud abierta por miembro + campos
+    // estructurados (día(s) hasta 2, horario) y elegibilidad capturada. La razón
+    // ya no se pide para este tipo.
+    const DAYS = new Set(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'])
+    const TIMES = new Set(['mañana', 'tarde', 'noche'])
+    let proposedDays: string[] = []
+    let proposedTime: string | null = null
+    let wasEligible: boolean | null = null
+    let eligibilityNote: string | null = null
+    if (body.request_type === 'study_interest') {
+      if (await hasOpenStudyInterest(memberId)) {
+        return NextResponse.json({ error: 'Ya tenés una solicitud de estudio abierta. Podés tener una a la vez.', code: 'solicitud_abierta' }, { status: 409 })
+      }
+      if (!body?.plan_id) {
+        return NextResponse.json({ error: 'Seleccioná el estudio de interés.' }, { status: 400 })
+      }
+      proposedDays = Array.isArray(body?.proposed_days) ? body.proposed_days.filter((d: unknown) => typeof d === 'string' && DAYS.has(d)).slice(0, 2) : []
+      proposedTime = TIMES.has(body?.proposed_time) ? body.proposed_time : null
+      wasEligible = typeof body?.was_eligible === 'boolean' ? body.was_eligible : null
+      eligibilityNote = typeof body?.eligibility_note === 'string' ? (body.eligibility_note.trim().slice(0, 500) || null) : null
     }
 
     // Campos propios de reubicación: obligatorios solo para ese tipo.
@@ -65,6 +84,9 @@ export async function POST(req: NextRequest) {
     let lastLeaderName: string | null = null
     let wantsFolleto = false
     if (body.request_type === 'relocation') {
+      if (reason.length < 20) {
+        return NextResponse.json({ error: 'La razón debe tener al menos 20 caracteres' }, { status: 400 })
+      }
       if (!NEEDED_STUDY_CODES.has(body?.needed_study_code)) {
         return NextResponse.json({ error: 'Seleccioná el estudio que necesitás (N2, N3, N4, Discípulos 2 o Discípulos 3)' }, { status: 400 })
       }
@@ -88,11 +110,15 @@ export async function POST(req: NextRequest) {
       current_group_id: body.current_group_id ?? null,
       proposed_location: body.proposed_location?.trim() || null,
       proposed_schedule: body.proposed_schedule?.trim() || null,
-      reason,
+      reason: body.request_type === 'relocation' ? reason : null,
       needed_study_code: neededStudyCode,
       last_class_attended: lastClassAttended,
       last_leader_name: lastLeaderName,
       wants_folleto: wantsFolleto,
+      proposed_days: proposedDays,
+      proposed_time: proposedTime,
+      was_eligible: wasEligible,
+      eligibility_note: eligibilityNote,
     })
 
     // Notificaciones internas a los coordinadores configurados (best-effort:

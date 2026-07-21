@@ -28,7 +28,7 @@ export type BaseRequest = {
   member_id: string
   member_name: string
   request_type: string
-  reason: string
+  reason: string | null
   status: RequestStatus
   review_notes: string | null
   /** Quien la tiene asignada (coordinador). */
@@ -396,9 +396,11 @@ export function RequestBoard<R extends BaseRequest>({
                                 {renderDetails(r)}
                               </div>
 
-                              <p className="text-sm text-navy-light/80 font-body leading-relaxed">
-                                &ldquo;{r.reason}&rdquo;
-                              </p>
+                              {r.reason && (
+                                <p className="text-sm text-navy-light/80 font-body leading-relaxed">
+                                  &ldquo;{r.reason}&rdquo;
+                                </p>
+                              )}
 
                               {/* Historial */}
                               <div className="space-y-1">

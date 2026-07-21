@@ -30,6 +30,7 @@ const REQUEST_SELECT = `
   proposed_location, proposed_schedule, reason, status,
   reviewed_by, reviewed_at, review_notes, created_at, updated_at,
   needed_study_code, last_class_attended, last_leader_name, wants_folleto,
+  proposed_days, proposed_time, was_eligible, eligibility_note,
   resolved_group_id, resulting_enrollment_id, resulting_folleto_request_id,
   member:members!study_requests_member_id_fkey(first_name, last_name),
   reviewer:members!study_requests_reviewed_by_fkey(first_name, last_name),
@@ -49,7 +50,7 @@ type DbRequestRow = {
   current_group_id: string | null
   proposed_location: string | null
   proposed_schedule: string | null
-  reason: string
+  reason: string | null
   status: StudyRequestStatus
   reviewed_by: string | null
   reviewed_at: string | null
@@ -60,6 +61,10 @@ type DbRequestRow = {
   last_class_attended: string | null
   last_leader_name: string | null
   wants_folleto: boolean
+  proposed_days: string[] | null
+  proposed_time: string | null
+  was_eligible: boolean | null
+  eligibility_note: string | null
   resolved_group_id: string | null
   resulting_enrollment_id: string | null
   resulting_folleto_request_id: string | null
@@ -108,6 +113,10 @@ function toDomain(r: DbRequestRow): StudyRequest {
     last_class_attended: r.last_class_attended,
     last_leader_name: r.last_leader_name,
     wants_folleto: r.wants_folleto,
+    proposed_days: r.proposed_days ?? [],
+    proposed_time: r.proposed_time,
+    was_eligible: r.was_eligible,
+    eligibility_note: r.eligibility_note,
     resolved_group_id: r.resolved_group_id,
     resolved_group_name: r.resolved_group?.name ?? null,
     resulting_enrollment_id: r.resulting_enrollment_id,
@@ -165,16 +174,35 @@ export async function createStudyRequest(input: StudyRequestWriteInput): Promise
       current_group_id: input.current_group_id ?? null,
       proposed_location: input.proposed_location ?? null,
       proposed_schedule: input.proposed_schedule ?? null,
-      reason: input.reason,
+      reason: input.reason ?? null,
       needed_study_code: input.needed_study_code ?? null,
       last_class_attended: input.last_class_attended ?? null,
       last_leader_name: input.last_leader_name ?? null,
       wants_folleto: input.wants_folleto ?? false,
+      proposed_days: input.proposed_days ?? [],
+      proposed_time: input.proposed_time ?? null,
+      was_eligible: input.was_eligible ?? null,
+      eligibility_note: input.eligibility_note ?? null,
     })
     .select(REQUEST_SELECT)
     .single()
   if (error) throw error
   return toDomain(data as DbRequestRow)
+}
+
+/** ¿El miembro ya tiene una solicitud de INTERÉS de estudio abierta (open/in_review)?
+ *  Regla: máximo 1 abierta por miembro (validación server, espejo de la UI). */
+export async function hasOpenStudyInterest(memberId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_requests')
+    .select('id')
+    .eq('member_id', memberId)
+    .eq('request_type', 'study_interest')
+    .in('status', ['open', 'in_review'])
+    .limit(1)
+  if (error) throw error
+  return (data ?? []).length > 0
 }
 
 export async function updateStudyRequestStatus(
@@ -557,7 +585,7 @@ export async function notifyRecipientsOfRequest(req: StudyRequest): Promise<void
     recipient_member_id: memberId,
     type: meta.type,
     title: meta.title,
-    body: `${req.member_name} envió una solicitud. Motivo: ${req.reason.slice(0, 140)}`,
+    body: `${req.member_name} envió una solicitud.${req.reason ? ` Motivo: ${req.reason.slice(0, 140)}` : req.plan_name ? ` Interés: ${req.plan_name}` : ''}`,
     link: `/estudios/solicitudes?request=${req.id}`,
   }))
   const { error } = await supabase.from('internal_notifications').insert(rows)
