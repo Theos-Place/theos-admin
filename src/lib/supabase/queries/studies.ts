@@ -782,6 +782,31 @@ export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): 
   }
 }
 
+/** Inscripciones vigentes de un grupo (para la regla de borrado): cuenta a las
+ *  personas que siguen en el grupo (matriculadas, en lista de espera o con pago
+ *  pendiente); completed/dropped/transferred/expirada no cuentan. */
+export async function countActiveEnrollments(groupId: string): Promise<number> {
+  const supabase = createAdminClient()
+  const { count, error } = await supabase
+    .from('study_enrollments')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId)
+    .in('status', ['enrolled', 'waitlist', 'pendiente_de_pago'])
+  if (error) throw error
+  return count ?? 0
+}
+
+/** Elimina un grupo. Primero borra sus inscripciones (la FK no es cascade); el
+ *  resto de referencias a study_groups son ON DELETE SET NULL. El guard del
+ *  endpoint ya garantiza que no queden personas activas. */
+export async function deleteGroup(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error: eEnr } = await supabase.from('study_enrollments').delete().eq('group_id', id)
+  if (eEnr) throw eEnr
+  const { error } = await supabase.from('study_groups').delete().eq('id', id)
+  if (error) throw error
+}
+
 /** Agrega un estudio al historial de un miembro SIN grupo (ej. estudios viejos,
  *  cuando el sistema no existía). group_id queda nulo; el plan va directo. */
 export async function addMemberStudy(input: {

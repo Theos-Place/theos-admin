@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
-import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { STUDY_ADMIN_ROLES, GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import {
   getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode,
 } from '@/lib/supabase/queries/studies'
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    const auth = await requireRoles(...GROUP_ADMIN_ROLES)
     if (auth.res) return auth.res
   try {
     const parsed = groupCreateSchema.safeParse(await req.json())

@@ -122,7 +122,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const userRole  = user?.role ?? ''
   const userRoles = user?.roles ?? []
 
-  const canViewAccesos = userRoles.includes('admin')
+  // coordinador_estudios entra a accesos para gestionar solo sus permisos delegados.
+  const canViewAccesos = userRoles.some(r => ['admin', 'coordinador_estudios'].includes(r))
   const canViewListas = userRoles.some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
   const canViewDuplicados = userRoles.some(r => ['admin', 'editor_perfiles'].includes(r))
 

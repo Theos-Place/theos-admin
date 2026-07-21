@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Shield, Search, UserPlus, Check, AlertTriangle } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
-import { ROLES, type RoleId, type UserAccess } from '@/lib/auth/roles'
+import { ROLES, assignableRoleIds, type RoleId, type UserAccess } from '@/lib/auth/roles'
+import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { TOAST_MS } from '@/lib/constants'
 import { formatDate, initialsFromParts } from '@/lib/format'
@@ -32,6 +33,11 @@ function avatarBg(id: string) {
 
 export default function AccesosPage() {
   const router = useRouter()
+  const { user: actor } = useAuth()
+  // Roles que el actor puede gestionar (admin: todos; coordinador_estudios: solo
+  // los delegados). Filtra el modal "Dar acceso" y la referencia de roles.
+  const allow = assignableRoleIds(actor?.roles ?? [])
+  const canManageRole = (id: RoleId) => allow === 'all' || allow.has(id)
   const [search, setSearch]           = useState('')
   const [roleFilter, setRoleFilter]   = useState<RoleId | ''>('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
@@ -149,7 +155,7 @@ export default function AccesosPage() {
           Referencia de roles
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {ROLES.filter(r => r.id !== 'miembro').map(role => (
+          {ROLES.filter(r => r.id !== 'miembro' && canManageRole(r.id)).map(role => (
             <div
               key={role.id}
               className="rounded-xl p-4 border bg-surface-card border-outline"
@@ -429,6 +435,7 @@ export default function AccesosPage() {
       {showModal && (
         <DarAccesoModal
           existingIds={users.map(u => u.member_id)}
+          canManageRole={canManageRole}
           onClose={() => setShowModal(false)}
           onConfirm={handleAccessGranted}
         />
@@ -450,10 +457,12 @@ export default function AccesosPage() {
 /* ── Modal 2 pasos ── */
 function DarAccesoModal({
   existingIds,
+  canManageRole,
   onClose,
   onConfirm,
 }: {
   existingIds: string[]
+  canManageRole: (id: RoleId) => boolean
   onClose: () => void
   onConfirm: (memberId: string, name: string, email: string, initials: string, roles: RoleId[]) => void
 }) {
@@ -530,7 +539,7 @@ function DarAccesoModal({
               Seleccioná uno o más roles para <strong className="text-navy">{selected?.first_name} {selected?.last_name}</strong>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {ROLES.map(role => {
+              {ROLES.filter(r => r.id !== 'miembro' && canManageRole(r.id)).map(role => {
                 const isSelected = selectedRoles.has(role.id)
                 return (
                   <button

@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getUserAccess } from '@/lib/supabase/queries/members'
 
-// GET: miembros con roles asignados (gestión de accesos).
+// GET: miembros con roles asignados (gestión de accesos). admin ve todo;
+// coordinador_estudios entra para gestionar los permisos que tiene delegados.
 export async function GET() {
   try {
-    const auth = await requireRoles('admin')
+    const auth = await requireRoles('admin', 'coordinador_estudios')
     if (auth.res) return auth.res
     return NextResponse.json(await getUserAccess())
   } catch (error) {

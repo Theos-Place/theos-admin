@@ -3,9 +3,10 @@
 import { useState, use, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
-import { ROLES, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/lib/auth/roles'
+import { ROLES, assignableRoleIds, type RoleId, type UserAccess, type AccessHistoryEntry } from '@/lib/auth/roles'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { useAuth } from '@/hooks/useAuth'
 import { formatDate, todayCR } from '@/lib/format'
 
 const AVATAR_COLORS = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949', '#3DB97A']
@@ -16,6 +17,12 @@ function avatarBg(id: string) {
 export default function AccesoDetailPage({ params }: { params: Promise<{ memberId: string }> }) {
   const { memberId } = use(params)
   const toast = useToast()
+  const { user: actor } = useAuth()
+  // Qué roles puede gestionar el ACTOR logueado (admin: todos; coordinador_estudios:
+  // solo los delegados). Filtra la UI para que no aparezcan como editables los que
+  // no puede tocar. El server valida igual.
+  const allow = assignableRoleIds(actor?.roles ?? [])
+  const canManageRole = (id: RoleId) => allow === 'all' || allow.has(id)
 
   const [user, setUser]               = useState<UserAccess | null>(null)
   const [confirmAdd, setConfirmAdd]   = useState<RoleId | null>(null)
@@ -93,7 +100,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
 
   // 'miembro' es implícito — se excluye de toda la UI de gestión
   const displayRoles   = user.roles.filter(r => r !== 'miembro')
-  const availableRoles = ROLES.filter(r => r.id !== 'miembro' && !user.roles.includes(r.id))
+  const availableRoles = ROLES.filter(r => r.id !== 'miembro' && !user.roles.includes(r.id) && canManageRole(r.id))
 
   return (
     <div className="space-y-6">
@@ -179,13 +186,15 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleRevoke(rid)}
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-all shrink-0"
-                    aria-label={`Revocar rol ${role.name}`}
-                  >
-                    <X size={14} />
-                  </button>
+                  {canManageRole(rid) && (
+                    <button
+                      onClick={() => handleRevoke(rid)}
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-all shrink-0"
+                      aria-label={`Revocar rol ${role.name}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               )
             })}
@@ -200,7 +209,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
             Agregar rol
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {ROLES.filter(r => r.id !== 'miembro').map(role => {
+            {ROLES.filter(r => r.id !== 'miembro' && canManageRole(r.id)).map(role => {
               const assigned = user.roles.includes(role.id)
               return (
                 <div
