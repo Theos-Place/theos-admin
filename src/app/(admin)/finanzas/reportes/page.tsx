@@ -68,7 +68,6 @@ export default function ReportesPage() {
   const monthlyData = useMemo(() => {
     return MONTH_NAMES.map((name, i) => {
       const month = i + 1
-      const year = Number(yearFilter)
       const total = yearDonations
         .filter(d => new Date(d.donation_date).getMonth() + 1 === month)
         .reduce((s, d) => s + d.amount, 0)
@@ -79,7 +78,7 @@ export default function ReportesPage() {
       ).size
       return { name, total, uniqueDonors }
     })
-  }, [yearDonations, yearFilter])
+  }, [yearDonations])
 
   const maxMonthTotal = Math.max(...monthlyData.map(m => m.total), 1)
   const topMonths = [...monthlyData].filter(m => m.total > 0).sort((a, b) => b.total - a.total).slice(0, 3)

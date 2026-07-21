@@ -9,7 +9,7 @@ import {
   Heart, Hammer,
   MessageCircle, AlertTriangle, CheckCircle2, Clock,
   ChevronRight, TrendingUp, ArrowUpRight, Eye, EyeOff,
-  LayoutDashboard, GraduationCap,
+  GraduationCap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -63,12 +63,6 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   social:      '#E9B949',
   capacitacion:'#161440',
 }
-const EVENT_TYPE_LABELS: Record<EventType, string> = {
-  charla:      'Charla',
-  campamento:  'Campamento',
-  social:      'Social',
-  capacitacion:'Capacitación',
-}
 
 function getGreeting(hour: number) {
   if (hour >= 5 && hour < 12) return 'Buenos días'
@@ -98,11 +92,6 @@ function formatShortDate(iso: string) {
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
 }
 
-function capacityColor(pct: number) {
-  if (pct < 0.7) return '#3DB97A'
-  if (pct < 0.9) return '#E9B949'
-  return '#EF5554'
-}
 
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -435,7 +424,6 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3 mb-4">
               {todayEvents.map(ev => {
-                const pct = ev.max_capacity ? ev.registrations.length / ev.max_capacity : 0
                 return (
                   <div key={ev.id} className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
                     <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: EVENT_TYPE_COLORS[ev.event_type] ?? '#161440' }} />

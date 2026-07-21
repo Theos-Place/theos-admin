@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { DuplicateWarning } from '@/components/members/DuplicateWarning'
-import { CR_PROVINCES, CR_CANTONS, CR_DISTRICTS } from '@/data/costa-rica-geo'
+import { CR_PROVINCES } from '@/data/costa-rica-geo'
 import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'

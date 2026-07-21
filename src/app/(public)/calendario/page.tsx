@@ -249,6 +249,7 @@ function CalendarioWidget() {
       {selectedEvent && (
         <Modal onClose={() => setSelectedEvent(null)} titleId="evento-detalle-title" width={400}>
           <div className="p-6">
+            {/* eslint-disable-next-line @next/next/no-img-element -- flyer remoto dentro de un modal de detalle (no es LCP); next/image exigiría remotePatterns + dimensiones fijas para poco beneficio. */}
             {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt={`Flyer de ${selectedEvent.name}`} className="w-full h-[140px] object-cover rounded-lg mb-3" />}
             <h3 id="evento-detalle-title" className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
             {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.55)] mb-2">{selectedEvent.description}</p>}

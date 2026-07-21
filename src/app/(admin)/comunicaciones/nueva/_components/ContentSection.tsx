@@ -30,7 +30,6 @@ export function ContentSection({
   setWaBody,
   emailBody,
   setEmailBody,
-  previewChannel,
   setPreviewChannel,
   waRef,
   onInsertVariable,

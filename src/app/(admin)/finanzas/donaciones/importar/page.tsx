@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { CloudUpload, Download, Check, CheckCircle2, AlertCircle, XCircle, ArrowLeft, ChevronRight } from 'lucide-react'
+import { CloudUpload, Download, Check, CheckCircle2, XCircle, ArrowLeft, ChevronRight } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { generateCSV } from '@/lib/export'
 import { formatCRC } from '@/lib/format'

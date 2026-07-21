@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import { type MemberHit } from '@/components/shared/MemberCombobox'
 import { type ContractType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
@@ -35,7 +34,6 @@ const DOC_TYPE_MAP: Record<DocKey, string> = {
 }
 
 export default function NuevoEmpleadoPage() {
-  const router = useRouter()
   const { employees, positions } = useEmployees()
   const toast = useToast()
 

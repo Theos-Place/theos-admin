@@ -170,7 +170,8 @@ function toListItem(g: RawListGroup): DbGroupListItem {
     else if (e.status === 'waitlist' || e.status === 'pendiente_de_pago') counts.pending++
     else counts.withdrawn++ // dropped | transferred | expirada
   }
-  const { enrollments: _omit, ...rest } = g
+  const rest = { ...g }
+  delete (rest as { enrollments?: unknown }).enrollments
   return { ...rest, enrollment_counts: counts }
 }
 

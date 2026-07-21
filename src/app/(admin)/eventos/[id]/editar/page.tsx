@@ -30,7 +30,7 @@ type SubEventInput = { id: string; name: string; max_capacity: string }
 
 type RecurringScope = 'single' | 'future' | 'all'
 
-function Section({ id, title, open, onToggle, children }: {
+function Section({ title, open, onToggle, children }: {
   id: string; title: string; open: boolean; onToggle: () => void; children: React.ReactNode
 }) {
   return (

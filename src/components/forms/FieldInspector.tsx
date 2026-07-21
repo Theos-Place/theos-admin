@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, GripVertical, Trash2, ChevronDown } from 'lucide-react'
+import { Plus, X, GripVertical, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FormFieldNew, LogicRule, LogicCondition, ConditionOperator } from '@/data/form-config'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'

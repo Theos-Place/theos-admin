@@ -64,7 +64,6 @@ type Props = {
 }
 
 export function EventServersTab({
-  allBookings,
   groupedBookings,
   confirmedCount,
   pendingCount,

@@ -347,7 +347,7 @@ export default function ComunicacionDetallePage() {
 
         {/* Mobile: tarjetas */}
         <ul className="md:hidden divide-y divide-[var(--outline-variant)]">
-          {filtered.map((r, idx) => (
+          {filtered.map((r) => (
             <li key={r.id} className="flex items-center gap-3 px-4 py-3">
               <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
                 <span className="text-[9px] font-bold text-white">{r.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</span>

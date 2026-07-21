@@ -133,7 +133,10 @@ export async function createTemplate(input: TemplateWriteInput): Promise<{ id: s
  *  pueden mutar sus marcas (is_system/system_key) ni el canal. */
 export async function updateTemplate(id: string, patch: Partial<TemplateWriteInput>): Promise<void> {
   const supabase = createAdminClient()
-  const { is_system: _i, system_key: _s, channel: _c, ...safe } = patch as Record<string, unknown>
+  const safe: Record<string, unknown> = { ...(patch as Record<string, unknown>) }
+  delete safe.is_system
+  delete safe.system_key
+  delete safe.channel
   const { error } = await supabase.from('message_templates').update(safe as Updatable<'message_templates'>).eq('id', id)
   if (error) throw error
 }
