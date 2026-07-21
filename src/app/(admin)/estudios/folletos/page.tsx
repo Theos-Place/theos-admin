@@ -15,6 +15,7 @@ import {
   levelLabel, type FolletoState,
 } from '@/lib/studies/folletos'
 import { FOLLETO_TIPO_LABEL, FOLLETO_TIPO_BADGE, type FolletoTipo } from '@/lib/studies/bloques'
+import { ManualFolletoRequestButton } from '@/components/studies/ManualFolletoRequestButton'
 
 const STATUS_FILTERS: { key: FolletoState | 'all'; label: string }[] = [
   { key: 'all', label: 'Todos' },
@@ -27,6 +28,7 @@ const TIPO_FILTERS: { key: FolletoTipo | 'all'; label: string }[] = [
   { key: 'preapertura_preliminar', label: 'Preliminar' },
   { key: 'preapertura_confirmacion', label: 'Confirmación' },
   { key: 'preapertura_final', label: 'Final' },
+  { key: 'manual', label: 'Manual' },
 ]
 
 function fmtDate(iso: string | null): string {
@@ -93,14 +95,17 @@ export default function FolletosPage() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 shadow-[var(--shadow-md)]">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-            <FileText size={22} className="text-white" />
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+              <FileText size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Folletos</h1>
+              <p className="mt-0.5 text-sm text-white/70 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Folletos</h1>
-            <p className="mt-0.5 text-sm text-white/70 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
-          </div>
+          {canEdit && <ManualFolletoRequestButton onCreated={refetch} />}
         </div>
       </div>
 
@@ -202,9 +207,14 @@ export default function FolletosPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                        {r.tipo === 'cierre'
-                          ? <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/50"> · → {levelLabel(r.target_level_code)}</span>}</>
-                          : (r.bloque?.nombre ?? '—')}
+                        {r.tipo === 'cierre' ? (
+                          <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/50"> · → {levelLabel(r.target_level_code)}</span>}</>
+                        ) : r.tipo === 'manual' ? (
+                          <>
+                            <span>{r.target_level_code ? levelLabel(r.target_level_code) : '—'}{r.target_leader ? ` · ${[r.target_leader.first_name, r.target_leader.last_name].filter(Boolean).join(' ')}` : ''}</span>
+                            {r.note && <span className="block text-navy-light/50 text-[12px] italic">“{r.note}”</span>}
+                          </>
+                        ) : (r.bloque?.nombre ?? '—')}
                       </td>
                       <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[13px]">{r.quantity}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.sede ?? '—'}</td>
