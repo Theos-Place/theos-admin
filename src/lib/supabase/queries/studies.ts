@@ -937,10 +937,14 @@ export async function enrollMember(
   const supabase = createAdminClient()
   const { data: g } = await supabase
     .from('study_groups')
-    .select('is_virtual, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
+    .select('is_virtual, leader_id, co_leader_id, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
     .eq('id', groupId).maybeSingle()
-  const group = g as { is_virtual: boolean | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
+  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
   const plan = group?.plan
+  // El DIRIGENTE del grupo (dirigente/co-dirigente) no paga matrícula del grupo
+  // que dirige. Un dirigente que se inscribe como ALUMNO en otro grupo sí paga
+  // (ahí es estudiante), por eso el criterio es por-grupo, no "es dirigente".
+  const esDirigenteDelGrupo = !!group && (memberId === group.leader_id || memberId === group.co_leader_id)
 
   // Guard: planes que EXIGEN cédula (ej. PREMAT). Bloqueante server-side: no se
   // puede matricular sin cédula registrada. La UI avisa antes (matrícula).
@@ -1018,7 +1022,8 @@ export async function enrollMember(
     finalAmount = computeDiscountedAmount(amount, resolved.discount_type, resolved.discount_value)
     appliedScholarship = { id: resolved.id, kind: resolved.kind }
   }
-  const requiresPaymentFinal = requiresPayment && finalAmount > 0
+  // El dirigente del grupo no paga la matrícula de su propio grupo.
+  const requiresPaymentFinal = requiresPayment && finalAmount > 0 && !esDirigenteDelGrupo
   const status = requiresPaymentFinal ? 'pendiente_de_pago' : 'enrolled'
 
   const { data: enr, error } = await supabase

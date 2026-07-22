@@ -204,18 +204,21 @@ export async function autoEnrollApprovedToNextLevel(
   let enrolled = 0
   for (const memberId of approvedMemberIds) {
     if (already.has(memberId)) continue
+    // El dirigente del grupo sucesor (heredado del origen) no paga su matrícula;
+    // el resto (alumnos, aunque dirijan otros grupos) sí.
+    const memberFree = free || memberId === src.leader_id || memberId === src.co_leader_id
     const { data: enr, error: enrErr } = await supabase
       .from('study_enrollments')
       .insert({
         member_id: memberId,
         plan_id: np.id,
         group_id: successorGroupId,
-        status: free ? 'enrolled' : 'pendiente_de_pago',
+        status: memberFree ? 'enrolled' : 'pendiente_de_pago',
         enrolled_at: now,
       })
       .select('id').single()
     if (enrErr) { console.warn('auto-enroll insert:', enrErr.message); continue }
-    if (!free) {
+    if (!memberFree) {
       const enrollmentId = (enr as { id: string }).id
       // Pago pendiente asociado (sin comprobante aún; el alumno lo completa).
       // QA 2026-07-17: si el pago no se pudo crear, revertir ESA inscripción y
