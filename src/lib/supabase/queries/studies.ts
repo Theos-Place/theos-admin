@@ -1053,6 +1053,16 @@ export async function enrollMember(
       }
       throw payErr
     }
+    // Notifica al miembro que tiene un cobro pendiente (clickeable → su perfil).
+    // Best-effort: un fallo de notificación no debe tumbar la matrícula.
+    const { error: notifErr } = await supabase.from('internal_notifications').insert({
+      recipient_member_id: memberId,
+      type: 'payment_pending',
+      title: 'Tenés un cobro pendiente',
+      body: `Se generó un cobro de matrícula de ₡${finalAmount.toLocaleString('es-CR')}. Abrí el detalle para pagarlo (subir comprobante).`,
+      link: `/miembros/${memberId}?tab=participacion`,
+    })
+    if (notifErr) console.warn('enrollMember: notificación de cobro falló:', notifErr.message)
   }
   if (appliedScholarship) {
     const { consumeScholarship } = await import('./scholarships')

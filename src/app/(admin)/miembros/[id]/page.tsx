@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { useMember } from '@/hooks/useMember'
 import { useStudies } from '@/hooks/useStudies'
@@ -71,7 +71,10 @@ export default function MiembroDetailPage() {
   const isOwnProfile = !!viewer?.id && viewer.id === id
   const canDeactivate = hasRole('admin', 'comunicaciones')
 
-  const [activeTab, setActiveTab] = useState('resumen')
+  // Permite abrir un tab directo vía ?tab= (p. ej. la notificación de cobro
+  // apunta a ?tab=participacion). Fallback a 'resumen'.
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'resumen')
   const [menuOpen, setMenuOpen] = useState(false)
   const [showDeactivate, setShowDeactivate] = useState(false)
   const [deactivating, setDeactivating] = useState(false)
@@ -85,6 +88,7 @@ export default function MiembroDetailPage() {
     eventos: false,
     eventRegistrations: false,
     misBecas: false,
+    pagos: false,
     donaciones: false,
   })
 

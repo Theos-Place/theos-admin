@@ -21,6 +21,7 @@ export type InternalNotificationType =
   | 'folleto_created'
   // Pagos:
   | 'payment_rejected'
+  | 'payment_pending'
 
 export type InternalNotification = {
   id: string
