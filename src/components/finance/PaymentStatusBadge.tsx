@@ -10,7 +10,8 @@ const STATUS_CONFIG: Record<PaymentStatus, { label: string; color: string; bg: s
 }
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
-  const cfg = STATUS_CONFIG[status]
+  // Fallback neutro: un estado no mapeado no debe tumbar la pantalla.
+  const cfg = STATUS_CONFIG[status] ?? { label: String(status || '—'), color: '#161440', bg: 'rgba(22,20,64,0.08)' }
   return (
     <span
       className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
