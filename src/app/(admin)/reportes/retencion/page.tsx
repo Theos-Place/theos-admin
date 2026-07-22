@@ -28,6 +28,7 @@ const fmt = (n: number) => n.toLocaleString('es-CR')
 export default function ReporteRetencionPage() {
   const [report, setReport] = useState<RetencionReport | null>(null)
   const [group, setGroup] = useState<MainGroup>('G3')
+  const [flowYear, setFlowYear] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const fetchReport = useCallback(() => {
@@ -66,7 +67,12 @@ export default function ReporteRetencionPage() {
     return row
   })
   const projData = projectionByGroup[group].map(p => ({ year: p.year, real: p.projected ? null : p.value, proj: p.value, projected: p.projected }))
-  const flow = flowByGroup[group]
+  // Filtro de año del flujo: todos los años con datos (para poder mirar cohortes
+  // viejas como 2020), default el más reciente.
+  const flowYears = years
+  const effFlowYear = flowYear && years.includes(flowYear) ? flowYear : years[years.length - 1]
+  const flow = flowByGroup[group]?.[effFlowYear]
+  const isTerminal = group === 'G4'
 
   return (
     <div className="space-y-5">
@@ -87,19 +93,42 @@ export default function ReporteRetencionPage() {
       />
       <p className="text-[12px] text-navy-light/70 font-body -mt-2">{GROUP_LABELS[group]}</p>
 
-      {/* Flujo de transición (no aplica a G4, terminal) */}
-      {flow ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <FlowStat label="Siguen en el grupo" value={flow.siguen} tone="navy" sub={`de ${fmt(flow.base)} en total`} />
-          <FlowStat label="Transicionaron" value={flow.transicionaron} tone="teal" sub="pasaron al grupo siguiente" />
-          <FlowStat label="Perdidos en transición" value={flow.perdidos} tone="coral" sub="cumplieron la edad, no siguieron" />
-          <FlowStat label="Dropout" value={flow.dropout} tone="muted" sub="dejaron antes de la edad límite" />
+      {/* Flujo POR AÑO: de los que asistieron a este grupo en el año elegido,
+          cómo están HOY. Filtro de año (últimos 5). */}
+      <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)] space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-bold text-navy font-display">
+            De los que asistieron a {group} en {effFlowYear}, hoy…
+          </p>
+          <div className="flex items-center gap-1.5">
+            {flowYears.map(y => (
+              <button
+                key={y}
+                onClick={() => setFlowYear(y)}
+                className={cn(
+                  'rounded-full px-3 py-1 text-[12px] font-medium font-body transition-colors',
+                  y === effFlowYear ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/70 hover:bg-surface-high',
+                )}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        <p className="rounded-xl bg-surface-low px-4 py-2.5 text-[12px] text-navy-light/70 font-body">
-          G4 es el grupo final: no tiene transición a un grupo siguiente.
+        {flow && flow.base > 0 ? (
+          <div className={cn('grid grid-cols-2 gap-3', isTerminal ? 'lg:grid-cols-2' : 'lg:grid-cols-4')}>
+            <FlowStat label="Siguen asistiendo" value={flow.siguen} tone="navy" sub={`de ${fmt(flow.base)} que asistieron en ${effFlowYear}`} />
+            {!isTerminal && <FlowStat label="Transicionaron" value={flow.transicionaron} tone="teal" sub="pasaron al grupo siguiente" />}
+            {!isTerminal && <FlowStat label="Perdidos en transición" value={flow.perdidos} tone="coral" sub="cumplieron la edad, no siguieron" />}
+            <FlowStat label="Dropout" value={flow.dropout} tone="muted" sub={isTerminal ? 'ya no asisten' : 'dejaron antes de la edad límite'} />
+          </div>
+        ) : (
+          <p className="text-[13px] text-navy-light/60 font-body py-2">Nadie asistió a {group} en {effFlowYear}.</p>
+        )}
+        <p className="text-[11px] text-navy-light/60 font-body">
+          Estado calculado a HOY. Siguen asistiendo = ≥2 charlas en los últimos 4 meses.{isTerminal ? ' G4 es el grupo final: solo aplica seguir asistiendo o dropout.' : ''}
         </p>
-      )}
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Asistentes únicos por año */}

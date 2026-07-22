@@ -51,7 +51,9 @@ export type RetencionReport = {
   uniquesByGroup: Record<MainGroup, YearCount[]>
   g1Subgroups: Record<string, YearCount[]>   // G1a/G1b/G1c
   retentionByGroup: Record<MainGroup, RetentionPoint[]>
-  flowByGroup: Record<string, FlowSummary>   // G1/G2/G3 (G4 es terminal)
+  // Flujo POR AÑO: de los que asistieron al grupo en el año Y, cómo están HOY
+  // (siguen/transicionaron/perdidos/dropout). Incluye G4 (solo siguen/dropout).
+  flowByGroup: Record<string, Record<number, FlowSummary>>
   projectionByGroup: Record<MainGroup, ProjectionPoint[]>
 }
 
@@ -131,31 +133,35 @@ export function buildRetencionReport(rows: GroupAttRow[], activeToday: Set<strin
     return [g, points]
   })) as Record<MainGroup, RetentionPoint[]>
 
-  // ── Flujo de transición (G1→G2, G2→G3, G3→G4) ──
-  const lastYear = years[years.length - 1]
-  const flowByGroup: Record<string, FlowSummary> = {}
-  for (const g of ['G1', 'G2', 'G3'] as MainGroup[]) {
-    const top = GROUP_TOP_AGE[g]
-    const next = NEXT_GROUP[g]
-    let siguen = 0, transicionaron = 0, perdidos = 0, dropout = 0, base = 0
+  // ── Flujo POR AÑO: de los que asistieron al grupo en el año Y, cómo están HOY.
+  //    El estado (siguen/transicionaron/perdidos/dropout) es "a hoy" (fijo por
+  //    persona) y se cuenta en CADA año en que la persona estuvo en el grupo.
+  //    Incluye G4 (terminal: solo siguen vs dropout). ──
+  const flowByGroup: Record<string, Record<number, FlowSummary>> = {}
+  for (const g of MAIN_GROUPS) {
+    const top = GROUP_TOP_AGE[g]      // undefined para G4
+    const next = NEXT_GROUP[g]        // undefined para G4
+    const byYear: Record<number, FlowSummary> = {}
+    for (const y of years) byYear[y] = { base: 0, siguen: 0, transicionaron: 0, perdidos: 0, dropout: 0 }
     for (const [pid, gy] of personGroupYears) {
       const yearsInG = gy.get(g)
       if (!yearsInG || yearsInG.size === 0) continue
-      base++
       const maxAge = personGroupMaxAge.get(pid)?.get(g) ?? 0
-      // "Sigue asistiendo hoy" = criterio activo (≥2 charlas en 4 meses), no
-      // "apareció el último año de datos".
-      const stillActive = activeToday.has(pid)
-      const inNext = (gy.get(next)?.size ?? 0) > 0
-      if (stillActive) { siguen++; continue }
-      if (maxAge >= top) { if (inNext) transicionaron++; else perdidos++ }
-      else dropout++
+      const stillActive = activeToday.has(pid)                 // activo hoy (≥2 charlas en 4m)
+      const inNext = next ? (gy.get(next)?.size ?? 0) > 0 : false
+      let bucket: keyof FlowSummary
+      if (stillActive) bucket = 'siguen'
+      else if (!next) bucket = 'dropout'                       // G4 terminal: no activo → dropout
+      else if (maxAge >= top) bucket = inNext ? 'transicionaron' : 'perdidos'
+      else bucket = 'dropout'
+      for (const y of yearsInG) { byYear[y].base++; byYear[y][bucket]++ }
     }
-    flowByGroup[g] = { base, siguen, transicionaron, perdidos, dropout }
+    flowByGroup[g] = byYear
   }
 
   // ── Proyección 2025-2030: retención promedio de las últimas 3 transiciones,
   //    aplicada al último año real hacia adelante. Estimación simple. ──
+  const lastYear = years[years.length - 1]
   const PROJECT_TO = 2030
   const projectionByGroup = Object.fromEntries(MAIN_GROUPS.map(g => {
     const real = uniquesByGroup[g]
