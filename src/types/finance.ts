@@ -1,6 +1,6 @@
 // Finance module domain types.
 
-export type PaymentMethod = 'card' | 'sinpe' | 'scholarship' | 'cash'
+export type PaymentMethod = 'card' | 'sinpe' | 'scholarship' | 'cash' | 'comprobante'
 export type PaymentStatus = 'paid' | 'pending' | 'refunded' | 'partial_refund' | 'failed'
 export type RefundStatus = 'pending' | 'processing' | 'completed' | 'rejected'
 
