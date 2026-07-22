@@ -53,7 +53,15 @@ export default function FinanzasPage() {
   const totalIngresos = filteredPayments.reduce((s, p) => s + p.amount, 0)
     + filteredDonations.reduce((s, d) => s + d.amount, 0)
 
-  const activeDonors = new Set(filteredDonations.filter(d => d.is_identified).map(d => d.member_id)).size
+  // "Donador activo" = donó (identificado) desde el inicio del trimestre que está
+  // 2 trimestres atrás — misma ventana que members.is_donor (refresh_donor_flags).
+  // No depende del selector de período (es estado actual, no del mes elegido).
+  const donorWindowStart = new Date(thisYear, Math.floor(thisMonth / 3) * 3 - 6, 1)
+  const activeDonors = new Set(
+    donations
+      .filter(d => d.is_identified && new Date(d.donation_date) >= donorWindowStart)
+      .map(d => d.member_id),
+  ).size
   const pendingPayments = payments.filter(p => p.status === 'pending').length
   const pendingRefunds = refunds.filter(r => r.status === 'pending' || r.status === 'processing').length
   const sinpePendingRefunds = refunds.filter(r => r.sinpe_pending && (r.status === 'pending' || r.status === 'processing'))
@@ -150,6 +158,7 @@ export default function FinanzasPage() {
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors}
             </p>
+            <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">Donaron en los últimos 2 trimestres</p>
           </div>
 
           {/* Pagos pendientes */}
