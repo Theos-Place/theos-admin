@@ -23,7 +23,7 @@ const tooltipStyle = {
   fontFamily: 'var(--font-body)',
 }
 
-const fmt = (n: number) => n.toLocaleString('es-CR')
+const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('es-CR')
 
 export default function ReporteDiscipulosPage() {
   const [report, setReport] = useState<DiscipulosReport | null>(null)

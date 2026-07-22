@@ -23,7 +23,9 @@ const tooltipStyle = {
   borderRadius: 12, border: '1px solid var(--outline-variant)',
   fontSize: 12, fontFamily: 'var(--font-body)',
 }
-const fmt = (n: number) => n.toLocaleString('es-CR')
+// Defensivo: un valor faltante muestra 0 en vez de tumbar la pantalla (p. ej.
+// si el cache quedó con un formato distinto tras un deploy).
+const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('es-CR')
 
 export default function ReporteRetencionPage() {
   const [report, setReport] = useState<RetencionReport | null>(null)
