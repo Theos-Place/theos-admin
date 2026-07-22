@@ -239,6 +239,15 @@ export async function autoEnrollApprovedToNextLevel(
         await supabase.from('study_enrollments').delete().eq('id', enrollmentId)
         continue
       }
+      // Notifica al miembro del cobro pendiente (clickeable → su perfil).
+      const { error: notifErr } = await supabase.from('internal_notifications').insert({
+        recipient_member_id: memberId,
+        type: 'payment_pending',
+        title: 'Tenés un cobro pendiente',
+        body: `Se generó un cobro de matrícula de ₡${amount.toLocaleString('es-CR')}. Abrí el detalle para pagarlo (subir comprobante).`,
+        link: `/miembros/${memberId}?tab=participacion`,
+      })
+      if (notifErr) console.warn('auto-enroll: notificación de cobro falló:', notifErr.message)
     }
     enrolled++
   }
@@ -434,6 +443,75 @@ function computeQueueStatus(status: string, reviewStatus: string | null): Paymen
  * ACCIONABLE (pendiente + en_revision); 'cerrado' es historial y se limita a
  * los últimos 300 para no cargar años de pagos aprobados.
  */
+export type MemberPaymentRow = {
+  id: string
+  concept: PaymentConcept | null
+  description: string
+  amount: number
+  currency: string
+  status: string                 // crudo: paid | pending | failed | refunded | partial_refund
+  queue_status: ReturnType<typeof computeQueueStatus>
+  created_at: string
+  reviewed_at: string | null
+  enrollment_id: string | null
+  event_registration_id: string | null
+}
+
+/** Pagos/cobros de UN miembro (para la sección "Pagos y cobros" del perfil).
+ *  Trae todos los conceptos con su descripción y estado, y los ids de entidad
+ *  para poder pagar (subir comprobante) desde la lista. Orden: pendientes/en
+ *  revisión primero (más nuevos arriba), luego los cerrados. */
+export async function getPaymentsByMember(memberId: string): Promise<MemberPaymentRow[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('payments')
+    .select(`
+      id, amount, currency, concept, receipt_path, created_at, status, review_status, reviewed_at,
+      enrollment_id, event_registration_id,
+      event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
+      enrollment:study_enrollments!payments_enrollment_id_fkey(
+        group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
+        plan_direct:study_plans!study_enrollments_plan_id_fkey(name)
+      )
+    `)
+    .eq('member_id', memberId)
+    .not('concept', 'is', null)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+
+  return ((data ?? []) as Array<Record<string, unknown>>).map(r => {
+    const er = Array.isArray(r.event_registration) ? r.event_registration[0] : r.event_registration
+    const erRow = er as { event: { title: string } | { title: string }[] | null } | null
+    const ev = erRow ? (Array.isArray(erRow.event) ? erRow.event[0] : erRow.event) : null
+    const eventTitle = (ev as { title: string } | null)?.title ?? null
+    const enr = Array.isArray(r.enrollment) ? r.enrollment[0] : r.enrollment
+    const enrRow = enr as { group: { plan: unknown }[] | { plan: unknown } | null; plan_direct: unknown } | null
+    const grp = enrRow ? (Array.isArray(enrRow.group) ? enrRow.group[0] : enrRow.group) : null
+    const gplan = grp ? (Array.isArray((grp as { plan: unknown }).plan) ? (grp as { plan: { name: string }[] }).plan[0] : (grp as { plan: { name: string } | null }).plan) : null
+    const dplan = enrRow ? (Array.isArray(enrRow.plan_direct) ? enrRow.plan_direct[0] : enrRow.plan_direct) : null
+    const studyName = (gplan as { name: string } | null)?.name ?? (dplan as { name: string } | null)?.name ?? null
+    const concept = (r.concept as PaymentConcept | null) ?? null
+    const description = concept === 'evento' ? (eventTitle ?? 'Evento')
+      : concept === 'folletos' ? (studyName ? `Folleto — ${studyName}` : 'Folleto')
+      : concept === 'matricula' ? (studyName ?? 'Matrícula')
+      : concept === 'prematrimonial' ? 'Curso Prematrimonial'
+      : 'Pago'
+    return {
+      id: r.id as string,
+      concept,
+      description,
+      amount: Number(r.amount ?? 0),
+      currency: (r.currency as string) ?? 'CRC',
+      status: (r.status as string) ?? 'pending',
+      queue_status: computeQueueStatus(r.status as string, r.review_status as string | null),
+      created_at: r.created_at as string,
+      reviewed_at: (r.reviewed_at as string | null) ?? null,
+      enrollment_id: (r.enrollment_id as string | null) ?? null,
+      event_registration_id: (r.event_registration_id as string | null) ?? null,
+    }
+  })
+}
+
 export async function getPendingPaymentsQueue(filters: {
   status?: PaymentQueueStatus
   concept?: PaymentConcept

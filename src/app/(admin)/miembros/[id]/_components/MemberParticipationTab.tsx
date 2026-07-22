@@ -7,6 +7,7 @@ import { FinanceRequestActions } from '@/components/finance/FinanceRequestAction
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import { formatDate, formatCRC } from '@/lib/format'
+import type { MemberPaymentRow } from '@/lib/supabase/queries/payments'
 
 const LOAD_MORE = 10
 
@@ -98,6 +99,7 @@ type OpenSections = {
   eventos: boolean
   eventRegistrations: boolean
   misBecas: boolean
+  pagos: boolean
   donaciones: boolean
 }
 
@@ -542,6 +544,16 @@ export function MemberParticipationTab({
         <MemberScholarshipRequests memberId={memberId} />
       </SectionAccordion>
 
+      {/* Pagos y cobros (matrícula, eventos, prematrimonial): pendientes con
+          botón para pagar (subir comprobante), en revisión, y cerrados. */}
+      <SectionAccordion
+        title="Pagos y cobros"
+        open={openSections.pagos}
+        onToggle={() => onToggleSection('pagos')}
+      >
+        <MemberPayments memberId={memberId} />
+      </SectionAccordion>
+
       {/* Donaciones */}
       <SectionAccordion
         title="Donaciones"
@@ -878,6 +890,60 @@ function MemberScholarshipRequests({ memberId }: { memberId: string }) {
           </span>
         </div>
       ))}
+    </div>
+  )
+}
+
+/** Estado visual de un pago del miembro. */
+function paymentBadge(p: MemberPaymentRow): { label: string; cls: string } {
+  if (p.queue_status === 'en_revision') return { label: 'En revisión', cls: 'bg-amber-50 text-amber-700' }
+  if (p.queue_status === 'pendiente') return { label: 'Pendiente', cls: 'bg-coral/10 text-coral' }
+  if (p.status === 'paid') return { label: 'Pagado', cls: 'bg-teal-soft/30 text-teal-deep' }
+  if (p.status === 'refunded' || p.status === 'partial_refund') return { label: 'Devuelto', cls: 'bg-navy/5 text-navy-light/70' }
+  return { label: 'Cancelado', cls: 'bg-surface-low text-navy-light/60' }
+}
+
+/** Sección "Pagos y cobros": lista los pagos del miembro (fetch propio). Los
+ *  pendientes de matrícula/evento muestran botón para pagar (subir comprobante).
+ *  Lo ve el propio miembro o el staff de finanzas (gate en el endpoint). */
+function MemberPayments({ memberId }: { memberId: string }) {
+  const [rows, setRows] = useState<MemberPaymentRow[] | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    fetch(`/api/members/${memberId}/payments`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((d: MemberPaymentRow[]) => { if (alive) setRows(d) })
+      .catch(() => { if (alive) setError(true) })
+    return () => { alive = false }
+  }, [memberId])
+
+  if (error) return <p className="px-4 py-3 text-[13px] text-coral font-body">No se pudieron cargar los pagos.</p>
+  if (!rows) return <p className="px-4 py-6 text-center text-[13px] text-navy-light/50 font-body">Cargando…</p>
+  if (rows.length === 0) return <p className="px-4 py-6 text-center text-[13px] text-navy-light/50 font-body">Sin pagos ni cobros registrados.</p>
+
+  return (
+    <div className="divide-y divide-[var(--outline-variant)]">
+      {rows.map(p => {
+        const badge = paymentBadge(p)
+        const canPay = p.queue_status === 'pendiente'
+        return (
+          <div key={p.id} className="flex items-center justify-between gap-3 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[13px] text-navy font-body truncate">{p.description}</p>
+              <p className="text-[11px] text-navy-light/60 font-body">
+                {formatCRC(p.amount)} · {formatDate(p.created_at)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', badge.cls)}>{badge.label}</span>
+              {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} />}
+              {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} />}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
