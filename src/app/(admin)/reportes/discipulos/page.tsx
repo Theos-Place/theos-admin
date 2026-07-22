@@ -9,6 +9,7 @@ import {
 import { KpiCard } from '@/components/reportes/KpiCard'
 import { ChartCard } from '@/components/reportes/ChartCard'
 import { cn } from '@/lib/utils'
+import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import type { DiscipulosReport } from '@/lib/reports/discipulos'
 
 const NAVY = '#161440'
@@ -99,7 +100,7 @@ export default function ReporteDiscipulosPage() {
           label="Comprometidos"
           value={fmt(criteria.comprometidos.n)}
           sublabel={`${criteria.comprometidos.pct}% de la base`}
-          info="≥6 charlas en los últimos 6 meses y al menos 1 en los últimos 60 días."
+          info={ATTENDANCE_GENERAL_TOOLTIP}
         />
         <KpiCard
           label="Sirven"

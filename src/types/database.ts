@@ -4422,7 +4422,7 @@ export type Database = {
         }[]
       }
       get_dm_flags: {
-        Args: { ref_date?: string }
+        Args: { p_oldest: string; p_recency: string; p_min: number }
         Returns: {
           person_id: string
           es_comprometido: boolean
@@ -4433,12 +4433,16 @@ export type Database = {
         }[]
       }
       get_dm_milestones: {
-        Args: never
+        Args: { p_min: number }
         Returns: {
           milestone: string
           avg_days: number
           n: number
         }[]
+      }
+      get_active_today: {
+        Args: { p_oldest: string; p_min: number }
+        Returns: { member_id: string }[]
       }
       report_charla_attendance: {
         Args: never

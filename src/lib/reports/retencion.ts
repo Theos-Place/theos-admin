@@ -59,7 +59,7 @@ function rate(retained: number, base: number): number {
   return base > 0 ? Math.round((retained / base) * 1000) / 10 : 0
 }
 
-export function buildRetencionReport(rows: GroupAttRow[]): RetencionReport {
+export function buildRetencionReport(rows: GroupAttRow[], activeToday: Set<string> = new Set()): RetencionReport {
   const years = [...new Set(rows.map(r => r.yr))].sort((a, b) => a - b)
 
   // person → main group → set de años; y person → main group → edad máxima.
@@ -143,9 +143,11 @@ export function buildRetencionReport(rows: GroupAttRow[]): RetencionReport {
       if (!yearsInG || yearsInG.size === 0) continue
       base++
       const maxAge = personGroupMaxAge.get(pid)?.get(g) ?? 0
-      const stillInG = yearsInG.has(lastYear)
+      // "Sigue asistiendo hoy" = criterio activo (≥2 charlas en 4 meses), no
+      // "apareció el último año de datos".
+      const stillActive = activeToday.has(pid)
       const inNext = (gy.get(next)?.size ?? 0) > 0
-      if (stillInG) { siguen++; continue }
+      if (stillActive) { siguen++; continue }
       if (maxAge >= top) { if (inNext) transicionaron++; else perdidos++ }
       else dropout++
     }
@@ -170,7 +172,7 @@ export function buildRetencionReport(rows: GroupAttRow[]): RetencionReport {
 
   const totalRows = rows.length
   const coverageNote =
-    `Clasificado por edad al asistir. Excluye check-ins de miembros sin fecha de nacimiento (~13%) y personas con una sola visita. ${totalRows.toLocaleString('es-CR')} registros persona-año-grupo.`
+    `Clasificado por edad al asistir (zona horaria Costa Rica). Excluye check-ins de miembros sin fecha de nacimiento y personas con una sola visita. "Sigue asistiendo" = ≥2 charlas en los últimos 4 meses. ${totalRows.toLocaleString('es-CR')} registros persona-año-grupo.`
 
   return {
     years,
