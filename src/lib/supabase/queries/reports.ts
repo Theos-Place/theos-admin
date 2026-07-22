@@ -5,6 +5,11 @@ import { buildCharlaReport, type CharlaAggRow, type CharlaReport } from '@/lib/r
 import { buildGrowthReport, type GrowthAggRow, type GrowthReport } from '@/lib/reports/member-growth'
 import { buildDiscipulosReport, type DmFlagRow, type DmMilestoneRow, type DiscipulosReport } from '@/lib/reports/discipulos'
 import { buildRetencionReport, type GroupAttRow, type RetencionReport } from '@/lib/reports/retencion'
+import {
+  attendanceWindowStart, attendanceRecencyStart,
+  ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS, ATTENDANCE_MIN_CHARLAS,
+  ACTIVE_ATTENDANCE_MONTHS, ACTIVE_ATTENDANCE_MIN,
+} from '@/lib/attendance'
 
 // Caché de reportes (tabla report_snapshots, refrescada por el cron nocturno
 // /api/cron/report-snapshots). Dos estrategias según el peso del dataset:
@@ -15,7 +20,7 @@ import { buildRetencionReport, type GroupAttRow, type RetencionReport } from '@/
 //     devuelve casi directo. El filtrado por cohorte se hace en el cliente.
 
 type AggRpc = 'report_charla_attendance' | 'report_member_growth'
-type HeavyRpc = 'get_dm_flags' | 'get_dm_milestones' | 'get_group_attendance'
+type HeavyRpc = 'get_dm_flags' | 'get_dm_milestones' | 'get_group_attendance' | 'get_active_today'
 
 // Keys en report_snapshots. Para charla/growth = nombre del RPC (filas). Para
 // los pesados = payload final ya construido.
@@ -23,10 +28,10 @@ const KEY_DISCIPULOS = 'discipulos_payload'
 const KEY_RETENCION = 'retencion_payload'
 
 /** Trae TODAS las filas de un RPC paginando (.range corta en 1000). */
-async function fetchAllRpc<T>(supabase: SupabaseClient, rpcName: AggRpc | HeavyRpc): Promise<T[]> {
+async function fetchAllRpc<T>(supabase: SupabaseClient, rpcName: AggRpc | HeavyRpc, params?: Record<string, unknown>): Promise<T[]> {
   const rows: T[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase.rpc(rpcName).range(from, from + 999)
+    const { data, error } = await supabase.rpc(rpcName, params).range(from, from + 999)
     if (error) throw error
     const batch = (data ?? []) as T[]
     rows.push(...batch)
@@ -58,15 +63,32 @@ async function loadAggRows<T>(supabase: SupabaseClient, rpcName: AggRpc): Promis
 
 // ── Cómputo en vivo de los reportes pesados (lo usa el cron) ──
 async function computeDiscipulos(supabase: SupabaseClient): Promise<DiscipulosReport> {
+  // Ventana de "comprometido" anclada a HOY, con las constantes centrales
+  // (mismos parámetros que active_attendance_member_ids: checked_in_at).
+  const now = new Date()
+  const params = {
+    p_oldest: attendanceWindowStart(ATTENDANCE_MONTHS, now),
+    p_recency: attendanceRecencyStart(ATTENDANCE_RECENCY_DAYS, now),
+    p_min: ATTENDANCE_MIN_CHARLAS,
+  }
   const [flags, milestones] = await Promise.all([
-    fetchAllRpc<DmFlagRow>(supabase, 'get_dm_flags'),
-    fetchAllRpc<DmMilestoneRow>(supabase, 'get_dm_milestones'),
+    fetchAllRpc<DmFlagRow>(supabase, 'get_dm_flags', params),
+    fetchAllRpc<DmMilestoneRow>(supabase, 'get_dm_milestones', { p_min: ATTENDANCE_MIN_CHARLAS }),
   ])
   return buildDiscipulosReport(flags, milestones)
 }
 async function computeRetencion(supabase: SupabaseClient): Promise<RetencionReport> {
-  const rows = await fetchAllRpc<GroupAttRow>(supabase, 'get_group_attendance')
-  return buildRetencionReport(rows)
+  // "Sigue asistiendo hoy" = criterio activo (≥2 charlas en 4 meses), anclado a HOY.
+  const now = new Date()
+  const [rows, active] = await Promise.all([
+    fetchAllRpc<GroupAttRow>(supabase, 'get_group_attendance'),
+    fetchAllRpc<{ member_id: string }>(supabase, 'get_active_today', {
+      p_oldest: attendanceWindowStart(ACTIVE_ATTENDANCE_MONTHS, now),
+      p_min: ACTIVE_ATTENDANCE_MIN,
+    }),
+  ])
+  const activeToday = new Set(active.map(a => a.member_id))
+  return buildRetencionReport(rows, activeToday)
 }
 
 /** Refresca toda la caché de reportes. La usa el cron nocturno. */

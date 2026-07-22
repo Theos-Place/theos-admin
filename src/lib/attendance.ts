@@ -59,3 +59,14 @@ export function meetsAttendanceCriteria(
 /** Texto del criterio, derivado de las constantes para no desfasarse. */
 export const ATTENDANCE_GENERAL_TOOLTIP =
   `Se considera asistencia activa con al menos ${ATTENDANCE_MIN_CHARLAS} check-ins de charla en los últimos ${ATTENDANCE_MONTHS} meses, con al menos uno en los últimos ${ATTENDANCE_RECENCY_DAYS} días.`
+
+/** Criterio "sigue asistiendo hoy" (más laxo que el comprometido): al menos
+ *  ACTIVE_ATTENDANCE_MIN check-ins de charla en los últimos ACTIVE_ATTENDANCE_MONTHS
+ *  meses. Se usa en el reporte de retención para distinguir a quien sigue viniendo
+ *  de quien se perdió. Sin condición de recencia adicional. */
+export const ACTIVE_ATTENDANCE_MONTHS = 4
+export const ACTIVE_ATTENDANCE_MIN = 2
+
+/** Texto del criterio "sigue asistiendo", derivado de las constantes. */
+export const ACTIVE_ATTENDANCE_TOOLTIP =
+  `Sigue asistiendo: al menos ${ACTIVE_ATTENDANCE_MIN} check-ins de charla en los últimos ${ACTIVE_ATTENDANCE_MONTHS} meses.`
