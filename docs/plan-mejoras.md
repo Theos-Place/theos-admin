@@ -42,8 +42,6 @@ Correr tsc, lint y vitest; agregá test del mapeo si hay lógica de estado.
 
 ### [ ] DEU-2 · Flag `events.is_public` para el calendario embebible
 
-> ⚠️ Pendiente de reconfirmar: en sesión 2026-07-25 el usuario eligió "todos públicos, sin cambio" en la pregunta interactiva, lo que contradice este punto. Confirmar antes de ejecutar.
-
 ```
 Hoy events no tiene is_public y el calendario público embebible (/calendario, /api/public/events)
 expone TODOS los eventos. Agregá: migración con columna is_public boolean NOT NULL DEFAULT true
@@ -54,8 +52,6 @@ Test del filtro público.
 ```
 
 ### [ ] DEU-3 · Columna legacy `employees.position`
-
-> Decisión 2026-07-25: eliminarla (la tabla employees está vacía en producción).
 
 ```
 employees.position es una columna legacy NOT NULL que se rellena desde el puesto por

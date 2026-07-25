@@ -73,7 +73,7 @@ export function useServers(...slices: ServersSlice[]) {
   const openByCommittee = useMemo(() => {
     const m: Record<string, number> = {}
     for (const v of dbVacancies) {
-      if (v.status === 'published') m[v.committee_id] = (m[v.committee_id] ?? 0) + 1
+      if (v.status === 'aprobado') m[v.committee_id] = (m[v.committee_id] ?? 0) + 1
     }
     return m
   }, [dbVacancies])

@@ -10,6 +10,7 @@ import { TOAST_LONG_MS } from '@/lib/constants'
 import { X, Check, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
+import { VACANCY_STATE_BADGE, VACANCY_STATE_LABEL } from '@/lib/servers/vacancy-states'
 
 type Tab = 'descripcion' | 'aplicaciones'
 
@@ -27,15 +28,8 @@ const APP_STATUS_LABELS: Record<ApplicationStatus, string> = {
   rejected:  'No seleccionada',
 }
 
-const VACANCY_STATUS_COLORS: Record<string, string> = {
-  draft:     'bg-navy-light/10 text-navy-light/60',
-  published: 'bg-teal-deep/10 text-teal-deep',
-  filled:    'bg-navy/10 text-navy',
-  closed:    'bg-coral/10 text-coral',
-}
-const VACANCY_STATUS_LABELS: Record<string, string> = {
-  draft: 'Borrador', published: 'Publicada', filled: 'Ocupada', closed: 'Cerrada',
-}
+const VACANCY_STATUS_COLORS: Record<string, string> = VACANCY_STATE_BADGE
+const VACANCY_STATUS_LABELS: Record<string, string> = VACANCY_STATE_LABEL
 
 export default function VacanteDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -126,7 +120,7 @@ export default function VacanteDetailPage() {
       const res = await fetch(`/api/servers/vacancies/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'closed' }),
+        body: JSON.stringify({ status: 'cerrada' }),
       })
       if (!res.ok) throw new Error('No se pudo cerrar el puesto')
       await refetch()
@@ -159,7 +153,7 @@ export default function VacanteDetailPage() {
               <span className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display">
                 {vacancy.committee_name}
               </span>
-              <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', vacancyClosed ? VACANCY_STATUS_COLORS['closed'] : VACANCY_STATUS_COLORS[vacancy.status])}>
+              <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', vacancyClosed ? VACANCY_STATUS_COLORS['cerrada'] : VACANCY_STATUS_COLORS[vacancy.status])}>
                 {vacancyClosed ? 'Cerrada' : VACANCY_STATUS_LABELS[vacancy.status]}
               </span>
               {vacancy.published_at && (
@@ -173,7 +167,7 @@ export default function VacanteDetailPage() {
           </div>
           <div className="ph-actions">
             <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/vacantes/${id}/editar`}>Editar publicación</button>
-            {!vacancyClosed && vacancy.status !== 'closed' && (
+            {!vacancyClosed && vacancy.status !== 'cerrada' && (
               <button className="btn btn-ghost btn-sm text-coral border-[rgba(239,85,84,0.3)]" onClick={() => setCloseVacancyOpen(true)}>
                 Cerrar puesto
               </button>

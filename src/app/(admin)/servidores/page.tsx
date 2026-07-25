@@ -105,7 +105,7 @@ export default function ServidoresPage() {
     return { puestosOcupados: count, personasUnicas: ids.size }
   }, [committees])
   const totalCommittees = committees.length
-  const openVacancies   = vacancies.filter(v => v.status === 'published').length
+  const openVacancies   = vacancies.filter(v => v.status === 'aprobado').length
   const pendingApps     = applications.filter(a => a.status === 'pending').length
 
   const filteredAreas = useMemo(() => {
