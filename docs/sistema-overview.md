@@ -348,6 +348,9 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 - Agregar `HEALTHCHECK_URL_STORAGE_ORPHANS` (y decidir si `report-snapshots` debe pingear healthcheck).
 - Env vars de Supabase en Vercel solo están en Production; los deploys Preview fallan por eso.
 - Configurar Healthchecks/Sentry en env.
+- Confirmar SMTP de Supabase Auth en producción (lo usa la invitación automática de cuentas).
+
+**Plan de ejecución:** la cola completa priorizada por fases está en [`docs/plan-desarrollo.md`](plan-desarrollo.md).
 
 **Planeado para fases siguientes:**
 - Canal WhatsApp en comunicaciones (hoy solo modelado en el esquema).
