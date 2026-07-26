@@ -27,7 +27,7 @@ Checklist de administración; nada de esto pasa por Claude Code:
 
 ### Deuda técnica (de la auditoría)
 
-### [ ] DEU-1 · Unificar vocabulario de `vacancies.status`
+### [x] DEU-1 · Unificar vocabulario de `vacancies.status` — PR #35 (migración 20260725120000; mapeo draft→creado, published→aprobado, filled/closed→cerrada)
 
 ```
 En vacancies.status conviven dos vocabularios: legacy (draft/published/filled/closed) y nuevo
