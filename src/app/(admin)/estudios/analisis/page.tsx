@@ -228,7 +228,7 @@ export default function AnalisisPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[12px] text-navy-light/70 font-body">
               {analysis.studyInfo.weeks > 0 ? `${analysis.studyInfo.weeks} semanas · ` : ''}
-              prereq: <strong className="text-navy">{analysis.studyInfo.prerequisite ?? '—'}</strong> · requisitos:
+              prereq: <strong className="text-navy">{analysis.studyInfo.prerequisite ?? '—'}</strong> · compromisos:
             </span>
             <RequirementChips requirements={analysis.studyInfo.requirements} />
           </div>

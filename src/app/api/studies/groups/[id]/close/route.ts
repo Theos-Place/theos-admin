@@ -6,6 +6,7 @@ import {
   createFolletoRequest, getLeaderSedeForGroup, notifyFolletoRecipients,
 } from '@/lib/supabase/queries/folletos'
 import { isFolletoEligible, nextLevelCode, levelLabel, estimatedAvailableDate } from '@/lib/studies/folletos'
+import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
 
 type FolletoPayload = { send?: boolean; sede?: string }
@@ -26,7 +27,19 @@ export async function POST(
   const { id } = await params
   const { results, folleto } = (await req.json().catch(() => ({ results: [] }))) as { results: CloseResult[]; folleto?: FolletoPayload }
   try {
-    await closeGroup(id, results ?? [], auth.ctx.memberId)
+    const supabase = createAdminClient()
+    const { data: g } = await supabase
+      .from('study_groups').select('plan:study_plans(code)').eq('id', id).maybeSingle()
+    const planEmbed = (g as { plan: { code: string | null } | { code: string | null }[] | null } | null)?.plan
+    const sourceCode = (Array.isArray(planEmbed) ? planEmbed[0] : planEmbed)?.code ?? null
+
+    // EST-3: recomendaciones solo en N4+ o capacitaciones (DIS). Si el cliente
+    // las manda para otro plan, se ignoran (el gate de la UI es solo UX).
+    const sanitized = allowsCloseRecommendations(sourceCode)
+      ? (results ?? [])
+      : (results ?? []).map(r => ({ ...r, recommendations: null }))
+
+    await closeGroup(id, sanitized, auth.ctx.memberId)
 
     // Matrícula automática al siguiente nivel para los aprobados, en estado
     // 'pendiente_de_pago' + pago pendiente (concepto matricula). Best-effort.
@@ -46,11 +59,6 @@ export async function POST(
     if (folleto?.send) {
       try {
         const quantity = (results ?? []).filter(r => r.status_result === 'aprobado').length
-        const supabase = createAdminClient()
-        const { data: g } = await supabase
-          .from('study_groups').select('plan:study_plans(code)').eq('id', id).maybeSingle()
-        const planEmbed = (g as { plan: { code: string | null } | { code: string | null }[] | null } | null)?.plan
-        const sourceCode = (Array.isArray(planEmbed) ? planEmbed[0] : planEmbed)?.code ?? null
         const target = nextLevelCode(sourceCode)
 
         if (quantity > 0 && isFolletoEligible(sourceCode) && target) {

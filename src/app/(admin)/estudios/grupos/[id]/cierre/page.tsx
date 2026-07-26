@@ -9,6 +9,7 @@ import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { isFolletoEligible, nextLevelCode, levelLabel } from '@/lib/studies/folletos'
+import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, FileText } from 'lucide-react'
 
 type ParticipantResult = {
@@ -104,6 +105,9 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   const retirados = results.filter(r => r.status_result === 'retirado').length
   const autoPromotable = studyType?.auto_promote && studyType?.next_study_id
 
+  // EST-3: recomendaciones solo en cierres de N4+ o capacitaciones (DIS).
+  const canRecommend = allowsCloseRecommendations(group.study_type_id)
+
   // Folletos: solo para N1/N2/N3 y Discípulos 1/2, y solo si hay aprobados.
   const folletoTarget = nextLevelCode(group.study_type_id)
   const showFolletos = isFolletoEligible(group.study_type_id) && aprobados > 0
@@ -128,7 +132,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           status_result: r.status_result,
           grade: r.grade ? Number(r.grade) : null,
           fail_reason: r.status_result === 'reprobado' ? r.fail_reason.trim() : null,
-          recommendations: (r.rec_oracion || r.rec_servicio || r.rec_dirigente)
+          recommendations: canRecommend && (r.rec_oracion || r.rec_servicio || r.rec_dirigente)
             ? {
                 oracion: r.rec_oracion,
                 servicio: r.rec_servicio,
@@ -311,8 +315,8 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                     </div>
                   )}
 
-                  {/* Recomendaciones opcionales */}
-                  {r.status_result !== '' && r.status_result !== 'retirado' && (
+                  {/* Recomendaciones opcionales — solo N4+ o capacitaciones (EST-3) */}
+                  {canRecommend && r.status_result !== '' && r.status_result !== 'retirado' && (
                     <div className="rounded-xl bg-surface-low px-3 py-2.5 space-y-2">
                       <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                         Recomendar para (opcional)

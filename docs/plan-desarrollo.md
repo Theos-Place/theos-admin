@@ -131,7 +131,7 @@ cuando el concepto no aplique). Mantené el guard de permisos existente
 (requireModuleView('revision_pagos','edit')). Seguí el patrón de filtros server-side del repo.
 ```
 
-### [ ] EST-3 · Recomendaciones solo en cierres N4+ y capacitaciones
+### [x] EST-3 · Recomendaciones solo en cierres N4+ y capacitaciones — HECHO 2026-07-26 (módulo puro `close-recommendations.ts`: N4+ o DIS*; gate en UI + server ignora recomendaciones de planes no permitidos; 4 tests)
 Archivos: `src/app/(admin)/estudios/grupos/[id]/cierre/page.tsx` (bloque "Recomendar para", líneas ~314-345)
 
 ```
@@ -144,6 +144,59 @@ del grupo (ver cadenas de niveles en src/lib/studies/, p. ej. la lógica de next
 src/lib/studies/folletos.ts como referencia de cómo se modelan las cadenas). Validá también
 server-side: si llega recommendations para un grupo N1-N3, ignorarlas o rechazarlas.
 Agregá test de la condición de visibilidad/aceptación.
+```
+
+### Calendario público y eventos (feedback 2026-07-26)
+
+### [ ] EVE-1 · Detalle de evento público + botón inscribirse con login
+Archivos: `src/app/(public)/calendario/page.tsx` (modal, líneas ~249-264), `src/components/servers/PublicApplyButton.tsx` (patrón a copiar), `src/components/events/useEventRegistration.tsx`, `src/app/api/public/events/route.ts`
+
+```
+El calendario público (src/app/(public)/calendario/page.tsx) tiene dos problemas:
+1) El modal de detalle muestra muy poca info (flyer, nombre, descripción, lugar, hora).
+   El endpoint /api/public/events YA expone requires_registration, requires_payment,
+   payment_amount y max_capacity pero el modal no los usa. Agregalos al detalle: costo
+   (formateado en colones), si requiere inscripción, y fecha completa. NO agregués campos
+   nuevos al endpoint público sin whitelist explícita (ver el comentario de seguridad en
+   src/app/api/public/events/route.ts: nunca hacer spread del evento).
+2) El botón "Inscribirse" es un <div> decorativo sin onClick (líneas ~96-99 y ~259).
+   Hacelo funcional con login-gate, copiando el patrón de
+   src/components/servers/PublicApplyButton.tsx (el login-gate de /vacantes):
+   - Sin sesión: redirigir a /login?redirect=<destino>. El param redirect ya funciona
+     (postLoginDest en src/app/(auth)/login/page.tsx lo valida en password, TOTP y passkey).
+   - El destino post-login debe abrir la inscripción del evento: la vista de inscripción
+     para miembros vive en /eventos (src/app/(admin)/eventos/page.tsx usa
+     useEventRegistration). Agregá soporte de deep link ?register=<eventId> en /eventos
+     que abra el modal de inscripción de ese evento al cargar, verificando elegibilidad
+     con /api/eventos/elegibilidad como hace el flujo actual.
+   - Con sesión activa: el botón lleva directo a /eventos?register=<eventId>.
+   Mostrar el botón solo si el evento tiene requires_registration (y respetar el query
+   param showBtn existente del widget).
+El calendario es un widget embebible controlado por query params (view, types, colores,
+showBtn...); no rompás esos params. Tests del deep link y del redirect post-login.
+```
+
+### [ ] EVE-2 · Flyers de eventos en Supabase Storage
+Archivos: `src/app/(admin)/eventos/nuevo/_components/Step1Informacion.tsx` (dropzone, líneas ~116-180), `src/app/(admin)/eventos/nuevo/page.tsx` (~165-170, FileReader), `src/lib/events/form-mapper.ts:58`, patrón: `src/app/api/communications/upload-image/route.ts`
+
+```
+Hoy el flyer de eventos se guarda como data URL base64 DENTRO de la columna events.flyer_url
+(se lee con FileReader.readAsDataURL en src/app/(admin)/eventos/nuevo/page.tsx línea ~165 y
+form-mapper.ts lo guarda tal cual). Migralo a Supabase Storage:
+1) Bucket nuevo event-flyers (público, como email-images). Documentar que se crea desde el
+   dashboard de Supabase (los buckets no se declaran en migraciones en este repo).
+2) Endpoint POST /api/events/upload-flyer siguiendo el patrón exacto de
+   src/app/api/communications/upload-image/route.ts (validar MIME PNG/JPG/WebP, máx 5MB,
+   createAdminClient, devolver getPublicUrl). Guard: los mismos roles que gestionan eventos
+   (direccion, encargado_staff, comunicaciones).
+3) Cambiar crear Y editar evento para subir al endpoint y guardar la URL pública en flyer_url
+   en vez del base64. La dropzone actual (Step1Informacion.tsx) se mantiene; solo cambia el destino.
+4) Migración de datos: script one-off que recorra events con flyer_url que empiece con
+   "data:", suba el contenido al bucket y reemplace por la URL pública. Reportar cuántos migró.
+5) Registrar el bucket nuevo en el cron de huérfanos src/app/api/cron/storage-orphans/route.ts.
+6) CSP (src/lib/csp.ts): verificar que img-src permita el dominio de Storage de Supabase;
+   cuando ya no queden flyers base64, anotar como seguimiento quitar data: de img-src.
+Tests del endpoint de upload (MIME inválido, tamaño excedido).
 ```
 
 ---
