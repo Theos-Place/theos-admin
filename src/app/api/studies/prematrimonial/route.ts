@@ -6,6 +6,8 @@ import {
   createPrematrimonialRequest, getPrematrimonialQueue, hasCompletedN2,
 } from '@/lib/supabase/queries/prematrimonial'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
+import { minCeremonyDate, ceremonyDateTooSoon, PREMAT_MIN_MONTHS } from '@/lib/studies/premat-dates'
+import { todayCR, formatDate } from '@/lib/format'
 
 const MAX_BYTES = 8 * 1024 * 1024
 
@@ -56,6 +58,18 @@ export async function POST(req: NextRequest) {
       ceremonia = JSON.parse((form.get('ceremonia') as string) || '{}')
     } catch {
       return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 })
+    }
+
+    // Regla PRE-3: si la fecha de boda viene definida, debe ser al menos
+    // hoy + 6 meses CALENDARIO (hora CR). El min del input del wizard es solo
+    // UX; esta es la validación confiable.
+    const ceremonyDate = typeof ceremonia.ceremony_date === 'string' ? ceremonia.ceremony_date : null
+    if (ceremonia.ceremony_date_defined && ceremonyDate && ceremonyDateTooSoon(ceremonyDate, todayCR())) {
+      const minima = formatDate(minCeremonyDate(todayCR()))
+      return NextResponse.json(
+        { error: `La boda debe ser al menos ${PREMAT_MIN_MONTHS} meses después de hoy (mínimo ${minima}): el curso son 10 sesiones y debe completarse antes de la ceremonia.`, code: 'boda_muy_pronto' },
+        { status: 400 },
+      )
     }
 
     // Requisito: quien se inscribe debe tener cédula (bloqueante para esta acción).

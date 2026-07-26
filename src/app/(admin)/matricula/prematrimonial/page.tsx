@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Heart, Search, Check, IdCard, ArrowLeft, ArrowRight, Loader2, AlertCircle, Upload, UserCog } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { minCeremonyDate } from '@/lib/studies/premat-dates'
+import { toYmdLocal } from '@/lib/format'
 
 type Enrollee = { member_id: string; name: string; email: string | null; has_cedula: boolean; has_n2: boolean }
 
@@ -64,8 +66,10 @@ export default function PrematrimonialWizardPage() {
   const [hostAddress, setHostAddress] = useState('')
   const [hostMaps, setHostMaps] = useState('')
 
-  // Paso 4 — ceremonia
-  const [ceremonyDate, setCeremonyDate] = useState('')
+  // Paso 4 — ceremonia. PRE-3: la boda debe ser mínimo hoy + 6 meses calendario;
+  // el default arranca en ese mínimo (el server valida igual con code boda_muy_pronto).
+  const minWeddingDate = minCeremonyDate(toYmdLocal(new Date()))
+  const [ceremonyDate, setCeremonyDate] = useState(minWeddingDate)
   const [dateDefined, setDateDefined] = useState(false)
   const [venueDefined, setVenueDefined] = useState(false)
   const [venueOutsideGam, setVenueOutsideGam] = useState(false)
@@ -222,7 +226,7 @@ export default function PrematrimonialWizardPage() {
             <h2 className="font-semibold text-navy font-display">La ceremonia</h2>
             <div>
               <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Fecha de la boda {dateDefined ? '(definida)' : '(aproximada)'}</p>
-              <input type="date" value={ceremonyDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+              <input type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
               <label className="ml-3 text-[13px] text-navy font-body"><input type="checkbox" checked={dateDefined} onChange={e => setDateDefined(e.target.checked)} /> Fecha ya definida</label>
             </div>
             <label className="flex items-center gap-2 text-sm text-navy font-body"><input type="checkbox" checked={venueDefined} onChange={e => setVenueDefined(e.target.checked)} /> Ya tenemos el lugar definido</label>

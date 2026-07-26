@@ -92,7 +92,7 @@ tiene una zona que ya no está en la lista, debe seguir mostrándose tal cual.
 No conectés esto al catálogo de sedes; la lista es fija a propósito.
 ```
 
-### [ ] PRE-3 · Fecha de boda: mínimo y default +6 meses
+### [x] PRE-3 · Fecha de boda: mínimo y default +6 meses — HECHO 2026-07-26 (módulo puro `premat-dates.ts` con meses calendario + ajuste fin de mes; 400 `boda_muy_pronto` server-side; min/default en el input; 5 tests)
 Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (campo `ceremonyDate`), `src/app/api/studies/prematrimonial/route.ts`
 
 ```
