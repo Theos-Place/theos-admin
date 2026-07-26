@@ -475,7 +475,6 @@ export type Database = {
           id: string
           member_id: string | null
           notes: string | null
-          position: string
           position_id: string | null
           salary: number | null
           salary_currency: string | null
@@ -497,7 +496,6 @@ export type Database = {
           id?: string
           member_id?: string | null
           notes?: string | null
-          position: string
           position_id?: string | null
           salary?: number | null
           salary_currency?: string | null
@@ -519,7 +517,6 @@ export type Database = {
           id?: string
           member_id?: string | null
           notes?: string | null
-          position?: string
           position_id?: string | null
           salary?: number | null
           salary_currency?: string | null

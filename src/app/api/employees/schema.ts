@@ -7,7 +7,6 @@ export const employeeWriteSchema = z
   .object({
     member_id: z.string().trim().min(1).nullish(),
     position_id: z.string().trim().min(1).nullish(),
-    position: z.string().trim().nullish(),
     contract_type: z.enum(['planilla', 'servicios_profesionales']).nullish(),
     start_date: z.string().trim().min(1).optional(),
     end_date: z.string().trim().min(1).nullish(),

@@ -111,7 +111,6 @@ export default function NuevoEmpleadoPage() {
         body: JSON.stringify({
           member_id: selected.id,
           position_id: positionId || null,
-          position: selectedPosition?.name ?? null,
           contract_type: contractType,
           salary: salary ? Number(salary) : null,
           start_date: startDate,
