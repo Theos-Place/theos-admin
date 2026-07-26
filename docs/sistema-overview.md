@@ -92,7 +92,7 @@ Tres flujos de solicitud que no hay que confundir:
 | APIs | `/api/servers/areas`, `/api/servers/committees`, `/api/servers/positions`, `/api/servers/position-requests`, `/api/servers/vacancies` (+apply, bulk, import, export-applicants), `/api/servers/applications`, `/api/servers/volunteers`, `/api/servers/goals`, `/api/public/vacancies` |
 | Tablas | `areas`, `service_positions`, `position_records`, `position_requests`, `volunteers`, `vacancies`, `applications`, `committee_goals`, `member_role_position_grants` |
 | Permisos | `SERVICE_ADMIN_ROLES` (encargado_staff, coordinador_servidores, direccion, admin) + `lider_comite` (scope su comité); import: `STAFF_IMPORT_ROLES` |
-| Estado | Funcional con **legacy visible**: `vacancies.status` mezcla dos vocabularios (`draft/published/filled/closed` viejo y `creado/enviado_lider/aprobado/denegado` nuevo); `published` se trata igual que `aprobado` |
+| Estado | Funcional. Vocabulario de `vacancies.status` unificado en español (PR #35, migración 20260725120000): `creado/enviado_lider/aprobado/denegado/cerrada` |
 | Depende de | Accesos (`position-role-sync` asigna/quita roles al entrar/salir de comités), eventos (voluntarios), miembros |
 
 ### Comunicaciones
@@ -176,7 +176,7 @@ RRHH de puestos remunerados: perfiles, salarios, documentos y vacaciones. Separa
 | APIs | `/api/employees` (+salary, documents, vacations), `/api/employees/positions`, `/api/employees/documents/[id]/download` |
 | Tablas | `employees`, `employee_documents`, `salary_changes`, `vacation_records`, `paid_positions` |
 | Permisos | `direccion`, `encargado_staff` |
-| Estado | Funcional. Columna `position` legacy NOT NULL (se rellena desde el puesto si falta) |
+| Estado | Funcional. Columna legacy `position` eliminada (PR #36) |
 | Depende de | Miembros, Storage (`employee-docs`) |
 
 ### Accesos / roles
@@ -252,7 +252,7 @@ Bandeja de notificaciones internas persistidas + alertas calculadas al vuelo (ur
 | Grupo de estudio | `en_matricula → en_curso → finalizado` | Al cerrar: sucesor hereda dirigente/horario/zona + folletos del siguiente nivel |
 | Tiquete de evento (`event_registrations`) | `pending/paid/exempted/expired` | Servidor del comité organizador queda `exempted` |
 | Folleto (`folleto_requests`) | `creada → en_impresion → enviado_entregado → cerrada` | Lineal, sin retroceso |
-| Vacante (`vacancies`) | `creado → enviado_lider → aprobado/denegado` (nuevo) + `draft/published/filled/closed` (legacy) | `published` se trata como `aprobado`. Ventana de solicitud abre el día 25 de cada mes |
+| Vacante (`vacancies`) | `creado → enviado_lider → aprobado/denegado`; `aprobado → cerrada` al cerrar | Vocabulario unificado (PR #35). Ventana de solicitud abre el día 25 de cada mes |
 | Beca (`scholarships`) | `active → used/revoked` | Un solo uso, guard atómico 409 |
 | Solicitudes (estudio/finanzas/prematrimonial) | `open → in_review → resolved/rejected` (premat: `pago_en_revision/pendiente/grupo_creado/cancelada`) | Una solicitud de estudio abierta a la vez por miembro |
 | Broadcast (`message_broadcasts`) | `draft/sending/sent/failed/partial` | Log por destinatario en `message_logs` (hasta delivered/bounced/complained) |
@@ -336,12 +336,9 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 **En el código (verificado):**
 1. `queries/members.ts:189` — TODO: el filtro avanzado de miembros solo hace AND entre condiciones; faltan grupos OR.
 2. Regla de sede duplicada en TS (`sede-attendance.ts`) y SQL (`refresh_member_sedes`), con fixtures de contrato — riesgo de desincronización si alguien cambia una sin la otra.
-3. `vacancies.status` mezcla vocabulario legacy (`published`) y nuevo (`aprobado`) en la misma columna; el código los trata igual pero es deuda de modelo.
-4. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo.
-5. `events` sin flag `is_public`: el calendario embebible expone todos los eventos.
-6. Plantilla `form_asignado` existe pero no está conectada a ningún disparador (decisión: feature futura).
-7. `employees.position` columna legacy NOT NULL rellenada por compatibilidad.
-8. Param `vista` legacy en `/eventos` como fallback de vista.
+3. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo.
+5. Plantilla `form_asignado` existe pero no está conectada a ningún disparador (decisión: feature futura; FEA-1 del plan).
+6. Param `vista` legacy en `/eventos` como fallback de vista.
 
 **Operativos (fuera del código, acciones del usuario/administración):**
 - Verificar que la edge function `process-email-queue` no duplique los crons de vercel.json.
@@ -357,3 +354,5 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 
 **Decisiones confirmadas (no son deuda):**
 - No hay panel admin de sedes/org: intencional, las sedes se administran directamente en la BD.
+- El calendario público (`/calendario`, `/api/public/events`) es sin auth y muestra todos los eventos: intencional, sin flag `is_public` (2026-07-26).
+- `vacancies.status` unificado (PR #35) y `employees.position` eliminada (PR #36): deuda cerrada.

@@ -40,18 +40,12 @@ componentes de /servidores/vacantes. Revisá también el SELECT público de vaca
 Correr tsc, lint y vitest; agregá test del mapeo si hay lógica de estado.
 ```
 
-### [ ] DEU-2 · Flag `events.is_public` para el calendario embebible
+### [x] DEU-2 · Flag `events.is_public` — CERRADO SIN CÓDIGO (decisión 2026-07-26)
 
-> ⚠️ Pendiente de reconfirmar: en sesión 2026-07-25 el usuario eligió "todos públicos, sin cambio" en la pregunta interactiva, lo que contradice este punto. Confirmar antes de ejecutar.
-
-```
-Hoy events no tiene is_public y el calendario público embebible (/calendario, /api/public/events)
-expone TODOS los eventos. Agregá: migración con columna is_public boolean NOT NULL DEFAULT true
-(para no ocultar nada existente de golpe), checkbox "Visible en calendario público" en los forms
-de crear/editar evento (src/app/(admin)/eventos/nuevo y [id]/editar), y filtro is_public=true en
-/api/public/events y en la vista embebible. Los eventos internos siguen visibles en /eventos.
-Test del filtro público.
-```
+> Decisión confirmada: la página de eventos debe ser pública sin auth y mostrar **todos** los
+> eventos. Es el comportamiento actual (`/calendario` es ruta pública en el proxy;
+> `/api/public/events` expone todo evento no cancelado/archivado, con rate limit y whitelist
+> de campos). No se agrega flag `is_public`. Deja de ser deuda.
 
 ### [x] DEU-3 · Columna legacy `employees.position` — PR #36 (migración 20260726100000, DROP COLUMN; decisión 2026-07-25: eliminarla, tabla vacía en producción)
 
