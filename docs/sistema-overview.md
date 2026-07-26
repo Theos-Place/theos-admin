@@ -335,9 +335,9 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 
 **En el código (verificado):**
 1. Regla de sede duplicada en TS (`sede-attendance.ts`) y SQL (`refresh_member_sedes`), con fixtures de contrato — riesgo de desincronización si alguien cambia una sin la otra.
-3. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo.
-5. Plantilla `form_asignado` existe pero no está conectada a ningún disparador (decisión: feature futura; FEA-1 del plan).
-6. Param `vista` legacy en `/eventos` como fallback de vista.
+2. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo.
+3. Plantilla `form_asignado` existe pero no está conectada a ningún disparador (decisión: feature futura; FEA-1 del plan).
+4. Param `vista` legacy en `/eventos` como fallback de vista.
 
 **Operativos (fuera del código, acciones del usuario/administración):**
 - Verificar que la edge function `process-email-queue` no duplique los crons de vercel.json.
