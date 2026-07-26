@@ -58,8 +58,15 @@ consumo a paid_positions primero. Cambio pequeño pero tocá con cuidado: es RRH
 
 ### Quick wins del feedback (prematrimonial, revisión de pagos, cierres)
 
-### [ ] PRE-1 · Búsqueda de cónyuge por correo
+### [x] PRE-1 · Búsqueda de cónyuge por correo — VERIFICADO 2026-07-26: no reproducible
 Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx`, `src/app/api/studies/prematrimonial/spouse-search/route.ts`
+
+> Resultado: la búsqueda por correo **ya funciona** — el form envía el texto tal cual (placeholder
+> ya dice "Cédula, correo o teléfono") y `findSpouseByContact` matchea email con `ilike`
+> case-insensitive; probado contra datos de producción con mayúsculas mezcladas. Se agregó test
+> de regresión (`prematrimonial-spouse-search.test.ts`, 5 casos). Si el reporte persiste,
+> conseguir el correo exacto que falló: lo probable es que ese correo no esté registrado en el
+> perfil del cónyuge (o esté en otro campo).
 
 ```
 En el wizard prematrimonial (src/app/(admin)/matricula/prematrimonial/page.tsx), la búsqueda
