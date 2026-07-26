@@ -3,6 +3,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
 import { getMemberIds, getMembersByIds } from '@/lib/supabase/queries/members'
+import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
 // para exportar. Mismos params que /api/members. Usa createAdminClient (en getMembers).
@@ -39,6 +40,8 @@ export async function GET(req: NextRequest) {
     const { ids, total } = await getMemberIds({
       search,
       conditions,
+      groups: parseGroupsParam(searchParams.get('groups')),
+      topLevelOps: parseOpsParam(searchParams.get('ops')),
       is_active: is_active !== null ? is_active === 'true' : true,
       is_donor:  is_donor  !== null ? is_donor  === 'true' : undefined,
       is_server: is_server === 'true' ? true : undefined,

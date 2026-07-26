@@ -1,6 +1,7 @@
 import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
-import type { FilterCondition } from '@/types/filters'
+import type { FilterCondition, ConditionGroup } from '@/types/filters'
+import { evaluateUnits } from '@/lib/filter-units'
 import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
 import { esComiteDirigentes } from '@/lib/dirigentes'
@@ -88,6 +89,10 @@ export type MemberFilters = {
   ids?: string[]
   /** Condiciones de los filtros avanzados (se resuelven server-side). */
   conditions?: FilterCondition[]
+  /** FIL-3: grupos AND/OR del QueryBar y operador top-level por unidad
+   *  ('c<id>' o 'g<id>' → 'AND'|'OR'). Sin ellos, todo se combina con AND. */
+  groups?: ConditionGroup[]
+  topLevelOps?: Record<string, 'AND' | 'OR'>
   /** Interno: no aplicar el filtro de is_active (los ids ya vienen filtrados). */
   any_active?: boolean
   page?: number
@@ -185,14 +190,17 @@ export function applyMemberSearch<T extends { ilike: (col: string, pattern: stri
 
 
 // ── Filtros avanzados server-side ─────────────────────────────────────────────
-// Cada condición se traduce a un set de member_ids y se intersecan en AND.
-// TODO: grupos OR del QueryBar (hoy se aplica AND entre todas las condiciones,
-// el mínimo viable); condiciones 'form' y los refinamientos de 'attendance'
-// (cantidad, rango de fechas, tipo de evento) quedan pendientes.
+// Cada condición se traduce a sets de member_ids POR CONDICIÓN; la combinación
+// (condiciones sueltas y grupos AND/OR del QueryBar, con operador top-level por
+// unidad) la hace evaluateUnits de src/lib/filter-units.ts — la MISMA semántica
+// que la UI (FIL-3).
+
+/** Sets resueltos de UNA condición: pasa quien está en todos los include y en
+ *  ningún exclude. Sin sets (p. ej. 'status' suelto) la condición no filtra acá. */
+type ResolvedCondition = { id: number; include: Array<Set<string>>; exclude: Array<Set<string>> }
 
 type ConditionResolution = {
-  include: Array<Set<string>>
-  exclude: Array<Set<string>>
+  perCondition: ResolvedCondition[]
   isActiveOverride?: boolean
 }
 
@@ -302,12 +310,21 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
   return out
 }
 
-/** Resuelve las condiciones avanzadas a sets de inclusión/exclusión. */
-export async function resolveAdvancedConditions(conditions: FilterCondition[]): Promise<ConditionResolution> {
+/** Resuelve cada condición avanzada a sus sets de inclusión/exclusión.
+ *  `orGroupedIds`: ids de condiciones dentro de grupos OR — para esas, 'status'
+ *  se resuelve como set (no como override global del escaneo base). */
+export async function resolveAdvancedConditions(
+  conditions: FilterCondition[],
+  orGroupedIds: Set<number> = new Set(),
+): Promise<ConditionResolution> {
   const supabase = createAdminClient()
-  const res: ConditionResolution = { include: [], exclude: [] }
+  const perCondition: ResolvedCondition[] = []
+  let isActiveOverride: boolean | undefined
 
   for (const c of conditions) {
+    // Shadow a propósito: cada condición acumula SUS sets; los case de abajo
+    // siguen escribiendo en `res` sin saber del cambio de granularidad.
+    const res = { include: [] as Array<Set<string>>, exclude: [] as Array<Set<string>>, isActiveOverride: undefined as boolean | undefined }
     switch (c.type) {
       case 'study': {
         // Inverso: NO lo completó y NO lo está cursando ahora — mismo universo
@@ -462,7 +479,13 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         break
       }
       case 'status': {
-        res.isActiveOverride = c.value === 'active'
+        // Dentro de un grupo OR el override global no sirve (uniría mal):
+        // se resuelve como set de miembros con ese estado.
+        if (orGroupedIds.has(c.id)) {
+          res.include.push(await pagedIds(q => q.eq('is_active', c.value === 'active'), 'members', 'member_id:id', 'id'))
+        } else {
+          res.isActiveOverride = c.value === 'active'
+        }
         break
       }
       case 'age': {
@@ -542,9 +565,11 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         break
       }
     }
+    if (res.isActiveOverride !== undefined) isActiveOverride = res.isActiveOverride
+    perCondition.push({ id: c.id, include: res.include, exclude: res.exclude })
   }
   void supabase
-  return res
+  return { perCondition, isActiveOverride }
 }
 
 /** Trae miembros enriquecidos por ids en chunks (evita URLs gigantes en .in). */
@@ -562,13 +587,18 @@ export async function getMembersByIds(allIds: string[], chunk = 100): Promise<Db
  *  select('id'). Sirve para guardar listas / acciones sobre "todos los resultados". */
 export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: string[]; total: number }> {
   const supabase = createAdminClient()
-  const { search, is_donor, is_server, active_attendance, conditions, province, gender, ids: explicitIds } = filters
+  const { search, is_donor, is_server, active_attendance, conditions, groups, topLevelOps, province, gender, ids: explicitIds } = filters
   let { is_active = true } = filters
 
-  // Filtros avanzados → sets de inclusión/exclusión (AND entre condiciones).
+  // Filtros avanzados → sets por condición; la combinación AND/OR va al final
+  // con evaluateUnits (FIL-3). Si un 'status' está dentro de un grupo OR, el
+  // escaneo base no puede filtrar por is_active (la unión necesita el universo
+  // completo): esa condición se resuelve como set y acá se relaja el eq.
+  const orGroupedIds = new Set((groups ?? []).filter(g => g.op === 'OR').flatMap(g => g.members))
+  const statusInOrGroup = !!conditions?.some(c => c.type === 'status' && orGroupedIds.has(c.id))
   let resolution: Awaited<ReturnType<typeof resolveAdvancedConditions>> | null = null
   if (conditions?.length) {
-    resolution = await resolveAdvancedConditions(conditions)
+    resolution = await resolveAdvancedConditions(conditions, orGroupedIds)
     if (resolution.isActiveOverride !== undefined) is_active = resolution.isActiveOverride
   }
 
@@ -595,9 +625,9 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
     let query = supabase
       .from('members')
       .select(is_server ? 'id, volunteers!inner(status)' : 'id')
-      .eq('is_active', is_active)
       .order('id')
       .range(from, from + pageSize - 1)
+    if (!statusInOrGroup) query = query.eq('is_active', is_active)
 
     if (search) {
       query = applyMemberSearch(query, search)
@@ -616,9 +646,16 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
 
   let finalIds = Array.from(ids)
   for (const set of intersectSets) finalIds = finalIds.filter(id => set.has(id))
-  if (resolution) {
-    for (const inc of resolution.include) finalIds = finalIds.filter(id => inc.has(id))
-    for (const exc of resolution.exclude) finalIds = finalIds.filter(id => !exc.has(id))
+  if (resolution && conditions?.length) {
+    // FIL-3: misma semántica de unidades que la UI (grupos AND/OR + operador
+    // top-level). Una condición sin resolución conocida no filtra (pasa).
+    const rcMap = new Map(resolution.perCondition.map(rc => [rc.id, rc]))
+    const passes = (id: string, condId: number) => {
+      const rc = rcMap.get(condId)
+      if (!rc) return true
+      return rc.include.every(s => s.has(id)) && rc.exclude.every(s => !s.has(id))
+    }
+    finalIds = evaluateUnits(finalIds, conditions, groups ?? [], topLevelOps ?? {}, passes)
   }
   return { ids: finalIds, total: finalIds.length }
 }

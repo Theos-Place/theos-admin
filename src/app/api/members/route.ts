@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { getMembers } from '@/lib/supabase/queries/members'
+import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,6 +32,8 @@ export async function GET(req: NextRequest) {
     const result = await getMembers({
       search,
       conditions,
+      groups: parseGroupsParam(searchParams.get('groups')),
+      topLevelOps: parseOpsParam(searchParams.get('ops')),
       is_active: is_active !== null ? is_active === 'true' : true,
       is_donor:  is_donor  !== null ? is_donor  === 'true' : undefined,
       is_server: is_server === 'true' ? true : undefined,

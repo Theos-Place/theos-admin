@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { DbMemberEnriched } from '@/lib/supabase/queries/members'
 import { toDomainMember } from '@/lib/members/adapter'
 import type { Member } from '@/types/member'
-import type { FilterCondition } from '@/types/filters'
+import type { FilterCondition, ConditionGroup } from '@/types/filters'
 
 export type MemberSearchParams = {
   search?: string
@@ -11,6 +11,9 @@ export type MemberSearchParams = {
   active_attendance?: boolean
   /** Filtros avanzados — viajan al servidor serializados como JSON. */
   conditions?: FilterCondition[]
+  /** FIL-3: grupos AND/OR y operador top-level por unidad. */
+  groups?: ConditionGroup[]
+  topLevelOps?: Record<string, 'AND' | 'OR'>
 }
 
 const PAGE_SIZE = 50
@@ -22,7 +25,11 @@ function buildQuery(params: MemberSearchParams, page: number): string {
   if (params.is_donor)          u.set('is_donor', 'true')
   if (params.is_server)         u.set('is_server', 'true')
   if (params.active_attendance) u.set('active_attendance', 'true')
-  if (params.conditions?.length) u.set('conditions', JSON.stringify(params.conditions))
+  if (params.conditions?.length) {
+    u.set('conditions', JSON.stringify(params.conditions))
+    if (params.groups?.length) u.set('groups', JSON.stringify(params.groups))
+    if (params.topLevelOps && Object.keys(params.topLevelOps).length) u.set('ops', JSON.stringify(params.topLevelOps))
+  }
   u.set('page', String(page))
   u.set('pageSize', String(PAGE_SIZE))
   return u.toString()
@@ -39,7 +46,7 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
 
-  const conditionsKey = JSON.stringify(params.conditions ?? [])
+  const conditionsKey = JSON.stringify([params.conditions ?? [], params.groups ?? [], params.topLevelOps ?? {}])
   const key = useMemo(() => buildQuery(params, 1), [params.search, params.is_donor, params.is_server, params.active_attendance, conditionsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Primera página: corre cuando cambia el query o el enabled.

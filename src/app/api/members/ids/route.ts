@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getMemberIds } from '@/lib/supabase/queries/members'
+import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
 
 // GET: solo los IDs (y total) que coinciden con los filtros, sin paginar.
 // Mismos params que /api/members. Para guardar listas / acciones sobre todo el filtro.
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
     const result = await getMemberIds({
       search,
       conditions,
+      groups: parseGroupsParam(searchParams.get('groups')),
+      topLevelOps: parseOpsParam(searchParams.get('ops')),
       is_active: is_active !== null ? is_active === 'true' : true,
       is_donor:  is_donor  !== null ? is_donor  === 'true' : undefined,
       is_server: is_server === 'true' ? true : undefined,

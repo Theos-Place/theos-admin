@@ -4,6 +4,9 @@ import { useState, useMemo, useRef, useCallback } from 'react'
 import type { Member } from '@/types/member'
 import { committeeInArea } from '@/lib/org'
 import type { FilterCondition, ConditionGroup, AddableCondition } from '@/types/filters'
+import { buildUnits, type FilterUnit } from '@/lib/filter-units'
+
+export { buildUnits }
 
 export type QuickFilter = 'todos' | 'activos' | 'donadores' | 'servidores'
 
@@ -96,27 +99,9 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
   }
 }
 
-type Unit =
-  | { kind: 'condition'; id: number }
-  | { kind: 'group'; id: number; members: number[]; op: 'AND' | 'OR' }
-
-export function buildUnits(conditions: FilterCondition[], groups: ConditionGroup[]): Unit[] {
-  const groupedIds = new Set(groups.flatMap(g => g.members))
-  const addedGroups = new Set<number>()
-  const units: Unit[] = []
-  for (const cond of conditions) {
-    if (groupedIds.has(cond.id)) {
-      const grp = groups.find(g => g.members.includes(cond.id))
-      if (grp && !addedGroups.has(grp.id)) {
-        addedGroups.add(grp.id)
-        units.push({ kind: 'group', id: grp.id, members: grp.members, op: grp.op })
-      }
-    } else {
-      units.push({ kind: 'condition', id: cond.id })
-    }
-  }
-  return units
-}
+// FIL-3: la construcción de unidades vive en el módulo puro compartido
+// src/lib/filter-units.ts — la evaluación server-side usa la misma semántica.
+type Unit = FilterUnit
 
 function applyFilters(
   members: Member[],

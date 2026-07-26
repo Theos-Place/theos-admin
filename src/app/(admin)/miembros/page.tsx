@@ -76,13 +76,16 @@ function MiembrosContent() {
   const filters = useMemberFilters([])
   const searchActive = debouncedSearch.trim().length >= 2
   const shouldFetch  = searchActive || showDonors || showServers || showActive || filters.conditions.length > 0
-  const conditionsKey = JSON.stringify(filters.conditions)
+  const conditionsKey = JSON.stringify([filters.conditions, filters.groups, filters.topLevelOps])
   const searchParams = useMemo(() => ({
     search: searchActive ? debouncedSearch.trim() : undefined,
     is_donor: showDonors || undefined,
     is_server: showServers || undefined,
     active_attendance: showActive || undefined,
     conditions: filters.conditions.length ? filters.conditions : undefined,
+    // FIL-3: los grupos AND/OR del QueryBar viajan al server.
+    groups: filters.groups.length ? filters.groups : undefined,
+    topLevelOps: Object.keys(filters.topLevelOps).length ? filters.topLevelOps : undefined,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [searchActive, debouncedSearch, showDonors, showServers, showActive, conditionsKey])
 
@@ -104,7 +107,11 @@ function MiembrosContent() {
     if (showDonors)  u.set('is_donor', 'true')
     if (showServers) u.set('is_server', 'true')
     if (showActive)  u.set('active_attendance', 'true')
-    if (filters.conditions.length) u.set('conditions', JSON.stringify(filters.conditions))
+    if (filters.conditions.length) {
+      u.set('conditions', JSON.stringify(filters.conditions))
+      if (filters.groups.length) u.set('groups', JSON.stringify(filters.groups))
+      if (Object.keys(filters.topLevelOps).length) u.set('ops', JSON.stringify(filters.topLevelOps))
+    }
     return u.toString()
   }
 
@@ -201,13 +208,7 @@ function MiembrosContent() {
 
   // Export: descarga la totalidad que coincide con búsqueda/chips (no solo lo cargado).
   async function fetchAllForExport(): Promise<Member[]> {
-    const u = new URLSearchParams({ is_active: 'true' })
-    if (searchActive) u.set('search', debouncedSearch.trim())
-    if (showDonors)  u.set('is_donor', 'true')
-    if (showServers) u.set('is_server', 'true')
-    if (showActive)  u.set('active_attendance', 'true')
-    if (filters.conditions.length) u.set('conditions', JSON.stringify(filters.conditions))
-    const res = await fetch(`/api/members/export?${u.toString()}`)
+    const res = await fetch(`/api/members/export?${filterQS()}`)
     if (!res.ok) throw new Error('Error exportando')
     const d = await res.json()
     return (d.members ?? []).map(toDomainMember) as Member[]

@@ -285,7 +285,7 @@ Tocá: src/types/filters.ts (nuevo tipo de condición), src/lib/supabase/queries
 "Eventos"), src/lib/condition-labels.ts (labels). Tests de la evaluación.
 ```
 
-### [ ] FIL-3 · Grupos OR en el filtro avanzado (TODO del código)
+### [x] FIL-3 · Grupos OR en el filtro avanzado — HECHO 2026-07-26 (módulo compartido `filter-units.ts` con la semántica de unidades UI=server; resolución por condición; `groups`/`ops` viajan a /api/members, ids y export; caso status-en-OR relaja el escaneo base; 9 tests)
 Archivos: `src/lib/supabase/queries/members.ts:189` (TODO), `src/components/members/QueryBar.tsx`, `src/hooks/useMemberFilters.ts`. Depende de: FIL-1 y FIL-2
 
 ```
