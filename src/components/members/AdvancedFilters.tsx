@@ -11,6 +11,8 @@ import { useOrg } from '@/lib/org'
 import { useForms } from '@/hooks/useForms'
 import { useEventTypes } from '@/hooks/useEventTypes'
 import { DatePicker } from '@/components/events/DatePicker'
+import { Combobox, type ComboItem, type ComboValue } from '@/components/shared/Combobox'
+import { formatDate } from '@/lib/format'
 import type { FormTemplate } from '@/types/forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
 
@@ -279,6 +281,17 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   const [qty, setQty]                   = useState('')
   const [from, setFrom]                 = useState('')
   const [to, setTo]                     = useState('')
+  // FIL-1: negación ("no asistió") y evento puntual.
+  const [mode, setMode]                 = useState<'attended' | 'not_attended'>('attended')
+  const [eventPick, setEventPick]       = useState<ComboValue>({ kind: 'empty' })
+  const [eventItems, setEventItems]     = useState<ComboItem[]>([])
+  useEffect(() => {
+    fetch('/api/members/event-options')
+      .then(r => (r.ok ? r.json() : { items: [] }))
+      .then(d => setEventItems(((d.items ?? []) as Array<{ id: string; title: string; starts_at: string | null }>)
+        .map(e => ({ value: e.id, label: e.starts_at ? `${e.title} · ${formatDate(e.starts_at)}` : e.title }))))
+      .catch(() => {})
+  }, [])
 
   function toggleSede(id: string) {
     setSedes(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
@@ -286,6 +299,32 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 
   return (
     <div className="space-y-4">
+      <div>
+        <Label>Condición</Label>
+        <RadioGroup<'attended' | 'not_attended'>
+          options={[
+            { value: 'attended',     label: 'Asistió' },
+            { value: 'not_attended', label: 'No asistió' },
+          ]}
+          value={mode}
+          onChange={setMode}
+        />
+      </div>
+
+      <div>
+        <Label>Evento puntual (opcional)</Label>
+        <Combobox
+          items={eventItems}
+          value={eventPick}
+          onChange={setEventPick}
+          allowCreate={false}
+          allowEmpty
+          emptyLabel="Cualquier evento"
+          placeholder="Buscar evento por nombre…"
+          ariaLabel="Evento puntual"
+        />
+      </div>
+
       <div>
         <Label>Tipo de evento</Label>
         <Sel value={eventType} onChange={setEventType}>
@@ -379,10 +418,14 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             sedes, camp, attendanceType, qtyOp,
             qty: qtyOp !== 'any' ? qty : '',
             from, to,
+            negate: mode === 'not_attended',
+            eventId: eventPick.kind === 'existing' ? eventPick.value : '',
+            eventName: eventPick.kind === 'existing' ? eventPick.label : undefined,
           })
           setEventType(''); setSedes([]); setCamp('')
           setAttType('any'); setQtyOp('any'); setQty('')
           setFrom(''); setTo('')
+          setMode('attended'); setEventPick({ kind: 'empty' })
         }}
       />
     </div>

@@ -11,10 +11,11 @@ export function conditionLabel(c: FilterCondition): string {
       return `Estudio: ${name}`
     }
     case 'attendance': {
-      const type = c.eventTypeName || c.eventType || 'Asistencia'
-      if (!c.qty || c.qtyOp === 'any') return type
+      // FIL-1: el evento puntual manda sobre el tipo; negate antepone "No asistió".
+      const type = c.eventName || c.eventTypeName || c.eventType || 'Asistencia'
       const sym = c.qtyOp === 'gte' ? '≥' : c.qtyOp === 'lte' ? '≤' : '='
-      return `${type} ${sym}${c.qty}×`
+      const base = (!c.qty || c.qtyOp === 'any') ? type : `${type} ${sym}${c.qty}×`
+      return c.negate ? `No asistió: ${base}` : base
     }
     case 'service': {
       if (c.position) return `Puesto: ${c.position}`

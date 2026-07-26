@@ -6,7 +6,9 @@ export type QtyOperator = 'gte' | 'lte' | 'eq' | 'any'
 
 export type FilterCondition =
   | { id: number; group: 'study'; type: 'study'; study: string; status: StudyStatus; from: string | null; to: string | null }
-  | { id: number; group: 'attend'; type: 'attendance'; eventType: string; eventTypeName?: string; sedes: string[]; camp: string; attendanceType: AttendanceType; qtyOp: QtyOperator; qty: string; from: string; to: string }
+  // negate/eventId/eventName son opcionales para no romper listas guardadas
+  // (member_lists persiste FilterState como JSON): FIL-1.
+  | { id: number; group: 'attend'; type: 'attendance'; eventType: string; eventTypeName?: string; sedes: string[]; camp: string; attendanceType: AttendanceType; qtyOp: QtyOperator; qty: string; from: string; to: string; negate?: boolean; eventId?: string; eventName?: string }
   | { id: number; group: 'service'; type: 'service'; area: string; committee: string; position: string; status: ServiceStatus; from: string; to: string }
   | { id: number; group: 'form'; type: 'form'; formId: string; formName: string; status: FormResponseStatus; from: string; to: string; field: string; fieldVal: string }
   | { id: number; group: 'donor'; type: 'donor'; value: 'yes' | 'no' }

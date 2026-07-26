@@ -146,6 +146,34 @@ server-side: si llega recommendations para un grupo N1-N3, ignorarlas o rechazar
 Agregá test de la condición de visibilidad/aceptación.
 ```
 
+### [ ] MAT-1 · Resumen de compromisos entendible en matrícula (feedback 2026-07-26)
+Archivos: `src/app/(admin)/matricula/page.tsx` (`StageRequirementsEmptyState`, líneas ~540-616), `src/lib/studies/eligibility.ts`, referencia de estilo: `RequirementChips` en `src/app/(admin)/estudios/analisis/page.tsx` y `CommitmentRow` en la misma página de matrícula
+
+```
+En la página de matrícula, cuando una etapa está bloqueada, el bloque
+StageRequirementsEmptyState (src/app/(admin)/matricula/page.tsx líneas ~540-616) une los
+textos crudos de reasons_blocked de todos los estudios gateway de la etapa. Resultado
+confuso: aparecen prerequisitos mezclados ("Necesitás completar Nivel 4 primero" Y
+"Necesitás completar Nivel 2 primero" a la vez) más un párrafo largo de asistencia.
+Reemplazá esa unión de strings por un resumen estructurado y mínimo:
+1) No agregues strings: usá los datos estructurados del EligibilityResult (o extendé
+   computeEligibility en src/lib/studies/eligibility.ts para exponer flags por tipo de
+   requisito: prerequisite, donor, server, attendance, age) en vez de parsear texto.
+2) Prerequisitos: mostrar solo el MÍNIMO real de la cadena — si entre los gateway faltan
+   N2 y N4, el mínimo es el nivel más bajo que le falta al miembro según su avance
+   (o un genérico "Completar los estudios de niveles" si aplica a toda la cadena).
+   Nunca listar dos niveles de la misma cadena a la vez.
+3) Compromisos: mostrarlos con las mismas etiquetas cortas que ya se usan en el resto del
+   sistema (CommitmentRow en matrícula y RequirementChips en /estudios/analisis):
+   "Donador/a activo/a", "Servidor/a en comité", "Asistencia activa". El detalle largo
+   ("al menos 6 charlas con check-in...") va como tooltip o texto secundario, no como
+   ítem principal. Deduplicar: cada compromiso aparece una sola vez.
+4) Mantener las dos columnas "Ya cumplís" / "Te falta" con el mismo estilo visual.
+No cambiés la lógica de elegibilidad, solo cómo se resume y presenta.
+Tests del resumen: etapa con gateways que piden N2 y N4 → muestra solo el mínimo;
+compromisos repetidos entre estudios → aparecen una vez.
+```
+
 ### Calendario público y eventos (feedback 2026-07-26)
 
 ### [ ] EVE-1 · Detalle de evento público + botón inscribirse con login
@@ -203,7 +231,7 @@ Tests del endpoint de upload (MIME inválido, tamaño excedido).
 
 ## Fase 2 — Filtros del padrón (hacer los 3 seguidos, misma zona de código)
 
-### [ ] FIL-1 · Filtro de miembros: NO asistió a un evento
+### [x] FIL-1 · Filtro de miembros: NO asistió a un evento — HECHO 2026-07-26 (negate como anti-join vía sets exclude existentes; eventId puntual con combobox; endpoint liviano `/api/members/event-options`; labels + 4 tests)
 Archivos: `src/types/filters.ts`, `src/components/members/AdvancedFilters.tsx`, `src/lib/supabase/queries/members.ts` (evaluación `attendance`, líneas ~355-428), `src/lib/condition-labels.ts`
 
 ```

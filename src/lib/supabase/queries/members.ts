@@ -353,10 +353,15 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         break
       }
       case 'attendance': {
+        // FIL-1: con negate=true el set matcheado va a EXCLUDE (anti-join sobre
+        // el conjunto base: quedan quienes NO tienen asistencia que cumpla).
+        const target = (set: Set<string>) => (c.negate ? res.exclude.push(set) : res.include.push(set))
+        // Evento puntual: solo si es un UUID válido (anti filter-injection, mismo criterio que c.area).
+        const eventId = c.eventId && UUID_RE.test(c.eventId) ? c.eventId : ''
         // Sin refinamiento → criterio de asistencia activa (≥6 charlas en 6 meses, con al menos una en los últimos 60 días).
-        const hasRefine = !!(c.eventType || c.from || c.to || (c.sedes && c.sedes.length) || c.camp || (c.qtyOp && c.qtyOp !== 'any'))
+        const hasRefine = !!(c.eventType || c.from || c.to || (c.sedes && c.sedes.length) || c.camp || (c.qtyOp && c.qtyOp !== 'any') || eventId)
         if (!hasRefine) {
-          res.include.push(new Set(await getActiveAttendanceMemberIds()))
+          target(new Set(await getActiveAttendanceMemberIds()))
           break
         }
         // Cuenta asistencias por miembro filtrando por tipo de evento (id real de
@@ -377,6 +382,7 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const applyEventFilters = (q: any) => {
+          if (eventId) q = q.eq('event_id', eventId)
           if (c.eventType) q = q.eq('events.event_type', c.eventType)
           if (sedeUuids.length) q = q.in('events.sede_id', sedeUuids)
           if (campLike) q = q.ilike('events.title', `%${campLike}%`)
@@ -424,7 +430,7 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
           : count >= 1 // 'any'
         const set = new Set<string>()
         for (const [id, count] of counts) if (passes(count)) set.add(id)
-        res.include.push(set)
+        target(set)
         break
       }
       case 'status': {
