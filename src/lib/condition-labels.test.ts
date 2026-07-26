@@ -31,6 +31,18 @@ describe('conditionLabel — attendance (FIL-1)', () => {
       .toBe('No asistió: Campamento Verano 2026 · 15 ene 2026')
   })
 
+  it('registration: inscrito/no inscrito con estado del tiquete (FIL-2)', () => {
+    const base = {
+      id: 2, group: 'attend', type: 'registration',
+      eventId: '', eventType: '', ticketStatus: 'any', from: '', to: '',
+    } as const
+    expect(conditionLabel({ ...base } as FilterCondition)).toBe('Inscrito: Evento')
+    expect(conditionLabel({ ...base, negate: true, eventName: 'Congreso 2026' } as FilterCondition))
+      .toBe('No inscrito: Congreso 2026')
+    expect(conditionLabel({ ...base, ticketStatus: 'paid', eventTypeName: 'Campamento' } as FilterCondition))
+      .toBe('Inscrito: Campamento (pagado)')
+  })
+
   it('conserva el sufijo de cantidad', () => {
     expect(conditionLabel(attend({ qtyOp: 'gte', qty: '3', eventTypeName: 'Charla', eventType: 'charla' })))
       .toBe('Charla ≥3×')

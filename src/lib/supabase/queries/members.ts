@@ -433,6 +433,34 @@ export async function resolveAdvancedConditions(conditions: FilterCondition[]): 
         target(set)
         break
       }
+      case 'registration': {
+        // FIL-2: inscripción a eventos (event_registrations), con estado del
+        // tiquete y la misma negación anti-join que attendance. El rango de
+        // fechas se evalúa sobre la fecha del EVENTO (no de la inscripción).
+        const target = (set: Set<string>) => (c.negate ? res.exclude.push(set) : res.include.push(set))
+        const eventId = c.eventId && UUID_RE.test(c.eventId) ? c.eventId : ''
+        const set = new Set<string>()
+        for (let from = 0; ; from += 1000) {
+          let q = supabase
+            .from('event_registrations')
+            .select('member_id, events!inner(event_type, starts_at)')
+            .not('member_id', 'is', null)
+            .order('id')
+            .range(from, from + 999)
+          if (eventId) q = q.eq('event_id', eventId)
+          if (c.eventType) q = q.eq('events.event_type', c.eventType)
+          if (c.ticketStatus && c.ticketStatus !== 'any') q = q.eq('payment_status', c.ticketStatus)
+          if (c.from) q = q.gte('events.starts_at', c.from)
+          if (c.to) q = q.lte('events.starts_at', `${c.to}T23:59:59.999Z`)
+          const { data, error } = await q
+          if (error) throw error
+          const rows = (data ?? []) as Array<{ member_id: string | null }>
+          for (const r of rows) if (r.member_id) set.add(r.member_id)
+          if (rows.length < 1000) break
+        }
+        target(set)
+        break
+      }
       case 'status': {
         res.isActiveOverride = c.value === 'active'
         break

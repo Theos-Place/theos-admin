@@ -17,6 +17,14 @@ export function conditionLabel(c: FilterCondition): string {
       const base = (!c.qty || c.qtyOp === 'any') ? type : `${type} ${sym}${c.qty}×`
       return c.negate ? `No asistió: ${base}` : base
     }
+    case 'registration': {
+      // FIL-2: inscripción a eventos, con estado del tiquete opcional.
+      const what = c.eventName || c.eventTypeName || c.eventType || 'Evento'
+      const ticket = c.ticketStatus && c.ticketStatus !== 'any'
+        ? ` (${{ pending: 'pendiente', paid: 'pagado', exempted: 'exonerado', expired: 'expirado' }[c.ticketStatus]})`
+        : ''
+      return `${c.negate ? 'No inscrito' : 'Inscrito'}: ${what}${ticket}`
+    }
     case 'service': {
       if (c.position) return `Puesto: ${c.position}`
       if (c.committee) return `Comité: ${c.committee}`

@@ -14,7 +14,7 @@ import { DatePicker } from '@/components/events/DatePicker'
 import { Combobox, type ComboItem, type ComboValue } from '@/components/shared/Combobox'
 import { formatDate } from '@/lib/format'
 import type { FormTemplate } from '@/types/forms'
-import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator } from '@/types/filters'
+import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator, TicketStatus } from '@/types/filters'
 
 const FORM_CATEGORY_LABEL: Record<FormTemplate['category'], string> = {
   event_registration: 'Inscripción eventos',
@@ -270,6 +270,26 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   )
 }
 
+// Catálogo liviano de eventos para los panels de asistencia/inscripción
+// (FIL-1/FIL-2). Caché a nivel de módulo: un solo fetch por sesión de página.
+let eventOptionsCache: ComboItem[] | null = null
+function useEventOptions(): ComboItem[] {
+  const [items, setItems] = useState<ComboItem[]>(eventOptionsCache ?? [])
+  useEffect(() => {
+    if (eventOptionsCache) return
+    fetch('/api/members/event-options')
+      .then(r => (r.ok ? r.json() : { items: [] }))
+      .then(d => {
+        const mapped = ((d.items ?? []) as Array<{ id: string; title: string; starts_at: string | null }>)
+          .map(e => ({ value: e.id, label: e.starts_at ? `${e.title} · ${formatDate(e.starts_at)}` : e.title }))
+        eventOptionsCache = mapped
+        setItems(mapped)
+      })
+      .catch(() => {})
+  }, [])
+  return items
+}
+
 function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const eventTypes = useEventTypes() // catálogo real de la BD (id + nombre)
@@ -284,14 +304,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   // FIL-1: negación ("no asistió") y evento puntual.
   const [mode, setMode]                 = useState<'attended' | 'not_attended'>('attended')
   const [eventPick, setEventPick]       = useState<ComboValue>({ kind: 'empty' })
-  const [eventItems, setEventItems]     = useState<ComboItem[]>([])
-  useEffect(() => {
-    fetch('/api/members/event-options')
-      .then(r => (r.ok ? r.json() : { items: [] }))
-      .then(d => setEventItems(((d.items ?? []) as Array<{ id: string; title: string; starts_at: string | null }>)
-        .map(e => ({ value: e.id, label: e.starts_at ? `${e.title} · ${formatDate(e.starts_at)}` : e.title }))))
-      .catch(() => {})
-  }, [])
+  const eventItems = useEventOptions()
 
   function toggleSede(id: string) {
     setSedes(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
@@ -426,6 +439,90 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
           setAttType('any'); setQtyOp('any'); setQty('')
           setFrom(''); setTo('')
           setMode('attended'); setEventPick({ kind: 'empty' })
+        }}
+      />
+    </div>
+  )
+}
+
+// FIL-2: condición de INSCRIPCIÓN a eventos (event_registrations), con estado
+// del tiquete y la misma negación que asistencia. Combinada con AND contra la
+// condición de asistencia permite "inscritos que no asistieron".
+function RegistrationPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const eventTypes = useEventTypes()
+  const eventItems = useEventOptions()
+  const [mode, setMode]           = useState<'registered' | 'not_registered'>('registered')
+  const [eventPick, setEventPick] = useState<ComboValue>({ kind: 'empty' })
+  const [eventType, setEventType] = useState('')
+  const [ticketStatus, setTicket] = useState<TicketStatus>('any')
+  const [from, setFrom]           = useState('')
+  const [to, setTo]               = useState('')
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Condición</Label>
+        <RadioGroup<'registered' | 'not_registered'>
+          options={[
+            { value: 'registered',     label: 'Inscrito' },
+            { value: 'not_registered', label: 'No inscrito' },
+          ]}
+          value={mode}
+          onChange={setMode}
+        />
+      </div>
+
+      <div>
+        <Label>Evento puntual (opcional)</Label>
+        <Combobox
+          items={eventItems}
+          value={eventPick}
+          onChange={setEventPick}
+          allowCreate={false}
+          allowEmpty
+          emptyLabel="Cualquier evento"
+          placeholder="Buscar evento por nombre…"
+          ariaLabel="Evento puntual de la inscripción"
+        />
+      </div>
+
+      <div>
+        <Label>Tipo de evento</Label>
+        <Sel value={eventType} onChange={setEventType}>
+          <option value="">Cualquier evento</option>
+          {eventTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Estado del tiquete</Label>
+        <Sel value={ticketStatus} onChange={v => setTicket(v as TicketStatus)}>
+          <option value="any">Cualquiera</option>
+          <option value="pending">Pendiente</option>
+          <option value="paid">Pagado</option>
+          <option value="exempted">Exonerado</option>
+          <option value="expired">Expirado</option>
+        </Sel>
+      </div>
+
+      <div>
+        <Label>Rango de fechas del evento</Label>
+        <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
+      </div>
+
+      <AddBtn
+        onClick={() => {
+          addCondition({
+            group: 'attend', type: 'registration',
+            eventId: eventPick.kind === 'existing' ? eventPick.value : '',
+            eventName: eventPick.kind === 'existing' ? eventPick.label : undefined,
+            eventType,
+            eventTypeName: eventTypes.find(t => t.id === eventType)?.name,
+            ticketStatus, from, to,
+            negate: mode === 'not_registered',
+          })
+          setMode('registered'); setEventPick({ kind: 'empty' })
+          setEventType(''); setTicket('any'); setFrom(''); setTo('')
         }}
       />
     </div>
@@ -756,7 +853,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
 
   const conditionTypes: Record<Tab, FilterCondition['type'][]> = {
     study:   ['study'],
-    attend:  ['attendance'],
+    attend:  ['attendance', 'registration'],
     service: ['service'],
     form:    ['form'],
     profile: ['donor', 'age', 'status', 'leader', 'marital', 'created'],
@@ -797,7 +894,17 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
         {/* Left: inputs */}
         <div className="p-5 border-r border-[var(--outline-variant)]">
           {activeTab === 'study'   && <StudyPanel  addCondition={addCondition} />}
-          {activeTab === 'attend'  && <AttendPanel addCondition={addCondition} />}
+          {activeTab === 'attend'  && (
+            <div className="space-y-6">
+              <AttendPanel addCondition={addCondition} />
+              <div className="border-t border-[var(--outline-variant)] pt-5">
+                <p className="mb-3 text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                  Inscripción a evento
+                </p>
+                <RegistrationPanel addCondition={addCondition} />
+              </div>
+            </div>
+          )}
           {activeTab === 'service' && <ServicePanel addCondition={addCondition} />}
           {activeTab === 'form'    && <FormPanel   addCondition={addCondition} />}
           {activeTab === 'profile' && (

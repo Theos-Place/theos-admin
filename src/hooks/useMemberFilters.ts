@@ -19,7 +19,13 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
       if (c.status === 'not_taken') return !inCompleted && !inProgress
       return inCompleted || inProgress
     }
+    case 'registration':
+      // FIL-2: las inscripciones no viajan en el Member del padrón; el filtro
+      // real es server-side (members.ts). Acá no se re-filtra.
+      return true
     case 'attendance': {
+      // FIL-1: negación y evento puntual solo se evalúan server-side.
+      if (c.negate || c.eventId) return true
       let recs = m.attendance_history
       if (c.eventType === 'Charla')
         recs = recs.filter(r => r.type === 'Charla semanal' || r.type === 'Charla mensual')

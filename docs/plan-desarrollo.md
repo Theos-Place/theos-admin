@@ -146,6 +146,26 @@ server-side: si llega recommendations para un grupo N1-N3, ignorarlas o rechazar
 Agregá test de la condición de visibilidad/aceptación.
 ```
 
+### [ ] FIN-1 · Donaciones: stat de donadores activos + total al filtrar (feedback 2026-07-26)
+Archivos: `src/app/(admin)/finanzas/donaciones/page.tsx` (stat card línea ~131, lista y filtros), `src/app/api/finance/donations/*`, `src/lib/supabase/queries/finance.ts`
+
+```
+Dos cambios en la página de donaciones (src/app/(admin)/finanzas/donaciones/page.tsx):
+1) Reemplazar la stat card "Sin identificar" (línea ~131) por "Donadores activos": cantidad
+   de miembros con members.is_donor = true. Ese flag YA se recalcula como "donó en los
+   últimos ~2 trimestres" (ver RPC de is_donor en la migración baseline y el trigger que lo
+   marca en cada donación) — usalo, no inventés otra definición. Exponer el conteo desde el
+   API/query que alimenta las stats de la página (o donation_stats si es RPC).
+   OJO: solo se quita la CARD; el banner de alerta de donaciones sin identificar y el modal
+   para identificarlas (líneas ~154 y ~344) se mantienen, porque son accionables.
+2) Total al filtrar: cuando la lista tiene cualquier filtro aplicado (búsqueda, fechas,
+   identificado/no, etc.), mostrar junto al conteo de resultados la SUMA de los montos
+   filtrados (usar AmountDisplay con el mismo comportamiento de ocultar/revelar montos que
+   ya tiene la página). Si la lista está paginada server-side, la suma debe calcularse
+   server-side sobre el filtro completo, no solo la página visible.
+Permisos sin cambio (finanzas, direccion). Test del total filtrado con paginación.
+```
+
 ### [ ] MAT-1 · Resumen de compromisos entendible en matrícula (feedback 2026-07-26)
 Archivos: `src/app/(admin)/matricula/page.tsx` (`StageRequirementsEmptyState`, líneas ~540-616), `src/lib/studies/eligibility.ts`, referencia de estilo: `RequirementChips` en `src/app/(admin)/estudios/analisis/page.tsx` y `CommitmentRow` en la misma página de matrícula
 
@@ -250,7 +270,7 @@ La negación se combina con las demás condiciones con el AND existente (el OR e
 hace en FIL-3, no lo toqués acá). Agregá tests de la query con negate.
 ```
 
-### [ ] FIL-2 · Filtro de miembros: por inscripción a evento
+### [x] FIL-2 · Filtro de miembros: por inscripción a evento — HECHO 2026-07-26 (condición `registration` contra event_registrations: evento puntual/tipo, estado del tiquete, rango sobre fecha del evento, negación anti-join; panel propio en el tab Asistencia; labels + tests)
 Archivos: los mismos de FIL-1 + tabla `event_registrations`. Depende de: FIL-1
 
 ```
