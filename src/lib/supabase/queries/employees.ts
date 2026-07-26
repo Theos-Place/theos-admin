@@ -138,7 +138,6 @@ export async function deletePosition(id: string): Promise<void> {
 export type EmployeeWriteInput = {
   member_id?: string | null
   position_id?: string | null
-  position?: string | null // columna legacy NOT NULL; se rellena desde el puesto si falta
   contract_type?: ContractType | null
   start_date?: string
   end_date?: string | null
@@ -150,18 +149,7 @@ export type EmployeeWriteInput = {
 
 export async function createEmployee(input: EmployeeWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const row: EmployeeWriteInput = { ...input }
-  // `position` (texto) es NOT NULL. Si no viene, lo derivamos del puesto pagado.
-  if (!row.position) {
-    if (row.position_id) {
-      const { data: pos } = await supabase
-        .from('paid_positions').select('name').eq('id', row.position_id).maybeSingle()
-      row.position = (pos as { name: string } | null)?.name ?? 'Sin definir'
-    } else {
-      row.position = 'Sin definir'
-    }
-  }
-  const { data, error } = await supabase.from('employees').insert(row as Insertable<'employees'>).select('id').single()
+  const { data, error } = await supabase.from('employees').insert(input as Insertable<'employees'>).select('id').single()
   if (error) throw error
   return data as { id: string }
 }
