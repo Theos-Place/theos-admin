@@ -53,9 +53,7 @@ de crear/editar evento (src/app/(admin)/eventos/nuevo y [id]/editar), y filtro i
 Test del filtro público.
 ```
 
-### [ ] DEU-3 · Columna legacy `employees.position`
-
-> Decisión 2026-07-25: eliminarla (la tabla employees está vacía en producción).
+### [x] DEU-3 · Columna legacy `employees.position` — PR #36 (migración 20260726100000, DROP COLUMN; decisión 2026-07-25: eliminarla, tabla vacía en producción)
 
 ```
 employees.position es una columna legacy NOT NULL que se rellena desde el puesto por
