@@ -95,7 +95,7 @@ export async function importVacancies(rows: ImportVacancyRow[]): Promise<Vacancy
       expires_at: r.expires_at || null,
       location: r.location?.toString().trim() || null,
       is_featured: !!r.is_featured,
-      status: 'published',
+      status: 'aprobado',
       published_at: new Date().toISOString(),
     })
   })

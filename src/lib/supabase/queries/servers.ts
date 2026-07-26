@@ -47,7 +47,7 @@ export type DbVacancy = {
   commitment: string | null
   slots_total: number
   slots_filled: number
-  status: 'draft' | 'published' | 'filled' | 'closed' | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado'
+  status: 'creado' | 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada'
   published_at: string | null
   created_at: string
   expires_at: string | null
@@ -342,7 +342,7 @@ export type VacancyWriteInput = {
   schedule?: string | null
   commitment?: string | null
   slots_total?: number
-  status?: 'draft' | 'published' | 'filled' | 'closed' | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado'
+  status?: 'creado' | 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada'
   expires_at?: string | null
   location?: string | null
   notes?: string | null
@@ -352,7 +352,7 @@ export type VacancyWriteInput = {
 // Vacantes
 export async function createVacancy(input: VacancyWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const row = { ...input, published_at: input.status === 'published' ? new Date().toISOString() : null }
+  const row = { ...input, published_at: input.status === 'aprobado' ? new Date().toISOString() : null }
   const { data, error } = await supabase.from('vacancies').insert(row).select('id').single()
   if (error) throw error
   return data as { id: string }
@@ -418,8 +418,8 @@ export async function createVacancyRequests(
 export async function updateVacancy(id: string, patch: Partial<VacancyWriteInput>): Promise<void> {
   const supabase = createAdminClient()
   const row: Record<string, unknown> = { ...patch }
-  // Al publicar, sellamos published_at si no estaba puesto.
-  if (patch.status === 'published') row.published_at = new Date().toISOString()
+  // Al aprobar (publicar), sellamos published_at si no estaba puesto.
+  if (patch.status === 'aprobado') row.published_at = new Date().toISOString()
   const { error } = await supabase.from('vacancies').update(row as Updatable<'vacancies'>).eq('id', id)
   if (error) throw error
 }
@@ -503,7 +503,7 @@ export async function approveApplications(ids: string[], actorUserId?: string): 
  *  No toca aplicaciones ni servidores — es el flujo de la solicitud de cupos. */
 export async function setVacanciesStatus(
   ids: string[],
-  status: 'enviado_lider' | 'aprobado' | 'denegado',
+  status: 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada',
 ): Promise<{ updated: number }> {
   if (ids.length === 0) return { updated: 0 }
   const supabase = createAdminClient()

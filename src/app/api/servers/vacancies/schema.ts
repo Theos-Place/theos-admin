@@ -15,7 +15,7 @@ export const vacancyWriteSchema = z
     commitment: z.string().trim().nullish(),
     slots_total: z.number().int().min(1).max(1000).optional(),
     status: z
-      .enum(['draft', 'published', 'filled', 'closed', 'creado', 'enviado_lider', 'aprobado', 'denegado'])
+      .enum(['creado', 'enviado_lider', 'aprobado', 'denegado', 'cerrada'])
       .optional(),
     expires_at: z.string().trim().min(1).nullish(),
     location: z.string().trim().nullish(),

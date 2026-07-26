@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { type Vacancy, type VacancyStatus } from '@/types/server'
+import { VACANCY_STATE_BADGE, VACANCY_STATE_LABEL } from '@/lib/servers/vacancy-states'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -11,27 +12,8 @@ type Props = {
   vacancies: Vacancy[]
 }
 
-const STATUS_COLORS: Record<VacancyStatus, string> = {
-  draft: 'bg-navy-light/10 text-navy-light/60',
-  published: 'bg-teal-deep/10 text-teal-deep',
-  filled: 'bg-navy/10 text-navy',
-  closed: 'bg-coral/10 text-coral',
-  creado: 'bg-navy-light/10 text-navy-light/70',
-  enviado_lider: 'bg-teal-deep/10 text-teal-deep',
-  aprobado: 'bg-teal-soft/30 text-teal-deep',
-  denegado: 'bg-coral/10 text-coral',
-}
-
-const STATUS_LABELS: Record<VacancyStatus, string> = {
-  draft: 'Borrador',
-  published: 'Publicada',
-  filled: 'Ocupada',
-  closed: 'Cerrada',
-  creado: 'Creado',
-  enviado_lider: 'Enviado a líder',
-  aprobado: 'Aprobado',
-  denegado: 'Denegado',
-}
+const STATUS_COLORS: Record<VacancyStatus, string> = VACANCY_STATE_BADGE
+const STATUS_LABELS: Record<VacancyStatus, string> = VACANCY_STATE_LABEL
 
 export function VacanciesTab({ committeeId, vacancies }: Props) {
   return (

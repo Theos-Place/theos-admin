@@ -20,7 +20,7 @@ export async function POST(
     const { data: vac } = await supabase.from('vacancies').select('status').eq('id', id).maybeSingle()
     const status = (vac as { status: string } | null)?.status
     if (!status) return NextResponse.json({ error: 'Puesto no encontrado' }, { status: 404 })
-    if (status !== 'published' && status !== 'aprobado') {
+    if (status !== 'aprobado') {
       return NextResponse.json({ error: 'Este puesto no está disponible para aplicar.' }, { status: 409 })
     }
 

@@ -235,7 +235,7 @@ export default function VacantesPage() {
   )
 }
 
-// Cerrar puesto (solo admin). PUT status=closed; recarga la lista.
+// Cerrar puesto (solo admin). PUT status=cerrada; recarga la lista.
 function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClosed: () => void }) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
@@ -246,7 +246,7 @@ function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClos
     setBusy(true)
     try {
       const res = await fetch(`/api/servers/vacancies/${vacancyId}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'closed' }),
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cerrada' }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       onClosed()

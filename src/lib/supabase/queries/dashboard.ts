@@ -92,7 +92,7 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
 
     count(supabase, 'volunteers', (q) => q.eq('status', 'active')),
     count(supabase, 'areas', (q) => q.eq('area_type', 'committee').eq('is_active', true)),
-    count(supabase, 'vacancies', (q) => q.eq('status', 'published')),
+    count(supabase, 'vacancies', (q) => q.eq('status', 'aprobado')),
     count(supabase, 'applications', (q) => q.eq('status', 'pending')),
 
     count(supabase, 'members', (q) => q.eq('is_donor', true)),

@@ -47,8 +47,7 @@ export type CommitteeData = {
 }
 
 export type VacancyStatus =
-  | 'draft' | 'published' | 'filled' | 'closed'
-  | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado'
+  | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada'
 
 export type Vacancy = {
   id: string
