@@ -10,7 +10,10 @@ type Enrollee = { member_id: string; name: string; email: string | null; has_ced
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
 const TIMES = ['Tarde', 'Noche']
-const ZONES = ['Virtual', 'Este de San José', 'Oeste de San José', 'Alajuela', 'Cartago', 'Liberia', 'Heredia']
+// Lista fija a propósito (PRE-2, decisión 2026-07-25): NO conectar al catálogo
+// de sedes. Registros viejos con zonas fuera de la lista se muestran tal cual
+// en la cola (PrematrimonialQueue hace join de lo guardado).
+const ZONES = ['Este de San José', 'Oeste de San José', 'Alajuela', 'Cartago', 'Liberia', 'Heredia']
 const OFFICIANTS = ['Ernesto Desanti', 'Roberto Acosta', 'Héctor Morales', 'Mario Madrigal', 'Pablo Rojas', 'Roberto Morales', 'No requerimos de este servicio', 'Otro (especificar en comentarios)']
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {

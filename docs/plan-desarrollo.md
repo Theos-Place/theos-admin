@@ -79,7 +79,7 @@ No cambiés el contrato de respuesta (solo nombre + has_n2, por privacidad).
 Verificá con un test del endpoint buscando por correo con mayúsculas mezcladas.
 ```
 
-### [ ] PRE-2 · Zonas fijas del form prematrimonial
+### [x] PRE-2 · Zonas fijas del form prematrimonial — HECHO 2026-07-26 (se quitó 'Virtual'; las otras 6 ya estaban en el orden pedido; 0 registros viejos en prod)
 Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (constante `ZONES`, línea ~13)
 
 ```
