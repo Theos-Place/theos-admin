@@ -62,6 +62,10 @@ export default function RevisionPagosPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<StatusTab>('all')
   const [conceptFilter, setConceptFilter] = useState<ConceptFilter>('all')
+  // REV-1: filtros por plan y dirigente del grupo (solo aplican a matrícula).
+  const [planFilter, setPlanFilter] = useState('all')
+  const [leaderFilter, setLeaderFilter] = useState('all')
+  const [options, setOptions] = useState<{ plans: { id: string; name: string }[]; leaders: { id: string; name: string }[] }>({ plans: [], leaders: [] })
   const [busyId, setBusyId] = useState<string | null>(null)
   const [approveTarget, setApproveTarget] = useState<QueueRow | null>(null)
   const [reject, setReject] = useState<QueueRow | null>(null)
@@ -82,13 +86,26 @@ export default function RevisionPagosPage() {
     const params = new URLSearchParams()
     if (statusFilter !== 'all') params.set('status', statusFilter)
     if (conceptFilter !== 'all') params.set('concept', conceptFilter)
+    if (conceptFilter === 'matricula') {
+      if (planFilter !== 'all') params.set('planId', planFilter)
+      if (leaderFilter !== 'all') params.set('leaderId', leaderFilter)
+    }
     fetch(`/api/payments/queue?${params.toString()}`)
       .then(r => (r.ok ? r.json() : Promise.reject()))
       .then((d: QueueRow[]) => setRows(Array.isArray(d) ? d : []))
       .catch(() => setRows([]))
       .finally(() => setLoading(false))
-  }, [statusFilter, conceptFilter])
+  }, [statusFilter, conceptFilter, planFilter, leaderFilter])
   useEffect(() => { if (canView) refetch() }, [canView, refetch])
+
+  // Opciones de los filtros de matrícula (planes activos + dirigentes con grupo).
+  useEffect(() => {
+    if (!canView) return
+    fetch('/api/payments/queue/options')
+      .then(r => (r.ok ? r.json() : { plans: [], leaders: [] }))
+      .then(d => setOptions({ plans: d.plans ?? [], leaders: d.leaders ?? [] }))
+      .catch(() => {})
+  }, [canView])
 
   // La selección en lote solo tiene sentido sobre lo que se puede aprobar/rechazar.
   const filtered = rows
@@ -233,7 +250,7 @@ export default function RevisionPagosPage() {
         ))}
       </div>
 
-      {/* Filtro por concepto */}
+      {/* Filtro por concepto + filtros de matrícula (plan/dirigente, REV-1) */}
       <div className="flex items-center gap-2 flex-wrap">
         {([['all', 'Todos'], ['matricula', 'Matrícula'], ['evento', 'Evento'], ['folletos', 'Folletos']] as [ConceptFilter, string][]).map(([id, label]) => (
           <button
@@ -247,6 +264,28 @@ export default function RevisionPagosPage() {
             {label}
           </button>
         ))}
+        <select
+          aria-label="Filtrar por estudio o capacitación"
+          value={planFilter}
+          onChange={e => setPlanFilter(e.target.value)}
+          disabled={conceptFilter !== 'matricula'}
+          title={conceptFilter !== 'matricula' ? 'Disponible con el concepto Matrícula' : undefined}
+          className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[11px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <option value="all">Todos los estudios</option>
+          {options.plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <select
+          aria-label="Filtrar por dirigente del grupo"
+          value={leaderFilter}
+          onChange={e => setLeaderFilter(e.target.value)}
+          disabled={conceptFilter !== 'matricula'}
+          title={conceptFilter !== 'matricula' ? 'Disponible con el concepto Matrícula' : undefined}
+          className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[11px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <option value="all">Todos los dirigentes</option>
+          {options.leaders.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+        </select>
       </div>
 
       {canReview && sel.count > 0 && (

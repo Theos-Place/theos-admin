@@ -515,8 +515,24 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
 export async function getPendingPaymentsQueue(filters: {
   status?: PaymentQueueStatus
   concept?: PaymentConcept
+  /** REV-1: filtros por plan del grupo y dirigente del grupo. Solo tienen
+   *  sentido para concepto matrícula (fuerzan concept='matricula'). */
+  planId?: string
+  leaderId?: string
 } = {}): Promise<PaymentQueueRow[]> {
   const supabase = createAdminClient()
+  // Con filtro de plan/dirigente el embed pasa a !inner para que el filtro
+  // sobre la tabla anidada excluya las filas padre que no matchean.
+  const byGroup = !!(filters.planId || filters.leaderId)
+  const enrollmentSel = byGroup
+    ? `enrollment:study_enrollments!payments_enrollment_id_fkey!inner(
+        group:study_groups!study_enrollments_group_id_fkey!inner(plan:study_plans(name)),
+        plan_direct:study_plans!study_enrollments_plan_id_fkey(name)
+      )`
+    : `enrollment:study_enrollments!payments_enrollment_id_fkey(
+        group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
+        plan_direct:study_plans!study_enrollments_plan_id_fkey(name)
+      )`
   let q = supabase
     .from('payments')
     .select(`
@@ -524,14 +540,15 @@ export async function getPendingPaymentsQueue(filters: {
       status, review_status, reviewed_at,
       member:members!payments_member_id_fkey(first_name, last_name),
       event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
-      enrollment:study_enrollments!payments_enrollment_id_fkey(
-        group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
-        plan_direct:study_plans!study_enrollments_plan_id_fkey(name)
-      )
+      ${enrollmentSel}
     `)
     .not('concept', 'is', null)
 
-  if (filters.concept) q = q.eq('concept', filters.concept)
+  if (byGroup) {
+    q = q.eq('concept', 'matricula')
+    if (filters.planId) q = q.eq('enrollment.group.plan_id', filters.planId)
+    if (filters.leaderId) q = q.eq('enrollment.group.leader_id', filters.leaderId)
+  } else if (filters.concept) q = q.eq('concept', filters.concept)
 
   if (filters.status === 'en_revision') q = q.eq('status', 'pending').eq('review_status', 'en_revision')
   else if (filters.status === 'pendiente') q = q.eq('status', 'pending').or('review_status.is.null,review_status.eq.rechazado')

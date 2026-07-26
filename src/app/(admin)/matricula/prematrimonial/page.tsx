@@ -233,7 +233,7 @@ export default function PrematrimonialWizardPage() {
             <label className="flex items-center gap-2 text-sm text-navy font-body"><input type="checkbox" checked={venueOutsideGam} onChange={e => setVenueOutsideGam(e.target.checked)} /> La boda será fuera del GAM</label>
             {venueOutsideGam && <p className="rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-700 font-body">Si la boda es fuera del GAM, avisanos para coordinar.</p>}
             <div>
-              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">¿Quién dirige la ceremonia?</p>
+              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">¿Quién te gustaría que dirigiera la ceremonia?</p>
               <select value={officiant} onChange={e => setOfficiant(e.target.value)} className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body">
                 <option value="">Seleccioná…</option>
                 {OFFICIANTS.map(o => <option key={o} value={o}>{o}</option>)}

@@ -106,7 +106,7 @@ En el wizard prematrimonial (src/app/(admin)/matricula/prematrimonial/page.tsx):
 Usá cálculo de meses calendario, no 180 días. Agregá test unitario de la validación.
 ```
 
-### [ ] PRE-4 · Cambiar pregunta del oficiante
+### [x] PRE-4 · Cambiar pregunta del oficiante — HECHO 2026-07-26
 Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx`
 
 ```
@@ -115,7 +115,7 @@ quién oficia la ceremonia a exactamente: "¿Quién te gustaría que dirigiera l
 Solo cambia el label/copy; las opciones (OFFICIANTS) quedan igual.
 ```
 
-### [ ] REV-1 · Filtros extra en revisión de pagos
+### [x] REV-1 · Filtros extra en revisión de pagos — HECHO 2026-07-26 (params `planId`/`leaderId` con embed `!inner`, endpoint nuevo `/api/payments/queue/options` para roles de revisión, selects deshabilitados fuera de Matrícula; verificado contra producción)
 Archivos: `src/app/(admin)/pagos/revision/page.tsx`, `src/app/api/payments/queue/route.ts`, `src/lib/supabase/queries/payments.ts` (`getPendingPaymentsQueue`)
 
 ```
