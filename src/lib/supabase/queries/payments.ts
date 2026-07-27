@@ -135,6 +135,17 @@ async function findOrCreateSuccessorGroup(
     console.warn('successor create:', createErr.message)
     return null
   }
+  // EST-1: el sucesor hereda dirigente — si estaba inactivo, se activa (las
+  // cadenas N/DIS nunca son campaña). Best-effort: no revienta el cierre
+  // (p. ej. dirigente marcado "no recomendado": queda para gestión manual).
+  try {
+    const { setDirigenteActive } = await import('@/lib/supabase/queries/studies')
+    for (const lid of [src.leader_id, src.co_leader_id]) {
+      if (lid) await setDirigenteActive(lid, true)
+    }
+  } catch (e) {
+    console.warn('successor leader activation:', e)
+  }
   return (created as { id: string }).id
 }
 

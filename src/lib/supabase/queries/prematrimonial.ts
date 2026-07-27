@@ -172,6 +172,17 @@ export async function createGroupForRequest(
   if (gErr) throw gErr
   const groupId = (g as { id: string }).id
 
+  // EST-1: asignar dirigente a un grupo activo lo activa automáticamente
+  // (PREMAT no es campaña). Best-effort: no revierte la creación del grupo.
+  try {
+    const { setDirigenteActive } = await import('@/lib/supabase/queries/studies')
+    for (const lid of [group.leader_id, group.co_leader_id]) {
+      if (lid) await setDirigenteActive(lid, true)
+    }
+  } catch (e) {
+    console.warn('premat create_group leader activation:', e)
+  }
+
   // Agregar a la pareja como enrolled (sin re-cobro: el pago ya fue la llave).
   const rows = [r.requester_member_id, r.spouse_member_id].map(mid => ({
     group_id: groupId, plan_id: planId, member_id: mid, status: 'enrolled',

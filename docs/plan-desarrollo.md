@@ -465,7 +465,7 @@ Actualizá los tests existentes de la validación y agregá casos: N1 completado
 N1 completado sin N2 (falla), N2 waitlist (falla).
 ```
 
-### [ ] EST-1 · Dirigente con grupo activo ⇒ estado activo automático
+### [x] EST-1 · Dirigente con grupo activo ⇒ activo automático — HECHO 2026-07-27 (create/update de grupo ya activaban; se agregó la excepción de campaña vía `leader-activation.ts`, activación en el grupo sucesor del cierre y en el grupo prematrimonial, y la excepción de campaña en el bloqueo de desactivación individual+bulk; 4 tests)
 Archivos: `src/lib/supabase/queries/studies.ts` (`setDirigenteActive`, `bulkSetDirigenteActive`), `src/app/api/studies/dirigentes/bulk-status/route.ts`, asignación de dirigente en grupos (`/api/studies/groups`)
 
 ```
@@ -676,6 +676,31 @@ seguir pasando idénticas.
 
 - **CAM-1 · Matrículas de estudios tipo campaña** — no urge. Definir: ¿sin prerequisitos? ¿cupos? ¿pago? La etapa 'campaña' ya existe en la elegibilidad (campañas sin compromisos) y la excepción de campaña queda implementada en EST-1.
 - **WAP-1 · Canal WhatsApp en comunicaciones** — fase mayor. Hoy solo está modelado en el esquema (`channel_configs.type`, prefs de miembro). Requiere decidir proveedor y costos antes de escribir código.
+
+### Internacionalización (Madrid / Colombia) — contemplar ANTES de migrar datos internacionales
+
+- **INT-1 · Documento de identidad por tipo (cédula / DNI-NIE / pasaporte)** — hoy la
+  identificación es solo `cedula` + `cedula_normalized` (deduplicación, imports, match de
+  dirigentes, requisito del prematrimonial). Para miembros fuera de CR: agregar
+  `document_type` ('cedula' | 'dni_nie' | 'pasaporte' | 'otro', default 'cedula') y
+  generalizar la normalización y la deduplicación a la pareja (tipo, número normalizado).
+  La UI de perfil muestra un selector de tipo de documento; los flujos que hoy exigen
+  "cédula" pasan a exigir "documento de identidad". Los imports aceptan columna de tipo
+  opcional (default cédula). Sin romper: `cedula_normalized` sigue alimentado para los
+  ~23k registros CR existentes. Decisión recomendada: tipo+número, no solo "pasaporte",
+  para cubrir España (DNI/NIE), Colombia (CC) y cualquier país siguiente sin otro cambio
+  de esquema.
+- **INT-2 · Montos multimoneda** — hoy todos los montos (payments, donations, scholarships,
+  refunds, study_plans.cost, events.payment_amount) son numéricos sin moneda, asumidos en
+  colones (₡ hardcodeado en formateo). Agregar columna `currency` (ISO 4217, default 'CRC')
+  en las tablas de dinero, formateo por moneda en un helper único, y definir la regla de
+  reportes/agregados (¿se reporta por moneda separada o se convierte? — decisión de
+  producto pendiente con dirección/finanzas). Alcance inicial recomendado: EUR para Madrid,
+  sin conversión automática (los reportes agregan por moneda). Coordinar con la
+  integración Tilopay (fase 2 del roadmap) para que nazca multimoneda.
+- Relacionado (ya anotado en la respuesta al cuestionario de TI): multi-idioma, zonas
+  horarias de crons (hoy UTC pensado para CR) y GDPR para España — definir en la misma
+  fase, no requieren código todavía.
 
 ---
 

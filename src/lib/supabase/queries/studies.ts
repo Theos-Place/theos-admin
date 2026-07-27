@@ -1,4 +1,5 @@
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
+import { groupLocksLeader } from '@/lib/studies/leader-activation'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
 import { ymdCR } from '@/lib/format'
@@ -704,12 +705,16 @@ export async function membersWithActiveGroups(ids: string[]): Promise<Set<string
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('study_groups')
-    .select('leader_id, co_leader_id')
+    .select('leader_id, co_leader_id, plan:study_plans(level)')
     .in('status', ['en_matricula', 'en_curso'])
   if (error) throw error
   const idSet = new Set(ids)
   const out = new Set<string>()
-  for (const g of (data ?? []) as Array<{ leader_id: string | null; co_leader_id: string | null }>) {
+  type Row = { leader_id: string | null; co_leader_id: string | null; plan: { level: string | null } | { level: string | null }[] | null }
+  for (const g of (data ?? []) as Row[]) {
+    // EST-1: un grupo de campaña NO bloquea la desactivación del dirigente.
+    const plan = Array.isArray(g.plan) ? g.plan[0] : g.plan
+    if (!groupLocksLeader(plan?.level)) continue
     if (g.leader_id && idSet.has(g.leader_id)) out.add(g.leader_id)
     if (g.co_leader_id && idSet.has(g.co_leader_id)) out.add(g.co_leader_id)
   }
@@ -760,12 +765,22 @@ export async function bulkUpdateLeaderStudies(
   return n
 }
 
+/** Nivel del plan (para la excepción de campañas de EST-1). */
+async function planLevelById(supabase: ReturnType<typeof createAdminClient>, planId: string | null | undefined): Promise<string | null> {
+  if (!planId) return null
+  const { data } = await supabase.from('study_plans').select('level').eq('id', planId).maybeSingle()
+  return (data as { level: string | null } | null)?.level ?? null
+}
+
 export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
   await assertLeadersRecommended(supabase, [input.leader_id, input.co_leader_id])
   const { data, error } = await supabase.from('study_groups').insert(input as Insertable<'study_groups'>).select('id').single()
   if (error) throw error
-  await activateLeaders(supabase, [input.leader_id, input.co_leader_id])
+  // EST-1: asignar dirigente lo activa automáticamente — salvo campañas.
+  if (groupLocksLeader(await planLevelById(supabase, input.plan_id))) {
+    await activateLeaders(supabase, [input.leader_id, input.co_leader_id])
+  }
   return data as { id: string }
 }
 
@@ -778,7 +793,11 @@ export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): 
   const { error } = await supabase.from('study_groups').update(patch).eq('id', id)
   if (error) throw error
   if ('leader_id' in patch || 'co_leader_id' in patch) {
-    await activateLeaders(supabase, [patch.leader_id, patch.co_leader_id])
+    // EST-1: excepción de campañas — el plan sale del grupo (el patch no lo trae).
+    const { data: g } = await supabase.from('study_groups').select('plan_id').eq('id', id).maybeSingle()
+    if (groupLocksLeader(await planLevelById(supabase, (g as { plan_id: string | null } | null)?.plan_id))) {
+      await activateLeaders(supabase, [patch.leader_id, patch.co_leader_id])
+    }
   }
 }
 
