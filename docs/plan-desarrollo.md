@@ -514,7 +514,7 @@ reutilizalo). Implementá:
 Agregá el cron a vercel.json con horario UTC coherente con los demás. Tests de la transición.
 ```
 
-### [ ] EST-2 · Importar cursos por Excel/CSV
+### [x] EST-2 · Importar cursos por Excel/CSV — HECHO 2026-07-27 (wizard /estudios/importar con preview server-side vía `dry_run`; validación pura `group-import-rules.ts`; dirigente solo por cédula normalizada → sin match = advertencia sin dirigente; zona debe existir (el import NO crea zonas); plantilla .xlsx con dropdowns de planes/zonas/días; import parcial; activa dirigentes EST-1; botón en /estudios; 6 tests)
 Patrón a replicar: import de vacantes (`src/app/(admin)/servidores/admin/importar-vacantes/page.tsx`, `src/app/api/servers/vacancies/import/route.ts` + `import-template/route.ts`, `src/lib/supabase/queries/vacancy-import.ts`)
 
 ```

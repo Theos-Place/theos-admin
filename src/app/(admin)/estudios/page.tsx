@@ -7,8 +7,10 @@ import { toYmdLocal } from '@/lib/format'
 import {
   Users, Clock, AlertTriangle, TrendingUp,
   BookOpen, UserCheck, BarChart2, ListChecks, LayoutList, Inbox,
-  GraduationCap, History, Megaphone,
+  GraduationCap, History, Megaphone, CloudUpload,
 } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import type { StudyDashboardStats } from '@/lib/supabase/queries/studies'
 
 const EMPTY_COUNT = { grupos: 0, inscripciones: 0, unicos: 0 }
@@ -28,6 +30,8 @@ const QUICK_ACCESS = [
 
 export default function EstudiosPage() {
   const { groups } = useStudies('groups')
+  const { user } = useAuth()
+  const canImport = (user?.roles ?? []).some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r) || r === 'admin')
 
   // Solicitudes abiertas (reubicaciones + unirse a grupo + grupo nuevo).
   // El endpoint exige rol de coordinación: con 403 el conteo queda en 0.
@@ -77,15 +81,27 @@ export default function EstudiosPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1
-          className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
-        >
-          Estudios Bíblicos
-        </h1>
-        <p className="mt-1 text-sm text-navy-light/60 font-body">
-          {activeGroups.length} grupos activos en este período
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1
+            className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]"
+          >
+            Estudios Bíblicos
+          </h1>
+          <p className="mt-1 text-sm text-navy-light/60 font-body">
+            {activeGroups.length} grupos activos en este período
+          </p>
+        </div>
+        {/* EST-2: import masivo de grupos — mismo guard que crear grupos (el
+            server re-valida con STUDY_ADMIN_ROLES). */}
+        {canImport && (
+          <Link
+            href="/estudios/importar"
+            className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 px-4 py-2 text-sm text-navy hover:bg-surface-low transition-colors font-body"
+          >
+            <CloudUpload size={15} /> Importar grupos
+          </Link>
+        )}
       </div>
 
       {/* Stat cards */}
