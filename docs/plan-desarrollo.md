@@ -194,6 +194,133 @@ Tests del resumen: etapa con gateways que piden N2 y N4 → muestra solo el mín
 compromisos repetidos entre estudios → aparecen una vez.
 ```
 
+### Estudios, solicitudes y comunicaciones (feedback 2026-07-26, segunda tanda)
+
+### [ ] EST-4 · Grupo virtual ⇒ zona "Virtual" automática
+Archivos: `src/app/(admin)/estudios/grupos/nuevo/page.tsx` (checkbox is_virtual líneas ~346-358, zona ~236-248), `src/app/(admin)/estudios/grupos/[id]/editar/page.tsx` (~271), `src/lib/zones.ts` (`resolveZoneCode`)
+
+```
+En crear/editar grupo de estudio, el checkbox "Grupo virtual" (is_virtual) y la zona son
+campos independientes; hoy un grupo virtual obliga a elegir una zona geográfica.
+Cambio: al marcar "Grupo virtual", la zona debe fijarse automáticamente en "Virtual" y el
+selector de zona deshabilitarse (al desmarcar, se rehabilita y limpia). La zona "Virtual" no
+existe en el catálogo de sedes: crearla vía resolveZoneCode de src/lib/zones.ts (que ya crea
+zonas al vuelo) o con una migración/seed — decidí mirando cómo se listan las sedes en
+useSedes y evitá que "Virtual" aparezca como sede de charlas en otros combos si eso genera
+ruido (revisá consumidores de activeSedes). El nombre generado del grupo debe quedar tipo
+"HER — Virtual". Aplica en nuevo Y editar. No toqués la lógica de autorización de estudios
+virtuales (authorized_virtual_studies), solo la zona. Test del comportamiento del form.
+```
+
+### [ ] EST-5 · Nueva etapa "Avanzada" (CDEB, Hermenéutica, Cómo Dar Charlas)
+Archivos: migración SQL (`study_plans.level` CHECK), `src/lib/studies/eligibility.ts` (`LEVEL_TO_STAGE` líneas 9-14 y requisitos por etapa ~28-30), `src/types/study.ts:13`, `src/data/study-catalog.ts` (HER línea ~238, CDEB ~252, CDC ~253, `STUDY_STAGES` ~262), forms y agrupadores de matrícula/análisis
+
+```
+Crear la etapa "Avanzada" y mover ahí CDEB (Cómo Dar Estudios Bíblicos), HER (Hermenéutica)
+y CDC (Cómo Dar Charlas), que hoy están en etapa intermedia.
+Reglas de la etapa avanzada (decisión confirmada): los MISMOS compromisos que intermedia
+(donador activo + servidor en comité + asistencia reforzada de 12 charlas) Y además solo por
+invitación (el mecanismo invitation-only ya existe: planes ocultos sin invitación activa en
+study_invitations — reutilizalo, no lo dupliqués).
+1) Migración: agregar 'etapa_avanzada' al CHECK de study_plans.level y actualizar esos 3
+   planes (por code: CDEB, HER, CDC). Marcarlos invitation-only si no lo están ya.
+2) src/lib/studies/eligibility.ts: agregar el mapeo en LEVEL_TO_STAGE
+   (etapa_avanzada → 'avanzada') y los requisitos de la etapa (iguales a intermedia).
+   Actualizar el tipo stage en src/types/study.ts.
+3) Catálogo estático src/data/study-catalog.ts: stage 'avanzada' en los 3 y nuevo grupo en
+   STUDY_STAGES.
+4) UI: agregar el optgroup/tab "Etapa Avanzada" donde se agrupa por etapa — form de nuevo
+   grupo (optgroups líneas ~153-155 y ~224-232), página de matrícula (tabs/STAGE_META),
+   /estudios/analisis y /estudios/plan.
+Ojo: hay dos campos con nombre parecido — study_plans.level es la ETAPA;
+study_plans.difficulty ('Básico/Intermedio/Avanzado') es dificultad y NO se toca.
+Tests: elegibilidad de un plan etapa_avanzada (compromisos de intermedia + invitación).
+```
+
+### [ ] EST-6 · Solicitudes de interés: texto claro + quitar flujo de gestión
+Archivos: `src/components/studies/StudyRequestActions.tsx` (disclaimer ~195-199, toast ~148), `src/app/(admin)/estudios/solicitudes/page.tsx`, `src/components/shared/RequestBoard.tsx`, `src/app/api/studies/requests/*`, `src/lib/supabase/queries/study-requests.ts`
+
+```
+Dos cambios sobre las solicitudes de estudio tipo "me interesa" (study_interest). Decisión
+confirmada: quedan como DATOS DE DEMANDA de solo lectura, sin flujo de gestión. Las de
+REUBICACIÓN (relocation) mantienen su flujo completo tal cual.
+1) Texto del form (src/components/studies/StudyRequestActions.tsx): dejar claro que NO vamos
+   a contactar a la persona. Reemplazar el disclaimer (~195-199) por algo como: "Esta
+   solicitud es informativa: nos ayuda a ver qué estudios tienen demanda para abrir grupos
+   nuevos. No te vamos a contactar — revisá la página de Matrícula, ahí van a aparecer los
+   grupos nuevos cuando se abran." Y el toast de éxito (~148) por: "¡Gracias! Registramos tu
+   interés. Revisá la página de Matrícula para ver cuándo se abren grupos nuevos." (quitar
+   "Un coordinador la revisará pronto"). Ajustar también el mensaje de solicitud duplicada
+   para no prometer gestión de un coordinador.
+2) Quitar el flujo de gestión SOLO para study_interest en /estudios/solicitudes: sin asignar,
+   sin tomar, sin resolver/rechazar — la lista queda de lectura (con sus datos: plan, días,
+   horario, zona, fecha) como insumo de demanda. En RequestBoard es genérico: condicioná las
+   acciones por tipo o no pasés assigneesUrl/acciones para interest; las relocation siguen
+   con take/assign/resolve/reject. En el API (/api/studies/requests/[id]) rechazá las
+   acciones de gestión para study_interest con 400 claro (o dejá solo un archivado simple si
+   la UI lo necesita para limpiar la lista — decidilo mirando qué usa la página).
+   No borrés datos históricos: las interest ya resueltas se muestran igual.
+Revisá que /estudios/analisis (demanda) siga leyendo estas solicitudes igual. Tests del guard.
+```
+
+### [ ] EST-7 · Bug: no deja resolver solicitud de reubicación de grupo
+Archivos: `src/components/shared/RequestBoard.tsx` (botón deshabilitado línea ~582), `src/components/studies/RelocationResolveGroupPicker.tsx`, `src/app/api/studies/requests/[id]/route.ts`, `src/lib/supabase/queries/study-requests.ts` (`resolveStudyRequest` ~356-522)
+
+```
+Bug reportado: "no me deja resolver solicitud de grupo" (reubicación). Diagnosticá y arreglá.
+Causas candidatas ya identificadas (verificá en orden):
+1) El botón "Confirmar resolución" queda deshabilitado mientras resolveExtra === null
+   (RequestBoard ~582); lo llena RelocationResolveGroupPicker — si el picker no encuentra
+   grupos elegibles (filtros muy estrictos, grupos no en_matricula, sin cupo), el botón
+   nunca se habilita Y NO SE EXPLICA POR QUÉ. Como mínimo: mostrar un mensaje claro cuando
+   el picker no tiene opciones ("No hay grupos abiertos elegibles para reubicar...").
+2) Guards 409 de resolveStudyRequest: YA_RESUELTA (lista sin refrescar), YA_COMPLETADO,
+   PAGO_PENDIENTE, YA_MATRICULADO — verificá que el toast muestre el mensaje del server.
+3) Inconsistencia de roles: la página /estudios/solicitudes gatea con
+   hasRole('coordinador_estudios','coordinador_dirigentes','admin') pero el PATCH exige
+   requireRoles('direccion','coordinador_estudios','coordinador_dirigentes') — admin pasa
+   cualquier guard, pero revisá que 'direccion' vea la página y que no haya rol que vea
+   botones sin poder ejecutar.
+Reproducí el escenario, arreglá la causa raíz y dejá mensajes de error accionables en la UI.
+Nota: coordinar con EST-6 — esto aplica solo a reubicaciones, que mantienen su flujo.
+```
+
+### [ ] EST-8 · Notas de estudios en el perfil del miembro
+Archivos: `src/lib/supabase/queries/members-detail.ts` (`studyHistory` ~360-382), `src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx` (`StudyRow` ~77, tabla ~186-272)
+
+```
+Las notas de los estudiantes ya se guardan al cerrar un grupo (study_enrollments.grade
+numérica y study_enrollments.notes con "aprobado"/"reprobado: motivo") pero NO se muestran
+en ningún lado del perfil del miembro. Agregalas al historial de estudios:
+1) src/lib/supabase/queries/members-detail.ts: incluir grade y notes en el select de
+   studyHistory (~360-382).
+2) MemberParticipationTab.tsx: agregar grade/notes al tipo StudyRow y una columna "Nota" en
+   la tabla de historial de estudios (~186-272): mostrar la nota numérica cuando exista;
+   si no hay nota pero hay resultado en notes, mostrar el resultado; vacío → "—".
+   El motivo de reprobado puede ir como tooltip o texto secundario.
+Visibilidad: el historial ya respeta los permisos del perfil (scope own para miembro,
+beyondOwn para staff); las notas siguen esa misma visibilidad, sin gate adicional.
+Sin migración: las columnas ya existen. Test del mapeo grade/notes en members-detail.
+```
+
+### [ ] COM-1 · Configuración de comunicaciones solo para admin
+Archivos: `src/app/(admin)/comunicaciones/configuracion/page.tsx`, `src/app/api/communications/configs/route.ts`, sidebar/nav
+
+```
+La pantalla /comunicaciones/configuracion (remitentes/SMTP, channel_configs) debe quedar
+accesible ÚNICAMENTE para el rol admin. Hoy el módulo de comunicaciones lo ven los roles
+comunicaciones y direccion. Cambios:
+1) Gate de la página /comunicaciones/configuracion: solo admin (los demás ni la ven en el
+   menú/tabs de comunicaciones ni pueden entrar por URL — redirect o 404 consistente con el
+   patrón del repo).
+2) API /api/communications/configs (GET/POST/PUT): requireRoles('admin') — hoy
+   probablemente acepta comunicaciones/direccion; verificá también endpoints hermanos de
+   configuración de remitentes si existen.
+3) El resto de comunicaciones (mensajes, plantillas, audiencias) queda igual para
+   comunicaciones y direccion.
+Test del guard (403 para comunicaciones/direccion, 200 para admin).
+```
+
 ### Calendario público y eventos (feedback 2026-07-26)
 
 ### [ ] EVE-1 · Detalle de evento público + botón inscribirse con login
@@ -300,7 +427,7 @@ listas guardadas (/api/members/export, counts, member_lists) usen la misma evalu
 Tests: (A OR B) AND C con casos de negación incluidos.
 ```
 
-### [ ] FEA-1 · Conectar plantilla `form_asignado`
+### [x] FEA-1 · Conectar plantilla `form_asignado` — HECHO 2026-07-26 (dispara al crear/guardar form activo asignado a evento/grupo; destinatarios = inscritos no expirados / matriculados enrolled; dedupe por `forms.assignment_notified_key` (migración 20260726150000, aplicada); respeta prefs `mensajes_sistema`; GET /api/forms/[id] relajado a sesión para que el link de llenado funcione a miembros; 4 tests)
 Archivos: plantillas de sistema en `src/lib/email/`, `/api/forms`, asignación de forms a entidades
 
 ```

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles } from '@/lib/auth/guard'
 import { getFormById, updateForm, deleteForm } from '@/lib/supabase/queries/forms'
+import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
 
 export async function GET(
@@ -8,7 +9,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireModuleView('formularios')
+    // Decisión documentada (FEA-1): la lectura de UN formulario exige solo
+    // sesión, porque los destinatarios del correo form_asignado son miembros
+    // comunes y la página de llenado (/formularios/[id]/preview) carga el form
+    // por acá. La definición del form no expone datos de terceros; el listado
+    // (/api/forms), las respuestas y toda escritura siguen guardados por rol.
+    const auth = await requireRoles()
     if (auth.res) return auth.res
     const { id } = await params
     const form = await getFormById(id)
@@ -31,6 +37,9 @@ export async function PUT(
     const body = await req.json()
     const fields = 'fields' in body ? formToFields(body) : undefined
     await updateForm(id, formToPartialWriteInput(body), fields)
+    // FEA-1: correo form_asignado si la asignación es nueva (dedupe interno).
+    // Best-effort: un fallo de correo no revierte el guardado.
+    try { await notifyFormAssignedIfNeeded(id) } catch (e) { console.warn('form_asignado notify:', e) }
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/forms/[id]:', error)

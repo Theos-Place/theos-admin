@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getForms, createForm } from '@/lib/supabase/queries/forms'
 import { formToWriteInput, formToFields } from '@/lib/forms/form-mapper'
+import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 
 export async function GET() {
   try {
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
     if (auth.res) return auth.res
     const body = await req.json()
     const form = await createForm(formToWriteInput(body), formToFields(body))
+    // FEA-1: correo form_asignado si nace activo y asignado (dedupe interno).
+    try { await notifyFormAssignedIfNeeded(form.id) } catch (e) { console.warn('form_asignado notify:', e) }
     return NextResponse.json(form, { status: 201 })
   } catch (error) {
     console.error('POST /api/forms:', error)
