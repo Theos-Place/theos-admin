@@ -3,6 +3,7 @@
 
 import type { StudyType, StudyGroup } from '@/types/study'
 import { ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MIN_CHARLAS_INTERMEDIA, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
+import { isEnrollmentWindowOpen } from '@/lib/studies/enrollment-window'
 
 /** Mapa nivel de BD → etapa de dominio. Fuente ÚNICA (QA 2026-07-17: estaba
  *  triplicado en adapter.ts, studies-demand.ts y studies-eligibility.ts). */
@@ -126,6 +127,9 @@ export function computeEligibility(
   plans: StudyType[],
   groups: StudyGroup[],
   profile: MemberStudyProfile,
+  /** GRU-1: hoy (YYYY-MM-DD) para la ventana de matrícula de los grupos. Sin
+   *  este arg la ventana no se evalúa (compatibilidad con llamadas viejas). */
+  opts?: { todayYmd?: string },
 ): EligibilityResult[] {
   const invitedCodes = new Set(profile.invited_codes ?? [])
   return plans
@@ -212,7 +216,11 @@ export function computeEligibility(
             // Grupos virtuales: ocultos por completo salvo autorización activa
             // del miembro — no se ofrecen ni se pueden matricular sin ella.
             const virtualOk = !g.is_virtual || !!profile.authorized_virtual_studies
-            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity && ageOk && virtualOk
+            // GRU-1: solo se ofrecen grupos dentro de su ventana de matrícula
+            // (sin fechas = siempre; sin todayYmd no se evalúa).
+            const windowOk = !opts?.todayYmd
+              || isEnrollmentWindowOpen(g.enrollment_start_date, g.enrollment_end_date, opts.todayYmd)
+            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity && ageOk && virtualOk && windowOk
           })
           .map(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length

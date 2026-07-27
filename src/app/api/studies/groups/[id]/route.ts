@@ -4,6 +4,7 @@ import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { updateGroup, getGroupById, deleteGroup, countActiveEnrollments } from '@/lib/supabase/queries/studies'
 import { groupWriteSchema } from '../schema'
+import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 
 export async function GET(
   _req: NextRequest,
@@ -41,6 +42,18 @@ export async function PUT(
         { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
         { status: 400 },
       )
+    }
+    // GRU-1: la coherencia de la ventana se valida sobre el grupo RESULTANTE
+    // (patch parcial mergeado con lo guardado).
+    if ('enrollment_start_date' in parsed.data || 'enrollment_end_date' in parsed.data || 'starts_at' in parsed.data) {
+      const current = await getGroupById(id)
+      const merged = {
+        enrollment_start_date: parsed.data.enrollment_start_date !== undefined ? parsed.data.enrollment_start_date : current?.enrollment_start_date,
+        enrollment_end_date: parsed.data.enrollment_end_date !== undefined ? parsed.data.enrollment_end_date : current?.enrollment_end_date,
+        starts_at: parsed.data.starts_at !== undefined ? parsed.data.starts_at : current?.starts_at,
+      }
+      const dateError = validateEnrollmentDates(merged)
+      if (dateError) return NextResponse.json({ error: dateError, code: 'fechas_matricula' }, { status: 400 })
     }
     await updateGroup(id, parsed.data)
     return NextResponse.json({ ok: true })

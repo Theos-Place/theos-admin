@@ -1,5 +1,6 @@
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { groupLocksLeader } from '@/lib/studies/leader-activation'
+import { isEnrollmentWindowOpen } from '@/lib/studies/enrollment-window'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
 import { ymdCR } from '@/lib/format'
@@ -55,6 +56,9 @@ export type DbGroupEnriched = {
   max_students: number | null
   starts_at: string | null
   ends_at: string | null
+  /** GRU-1: ventana de matrícula (null = modo manual, sin ventana). */
+  enrollment_start_date: string | null
+  enrollment_end_date: string | null
   status: 'en_matricula' | 'en_curso' | 'finalizado'
   current_week: number
   whatsapp_group_url: string | null
@@ -306,7 +310,8 @@ export async function getStudyGroupsWithEnrollments(): Promise<DbGroupEnriched[]
 
 const GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
-  max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  max_students, starts_at, ends_at, enrollment_start_date, enrollment_end_date,
+  status, current_week, whatsapp_group_url,
   is_leader_training, training_modality, is_virtual,
   age_min, age_max,
   plan:study_plans(code),
@@ -621,6 +626,9 @@ export type GroupWriteInput = {
   max_students?: number | null
   starts_at?: string | null
   ends_at?: string | null
+  /** GRU-1: ventana de matrícula (YYYY-MM-DD, nullable = modo manual). */
+  enrollment_start_date?: string | null
+  enrollment_end_date?: string | null
   status?: DbGroupEnriched['status']
   age_min?: number | null
   age_max?: number | null
@@ -952,14 +960,22 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
 export async function enrollMember(
   groupId: string, memberId: string,
   scholarshipInput?: { scholarship_id?: string; coupon_code?: string },
+  opts?: { enforceEnrollmentWindow?: boolean },
 ): Promise<{ status: 'enrolled' | 'pendiente_de_pago'; enrollment_id: string; amount: number }> {
   const supabase = createAdminClient()
   const { data: g } = await supabase
     .from('study_groups')
-    .select('is_virtual, leader_id, co_leader_id, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
+    .select('is_virtual, leader_id, co_leader_id, status, enrollment_start_date, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
     .eq('id', groupId).maybeSingle()
-  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
+  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; status: string; enrollment_start_date: string | null; enrollment_end_date: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
   const plan = group?.plan
+
+  // Guard GRU-1 (solo autoservicio; el staff puede matricular fuera de la
+  // ventana): el grupo debe estar dentro de su período de matrícula.
+  if (opts?.enforceEnrollmentWindow && group
+    && !isEnrollmentWindowOpen(group.enrollment_start_date, group.enrollment_end_date, ymdCR())) {
+    throw new Error('MATRICULA_CERRADA')
+  }
   // El DIRIGENTE del grupo (dirigente/co-dirigente) no paga matrícula del grupo
   // que dirige. Un dirigente que se inscribe como ALUMNO en otro grupo sí paga
   // (ahí es estudiante), por eso el criterio es por-grupo, no "es dirigente".

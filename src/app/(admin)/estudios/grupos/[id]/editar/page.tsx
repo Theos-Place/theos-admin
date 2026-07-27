@@ -78,6 +78,9 @@ function EditarForm({ group, studyType, refetch }: {
   const [ageMax, setAgeMax] = useState(group.age_max != null ? String(group.age_max) : '')
   const [startDate, setStartDate] = useState(group.start_date?.slice(0, 10) ?? '')
   const [endDate, setEndDate] = useState(group.end_date?.slice(0, 10) ?? '')
+  // GRU-1: ventana de matrícula (vacías = modo manual).
+  const [enrollStart, setEnrollStart] = useState(group.enrollment_start_date ?? '')
+  const [enrollEnd, setEnrollEnd] = useState(group.enrollment_end_date ?? '')
   const [leaderId, setLeaderId] = useState(group.leader_id ?? '')
   const [coLeaderId, setCoLeaderId] = useState(group.co_leader_id ?? '')
   const [waUrl, setWaUrl] = useState(group.whatsapp_group_url ?? '')
@@ -112,6 +115,8 @@ function EditarForm({ group, studyType, refetch }: {
           age_max: ageMax ? Number(ageMax) : null,
           starts_at: startDate || null,
           ends_at: endDate || null,
+          enrollment_start_date: enrollStart || null,
+          enrollment_end_date: enrollEnd || null,
           whatsapp_group_url: waUrl || null,
           status,
           is_virtual: isVirtual,
@@ -285,6 +290,16 @@ function EditarForm({ group, studyType, refetch }: {
           <div className="space-y-1">
             <label className={labelCls}>Fecha de cierre</label>
             <input type="date" className={inputCls} value={endDate} onChange={e => setEndDate(e.target.value)} />
+          </div>
+
+          {/* GRU-1: ventana de matrícula (vacías = modo manual). */}
+          <div className="space-y-1">
+            <label className={labelCls}>Inicio de matrícula</label>
+            <input type="date" className={inputCls} value={enrollStart} max={enrollEnd || startDate || undefined} onChange={e => setEnrollStart(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className={labelCls}>Fin de matrícula</label>
+            <input type="date" className={inputCls} value={enrollEnd} min={enrollStart || undefined} max={startDate || undefined} onChange={e => setEnrollEnd(e.target.value)} />
           </div>
 
           {/* WhatsApp */}

@@ -3389,6 +3389,8 @@ export type Database = {
           created_at: string | null
           current_week: number | null
           ends_at: string | null
+          enrollment_start_date: string | null
+          enrollment_end_date: string | null
           id: string
           is_leader_training: boolean | null
           is_virtual: boolean
@@ -3415,6 +3417,8 @@ export type Database = {
           created_at?: string | null
           current_week?: number | null
           ends_at?: string | null
+          enrollment_start_date?: string | null
+          enrollment_end_date?: string | null
           id?: string
           is_leader_training?: boolean | null
           is_virtual?: boolean
@@ -3441,6 +3445,8 @@ export type Database = {
           created_at?: string | null
           current_week?: number | null
           ends_at?: string | null
+          enrollment_start_date?: string | null
+          enrollment_end_date?: string | null
           id?: string
           is_leader_training?: boolean | null
           is_virtual?: boolean

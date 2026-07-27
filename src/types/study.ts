@@ -64,6 +64,9 @@ export type StudyGroup = {
   age_max: number | null
   start_date: string
   end_date: string | null
+  /** GRU-1: ventana de matrícula (null = sin ventana, modo manual). */
+  enrollment_start_date?: string | null
+  enrollment_end_date?: string | null
   status: GroupStatus
   current_week: number
   participants: GroupParticipant[]

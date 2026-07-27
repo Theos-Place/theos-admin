@@ -274,6 +274,7 @@ Bandeja de notificaciones internas persistidas + alertas calculadas al vuelo (ur
 
 | Cron | Horario (UTC) | Qué hace |
 |---|---|---|
+| `/api/cron/group-enrollment-windows` | 12:30 diario | Cierra matrícula por ventana (GRU-1): grupo `en_matricula` con `enrollment_end_date` vencida y ya iniciado → `en_curso` (nunca re-abre; lo manual manda) |
 | `/api/cron/folleto-blocks` | 13:00 diario | Genera pedidos de folletos si hoy cae en hito de un bloque activo; notifica + correo |
 | `/api/studies/start-reminders` | 13:30 diario | Correo `inicio_capacitacion` a estudiantes de grupos por arrancar (dedupe en `start_notified_at`) |
 | `/api/notifications/leader-absence-check` | 14:00 diario | Dirigente activo >4 semanas sin check-in de charla → avisa a coordinadores (máx 1/semana) |
@@ -302,7 +303,7 @@ Un workflow (`.github/workflows/ci.yml`): push a `main` y PRs. Node 22: typechec
 |---|---|
 | Obligatorias (zod en `env.ts`) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` o `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SECRET_KEY` o `SUPABASE_SERVICE_ROLE_KEY` |
 | Requeridas de facto | `CRON_SECRET`, `SES_SMTP_HOST`, `SES_SMTP_PORT`, `SES_SMTP_USER`, `SES_SMTP_PASSWORD`, `SES_FROM_EMAIL`, `SES_FROM_NAME`, `NEXT_PUBLIC_SITE_URL` |
-| Opcionales | `SES_CONFIGURATION_SET`, `SES_SNS_TOPIC_ARN`, `EMAIL_DAILY_LIMIT`, `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `HEALTHCHECK_URL_FOLLETO_BLOCKS`, `HEALTHCHECK_URL_START_REMINDERS`, `HEALTHCHECK_URL_LEADER_ABSENCE`, `HEALTHCHECK_URL_STORAGE_ORPHANS`, `HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE` |
+| Opcionales | `SES_CONFIGURATION_SET`, `SES_SNS_TOPIC_ARN`, `EMAIL_DAILY_LIMIT`, `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `HEALTHCHECK_URL_FOLLETO_BLOCKS`, `HEALTHCHECK_URL_START_REMINDERS`, `HEALTHCHECK_URL_LEADER_ABSENCE`, `HEALTHCHECK_URL_STORAGE_ORPHANS`, `HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE`, `HEALTHCHECK_URL_GROUP_WINDOWS` |
 | Edge function (Deno) | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
 
 ## 5. Catálogo de permisos

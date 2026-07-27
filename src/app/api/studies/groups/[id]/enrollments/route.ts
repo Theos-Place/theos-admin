@@ -20,7 +20,10 @@ export async function POST(
     const { member_id, scholarship_id, coupon_code } = await req.json()
     const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
     if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
-    const result = await enrollMember(id, targetMemberId, { scholarship_id, coupon_code })
+    // GRU-1: la ventana de matrícula aplica al autoservicio; el staff con
+    // STUDY_ADMIN_ROLES puede matricular fuera de la ventana.
+    const isStaff = auth.ctx.roles.some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r) || r === 'admin')
+    const result = await enrollMember(id, targetMemberId, { scholarship_id, coupon_code }, { enforceEnrollmentWindow: !isStaff })
     // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
     await notifyEnrollment(id, targetMemberId, result.status)
     return NextResponse.json({ ok: true, ...result }, { status: 201 })
@@ -41,6 +44,12 @@ export async function POST(
       return NextResponse.json(
         { error: 'Este grupo es virtual y el miembro no tiene autorización para estudios virtuales.' },
         { status: 403 },
+      )
+    }
+    if (error instanceof Error && error.message === 'MATRICULA_CERRADA') {
+      return NextResponse.json(
+        { error: 'El período de matrícula de este grupo no está abierto.', code: 'matricula_cerrada' },
+        { status: 409 },
       )
     }
     if (error instanceof Error && error.message === 'CEDULA_REQUERIDA') {

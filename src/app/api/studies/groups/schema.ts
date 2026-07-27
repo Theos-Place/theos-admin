@@ -18,6 +18,11 @@ export const groupWriteSchema = z
     max_students: z.number().int().min(0).nullish(),
     starts_at: z.string().trim().min(1).nullish(),
     ends_at: z.string().trim().min(1).nullish(),
+    // GRU-1: ventana de matrícula (YYYY-MM-DD). La coherencia entre fechas se
+    // valida con validateEnrollmentDates en las rutas (zod .strict() no permite
+    // encadenar refinements sin perder .extend()).
+    enrollment_start_date: z.string().trim().min(1).nullish(),
+    enrollment_end_date: z.string().trim().min(1).nullish(),
     status: z.enum(['en_matricula', 'en_curso', 'finalizado']).optional(),
     age_min: z.number().int().min(0).max(120).nullish(),
     age_max: z.number().int().min(0).max(120).nullish(),

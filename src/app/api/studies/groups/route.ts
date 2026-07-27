@@ -6,6 +6,7 @@ import {
   getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode,
 } from '@/lib/supabase/queries/studies'
 import { groupCreateSchema } from './schema'
+import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 
 // Roles que pueden listar todos los grupos: los de estudios + dirigentes, más
 // los consumidores cross-módulo del listado (finanzas en sus solicitudes,
@@ -81,6 +82,9 @@ export async function POST(req: NextRequest) {
       )
     }
     const { study_type_id, ...input } = parsed.data
+    // GRU-1: coherencia de la ventana de matrícula.
+    const dateError = validateEnrollmentDates(input)
+    if (dateError) return NextResponse.json({ error: dateError, code: 'fechas_matricula' }, { status: 400 })
     // El frontend manda study_type_id (code); resolvemos a plan_id (UUID).
     if (!input.plan_id && study_type_id) {
       const planId = await getPlanIdByCode(study_type_id)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
@@ -11,6 +11,8 @@ import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { TimePicker } from '@/components/events/TimePicker'
 import { resolveZoneCode } from '@/lib/zones'
+import { isCapacitacion, addDays } from '@/lib/studies/bloques'
+import { toYmdLocal } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import type { GroupStatus } from '@/types/study'
@@ -36,7 +38,9 @@ type Step1 = {
   location: string
   capacity: string
   start_date: string
-  signup_deadline: string
+  /** GRU-1: ventana de matrícula (reemplaza el viejo signup_deadline muerto). */
+  enrollment_start: string
+  enrollment_end: string
   is_virtual: boolean
 }
 
@@ -58,7 +62,8 @@ export default function NuevoGrupoPage() {
     location: '',
     capacity: '10',
     start_date: '',
-    signup_deadline: '',
+    enrollment_start: '',
+    enrollment_end: '',
     is_virtual: false,
   })
   const [selectedLeader, setSelectedLeader] = useState('')
@@ -79,6 +84,34 @@ export default function NuevoGrupoPage() {
   }
 
   const studyType = studyTypes.find(s => s.id === step1.study_type_id)
+
+  // GRU-1: si el plan es una capacitación, precargar la ventana de matrícula
+  // desde el bloque vigente/próximo (primer hito = apertura − 3 semanas; fin =
+  // cierre de matrícula del bloque). Siempre editable; best-effort (el fetch de
+  // bloques exige coordinador_estudios — otros roles simplemente no precargan).
+  useEffect(() => {
+    if (!studyType?.code || !isCapacitacion(studyType.code)) return
+    if (step1.enrollment_start || step1.enrollment_end) return
+    let alive = true
+    fetch('/api/studies/bloques')
+      .then(r => (r.ok ? r.json() : []))
+      .then((bloques: Array<{ fecha_apertura: string; fecha_cierre_matricula: string }>) => {
+        if (!alive || !Array.isArray(bloques)) return
+        const today = toYmdLocal(new Date())
+        const vigente = bloques
+          .filter(b => b.fecha_cierre_matricula >= today)
+          .sort((a, b) => a.fecha_apertura.localeCompare(b.fecha_apertura))[0]
+        if (!vigente) return
+        setStep1(prev => (prev.enrollment_start || prev.enrollment_end) ? prev : {
+          ...prev,
+          enrollment_start: addDays(vigente.fecha_apertura, -21),
+          enrollment_end: vigente.fecha_cierre_matricula,
+        })
+      })
+      .catch(() => {})
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studyType?.code])
 
   const leaderData = dirigentes.find(d => d.member_id === selectedLeader)
   const coLeaderData = dirigentes.find(d => d.member_id === selectedCoLeader)
@@ -112,6 +145,8 @@ export default function NuevoGrupoPage() {
           age_min: step1.age_from ? Number(step1.age_from) : null,
           age_max: step1.age_to ? Number(step1.age_to) : null,
           starts_at: step1.start_date || null,
+          enrollment_start_date: step1.enrollment_start || null,
+          enrollment_end_date: step1.enrollment_end || null,
           status: initialStatus,
           is_virtual: step1.is_virtual,
         }),
@@ -340,8 +375,34 @@ export default function NuevoGrupoPage() {
               />
             </div>
 
-            {/* "Fecha límite de inscripción" se quitó: no existe en la BD y el
-                valor se descartaba en silencio. */}
+            {/* GRU-1: ventana de matrícula. El grupo solo acepta matrículas
+                dentro del rango; al vencer, el cron lo pasa a en_curso si ya
+                inició. Vacías = modo manual (comportamiento histórico). */}
+            <div className="space-y-1">
+              <label className="text-[11px] text-navy-light/60 font-display">
+                Inicio de matrícula
+              </label>
+              <input
+                type="date"
+                className={inputCls}
+                value={step1.enrollment_start}
+                max={step1.enrollment_end || step1.start_date || undefined}
+                onChange={e => setS1('enrollment_start', e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] text-navy-light/60 font-display">
+                Fin de matrícula
+              </label>
+              <input
+                type="date"
+                className={inputCls}
+                value={step1.enrollment_end}
+                min={step1.enrollment_start || undefined}
+                max={step1.start_date || undefined}
+                onChange={e => setS1('enrollment_end', e.target.value)}
+              />
+            </div>
 
             <div className="col-span-1 sm:col-span-2">
               <label className="flex items-center gap-2 cursor-pointer">

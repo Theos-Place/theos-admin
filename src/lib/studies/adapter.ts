@@ -106,6 +106,8 @@ export function toDomainStudyGroup(db: DbGroupForDomain): StudyGroup {
     age_max: db.age_max ?? null,
     start_date: db.starts_at ?? '',
     end_date: db.ends_at,
+    enrollment_start_date: db.enrollment_start_date ?? null,
+    enrollment_end_date: db.enrollment_end_date ?? null,
     status: db.status,
     current_week: db.current_week,
     participants,

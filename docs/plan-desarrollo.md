@@ -484,7 +484,12 @@ Implementá:
 Tests: asignar dirigente inactivo a grupo normal → queda activo; a grupo campaña → sigue inactivo.
 ```
 
-### [ ] GRU-1 · Fechas de matrícula (inicio/fin) en grupos + activación automática
+### [x] GRU-1 · Fechas de matrícula en grupos + cierre automático — HECHO 2026-07-27 (migración 20260727100000 aplicada; ventana en elegibilidad + guard `matricula_cerrada` en autoservicio con bypass de staff; cron `group-enrollment-windows` 12:30 UTC cierra en_matricula→en_curso con doble guard; forms crear/editar con precarga desde el bloque vigente para capacitaciones; se eliminó `signup_deadline` muerto; env opcional nueva `HEALTHCHECK_URL_GROUP_WINDOWS`; 5 tests)
+
+> Nota de diseño: los grupos no tienen estado previo a `en_matricula`, así que la "apertura"
+> no cambia estado — la VENTANA hace que el grupo aparezca en matrícula el día de
+> `enrollment_start_date` (elegibilidad + guard server-side). El cambio manual siempre manda:
+> el cron solo transiciona desde el estado esperado y nunca re-abre.
 Archivos: `src/app/(admin)/estudios/grupos/nuevo/page.tsx`, `src/app/(admin)/estudios/grupos/[id]/editar/page.tsx`, `src/app/api/studies/groups/schema.ts`, migración SQL, `src/lib/studies/bloques.ts`, cron nuevo
 
 ```

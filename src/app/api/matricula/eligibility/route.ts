@@ -6,6 +6,7 @@ import { activeExceptionsByCodeForMember } from '@/lib/supabase/queries/study-ex
 import { toDomainStudyType, toDomainStudyGroup } from '@/lib/studies/adapter'
 import { computeEligibility } from '@/lib/studies/eligibility'
 import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
+import { todayCR } from '@/lib/format'
 
 // GET /api/matricula/eligibility?member_id=X
 // Devuelve { eligibility: EligibilityResult[], profile } calculado con datos reales.
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
       plans.map(toDomainStudyType).filter(p => !p.is_archived && p.is_curricular !== false),
       groups.data.map(toDomainStudyGroup),
       { ...profile, exceptions },
+      { todayYmd: todayCR() }, // GRU-1: ventana de matrícula
     )
     // PRE-5: ¿puede entrar al curso prematrimonial? (N1 completado + inscrito
     // en N2). La página de matrícula usa este flag para mostrar/ocultar la
