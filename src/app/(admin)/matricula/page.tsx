@@ -65,6 +65,9 @@ export default function MatriculaPage() {
 
   const [eligibilityResults, setEligibilityResults] = useState<EligibilityResult[]>([])
   const [profile, setProfile] = useState<MemberStudyProfile | null>(null)
+  // PRE-5: la tarjeta del prematrimonial solo se muestra si el miembro cumple
+  // el requisito (N1 completado + inscrito en N2). Server-side en el flag.
+  const [prematOk, setPrematOk] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [retryKey, setRetryKey] = useState(0)
@@ -81,6 +84,7 @@ export default function MatriculaPage() {
         if (!alive) return
         setEligibilityResults(d?.eligibility ?? [])
         setProfile(d?.profile ?? null)
+        setPrematOk(!!d?.premat_ok)
         setLoading(false)
       })
       .catch(() => { if (alive) { setLoadError(true); setLoading(false) } })
@@ -340,8 +344,9 @@ export default function MatriculaPage() {
 
       {/* Inscripción al curso prematrimonial — pertenece al bloque inicial, por
           eso solo se muestra en el tab "Todos" o "Etapa Inicial". Flujo propio
-          (pareja + logística + ceremonia + pago por comprobante). */}
-      {(activeFilter === 'all' || activeFilter === 'inicial') && (
+          (pareja + logística + ceremonia + pago por comprobante). PRE-5: solo
+          aparece si el miembro cumple el requisito (flag server-side). */}
+      {prematOk && (activeFilter === 'all' || activeFilter === 'inicial') && (
         <Link
           href={selectedMember ? `/matricula/prematrimonial?member_id=${selectedMember.id}` : '/matricula/prematrimonial'}
           className="group flex items-center gap-4 rounded-2xl px-6 py-5 border-2 border-teal/25 bg-teal/5 hover:bg-teal/10 hover:border-teal/40 transition-colors"
@@ -353,8 +358,8 @@ export default function MatriculaPage() {
             <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em]">Curso Prematrimonial</p>
             <p className="text-[13px] text-navy-light/70 font-body">
               {selectedMember
-                ? `Inscribí a ${selectedMember.name} con su pareja. Requiere Nivel 2 de ambos y tiene su propio formulario (logística, ceremonia y pago).`
-                : 'Inscribite con tu pareja. Requiere Nivel 2 de ambos y tiene su propio formulario (logística, ceremonia y pago).'}
+                ? `Inscribí a ${selectedMember.name} con su pareja. Ambos deben tener Nivel 1 completado y estar inscritos en Nivel 2; tiene su propio formulario (logística, ceremonia y pago).`
+                : 'Inscribite con tu pareja. Ambos deben tener Nivel 1 completado y estar inscritos en Nivel 2; tiene su propio formulario (logística, ceremonia y pago).'}
             </p>
           </div>
           <ArrowRight size={18} className="shrink-0 text-teal-deep transition-transform group-hover:translate-x-1" />

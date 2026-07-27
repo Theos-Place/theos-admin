@@ -3,8 +3,9 @@ import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
 import {
-  createPrematrimonialRequest, getPrematrimonialQueue, hasCompletedN2,
+  createPrematrimonialRequest, getPrematrimonialQueue, meetsPrematRequirement,
 } from '@/lib/supabase/queries/prematrimonial'
+import { PREMAT_REQUIREMENT_LABEL } from '@/lib/studies/premat-requirement'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { minCeremonyDate, ceremonyDateTooSoon, PREMAT_MIN_MONTHS } from '@/lib/studies/premat-dates'
 import { todayCR, formatDate } from '@/lib/format'
@@ -82,11 +83,13 @@ export async function POST(req: NextRequest) {
     if (!spouseMemberId) return NextResponse.json({ error: 'Falta seleccionar a la pareja.' }, { status: 400 })
     if (spouseMemberId === requester) return NextResponse.json({ error: 'La pareja no puede ser el mismo miembro que se inscribe.' }, { status: 400 })
 
-    // Requisito N2 para AMBOS (server-side, sobre los member_id — confiable).
-    const [reqN2, spouseN2] = await Promise.all([hasCompletedN2(requester), hasCompletedN2(spouseMemberId)])
-    if (!reqN2 || !spouseN2) {
-      const quien = !reqN2 && !spouseN2 ? 'Ninguno de los dos tiene' : !reqN2 ? 'El miembro no tiene' : 'La pareja no tiene'
-      return NextResponse.json({ error: `${quien} el Nivel 2 completado, requisito del curso prematrimonial.`, code: 'requisito_n2' }, { status: 409 })
+    // Requisito PRE-5 para AMBOS (server-side, sobre los member_id — confiable):
+    // N1 completado + al menos inscrito en N2. El code se mantiene 'requisito_n2'
+    // por compatibilidad con los consumidores.
+    const [reqOk, spouseOk] = await Promise.all([meetsPrematRequirement(requester), meetsPrematRequirement(spouseMemberId)])
+    if (!reqOk || !spouseOk) {
+      const quien = !reqOk && !spouseOk ? 'Ninguno de los dos cumple' : !reqOk ? 'El miembro no cumple' : 'La pareja no cumple'
+      return NextResponse.json({ error: `${quien} el requisito del curso prematrimonial (${PREMAT_REQUIREMENT_LABEL}).`, code: 'requisito_n2' }, { status: 409 })
     }
 
     // Comprobante (archivo obligatorio).

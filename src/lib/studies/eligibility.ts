@@ -63,6 +63,8 @@ export type EligibleGroup = {
 export type MemberStudyProfile = {
   completed_codes: string[]
   current_code: string | null
+  /** Todos los códigos con matrícula 'enrolled' (PRE-5: requisito prematrimonial). */
+  enrolled_codes?: string[]
   /** Códigos con matrícula automática pendiente de pago: bloquean la
    *  re-matrícula (el camino es subir el comprobante, no re-inscribirse). */
   pending_payment_codes?: string[]

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { hasCompletedN2 } from '@/lib/supabase/queries/prematrimonial'
+import { meetsPrematRequirement } from '@/lib/supabase/queries/prematrimonial'
 
 // GET: datos mínimos del miembro que se va a inscribir al prematrimonial cuando
 // un admin lo hace EN NOMBRE DE otro (flujo "Ver disponibilidad como"). Solo
 // admin/direccion — son quienes pueden actuar por otro miembro. Devuelve lo
-// justo para armar el paso 1 del wizard (nombre, correo, cédula, N2); ninguna
-// otra información sensible.
+// justo para armar el paso 1 del wizard (nombre, correo, cédula y si cumple el
+// requisito PRE-5); ninguna otra información sensible.
 export async function GET(req: NextRequest) {
   const auth = await requireRoles('admin', 'direccion')
   if (auth.res) return auth.res
@@ -26,13 +26,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No se encontró el miembro.' }, { status: 404 })
     }
     const m = member as { id: string; first_name: string | null; last_name: string | null; email: string | null; cedula: string | null }
-    const has_n2 = await hasCompletedN2(m.id)
+    const meets_requirement = await meetsPrematRequirement(m.id)
     return NextResponse.json({
       member_id: m.id,
       name: `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim(),
       email: m.email,
       has_cedula: !!(m.cedula && String(m.cedula).trim()),
-      has_n2,
+      meets_requirement,
     })
   } catch (error) {
     console.error('GET prematrimonial/enrollee:', error)

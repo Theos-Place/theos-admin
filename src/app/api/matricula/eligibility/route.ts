@@ -5,6 +5,7 @@ import { getStudyPlans, getStudyGroups, getMemberStudyProfile } from '@/lib/supa
 import { activeExceptionsByCodeForMember } from '@/lib/supabase/queries/study-exceptions'
 import { toDomainStudyType, toDomainStudyGroup } from '@/lib/studies/adapter'
 import { computeEligibility } from '@/lib/studies/eligibility'
+import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
 
 // GET /api/matricula/eligibility?member_id=X
 // Devuelve { eligibility: EligibilityResult[], profile } calculado con datos reales.
@@ -37,7 +38,11 @@ export async function GET(req: NextRequest) {
       groups.data.map(toDomainStudyGroup),
       { ...profile, exceptions },
     )
-    return NextResponse.json({ eligibility, profile })
+    // PRE-5: ¿puede entrar al curso prematrimonial? (N1 completado + inscrito
+    // en N2). La página de matrícula usa este flag para mostrar/ocultar la
+    // tarjeta del wizard; el POST del prematrimonial re-valida server-side.
+    const premat_ok = meetsPrematRequirementFromCodes(profile?.completed_codes ?? [], profile?.enrolled_codes ?? [])
+    return NextResponse.json({ eligibility, profile, premat_ok })
   } catch (error) {
     console.error('GET /api/matricula/eligibility:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

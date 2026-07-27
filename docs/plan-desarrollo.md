@@ -444,7 +444,7 @@ reenviar si se re-guarda el form sin cambiar la asignación. Test del disparador
 
 ## Fase 3 — Reglas de negocio de estudios y matrícula
 
-### [ ] PRE-5 · Nuevo requisito prematrimonial: N1 completado + inscrito en N2
+### [x] PRE-5 · Nuevo requisito prematrimonial — HECHO 2026-07-27 (regla pura `premat-requirement.ts`: N1 completado + N2 enrolled/completed, nivel posterior implica anteriores; profile gana `enrolled_codes`; 409 `requisito_n2` con mensaje nuevo; `has_n2`→`meets_requirement` en spouse-search/enrollee; tarjeta de /matricula y wizard gateados con `premat_ok` server-side; 6 tests)
 Archivos: `src/lib/supabase/queries/prematrimonial.ts` (`PREMAT_REQUIRED_CODE`, `hasCompletedN2`), `src/app/api/studies/prematrimonial/route.ts` (líneas ~71-75), `src/app/api/studies/prematrimonial/spouse-search/route.ts`, wizard y elegibilidad
 
 ```

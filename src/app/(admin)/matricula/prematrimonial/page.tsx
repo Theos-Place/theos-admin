@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { minCeremonyDate } from '@/lib/studies/premat-dates'
 import { toYmdLocal } from '@/lib/format'
 
-type Enrollee = { member_id: string; name: string; email: string | null; has_cedula: boolean; has_n2: boolean }
+type Enrollee = { member_id: string; name: string; email: string | null; has_cedula: boolean; meets_requirement: boolean }
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
 const TIMES = ['Tarde', 'Noche']
@@ -41,6 +41,18 @@ export default function PrematrimonialWizardPage() {
   const onBehalf = !!requestedMemberId && requestedMemberId !== user?.member_id && isPrivileged
   const [enrollee, setEnrollee] = useState<Enrollee | null>(null)
   const [enrolleeError, setEnrolleeError] = useState('')
+  // PRE-5: requisito del propio usuario en autoservicio (null = cargando; el
+  // gate no bloquea mientras carga — el POST re-valida server-side igual).
+  const [selfPrematOk, setSelfPrematOk] = useState<boolean | null>(null)
+  useEffect(() => {
+    if (onBehalf || !user?.member_id) return
+    let alive = true
+    fetch(`/api/matricula/eligibility?member_id=${user.member_id}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setSelfPrematOk(!!d.premat_ok) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [onBehalf, user?.member_id])
 
   useEffect(() => {
     if (!onBehalf) return
@@ -55,7 +67,7 @@ export default function PrematrimonialWizardPage() {
   // Paso 2 — pareja
   const [spouseQuery, setSpouseQuery] = useState('')
   const [searching, setSearching] = useState(false)
-  const [spouse, setSpouse] = useState<{ id: string; name: string; has_n2: boolean } | null>(null)
+  const [spouse, setSpouse] = useState<{ id: string; name: string; meets_requirement: boolean } | null>(null)
   const [spouseMsg, setSpouseMsg] = useState('')
 
   // Paso 3 — logística
@@ -98,7 +110,7 @@ export default function PrematrimonialWizardPage() {
         body: JSON.stringify({ query: spouseQuery.trim(), ...(onBehalf ? { on_behalf_of: requestedMemberId } : {}) }),
       })
       const d = await res.json()
-      if (d.found) setSpouse({ id: d.spouse_member_id, name: d.name, has_n2: d.has_n2 })
+      if (d.found) setSpouse({ id: d.spouse_member_id, name: d.name, meets_requirement: d.meets_requirement })
       else setSpouseMsg(d.message || 'No encontrado.')
     } catch { setSpouseMsg('No se pudo buscar. Intentá de nuevo.') }
     finally { setSearching(false) }
@@ -159,6 +171,27 @@ export default function PrematrimonialWizardPage() {
     )
   }
 
+  // PRE-5: bloqueo si el inscrito no cumple el requisito. En onBehalf viene del
+  // endpoint enrollee; en autoservicio, de /api/matricula/eligibility (premat_ok).
+  // El POST re-valida server-side de todas formas (409 requisito_n2).
+  const meetsReq = onBehalf ? (enrollee?.meets_requirement ?? true) : (selfPrematOk ?? true)
+  if (loaded && (!onBehalf || enrollee) && !meetsReq) {
+    return (
+      <div className="page max-w-2xl mx-auto">
+        <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6 text-center">
+          <Heart className="mx-auto mb-3 text-coral-deep" size={28} />
+          <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? 'El miembro aún no cumple el requisito' : 'Aún no cumplís el requisito'}</h2>
+          <p className="mt-2 text-sm text-navy-light/70 font-body">
+            El curso prematrimonial requiere <strong>Nivel 1 completado y estar inscrito en Nivel 2</strong>{onBehalf ? ` — ${enrolleeName} todavía no lo cumple.` : '. Matriculate en Nivel 2 y volvé.'}
+          </p>
+          <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
+            <ArrowRight size={14} /> Ir a matrícula
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="page max-w-2xl mx-auto">
       <div className="mb-5 flex items-center gap-3">
@@ -181,7 +214,7 @@ export default function PrematrimonialWizardPage() {
               </div>
             )}
             <h2 className="font-semibold text-navy font-display">La pareja</h2>
-            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con Nivel 2 — buscala por cédula, correo o teléfono.</p>
+            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con Nivel 1 completado e inscrita en Nivel 2 — buscala por cédula, correo o teléfono.</p>
             <div className="flex gap-2">
               <input value={spouseQuery} onChange={e => setSpouseQuery(e.target.value)} placeholder="Cédula, correo o teléfono"
                 className="flex-1 rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />
@@ -193,7 +226,7 @@ export default function PrematrimonialWizardPage() {
             {spouse && (
               <div className="rounded-xl border border-teal/25 bg-teal/5 px-4 py-3 text-sm font-body">
                 <p className="text-navy inline-flex items-center gap-1.5"><Check size={15} className="text-teal-deep" /> Encontrado: <strong>{spouse.name}</strong></p>
-                {!spouse.has_n2 && <p className="mt-1 text-coral-deep text-[13px]">⚠ Tu pareja no tiene el Nivel 2 completado; no podrás inscribirte hasta que lo tenga.</p>}
+                {!spouse.meets_requirement && <p className="mt-1 text-coral-deep text-[13px]">⚠ Tu pareja aún no cumple el requisito (Nivel 1 completado y estar inscrita en Nivel 2); no podrás inscribirte hasta que lo cumpla.</p>}
               </div>
             )}
             {spouseMsg && <p className="rounded-xl bg-coral/5 px-4 py-3 text-[13px] text-coral-deep font-body">{spouseMsg}</p>}

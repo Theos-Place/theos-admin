@@ -11,6 +11,8 @@ import { LEVEL_TO_STAGE, requirementsForStage } from '@/lib/studies/eligibility'
 export async function getMemberStudyProfile(memberId: string): Promise<{
   completed_codes: string[]
   current_code: string | null
+  /** Todos los códigos con matrícula 'enrolled' (no solo el primero). */
+  enrolled_codes: string[]
   pending_payment_codes: string[]
   is_donor: boolean
   is_server: boolean
@@ -54,6 +56,12 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   const current_code = enrollments
     .map(e => e.status === 'enrolled' ? codeOf(e) : null)
     .find(Boolean) ?? null
+  // TODOS los códigos con matrícula 'enrolled' (current_code es solo el primero;
+  // alguien puede cursar N2 y una capacitación a la vez). Lo usa el requisito
+  // prematrimonial (PRE-5: N1 completado + inscrito en N2).
+  const enrolled_codes = enrollments
+    .filter(e => e.status === 'enrolled' && codeOf(e))
+    .map(e => codeOf(e)!)
   // Niveles con matrícula pendiente de pago (auto-matrícula al cerrar el nivel
   // anterior): bloquean la re-matrícula — el camino es pagar, no re-inscribirse.
   const pending_payment_codes = enrollments
@@ -65,6 +73,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   return {
     completed_codes,
     current_code,
+    enrolled_codes,
     pending_payment_codes,
     is_donor: Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor),
     is_server: (volRes.data ?? []).length > 0,

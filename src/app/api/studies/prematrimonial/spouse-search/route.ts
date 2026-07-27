@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { findSpouseByContact, hasCompletedN2 } from '@/lib/supabase/queries/prematrimonial'
+import { findSpouseByContact, meetsPrematRequirement } from '@/lib/supabase/queries/prematrimonial'
 
 // Búsqueda del cónyuge por cédula/email/teléfono (exacta). PRIVACIDAD: solo se
 // devuelve el nombre + si cumple el requisito (N2), nunca otros datos.
@@ -32,9 +32,9 @@ export async function POST(req: NextRequest) {
     if (spouse.id === enrolleeId) {
       return NextResponse.json({ found: false, message: 'La pareja no puede ser el mismo miembro que se inscribe.' })
     }
-    const hasN2 = await hasCompletedN2(spouse.id)
-    // Solo el nombre (y si cumple el requisito). Nada más.
-    return NextResponse.json({ found: true, name: spouse.name, spouse_member_id: spouse.id, has_n2: hasN2 })
+    const meetsReq = await meetsPrematRequirement(spouse.id)
+    // Solo el nombre (y si cumple el requisito PRE-5). Nada más.
+    return NextResponse.json({ found: true, name: spouse.name, spouse_member_id: spouse.id, meets_requirement: meetsReq })
   } catch (error) {
     console.error('POST prematrimonial/spouse-search:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

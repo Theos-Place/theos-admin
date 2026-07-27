@@ -7,11 +7,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { normalizeCedula } from '@/lib/cedula'
 import { normalizePhone } from '@/lib/phone'
 import { getMemberStudyProfile } from '@/lib/supabase/queries/studies-eligibility'
+import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
 import { createComprobantePayment } from '@/lib/supabase/queries/payments'
 
 export const PREMAT_COST = 25000
 export const PREMAT_PLAN_CODE = 'PREMAT'
-export const PREMAT_REQUIRED_CODE = 'N2'
 
 const loose = () => createAdminClient() as unknown as SupabaseClient
 
@@ -42,10 +42,12 @@ export async function findSpouseByContact(raw: string): Promise<{ id: string; na
   return null
 }
 
-/** ¿El miembro completó N2 (Nivel 2)? Reusa la lógica de elegibilidad. */
-export async function hasCompletedN2(memberId: string): Promise<boolean> {
+/** PRE-5: ¿el miembro cumple el requisito del prematrimonial? (N1 completado +
+ *  al menos inscrito en N2; regla pura en @/lib/studies/premat-requirement). */
+export async function meetsPrematRequirement(memberId: string): Promise<boolean> {
   const profile = await getMemberStudyProfile(memberId)
-  return (profile?.completed_codes ?? []).includes(PREMAT_REQUIRED_CODE)
+  if (!profile) return false
+  return meetsPrematRequirementFromCodes(profile.completed_codes ?? [], profile.enrolled_codes ?? [])
 }
 
 export type PrematLogistica = {
