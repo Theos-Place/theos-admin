@@ -2,6 +2,7 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { nextLevelCode } from '@/lib/studies/folletos'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
+import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
@@ -478,6 +479,42 @@ export type MemberPaymentRow = {
  *  Trae todos los conceptos con su descripción y estado, y los ids de entidad
  *  para poder pagar (subir comprobante) desde la lista. Orden: pendientes/en
  *  revisión primero (más nuevos arriba), luego los cerrados. */
+/** PAG-2: pagos de estudios que bloquean una matrícula nueva (concepto
+ *  'matricula' con status 'pending'). `excludePlanId` deja fuera los pagos
+ *  ligados al plan que se está matriculando: el pago del propio flujo en curso
+ *  no debe bloquearse a sí mismo (ese caso ya lo maneja el guard
+ *  PAGO_PENDIENTE con su mensaje específico). */
+export async function countBlockingStudyPayments(memberId: string, excludePlanId?: string | null): Promise<number> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('payments')
+    .select(`
+      concept, status,
+      enrollment:study_enrollments!payments_enrollment_id_fkey(
+        plan_id, group:study_groups!study_enrollments_group_id_fkey(plan_id)
+      )
+    `)
+    .eq('member_id', memberId)
+    .eq('concept', 'matricula')
+    .eq('status', 'pending')
+  if (error) throw error
+  let count = 0
+  for (const r of (data ?? []) as Array<{
+    concept: string | null; status: string
+    enrollment: { plan_id: string | null; group: { plan_id: string | null } | { plan_id: string | null }[] | null } | { plan_id: string | null; group: unknown }[] | null
+  }>) {
+    if (!isBlockingStudyPayment(r)) continue
+    if (excludePlanId) {
+      const enr = Array.isArray(r.enrollment) ? r.enrollment[0] : r.enrollment
+      const grp = enr ? (Array.isArray(enr.group) ? (enr.group as Array<{ plan_id: string | null }>)[0] : enr.group as { plan_id: string | null } | null) : null
+      const planId = grp?.plan_id ?? enr?.plan_id ?? null
+      if (planId === excludePlanId) continue
+    }
+    count++
+  }
+  return count
+}
+
 export async function getPaymentsByMember(memberId: string): Promise<MemberPaymentRow[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
