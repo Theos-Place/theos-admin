@@ -78,21 +78,33 @@ export async function PUT(
     if ('phone' in updates) updates.phone = normalizePhoneOrNull(updates.phone as string)
     if ('emergency_contact_phone' in updates) updates.emergency_contact_phone = normalizePhoneOrNull(updates.emergency_contact_phone as string)
     if ('email' in updates) updates.email = normalizeEmail(updates.email)
-    if ('cedula' in updates && typeof updates.cedula === 'string') updates.cedula = updates.cedula.trim() || null
+    // INT-1: número en MAYÚSCULAS (dedup consistente para documentos con letras).
+    if ('cedula' in updates && typeof updates.cedula === 'string') updates.cedula = updates.cedula.trim().toUpperCase() || null
 
-    // Validación de formato de cédula (server-side): si se envía no vacía.
-    const { isValidCedula, CEDULA_FORMAT_MESSAGE } = await import('@/lib/cedula')
-    if (typeof updates.cedula === 'string' && updates.cedula && !isValidCedula(updates.cedula)) {
-      return NextResponse.json({ error: CEDULA_FORMAT_MESSAGE, code: 'cedula_invalida' }, { status: 400 })
+    // INT-1: validación por TIPO de documento (server-side). Si el patch no
+    // trae el tipo, se usa el actual del miembro (default 'cedula').
+    const { isDocumentType, isValidDocument, documentFormatMessage } = await import('@/lib/cedula')
+    let documentType = typeof updates.document_type === 'string' ? updates.document_type : ''
+    if (documentType && !isDocumentType(documentType)) {
+      return NextResponse.json({ error: 'Tipo de documento inválido.', code: 'documento_invalido' }, { status: 400 })
+    }
+    if (!documentType) {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const { data: cur } = await createAdminClient()
+        .from('members').select('document_type').eq('id', id).maybeSingle()
+      documentType = (cur as { document_type?: string } | null)?.document_type ?? 'cedula'
+    }
+    if (typeof updates.cedula === 'string' && updates.cedula && isDocumentType(documentType) && !isValidDocument(documentType, updates.cedula)) {
+      return NextResponse.json({ error: documentFormatMessage(documentType), code: 'cedula_invalida' }, { status: 400 })
     }
 
     const cedula = typeof updates.cedula === 'string' ? updates.cedula : ''
     const email = typeof updates.email === 'string' ? updates.email : ''
     if (cedula || email) {
-      const existing = await findMemberByCedulaOrEmail(cedula || null, email || null, id)
+      const existing = await findMemberByCedulaOrEmail(cedula || null, email || null, id, documentType)
       if (existing) {
         return NextResponse.json(
-          { error: 'Ya existe otro miembro con esa cédula o correo.', code: 'duplicate' },
+          { error: 'Ya existe otro miembro con ese documento o correo.', code: 'duplicate' },
           { status: 409 },
         )
       }

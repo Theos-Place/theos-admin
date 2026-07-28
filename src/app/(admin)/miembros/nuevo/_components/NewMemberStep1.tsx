@@ -5,11 +5,13 @@ import { CR_PROVINCES } from '@/data/costa-rica-geo'
 import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
+import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedula'
 
 type Step1Data = {
   first_name: string
   last_name: string
   cedula: string
+  document_type: string
   email: string
   phone: string
   birth_date: string
@@ -121,13 +123,25 @@ export function NewMemberStep1({
         </Field>
       </div>
 
-      <Field label="Cédula" htmlFor="member-cedula" error={errors.cedula}>
+      {/* INT-1: tipo de documento (internacionalización). */}
+      <Field label="Tipo de documento" htmlFor="member-document-type">
+        <select
+          id="member-document-type"
+          className={selectCls}
+          value={data.document_type || 'cedula'}
+          onChange={e => onData('document_type', e.target.value)}
+        >
+          {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{DOCUMENT_TYPE_LABEL[t]}</option>)}
+        </select>
+      </Field>
+
+      <Field label={data.document_type === 'cedula' || !data.document_type ? 'Cédula' : 'Número de documento'} htmlFor="member-cedula" error={errors.cedula}>
         <div className="relative">
           <input
             id="member-cedula"
             type="text"
             className={cn(inputCls, tseLoading ? 'pr-9' : '', 'font-mono')}
-            placeholder="Ej: 108470291"
+            placeholder={data.document_type === 'dni_nie' ? 'Ej: 12345678Z' : data.document_type === 'pasaporte' ? 'Ej: AB123456' : 'Ej: 108470291'}
             value={data.cedula}
             onChange={e => onData('cedula', e.target.value)}
             onBlur={onCedulaBlur}

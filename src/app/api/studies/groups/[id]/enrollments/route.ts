@@ -78,7 +78,7 @@ export async function POST(
     }
     if (error instanceof Error && error.message === 'CEDULA_REQUERIDA') {
       return NextResponse.json(
-        { error: 'Este curso requiere la cédula registrada. Completala en tu perfil para poder inscribirte.', code: 'cedula_requerida' },
+        { error: 'Este curso requiere el documento de identidad registrado. Completalo en tu perfil para poder inscribirte.', code: 'cedula_requerida' },
         { status: 409 },
       )
     }

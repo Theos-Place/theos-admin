@@ -8,7 +8,7 @@ import type { DbMember } from './members'
 /** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
  *  campos que no existen en la tabla o que no deben tocarse por este camino). */
 export const MEMBER_WRITE_FIELDS = [
-  'cedula', 'first_name', 'last_name', 'birth_date', 'gender', 'marital_status',
+  'cedula', 'document_type', 'first_name', 'last_name', 'birth_date', 'gender', 'marital_status',
   'phone', 'email', 'province', 'canton', 'district', 'address', 'occupation',
   'workplace', 'allergies', 'medications', 'emergency_contact_name',
   'emergency_contact_phone', 'photo_url', 'is_donor', 'is_active',
@@ -27,21 +27,29 @@ export function normalizeEmail(raw: unknown): string | null {
  *  valor en la sintaxis de PostgREST, así que comas/paréntesis del input
  *  alteran el filtro. El correo se compara case-insensitive (hay filas
  *  históricas con mayúsculas). `excludeId` omite al propio miembro (edición). */
-export async function findMemberByCedulaOrEmail(cedula: string | null, email: string | null, excludeId?: string) {
+export async function findMemberByCedulaOrEmail(
+  cedula: string | null,
+  email: string | null,
+  excludeId?: string,
+  /** INT-1: el dedup del documento es por PAREJA (tipo, número normalizado) —
+   *  mismo criterio que el índice único members_document_norm_uniq. */
+  documentType: string = 'cedula',
+) {
   if (!cedula && !email) return null
   const supabase = createAdminClient()
-  const lookup = (col: 'cedula_normalized' | 'email', val: string, ci = false) => {
+  const lookup = (col: 'cedula_normalized' | 'email', val: string, ci = false, docType?: string) => {
     let q = supabase.from('members').select('id')
     // ilike sin comodines = igualdad case-insensitive; se escapan %_\ del input.
     q = ci ? q.ilike(col, val.replace(/[\\%_]/g, m => `\\${m}`)) : q.eq(col, val)
+    if (docType) q = q.eq('document_type', docType)
     if (excludeId) q = q.neq('id', excludeId)
     return q.limit(1).maybeSingle()
   }
 
-  // La cédula se compara NORMALIZADA (misma base que el índice único parcial
-  // members_cedula_norm_uniq): así "1-1234-5678" y "112345678" colisionan.
+  // El número se compara NORMALIZADO (misma base que el índice único parcial
+  // members_document_norm_uniq): así "1-1234-5678" y "112345678" colisionan.
   const [byCedula, byEmail] = await Promise.all([
-    cedula ? lookup('cedula_normalized', normalizeCedula(cedula)) : null,
+    cedula ? lookup('cedula_normalized', normalizeCedula(cedula).toUpperCase(), false, documentType) : null,
     email ? lookup('email', email.trim(), true) : null,
   ])
   if (byCedula?.error) throw byCedula.error

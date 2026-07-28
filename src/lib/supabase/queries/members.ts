@@ -19,6 +19,8 @@ import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-att
 export type DbMember = {
   id: string
   cedula: string | null
+  /** INT-1: tipo del documento en `cedula` ('cedula'|'dni_nie'|'pasaporte'|'otro'). */
+  document_type: string
   first_name: string
   last_name: string
   birth_date: string | null

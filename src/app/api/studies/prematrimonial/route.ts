@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     // Requisito: quien se inscribe debe tener cédula (bloqueante para esta acción).
     const { data: me } = await admin.from('members').select('cedula').eq('id', requester).maybeSingle()
     if (!me?.cedula || !String(me.cedula).trim()) {
-      return NextResponse.json({ error: 'El miembro debe tener la cédula registrada antes de inscribirse.', code: 'cedula_requerida' }, { status: 409 })
+      return NextResponse.json({ error: 'El miembro debe tener el documento de identidad registrado antes de inscribirse.', code: 'cedula_requerida' }, { status: 409 })
     }
 
     // Cónyuge: debe existir y no ser el mismo que se inscribe.

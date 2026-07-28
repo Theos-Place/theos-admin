@@ -9,7 +9,7 @@ import { sedeLabel } from '@/lib/sedes'
 import { useMember } from '@/hooks/useMember'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { normalizePhoneOrNull } from '@/lib/phone'
-import { isValidCedula, CEDULA_FORMAT_MESSAGE } from '@/lib/cedula'
+import { isValidDocument, documentFormatMessage, isDocumentType, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, type DocumentType } from '@/lib/cedula'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,6 +25,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   const [firstName,             setFirstName]             = useState(member?.first_name ?? '')
   const [lastName,              setLastName]              = useState(member?.last_name ?? '')
   const [cedula,                setCedula]                = useState(member?.cedula ?? '')
+  // INT-1: tipo de documento ('cedula' default para el histórico CR).
+  const initialDocType = (member as { document_type?: string } | null | undefined)?.document_type ?? 'cedula'
+  const [documentType,          setDocumentType]          = useState<DocumentType>(isDocumentType(initialDocType) ? initialDocType : 'cedula')
   const [email,                 setEmail]                 = useState(member?.email ?? '')
   const [phone,                 setPhone]                 = useState(member?.phone ?? '')
   const [sede,                  setSede]                  = useState(member?.sede ?? '')
@@ -58,6 +61,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     setFirstName(member.first_name ?? '')
     setLastName(member.last_name ?? '')
     setCedula(member.cedula ?? '')
+    const dt = (member as { document_type?: string }).document_type ?? 'cedula'
+    setDocumentType(isDocumentType(dt) ? dt : 'cedula')
     setEmail(member.email ?? '')
     setPhone(member.phone ?? '')
     setSede(member.sede ?? '')
@@ -107,8 +112,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   async function handleSave() {
     // Validación de formato de cédula (si se ingresó): misma regla que el server.
     const ced = cedula.trim()
-    if (ced && !isValidCedula(ced)) {
-      setCedulaErr(CEDULA_FORMAT_MESSAGE)
+    if (ced && !isValidDocument(documentType, ced)) {
+      setCedulaErr(documentFormatMessage(documentType))
       setHighlightCedula(true)
       document.getElementById('edit-cedula')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
@@ -118,7 +123,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     const payload = {
       first_name: firstName.trim(),
       last_name: lastName.trim(),
-      cedula: cedula.trim() || null,
+      cedula: cedula.trim().toUpperCase() || null,
+      document_type: documentType,
       ...(isAdmin ? { is_system: isSystem } : {}),
       email: email.trim() || null,
       phone: normalizePhoneOrNull(phone),
@@ -144,7 +150,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         body: JSON.stringify(payload),
       })
       if (res.status === 409) {
-        notify('Ya existe otro miembro con esa cédula o correo.', 'error')
+        notify('Ya existe otro miembro con ese documento o correo.', 'error')
         setSaving(false)
         return
       }
@@ -281,17 +287,27 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label" htmlFor="edit-cedula">Cédula</label>
+                {/* INT-1: tipo de documento + número. */}
+                <label className="form-label" htmlFor="edit-document-type">Tipo de documento</label>
+                <select
+                  id="edit-document-type"
+                  className="form-input mb-2"
+                  value={documentType}
+                  onChange={e => { if (isDocumentType(e.target.value)) setDocumentType(e.target.value); if (cedulaErr) setCedulaErr('') }}
+                >
+                  {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{DOCUMENT_TYPE_LABEL[t]}</option>)}
+                </select>
+                <label className="form-label" htmlFor="edit-cedula">{documentType === 'cedula' ? 'Cédula' : 'Número de documento'}</label>
                 <input
                   id="edit-cedula"
                   className={`form-input${highlightCedula || cedulaErr ? ' ring-2 ring-coral/40 border-coral/50' : ''}`}
                   value={cedula}
                   onChange={e => { setCedula(e.target.value); if (cedulaErr) setCedulaErr(''); if (highlightCedula) setHighlightCedula(false) }}
-                  placeholder="Ej: 1-1234-5678"
+                  placeholder={documentType === 'dni_nie' ? 'Ej: 12345678Z' : documentType === 'pasaporte' ? 'Ej: AB123456' : 'Ej: 1-1234-5678'}
                   aria-invalid={!!cedulaErr}
                 />
                 {cedulaErr && <p className="mt-1 text-[12px] text-coral-deep font-body">{cedulaErr}</p>}
-                {highlightCedula && !cedulaErr && <p className="mt-1 text-[12px] text-coral-deep font-body">Completá tu número de cédula acá.</p>}
+                {highlightCedula && !cedulaErr && <p className="mt-1 text-[12px] text-coral-deep font-body">Completá tu documento de identidad acá.</p>}
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="edit-birth-date">Fecha de nacimiento</label>

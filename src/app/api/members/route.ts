@@ -67,18 +67,29 @@ export async function POST(req: NextRequest) {
     // Correo normalizado (trim + minúsculas) ANTES de guardar: lo que se
     // compara en el chequeo de duplicados es lo mismo que queda en la BD.
     if ('email' in payload) payload.email = normalizeEmail(payload.email)
-    if ('cedula' in payload && typeof payload.cedula === 'string') payload.cedula = payload.cedula.trim() || null
+    // INT-1: el número se guarda en MAYÚSCULAS (dedup consistente para DNI/
+    // pasaporte con letras; las cédulas CR son dígitos y no cambian).
+    if ('cedula' in payload && typeof payload.cedula === 'string') payload.cedula = payload.cedula.trim().toUpperCase() || null
+    const documentType = typeof payload.document_type === 'string' && payload.document_type ? payload.document_type : 'cedula'
+    const { isDocumentType, isValidDocument, documentFormatMessage } = await import('@/lib/cedula')
+    if (!isDocumentType(documentType)) {
+      return NextResponse.json({ error: 'Tipo de documento inválido.', code: 'documento_invalido' }, { status: 400 })
+    }
+    if (typeof payload.cedula === 'string' && payload.cedula && !isValidDocument(documentType, payload.cedula)) {
+      return NextResponse.json({ error: documentFormatMessage(documentType), code: 'documento_invalido' }, { status: 400 })
+    }
 
-    // Verificación de duplicados a nivel de app (cédula / correo), porque la BD
-    // no tiene el UNIQUE activo sobre estos campos.
+    // Verificación de duplicados a nivel de app (documento / correo), porque la
+    // BD no tiene el UNIQUE activo sobre estos campos. El documento dedupea por
+    // PAREJA (tipo, número normalizado) — INT-1.
     const cedula = typeof payload.cedula === 'string' ? payload.cedula : ''
     const email = typeof payload.email === 'string' ? payload.email : ''
     if (cedula || email) {
       const { findMemberByCedulaOrEmail } = await import('@/lib/supabase/queries/members')
-      const existing = await findMemberByCedulaOrEmail(cedula || null, email || null)
+      const existing = await findMemberByCedulaOrEmail(cedula || null, email || null, undefined, documentType)
       if (existing) {
         return NextResponse.json(
-          { error: 'Ya existe un miembro con esa cédula o correo.', code: 'duplicate' },
+          { error: 'Ya existe un miembro con ese documento o correo.', code: 'duplicate' },
           { status: 409 },
         )
       }
@@ -101,7 +112,7 @@ export async function POST(req: NextRequest) {
     const e = error as { code?: string; message?: string }
     if (e?.code === '23505') {
       return NextResponse.json(
-        { error: 'Ya existe un miembro con esa cédula o correo.', code: 'duplicate' },
+        { error: 'Ya existe un miembro con ese documento o correo.', code: 'duplicate' },
         { status: 409 },
       )
     }

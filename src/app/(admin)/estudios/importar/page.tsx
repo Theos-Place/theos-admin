@@ -62,7 +62,7 @@ function rowsFromAoa(aoa: string[][]): GroupImportRow[] {
   const idx = (...names: string[]) => header.findIndex(h => names.some(n => h.includes(n)))
   const pi = idx('plan'), zi = idx('zona', 'sede'), di = idx('dia', 'día'), hi = idx('horario'),
     fii = idx('fecha inicio', 'inicio del grupo'), ffi = idx('fecha fin', 'fin del grupo'),
-    ci = idx('cupo'), cedi = idx('cedula', 'cédula'),
+    ci = idx('cupo'), cedi = idx('cedula', 'cédula', 'documento'),
     imi = idx('inicio de matricula', 'inicio de matrícula'), fmi = idx('fin de matricula', 'fin de matrícula')
   const at = (cols: string[], i: number) => (i >= 0 ? (cols[i] ?? '').trim() : '')
   return aoa.slice(1)

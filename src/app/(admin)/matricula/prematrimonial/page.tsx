@@ -168,14 +168,14 @@ export default function PrematrimonialWizardPage() {
       <div className="page max-w-2xl mx-auto">
         <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6 text-center">
           <IdCard className="mx-auto mb-3 text-coral-deep" size={28} />
-          <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? 'El miembro necesita cédula registrada' : 'Necesitás registrar tu cédula'}</h2>
+          <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? 'El miembro necesita su documento de identidad registrado' : 'Necesitás registrar tu documento de identidad'}</h2>
           <p className="mt-2 text-sm text-navy-light/70 font-body">
             {onBehalf
-              ? `Antes de inscribir a ${enrolleeName} al prematrimonial, su cédula debe estar registrada en el perfil.`
-              : 'La inscripción al prematrimonial requiere tu cédula. Completala en tu perfil y volvé.'}
+              ? `Antes de inscribir a ${enrolleeName} al prematrimonial, su documento de identidad debe estar registrado en el perfil.`
+              : 'La inscripción al prematrimonial requiere tu documento de identidad. Completalo en tu perfil y volvé.'}
           </p>
           <Link href={`/miembros/${onBehalf ? requestedMemberId : user?.member_id}/editar?completar=cedula`} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
-            <IdCard size={14} /> Completar cédula
+            <IdCard size={14} /> Completar documento
           </Link>
         </div>
       </div>
@@ -225,7 +225,7 @@ export default function PrematrimonialWizardPage() {
               </div>
             )}
             <h2 className="font-semibold text-navy font-display">La pareja</h2>
-            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con Nivel 1 completado e inscrita en Nivel 2 — buscala por cédula, correo o teléfono.</p>
+            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con Nivel 1 completado e inscrita en Nivel 2 — buscala por documento, correo o teléfono.</p>
             <div className="flex gap-2">
               <input value={spouseQuery} onChange={e => setSpouseQuery(e.target.value)} placeholder="Cédula, correo o teléfono"
                 className="flex-1 rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />

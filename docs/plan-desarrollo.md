@@ -325,6 +325,38 @@ comunicaciones y direccion. Cambios:
 Test del guard (403 para comunicaciones/direccion, 200 para admin).
 ```
 
+### [ ] REV-3 · Unificar página de pagos y revisión de pagos (feedback 2026-07-27)
+Archivos: `src/app/(admin)/finanzas/pagos/page.tsx` (+`[id]`), `src/app/(admin)/pagos/revision/page.tsx` (absorbe y desaparece), `src/app/api/payments/queue/route.ts`, `src/app/api/finance/payments/route.ts`, `src/lib/auth/roles.ts`, sidebar
+
+```
+Unificar /pagos/revision dentro de /finanzas/pagos: las dos páginas trabajan sobre la misma
+tabla payments y casi la misma funcionalidad; la diferencia es que revisión tiene el modal de
+acciones (aprobar/rechazar/iniciar revisión/reabrir/cerrar, vía /api/payments/[id]/review).
+Decisiones confirmadas:
+- La página unificada vive en /finanzas/pagos; /pagos/revision hace redirect ahí (mantener el
+  redirect para links guardados y notificaciones internas que apunten a la ruta vieja).
+- Los roles que hoy solo ven revisión (revision_pagos, folletos, coordinador_dirigentes,
+  coordinador_estudios) pasan a ver TODOS los pagos en la página unificada. Actualizá el
+  módulo/permiso en src/lib/auth/roles.ts para que esos roles tengan view del módulo de pagos
+  completo, y el guard del API /api/finance/payments acorde. Las acciones de revisión siguen
+  gateadas por requireModuleView('revision_pagos','edit') como hoy.
+Implementación:
+1) En /finanzas/pagos: integrar la cola de revisión como pestaña o filtro destacado
+   ("En revisión" con contador), conservando los filtros que ya tiene revisión (estado de
+   cola, concepto, y los de REV-1: plan y dirigente) más los propios de la página de pagos.
+2) Traer el modal de detalle/acciones de revisión a la página unificada: cualquier pago se
+   abre en el modal; si está en cola de revisión muestra las acciones de cambio de estado y
+   el comprobante; si no, solo el detalle. Mantener los guards 409 anti-carrera existentes.
+3) Eliminar la página vieja /pagos/revision (dejando el redirect) y actualizar el sidebar:
+   una sola entrada "Pagos" visible para todos los roles involucrados.
+4) Revisar consumidores: notificaciones internas con links a /pagos/revision, y el punto
+   REV-2 pendiente del plan (botón de recordatorio) que ahora se implementa sobre la página
+   unificada.
+No cambiar la lógica de aprobar/rechazar ni la propagación por concept (RPC approve_payment).
+Tests: acceso por rol (revision_pagos ve todos los pagos, miembro común no), redirect, y
+que las acciones de revisión sigan funcionando desde la página unificada.
+```
+
 ### Calendario público y eventos (feedback 2026-07-26)
 
 ### [x] EVE-1 · Detalle de evento público + inscribirse con login — HECHO 2026-07-27 (modal con fecha completa, costo en colones y "requiere inscripción" — campos que el endpoint ya exponía con whitelist, sin campos nuevos; botón funcional con login-gate patrón /vacantes → `/login?redirect=/eventos?register=<id>`; deep link `?register=` en /eventos abre el modal de inscripción vía elegibilidad y limpia la URL; botón visible solo con requires_registration y respetando showBtn; 2 tests)
@@ -689,7 +721,19 @@ seguir pasando idénticas.
 
 ### Internacionalización (Madrid / Colombia) — contemplar ANTES de migrar datos internacionales
 
-- **INT-1 · Documento de identidad por tipo (cédula / DNI-NIE / pasaporte)** — hoy la
+- [x] **INT-1 · Documento de identidad por tipo (cédula / DNI-NIE / pasaporte)** — HECHO 2026-07-28.
+  Migración `20260728150000_document_type` (aplicada a producción): `members.document_type`
+  ('cedula' | 'dni_nie' | 'pasaporte' | 'otro', default 'cedula', los 23,320 registros CR
+  quedaron como 'cedula') + índice único por PAREJA (document_type, cedula_normalized)
+  reemplazando el de solo cédula. Código: helpers en `src/lib/cedula.ts`
+  (`isValidDocument`, `documentFormatMessage`, labels) con tests; números en MAYÚSCULAS al
+  guardar (dedup consistente para documentos con letras); POST/PATCH de members validan por
+  tipo y dedupean por pareja; alta y edición de miembro con selector de tipo, label y
+  placeholder dinámicos; lookup TSE/Hacienda solo aplica a tipo 'cedula'; import de grupos
+  acepta encabezado "documento"; mensajes de prematrimonial/matrícula dicen "documento de
+  identidad" (los códigos de error `cedula_requerida`/`cedula_invalida` no cambian).
+  Nota: la normalización quita solo guiones y espacios (NO puntos) — números tipo CC
+  colombiana se capturan sin puntos. Spec original: hoy la
   identificación es solo `cedula` + `cedula_normalized` (deduplicación, imports, match de
   dirigentes, requisito del prematrimonial). Para miembros fuera de CR: agregar
   `document_type` ('cedula' | 'dni_nie' | 'pasaporte' | 'otro', default 'cedula') y

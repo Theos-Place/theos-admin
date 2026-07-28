@@ -19,6 +19,7 @@ type Step1Data = {
   first_name: string
   last_name: string
   cedula: string
+  document_type: string
   email: string
   phone: string
   birth_date: string
@@ -117,6 +118,7 @@ export default function NuevoMiembroPage() {
     first_name: '',
     last_name: '',
     cedula: '',
+    document_type: 'cedula',
     email: '',
     phone: '',
     birth_date: '',
@@ -177,6 +179,9 @@ export default function NuevoMiembroPage() {
   async function handleCedulaBlur() {
     const cedula = data.cedula.trim()
     if (!cedula) return
+    // INT-1: la consulta a Hacienda (autocompletar por cédula) solo aplica a
+    // cédulas CR; el chequeo de duplicado de abajo sí corre para todo tipo.
+    const isCedulaCR = (data.document_type || 'cedula') === 'cedula'
     // Duplicado real: busca la cédula en la BD.
     try {
       const norm = (s: string) => s.replace(/[-\s]/g, '')
@@ -195,6 +200,7 @@ export default function NuevoMiembroPage() {
     setTseLoading(true)
     setTseBanner(null)
     try {
+      if (!isCedulaCR) return
       const res = await fetch(`https://api.hacienda.go.cr/fe/ae?identificacion=${cedula}`)
       if (res.ok) {
         const json = await res.json()
@@ -258,7 +264,8 @@ export default function NuevoMiembroPage() {
     const principalPayload = {
       first_name: data.first_name.trim(),
       last_name: data.last_name.trim(),
-      cedula: data.cedula.trim() || null,
+      cedula: data.cedula.trim().toUpperCase() || null,
+      document_type: data.document_type || 'cedula',
       email: data.email.trim() || null,
       phone: normalizePhoneOrNull(data.phone),
       birth_date: data.birth_date || null,

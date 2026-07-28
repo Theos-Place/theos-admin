@@ -2039,6 +2039,7 @@ export type Database = {
           birth_date: string | null
           canton: string | null
           cedula: string | null
+          document_type: string
           cedula_dup_legacy: boolean
           cedula_normalized: string | null
           is_system: boolean
@@ -2088,6 +2089,7 @@ export type Database = {
           birth_date?: string | null
           canton?: string | null
           cedula?: string | null
+          document_type?: string
           cedula_dup_legacy?: boolean
           cedula_normalized?: string | null
           is_system?: boolean
@@ -2137,6 +2139,7 @@ export type Database = {
           birth_date?: string | null
           canton?: string | null
           cedula?: string | null
+          document_type?: string
           cedula_dup_legacy?: boolean
           cedula_normalized?: string | null
           is_system?: boolean
