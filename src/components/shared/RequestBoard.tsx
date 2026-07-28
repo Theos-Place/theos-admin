@@ -544,8 +544,16 @@ export function RequestBoard<R extends BaseRequest>({
         </Modal>
       )}
 
-      {/* Modal resolver / rechazar */}
-      {actionTarget && (
+      {/* Modal resolver / rechazar. EST-7: el form extra puede NO aplicar a este
+          tipo de solicitud (renderResolveExtra devuelve null) — en ese caso el
+          submit no debe exigir resolveExtra. Antes bastaba con que la prop
+          existiera para deshabilitar el botón para siempre en los tipos sin
+          picker: ese era el bug de "no me deja resolver". */}
+      {actionTarget && (() => {
+        const resolveExtraNode = actionTarget.action === 'resolve'
+          ? renderResolveExtra?.(actionTarget.req, setResolveExtra) ?? null
+          : null
+        return (
         <Modal onClose={() => setActionTarget(null)} titleId="request-action-title">
           <div className="p-6">
             <h2 id="request-action-title" className="text-lg font-semibold text-navy font-display mb-1">
@@ -557,9 +565,7 @@ export function RequestBoard<R extends BaseRequest>({
             {actionTarget.action === 'resolve' && renderResolveHint && (
               <div className="mb-4">{renderResolveHint(actionTarget.req)}</div>
             )}
-            {actionTarget.action === 'resolve' && renderResolveExtra && (
-              <div className="mb-4">{renderResolveExtra(actionTarget.req, setResolveExtra)}</div>
-            )}
+            {resolveExtraNode && <div className="mb-4">{resolveExtraNode}</div>}
             <label htmlFor="request-review-notes" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">
               Notas {actionTarget.action === 'resolve' ? 'de resolución' : 'del rechazo'} (opcional)
             </label>
@@ -582,7 +588,7 @@ export function RequestBoard<R extends BaseRequest>({
               </button>
               <button
                 onClick={() => doAction(actionTarget.req, actionTarget.action, notes, actionTarget.action === 'resolve' ? resolveExtra : undefined)}
-                disabled={submitting || (actionTarget.action === 'resolve' && !!renderResolveExtra && resolveExtra === null)}
+                disabled={submitting || (actionTarget.action === 'resolve' && resolveExtraNode !== null && resolveExtra === null)}
                 className={cn(
                   'rounded-full px-5 py-2 text-sm text-white font-body font-medium transition-colors disabled:opacity-60',
                   actionTarget.action === 'resolve' ? 'bg-success hover:bg-[#2f9c64]' : 'bg-coral hover:bg-coral-deep',
@@ -595,7 +601,8 @@ export function RequestBoard<R extends BaseRequest>({
             </div>
           </div>
         </Modal>
-      )}
+        )
+      })()}
     </div>
   )
 }

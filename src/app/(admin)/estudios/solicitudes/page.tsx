@@ -41,7 +41,8 @@ export default function SolicitudesPage() {
   const [createFor, setCreateFor] = useState<MemberHit | null>(null)
   const [section, setSection] = useState<'prematrimonial' | 'relocation' | 'study_interest'>('prematrimonial')
 
-  const allowed = hasRole('coordinador_estudios', 'coordinador_dirigentes', 'admin')
+  // EST-7: 'direccion' puede ejecutar el PATCH de gestión — también debe ver la página.
+  const allowed = hasRole('coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin')
 
   useEffect(() => {
     if (!allowed) return

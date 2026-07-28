@@ -267,7 +267,7 @@ REUBICACIÓN (relocation) mantienen su flujo completo tal cual.
 Revisá que /estudios/analisis (demanda) siga leyendo estas solicitudes igual. Tests del guard.
 ```
 
-### [ ] EST-7 · Bug: no deja resolver solicitud de reubicación de grupo
+### [x] EST-7 · Bug: no deja resolver solicitud — HECHO 2026-07-27 (causa raíz: el submit se deshabilitaba con solo EXISTIR la prop `renderResolveExtra`, aunque devolviera null para ese tipo — quedaba deshabilitado para siempre en tipos sin picker; ahora solo exige `resolveExtra` si el form extra se renderiza. Además el picker ya avisa cuando no hay grupos elegibles, los 409 del server ya llegan al toast, y `direccion` ahora ve la página (podía ejecutar el PATCH sin verla))
 Archivos: `src/components/shared/RequestBoard.tsx` (botón deshabilitado línea ~582), `src/components/studies/RelocationResolveGroupPicker.tsx`, `src/app/api/studies/requests/[id]/route.ts`, `src/lib/supabase/queries/study-requests.ts` (`resolveStudyRequest` ~356-522)
 
 ```
