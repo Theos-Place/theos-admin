@@ -37,8 +37,12 @@ export default function DevolucionesPage() {
   const [rejectReason, setRejectReason] = useState('')
   const toast = useToast()
 
-  const cardRefunds = refunds.filter(r => r.method === 'card')
-  const sinpeRefunds = refunds.filter(r => r.method === 'sinpe')
+  // FASE FUTURA: devoluciones automáticas por pasarela (tarjeta) y SINPE
+  // directo no existen aún — hoy TODO se procesa manualmente (tiquetes de
+  // miembros por comprobante o registrados a mano), en una sola cola.
+  const REFUND_METHOD_LABEL: Record<string, string> = {
+    comprobante: 'Comprobante', cash: 'Efectivo', scholarship: 'Beca', sinpe: 'SINPE', card: 'Tarjeta',
+  }
 
   const stats = useMemo(() => ({
     pending:    refunds.filter(r => r.status === 'pending').length,
@@ -131,99 +135,21 @@ export default function DevolucionesPage() {
           </div>
         </div>
 
-        {/* Section A — Card (automatic) */}
+        {/* Cola única de devoluciones (todas se procesan manualmente hoy). */}
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--outline-variant)]">
             <p className="text-sm font-bold font-display text-navy">
-              Automáticas — Tarjeta
-            </p>
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium bg-[rgba(112,189,194,0.15)] text-teal-deep">
-              Procesadas por pasarela
-            </span>
-          </div>
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-[var(--outline-variant)]">
-                  {['Miembro', 'Concepto', 'Monto', 'Estado', 'Solicitada', 'Procesada'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {cardRefunds.map((r, i) => (
-                  <tr key={r.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
-                    <td className="px-5 py-3.5">
-                      <p className="text-[13px] font-medium font-body text-navy">{r.member_name}</p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-[13px] font-body text-navy">{r.entity_name}</p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-[13px] font-medium font-body text-navy">
-                        <AmountDisplay amount={r.amount} defaultHidden={false} />
-                      </p>
-                    </td>
-                    <td className="px-5 py-3.5"><RefundStatusBadge status={r.status} /></td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.requested_at)}</p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.processed_at)}</p>
-                    </td>
-                  </tr>
-                ))}
-                {cardRefunds.length === 0 && (
-                  <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones por tarjeta'}</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile: tarjetas */}
-          <ul className="md:hidden">
-            {cardRefunds.map((r, i) => (
-              <li
-                key={r.id}
-                className="px-4 py-3 flex items-center gap-3"
-                style={i < cardRefunds.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium font-body text-navy truncate">{r.member_name}</p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{r.entity_name}</p>
-                  <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">Solicitada {formatDate(r.requested_at)}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <p className="text-[13px] font-medium font-body text-navy">
-                    <AmountDisplay amount={r.amount} defaultHidden={false} />
-                  </p>
-                  <RefundStatusBadge status={r.status} />
-                </div>
-              </li>
-            ))}
-            {cardRefunds.length === 0 && (
-              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones por tarjeta'}</li>
-            )}
-          </ul>
-        </div>
-
-        {/* Section B — SINPE (manual) */}
-        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--outline-variant)]">
-            <p className="text-sm font-bold font-display text-navy">
-              Manuales — SINPE
+              Devoluciones
             </p>
             <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium bg-[rgba(239,85,84,0.10)] text-coral">
-              Requieren proceso manual
+              Proceso manual
             </span>
           </div>
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
-                  {['Miembro', 'Concepto', 'Monto', 'Motivo', 'Estado', 'Solicitada', 'Acciones'].map(h => (
+                  {['Miembro', 'Concepto', 'Monto', 'Método', 'Motivo', 'Estado', 'Solicitada', 'Acciones'].map(h => (
                     <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
@@ -231,7 +157,7 @@ export default function DevolucionesPage() {
                 </tr>
               </thead>
               <tbody>
-                {sinpeRefunds.map((r, i) => (
+                {refunds.map((r, i) => (
                   <tr key={r.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-3.5">
                       <p className="text-[13px] font-medium font-body text-navy">{r.member_name}</p>
@@ -243,6 +169,9 @@ export default function DevolucionesPage() {
                       <p className="text-[13px] font-medium font-body text-navy">
                         <AmountDisplay amount={r.amount} defaultHidden={false} />
                       </p>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{REFUND_METHOD_LABEL[r.method] ?? r.method}</p>
                     </td>
                     <td className="px-5 py-3.5">
                       <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{r.reason}</p>
@@ -271,8 +200,8 @@ export default function DevolucionesPage() {
                     </td>
                   </tr>
                 ))}
-                {sinpeRefunds.length === 0 && (
-                  <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones SINPE'}</td></tr>
+                {refunds.length === 0 && (
+                  <tr><td colSpan={8} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones'}</td></tr>
                 )}
               </tbody>
             </table>
@@ -280,11 +209,11 @@ export default function DevolucionesPage() {
 
           {/* Mobile: tarjetas */}
           <ul className="md:hidden">
-            {sinpeRefunds.map((r, i) => (
+            {refunds.map((r, i) => (
               <li
                 key={r.id}
                 className="px-4 py-3 space-y-2.5"
-                style={i < sinpeRefunds.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
+                style={i < refunds.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
               >
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
@@ -318,8 +247,8 @@ export default function DevolucionesPage() {
                 )}
               </li>
             ))}
-            {sinpeRefunds.length === 0 && (
-              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones SINPE'}</li>
+            {refunds.length === 0 && (
+              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones'}</li>
             )}
           </ul>
         </div>

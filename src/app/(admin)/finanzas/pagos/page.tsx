@@ -68,8 +68,6 @@ function PagosContent() {
   }, [])
   useEffect(() => { loadStats() }, [loadStats])
   const totalPaid = stats.total_paid
-  const totalCard = stats.total_card
-  const totalSinpe = stats.total_sinpe
   const totalPending = stats.total_pending
 
   const refetch = useCallback(() => { reload(); loadStats() }, [reload, loadStats])
@@ -152,11 +150,12 @@ function PagosContent() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          {/* FASE FUTURA: pagos por tarjeta / SINPE directo aún no existen en
+              el sistema (hoy todo entra por comprobante o manual) — las cards
+              "Por tarjeta"/"Por SINPE" se reactivan cuando se implementen. */}
           {[
             { label: 'Total cobrado', value: totalPaid, color: '#161440' },
-            { label: 'Por tarjeta', value: totalCard, color: '#519DA2' },
-            { label: 'Por SINPE', value: totalSinpe, color: '#3DB97A' },
             { label: 'Pendientes', value: totalPending, color: '#E9B949' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
@@ -198,9 +197,9 @@ function PagosContent() {
             activeKey={methodFilter}
             onSelect={k => setMethodFilter(k)}
             chips={[
+              // FASE FUTURA: 'card'/'sinpe' se agregan cuando existan esos métodos.
               { key: 'all', label: 'Todos' },
-              { key: 'card', label: 'Tarjeta' },
-              { key: 'sinpe', label: 'SINPE' },
+              { key: 'comprobante', label: 'Comprobante' },
               { key: 'scholarship', label: 'Beca' },
               { key: 'cash', label: 'Efectivo' },
             ]}
