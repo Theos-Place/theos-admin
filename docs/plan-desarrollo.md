@@ -685,6 +685,7 @@ seguir pasando idénticas.
 
 - **CAM-1 · Matrículas de estudios tipo campaña** — no urge. Definir: ¿sin prerequisitos? ¿cupos? ¿pago? La etapa 'campaña' ya existe en la elegibilidad (campañas sin compromisos) y la excepción de campaña queda implementada en EST-1.
 - **WAP-1 · Canal WhatsApp en comunicaciones** — fase mayor. Hoy solo está modelado en el esquema (`channel_configs.type`, prefs de miembro). Requiere decidir proveedor y costos antes de escribir código.
+- **PAY-FUT · Pagos por tarjeta (pasarela) y SINPE directo** — decisión 2026-07-28: hoy todo entra por comprobante o manual; la UI de tarjeta/SINPE se retiró de /finanzas/pagos y /finanzas/devoluciones (marcada FASE FUTURA en el código: stat cards, chips de filtro, sección de devoluciones automáticas, botón Confirmar SINPE auto-gateado). El esquema ya soporta los métodos (`refunds.method`, `payment_stats`); al implementarse, reactivar esa UI.
 
 ### Internacionalización (Madrid / Colombia) — contemplar ANTES de migrar datos internacionales
 
