@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { updateFinanceRequestStatus } from '@/lib/supabase/queries/finance-requests'
+import { approvePayment } from '@/lib/supabase/queries/payments'
 import { sendSystemEmail } from '@/lib/email/system-templates'
-import { formatCRC } from '@/lib/format'
+import { formatCRC, formatDate } from '@/lib/format'
+import {
+  checkPaymentScholarshipEligibility, computeApplication, currencyMismatch,
+  checkCouponEmailSendable,
+} from '@/lib/finance/scholarship-payment-rules'
 
 const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
   SCHOLARSHIP_NOT_FOUND: 'La beca indicada no existe o no aplica para tu cuenta.',
@@ -10,7 +15,12 @@ const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
   SCHOLARSHIP_CODE_EXPIRED: 'El código ya venció.',
   SCHOLARSHIP_WRONG_TARGET: 'Ese código no aplica para este estudio/evento.',
   SCHOLARSHIP_ALREADY_USED: 'Ya usaste esta beca/código antes.',
+  // BECA_YA_USADA es la carrera perdida en el CONSUMO (consumeScholarship);
+  // antes no estaba mapeada y caía como 500 en vez de 409.
+  BECA_YA_USADA: 'Ya usaste esta beca/código antes.',
 }
+
+const SCHOLARSHIP_CONFLICT_CODES = new Set(['SCHOLARSHIP_ALREADY_USED', 'BECA_YA_USADA'])
 
 /** Traduce los errores de aplicar una beca (resolveScholarshipForApplication/
  *  consumeScholarship) a una respuesta HTTP. Devuelve null si el error no es
@@ -19,7 +29,7 @@ export function scholarshipErrorResponse(error: unknown): NextResponse | null {
   if (!(error instanceof Error)) return null
   const message = SCHOLARSHIP_ERROR_MESSAGES[error.message]
   if (!message) return null
-  const status = error.message === 'SCHOLARSHIP_ALREADY_USED' ? 409 : 400
+  const status = SCHOLARSHIP_CONFLICT_CODES.has(error.message) ? 409 : 400
   return NextResponse.json({ error: message }, { status })
 }
 
@@ -54,6 +64,9 @@ export type Scholarship = {
   used_at: string | null
   used_count: number
   created_at: string
+  /** BEC-1: registro del correo enviado con el código/aviso de beca. */
+  email_sent_at: string | null
+  email_sent_to: string | null
 }
 
 /** Redondea al colón (CRC no usa decimales en la práctica de este sistema). */
@@ -69,7 +82,7 @@ export function formatDiscount(type: DiscountType, value: number): string {
 
 const SELECT = `
   id, kind, member_id, entity_type, plan_id, event_id, discount_type, discount_value,
-  code, expires_at, approval_type, status, used_at, created_at,
+  code, expires_at, approval_type, status, used_at, created_at, email_sent_at, email_sent_to,
   member:members!scholarships_member_id_fkey(first_name, last_name),
   plan:study_plans!scholarships_plan_id_fkey(name),
   event:events!scholarships_event_id_fkey(title)
@@ -90,6 +103,8 @@ type DbRow = {
   status: ScholarshipStatus
   used_at: string | null
   created_at: string
+  email_sent_at: string | null
+  email_sent_to: string | null
   member: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
   plan: { name: string } | { name: string }[] | null
   event: { title: string } | { title: string }[] | null
@@ -121,6 +136,8 @@ function toDomain(r: DbRow, usedCount = 0): Scholarship {
     used_at: r.used_at,
     used_count: usedCount,
     created_at: r.created_at,
+    email_sent_at: r.email_sent_at,
+    email_sent_to: r.email_sent_to,
   }
 }
 
@@ -338,7 +355,7 @@ export async function approveScholarshipRequest(
   if (!['open', 'in_review'].includes(req.status)) throw new Error('La solicitud ya fue resuelta')
   if (!req.entity_type) throw new Error('La solicitud no tiene un destino definido')
 
-  const { error: insErr } = await supabase.from('scholarships').insert({
+  const { data: created, error: insErr } = await supabase.from('scholarships').insert({
     kind: 'asignada',
     member_id: req.member_id,
     entity_type: req.entity_type,
@@ -351,8 +368,9 @@ export async function approveScholarshipRequest(
     request_id: requestId,
     approved_by: input.reviewerUserId,
     approved_at: new Date().toISOString(),
-  })
+  }).select('id').single()
   if (insErr) throw insErr
+  const scholarshipId = (created as { id: string }).id
 
   await updateFinanceRequestStatus(requestId, 'resolved', input.reviewerMemberId, null)
 
@@ -371,15 +389,241 @@ export async function approveScholarshipRequest(
       link: null,
     })
     if (member?.email) {
-      await sendSystemEmail({
+      const sent = await sendSystemEmail({
         systemKey: input.approval_type === 'parcial' ? 'beca_aprobada_parcial' : 'beca_aprobada',
         to: { email: member.email, name: `${member.first_name} ${member.last_name}`.trim() },
         data: { nombre: member.first_name, nombre_estudio_evento: entityName, descuento: discount },
       })
+      // BEC-1: registrar el envío en la beca (mismo tracking que el botón manual).
+      if (sent.ok) {
+        await supabase.from('scholarships')
+          .update({ email_sent_at: new Date().toISOString(), email_sent_to: member.email })
+          .eq('id', scholarshipId)
+      }
     }
   } catch (e) {
     console.warn('approveScholarshipRequest: aviso falló:', e)
   }
+}
+
+// ── BEC-1: beca/cupón sobre un PAGO pendiente (modal de pagos) ──────────────
+
+type PaymentForApply = {
+  id: string
+  member_id: string | null
+  amount: number
+  currency: string | null
+  payment_method: string | null
+  status: string
+  review_status: string | null
+  concept: string | null
+  enrollment_id: string | null
+  event_registration_id: string | null
+  study_group_id: string | null
+  event_id: string | null
+  scholarship_id: string | null
+}
+
+const PAYMENT_APPLY_ERROR: Record<string, { message: string; status: number }> = {
+  pago_no_encontrado: { message: 'El pago no existe.', status: 404 },
+  pago_no_pendiente: { message: 'El pago ya no está pendiente.', status: 409 },
+  pago_ya_con_beca: { message: 'Este pago ya tiene una beca aplicada.', status: 409 },
+  pago_sin_miembro: { message: 'El pago no tiene un miembro asociado.', status: 400 },
+  concepto_no_aplica: { message: 'Las becas solo aplican a pagos de matrícula o eventos.', status: 400 },
+  moneda_distinta: { message: 'La beca es de monto fijo en otra moneda; no aplica a este pago.', status: 400 },
+}
+
+/** Traduce los errores propios de aplicar beca a un PAGO. Complementa a
+ *  scholarshipErrorResponse (errores de la beca en sí). */
+export function paymentApplyErrorResponse(error: unknown): NextResponse | null {
+  if (!(error instanceof Error)) return null
+  const entry = PAYMENT_APPLY_ERROR[error.message]
+  if (!entry) return null
+  return NextResponse.json({ error: entry.message, code: error.message }, { status: entry.status })
+}
+
+/** Carga el pago y resuelve el destino de beca (plan del grupo / evento).
+ *  Tira los códigos de PAYMENT_APPLY_ERROR si el pago no admite beca. */
+async function resolvePaymentScholarshipTarget(paymentId: string): Promise<{
+  payment: PaymentForApply
+  entityType: ScholarshipEntityType
+  entityId: string
+}> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('payments')
+    .select('id, member_id, amount, currency, payment_method, status, review_status, concept, enrollment_id, event_registration_id, study_group_id, event_id, scholarship_id')
+    .eq('id', paymentId).maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('pago_no_encontrado')
+  const payment = data as PaymentForApply
+
+  const elig = checkPaymentScholarshipEligibility(payment)
+  if (!elig.ok) throw new Error(elig.error)
+
+  if (elig.entityType === 'study_plan') {
+    const { data: group, error: gErr } = await supabase
+      .from('study_groups').select('plan_id').eq('id', payment.study_group_id!).maybeSingle()
+    if (gErr) throw gErr
+    const planId = (group as { plan_id: string | null } | null)?.plan_id
+    if (!planId) throw new Error('concepto_no_aplica')
+    return { payment, entityType: 'study_plan', entityId: planId }
+  }
+  return { payment, entityType: 'event', entityId: payment.event_id! }
+}
+
+/** Beca ASIGNADA activa aplicable a un pago pendiente (para precargar el
+ *  panel del modal de pagos). null si el pago no admite beca o no hay. */
+export async function findApplicableScholarshipForPayment(paymentId: string): Promise<Scholarship | null> {
+  try {
+    const { payment, entityType, entityId } = await resolvePaymentScholarshipTarget(paymentId)
+    return await findApplicableScholarship(payment.member_id!, entityType, entityId)
+  } catch (e) {
+    if (e instanceof Error && PAYMENT_APPLY_ERROR[e.message]) return null
+    throw e
+  }
+}
+
+export type ApplyToPaymentResult = { amount: number; covered: boolean; approved: boolean }
+
+/**
+ * Aplica una beca asignada o un código de cupón a un pago PENDIENTE:
+ * recalcula el monto con el descuento y consume la beca (guard atómico
+ * active→used / redención única — 409 si ya se usó). Beca completa (100%):
+ * el pago baja a 0, queda method='scholarship' y se aprueba SIN comprobante
+ * vía approve_payment (libera matrícula/inscripción igual que la revisión).
+ * Parcial: el pago sigue pendiente por el resto y el flujo de comprobante
+ * no cambia.
+ */
+export async function applyScholarshipToPayment(
+  paymentId: string,
+  input: { scholarship_id?: string; coupon_code?: string },
+  reviewerMemberId: string | null,
+): Promise<ApplyToPaymentResult> {
+  const supabase = createAdminClient()
+  const { payment, entityType, entityId } = await resolvePaymentScholarshipTarget(paymentId)
+
+  const resolved = await resolveScholarshipForApplication(payment.member_id!, entityType, entityId, input)
+
+  // Monto fijo en otra moneda no aplica (INT-2: sin conversión automática).
+  if (resolved.discount_type === 'fixed') {
+    const { data: s } = await supabase.from('scholarships').select('currency').eq('id', resolved.id).maybeSingle()
+    if (currencyMismatch('fixed', (s as { currency: string | null } | null)?.currency ?? null, payment.currency)) {
+      throw new Error('moneda_distinta')
+    }
+  }
+
+  const { amount: newAmount, covered } = computeApplication(Number(payment.amount), resolved.discount_type, resolved.discount_value)
+
+  // UPDATE optimista: solo si sigue pendiente y sin beca (anti-carrera).
+  // Beca completa: method='scholarship' documenta el origen y review_status
+  // ='en_revision' habilita el guard de approve_payment.
+  const patch = covered
+    ? { amount: newAmount, scholarship_id: resolved.id, payment_method: 'scholarship', review_status: 'en_revision' }
+    : { amount: newAmount, scholarship_id: resolved.id }
+  const { data: updated, error: updErr } = await supabase.from('payments')
+    .update(patch)
+    .eq('id', paymentId).eq('status', 'pending').is('scholarship_id', null)
+    .select('id')
+  if (updErr) throw updErr
+  if ((updated ?? []).length === 0) throw new Error('pago_no_pendiente')
+
+  try {
+    await consumeScholarship(resolved, payment.member_id!, newAmount, {
+      enrollmentId: payment.enrollment_id,
+      eventRegistrationId: payment.event_registration_id,
+    })
+  } catch (e) {
+    // Carrera perdida del cupón: revertir el pago a como estaba.
+    await supabase.from('payments').update({
+      amount: payment.amount,
+      scholarship_id: null,
+      payment_method: payment.payment_method,
+      review_status: payment.review_status,
+    }).eq('id', paymentId)
+    throw e
+  }
+
+  let approved = false
+  if (covered) {
+    // Mismo RPC transaccional de la cola de revisión: paid + libera el objeto
+    // (matrícula/inscripción). Si otra revisión lo procesó en paralelo, el
+    // guard devuelve false y el estado real ya quedó resuelto por esa vía.
+    approved = await approvePayment(paymentId, reviewerMemberId)
+  }
+  return { amount: newAmount, covered, approved }
+}
+
+// ── BEC-1: correo con el código de cupón / aviso de beca ────────────────────
+
+const SEND_EMAIL_ERROR: Record<string, { message: string; status: number }> = {
+  beca_no_encontrada: { message: 'La beca/cupón no existe.', status: 404 },
+  no_activa: { message: 'La beca/cupón ya no está activa.', status: 409 },
+  vencida: { message: 'El cupón ya venció.', status: 409 },
+  miembro_requerido: { message: 'Indicá a quién enviarle el cupón.', status: 400 },
+  sin_correo: { message: 'Esa persona no tiene correo registrado.', status: 400 },
+  envio_fallido: { message: 'No se pudo enviar el correo. Intentá de nuevo.', status: 502 },
+}
+
+export function scholarshipEmailErrorResponse(error: unknown): NextResponse | null {
+  if (!(error instanceof Error)) return null
+  const entry = SEND_EMAIL_ERROR[error.message]
+  if (!entry) return null
+  return NextResponse.json({ error: entry.message, code: error.message }, { status: entry.status })
+}
+
+/**
+ * Envía por correo el código de un cupón genérico (a la persona elegida) o el
+ * aviso de beca asignada (a su dueño), y registra el envío en la beca
+ * (email_sent_at/email_sent_to). El dedupe es de UI: muestra el último envío
+ * y pide confirmación antes de reenviar.
+ */
+export async function sendScholarshipEmail(
+  scholarshipId: string,
+  requestedMemberId: string | null,
+): Promise<{ sent_to: string; sent_at: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('scholarships').select(SELECT).eq('id', scholarshipId).maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('beca_no_encontrada')
+  const s = toDomain(data as DbRow)
+
+  const sendable = checkCouponEmailSendable(
+    { kind: s.kind, status: s.status, expires_at: s.expires_at, member_id: s.member_id },
+    requestedMemberId,
+    new Date(),
+  )
+  if (!sendable.ok) throw new Error(sendable.error)
+
+  const { data: m } = await supabase.from('members')
+    .select('email, first_name, last_name').eq('id', sendable.memberId).maybeSingle()
+  const member = m as { email: string | null; first_name: string; last_name: string } | null
+  if (!member?.email) throw new Error('sin_correo')
+
+  const discount = formatDiscount(s.discount_type, s.discount_value)
+  const result = s.kind === 'generica'
+    ? await sendSystemEmail({
+        systemKey: 'cupon_asignado',
+        to: { email: member.email, name: `${member.first_name} ${member.last_name}`.trim() },
+        data: {
+          nombre: member.first_name,
+          nombre_estudio_evento: s.entity_name,
+          codigo: s.code ?? '',
+          descuento: discount,
+          vencimiento: s.expires_at ? formatDate(s.expires_at) : 'sin vencimiento',
+        },
+      })
+    : await sendSystemEmail({
+        systemKey: s.approval_type === 'parcial' ? 'beca_aprobada_parcial' : 'beca_aprobada',
+        to: { email: member.email, name: `${member.first_name} ${member.last_name}`.trim() },
+        data: { nombre: member.first_name, nombre_estudio_evento: s.entity_name, descuento: discount },
+      })
+  if (!result.ok) throw new Error('envio_fallido')
+
+  const sentAt = new Date().toISOString()
+  await supabase.from('scholarships')
+    .update({ email_sent_at: sentAt, email_sent_to: member.email })
+    .eq('id', scholarshipId)
+  return { sent_to: member.email, sent_at: sentAt }
 }
 
 /** Rechaza una solicitud de beca (motivo obligatorio). Sin fila en scholarships. */

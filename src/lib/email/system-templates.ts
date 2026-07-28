@@ -17,6 +17,7 @@ export type SystemTemplateKey =
   | 'form_asignado' | 'form_completado'
   | 'matricula_estudiante' | 'matricula_dirigente' | 'inicio_capacitacion'
   | 'beca_aprobada' | 'beca_aprobada_parcial' | 'beca_rechazada'
+  | 'cupon_asignado'
 
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */
@@ -37,6 +38,11 @@ const FALLBACK: Record<string, { subject: string; html: string }> = {
   beca_rechazada: {
     subject: 'Sobre tu solicitud de beca',
     html: '<p>Hola {{nombre}},</p><p>Gracias por tu solicitud de beca para {{nombre_estudio_evento}}. En esta ocasión no pudimos aprobarla.</p><p>Motivo: {{motivo_rechazo}}</p>',
+  },
+  // BEC-1: cupón genérico enviado a una persona desde /finanzas/becas.
+  cupon_asignado: {
+    subject: 'Tenés un cupón de descuento',
+    html: '<p>Hola {{nombre}},</p><p>Se te asignó un cupón de descuento para {{nombre_estudio_evento}}.</p><p>Código: <strong>{{codigo}}</strong> — descuento de {{descuento}}. Vence el {{vencimiento}}.</p><p>Usalo al momento de hacer tu pago.</p>',
   },
 }
 

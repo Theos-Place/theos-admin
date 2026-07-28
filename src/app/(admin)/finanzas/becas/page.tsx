@@ -13,7 +13,8 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { formatDate, formatCRC } from '@/lib/format'
+import { formatDate, formatDateTime, formatCRC } from '@/lib/format'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import type { FinanceRequest } from '@/types/finance'
 
 type Scholarship = {
@@ -31,6 +32,9 @@ type Scholarship = {
   status: 'active' | 'used' | 'revoked'
   used_count: number
   created_at: string
+  /** BEC-1: último envío por correo del código. */
+  email_sent_at: string | null
+  email_sent_to: string | null
 }
 
 function formatDiscount(type: 'percentage' | 'fixed', value: number): string {
@@ -74,6 +78,31 @@ export default function BecasPage() {
   const [confirmRevoke, setConfirmRevoke] = useState<Scholarship | null>(null)
   const [warnUsed, setWarnUsed] = useState<Scholarship | null>(null)
   const [bulkRevoking, setBulkRevoking] = useState(false)
+
+  // BEC-1: enviar el código de un cupón por correo a una persona elegida.
+  const [sendTarget, setSendTarget] = useState<Scholarship | null>(null)
+  const [sendMember, setSendMember] = useState<MemberHit | null>(null)
+  const [sendBusy, setSendBusy] = useState(false)
+
+  async function doSendEmail() {
+    if (!sendTarget || !sendMember || sendBusy) return
+    setSendBusy(true)
+    try {
+      const res = await fetch(`/api/scholarships/${sendTarget.id}/send-email`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: sendMember.id }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el correo.')
+      toast(`Cupón enviado a ${data.sent_to}.`, 'success')
+      setSendTarget(null); setSendMember(null)
+      refetchCoupons()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo enviar el correo.', 'error')
+    } finally {
+      setSendBusy(false)
+    }
+  }
 
   function requestRevoke(c: Scholarship) {
     if (c.used_count > 0) { setWarnUsed(c); return }
@@ -230,12 +259,22 @@ export default function BecasPage() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           {canEdit && c.status === 'active' && (
-                            <button
-                              onClick={() => requestRevoke(c)}
-                              className="rounded-full border border-coral/40 text-coral px-3 py-1 text-[12px] hover:bg-coral/5 transition-colors font-body"
-                            >
-                              Revocar
-                            </button>
+                            <div className="inline-flex items-center gap-2">
+                              {/* BEC-1: mandar el código a una persona (dedupe por UI). */}
+                              <button
+                                onClick={() => { setSendMember(null); setSendTarget(c) }}
+                                title={c.email_sent_at ? `Último envío: ${formatDateTime(c.email_sent_at)} a ${c.email_sent_to ?? '—'}` : undefined}
+                                className="rounded-full border border-navy/20 text-navy px-3 py-1 text-[12px] hover:bg-navy/5 transition-colors font-body whitespace-nowrap"
+                              >
+                                {c.email_sent_at ? 'Reenviar correo' : 'Enviar por correo'}
+                              </button>
+                              <button
+                                onClick={() => requestRevoke(c)}
+                                className="rounded-full border border-coral/40 text-coral px-3 py-1 text-[12px] hover:bg-coral/5 transition-colors font-body"
+                              >
+                                Revocar
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -317,6 +356,68 @@ export default function BecasPage() {
           onClose={() => setReviewTarget(null)}
           onDone={() => { setReviewTarget(null); refetchRequests() }}
         />
+      )}
+
+      {/* BEC-1: enviar el código del cupón por correo a una persona. */}
+      {sendTarget && (
+        <Modal onClose={() => !sendBusy && setSendTarget(null)} titleId="send-coupon-title" width={480}>
+          <div className="p-6 space-y-4">
+            <h3 id="send-coupon-title" className="text-base font-bold text-navy font-display">
+              Enviar cupón por correo · <span className="font-mono">{sendTarget.code}</span>
+            </h3>
+            <p className="text-sm text-navy-light/70 font-body">
+              Se le enviará el código, el descuento ({formatDiscount(sendTarget.discount_type, sendTarget.discount_value)})
+              y el destino ({sendTarget.entity_name}) al correo registrado de la persona.
+            </p>
+            {sendTarget.email_sent_at && (
+              <p className="rounded-xl bg-amber-50 text-amber-700 px-3 py-2 text-[12px] font-body">
+                Este cupón ya se envió el {formatDateTime(sendTarget.email_sent_at)}
+                {sendTarget.email_sent_to ? ` a ${sendTarget.email_sent_to}` : ''}. Confirmá solo si querés reenviarlo.
+              </p>
+            )}
+            {sendMember ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-outline px-4 py-2.5">
+                <p className="text-sm text-navy font-body">
+                  {sendMember.first_name} {sendMember.last_name}
+                  {sendMember.email ? <span className="text-navy-light/60"> · {sendMember.email}</span> : null}
+                </p>
+                <button onClick={() => setSendMember(null)} className="text-[12px] text-navy-light/70 hover:text-navy font-body">
+                  Cambiar
+                </button>
+              </div>
+            ) : (
+              <MemberCombobox
+                onSelect={m => setSendMember(m)}
+                placeholder="Buscar a quién enviárselo…"
+                autoFocus
+                dropdown
+                secondaryText={m => m.email ?? 'Sin correo registrado'}
+              />
+            )}
+            {sendMember && !sendMember.email && (
+              <p className="text-[12px] text-coral font-body">Esa persona no tiene correo registrado en su perfil.</p>
+            )}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={doSendEmail}
+                disabled={!sendMember || !sendMember.email || sendBusy}
+                className={cn(
+                  'flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-opacity font-body inline-flex items-center justify-center gap-2 bg-navy hover:opacity-90',
+                  (!sendMember || !sendMember.email || sendBusy) && 'opacity-50 cursor-not-allowed',
+                )}
+              >
+                {sendBusy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : sendTarget.email_sent_at ? 'Reenviar correo' : 'Enviar correo'}
+              </button>
+              <button
+                onClick={() => setSendTarget(null)}
+                disabled={sendBusy}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

@@ -40,6 +40,8 @@ function PagosContent() {
   const canQueue = can('revision_pagos', 'view')
   const canReview = can('revision_pagos', 'edit')
   const canFinanceEdit = can('finanzas', 'edit')
+  // BEC-1: aplicar beca/cupón desde el modal (espejo del guard del endpoint).
+  const canApplyScholarship = can('becas', 'edit') || canReview
 
   const [revealAll, setRevealAll] = useState(false)
   // Pestañas: 'todos' (listado general) | 'revision' (cola de revisión).
@@ -237,6 +239,7 @@ function PagosContent() {
             ref={queueRef}
             visible={tab === 'revision'}
             canReview={canReview}
+            canApplyScholarship={canApplyScholarship}
             onMutated={refetch}
           />
         )}

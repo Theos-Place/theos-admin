@@ -3005,6 +3005,8 @@ export type Database = {
           created_by: string | null
           discount_type: string | null
           discount_value: number | null
+          email_sent_at: string | null
+          email_sent_to: string | null
           entity_type: string | null
           event_id: string | null
           expires_at: string | null
@@ -3033,6 +3035,8 @@ export type Database = {
           created_by?: string | null
           discount_type?: string | null
           discount_value?: number | null
+          email_sent_at?: string | null
+          email_sent_to?: string | null
           entity_type?: string | null
           event_id?: string | null
           expires_at?: string | null
@@ -3061,6 +3065,8 @@ export type Database = {
           created_by?: string | null
           discount_type?: string | null
           discount_value?: number | null
+          email_sent_at?: string | null
+          email_sent_to?: string | null
           entity_type?: string | null
           event_id?: string | null
           expires_at?: string | null

@@ -69,13 +69,23 @@ type PaymentReviewQueueProps = {
    *  (permite abrir el detalle de un tiquete desde la pestaña "Todos"). */
   visible: boolean
   canReview: boolean
+  /** BEC-1: puede aplicar beca/cupón al pago (becas o revisión, con edit). */
+  canApplyScholarship?: boolean
   /** Tras una acción que cambia pagos (aprobar/rechazar/cerrar/lote): el padre
    *  recarga el listado general y el contador de la pestaña. */
   onMutated?: () => void
   ref?: Ref<PaymentReviewQueueHandle>
 }
 
-export function PaymentReviewQueue({ visible, canReview, onMutated, ref }: PaymentReviewQueueProps) {
+// BEC-1: estado del panel "Aplicar beca / cupón" dentro del detalle.
+type ScholarshipPanel = {
+  loading: boolean
+  assigned: { id: string; discount_type: 'percentage' | 'fixed'; discount_value: number; entity_name: string } | null
+  code: string
+  busy: boolean
+}
+
+export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = false, onMutated, ref }: PaymentReviewQueueProps) {
   const toast = useToast()
 
   const [rows, setRows] = useState<QueueRow[]>([])
@@ -100,6 +110,7 @@ export function PaymentReviewQueue({ visible, canReview, onMutated, ref }: Payme
   const [detail, setDetail] = useState<QueueRow | null>(null)
   const [closeTarget, setCloseTarget] = useState<QueueRow | null>(null)
   const [closeReason, setCloseReason] = useState('')
+  const [scholPanel, setScholPanel] = useState<ScholarshipPanel | null>(null)
 
   const refetch = useCallback(() => {
     setLoading(true)
@@ -132,7 +143,7 @@ export function PaymentReviewQueue({ visible, canReview, onMutated, ref }: Payme
   useImperativeHandle(ref, () => ({
     openPayment(paymentId: string) {
       const row = rows.find(r => r.id === paymentId)
-      if (row) setDetail(row)
+      if (row) { setScholPanel(null); setDetail(row) }
       return !!row
     },
   }), [rows])
@@ -238,6 +249,42 @@ export function PaymentReviewQueue({ visible, canReview, onMutated, ref }: Payme
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
     } finally { setBusyId(null) }
+  }
+
+  // BEC-1: abrir el panel de beca/cupón (busca la beca asignada aplicable).
+  async function openScholarshipPanel(row: QueueRow) {
+    setScholPanel({ loading: true, assigned: null, code: '', busy: false })
+    try {
+      const res = await fetch(`/api/payments/${row.id}/scholarship-options`)
+      const data = await res.json().catch(() => null)
+      setScholPanel(p => p ? { ...p, loading: false, assigned: res.ok ? data?.scholarship ?? null : null } : p)
+    } catch {
+      setScholPanel(p => p ? { ...p, loading: false } : p)
+    }
+  }
+
+  // BEC-1: aplicar beca asignada o código de cupón al pago. Beca completa →
+  // el pago queda aprobado sin comprobante; parcial → pendiente por el resto.
+  async function applyScholarship(row: QueueRow, body: { scholarship_id?: string; coupon_code?: string }) {
+    setScholPanel(p => p ? { ...p, busy: true } : p)
+    try {
+      const res = await fetch(`/api/payments/${row.id}/apply-scholarship`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo aplicar la beca.')
+      toast(
+        data.covered
+          ? `Cubierto por beca — no requiere comprobante. El pago de ${row.member_name} quedó aprobado.`
+          : `Beca aplicada a ${row.member_name}: nuevo monto ${money(data.amount, row.currency)}, pendiente por el resto.`,
+        'success',
+      )
+      setScholPanel(null); setDetail(null); mutated()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo aplicar la beca.', 'error')
+      setScholPanel(p => p ? { ...p, busy: false } : p)
+    }
   }
 
   async function doBulk() {
@@ -434,7 +481,7 @@ export function PaymentReviewQueue({ visible, canReview, onMutated, ref }: Payme
                             </>
                           )}
                           <button
-                            onClick={() => setDetail(r)}
+                            onClick={() => { setScholPanel(null); setDetail(r) }}
                             className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                           >
                             Abrir
@@ -483,7 +530,7 @@ export function PaymentReviewQueue({ visible, canReview, onMutated, ref }: Payme
           ['Última gestión', fmtDate(detail.reviewed_at)],
         ]
         return (
-        <Modal onClose={() => !busyId && setDetail(null)} titleId="detail-title" width={480}>
+        <Modal onClose={() => { if (!busyId && !scholPanel?.busy) { setDetail(null); setScholPanel(null) } }} titleId="detail-title" width={480}>
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h3 id="detail-title" className="text-base font-bold text-navy font-display">Tiquete de pago</h3>
@@ -506,6 +553,67 @@ export function PaymentReviewQueue({ visible, canReview, onMutated, ref }: Payme
               >
                 <ImageIcon size={13} /> Ver comprobante
               </button>
+            )}
+
+            {/* BEC-1: aplicar beca asignada o código de cupón al pago pendiente. */}
+            {canApplyScholarship && detail.queue_status !== 'cerrado' && (
+              <div className="rounded-xl border border-outline p-3 space-y-2.5">
+                {!scholPanel ? (
+                  <button
+                    onClick={() => openScholarshipPanel(detail)}
+                    className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[12px] text-navy hover:bg-navy/5 transition-colors font-body"
+                  >
+                    Aplicar beca / cupón
+                  </button>
+                ) : scholPanel.loading ? (
+                  <p className="text-[13px] text-navy-light/60 font-body inline-flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin" /> Buscando becas de la persona…
+                  </p>
+                ) : (
+                  <>
+                    {scholPanel.assigned ? (
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="text-[13px] text-navy font-body">
+                          Beca asignada activa:{' '}
+                          <strong>
+                            {scholPanel.assigned.discount_type === 'percentage'
+                              ? `${scholPanel.assigned.discount_value}%`
+                              : money(scholPanel.assigned.discount_value, detail.currency)}
+                          </strong>
+                        </p>
+                        <button
+                          onClick={() => applyScholarship(detail, { scholarship_id: scholPanel.assigned!.id })}
+                          disabled={scholPanel.busy}
+                          className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                        >
+                          {scholPanel.busy ? '…' : 'Aplicar beca'}
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-[13px] text-navy-light/60 font-body">Sin beca asignada activa para este destino.</p>
+                    )}
+                    <div className="flex gap-2">
+                      <input
+                        value={scholPanel.code}
+                        onChange={e => setScholPanel(p => p ? { ...p, code: e.target.value } : p)}
+                        placeholder="Código de cupón"
+                        aria-label="Código de cupón"
+                        className="flex-1 min-w-0 rounded-xl bg-surface-low px-3 py-1.5 text-[13px] text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body uppercase"
+                      />
+                      <button
+                        onClick={() => applyScholarship(detail, { coupon_code: scholPanel.code.trim().toUpperCase() })}
+                        disabled={!scholPanel.code.trim() || scholPanel.busy}
+                        className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[12px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
+                      >
+                        {scholPanel.busy ? '…' : 'Aplicar código'}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-navy-light/60 font-body">
+                      Beca completa: el pago queda aprobado sin comprobante. Parcial: queda pendiente por el resto.
+                    </p>
+                  </>
+                )}
+              </div>
             )}
 
             {canReview ? (
