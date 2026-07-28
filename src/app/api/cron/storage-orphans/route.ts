@@ -38,7 +38,7 @@ async function listBucketObjects(supabase: SupabaseClient, bucket: string, prefi
 }
 
 /** Pagina todas las filas de una tabla y devuelve el set de paths no nulos. */
-async function listDbPaths(supabase: SupabaseClient, table: string, column: string): Promise<Set<string>> {
+async function listDbPaths(supabase: SupabaseClient, table: string, column: string, toPath?: (value: string) => string | null): Promise<Set<string>> {
   const paths = new Set<string>()
   let offset = 0
   for (;;) {
@@ -49,7 +49,9 @@ async function listDbPaths(supabase: SupabaseClient, table: string, column: stri
       .range(offset, offset + PAGE - 1)
     if (error) throw new Error(`select ${table}.${column}: ${error.message}`)
     for (const row of (data ?? []) as unknown as Array<Record<string, string | null>>) {
-      const p = row[column]
+      const raw = row[column]
+      if (!raw) continue
+      const p = toPath ? toPath(raw) : raw
       if (p) paths.add(p)
     }
     if ((data ?? []).length < PAGE) break
@@ -73,10 +75,13 @@ async function reportBucket(
   bucket: string,
   table: string,
   column: string,
+  /** Normaliza el valor de la columna a un path del bucket (null = ignorar la
+   *  fila, p. ej. URLs de otro origen o data: aún no migradas). */
+  toPath?: (value: string) => string | null,
 ): Promise<BucketReport> {
   const [objects, dbPaths] = await Promise.all([
     listBucketObjects(supabase, bucket),
-    listDbPaths(supabase, table, column),
+    listDbPaths(supabase, table, column, toPath),
   ])
   const objectSet = new Set(objects)
   return {
@@ -99,6 +104,13 @@ export async function POST(req: NextRequest) {
     const reports = await Promise.all([
       reportBucket(supabase, 'payment-receipts', 'payments', 'receipt_path'),
       reportBucket(supabase, 'employee-docs', 'employee_documents', 'file_url'),
+      // EVE-2: flyers de eventos. La columna guarda la URL PÚBLICA completa →
+      // se extrae el path del bucket; valores que no son del bucket (histórico
+      // base64 aún no migrado) se ignoran en vez de reportarse como rotos.
+      reportBucket(supabase, 'event-flyers', 'events', 'flyer_url', v => {
+        const m = v.match(/\/storage\/v1\/object\/public\/event-flyers\/(.+)$/)
+        return m ? decodeURIComponent(m[1]) : null
+      }),
     ])
 
     const issues = reports.filter(r => r.orphan_objects.length > 0 || r.broken_rows.length > 0)

@@ -162,11 +162,21 @@ function NuevoEventoForm() {
     set('sub_events', form.sub_events.filter(s => s.id !== id))
   }
 
-  function handleFlyerSelect(file: File) {
+  // EVE-2: el flyer se sube a Storage (bucket público event-flyers) y se guarda
+  // la URL pública en flyer_url — antes se metía el base64 completo en la BD.
+  async function handleFlyerSelect(file: File) {
     if (file.size > 5 * 1024 * 1024) return
-    const reader = new FileReader()
-    reader.onload = (e) => setFlyer(e.target?.result as string)
-    reader.readAsDataURL(file)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/events/upload-flyer', { method: 'POST', body: fd })
+      const d = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(d?.error || 'No se pudo subir el flyer.')
+      setFlyer(d.url as string)
+    } catch (e) {
+      console.error('upload flyer:', e)
+      setFlyer(null)
+    }
   }
 
   // El fin nunca puede ser anterior al inicio (fecha + hora).

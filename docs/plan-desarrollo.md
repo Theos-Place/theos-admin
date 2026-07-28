@@ -355,7 +355,7 @@ El calendario es un widget embebible controlado por query params (view, types, c
 showBtn...); no rompás esos params. Tests del deep link y del redirect post-login.
 ```
 
-### [ ] EVE-2 · Flyers de eventos en Supabase Storage
+### [x] EVE-2 · Flyers de eventos en Supabase Storage — HECHO 2026-07-27 (bucket público `event-flyers` creado; endpoint `/api/events/upload-flyer` con MIME/5MB y roles de eventos; el form de crear sube y guarda la URL pública — editar NO tenía campo de flyer, solo crear; script one-off `scripts/migrate-event-flyers.mjs` ejecutado: 0 flyers base64 en prod; bucket registrado en storage-orphans con normalización URL→path; CSP img-src ya permitía el origen de Supabase. SEGUIMIENTO: quitar `data:` de img-src cuando se confirme que nada más lo usa)
 Archivos: `src/app/(admin)/eventos/nuevo/_components/Step1Informacion.tsx` (dropzone, líneas ~116-180), `src/app/(admin)/eventos/nuevo/page.tsx` (~165-170, FileReader), `src/lib/events/form-mapper.ts:58`, patrón: `src/app/api/communications/upload-image/route.ts`
 
 ```
