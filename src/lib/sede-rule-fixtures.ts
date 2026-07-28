@@ -1,11 +1,12 @@
-// CONTRATO de la regla "sede por asistencia a charlas", compartido por sus DOS
-// implementaciones (que existen a propósito por rendimiento/contexto):
-//   1. TS  — computeMemberSede() en sede-attendance.ts (cálculo en vivo, perfil).
-//   2. SQL — refresh_member_sedes() en la migración baseline (cron masivo 22k+).
+// CONTRATO de la regla "sede por asistencia a charlas" (REF-1, 2026-07-28):
+// la ÚNICA implementación de producción es SQL — refresh_member_sede(member_id)
+// (trigger por check-in) + refresh_member_sedes() (pg_cron masivo), misma regla
+// en el mismo archivo de migración (20260728100000). computeMemberSede (TS) es
+// la especificación ejecutable de estos fixtures, sin consumidores de runtime.
 //
-// ⚠️ Si cambiás la regla de sede, actualizá los TRES:
-//    · src/lib/sede-attendance.ts (computeMemberSede)
-//    · refresh_member_sedes() en supabase/migrations (la función SQL espejo)
+// ⚠️ Si cambiás la regla de sede, actualizá:
+//    · las DOS funciones SQL (misma migración, un solo archivo)
+//    · src/lib/sede-attendance.ts (el espejo de test)
 //    · estos fixtures
 // El test sede-attendance.test.ts valida el lado TS contra estos casos; sirven
 // además como especificación única para verificar el lado SQL (ver el script de

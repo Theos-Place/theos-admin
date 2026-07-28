@@ -233,9 +233,9 @@ Bandeja de notificaciones internas persistidas + alertas calculadas al vuelo (ur
 - **"Sigue asistiendo" (retención, laxo):** ≥2 charlas en 4 meses, sin recencia.
 - Solo cuentan check-ins de **charla**, no de cualquier evento.
 
-### Sede del miembro (`src/lib/sede-attendance.ts` + SQL `refresh_member_sedes`)
+### Sede del miembro (SQL única fuente — REF-1, migración 20260728100000)
 - Activo: charla más asistida en los últimos 6 meses (empate → la más reciente). Inactivo: lo mismo pero sobre los 6 meses previos a su última asistencia. Nunca asistió → sin sede.
-- Se recalcula por trigger en cada check-in y masivamente por RPC. **Ojo:** la regla vive en dos implementaciones espejo (TS y SQL) con fixtures de contrato compartidas (`sede-rule-fixtures.ts`); si cambia, hay que tocar las tres.
+- **Única implementación de producción en SQL**: `refresh_member_sede(member_id)` (trigger en cada check-in) + `refresh_member_sedes()` (pg_cron 6:45 UTC, masiva) — misma regla, mismo archivo de migración. Todo consumidor lee lo persistido (`members.sede_id/sede_case/sede_last_checkin`). `computeMemberSede` (TS) es solo la especificación ejecutable de los fixtures. Frescura: el flip activo→inactivo por paso del tiempo lo corrige el cron (≤24h).
 
 ### Elegibilidad de estudios (`src/lib/studies/eligibility.ts`)
 - Etapas por nivel de plan: `niveles`, `inicial`, `intermedia`, `campaña`. Requisitos: inicial → asistencia; intermedia → donador + servidor + asistencia reforzada; niveles y campañas → sin compromisos.
@@ -336,10 +336,9 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 ## 6. Pendientes y deuda técnica
 
 **En el código (verificado):**
-1. Regla de sede duplicada en TS (`sede-attendance.ts`) y SQL (`refresh_member_sedes`), con fixtures de contrato — riesgo de desincronización si alguien cambia una sin la otra.
-2. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo.
-3. Plantilla `form_asignado` existe pero no está conectada a ningún disparador (decisión: feature futura; FEA-1 del plan).
-4. Param `vista` legacy en `/eventos` como fallback de vista.
+1. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo.
+2. Param `vista` legacy en `/eventos` como fallback de vista.
+3. Seguimiento EVE-2: quitar `data:` de `img-src` en la CSP cuando se confirme que nada más lo usa.
 
 **Operativos (fuera del código, acciones del usuario/administración):**
 - Verificar que la edge function `process-email-queue` no duplique los crons de vercel.json.

@@ -1,6 +1,5 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { computeMemberSede } from '@/lib/sede-attendance'
 import { meetsAttendanceCriteria } from '@/lib/attendance'
 
 // Export de aplicantes de las vacantes seleccionadas (punto 6). Una fila por
@@ -64,7 +63,7 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
   for (const slice of chunk(memberIds)) {
     const { data: members } = await supabase
       .from('members')
-      .select('id, cedula, first_name, last_name, email, phone, province')
+      .select('id, cedula, first_name, last_name, email, phone, province, sede:sedes(name)')
       .in('id', slice)
     for (const m of (members ?? []) as Array<Record<string, string | null>>) memberById.set(m.id as string, m)
   }
@@ -131,7 +130,15 @@ export async function getVacancyApplicantsExport(vacancyIds: string[]): Promise<
     arr.push({ checked_in_at: c.checked_in_at, title: ev?.title ?? null })
     checkinsByMember.set(c.member_id, arr)
   }
-  const sedeOf = (memberId: string): string => computeMemberSede(checkinsByMember.get(memberId) ?? [])?.name ?? ''
+  // REF-1: la sede sale de lo PERSISTIDO (members.sede_id → sedes.name),
+  // mantenido por la única implementación SQL de la regla. Los check-ins de
+  // arriba se siguen usando para meetsAttendanceCriteria (eso no cambia).
+  const sedeOf = (memberId: string): string => {
+    const m = memberById.get(memberId) as Record<string, unknown> | undefined
+    const s = m?.sede
+    const row = Array.isArray(s) ? s[0] : s
+    return (row as { name?: string | null } | null)?.name ?? ''
+  }
 
   // 6) Armar filas (una por aplicación).
   return appRows.map(a => {

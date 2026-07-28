@@ -1,11 +1,11 @@
-// Cálculo de la sede de un miembro por asistencia a charlas (módulo PURO, sin
-// server — importable desde componentes cliente). Se usa en vivo para perfil,
-// lista y export; usa los nombres canónicos de sedes-canonical.ts.
-//
-// ⚠️ Esta es UNA de dos implementaciones espejo de la misma regla (la otra es la
-// función SQL refresh_member_sedes(), cron masivo para 22k+ miembros). El
-// CONTRATO compartido y sus casos están en sede-rule-fixtures.ts: si cambiás la
-// regla, actualizá computeMemberSede + refresh_member_sedes + los fixtures.
+// ESPECIFICACIÓN EJECUTABLE de la regla de sede por asistencia (REF-1,
+// 2026-07-28): este módulo YA NO tiene consumidores de producción — la única
+// implementación que corre en producción es SQL (refresh_member_sede(member_id)
+// en el trigger de cada check-in + refresh_member_sedes() masiva del pg_cron;
+// migración 20260728100000). Los consumidores leen lo persistido en members.
+// Este espejo TS existe para que los fixtures del contrato
+// (sede-rule-fixtures.ts) sigan siendo ejecutables en los tests: si cambiás la
+// regla, actualizá las DOS funciones SQL + este módulo + los fixtures.
 //
 // Reglas (decisión 2026-07-15):
 //  · Activo (asistió en los últimos 6 meses calendario): sede = charla más

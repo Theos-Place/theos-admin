@@ -8,7 +8,7 @@ import type { DbMember, DbMemberEnriched } from './members'
 import { getAreaNameMap, parentAreaName } from './_area-map'
 import { meetsAttendanceCriteria } from '@/lib/attendance'
 import { esComiteDirigentes } from '@/lib/dirigentes'
-import { computeMemberSede, type MemberSedeResult } from '@/lib/sede-attendance'
+import type { MemberSedeResult } from '@/lib/sede-attendance'
 
 // ── Helpers para detail view ──────────────────────────────────────────────────
 
@@ -490,19 +490,15 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   ))
   const lastCharlaCheckin = charlaCheckins.find(c => c.checked_in_at)?.checked_in_at ?? null
 
-  // Sede calculada: criterio único (src/lib/sede-attendance.ts) — activo =
-  // más asistida en los últimos 6 meses; inactivo = más asistida en los 6
-  // meses previos a su última asistencia. Decisión 2026: la sede es dinámica
-  // por asistencia, no el sede_id estático del perfil (ese lo mantiene el
-  // cron refresh_member_sedes con el mismo algoritmo, para listas/filtros).
-  const attendance_sede = computeMemberSede(
-    (checkinsRes.data ?? [])
-      .filter(c => (c as { events: { event_type: string } | null }).events?.event_type === 'charla')
-      .map(c => {
-        const row = c as { checked_in_at: string | null; events: { title: string } | null }
-        return { checked_in_at: row.checked_in_at, title: row.events?.title ?? null }
-      }),
-  )
+  // REF-1: la sede ya NO se recalcula en vivo — se lee lo PERSISTIDO
+  // (members.sede_id/sede_case/sede_last_checkin), que mantiene la única
+  // implementación de producción en SQL: refresh_member_sede(member_id) en el
+  // trigger de cada check-in + refresh_member_sedes() masiva del pg_cron
+  // (6:45 UTC). Frescura: el flip activo→inactivo por puro paso del tiempo
+  // (sin check-in nuevo) lo corrige el cron nocturno (≤24h de rezago).
+  const attendance_sede: MemberSedeResult | null = sede && sedeCase && sedeLastCheckin
+    ? { name: sede.name, case: sedeCase, lastCheckin: sedeLastCheckin }
+    : null
 
   // Familia: dos queries — primero los family_unit_id del miembro, después
   // los OTROS miembros de esos units.

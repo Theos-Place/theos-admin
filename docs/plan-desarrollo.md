@@ -665,7 +665,7 @@ no genera, con 5 sí.
 
 ## Fase 6 — Refactor delicado
 
-### [ ] REF-1 · Regla de sede a fuente única
+### [x] REF-1 · Regla de sede a fuente única — HECHO 2026-07-28 (migración 20260728100000 aplicada y verificada: SQL es la única implementación de producción — `refresh_member_sede(member_id)` nueva para el trigger + `refresh_member_sedes()` masiva del pg_cron, misma regla en el mismo archivo; el perfil y el export de servidores leen lo PERSISTIDO; `computeMemberSede` queda solo como especificación ejecutable de los fixtures, que pasan idénticos. Smoke en prod: 20/20 miembros idénticos al bulk. BONUS: el trigger por check-in usaba la REGLA VIEJA (sin ventana ni caso) — arreglado; y el muestreo previo (400 miembros, 91% paridad) reveló que el mapeo título→sede de TS no reconocía United (~9%) — al leer lo persistido, el perfil de esa gente deja de mostrar "sin sede". Frescura documentada: el flip activo→inactivo por paso del tiempo lo corrige el cron nocturno, ≤24h)
 Archivos: `src/lib/sede-attendance.ts`, SQL `refresh_member_sedes`, `sede-rule-fixtures.ts`
 
 ```
@@ -722,6 +722,7 @@ seguir pasando idénticas.
     (el middleware excluye /api).
   - Sin soft-delete; DELETE con referencias → 409 con conteo.
   - Anti-suplantación con `resolveTargetMemberId()` en autoservicio.
-  - La regla de sede vive duplicada en TS y SQL con fixtures compartidas; no tocarla de un solo
-    lado (hasta REF-1).
+  - La regla de sede vive SOLO en SQL desde REF-1 (refresh_member_sede + refresh_member_sedes,
+    migración 20260728100000); computeMemberSede es la spec ejecutable de los fixtures. Si cambia
+    la regla: las dos funciones SQL + el espejo TS + los fixtures.
 - Después de cada punto completado, marcar el checkbox acá y anotar el commit/PR.
