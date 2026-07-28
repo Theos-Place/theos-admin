@@ -170,7 +170,7 @@ Dos cambios en la página de donaciones (src/app/(admin)/finanzas/donaciones/pag
 Permisos sin cambio (finanzas, direccion). Test del total filtrado con paginación.
 ```
 
-### [ ] MAT-1 · Resumen de compromisos entendible en matrícula (feedback 2026-07-26)
+### [x] MAT-1 · Resumen de compromisos entendible en matrícula — HECHO 2026-07-27 (computeEligibility expone `requirements` estructurado; módulo puro `stage-requirements-summary.ts`: mínimo real por cadena de prerequisitos + compromisos deduplicados con etiquetas cortas y detalle secundario; mismas dos columnas; 6 tests)
 Archivos: `src/app/(admin)/matricula/page.tsx` (`StageRequirementsEmptyState`, líneas ~540-616), `src/lib/studies/eligibility.ts`, referencia de estilo: `RequirementChips` en `src/app/(admin)/estudios/analisis/page.tsx` y `CommitmentRow` en la misma página de matrícula
 
 ```

@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
+import { summarizeStageRequirements } from '@/lib/studies/stage-requirements-summary'
 import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 import { formatDateLong, formatCRC } from '@/lib/format'
@@ -550,14 +551,12 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
 }) {
   const meta = STAGE_META[stage] ?? STAGE_META.niveles
   const gateway = results.filter(r => isStageGateway(r, studyTypes))
-  const met = new Set<string>()
-  const blocked = new Set<string>()
-  let anyEligible = false
-  for (const r of gateway) {
-    if (r.is_eligible) anyEligible = true
-    r.reasons_met.forEach(m => met.add(m))
-    if (!r.is_eligible) r.reasons_blocked.forEach(b => blocked.add(b))
-  }
+  const anyEligible = gateway.some(r => r.is_eligible)
+  // MAT-1: resumen estructurado y mínimo (datos, no unión de strings): un solo
+  // prerequisito por cadena (el mínimo real) y compromisos deduplicados con
+  // etiquetas cortas — el detalle largo va como texto secundario.
+  const planNameByCode = (code: string) => studyTypes.find(s => s.code === code)?.name ?? code
+  const { met, missing } = summarizeStageRequirements(gateway, planNameByCode)
 
   return (
     <div className="rounded-2xl p-8 bg-surface-card shadow-card">
@@ -579,29 +578,32 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
         </div>
       </div>
 
-      {(met.size > 0 || blocked.size > 0) && (
+      {(met.length > 0 || missing.length > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {met.size > 0 && (
+          {met.length > 0 && (
             <div>
               <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Ya cumplís</p>
               <div className="space-y-1.5">
-                {[...met].map((m, i) => (
-                  <div key={i} className="flex items-start gap-1.5">
+                {met.map(item => (
+                  <div key={item.key} className="flex items-start gap-1.5">
                     <CheckCircle2 size={13} className="text-teal-deep shrink-0 mt-0.5" />
-                    <span className="text-[13px] text-navy font-body">{m}</span>
+                    <span className="text-[13px] text-navy font-body">{item.label}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-          {blocked.size > 0 && (
+          {missing.length > 0 && (
             <div>
               <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Te falta</p>
               <div className="space-y-1.5">
-                {[...blocked].map((b, i) => (
-                  <div key={i} className="flex items-start gap-1.5">
+                {missing.map(item => (
+                  <div key={item.key} className="flex items-start gap-1.5">
                     <XCircle size={13} className="text-red-400 shrink-0 mt-0.5" />
-                    <span className="text-[13px] text-navy-light/70 font-body">{b}</span>
+                    <span className="text-[13px] text-navy-light/70 font-body">
+                      {item.label}
+                      {item.detail && <span className="block text-[11px] text-navy-light/60">{item.detail}</span>}
+                    </span>
                   </div>
                 ))}
               </div>
