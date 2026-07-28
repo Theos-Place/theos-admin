@@ -586,7 +586,7 @@ la persona está por hacer en el wizard no debe bloquearse a sí mismo.
 Tests: con pago de estudio pendiente → bloqueado; con pago de evento pendiente → pasa.
 ```
 
-### [ ] PAG-3 · Recordatorio semanal de pagos pendientes (lunes)
+### [x] PAG-3 · Recordatorio semanal de pagos pendientes — HECHO 2026-07-27 (cron lunes 16:30 UTC, patrón CRON_SECRET + `HEALTHCHECK_URL_PAYMENT_REMINDERS`; regla pura `payment-reminder-rules.ts`: pendientes sí, en_revision no, rechazados solo dentro de las 72h; helper compartido `payment-reminders.ts` con prefs mensajes_sistema + dedupe diario hora CR — REV-2 lo reusa; email queda como punto de extensión documentado; 4 tests)
 Archivos: cron nuevo `src/app/api/cron/payment-reminders/route.ts`, `vercel.json`. Depende de: PAG-1
 
 ```

@@ -280,6 +280,7 @@ Bandeja de notificaciones internas persistidas + alertas calculadas al vuelo (ur
 | `/api/notifications/leader-absence-check` | 14:00 diario | Dirigente activo >4 semanas sin check-in de charla → avisa a coordinadores (máx 1/semana) |
 | `/api/cron/storage-orphans` | 15:00 lunes | Reporte de consistencia Storage↔BD (solo reporta, no borra) |
 | `/api/cron/payment-holds-expire` | 16:00 diario | Comprobante rechazado +72h sin resubir → libera cupo (`expired`/`expirada`) |
+| `/api/cron/payment-reminders` | 16:30 lunes | Recordatorio consolidado de pagos pendientes por miembro (notificación interna → /mis-pagos), con prefs y dedupe diario (PAG-3) |
 | `/api/cron/report-snapshots` | 06:00 diario | Recalcula datasets de reportes a `report_snapshots` (maxDuration 300s). Único **sin** ping de healthcheck (**por confirmar** si es intencional) |
 
 Además hay una edge function de Supabase `process-email-queue` que llama de vuelta al app (`/process`, crons de estudios/folletos) con el mismo `CRON_SECRET` — **por confirmar** que no duplique los crons de Vercel (pendiente conocido).
@@ -303,7 +304,7 @@ Un workflow (`.github/workflows/ci.yml`): push a `main` y PRs. Node 22: typechec
 |---|---|
 | Obligatorias (zod en `env.ts`) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` o `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SECRET_KEY` o `SUPABASE_SERVICE_ROLE_KEY` |
 | Requeridas de facto | `CRON_SECRET`, `SES_SMTP_HOST`, `SES_SMTP_PORT`, `SES_SMTP_USER`, `SES_SMTP_PASSWORD`, `SES_FROM_EMAIL`, `SES_FROM_NAME`, `NEXT_PUBLIC_SITE_URL` |
-| Opcionales | `SES_CONFIGURATION_SET`, `SES_SNS_TOPIC_ARN`, `EMAIL_DAILY_LIMIT`, `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `HEALTHCHECK_URL_FOLLETO_BLOCKS`, `HEALTHCHECK_URL_START_REMINDERS`, `HEALTHCHECK_URL_LEADER_ABSENCE`, `HEALTHCHECK_URL_STORAGE_ORPHANS`, `HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE`, `HEALTHCHECK_URL_GROUP_WINDOWS` |
+| Opcionales | `SES_CONFIGURATION_SET`, `SES_SNS_TOPIC_ARN`, `EMAIL_DAILY_LIMIT`, `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `HEALTHCHECK_URL_FOLLETO_BLOCKS`, `HEALTHCHECK_URL_START_REMINDERS`, `HEALTHCHECK_URL_LEADER_ABSENCE`, `HEALTHCHECK_URL_STORAGE_ORPHANS`, `HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE`, `HEALTHCHECK_URL_GROUP_WINDOWS`, `HEALTHCHECK_URL_PAYMENT_REMINDERS` |
 | Edge function (Deno) | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
 
 ## 5. Catálogo de permisos
