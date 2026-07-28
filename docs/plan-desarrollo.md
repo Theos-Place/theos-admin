@@ -567,7 +567,7 @@ Anti-suplantación: la página solo muestra pagos propios o de familiares
 (resolveTargetMemberId / family_member_ids del auth-context). Tests del deep link y del self-access.
 ```
 
-### [ ] PAG-2 · Bloquear matrícula si hay pago de estudios pendiente
+### [x] PAG-2 · Bloquear matrícula con pago de estudios pendiente — HECHO 2026-07-27 (guard en enrollMember → 409 `pago_pendiente` con conteo; solo concepto matrícula bloquea — regla pura `pending-payments.ts` con tests estudio-bloquea/evento-pasa; excluye el pago del propio plan (caso PAGO_PENDIENTE); banner en /matricula con link a /mis-pagos vía `pending_study_payments` del eligibility; staff con STUDY_ADMIN puede matricular a terceros con override EXPLÍCITO `override_pago_pendiente` confirmado en modal)
 Archivos: `src/lib/studies/eligibility.ts`, `/api/matricula/eligibility`, página de matrícula. Depende de: PAG-1
 
 ```

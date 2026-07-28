@@ -1,6 +1,7 @@
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { groupLocksLeader } from '@/lib/studies/leader-activation'
 import { isEnrollmentWindowOpen } from '@/lib/studies/enrollment-window'
+import { countBlockingStudyPayments } from '@/lib/supabase/queries/payments'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
 import { ymdCR } from '@/lib/format'
@@ -960,7 +961,7 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
 export async function enrollMember(
   groupId: string, memberId: string,
   scholarshipInput?: { scholarship_id?: string; coupon_code?: string },
-  opts?: { enforceEnrollmentWindow?: boolean },
+  opts?: { enforceEnrollmentWindow?: boolean; allowPendingStudyPayments?: boolean },
 ): Promise<{ status: 'enrolled' | 'pendiente_de_pago'; enrollment_id: string; amount: number }> {
   const supabase = createAdminClient()
   const { data: g } = await supabase
@@ -975,6 +976,15 @@ export async function enrollMember(
   if (opts?.enforceEnrollmentWindow && group
     && !isEnrollmentWindowOpen(group.enrollment_start_date, group.enrollment_end_date, ymdCR())) {
     throw new Error('MATRICULA_CERRADA')
+  }
+
+  // Guard PAG-2: con pagos de ESTUDIOS pendientes no se puede matricular otro
+  // estudio (eventos/otros conceptos no bloquean). Se excluyen los pagos del
+  // MISMO plan (ese caso lo maneja PAGO_PENDIENTE con su mensaje). El staff
+  // puede saltarlo con un override explícito (allowPendingStudyPayments).
+  if (!opts?.allowPendingStudyPayments) {
+    const pendientes = await countBlockingStudyPayments(memberId, plan?.id ?? null)
+    if (pendientes > 0) throw new Error(`PAGO_ESTUDIOS_PENDIENTE:${pendientes}`)
   }
   // El DIRIGENTE del grupo (dirigente/co-dirigente) no paga matrícula del grupo
   // que dirige. Un dirigente que se inscribe como ALUMNO en otro grupo sí paga

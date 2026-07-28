@@ -51,6 +51,8 @@ export default function MatriculaPage() {
   const { studyTypes } = useStudyPlans()
   const userRoles = user?.roles ?? []
   const isAdminView = userRoles.some(r => ['admin', 'direccion'].includes(r))
+  // PAG-2: espejo del isStaff del API (STUDY_ADMIN_ROLES + admin) para el override.
+  const isStudyStaff = userRoles.some(r => ['coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin'].includes(r))
 
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null)
   const effectiveMemberId = selectedMember?.id ?? user?.member_id ?? null
@@ -71,6 +73,9 @@ export default function MatriculaPage() {
   // PRE-5: la tarjeta del prematrimonial solo se muestra si el miembro cumple
   // el requisito (N1 completado + inscrito en N2). Server-side en el flag.
   const [prematOk, setPrematOk] = useState(false)
+  // PAG-2: pagos de estudios pendientes → banner y bloqueo (con override staff).
+  const [pendingPayments, setPendingPayments] = useState(0)
+  const [overridePrompt, setOverridePrompt] = useState<{ count: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [retryKey, setRetryKey] = useState(0)
@@ -88,6 +93,7 @@ export default function MatriculaPage() {
         setEligibilityResults(d?.eligibility ?? [])
         setProfile(d?.profile ?? null)
         setPrematOk(!!d?.premat_ok)
+        setPendingPayments(Number(d?.pending_study_payments ?? 0))
         setLoading(false)
       })
       .catch(() => { if (alive) { setLoadError(true); setLoading(false) } })
@@ -142,7 +148,7 @@ export default function MatriculaPage() {
   const attendanceActive = profile?.attendance_active ?? false
   const availableCount = eligibilityResults.filter(r => r.is_eligible && r.available_groups.length > 0).length
 
-  async function handleEnroll(scholarship?: { scholarship_id?: string; coupon_code?: string }) {
+  async function handleEnroll(scholarship?: { scholarship_id?: string; coupon_code?: string }, overridePending = false) {
     if (!confirmModal || !effectiveMemberId || enrolling) return
     const { group, study } = confirmModal
     setEnrolling(true)
@@ -150,9 +156,16 @@ export default function MatriculaPage() {
       const res = await fetch(`/api/studies/groups/${group.group_id}/enrollments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: effectiveMemberId, ...scholarship }),
+        body: JSON.stringify({ member_id: effectiveMemberId, ...scholarship, ...(overridePending ? { override_pago_pendiente: true } : {}) }),
       })
       const data = await res.json().catch(() => null)
+      // PAG-2: staff matriculando a otro puede pasar el bloqueo con override
+      // EXPLÍCITO (modal de confirmación, nunca silencioso).
+      if (res.status === 409 && data?.code === 'pago_pendiente' && selectedMember && isStudyStaff) {
+        setOverridePrompt({ count: Number(data?.count ?? 1) })
+        setEnrolling(false)
+        return
+      }
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
       setConfirmModal(null)
       if (data?.status === 'pendiente_de_pago') {
@@ -349,6 +362,18 @@ export default function MatriculaPage() {
           eso solo se muestra en el tab "Todos" o "Etapa Inicial". Flujo propio
           (pareja + logística + ceremonia + pago por comprobante). PRE-5: solo
           aparece si el miembro cumple el requisito (flag server-side). */}
+      {/* PAG-2: aviso de pagos de estudios pendientes (bloquean matricular). */}
+      {pendingPayments > 0 && (
+        <div className="flex items-start gap-3 rounded-2xl border border-coral/25 bg-coral/5 px-5 py-4">
+          <AlertCircle size={18} className="mt-0.5 shrink-0 text-coral-deep" aria-hidden />
+          <p className="text-[13px] text-navy font-body">
+            {selectedMember ? `${selectedMember.name} tiene` : 'Tenés'} <strong>{pendingPayments} pago{pendingPayments !== 1 ? 's' : ''} de estudios pendiente{pendingPayments !== 1 ? 's' : ''}</strong>;
+            para matricular {selectedMember ? 'otro estudio debe completarlos' : 'debés completarlos'} primero.{' '}
+            <Link href="/mis-pagos" className="text-coral underline decoration-dotted hover:text-coral-deep">Ir a mis pagos</Link>
+          </p>
+        </div>
+      )}
+
       {prematOk && (activeFilter === 'all' || activeFilter === 'inicial') && (
         <Link
           href={selectedMember ? `/matricula/prematrimonial?member_id=${selectedMember.id}` : '/matricula/prematrimonial'}
@@ -461,6 +486,33 @@ export default function MatriculaPage() {
       )}
 
       {/* Modal de confirmación */}
+      {/* PAG-2: override explícito del staff sobre el bloqueo por pago pendiente. */}
+      {overridePrompt && confirmModal && (
+        <Modal onClose={() => setOverridePrompt(null)} titleId="override-pago-title" width={440}>
+          <div className="p-6 space-y-4">
+            <h3 id="override-pago-title" className="text-base font-bold text-navy font-display">Pago de estudios pendiente</h3>
+            <p className="text-[13px] text-navy-light/70 font-body">
+              {selectedMember?.name ?? 'El miembro'} tiene <strong>{overridePrompt.count} pago{overridePrompt.count !== 1 ? 's' : ''} de estudios pendiente{overridePrompt.count !== 1 ? 's' : ''}</strong>.
+              ¿Matricularlo de todas formas? El pago pendiente sigue debiéndose.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setOverridePrompt(null); handleEnroll(undefined, true) }}
+                className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+              >
+                Matricular de todas formas
+              </button>
+              <button
+                onClick={() => setOverridePrompt(null)}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {confirmModal && (
         <ConfirmModal
           study={confirmModal.study}

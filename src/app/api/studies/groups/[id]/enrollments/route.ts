@@ -17,13 +17,19 @@ export async function POST(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    const { member_id, scholarship_id, coupon_code } = await req.json()
+    const { member_id, scholarship_id, coupon_code, override_pago_pendiente } = await req.json()
     const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
     if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
     // GRU-1: la ventana de matrícula aplica al autoservicio; el staff con
     // STUDY_ADMIN_ROLES puede matricular fuera de la ventana.
     const isStaff = auth.ctx.roles.some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r) || r === 'admin')
-    const result = await enrollMember(id, targetMemberId, { scholarship_id, coupon_code }, { enforceEnrollmentWindow: !isStaff })
+    const result = await enrollMember(id, targetMemberId, { scholarship_id, coupon_code }, {
+      enforceEnrollmentWindow: !isStaff,
+      // PAG-2: el bloqueo por pago de estudios pendiente aplica a TODOS; el
+      // staff puede saltarlo solo con el override EXPLÍCITO del body (la UI
+      // se lo confirma — nunca silencioso).
+      allowPendingStudyPayments: isStaff && override_pago_pendiente === true,
+    })
     // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
     await notifyEnrollment(id, targetMemberId, result.status)
     return NextResponse.json({ ok: true, ...result }, { status: 201 })
@@ -44,6 +50,17 @@ export async function POST(
       return NextResponse.json(
         { error: 'Este grupo es virtual y el miembro no tiene autorización para estudios virtuales.' },
         { status: 403 },
+      )
+    }
+    if (error instanceof Error && error.message.startsWith('PAGO_ESTUDIOS_PENDIENTE:')) {
+      const count = Number(error.message.split(':')[1] || 1)
+      return NextResponse.json(
+        {
+          error: `El miembro tiene ${count} pago${count !== 1 ? 's' : ''} de estudios pendiente${count !== 1 ? 's' : ''}; debe completarlo${count !== 1 ? 's' : ''} antes de matricular otro estudio.`,
+          code: 'pago_pendiente',
+          count,
+        },
+        { status: 409 },
       )
     }
     if (error instanceof Error && error.message === 'MATRICULA_CERRADA') {

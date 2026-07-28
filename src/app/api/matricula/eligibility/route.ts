@@ -7,6 +7,7 @@ import { toDomainStudyType, toDomainStudyGroup } from '@/lib/studies/adapter'
 import { computeEligibility } from '@/lib/studies/eligibility'
 import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
 import { todayCR } from '@/lib/format'
+import { countBlockingStudyPayments } from '@/lib/supabase/queries/payments'
 
 // GET /api/matricula/eligibility?member_id=X
 // Devuelve { eligibility: EligibilityResult[], profile } calculado con datos reales.
@@ -44,7 +45,10 @@ export async function GET(req: NextRequest) {
     // en N2). La página de matrícula usa este flag para mostrar/ocultar la
     // tarjeta del wizard; el POST del prematrimonial re-valida server-side.
     const premat_ok = meetsPrematRequirementFromCodes(profile?.completed_codes ?? [], profile?.enrolled_codes ?? [])
-    return NextResponse.json({ eligibility, profile, premat_ok })
+    // PAG-2: pagos de estudios pendientes que bloquean matricular otro estudio
+    // (la UI muestra el aviso con link a /mis-pagos; enrollMember re-valida).
+    const pending_study_payments = await countBlockingStudyPayments(memberId)
+    return NextResponse.json({ eligibility, profile, premat_ok, pending_study_payments })
   } catch (error) {
     console.error('GET /api/matricula/eligibility:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
