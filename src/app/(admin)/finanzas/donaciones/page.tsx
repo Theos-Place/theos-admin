@@ -32,7 +32,7 @@ export default function DonacionesPage() {
     return () => clearTimeout(t)
   }, [searchInput])
 
-  const { donations, total, stats, loading, error, hasMore, loadMore, refetch } =
+  const { donations, total, stats, filteredSum, loading, error, hasMore, loadMore, refetch } =
     useDonations({ search, status: statusFilter, from: dateFrom, to: dateTo })
 
   const [showUnidentifiedModal, setShowUnidentifiedModal] = useState(false)
@@ -61,6 +61,7 @@ export default function DonacionesPage() {
   }
 
   const uniqueDonors = stats?.unique_donors ?? 0
+  const activeDonors = stats?.active_donors ?? 0
   const totalThisMonth = stats?.total_this_month ?? null
   const unidentifiedCount = stats?.unidentified_count ?? 0
   const unidentifiedTotal = stats?.unidentified_total ?? null
@@ -126,9 +127,11 @@ export default function DonacionesPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: 'Donadores identificados', value: uniqueDonors, isAmount: false },
-            { label: 'Total donado este mes', value: totalThisMonth, isAmount: true },
-            { label: 'Sin identificar', value: unidentifiedCount, isAmount: false, alert: unidentifiedCount > 0 },
+            { label: 'Donadores identificados', value: uniqueDonors, isAmount: false, alert: false },
+            { label: 'Total donado este mes', value: totalThisMonth, isAmount: true, alert: false },
+            // FIN-1: reemplaza "Sin identificar" (el banner accionable de abajo
+            // se mantiene). Donadores activos = members.is_donor (últimos ~2 trimestres).
+            { label: 'Donadores activos', value: activeDonors, isAmount: false, alert: false },
           ].map(({ label, value, isAmount, alert }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
               <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
@@ -318,6 +321,9 @@ export default function DonacionesPage() {
           <div className="flex flex-col items-center gap-3">
             <p className="text-sm text-navy-light/60 font-body">
               Mostrando {donations.length.toLocaleString('es-CR')} de {total.toLocaleString('es-CR')} donaciones
+              {filteredSum != null && (
+                <> · Total filtrado: <AmountDisplay amount={filteredSum} defaultHidden={false} revealed={revealAll} /></>
+              )}
             </p>
             {hasMore && (
               <button

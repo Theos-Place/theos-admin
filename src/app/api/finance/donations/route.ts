@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
-import { getDonations, getDonationStats, type DonationFilters } from '@/lib/supabase/queries/finance'
+import { getDonations, getDonationStats, getDonationsFilteredSum, type DonationFilters } from '@/lib/supabase/queries/finance'
 
 // GET: donaciones paginadas con filtros server-side.
 //  ?stats=1 → solo los totales (RPC donation_stats).
@@ -30,10 +30,17 @@ export async function GET(req: NextRequest) {
       pageSize: Number(searchParams.get('pageSize') ?? 50),
       all: searchParams.get('all') === '1',
     }
-    const { rows, total } = await getDonations(filters)
+    // FIN-1: ?with_sum=1 → suma de montos del filtro COMPLETO (server-side,
+    // no solo la página). El cliente lo pide solo con filtros activos.
+    const withSum = searchParams.get('with_sum') === '1'
+    const [{ rows, total }, sum] = await Promise.all([
+      getDonations(filters),
+      withSum ? getDonationsFilteredSum(filters) : Promise.resolve(null),
+    ])
     return NextResponse.json({
       donations: stripAmounts ? rows.map(d => ({ ...d, amount: null })) : rows,
       total,
+      filtered_sum: withSum && !stripAmounts ? sum : null,
     })
   } catch (error) {
     console.error('GET /api/finance/donations:', error)

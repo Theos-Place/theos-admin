@@ -12,6 +12,8 @@ export type DonationSearchParams = {
 
 export type DonationStats = {
   unique_donors: number
+  /** FIN-1: miembros con is_donor=true (donó en los últimos ~2 trimestres). */
+  active_donors: number
   total_this_month: number | null
   unidentified_count: number
   unidentified_total: number | null
@@ -19,8 +21,14 @@ export type DonationStats = {
 
 const PAGE_SIZE = 50
 
+/** FIN-1: ¿hay algún filtro activo? (con filtros se pide la suma server-side). */
+export function hasActiveDonationFilters(params: DonationSearchParams): boolean {
+  return !!(params.search?.trim() || (params.status && params.status !== 'all') || params.from || params.to)
+}
+
 function buildQuery(params: DonationSearchParams, page: number): string {
   const u = new URLSearchParams()
+  if (hasActiveDonationFilters(params)) u.set('with_sum', '1')
   if (params.search && params.search.trim()) u.set('search', params.search.trim())
   if (params.status && params.status !== 'all') u.set('status', params.status)
   if (params.from) u.set('from', params.from)
@@ -38,6 +46,8 @@ export function useDonations(params: DonationSearchParams) {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
   const [stats, setStats]     = useState<DonationStats | null>(null)
+  // FIN-1: suma de montos del filtro completo (null sin filtros o sin permiso de montos).
+  const [filteredSum, setFilteredSum] = useState<number | null>(null)
 
   const key = buildQuery(params, 1)
 
@@ -47,10 +57,11 @@ export function useDonations(params: DonationSearchParams) {
     setLoading(true); setError(null)
     fetch(`/api/finance/donations?${key}`)
       .then(r => { if (!r.ok) throw new Error('Error cargando donaciones'); return r.json() })
-      .then((d: { donations: DbDonation[]; total: number }) => {
+      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: number | null }) => {
         if (cancelled) return
         setDonations((d.donations ?? []).map(toDomainDonation))
         setTotal(d.total ?? 0)
+        setFilteredSum(d.filtered_sum ?? null)
         setPage(1)
       })
       .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Error desconocido') })
@@ -88,9 +99,10 @@ export function useDonations(params: DonationSearchParams) {
     setLoading(true); setError(null)
     fetch(`/api/finance/donations?${buildQuery(params, 1)}`)
       .then(r => { if (!r.ok) throw new Error('Error cargando donaciones'); return r.json() })
-      .then((d: { donations: DbDonation[]; total: number }) => {
+      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: number | null }) => {
         setDonations((d.donations ?? []).map(toDomainDonation))
         setTotal(d.total ?? 0)
+        setFilteredSum(d.filtered_sum ?? null)
         setPage(1)
       })
       .catch(e => setError(e instanceof Error ? e.message : 'Error desconocido'))
@@ -99,7 +111,7 @@ export function useDonations(params: DonationSearchParams) {
   }, [params, loadStats])
 
   return {
-    donations, total, stats, loading, error,
+    donations, total, stats, filteredSum, loading, error,
     hasMore: donations.length < total,
     loadMore, refetch, pageSize: PAGE_SIZE,
   }

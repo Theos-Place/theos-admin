@@ -171,6 +171,8 @@ export type DonationFilters = {
 
 export type DonationStats = {
   unique_donors: number
+  /** FIN-1: miembros con is_donor=true (donó en los últimos ~2 trimestres). */
+  active_donors: number
   total_this_month: number
   unidentified_count: number
   unidentified_total: number
@@ -211,6 +213,33 @@ export async function getDonations(filters: DonationFilters = {}): Promise<{ row
   if (error) throw error
   // Select dinámico (ternario inner/left join) → el parser tipado no lo resuelve.
   return { rows: (data ?? []) as unknown as DbDonation[], total: count ?? 0 }
+}
+
+/** FIN-1: SUMA de montos del filtro COMPLETO (no solo la página visible).
+ *  Mismos filtros que getDonations; pagina solo la columna amount (PostgREST
+ *  corta en ~1000 filas) y suma acá. Se pide solo cuando hay filtros activos. */
+export async function getDonationsFilteredSum(filters: DonationFilters = {}): Promise<number> {
+  const supabase = createAdminClient()
+  const search = filters.search?.trim()
+  let sum = 0
+  for (let from = 0; ; from += 1000) {
+    let q = supabase
+      .from('donations')
+      .select(search ? 'amount, member:members!inner(search_text)' : 'amount')
+      .order('id')
+      .range(from, from + 999)
+    if (filters.status === 'identified') q = q.eq('is_identified', true)
+    else if (filters.status === 'unidentified') q = q.eq('is_identified', false)
+    if (filters.from) q = q.gte('donation_date', filters.from)
+    if (filters.to) q = q.lte('donation_date', filters.to)
+    if (search) q = applyMemberSearch(q, search, 'member.search_text')
+    const { data, error } = await q
+    if (error) throw error
+    const rows = (data ?? []) as unknown as Array<{ amount: number | null }>
+    for (const r of rows) sum += Number(r.amount ?? 0)
+    if (rows.length < 1000) break
+  }
+  return sum
 }
 
 /** Totales del módulo de donaciones (calculados en SQL, migración 058). */

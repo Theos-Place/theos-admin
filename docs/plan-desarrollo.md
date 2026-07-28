@@ -146,7 +146,11 @@ server-side: si llega recommendations para un grupo N1-N3, ignorarlas o rechazar
 Agregá test de la condición de visibilidad/aceptación.
 ```
 
-### [ ] FIN-1 · Donaciones: stat de donadores activos + total al filtrar (feedback 2026-07-26)
+### [x] FIN-1 · Donaciones: stat de donadores activos + total al filtrar — HECHO 2026-07-27 (RPC `donation_stats` gana `active_donors` = members.is_donor, migración 20260727150000 aplicada — 694 hoy; card "Sin identificar" reemplazada, banner+modal intactos; suma del filtro completo server-side vía `?with_sum=1` paginado, con AmountDisplay y solo para rol finanzas)
+
+> OJO dato, no bug: las 14,710 donaciones en prod tienen amount=0 (los montos de QuickBooks
+> son la tarea de datos pendiente) — el "Total filtrado" mostrará ₡0 hasta importarlos,
+> igual que ya pasaba con "Total donado este mes".
 Archivos: `src/app/(admin)/finanzas/donaciones/page.tsx` (stat card línea ~131, lista y filtros), `src/app/api/finance/donations/*`, `src/lib/supabase/queries/finance.ts`
 
 ```
