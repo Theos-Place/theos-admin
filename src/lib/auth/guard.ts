@@ -75,24 +75,19 @@ export function resolveTargetMemberId(
  * no hay que enumerar roles por ruta — la fuente de verdad es ROLES.
  * Multi-rol funciona solo: coordinador_estudios + comunicaciones ve comunicaciones.
  *
+ * `module` acepta uno o varios módulos (any-of): REV-3 usa
+ * ['finanzas','revision_pagos'] para el listado unificado de pagos.
  * `beyondOwn: true` excluye permisos con scope 'own' (p. ej. el rol base
  * 'miembro' tiene miembros:view scope 'own' — eso NO autoriza el padrón).
  */
 export async function requireModuleView(
-  module: string,
+  module: string | string[],
   opts: { action?: string; beyondOwn?: boolean } = {},
 ): Promise<{ ctx: AuthContext; res?: undefined } | { ctx?: undefined; res: NextResponse }> {
-  const action = opts.action ?? 'view'
   const ctx = await getAuthContext()
   if (!ctx) return { res: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
-  const { ROLES } = await import('@/lib/auth/roles')
-  const allowed = ctx.roles.some(roleId => {
-    const role = ROLES.find(r => r.id === roleId)
-    return role?.permissions.some(p =>
-      (p.module === 'all' || p.module === module)
-      && p.actions.includes(action as never)
-      && (!opts.beyondOwn || p.scope !== 'own'))
-  })
+  const { hasModulePermission } = await import('@/lib/auth/roles')
+  const allowed = hasModulePermission(ctx.roles, module, opts.action ?? 'view', { beyondOwn: opts.beyondOwn })
   if (!allowed) return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
   return { ctx }
 }

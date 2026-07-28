@@ -30,8 +30,8 @@ const pageTitles: Record<string, string> = {
   '/notificaciones': 'Notificaciones',
   '/accesos':        'Accesos',
   '/configuracion':  'Configuración',
-  '/pagos/revision': 'Revisión de pagos',
-  '/pagos':          'Pagos',
+  // REV-3: /pagos/revision ahora redirige a /finanzas/pagos (página unificada).
+  '/finanzas/pagos': 'Pagos',
 }
 
 function getTitle(pathname: string): string {
@@ -73,6 +73,10 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // Excepción: /finanzas/becas tiene su propio permiso ('becas'), asignable sin
   // depender del módulo finanzas completo.
   if (pathname.startsWith('/finanzas/becas') && can('becas', 'view')) return <>{children}</>
+  // Excepción (REV-3): /finanzas/pagos es la página unificada de pagos — los
+  // roles de revisión (revision_pagos, folletos, coordinadores) la ven sin el
+  // módulo finanzas completo. Espejo del guard de GET /api/finance/payments.
+  if (pathname.startsWith('/finanzas/pagos') && can('revision_pagos', 'view')) return <>{children}</>
   // Excepción: /eventos (raíz) es también la pantalla de auto-inscripción de
   // cualquier miembro (antes /mis-eventos aparte); la propia página decide qué
   // mostrar según el permiso. Las subrutas de gestión (/eventos/nuevo,

@@ -52,6 +52,29 @@ export const STAFF_IMPORT_ROLES: RoleId[] = ['encargado_staff', 'coordinador_ser
  *  API (requireRoles) de eventos/check-in/reportes. */
 export const EVENT_CHECKIN_ROLES: RoleId[] = ['encargado_eventos', 'direccion', 'admin']
 
+/**
+ * ¿Alguno de los roles otorga `action` sobre alguno de los `modules`?
+ * Lógica pura compartida por el guard server-side (requireModuleView) y
+ * testeable sin Supabase. `modules` acepta uno o varios (semántica any-of:
+ * REV-3 usa ['finanzas','revision_pagos'] para la página unificada de pagos).
+ * `beyondOwn` excluye permisos con scope 'own' (espejo del guard).
+ */
+export function hasModulePermission(
+  roleIds: RoleId[],
+  modules: string | string[],
+  action: string = 'view',
+  opts: { beyondOwn?: boolean } = {},
+): boolean {
+  const wanted = Array.isArray(modules) ? modules : [modules]
+  return roleIds.some(roleId => {
+    const role = ROLES.find(r => r.id === roleId)
+    return role?.permissions.some(p =>
+      (p.module === 'all' || wanted.includes(p.module))
+      && p.actions.includes(action as never)
+      && (!opts.beyondOwn || p.scope !== 'own'))
+  })
+}
+
 // Orden de menor a mayor privilegio
 export const ROLES: Role[] = [
   {

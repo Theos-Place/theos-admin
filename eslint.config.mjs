@@ -16,6 +16,10 @@ const eslintConfig = defineConfig([
     "Theos Place Design System/**",
   ]),
   {
+    // Mismo patrón con el que eslint-config-next registra el plugin react-hooks
+    // (sin él, el override aplica también a .cjs — donde el plugin no existe —
+    // y ESLint aborta con "could not find plugin react-hooks").
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
     rules: {
       // DEUDA (revisión 2026-07-13): 78 casos de setState síncrono en effects,
       // patrón heredado de la era de mocks. Degradado a warning para que CI

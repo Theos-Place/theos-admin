@@ -1,28 +1,52 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+// REV-3: página unificada de pagos — el listado general de finanzas y la cola
+// de revisión (antes /pagos/revision, que ahora redirige acá) conviven como
+// pestañas. La ven el módulo finanzas Y los roles de revisión (revision_pagos,
+// folletos, coordinadores); las acciones siguen gateadas por permiso:
+// revisión → revision_pagos:edit, devoluciones/SINPE → finanzas:edit.
+
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { CreditCard, Eye, EyeOff, Search } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { FilterChips } from '@/components/shared/FilterChips'
-import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
+import { PaymentReviewQueue, type PaymentReviewQueueHandle } from '@/components/finance/PaymentReviewQueue'
 import { type Payment, type PaymentMethod, type PaymentStatus } from '@/types/finance'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import type { DbPayment } from '@/lib/supabase/queries/finance'
 import { toDomainPayment } from '@/lib/finance/adapter'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatDateTime } from '@/lib/format'
+import { useAuth } from '@/hooks/useAuth'
+import { usePermissions } from '@/hooks/usePermissions'
+import { cn } from '@/lib/utils'
 
 function PagosContent() {
+  const { loaded } = useAuth()
+  const { can } = usePermissions()
+  // Ver la página: módulo finanzas O permiso de revisión (espejo del guard de
+  // GET /api/finance/payments y de la excepción del ModuleGuard del layout).
+  const canFinance = can('finanzas', 'view')
+  const canQueue = can('revision_pagos', 'view')
+  const canReview = can('revision_pagos', 'edit')
+  const canFinanceEdit = can('finanzas', 'edit')
+
   const [revealAll, setRevealAll] = useState(false)
+  // Pestañas: 'todos' (listado general) | 'revision' (cola de revisión).
+  // En la URL para que el redirect de /pagos/revision y los links compartidos
+  // caigan directo en la cola.
+  const [tabRaw, setTab] = useUrlFilter('tab', 'todos')
+  const tab = tabRaw === 'revision' && canQueue ? 'revision' : 'todos'
   // Filtros en la URL: sobreviven recargas y se comparten por link.
   const [entityRaw, setEntityFilter] = useUrlFilter('entidad', 'all')
   const entityFilter = entityRaw as 'all' | 'event' | 'study_group'
@@ -40,6 +64,10 @@ function PagosContent() {
   const [sinpeTarget, setSinpeTarget] = useState<Payment | null>(null)
   const [sinpeConf, setSinpeConf] = useState('')
   const [sinpeDate, setSinpeDate] = useState('')
+  // Detalle plano de un pago que NO está en la cola de revisión (pagado,
+  // devuelto, etc.). Los que sí están se abren en el modal de la cola.
+  const [plainDetail, setPlainDetail] = useState<Payment | null>(null)
+  const queueRef = useRef<PaymentReviewQueueHandle>(null)
   const toast = useToast()
 
   // Listado paginado server-side (filtros + búsqueda viajan al servidor).
@@ -58,7 +86,7 @@ function PagosContent() {
   } = usePaginatedList<DbPayment, Payment>(buildUrl, { pageSize: 25, itemsKey: 'payments', mapItem: toDomainPayment })
   const filtered = payments
 
-  // Totales globales (los 4 montos del header) — SQL, no sobre lo cargado.
+  // Totales globales (los montos del header) — SQL, no sobre lo cargado.
   const [stats, setStats] = useState({ total_paid: 0, total_card: 0, total_sinpe: 0, total_pending: 0 })
   const loadStats = useCallback(() => {
     fetch('/api/finance/payments?stats=1')
@@ -70,7 +98,27 @@ function PagosContent() {
   const totalPaid = stats.total_paid
   const totalPending = stats.total_pending
 
-  const refetch = useCallback(() => { reload(); loadStats() }, [reload, loadStats])
+  // Contador de la pestaña "En revisión": tiquetes accionables
+  // (pendiente + en_revision, el default del endpoint sin filtros).
+  const [queueCount, setQueueCount] = useState<number | null>(null)
+  const loadQueueCount = useCallback(() => {
+    if (!canQueue) return
+    fetch('/api/payments/queue')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (Array.isArray(d)) setQueueCount(d.length) })
+      .catch(() => {})
+  }, [canQueue])
+  useEffect(() => { loadQueueCount() }, [loadQueueCount])
+
+  const refetch = useCallback(() => { reload(); loadStats(); loadQueueCount() }, [reload, loadStats, loadQueueCount])
+
+  // Abrir un pago desde la pestaña "Todos": los pendientes se intentan abrir
+  // en el modal de la cola (con acciones de revisión); el resto, detalle plano.
+  function openPayment(p: Payment) {
+    const openedInQueue = canQueue && p.status === 'pending'
+      && (queueRef.current?.openPayment(p.id) ?? false)
+    if (!openedInQueue) setPlainDetail(p)
+  }
 
   async function handleRefundConfirm(data: { type: 'full' | 'partial'; amount: number; reason: string; reasonDetail: string }) {
     if (!refundTarget) return
@@ -121,8 +169,18 @@ function PagosContent() {
     }
   }
 
+  if (!loaded) {
+    return (
+      <div className="py-16 text-center font-body">
+        <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+        <p className="text-sm text-navy-light/60">Cargando…</p>
+      </div>
+    )
+  }
+  if (!canFinance && !canQueue) return <AccessDenied />
+
   return (
-    <FinanceGuard>
+    <>
       <div className="space-y-6">
 
         {/* Header */}
@@ -136,7 +194,7 @@ function PagosContent() {
             <div>
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Pagos</h1>
               <p className="text-[12px] text-white/70 mt-0.5 font-body">
-                Registro de todos los pagos del sistema
+                Registro de todos los pagos del sistema y cola de revisión
               </p>
             </div>
           </div>
@@ -149,6 +207,41 @@ function PagosContent() {
           </button>
         </div>
 
+        {/* Pestañas: listado general / cola de revisión */}
+        {canQueue && (
+          <div className="flex items-center gap-2 flex-wrap" role="tablist" aria-label="Vistas de pagos">
+            {([
+              ['todos', 'Todos los pagos'],
+              ['revision', `En revisión${queueCount !== null ? ` (${queueCount})` : ''}`],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={tab === key}
+                onClick={() => setTab(key === 'todos' ? '' : key)}
+                className={cn(
+                  'rounded-full px-4 py-2 text-[13px] font-medium border transition-all font-display',
+                  tab === key ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-navy/15 hover:border-navy/30 bg-surface-card',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Cola de revisión: siempre montada (sus modales atienden aperturas
+            desde la pestaña "Todos"), la lista solo se pinta en su pestaña. */}
+        {canQueue && (
+          <PaymentReviewQueue
+            ref={queueRef}
+            visible={tab === 'revision'}
+            canReview={canReview}
+            onMutated={refetch}
+          />
+        )}
+
+        {tab === 'todos' && (<>
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
           {/* FASE FUTURA: pagos por tarjeta / SINPE directo aún no existen en
@@ -259,13 +352,13 @@ function PagosContent() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Link
-                          href={`/finanzas/pagos/${p.id}`}
-                          className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[var(--outline-variant)] text-navy font-body"
+                        <button
+                          onClick={() => openPayment(p)}
+                          className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[var(--outline-variant)] text-navy font-body hover:bg-surface-low"
                         >
-                          Ver →
-                        </Link>
-                        {p.status === 'paid' && (
+                          Abrir
+                        </button>
+                        {canFinanceEdit && p.status === 'paid' && (
                           <button
                             onClick={() => setRefundTarget(p)}
                             className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
@@ -273,7 +366,7 @@ function PagosContent() {
                             Devolver
                           </button>
                         )}
-                        {p.status === 'pending' && p.method === 'sinpe' && (
+                        {canFinanceEdit && p.status === 'pending' && p.method === 'sinpe' && (
                           <button
                             onClick={() => setSinpeTarget(p)}
                             className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(81,157,162,0.30)] text-teal-deep font-body"
@@ -308,7 +401,7 @@ function PagosContent() {
                 className="px-4 py-3 space-y-2.5"
                 style={i < filtered.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
               >
-                <Link href={`/finanzas/pagos/${p.id}`} className="flex items-start gap-3">
+                <button onClick={() => openPayment(p)} className="flex items-start gap-3 w-full text-left">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium font-body text-navy truncate">{p.member_name}</p>
                     <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
@@ -320,11 +413,11 @@ function PagosContent() {
                     </p>
                     <PaymentStatusBadge status={p.status} />
                   </div>
-                </Link>
+                </button>
                 <div className="flex items-center gap-2 flex-wrap">
                   <PaymentMethodBadge method={p.method} />
                   <div className="flex-1" />
-                  {p.status === 'paid' && (
+                  {canFinanceEdit && p.status === 'paid' && (
                     <button
                       onClick={() => setRefundTarget(p)}
                       className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
@@ -332,7 +425,7 @@ function PagosContent() {
                       Devolver
                     </button>
                   )}
-                  {p.status === 'pending' && p.method === 'sinpe' && (
+                  {canFinanceEdit && p.status === 'pending' && p.method === 'sinpe' && (
                     <button
                       onClick={() => setSinpeTarget(p)}
                       className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(81,157,162,0.30)] text-teal-deep font-body"
@@ -365,7 +458,54 @@ function PagosContent() {
             />
           )}
         </div>
+        </>)}
       </div>
+
+      {/* Detalle plano (pago fuera de la cola de revisión: pagado, devuelto…) */}
+      {plainDetail && (() => {
+        const p = plainDetail
+        const rows: [string, React.ReactNode][] = [
+          ['Persona', p.member_name],
+          ['Cédula', p.member_cedula || '—'],
+          ['Concepto', p.entity_name],
+          ['Tipo', p.entity_type === 'event' ? 'Evento' : 'Grupo de estudio'],
+          ['Monto', <AmountDisplay key="m" amount={p.amount} currency={p.currency} revealed={revealAll} />],
+          ['Creado', formatDateTime(p.created_at)],
+          ['Pagado', p.paid_at ? formatDateTime(p.paid_at) : '—'],
+        ]
+        return (
+        <Modal onClose={() => setPlainDetail(null)} titleId="plain-detail-title" width={480}>
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="plain-detail-title" className="text-base font-bold text-navy font-display">Detalle del pago</h3>
+              <div className="flex items-center gap-2">
+                <PaymentMethodBadge method={p.method} />
+                <PaymentStatusBadge status={p.status} />
+              </div>
+            </div>
+            <div className="rounded-xl border border-outline overflow-hidden">
+              {rows.map(([label, value], i) => (
+                <div key={label} className={cn('flex gap-3 px-4 py-2.5', i > 0 && 'border-t border-outline')}>
+                  <span className="w-32 shrink-0 text-[11px] uppercase tracking-wider text-navy-light/60 font-display">{label}</span>
+                  <span className="text-[13px] text-navy font-body">{value}</span>
+                </div>
+              ))}
+            </div>
+            {p.notes && (
+              <p className="rounded-xl p-3 text-[12px] text-[rgba(22,20,64,0.65)] font-body bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.08)]">{p.notes}</p>
+            )}
+            {canFinance && (
+              <Link
+                href={`/finanzas/pagos/${p.id}`}
+                className="inline-flex items-center text-[13px] text-teal-deep font-body hover:underline"
+              >
+                Ver detalle completo →
+              </Link>
+            )}
+          </div>
+        </Modal>
+        )
+      })()}
 
       {/* Refund modal */}
       {refundTarget && (
@@ -428,7 +568,7 @@ function PagosContent() {
         </Modal>
       )}
 
-    </FinanceGuard>
+    </>
   )
 }
 

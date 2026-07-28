@@ -28,7 +28,11 @@ const paymentWriteSchema = z
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('finanzas')
+    // REV-3: el listado de pagos es la página unificada — lo ven tanto el
+    // módulo finanzas como los roles de revisión (revision_pagos, folletos,
+    // coordinadores). Las escrituras siguen acotadas (POST abajo; acciones de
+    // revisión en /api/payments/[id]/review con revision_pagos:edit).
+    const auth = await requireModuleView(['finanzas', 'revision_pagos'])
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
 

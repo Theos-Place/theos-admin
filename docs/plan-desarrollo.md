@@ -325,7 +325,7 @@ comunicaciones y direccion. Cambios:
 Test del guard (403 para comunicaciones/direccion, 200 para admin).
 ```
 
-### [ ] REV-3 · Unificar página de pagos y revisión de pagos (feedback 2026-07-27)
+### [x] REV-3 · Unificar página de pagos y revisión de pagos — HECHO 2026-07-28 (página unificada en /finanzas/pagos con pestañas "Todos los pagos" / "En revisión (n)"; la cola completa (filtros REV-1, bulk, comprobante, recordatorio REV-2, modal de acciones) se extrajo a `PaymentReviewQueue` con handle imperativo — desde "Todos" un pago pendiente abre el modal de la cola con acciones, el resto abre detalle plano; /pagos/revision quedó como redirect a /finanzas/pagos?tab=revision; guard de GET /api/finance/payments ahora any-of ['finanzas','revision_pagos'] vía `hasModulePermission` (lógica pura nueva en roles.ts que requireModuleView delegó); excepción en ModuleGuard del layout espejo del guard; sidebar: una sola entrada "Pagos"; Devolver/Confirmar SINPE gateados por finanzas:edit para que los roles de revisión no vean acciones que les darían 403; tests de la matriz de acceso en payments-access.test.ts. BONUS: se arregló el lint roto del repo — el override de reglas react-hooks de eslint.config.mjs aplicaba a scripts/*.cjs donde el plugin no está registrado y ESLint abortaba; se acotó al patrón de eslint-config-next)
 Archivos: `src/app/(admin)/finanzas/pagos/page.tsx` (+`[id]`), `src/app/(admin)/pagos/revision/page.tsx` (absorbe y desaparece), `src/app/api/payments/queue/route.ts`, `src/app/api/finance/payments/route.ts`, `src/lib/auth/roles.ts`, sidebar
 
 ```
@@ -355,6 +355,86 @@ Implementación:
 No cambiar la lógica de aprobar/rechazar ni la propagación por concept (RPC approve_payment).
 Tests: acceso por rol (revision_pagos ve todos los pagos, miembro común no), redirect, y
 que las acciones de revisión sigan funcionando desde la página unificada.
+```
+
+### [ ] BEC-1 · Cupón/beca en el modal de pagos + correo al asignar cupón (feedback 2026-07-27)
+Archivos: modal de pagos de REV-3 (`src/app/(admin)/finanzas/pagos/*`), `src/lib/supabase/queries/scholarships.ts`, `src/app/api/scholarships/*`, `src/app/(admin)/finanzas/becas/*`, plantillas de email (`beca_aprobada`, `beca_aprobada_parcial`), `src/lib/supabase/queries/payments.ts`
+Depende de: REV-3 (el modal unificado de pagos)
+
+```
+Tres mejoras al flujo de becas/cupones sobre pagos:
+1) Aplicar cupón o beca desde el modal de pagos: en el modal unificado (REV-3), para un pago
+   pendiente, agregar la opción de aplicar una beca asignada del miembro o un código de cupón
+   (el canje ya existe para matrícula: /api/scholarships/applicable y el flujo de
+   scholarship_redemptions — reutilizalo, incluyendo el guard atómico active→used con 409 si
+   ya se usó). Al aplicar, recalcular el monto del pago con el descuento y registrar la
+   redención vinculada al pago.
+2) Botón "Enviar cupón por correo": cuando finanzas crea un cupón/beca y lo asigna a una
+   persona (becas asignadas, y cupones genéricos si se asignan a alguien), agregar en
+   /finanzas/becas un botón para mandarle un correo con el código y el mensaje de que la
+   beca fue otorgada. Reutilizar las plantillas existentes (beca_aprobada /
+   beca_aprobada_parcial, BD con fallback hardcodeado) o crear una hermana "cupon_asignado"
+   siguiendo ese mismo patrón. Registrar cuándo se envió (no reenviar sin confirmación) y
+   respetar el límite diario de email.
+3) Beca completa (100%): al aplicarla en el modal, el monto del pago baja a 0 (o al
+   equivalente si la beca es por monto fijo que cubre todo) y el sistema debe confirmar
+   explícitamente que NO se necesita comprobante de pago: el pago queda aprobado/pagado sin
+   pasar por la cola de revisión, el objeto pagado (matrícula, inscripción) se libera igual
+   que con approve_payment, y la UI lo dice claro ("Cubierto por beca — no requiere
+   comprobante"). Para becas parciales, el pago queda pendiente por el monto restante y el
+   flujo de comprobante sigue normal.
+Permisos: aplicar beca/cupón en el modal con los roles de becas/finanzas/revisión según
+requireModuleView('becas') + revisión; enviar correo solo becas/finanzas/direccion.
+Tests: beca completa → pago 0 aprobado sin comprobante; parcial → pendiente por el resto;
+cupón ya usado → 409; correo se registra y no duplica.
+```
+
+### [ ] REU-1 · Reubicación: días y zonas con selección múltiple (feedback 2026-07-27)
+Archivos: form de solicitar reubicación (flujo relocation en `src/components/studies/StudyRequestActions.tsx` o componente hermano), `src/app/api/studies/requests/route.ts`, esquema de `study_requests`
+
+```
+En el form de "Solicitar reubicación" (solicitudes tipo relocation de study_requests), debe
+preguntarse qué días y qué zonas le sirven a la persona, ambos con SELECCIÓN MÚLTIPLE
+(hoy el patrón del form de interés permite hasta 2 días y una sola zona). Cambios:
+1) UI: checkboxes o multi-select de días de la semana y de zonas (zonas desde el catálogo
+   activo vía useSedes, más "cualquiera"). Horario (mañana/tarde/noche) puede quedar como
+   está o hacerse múltiple también — mantenete consistente con el form de interés.
+2) Persistencia: revisar cómo guarda study_requests los días/zona (¿columnas simples o
+   jsonb?); si es campo simple, migrar a array/jsonb sin romper las solicitudes existentes
+   (las viejas con un solo valor se leen igual).
+3) La cola de gestión de reubicaciones y el RelocationResolveGroupPicker (EST-7) deben
+   mostrar los múltiples días/zonas y, idealmente, usar esas preferencias para ordenar o
+   filtrar los grupos candidatos.
+Coordinar con EST-6/EST-7: esto aplica SOLO al flujo relocation, que mantiene su gestión.
+Tests del guardado múltiple y de lectura de solicitudes viejas.
+```
+
+### [ ] PRE-7 · Prematrimonial: validación de género de la pareja + mensaje claro de documento (feedback 2026-07-27)
+Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (wizard, paso 2), `src/app/api/studies/prematrimonial/route.ts`, `src/app/api/studies/prematrimonial/spouse-search/route.ts`
+
+```
+Dos validaciones en el wizard prematrimonial:
+1) Género de la pareja: solo se realizan matrimonios entre hombre y mujer. Si la pareja
+   seleccionada tiene el mismo género que quien se matricula (members.gender), bloquear con
+   una validación clara pensada para el caso de ERROR de selección: mensaje tipo "La persona
+   seleccionada tiene el mismo género registrado. Verificá que seleccionaste a la persona
+   correcta; si el género en el perfil está incorrecto, contactá al equipo para corregirlo."
+   Validar en ambos lados: UI (paso 2, al confirmar la pareja) y server-side en el POST de
+   /api/studies/prematrimonial (409 con code, patrón del repo). Contemplar el caso de género
+   vacío en alguno de los dos perfiles: en ese caso pedir que se complete el dato en el
+   perfil antes de continuar, no bloquear como "mismo género".
+   Para spouse-search: evaluar si conviene devolver el gender (o un flag same_gender) en la
+   respuesta SIN exponer más datos personales de los necesarios.
+2) Documento de identidad al matricular a nombre de otra persona: la regla existente exige
+   que ambos tengan cédula registrada. Cuando quien está haciendo la matrícula es staff (o
+   un familiar) y la persona matriculada aún no tiene cédula, el form debe pedir que se
+   rellene ahí mismo, con mensaje CLARO: "Esta persona no tiene documento registrado. Ingresá
+   su cédula o número de documento de identidad para continuar." — y guardar el documento en
+   el perfil (normalizado, con el dedup 409 existente si ya pertenece a otro miembro).
+   Nota: cuando se implemente INT-1 (documento por tipo), este campo hereda el selector de
+   tipo; mientras tanto el texto ya habla de "cédula o número de documento".
+Tests: mismo género → 409; género vacío → pide completar perfil; matrícula a tercero sin
+cédula → pide documento y lo guarda con dedup.
 ```
 
 ### Calendario público y eventos (feedback 2026-07-26)
@@ -709,6 +789,28 @@ Antes de tocar nada, presentame un mini-plan con la opción recomendada y su rie
 check-ins históricos y el trigger corre en cada check-in, así que el rendimiento importa.
 No cambiés la regla de negocio en sí, solo la arquitectura. Las fixtures de contrato deben
 seguir pasando idénticas.
+```
+
+### [ ] MNT-1 · Squash de migraciones (nuevo baseline)
+Archivos: `supabase/migrations/`, `supabase/migrations_archive/`, tabla de migraciones de Supabase
+Cuándo: al final, cuando se calme la ola de migraciones de este plan (GRU-1, EST-5, REV-3, INT-*). No correrlo a mitad de fase.
+
+```
+Consolidar las migraciones acumuladas desde el baseline anterior
+(20260718150236_baseline_consolidado.sql) en un baseline nuevo, repitiendo el patrón que ya
+se usó en este repo:
+1) Verificar que producción esté al día con todas las migraciones pendientes.
+2) Generar el esquema actual completo como nuevo archivo baseline (supabase db dump del
+   schema, o diff limpio), incluyendo tablas, CHECKs, RPCs, triggers, políticas RLS y grants.
+3) Mover las migraciones individuales posteriores al baseline viejo a
+   supabase/migrations_archive/ (no borrarlas: son historia).
+4) Marcar el baseline nuevo como ya aplicado en la tabla de migraciones de Supabase en
+   producción (repair/insert del registro) para que no intente ejecutarlo de nuevo.
+5) Probar en un proyecto/branch de Supabase limpio que el baseline levanta la BD de cero y
+   que los tests pasan contra ese esquema.
+OJO: los buckets de Storage no están en migraciones (se crean por dashboard) — documentar en
+el baseline un comentario con los buckets requeridos (payment-receipts, employee-docs,
+email-images, event-flyers si ya existe EVE-2).
 ```
 
 ---

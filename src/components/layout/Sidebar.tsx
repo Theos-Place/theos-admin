@@ -143,12 +143,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   ]
   const finanzasSub: SubItem[] = [
     // Suite completa de finanzas: solo con el módulo 'finanzas' (becas/revision_pagos
-    // solas NO destapan donaciones/pagos/devoluciones/reportes/solicitudes).
+    // solas NO destapan donaciones/devoluciones/reportes/solicitudes).
+    // REV-3: la página unificada /finanzas/pagos (listado + cola de revisión)
+    // sí se destapa con el permiso revision_pagos aunque falte el módulo.
     ...(can('finanzas', 'view')
       ? FINANZAS_SUB.map(s => s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s)
-      : []),
-    // Revisión de pagos: quienes tienen el permiso revision_pagos (dentro de Finanzas).
-    ...(can('revision_pagos', 'view') ? [{ href: '/pagos/revision', label: 'Revisión de pagos', icon: CreditCard }] : []),
+      : can('revision_pagos', 'view')
+        ? [{ href: '/finanzas/pagos', label: 'Pagos', icon: CreditCard }]
+        : []),
     // Becas: quienes tienen el permiso becas (dentro de Finanzas, aunque no tengan el módulo completo).
     ...(can('becas', 'view') ? [{ href: '/finanzas/becas', label: 'Becas', icon: GraduationCap }] : []),
   ]
