@@ -336,9 +336,9 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 ## 6. Pendientes y deuda técnica
 
 **En el código (verificado):**
-1. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo.
-2. Param `vista` legacy en `/eventos` como fallback de vista.
-3. Seguimiento EVE-2: quitar `data:` de `img-src` en la CSP cuando se confirme que nada más lo usa.
+1. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo (acción externa).
+
+**Seguimientos cerrados 2026-07-28:** el param `vista` legacy de /eventos se retiró; el último productor de flyers base64 (detalle de evento) pasó al endpoint de Storage; `data:` en `img-src` se queda **a propósito** — el QR de TOTP en /configuracion/seguridad lo usa (data:image/svg+xml).
 
 **Operativos (fuera del código, acciones del usuario/administración):**
 - Verificar que la edge function `process-email-queue` no duplique los crons de vercel.json.

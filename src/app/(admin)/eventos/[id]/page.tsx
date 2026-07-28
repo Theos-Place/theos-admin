@@ -421,10 +421,19 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     }
   }
 
-  function handleFlyerSelect(file: File) {
-    const reader = new FileReader()
-    reader.onload = (e) => { void persistFlyer(e.target?.result as string) }
-    reader.readAsDataURL(file)
+  // EVE-2: el flyer se sube a Storage y se persiste la URL pública (antes se
+  // guardaba el base64 completo en la BD — este era el último productor).
+  async function handleFlyerSelect(file: File) {
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/events/upload-flyer', { method: 'POST', body: fd })
+      const d = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(d?.error || 'No se pudo subir el flyer.')
+      void persistFlyer(d.url as string)
+    } catch (e) {
+      setFlyerError(e instanceof Error ? e.message : 'No se pudo subir el flyer. Intentá de nuevo.')
+    }
   }
 
   const arcPct = attendanceRate / 100

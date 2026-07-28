@@ -182,10 +182,10 @@ function EventosContent() {
     initRef.current = true
     const sp = new URLSearchParams(window.location.search)
     if (!sp.has('view')) {
-      // Compatibilidad con links viejos que usaban ?vista=
-      const legacy = sp.get('vista')
+      // (El fallback del param legacy ?vista= se retiró — deuda del overview;
+      // los links viejos caen al default o a la vista recordada.)
       const stored = localStorage.getItem(VIEW_STORAGE_KEY)
-      const next = [legacy, stored].find(v => v && v !== 'calendar' && ['list', 'grid', 'calendar'].includes(v))
+      const next = [stored].find(v => v && v !== 'calendar' && ['list', 'grid', 'calendar'].includes(v))
       if (next) setViewRaw(next)
     }
   }, [setViewRaw])
