@@ -2,6 +2,8 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ROLES } from '@/lib/auth/roles'
 import type { FolletoState } from '@/lib/studies/folletos'
+import { estimatedAvailableDate, levelLabel } from '@/lib/studies/folletos'
+import { hasOwnFolleto, shouldCreateAutoFolleto, type AutoFolletoTipo } from '@/lib/studies/folleto-auto-rules'
 
 
 export type DbFolletoRequest = {
@@ -100,6 +102,73 @@ export async function createFolletoRequest(input: {
   const { data, error } = await supabase.from('folleto_requests').insert(input).select('id').single()
   if (error) throw error
   return data as { id: string }
+}
+
+/** FOL-1: tiquete AUTOMÁTICO de folletos del PROPIO nivel del grupo.
+ *  Dispara en dos momentos (reglas que reemplazan cierre/hitos):
+ *    · cupo_lleno:    al confirmar la matrícula que llena el cupo;
+ *    · fin_matricula: al vencer la ventana (GRU-1) con >= 5 matriculados.
+ *  Idempotente: el índice único parcial folleto_requests_auto_por_grupo
+ *  garantiza UN tiquete por grupo (el 23505 se trata como "ya existe").
+ *  Best-effort para los callers: nunca revienta la matrícula ni el cron. */
+export async function createAutoFolletoIfNeeded(
+  groupId: string,
+  tipo: AutoFolletoTipo,
+  todayIso: string,
+): Promise<{ created: boolean; reason?: string }> {
+  const supabase = createAdminClient()
+  const [{ data: g }, { count }] = await Promise.all([
+    supabase.from('study_groups')
+      .select('id, max_students, plan:study_plans(code)')
+      .eq('id', groupId).maybeSingle(),
+    supabase.from('study_enrollments')
+      .select('id', { count: 'exact', head: true })
+      .eq('group_id', groupId).eq('status', 'enrolled'),
+  ])
+  const row = g as { id: string; max_students: number | null; plan: { code: string | null } | { code: string | null }[] | null } | null
+  if (!row) return { created: false, reason: 'grupo_no_encontrado' }
+  const plan = Array.isArray(row.plan) ? row.plan[0] : row.plan
+  const code = plan?.code ?? null
+  if (!hasOwnFolleto(code)) return { created: false, reason: 'plan_sin_folleto' }
+
+  const enrolled = count ?? 0
+  if (!shouldCreateAutoFolleto(tipo, { enrolled, max_students: row.max_students })) {
+    return { created: false, reason: 'umbral_no_alcanzado' }
+  }
+
+  const sede = (await getLeaderSedeForGroup(groupId)) ?? (await getSedeForGroup(groupId))
+  const { error } = await supabase.from('folleto_requests').insert({
+    tipo,
+    source_group_id: groupId,
+    source_plan_code: code,
+    target_level_code: code,
+    quantity: enrolled,
+    sede,
+    close_date: todayIso,
+    available_at: estimatedAvailableDate(todayIso),
+  })
+  if (error) {
+    if ((error as { code?: string }).code === '23505') return { created: false, reason: 'ya_existe' }
+    throw error
+  }
+
+  const label = levelLabel(code)
+  const tipoLabel = tipo === 'cupo_lleno' ? 'cupo lleno' : 'fin de matrícula'
+  await notifyFolletoRecipients({
+    title: 'Folletos solicitados',
+    body: `${enrolled} folleto${enrolled !== 1 ? 's' : ''} de ${label} · ${sede ?? 'sede sin definir'} (${tipoLabel})`,
+    subject: `Folletos de ${label} — ${sede ?? 'sede sin definir'}`,
+    html: `
+      <p>Se generó una solicitud de folletos automática (${tipoLabel}).</p>
+      <ul>
+        <li><strong>Nivel:</strong> ${label}</li>
+        <li><strong>Cantidad:</strong> ${enrolled}</li>
+        <li><strong>Sede:</strong> ${sede ?? 'sin definir'}</li>
+      </ul>
+      <p>Podés seguir el estado en el sistema, en Estudios &rsaquo; Folletos.</p>
+    `,
+  })
+  return { created: true }
 }
 
 /** Solicitud de folletos MANUAL (caso especial, no ligada a cierre): entra a la

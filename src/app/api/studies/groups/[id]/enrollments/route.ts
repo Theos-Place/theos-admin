@@ -3,6 +3,8 @@ import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { enrollMember, withdrawMember, setEnrollmentGrade } from '@/lib/supabase/queries/studies'
 import { notifyEnrollment } from '@/lib/email/enrollment-notify'
+import { createAutoFolletoIfNeeded } from '@/lib/supabase/queries/folletos'
+import { ymdCR } from '@/lib/format'
 import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
@@ -32,6 +34,11 @@ export async function POST(
     })
     // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
     await notifyEnrollment(id, targetMemberId, result.status)
+    // FOL-1: si esta matrícula llenó el cupo, genera el tiquete de folletos
+    // (idempotente vía índice único; best-effort: no revierte la matrícula).
+    if (result.status === 'enrolled') {
+      try { await createAutoFolletoIfNeeded(id, 'cupo_lleno', ymdCR()) } catch (e) { console.warn('folleto cupo_lleno:', e) }
+    }
     return NextResponse.json({ ok: true, ...result }, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_COMPLETADO') {

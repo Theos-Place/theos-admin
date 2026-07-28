@@ -635,7 +635,7 @@ ya existen). No inventés un flujo nuevo: replicá el de matrícula. Test de cre
 
 ## Fase 5 — Folletos (después de GRU-1)
 
-### [ ] FOL-1 · Nuevas reglas de creación de tiquetes de folletos
+### [x] FOL-1 · Nuevas reglas de folletos — HECHO 2026-07-27 (migración 20260727200000 aplicada: tipos `cupo_lleno`/`fin_matricula` + índice único parcial = 1 tiquete automático por grupo, race-safe; el tiquete es del PROPIO nivel del grupo con quantity=matriculados; dispara al confirmar la matrícula que llena el cupo y en el cron de ventanas al vencer con ≥5; manual intacto; QUITADO: generación en cierre (route+UI del wizard) y en hitos de bloque. ACOPLAMIENTO reportado: en processBloqueMilestones el aviso por hito, el sello `*_sent_at` y la creación compartían bloque — se quitó solo el insert; el aviso con conteos por sede y su dedupe siguen igual. Gap conocido: la matrícula automática N2-N4 pasa a enrolled vía approve_payment (SQL) sin chequear cupo — lo cubren el cron y el manual; 3 tests)
 Archivos: `src/app/api/studies/groups/[id]/close/route.ts` (líneas ~42-91), `src/app/api/cron/folleto-blocks/route.ts`, `src/lib/supabase/queries/bloques.ts` (`processBloqueMilestones`), `src/lib/supabase/queries/folletos.ts`, `src/lib/studies/folletos.ts`. Depende de: GRU-1
 
 ```

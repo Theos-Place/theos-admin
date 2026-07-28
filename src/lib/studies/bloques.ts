@@ -34,7 +34,9 @@ export const MILESTONE_TO_TIPO: Record<BloqueMilestone, string> = {
 }
 
 // ── Etiquetas de tipo de folleto ─────────────────────────────────────────────
-export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final' | 'manual'
+// FOL-1: cupo_lleno/fin_matricula son las reglas vigentes; cierre y
+// preapertura_* quedan solo por los datos históricos (ya no se generan).
+export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final' | 'manual' | 'cupo_lleno' | 'fin_matricula'
 
 export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
   cierre: 'Cierre',
@@ -42,6 +44,8 @@ export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
   preapertura_confirmacion: 'Preapertura · Confirmación',
   preapertura_final: 'Preapertura · Final',
   manual: 'Manual (caso especial)',
+  cupo_lleno: 'Cupo lleno',
+  fin_matricula: 'Fin de matrícula',
 }
 
 export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
@@ -50,6 +54,8 @@ export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
   preapertura_confirmacion: 'bg-teal-deep/10 text-teal-deep',
   preapertura_final: 'bg-coral/10 text-coral',
   manual: 'bg-coral/15 text-coral-deep',
+  cupo_lleno: 'bg-teal-soft/30 text-teal-deep',
+  fin_matricula: 'bg-navy/10 text-navy',
 }
 
 // ── Estado derivado de fechas (no manual) ────────────────────────────────────

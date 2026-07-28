@@ -145,23 +145,14 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
         const total = bySede.reduce((s, r) => s + r.cantidad, 0)
         const tipo = MILESTONE_TO_TIPO[m]
 
-        // Una folleto_request de preapertura por sede con cantidad > 0.
-        const rows = bySede.filter(r => r.cantidad > 0).map(r => ({
-          tipo,
-          bloque_id: b.id,
-          sede: r.sede,
-          quantity: r.cantidad,
-          close_date: todayIso,        // fecha del reporte
-          available_at: b.fecha_apertura, // listos para la apertura
-          status: 'creada',
-        }))
-        if (rows.length) {
-          const { error: insErr } = await supabase.from('folleto_requests').insert(rows)
-          if (insErr) throw insErr
-        }
+        // FOL-1: el hito YA NO crea folleto_requests — la cola se alimenta
+        // por cupo_lleno / fin_matricula / manual. El AVISO por hito (conteos
+        // por sede, correo + notificación del cron folleto-blocks) se mantiene
+        // tal cual: `results` alimenta esa notificación, y el sello *_sent_at
+        // sigue siendo el anti-duplicado del aviso.
 
         // Marcar el hito como enviado (anti-duplicado del cron) — solo tras
-        // crear los reportes con éxito.
+        // calcular el reporte con éxito.
         const { error: markErr } = await supabase
           .from('capacitacion_bloques')
           .update({ [sentCol[m]]: new Date().toISOString() } as Record<typeof sentCol[BloqueMilestone], string>)
