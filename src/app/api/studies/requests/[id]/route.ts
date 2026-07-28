@@ -22,6 +22,21 @@ export async function PATCH(
     const { id } = await params
     const body = await req.json()
 
+    // EST-6 (decisión confirmada): las solicitudes de INTERÉS son datos de
+    // demanda de solo lectura — sin tomar/asignar/resolver/rechazar. Solo las
+    // de reubicación mantienen el flujo de gestión.
+    {
+      const supabase = (await import('@/lib/supabase/admin')).createAdminClient()
+      const { data: reqRow } = await supabase
+        .from('study_requests').select('request_type').eq('id', id).maybeSingle()
+      if ((reqRow as { request_type?: string } | null)?.request_type === 'study_interest') {
+        return NextResponse.json(
+          { error: 'Las solicitudes de interés son informativas (datos de demanda) y no se gestionan.', code: 'solo_lectura' },
+          { status: 400 },
+        )
+      }
+    }
+
     // assign: pasa a in_review con reviewed_by = el coordinador ASIGNADO.
     if (body?.action === 'assign') {
       if (typeof body?.assignee_member_id !== 'string' || !body.assignee_member_id) {

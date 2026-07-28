@@ -118,7 +118,10 @@ export default function SolicitudesPage() {
         tabs={TABS.filter(t => t.key === section)}
         typeLabel={TYPE_LABEL}
         endpointBase="/api/studies/requests"
-        assigneesUrl="/api/studies/requests/assignees"
+        // EST-6: los intereses son datos de demanda de SOLO LECTURA (el API
+        // también rechaza acciones); las reubicaciones mantienen su flujo.
+        readOnly={section === 'study_interest'}
+        assigneesUrl={section === 'study_interest' ? undefined : '/api/studies/requests/assignees'}
         onUpdated={updated => setRequests(prev => prev.map(r => (r.id === updated.id ? updated : r)))}
         renderDetails={r => (
           <>

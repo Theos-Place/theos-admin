@@ -143,9 +143,13 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
         const body = await res.json().catch(() => null)
         throw new Error(body?.error ?? 'No se pudo enviar la solicitud')
       }
+      const wasInterest = openModal === 'study_interest'
       setOpenModal(null)
-      if (openModal === 'study_interest') setHasOpenReq(true)
-      toast('Solicitud enviada. Un coordinador la revisará pronto.', 'success')
+      if (wasInterest) setHasOpenReq(true)
+      // EST-6: el interés es informativo — no prometemos gestión de un coordinador.
+      toast(wasInterest
+        ? '¡Gracias! Registramos tu interés. Revisá la página de Matrícula para ver cuándo se abren grupos nuevos.'
+        : 'Solicitud enviada. Un coordinador la revisará pronto.', 'success')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo enviar la solicitud')
     } finally {
@@ -173,7 +177,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
       </div>
       {hasOpenReq && (
         <p className="mt-1.5 text-[12px] text-navy-light/60 font-body">
-          Ya tenés una solicitud de estudio en curso. Podés hacer una a la vez; esperá a que un coordinador la gestione.
+          Ya registraste una solicitud de estudio (una a la vez). Revisá la página de Matrícula: ahí aparecen los grupos nuevos cuando se abren.
         </p>
       )}
 
@@ -194,8 +198,8 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                     <Info size={15} className="mt-0.5 shrink-0 text-teal-deep" aria-hidden />
                     <p className="text-[13px] text-navy font-body">
                       Esta solicitud es <strong>informativa</strong>: nos ayuda a ver qué estudios tienen demanda para
-                      abrir grupos nuevos. Hacerla <strong>no garantiza</strong> que el estudio se vaya a abrir, pero
-                      nos da una mano enorme para planear. ¡Gracias por contarnos!
+                      abrir grupos nuevos. <strong>No te vamos a contactar</strong> — revisá la página de Matrícula,
+                      ahí van a aparecer los grupos nuevos cuando se abran. ¡Gracias por contarnos!
                     </p>
                   </div>
                 )}

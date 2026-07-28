@@ -241,7 +241,7 @@ study_plans.difficulty ('Básico/Intermedio/Avanzado') es dificultad y NO se toc
 Tests: elegibilidad de un plan etapa_avanzada (compromisos de intermedia + invitación).
 ```
 
-### [ ] EST-6 · Solicitudes de interés: texto claro + quitar flujo de gestión
+### [x] EST-6 · Solicitudes de interés: texto claro + solo lectura — HECHO 2026-07-27 (disclaimer/toast/aviso de duplicado sin promesa de contacto y apuntando a Matrícula; RequestBoard gana prop `readOnly` — tab de intereses sin Tomar/Asignar/Resolver/Rechazar; API rechaza acciones para study_interest con 400 `solo_lectura`; reubicaciones intactas; históricas resueltas se siguen mostrando; /estudios/analisis no leía study_requests — sin impacto)
 Archivos: `src/components/studies/StudyRequestActions.tsx` (disclaimer ~195-199, toast ~148), `src/app/(admin)/estudios/solicitudes/page.tsx`, `src/components/shared/RequestBoard.tsx`, `src/app/api/studies/requests/*`, `src/lib/supabase/queries/study-requests.ts`
 
 ```

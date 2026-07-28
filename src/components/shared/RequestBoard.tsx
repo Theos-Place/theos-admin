@@ -80,12 +80,15 @@ type Props<R extends BaseRequest> = {
    *  grupo destino de una reubicación). `onChange` se llama con el payload a
    *  fusionar en el PATCH, o `null` mientras no sea válido — bloquea el submit. */
   renderResolveExtra?: (r: R, onChange: (payload: Record<string, unknown> | null) => void) => React.ReactNode
+  /** EST-6: tablero de SOLO LECTURA (datos de demanda) — oculta Tomar/Asignar/
+   *  Resolver/Rechazar. El API además rechaza acciones para esos tipos. */
+  readOnly?: boolean
   /** Habilita "Asignar a un coordinador": URL que lista los asignables. */
   assigneesUrl?: string
 }
 
 export function RequestBoard<R extends BaseRequest>({
-  requests, loading, tabs, typeLabel, endpointBase, onUpdated, renderDetails, renderResolveHint, renderResolveExtra, assigneesUrl,
+  requests, loading, tabs, typeLabel, endpointBase, onUpdated, renderDetails, renderResolveHint, renderResolveExtra, assigneesUrl, readOnly,
 }: Props<R>) {
   const toast = useToast()
   const [tab, setTab] = useState(tabs[0]?.key ?? '')
@@ -423,8 +426,8 @@ export function RequestBoard<R extends BaseRequest>({
                               {/* Pista de resolución (ej. crear beca/devolución real) */}
                               {r.status === 'resolved' && renderResolveHint?.(r)}
 
-                              {/* Acciones */}
-                              {(r.status === 'open' || r.status === 'in_review') && (
+                              {/* Acciones (ocultas en tableros de solo lectura, EST-6) */}
+                              {!readOnly && (r.status === 'open' || r.status === 'in_review') && (
                                 <div className="flex gap-2 flex-wrap pt-1">
                                   {r.status === 'open' && (
                                     <button
