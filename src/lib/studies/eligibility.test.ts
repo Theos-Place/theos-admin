@@ -198,3 +198,38 @@ describe('isRelocationEligibleCode', () => {
     expect(isRelocationEligibleCode(null)).toBe(false)
   })
 })
+
+// ── EST-5: etapa Avanzada ─────────────────────────────────────────────────────
+
+describe('etapa avanzada (EST-5)', () => {
+  const CDEB = plan({
+    code: 'CDEB', stage: 'avanzada', requires_invitation: true,
+    req_donor: true, req_server: true, req_attendee: true,
+  })
+
+  it('sin invitación el plan ni siquiera aparece (invitation-only)', () => {
+    const res = computeEligibility([CDEB], [], profile({ is_donor: true, is_server: true, attendance_active_intermedia: true }))
+    expect(res.find(r => r.study_code === 'CDEB')).toBeUndefined()
+  })
+
+  it('con invitación exige los compromisos de intermedia (asistencia REFORZADA)', () => {
+    // Asistencia general OK pero reforzada NO → bloqueado.
+    const res = computeEligibility([CDEB], [group({ study_type_id: 'CDEB' })], profile({
+      invited_codes: ['CDEB'], is_donor: true, is_server: true,
+      attendance_active: true, attendance_active_intermedia: false,
+    }))
+    const r = res.find(x => x.study_code === 'CDEB')!
+    expect(r.is_eligible).toBe(false)
+    expect(r.requirements.attendance).toBe(false)
+  })
+
+  it('con invitación y todos los compromisos → elegible', () => {
+    const res = computeEligibility([CDEB], [group({ study_type_id: 'CDEB' })], profile({
+      invited_codes: ['CDEB'], is_donor: true, is_server: true,
+      attendance_active: true, attendance_active_intermedia: true,
+    }))
+    const r = res.find(x => x.study_code === 'CDEB')!
+    expect(r.is_eligible).toBe(true)
+    expect(r.by_invitation).toBe(true)
+  })
+})

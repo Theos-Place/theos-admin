@@ -10,7 +10,7 @@ export type StudyType = {
   commitments?: string | null
   mentor_id?: string | null
   mentor_name?: string | null
-  stage: 'niveles' | 'inicial' | 'intermedia' | 'campaña'
+  stage: 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña'
   weeks: number
   prerequisite: string | null
   requires_payment: boolean

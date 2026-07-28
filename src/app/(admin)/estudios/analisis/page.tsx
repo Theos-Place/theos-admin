@@ -222,6 +222,13 @@ export default function AnalisisPage() {
               </option>
             ))}
           </optgroup>
+          <optgroup label="Etapa Avanzada (compromisos de intermedia + invitación)">
+            {STUDY_TYPES.filter(s => s.stage === 'avanzada' && !s.is_archived && s.is_curricular !== false).map(s => (
+              <option key={s.id} value={s.id}>
+                {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
+              </option>
+            ))}
+          </optgroup>
         </select>
 
         {analysis && !loading && (

@@ -21,14 +21,15 @@ import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 import { formatDateLong, formatCRC } from '@/lib/format'
 
-type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'campaña'
+type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña'
 
-const STAGE_ORDER: FilterTab[] = ['niveles', 'inicial', 'intermedia', 'campaña']
+const STAGE_ORDER: FilterTab[] = ['niveles', 'inicial', 'intermedia', 'avanzada', 'campaña']
 
 const STAGE_META: Record<string, { label: string; bg: string; text: string }> = {
   niveles:    { label: 'Niveles',          bg: 'rgba(41,54,92,0.08)',      text: '#29365C' },
   inicial:    { label: 'Etapa Inicial',    bg: 'rgba(181,221,224,0.35)',   text: '#519DA2' },
   intermedia: { label: 'Etapa Intermedia', bg: 'rgba(239,85,84,0.12)',     text: '#D94241' },
+  avanzada:   { label: 'Etapa Avanzada',   bg: 'rgba(233,185,73,0.18)',    text: '#9B7200' },
   'campaña':  { label: 'Campañas',         bg: 'rgba(155,127,212,0.15)',   text: '#7C5EC2' },
 }
 
@@ -38,6 +39,7 @@ const FILTER_TABS_BASE: { id: FilterTab; label: string }[] = [
   { id: 'niveles',     label: 'Niveles' },
   { id: 'inicial',     label: 'Etapa Inicial' },
   { id: 'intermedia',  label: 'Etapa Intermedia' },
+  { id: 'avanzada',    label: 'Etapa Avanzada' },
 ]
 
 type ConfirmState = { group: EligibleGroup; study: EligibilityResult }

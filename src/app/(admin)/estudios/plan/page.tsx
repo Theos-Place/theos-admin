@@ -139,6 +139,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
           niveles:    { label: 'Niveles',    cls: 'bg-navy/8 text-navy-light' },
           inicial:    { label: 'Inicial',    cls: 'bg-teal-soft/30 text-teal-deep' },
           intermedia: { label: 'Intermedia', cls: 'bg-coral/10 text-coral' },
+          avanzada:   { label: 'Avanzada · Por invitación', cls: 'bg-amber-50 text-amber-700' },
           'campaña':  { label: 'Abiertas a todo público', cls: 'bg-[rgba(155,127,212,0.15)] text-[#7c5cc4]' },
         }
         const t = STAGE_TAG[study.stage]
@@ -195,7 +196,7 @@ export default function PlanDeEstudiosPage() {
   // Orden manual dentro de cada etapa: HEAD van primero (en ese orden), TAIL al
   // final (antes de los descontinuados), el resto alfabético.
   const HEAD: Record<string, string[]> = { inicial: ['SCJ', 'BUS'], intermedia: ['DIS1', 'DIS2', 'DIS3'] }
-  const TAIL: Record<string, string[]> = { intermedia: ['CDEB', 'CDC'] }
+  const TAIL: Record<string, string[]> = { avanzada: ['CDEB', 'CDC'] }
   // CTBD debe ir justo debajo de DIS3 en el listado por código.
   const sortKey = (code: string) => (code === 'CTBD' ? 'DIS3~' : code)
   const withinStage = (stage: string) => (a: StudyType, b: StudyType) => {
@@ -216,9 +217,11 @@ export default function PlanDeEstudiosPage() {
   const niveles    = useMemo(() => byStage('niveles'), [curricular])
   const inicial    = useMemo(() => byStage('inicial'), [curricular])
   const intermedia = useMemo(() => byStage('intermedia'), [curricular])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- mismo patrón que las etapas de arriba (byStage es estable por render)
+  const avanzada   = useMemo(() => byStage('avanzada'), [curricular])
   const campana    = useMemo(() => byStage('campaña'), [curricular])
   // Listado final ordenado por etapa.
-  const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, 'campaña': 3 }
+  const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, avanzada: 3, 'campaña': 4 }
   // CDEB y CDC ("cómo dar...") van al final de toda la lista, justo antes de los
   // descontinuados (que siempre quedan de últimos).
   const isInvTail = (code: string) => (code === 'CDEB' || code === 'CDC' ? 1 : 0)
@@ -431,6 +434,18 @@ export default function PlanDeEstudiosPage() {
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {intermedia.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
+          </div>
+        </div>
+
+        <StageDivider label="Solo por invitación" />
+
+        {/* ── Etapa Avanzada (EST-5) ── */}
+        <div className="mb-1">
+          <p className="text-[10px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
+            Etapa Avanzada · Compromisos de intermedia + invitación
+          </p>
+          <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+            {avanzada.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}
           </div>
         </div>
 

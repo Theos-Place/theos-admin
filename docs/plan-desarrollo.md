@@ -216,7 +216,7 @@ ruido (revisá consumidores de activeSedes). El nombre generado del grupo debe q
 virtuales (authorized_virtual_studies), solo la zona. Test del comportamiento del form.
 ```
 
-### [ ] EST-5 · Nueva etapa "Avanzada" (CDEB, Hermenéutica, Cómo Dar Charlas)
+### [x] EST-5 · Nueva etapa "Avanzada" — HECHO 2026-07-27 (migración 20260727180000 aplicada: CHECK +etapa_avanzada, CDEB/HER/CDC movidos y marcados invitation-only; LEVEL_TO_STAGE + requisitos = intermedia + asistencia reforzada; tipo stage ampliado; catálogo estático + STUDY_STAGES; UI: matrícula (tab/meta), form de grupo nuevo (optgroup), /estudios/plan (sección propia "solo por invitación"), /estudios/analisis (optgroup), StudyTypeBadge; 3 tests de elegibilidad)
 Archivos: migración SQL (`study_plans.level` CHECK), `src/lib/studies/eligibility.ts` (`LEVEL_TO_STAGE` líneas 9-14 y requisitos por etapa ~28-30), `src/types/study.ts:13`, `src/data/study-catalog.ts` (HER línea ~238, CDEB ~252, CDC ~253, `STUDY_STAGES` ~262), forms y agrupadores de matrícula/análisis
 
 ```

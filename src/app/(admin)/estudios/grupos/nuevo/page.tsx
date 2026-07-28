@@ -189,6 +189,7 @@ export default function NuevoGrupoPage() {
   const niveles = activeTypes.filter(s => s.stage === 'niveles')
   const inicial = activeTypes.filter(s => s.stage === 'inicial')
   const intermedia = activeTypes.filter(s => s.stage === 'intermedia')
+  const avanzada = activeTypes.filter(s => s.stage === 'avanzada')
 
   return (
     <div className="w-full space-y-6">
@@ -265,6 +266,9 @@ export default function NuevoGrupoPage() {
                 </optgroup>
                 <optgroup label="Etapa Intermedia">
                   {intermedia.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
+                </optgroup>
+                <optgroup label="Etapa Avanzada">
+                  {avanzada.map(s => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
                 </optgroup>
               </select>
             </div>

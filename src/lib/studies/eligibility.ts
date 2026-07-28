@@ -11,6 +11,9 @@ export const LEVEL_TO_STAGE: Record<string, StudyType['stage']> = {
   niveles: 'niveles',
   etapa_inicial: 'inicial',
   etapa_intermedia: 'intermedia',
+  // EST-5: etapa Avanzada (CDEB, HER, CDC) — compromisos de intermedia + solo
+  // por invitación (requires_invitation en el plan).
+  etapa_avanzada: 'avanzada',
   campanas: 'campaña',
 }
 
@@ -27,7 +30,9 @@ export type StageRequirements = {
 
 export function requirementsForStage(stage: string): StageRequirements {
   if (stage === 'inicial') return { donor: false, server: false, attendance: 'general' }
-  if (stage === 'intermedia') return { donor: true, server: true, attendance: 'intermedia' }
+  // EST-5: avanzada pide LOS MISMOS compromisos que intermedia (la invitación
+  // es aparte, vía requires_invitation del plan).
+  if (stage === 'intermedia' || stage === 'avanzada') return { donor: true, server: true, attendance: 'intermedia' }
   return { donor: false, server: false, attendance: 'none' } // niveles y campañas: sin compromisos
 }
 
@@ -212,7 +217,7 @@ export function computeEligibility(
       // asistencias, misma ventana y misma recencia) — el resto de etapas
       // sigue con el criterio general. Mismo helper (meetsAttendanceCriteria),
       // solo cambia el mínimo exigido.
-      const isIntermedia = study.stage === 'intermedia'
+      const isIntermedia = study.stage === 'intermedia' || study.stage === 'avanzada'
       const attendanceOk = isIntermedia ? !!profile.attendance_active_intermedia : profile.attendance_active
       const minCharlas = isIntermedia ? ATTENDANCE_MIN_CHARLAS_INTERMEDIA : ATTENDANCE_MIN_CHARLAS
       requirements.attendance = attendanceOk || isWaived('attendance')

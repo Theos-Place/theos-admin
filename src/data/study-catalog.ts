@@ -1,7 +1,7 @@
 export type StudyCatalogItem = {
   code: string
   name: string
-  stage: 'niveles' | 'inicial' | 'intermedia' | 'campaña'
+  stage: 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña'
   prerequisite: string | null
   weeks: number
   mentor?: string
@@ -237,7 +237,7 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
   {
     code: 'HER',
     name: 'Hermenéutica',
-    stage: 'intermedia',
+    stage: 'avanzada',
     prerequisite: 'PAN',
     weeks: 10,
     mentor:'Naomi',
@@ -248,9 +248,9 @@ export const STUDY_CATALOG: StudyCatalogItem[] = [
     commitments: 'Tareas + Proyecto final con exposición',
   },
 
-  // INTERMEDIA — solo por invitación (mentores)
-  { code: 'CDEB', name: 'Cómo Dar Estudios Bíblicos', stage: 'intermedia', prerequisite: null, weeks: 8, mentor: 'Eddy' },
-  { code: 'CDC',  name: 'Cómo Dar Charlas',           stage: 'intermedia', prerequisite: null, weeks: 8, mentor: 'Benja' },
+  // AVANZADA — solo por invitación (EST-5)
+  { code: 'CDEB', name: 'Cómo Dar Estudios Bíblicos', stage: 'avanzada', prerequisite: null, weeks: 8, mentor: 'Eddy' },
+  { code: 'CDC',  name: 'Cómo Dar Charlas',           stage: 'avanzada', prerequisite: null, weeks: 8, mentor: 'Benja' },
 
   // CAMPAÑAS
   { code: 'TRANS', name: 'Transformados',                       stage: 'campaña', prerequisite: null, weeks: 8 },
@@ -263,6 +263,7 @@ export const STUDY_STAGES = {
   niveles:    { label: 'Niveles',          color: 'navy',   description: 'Fundamentos de la fe cristiana' },
   inicial:    { label: 'Etapa Inicial',    color: 'teal',   description: 'Crecimiento y servicio' },
   intermedia: { label: 'Etapa Intermedia', color: 'coral',  description: 'Profundización bíblica y liderazgo' },
+  avanzada:   { label: 'Etapa Avanzada',   color: 'amber',  description: 'Formación para enseñar — solo por invitación' },
   campaña:    { label: 'Campañas',         color: 'purple', description: 'Estudios especiales sin prerequisitos' },
 }
 
@@ -273,7 +274,7 @@ export const INTERMEDIA_REQUIREMENTS = [
 ]
 
 export type StudyCode = string
-export type StudyStage = 'niveles' | 'inicial' | 'intermedia' | 'campaña'
+export type StudyStage = 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña'
 
 export function studyLabel(code: string): string {
   const found = STUDY_CATALOG.find(s => s.code === code)

@@ -36,7 +36,7 @@ function Toggle({ checked, onChange, label, sublabel }: {
 }
 
 const STAGE_LABEL: Record<StudyType['stage'], string> = {
-  niveles: 'Niveles', inicial: 'Inicial', intermedia: 'Intermedia', campaña: 'Campaña',
+  niveles: 'Niveles', inicial: 'Inicial', intermedia: 'Intermedia', avanzada: 'Avanzada', campaña: 'Campaña',
 }
 
 export default function EditarEstudioPage({ params }: { params: Promise<{ id: string }> }) {
