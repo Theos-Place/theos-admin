@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { nextLevelCode } from '@/lib/studies/folletos'
+import { filterByNotifPref } from '@/lib/notifications/dispatch'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
@@ -236,7 +237,7 @@ export async function autoEnrollApprovedToNextLevel(
       // seguir con el resto del lote (best-effort) — el retry de reconciliación
       // (YA_CERRADO) la repara. Sin esto quedaba una matrícula pendiente_de_pago
       // invisible para finanzas.
-      const { error: payErr } = await supabase.from('payments').insert({
+      const { data: pay, error: payErr } = await supabase.from('payments').insert({
         member_id: memberId,
         amount,
         currency: 'CRC',
@@ -244,19 +245,24 @@ export async function autoEnrollApprovedToNextLevel(
         concept: 'matricula',
         enrollment_id: enrollmentId,
         status: 'pending',
-      })
+      }).select('id').single()
       if (payErr) {
         console.warn('auto-enroll pago falló, revirtiendo inscripción:', payErr.message)
         await supabase.from('study_enrollments').delete().eq('id', enrollmentId)
         continue
       }
-      // Notifica al miembro del cobro pendiente (clickeable → su perfil).
+      // PAG-1: si el miembro silenció 'mensajes_sistema', no se le notifica
+      // (el cobro sigue visible en /mis-pagos igual).
+      const allowed = await filterByNotifPref(supabase as unknown as Parameters<typeof filterByNotifPref>[0], [memberId], 'mensajes_sistema')
+      if (allowed.length === 0) continue
+      // Notifica al miembro del cobro pendiente (clic → el pago en /mis-pagos).
+      const payId = (pay as { id: string }).id
       const { error: notifErr } = await supabase.from('internal_notifications').insert({
         recipient_member_id: memberId,
         type: 'payment_pending',
         title: 'Tenés un cobro pendiente',
         body: `Se generó un cobro de matrícula de ₡${amount.toLocaleString('es-CR')}. Abrí el detalle para pagarlo (subir comprobante).`,
-        link: `/miembros/${memberId}?tab=participacion`,
+        link: `/mis-pagos?pago=${payId}`,
       })
       if (notifErr) console.warn('auto-enroll: notificación de cobro falló:', notifErr.message)
     }

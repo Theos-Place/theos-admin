@@ -540,7 +540,7 @@ Botón "Importar" en la página /estudios visible con esos roles. Tests de la va
 
 ## Fase 4 — Pagos pendientes (bloque con dependencias internas; hacer en orden)
 
-### [ ] PAG-1 · Página "mis pagos pendientes" + notificación clic-para-pagar
+### [x] PAG-1 · Página "mis pagos pendientes" + notificación clic-para-pagar — HECHO 2026-07-27 (/mis-pagos con pestañas de familia y deep link ?pago=; componente compartido `MemberPaymentsList` extraído del perfil; endpoint de pagos permite familia vía canViewMemberProfile; notificación del auto-enroll ahora linkea /mis-pagos?pago=<id> y respeta prefs mensajes_sistema; ítem "Mis pagos" en sidebar para toda sesión)
 Archivos: `src/app/api/members/[id]/payments/route.ts` (ya permite self-access), página nueva, `internal_notifications`, flujo de matrícula automática N2-N4
 
 ```

@@ -178,6 +178,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // la propia página muestra solo la inscripción a eventos (antes vivía
     // aparte en /mis-eventos); "Crear evento"/"Tipos de evento" siguen ocultos.
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: eventosSub,        module: 'eventos' },
+    // PAG-1: pagos pendientes propios (y de la familia) — cualquier sesión con
+    // perfil de miembro; el endpoint gatea a self/familia/staff.
+    { href: '/mis-pagos',      label: 'Mis pagos',      icon: CreditCard,      subs: [],                 module: null },
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
     { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores' },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
