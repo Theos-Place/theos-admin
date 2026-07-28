@@ -48,7 +48,10 @@ export async function GET(req: NextRequest) {
     // PAG-2: pagos de estudios pendientes que bloquean matricular otro estudio
     // (la UI muestra el aviso con link a /mis-pagos; enrollMember re-valida).
     const pending_study_payments = await countBlockingStudyPayments(memberId)
-    return NextResponse.json({ eligibility, profile, premat_ok, pending_study_payments })
+    // PRE-6: plan_id de PREMAT para la solicitud de beca del wizard (el modal
+    // de becas apunta a un study_plan por uuid).
+    const premat_plan_id = plans.find(p => (p as { code?: string | null }).code === 'PREMAT')?.id ?? null
+    return NextResponse.json({ eligibility, profile, premat_ok, pending_study_payments, premat_plan_id })
   } catch (error) {
     console.error('GET /api/matricula/eligibility:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

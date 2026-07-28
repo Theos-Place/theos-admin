@@ -617,7 +617,7 @@ Rate limit simple: no permitir más de un recordatorio manual por pago por día 
 Mostrar confirmación en la UI y cuándo se envió el último recordatorio.
 ```
 
-### [ ] PRE-6 · Botón "solicitar beca" en prematrimonial
+### [x] PRE-6 · Botón "solicitar beca" en prematrimonial — HECHO 2026-07-27 (reusa ScholarshipRequestModal con destino fijo al plan PREMAT — mismo flujo finance_requests/scholarship de la matrícula normal, sin flujo nuevo; el eligibility expone `premat_plan_id`; funciona en autoservicio y onBehalf; la solicitud queda open y el pago sigue pendiente hasta que becas resuelva — los emails beca_* ya existentes aplican)
 Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (paso 4, pago), `src/lib/supabase/queries/scholarships.ts`, `src/app/api/scholarships/*`, `finance_requests`
 
 ```

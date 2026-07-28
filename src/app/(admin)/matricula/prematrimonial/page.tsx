@@ -7,6 +7,7 @@ import { Heart, Search, Check, IdCard, ArrowLeft, ArrowRight, Loader2, AlertCirc
 import { useAuth } from '@/hooks/useAuth'
 import { minCeremonyDate } from '@/lib/studies/premat-dates'
 import { toYmdLocal } from '@/lib/format'
+import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
 
 type Enrollee = { member_id: string; name: string; email: string | null; has_cedula: boolean; meets_requirement: boolean }
 
@@ -43,16 +44,26 @@ export default function PrematrimonialWizardPage() {
   const [enrolleeError, setEnrolleeError] = useState('')
   // PRE-5: requisito del propio usuario en autoservicio (null = cargando; el
   // gate no bloquea mientras carga — el POST re-valida server-side igual).
+  // PRE-6: el mismo fetch trae premat_plan_id para la solicitud de beca, así
+  // que corre para el miembro EFECTIVO (self u onBehalf, el staff tiene permiso).
   const [selfPrematOk, setSelfPrematOk] = useState<boolean | null>(null)
+  const [prematPlanId, setPrematPlanId] = useState<string | null>(null)
+  const effectiveMemberId = onBehalf ? requestedMemberId : (user?.member_id ?? '')
   useEffect(() => {
-    if (onBehalf || !user?.member_id) return
+    if (!effectiveMemberId) return
     let alive = true
-    fetch(`/api/matricula/eligibility?member_id=${user.member_id}`)
+    fetch(`/api/matricula/eligibility?member_id=${effectiveMemberId}`)
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && d) setSelfPrematOk(!!d.premat_ok) })
+      .then(d => {
+        if (!alive || !d) return
+        if (!onBehalf) setSelfPrematOk(!!d.premat_ok)
+        setPrematPlanId(d.premat_plan_id ?? null)
+      })
       .catch(() => {})
     return () => { alive = false }
-  }, [onBehalf, user?.member_id])
+  }, [onBehalf, effectiveMemberId])
+  // PRE-6: modal de solicitud de beca (mismo flujo que la matrícula normal).
+  const [scholarshipOpen, setScholarshipOpen] = useState(false)
 
   useEffect(() => {
     if (!onBehalf) return
@@ -288,6 +299,19 @@ export default function PrematrimonialWizardPage() {
               <p className="text-navy-light/70">Luego de pagar, notificá a mariajose@theosplace.org.</p>
             </div>
             <p className="text-[13px] text-navy-light/70 font-body">El pago se hace <strong>antes</strong> de completar la inscripción: subí el comprobante y el número para que finanzas lo revise.</p>
+            {/* PRE-6: solicitud de beca — mismo flujo que la matrícula normal
+                (finance_requests tipo scholarship sobre el plan PREMAT). La
+                solicitud queda abierta y el pago sigue pendiente hasta que
+                becas la resuelva. */}
+            {prematPlanId && (
+              <button
+                type="button"
+                onClick={() => setScholarshipOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-teal/40 px-4 py-2 text-[13px] text-teal-deep hover:bg-teal/5 transition-colors font-body"
+              >
+                <Heart size={14} /> Solicitar beca
+              </button>
+            )}
             <div>
               <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Número de comprobante</p>
               <input value={reference} onChange={e => setReference(e.target.value)} placeholder="Ej: 123456789" className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm outline-none focus:border-navy/30 font-body" />
@@ -303,6 +327,15 @@ export default function PrematrimonialWizardPage() {
         )}
 
         {error && <p className="mt-4 flex items-center gap-1.5 rounded-xl bg-coral/5 px-3 py-2 text-[13px] text-coral-deep font-body"><AlertCircle size={14} /> {error}</p>}
+
+        {/* PRE-6: modal de solicitud de beca (destino fijo: plan PREMAT). */}
+        {scholarshipOpen && prematPlanId && effectiveMemberId && (
+          <ScholarshipRequestModal
+            memberId={effectiveMemberId}
+            fixedTarget={{ entity_type: 'study_plan', id: prematPlanId, name: 'Curso Prematrimonial' }}
+            onClose={() => setScholarshipOpen(false)}
+          />
+        )}
 
         {/* Navegación */}
         <div className="mt-6 flex items-center justify-between">
