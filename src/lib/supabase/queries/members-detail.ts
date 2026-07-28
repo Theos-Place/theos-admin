@@ -93,7 +93,7 @@ export type DbMemberFull = DbMemberEnriched & {
    *  activo = más asistida en los últimos 6 meses; inactivo = más asistida en
    *  los 6 meses previos a su última asistencia. null = nunca asistió. */
   attendance_sede: MemberSedeResult | null
-  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number }>
+  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number; grade: number | null; notes: string | null }>
   event_registration_history: Array<{
     registration_id: string; event_id: string; event_name: string; event_date: string
     requires_payment: boolean; cost: number
@@ -134,7 +134,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         )
       ),
       study_enrollments(
-        id, status, completed_at, enrolled_at,
+        id, status, completed_at, enrolled_at, grade, notes,
         study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks, cost, requires_payment)),
         plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks, cost, requires_payment)
       ),
@@ -282,6 +282,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     status: string
     completed_at: string | null
     enrolled_at: string | null
+    grade: number | null
+    notes: string | null
     study_groups: { id: string; current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: PlanEmbed } | null
     plan_direct: PlanEmbed
   }>
@@ -377,6 +379,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         requires_payment: !!plan.requires_payment && Number(plan.cost ?? 0) > 0,
         payment_status: paymentStatusByEnrollment.get(e.id) ?? null,
         cost: Number(plan.cost ?? 0),
+        // EST-8: nota numérica y resultado del cierre ('aprobado' | 'reprobado: motivo').
+        grade: e.grade ?? null,
+        notes: e.notes ?? null,
       }
     })
     .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')) // más reciente primero (igual que eventos y donaciones)

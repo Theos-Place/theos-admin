@@ -7,6 +7,7 @@ import { FinanceRequestActions } from '@/components/finance/FinanceRequestAction
 import { MemberPaymentsList, PayMatriculaButton, PayEventRegistrationButton } from '@/components/members/MemberPaymentsList'
 import { cn } from '@/lib/utils'
 import { formatDate, formatCRC } from '@/lib/format'
+import { studyGradeDisplay } from '@/lib/studies/grade-display'
 
 const LOAD_MORE = 10
 
@@ -73,7 +74,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; cost: number }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; cost: number; grade: number | null; notes: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -186,7 +187,7 @@ export function MemberParticipationTab({
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-[var(--outline-variant)]">
-                {([['name', 'Estudio'], ['startYear', 'Inicio'], ['status', 'Estado']] as [keyof StudyRow, string][]).map(([key, label]) => (
+                {([['name', 'Estudio'], ['startYear', 'Inicio'], ['status', 'Estado'], ['grade', 'Nota']] as [keyof StudyRow, string][]).map(([key, label]) => (
                   <th
                     key={key}
                     onClick={() => estudiosTable.toggleSort(key)}
@@ -230,6 +231,16 @@ export function MemberParticipationTab({
                         {row.status}
                       </span>
                     </td>
+                    {/* EST-8: nota del cierre (study_enrollments.grade); el
+                        motivo de reprobado va como title (tooltip). */}
+                    {(() => {
+                      const g = studyGradeDisplay(row.grade, row.notes)
+                      return (
+                        <td className="px-4 py-2.5 text-navy-light/70 text-xs font-body" title={g.tooltip}>
+                          {g.text}
+                        </td>
+                      )
+                    })()}
                     <td className="px-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-3">
                         {(row.rawStatus === 'enrolled' || row.rawStatus === 'pendiente_de_pago') && row.requiresPayment && (

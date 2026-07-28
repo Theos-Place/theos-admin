@@ -155,6 +155,8 @@ export default function MiembroDetailPage() {
       requiresPayment: s.requires_payment,
       paymentStatus: s.payment_status,
       cost: s.cost,
+      grade: s.grade ?? null,
+      notes: s.notes ?? null,
     }))
   }, [member])
 

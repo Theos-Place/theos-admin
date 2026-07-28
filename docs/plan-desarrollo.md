@@ -289,7 +289,7 @@ Reproducí el escenario, arreglá la causa raíz y dejá mensajes de error accio
 Nota: coordinar con EST-6 — esto aplica solo a reubicaciones, que mantienen su flujo.
 ```
 
-### [ ] EST-8 · Notas de estudios en el perfil del miembro
+### [x] EST-8 · Notas de estudios en el perfil — HECHO 2026-07-27 (grade/notes en el select de studyHistory + columna "Nota" ordenable en el historial; regla pura `grade-display.ts`: nota numérica manda, sin nota muestra el resultado, motivo de reprobado como tooltip; misma visibilidad del perfil, sin gate extra; sin migración; 4 tests)
 Archivos: `src/lib/supabase/queries/members-detail.ts` (`studyHistory` ~360-382), `src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx` (`StudyRow` ~77, tabla ~186-272)
 
 ```
