@@ -327,7 +327,7 @@ Test del guard (403 para comunicaciones/direccion, 200 para admin).
 
 ### Calendario público y eventos (feedback 2026-07-26)
 
-### [ ] EVE-1 · Detalle de evento público + botón inscribirse con login
+### [x] EVE-1 · Detalle de evento público + inscribirse con login — HECHO 2026-07-27 (modal con fecha completa, costo en colones y "requiere inscripción" — campos que el endpoint ya exponía con whitelist, sin campos nuevos; botón funcional con login-gate patrón /vacantes → `/login?redirect=/eventos?register=<id>`; deep link `?register=` en /eventos abre el modal de inscripción vía elegibilidad y limpia la URL; botón visible solo con requires_registration y respetando showBtn; 2 tests)
 Archivos: `src/app/(public)/calendario/page.tsx` (modal, líneas ~249-264), `src/components/servers/PublicApplyButton.tsx` (patrón a copiar), `src/components/events/useEventRegistration.tsx`, `src/app/api/public/events/route.ts`
 
 ```

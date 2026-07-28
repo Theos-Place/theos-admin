@@ -1,6 +1,8 @@
 'use client'
 import { useState, useMemo, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { registerDeepLink, loginRedirectTo } from '@/lib/events/public-register-link'
 import type { AdminEvent } from '@/data/event-config'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
@@ -51,6 +53,24 @@ function CalendarioWidget() {
   function formatEventTime(iso: string) {
     return new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })
   }
+  // EVE-1: fecha completa para el modal de detalle.
+  function formatFullDate(iso: string) {
+    return new Date(iso).toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const router = useRouter()
+  // EVE-1: botón Inscribirse con login-gate (patrón de /vacantes). Sin sesión →
+  // /login con redirect al deep link; con sesión → directo a /eventos?register=.
+  async function goRegister(eventId: string) {
+    const dest = registerDeepLink(eventId)
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      router.push(session ? dest : loginRedirectTo(dest))
+    } catch {
+      router.push(loginRedirectTo(dest))
+    }
+  }
   function formatDate(iso: string) {
     const d = new Date(iso)
     const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
@@ -91,11 +111,16 @@ function CalendarioWidget() {
                   )}
                   <div className="text-[11px] text-[rgba(0,0,0,0.4)] mt-0.5">🕐 {formatEventTime(ev.start_at)}</div>
                 </div>
-                {showBtn && (
+                {showBtn && ev.requires_registration && (
                   <div className="flex items-center">
-                    <div className="text-white rounded-lg py-1.5 px-3 text-xs font-semibold whitespace-nowrap" style={{ background: accent }}>
+                    <button
+                      type="button"
+                      onClick={e => { e.stopPropagation(); goRegister(ev.id) }}
+                      className="text-white rounded-lg py-1.5 px-3 text-xs font-semibold whitespace-nowrap"
+                      style={{ background: accent }}
+                    >
                       Inscribirse
-                    </div>
+                    </button>
                   </div>
                 )}
               </div>
@@ -254,9 +279,26 @@ function CalendarioWidget() {
             <h3 id="evento-detalle-title" className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
             {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.55)] mb-2">{selectedEvent.description}</p>}
             {showLoc && <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📍 {selectedEvent.location}</p>}
-            <p className="text-xs text-[rgba(0,0,0,0.4)] mb-3">🕐 {formatEventTime(selectedEvent.start_at)}</p>
+            {/* EVE-1: fecha completa + costo + si requiere inscripción (el
+                endpoint público ya exponía estos campos con whitelist). */}
+            <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📅 {formatFullDate(selectedEvent.start_at)} · 🕐 {formatEventTime(selectedEvent.start_at)}</p>
+            {selectedEvent.requires_payment && (selectedEvent.payment_amount ?? 0) > 0 && (
+              <p className="text-xs text-[rgba(0,0,0,0.55)] mb-1">💰 Costo: ₡{Number(selectedEvent.payment_amount).toLocaleString('es-CR')}</p>
+            )}
+            <p className="text-xs text-[rgba(0,0,0,0.4)] mb-3">
+              {selectedEvent.requires_registration ? '📝 Requiere inscripción' : 'Entrada libre, sin inscripción'}
+            </p>
             <div className="flex gap-2">
-              {showBtn && <div className="flex-1 text-white rounded-lg py-2.5 text-center font-semibold text-[13px] cursor-pointer" style={{ background: accent }}>Inscribirse</div>}
+              {showBtn && selectedEvent.requires_registration && (
+                <button
+                  type="button"
+                  onClick={() => goRegister(selectedEvent.id)}
+                  className="flex-1 text-white rounded-lg py-2.5 text-center font-semibold text-[13px]"
+                  style={{ background: accent }}
+                >
+                  Inscribirse
+                </button>
+              )}
               <div className="flex-1 border border-[rgba(0,0,0,0.15)] rounded-lg py-2.5 text-center text-[13px] cursor-pointer text-[rgba(0,0,0,0.5)]" onClick={() => setSelectedEvent(null)}>Cerrar</div>
             </div>
           </div>

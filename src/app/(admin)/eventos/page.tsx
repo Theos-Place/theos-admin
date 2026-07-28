@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -104,6 +104,7 @@ function eligibilityToStubEvent(e: EventEligibilityResult): AdminEvent {
 
 function EventosContent() {
   const router = useRouter()
+  const registerSearchParams = useSearchParams()
   // Dos fuentes: activos con relaciones (stats, próximos) + TODOS en liviano
   // (históricos para calendario y "Realizados"). Se fusionan por id.
   const { user, hasRole } = useAuth()
@@ -135,6 +136,21 @@ function EventosContent() {
   )
   const { openRegister, requestScholarship, successEvent, clearSuccess, modals: registrationModals } =
     useEventRegistration(memberId, () => setEligRefresh(k => k + 1))
+
+  // EVE-1: deep link ?register=<eventId> (viene del calendario público, con o
+  // sin login-gate): al cargar la elegibilidad abre el modal de inscripción de
+  // ese evento — mismo flujo y misma verificación que el botón normal.
+  const registerParam = registerSearchParams.get('register')
+  const registerHandled = useRef(false)
+  useEffect(() => {
+    if (registerHandled.current || !registerParam) return
+    const elig = eligibilityByEventId.get(registerParam)
+    if (!elig) return
+    registerHandled.current = true
+    openRegister(elig)
+    router.replace('/eventos', { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerParam, eligibilityByEventId])
   // Filtros de tipo desde la BD (no el mock): si se agrega un tipo, aparece solo.
   const eventTypes = useEventTypes()
   const typeStyle = useEventTypeStyle()
