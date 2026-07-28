@@ -10,6 +10,7 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { resolveZoneCode } from '@/lib/zones'
+import { zoneOnVirtualToggle } from '@/lib/studies/virtual-zone'
 import { cn } from '@/lib/utils'
 import { ChevronLeft } from 'lucide-react'
 import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
@@ -204,16 +205,23 @@ function EditarForm({ group, studyType, refetch }: {
           {/* Zona */}
           <div className="col-span-2 space-y-1">
             <label className={labelCls}>Zona</label>
-            <Combobox
-              ariaLabel="Zona"
-              items={SEDES.map(s => ({ value: s.id, label: s.name }))}
-              value={zone}
-              onChange={setZone}
-              allowEmpty
-              emptyLabel="Sin zona"
-              allowCreate={false}
-              placeholder="Buscar zona…"
-            />
+            {isVirtual ? (
+              // EST-4: en grupos virtuales la zona queda fija en "Virtual".
+              <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/60 font-body" aria-label="Zona fijada: Virtual">
+                Virtual (fijada por ser grupo virtual)
+              </p>
+            ) : (
+              <Combobox
+                ariaLabel="Zona"
+                items={SEDES.map(s => ({ value: s.id, label: s.name }))}
+                value={zone}
+                onChange={setZone}
+                allowEmpty
+                emptyLabel="Sin zona"
+                allowCreate={false}
+                placeholder="Buscar zona…"
+              />
+            )}
           </div>
 
           {/* Día */}
@@ -274,7 +282,11 @@ function EditarForm({ group, studyType, refetch }: {
                 type="checkbox"
                 className="accent-coral"
                 checked={isVirtual}
-                onChange={e => setIsVirtual(e.target.checked)}
+                onChange={e => {
+                  // EST-4: virtual fija la zona "Virtual"; desmarcar la limpia.
+                  setIsVirtual(e.target.checked)
+                  setZone(prev => zoneOnVirtualToggle(e.target.checked, prev, { kind: 'empty' }))
+                }}
               />
               <span className="text-sm text-navy-light/70 font-body">
                 Grupo <strong>virtual</strong> (solo lo ven miembros autorizados para estudios virtuales)

@@ -200,7 +200,7 @@ compromisos repetidos entre estudios → aparecen una vez.
 
 ### Estudios, solicitudes y comunicaciones (feedback 2026-07-26, segunda tanda)
 
-### [ ] EST-4 · Grupo virtual ⇒ zona "Virtual" automática
+### [x] EST-4 · Grupo virtual ⇒ zona "Virtual" automática — HECHO 2026-07-27 (seed sede VIRTUAL con is_active=false — no aparece en combos de charlas/activeSedes, migración 20260727170000 aplicada; módulo puro `virtual-zone.ts`: marcar fija la zona y muestra pill fija en vez del combobox, desmarcar limpia solo si era Virtual; aplicado en crear Y editar; el nombre queda "COD — Virtual"; 3 tests)
 Archivos: `src/app/(admin)/estudios/grupos/nuevo/page.tsx` (checkbox is_virtual líneas ~346-358, zona ~236-248), `src/app/(admin)/estudios/grupos/[id]/editar/page.tsx` (~271), `src/lib/zones.ts` (`resolveZoneCode`)
 
 ```
