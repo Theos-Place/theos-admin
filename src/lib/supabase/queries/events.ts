@@ -29,6 +29,8 @@ export type DbEventEnriched = {
   requires_registration: boolean
   requires_payment: boolean
   payment_amount: number | null
+  /** INT-2: moneda de payment_amount/server_price (CRC/USD/EUR). */
+  currency: string
   server_price: number | null
   servers_pay: boolean
   requires_survey: boolean
@@ -245,6 +247,7 @@ export type EventWriteInput = {
   requires_registration?: boolean
   requires_payment?: boolean
   payment_amount?: number | null
+  currency?: string
   server_price?: number | null
   servers_pay?: boolean
   requires_survey?: boolean
@@ -346,24 +349,26 @@ type PaymentStatus = 'pending' | 'paid' | 'exempted' | 'expired'
 export async function registrationPricing(
   eventId: string,
   memberId: string,
-): Promise<{ requiresPayment: boolean; isServer: boolean; exempt: boolean; price: number }> {
+): Promise<{ requiresPayment: boolean; isServer: boolean; exempt: boolean; price: number; currency: string }> {
   const supabase = createAdminClient()
   const { data: ev } = await supabase
     .from('events')
-    .select('requires_payment, payment_amount, server_price, servers_pay')
+    .select('requires_payment, payment_amount, server_price, servers_pay, currency')
     .eq('id', eventId).maybeSingle()
-  const e = (ev ?? {}) as { requires_payment?: boolean; payment_amount?: number | null; server_price?: number | null; servers_pay?: boolean }
+  const e = (ev ?? {}) as { requires_payment?: boolean; payment_amount?: number | null; server_price?: number | null; servers_pay?: boolean; currency?: string | null }
   const requiresPayment = !!e.requires_payment
-  if (!requiresPayment) return { requiresPayment: false, isServer: false, exempt: false, price: 0 }
+  // INT-2: los cobros del evento heredan su moneda.
+  const currency = e.currency ?? 'CRC'
+  if (!requiresPayment) return { requiresPayment: false, isServer: false, exempt: false, price: 0, currency }
 
   const committeeIds = await eventOrganizingCommitteeIds(eventId)
   // Solo evaluamos "servidor" si hay comités (sin comités no hay servidores que distinguir).
   const isServer = committeeIds.length > 0 ? await memberServesAnyCommittee(memberId, committeeIds) : false
   const serversExempt = e.servers_pay === false
-  if (isServer && serversExempt) return { requiresPayment, isServer, exempt: true, price: 0 }
+  if (isServer && serversExempt) return { requiresPayment, isServer, exempt: true, price: 0, currency }
   const base = e.payment_amount ?? 0
   const price = isServer && e.server_price != null ? e.server_price : base
-  return { requiresPayment, isServer, exempt: false, price }
+  return { requiresPayment, isServer, exempt: false, price, currency }
 }
 
 export class EventFullError extends Error {
@@ -435,7 +440,7 @@ export async function createRegistration(
       // El monto con descuento debe quedar fijo desde el registro (a diferencia
       // del camino sin beca, que crea el payment recién al subir el comprobante).
       await supabase.from('payments').insert({
-        member_id: input.member_id, amount: finalAmount, currency: 'CRC', payment_method: 'comprobante',
+        member_id: input.member_id, amount: finalAmount, currency: pricing.currency, payment_method: 'comprobante',
         concept: 'evento', event_registration_id: registrationId, entity_type: 'event',
         status: 'pending', scholarship_id: appliedScholarship.id,
       })
@@ -819,7 +824,7 @@ export async function onsiteChargeAndCheckin(
       const base = {
         member_id,
         amount: pricing.price,
-        currency: 'CRC',
+        currency: pricing.currency,
         // Único método por ahora; cuando entre Tilopay, este valor pasa a venir
         // del camino elegido (comprobante | tilopay) sin tocar el resto del flujo.
         payment_method: 'comprobante',
@@ -940,6 +945,7 @@ function toWriteInput(e: DbEventEnriched): EventWriteInput {
     requires_registration: e.requires_registration,
     requires_payment: e.requires_payment,
     payment_amount: e.payment_amount,
+    currency: e.currency,
     server_price: e.server_price,
     servers_pay: e.servers_pay,
     requires_survey: e.requires_survey,

@@ -58,6 +58,8 @@ export type AdminEvent = {
   max_capacity: number | null
   requires_payment: boolean
   payment_amount: number | null
+  /** INT-2: moneda de payment_amount/server_price (CRC/USD/EUR). */
+  currency: string
   /** Precio para servidores de los comités organizadores. null = igual al normal. */
   server_price: number | null
   /** false = servidores del comité organizador exentos de pago. */

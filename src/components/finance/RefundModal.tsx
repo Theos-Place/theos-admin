@@ -14,6 +14,8 @@ interface RefundModalProps {
     member_name: string
     entity_name: string
     amount: number
+    /** INT-2: moneda del pago (la devolución la hereda en BD). */
+    currency?: string
     method: PaymentMethod
   }
 }
@@ -76,7 +78,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
             <div className="flex justify-between text-[13px] font-body">
               <span className="text-[rgba(22,20,64,0.55)]">Monto pagado</span>
               <span className="text-navy font-medium">
-                <AmountDisplay amount={payment.amount} defaultHidden={false} />
+                <AmountDisplay amount={payment.amount} currency={payment.currency} defaultHidden={false} />
               </span>
             </div>
           </div>

@@ -12,7 +12,7 @@ import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
 import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
-import { ymdCR } from '@/lib/format'
+import { ymdCR, CURRENCIES, currencySymbol } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
@@ -168,6 +168,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [maxCapacity, setMaxCapacity] = useState(event ? String(event.max_capacity ?? '') : '')
   const [requiresPayment, setRequiresPayment] = useState(event?.requires_payment ?? false)
   const [paymentAmount, setPaymentAmount] = useState(event?.payment_amount ? String(event.payment_amount) : '')
+  // INT-2: moneda del cobro del evento.
+  const [currency, setCurrency] = useState(event?.currency ?? 'CRC')
   const [serverPrice, setServerPrice] = useState(event?.server_price != null ? String(event.server_price) : '')
   const [serversPay, setServersPay] = useState(event?.servers_pay ?? true)
   const [showRecurringModal, setShowRecurringModal] = useState(false)
@@ -206,6 +208,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setMaxCapacity(String(event.max_capacity ?? ''))
     setRequiresPayment(event.requires_payment ?? false)
     setPaymentAmount(event.payment_amount ? String(event.payment_amount) : '')
+    setCurrency(event.currency ?? 'CRC')
     setServerPrice(event.server_price != null ? String(event.server_price) : '')
     setServersPay(event.servers_pay ?? true)
      
@@ -269,7 +272,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       is_virtual: isVirtual, virtual_link: virtualLink, location,
       is_recurring: isRecurring, recurrence_rule: recurrenceRule, recurrence_end: recurrenceEnd,
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
-      requires_payment: requiresPayment, payment_amount: paymentAmount,
+      requires_payment: requiresPayment, payment_amount: paymentAmount, currency,
       server_price: serverPrice, servers_pay: serversPay,
       sub_events: subEvents,
       // Alcance para series recurrentes (lo ignora el backend si scope='all').
@@ -562,16 +565,20 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           {requiresPayment && (
             <div className="space-y-3 pl-1">
               <div className="space-y-1">
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display" htmlFor="edit-event-currency">Moneda</label>
+                <select id="edit-event-currency" className={cn(inputCls, 'font-body', 'max-w-[160px]')} value={currency} onChange={e => setCurrency(e.target.value)}>
+                  {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
                 <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Costo</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">{currencySymbol(currency)}</span>
                   <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Costo para servidores (opcional)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">₡</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">{currencySymbol(currency)}</span>
                   <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} placeholder="Igual al costo" value={serverPrice} onChange={e => setServerPrice(e.target.value)} disabled={!serversPay} />
                 </div>
                 <p className="text-[11px] text-navy-light/60 font-body">Se aplica a servidores activos de los comités organizadores.</p>

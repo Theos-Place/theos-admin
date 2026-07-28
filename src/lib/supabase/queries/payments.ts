@@ -44,6 +44,8 @@ export async function createComprobantePayment(input: {
   study_group_id?: string | null
   reference_code: string | null
   receipt_path: string
+  /** INT-2: moneda del cobro (default CRC; folletos y flujos CR no la pasan). */
+  currency?: string
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
@@ -51,7 +53,7 @@ export async function createComprobantePayment(input: {
     .insert({
       member_id: input.member_id,
       amount: input.amount,
-      currency: 'CRC',
+      currency: input.currency ?? 'CRC',
       payment_method: 'comprobante',
       concept: input.concept,
       enrollment_id: input.enrollment_id ?? null,
@@ -180,10 +182,12 @@ export async function autoEnrollApprovedToNextLevel(
   const next = nextLevelCode(sourceCode)
   if (!src || !next) return { enrolled: 0, next_level: null, amount: 0 }
 
-  const { data: nextPlan } = await supabase.from('study_plans').select('id, cost').eq('code', next).maybeSingle()
-  const np = nextPlan as { id: string; cost: number | null } | null
+  const { data: nextPlan } = await supabase.from('study_plans').select('id, cost, currency').eq('code', next).maybeSingle()
+  const np = nextPlan as { id: string; cost: number | null; currency: string | null } | null
   if (!np) return { enrolled: 0, next_level: next, amount: 0 }
   const amount = Number(np.cost ?? 0)
+  // INT-2: el pago hereda la moneda del costo del plan.
+  const currency = np.currency ?? 'CRC'
 
   // Grupo sucesor (best-effort: si falla, la matrícula queda solo a nivel de plan).
   const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next)
@@ -241,7 +245,7 @@ export async function autoEnrollApprovedToNextLevel(
       const { data: pay, error: payErr } = await supabase.from('payments').insert({
         member_id: memberId,
         amount,
-        currency: 'CRC',
+        currency,
         payment_method: 'comprobante',
         concept: 'matricula',
         enrollment_id: enrollmentId,
@@ -284,20 +288,23 @@ export async function submitEnrollmentComprobante(input: {
   const supabase = createAdminClient()
   const { data: enr } = await supabase
     .from('study_enrollments')
-    .select('member_id, group_id, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(cost)), plan_direct:study_plans!study_enrollments_plan_id_fkey(cost)')
+    .select('member_id, group_id, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(cost, currency)), plan_direct:study_plans!study_enrollments_plan_id_fkey(cost, currency)')
     .eq('id', input.enrollment_id)
     .maybeSingle()
   if (!enr) return null
   const row = enr as {
     member_id: string
     group_id: string | null
-    group: { plan: { cost: number | null } | { cost: number | null }[] | null } | { plan: unknown }[] | null
-    plan_direct: { cost: number | null } | { cost: number | null }[] | null
+    group: { plan: { cost: number | null; currency: string | null } | { cost: number | null; currency: string | null }[] | null } | { plan: unknown }[] | null
+    plan_direct: { cost: number | null; currency: string | null } | { cost: number | null; currency: string | null }[] | null
   }
   const grp = Array.isArray(row.group) ? row.group[0] : row.group
   const gplan = grp ? (Array.isArray(grp.plan) ? grp.plan[0] : grp.plan) : null
   const dplan = Array.isArray(row.plan_direct) ? row.plan_direct[0] : row.plan_direct
-  const amount = Number((gplan as { cost: number | null } | null)?.cost ?? dplan?.cost ?? 0)
+  const gp = gplan as { cost: number | null; currency: string | null } | null
+  const amount = Number(gp?.cost ?? dplan?.cost ?? 0)
+  // INT-2: el pago hereda la moneda del costo del plan (grupo primero, igual que el monto).
+  const currency = (gp?.cost != null ? gp.currency : dplan?.currency) ?? 'CRC'
 
   // Si ya hay un comprobante EN REVISIÓN para esta matrícula, no se acepta
   // otro: un doble submit (doble clic / dos pestañas) creaba dos pagos en la
@@ -344,7 +351,7 @@ export async function submitEnrollmentComprobante(input: {
     insertResult = await supabase.from('payments').insert({
     member_id: row.member_id,
     amount,
-    currency: 'CRC',
+    currency,
     payment_method: 'comprobante',
     concept: 'matricula',
     enrollment_id: input.enrollment_id,
@@ -380,11 +387,14 @@ export async function submitEventComprobante(input: {
   const supabase = createAdminClient()
   const { data: reg } = await supabase
     .from('event_registrations')
-    .select('event_id, member_id')
+    .select('event_id, member_id, event:events(currency)')
     .eq('id', input.event_registration_id)
     .maybeSingle()
   if (!reg) return null
   const { event_id, member_id } = reg as { event_id: string; member_id: string }
+  // INT-2: el pago hereda la moneda del costo del evento.
+  const regEvent = (reg as { event: { currency: string | null } | { currency: string | null }[] | null }).event
+  const currency = (Array.isArray(regEvent) ? regEvent[0] : regEvent)?.currency ?? 'CRC'
 
   const { registrationPricing } = await import('./events')
   const pricing = await registrationPricing(event_id, member_id)
@@ -429,7 +439,7 @@ export async function submitEventComprobante(input: {
   const { data, error } = await supabase.from('payments').insert({
     member_id,
     amount,
-    currency: 'CRC',
+    currency,
     payment_method: 'comprobante',
     concept: 'evento',
     event_registration_id: input.event_registration_id,

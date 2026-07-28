@@ -45,6 +45,7 @@ interface FormData {
   has_satisfaction_survey: boolean
   requires_payment: boolean
   payment_amount: string
+  currency: string
   server_price: string
   servers_pay: boolean
   flyer: string | null
@@ -126,6 +127,7 @@ function NuevoEventoForm() {
     has_satisfaction_survey: false,
     requires_payment: false,
     payment_amount: '',
+    currency: 'CRC',
     server_price: '',
     servers_pay: true,
     flyer: null,
@@ -412,10 +414,12 @@ function NuevoEventoForm() {
             <Step4Financiero
               requires_payment={form.requires_payment}
               payment_amount={form.payment_amount}
+              currency={form.currency}
               server_price={form.server_price}
               servers_pay={form.servers_pay}
               onTogglePayment={() => set('requires_payment', !form.requires_payment)}
               onPaymentAmountChange={v => set('payment_amount', v)}
+              onCurrencyChange={v => set('currency', v)}
               onServerPriceChange={v => set('server_price', v)}
               onToggleServersPay={() => set('servers_pay', !form.servers_pay)}
             />
@@ -474,6 +478,7 @@ function NuevoEventoForm() {
           max_capacity={form.max_capacity}
           requires_payment={form.requires_payment}
           payment_amount={form.payment_amount}
+          currency={form.currency}
         />
       </div>
     </div>

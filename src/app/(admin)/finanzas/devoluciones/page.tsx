@@ -167,7 +167,7 @@ export default function DevolucionesPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <p className="text-[13px] font-medium font-body text-navy">
-                        <AmountDisplay amount={r.amount} defaultHidden={false} />
+                        <AmountDisplay amount={r.amount} currency={r.currency} defaultHidden={false} />
                       </p>
                     </td>
                     <td className="px-5 py-3.5">
@@ -224,7 +224,7 @@ export default function DevolucionesPage() {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
-                      <AmountDisplay amount={r.amount} defaultHidden={false} />
+                      <AmountDisplay amount={r.amount} currency={r.currency} defaultHidden={false} />
                     </p>
                     <RefundStatusBadge status={r.status} />
                   </div>

@@ -28,6 +28,7 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
     requires_payment: db.requires_payment,
     requires_invitation: (db as { requires_invitation?: boolean }).requires_invitation ?? false,
     cost: db.cost,
+    currency: db.currency ?? 'CRC',
     requires_grade: db.requires_grade,
     auto_promote: db.auto_promote,
     next_study_id: db.next_study_code,

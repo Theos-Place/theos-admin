@@ -317,6 +317,7 @@ export type Database = {
       donations: {
         Row: {
           amount: number
+          currency: string
           created_at: string | null
           donation_date: string
           family_unit_id: string | null
@@ -328,6 +329,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          currency?: string
           created_at?: string | null
           donation_date: string
           family_unit_id?: string | null
@@ -339,6 +341,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          currency?: string
           created_at?: string | null
           donation_date?: string
           family_unit_id?: string | null
@@ -835,6 +838,7 @@ export type Database = {
           max_capacity: number | null
           parent_event_id: string | null
           payment_amount: number | null
+          currency: string
           recurrence_end: string | null
           recurrence_rule: string | null
           requires_checkin: boolean | null
@@ -868,6 +872,7 @@ export type Database = {
           max_capacity?: number | null
           parent_event_id?: string | null
           payment_amount?: number | null
+          currency?: string
           recurrence_end?: string | null
           recurrence_rule?: string | null
           requires_checkin?: boolean | null
@@ -901,6 +906,7 @@ export type Database = {
           max_capacity?: number | null
           parent_event_id?: string | null
           payment_amount?: number | null
+          currency?: string
           recurrence_end?: string | null
           recurrence_rule?: string | null
           requires_checkin?: boolean | null
@@ -2807,6 +2813,7 @@ export type Database = {
       refunds: {
         Row: {
           amount: number
+          currency: string
           created_at: string | null
           id: string
           member_id: string | null
@@ -2823,6 +2830,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          currency?: string
           created_at?: string | null
           id?: string
           member_id?: string | null
@@ -2839,6 +2847,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          currency?: string
           created_at?: string | null
           id?: string
           member_id?: string | null
@@ -2987,6 +2996,7 @@ export type Database = {
       scholarships: {
         Row: {
           amount: number | null
+          currency: string
           approval_type: string | null
           approved_at: string | null
           approved_by: string | null
@@ -3014,6 +3024,7 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          currency?: string
           approval_type?: string | null
           approved_at?: string | null
           approved_by?: string | null
@@ -3041,6 +3052,7 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          currency?: string
           approval_type?: string | null
           approved_at?: string | null
           approved_by?: string | null
@@ -3633,6 +3645,7 @@ export type Database = {
           code: string | null
           commitments: string | null
           cost: number | null
+          currency: string
           created_at: string | null
           description: string | null
           difficulty: string | null
@@ -3661,6 +3674,7 @@ export type Database = {
           code?: string | null
           commitments?: string | null
           cost?: number | null
+          currency?: string
           created_at?: string | null
           description?: string | null
           difficulty?: string | null
@@ -3689,6 +3703,7 @@ export type Database = {
           code?: string | null
           commitments?: string | null
           cost?: number | null
+          currency?: string
           created_at?: string | null
           description?: string | null
           difficulty?: string | null

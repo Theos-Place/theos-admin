@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Check, CreditCard, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatDate, formatCRC } from '@/lib/format'
+import { formatDate, formatMoney } from '@/lib/format'
 import type { MemberPaymentRow } from '@/lib/supabase/queries/payments'
 import { Modal } from '@/components/shared/Modal'
 
@@ -73,7 +73,7 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
             <div className="min-w-0">
               <p className="text-[13px] text-navy font-body truncate">{p.description}</p>
               <p className="text-[11px] text-navy-light/60 font-body">
-                {formatCRC(p.amount)} · {formatDate(p.created_at)}
+                {formatMoney(p.amount, p.currency)} · {formatDate(p.created_at)}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">

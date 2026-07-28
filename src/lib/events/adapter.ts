@@ -25,6 +25,7 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
     max_capacity: db.max_capacity, // null = sin límite
     requires_payment: db.requires_payment,
     payment_amount: db.payment_amount,
+    currency: db.currency ?? 'CRC',
     server_price: db.server_price ?? null,
     servers_pay: db.servers_pay ?? true,
     organizing_committee_ids: (db.organizing_committees ?? []).map((c) => c.committee_id),

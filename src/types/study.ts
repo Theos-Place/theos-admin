@@ -16,6 +16,8 @@ export type StudyType = {
   requires_payment: boolean
   requires_invitation?: boolean
   cost: number
+  /** INT-2: moneda del costo (CRC/USD/EUR). */
+  currency: string
   requires_grade: boolean
   auto_promote: boolean
   next_study_id: string | null

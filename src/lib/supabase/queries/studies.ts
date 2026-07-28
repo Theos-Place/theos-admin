@@ -19,6 +19,8 @@ export type DbStudyPlan = {
   description: string | null
   level: 'niveles' | 'etapa_inicial' | 'etapa_intermedia' | 'campanas'
   cost: number
+  /** INT-2: moneda del costo (CRC/USD/EUR). */
+  currency: string
   duration_weeks: number | null
   max_students: number | null
   requires_donor: boolean
@@ -595,6 +597,7 @@ export type PlanWriteInput = {
   description?: string | null
   level: DbStudyPlan['level']
   cost?: number
+  currency?: string
   duration_weeks?: number | null
   max_students?: number | null
   requires_donor?: boolean

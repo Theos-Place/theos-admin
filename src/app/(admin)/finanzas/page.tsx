@@ -250,7 +250,7 @@ export default function FinanzasPage() {
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-[13px] font-medium font-body text-navy">
-                          <AmountDisplay amount={p.amount} revealed={revealAll} />
+                          <AmountDisplay amount={p.amount} currency={p.currency} revealed={revealAll} />
                         </p>
                       </td>
                       <td className="px-4 py-3">
@@ -287,7 +287,7 @@ export default function FinanzasPage() {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
-                      <AmountDisplay amount={p.amount} revealed={revealAll} />
+                      <AmountDisplay amount={p.amount} currency={p.currency} revealed={revealAll} />
                     </p>
                     <PaymentStatusBadge status={p.status} />
                   </div>

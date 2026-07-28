@@ -10,6 +10,8 @@ export const planWriteSchema = z
     description: z.string().trim().nullish(),
     level: z.enum(['niveles', 'etapa_inicial', 'etapa_intermedia', 'campanas']),
     cost: z.number().min(0).optional(),
+    // INT-2: moneda del costo.
+    currency: z.enum(['CRC', 'USD', 'EUR']).optional(),
     duration_weeks: z.number().int().min(0).nullish(),
     max_students: z.number().int().min(0).nullish(),
     requires_donor: z.boolean().optional(),

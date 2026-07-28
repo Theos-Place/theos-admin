@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
+import { formatMoney } from '@/lib/format'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 
 type PaymentConcept = 'matricula' | 'folletos' | 'evento'
@@ -49,7 +50,7 @@ const QUEUE_STATUS_BADGE: Record<QueueStatus, { label: string; cls: string }> = 
 }
 
 function money(amount: number, currency: string) {
-  return `${currency === 'USD' ? '$' : '₡'}${amount.toLocaleString('es-CR')}`
+  return formatMoney(amount, currency)
 }
 
 export default function RevisionPagosPage() {

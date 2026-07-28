@@ -13,6 +13,8 @@ export type Payment = {
   entity_id: string
   entity_name: string
   amount: number
+  /** INT-2: moneda del monto (CRC/USD/EUR). */
+  currency: string
   method: PaymentMethod
   status: PaymentStatus
   gateway_ref: string | null
@@ -30,6 +32,8 @@ export type Donation = {
   member_cedula: string
   donation_date: string
   amount: number
+  /** INT-2: moneda del monto (CRC/USD/EUR). */
+  currency: string
   source_file: string
   imported_at: string
   family_unit_id: string | null
@@ -43,6 +47,8 @@ export type Refund = {
   member_name: string
   entity_name: string
   amount: number
+  /** INT-2: moneda del monto (CRC/USD/EUR). */
+  currency: string
   method: PaymentMethod
   status: RefundStatus
   reason: string

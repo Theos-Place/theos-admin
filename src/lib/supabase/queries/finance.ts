@@ -18,6 +18,7 @@ export type DbPayment = {
   event: EventRef
   study_group: GroupRef
   amount: number
+  currency: string
   payment_method: PaymentMethod | null
   status: PaymentStatus
   gateway_ref: string | null
@@ -35,6 +36,7 @@ export type DbDonation = {
   family_unit_id: string | null
   donation_date: string
   amount: number
+  currency: string
   source_file: string | null
   is_identified: boolean
   imported_at: string
@@ -47,6 +49,7 @@ export type DbRefund = {
   member: { first_name: string; last_name: string } | null
   payment: { event: EventRef; study_group: GroupRef } | null
   amount: number
+  currency: string
   method: PaymentMethod | null
   status: RefundStatus
   reason: string | null
@@ -75,7 +78,7 @@ export type DbImportBatch = {
 // members (member_id y reviewed_by) y el embed sin hint es ambiguo para
 // PostgREST (bug latente detectado al regenerar tipos, 2026-07-13).
 const PAYMENT_SELECT = `
-  id, member_id, entity_type, event_id, study_group_id, amount, payment_method,
+  id, member_id, entity_type, event_id, study_group_id, amount, currency, payment_method,
   status, gateway_ref, sinpe_confirmation, scholarship_id, paid_at, description, created_at,
   member:members!payments_member_id_fkey(first_name, last_name, cedula),
   event:events(title),
@@ -179,7 +182,7 @@ export type DonationStats = {
 }
 
 const DONATION_SELECT = `
-  id, member_id, family_unit_id, donation_date, amount, source_file, is_identified, imported_at,
+  id, member_id, family_unit_id, donation_date, amount, currency, source_file, is_identified, imported_at,
   member:members(first_name, last_name, cedula)
 `
 // Cuando hay búsqueda, el join debe ser inner para filtrar las donaciones por
@@ -255,7 +258,7 @@ export async function getRefunds(): Promise<DbRefund[]> {
   const { data, error } = await supabase
     .from('refunds')
     .select(`
-      id, payment_id, member_id, amount, method, status, reason, sinpe_pending, notes,
+      id, payment_id, member_id, amount, currency, method, status, reason, sinpe_pending, notes,
       requested_at, processed_at, processed_by,
       member:members(first_name, last_name),
       payment:payments(event:events(title), study_group:study_groups(name))

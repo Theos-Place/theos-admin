@@ -744,7 +744,21 @@ seguir pasando idénticas.
   ~23k registros CR existentes. Decisión recomendada: tipo+número, no solo "pasaporte",
   para cubrir España (DNI/NIE), Colombia (CC) y cualquier país siguiente sin otro cambio
   de esquema.
-- **INT-2 · Montos multimoneda** — hoy todos los montos (payments, donations, scholarships,
+- [x] **INT-2 · Montos multimoneda** — HECHO 2026-07-28. Migración
+  `20260728160000_multicurrency` (aplicada a producción, todo lo existente quedó en CRC):
+  columna `currency` (default 'CRC', CHECK CRC/USD/EUR) en donations, refunds,
+  scholarships, study_plans y events; el CHECK de payments se amplió con EUR; el RPC
+  `create_refund` hereda la moneda del pago. Código: `formatMoney(amount, currency)` +
+  `currencySymbol` + `CURRENCIES` en `src/lib/format.ts` (formatCRC delega; con tests);
+  los pagos heredan la moneda de su origen (costo del plan en matrícula/auto-matrícula,
+  moneda del evento en inscripciones); selectores de moneda en editar plan de estudio y
+  en crear/editar evento (símbolo dinámico en inputs y resumen); `AmountDisplay` acepta
+  `currency` y las páginas de finanzas (pagos, donaciones, devoluciones, perfil de
+  miembro, revisión de pagos) muestran la moneda de cada fila. PENDIENTE (decisión de
+  producto con dirección/finanzas): los reportes y stats agregados (finanzas resumen,
+  payment_stats, reportes) siguen sumando sin separar moneda — mientras todo sea CRC no
+  distorsiona; definir "por moneda separada vs. conversión" antes de capturar montos EUR
+  reales. Spec original: hoy todos los montos (payments, donations, scholarships,
   refunds, study_plans.cost, events.payment_amount) son numéricos sin moneda, asumidos en
   colones (₡ hardcodeado en formateo). Agregar columna `currency` (ISO 4217, default 'CRC')
   en las tablas de dinero, formateo por moneda en un helper único, y definir la regla de

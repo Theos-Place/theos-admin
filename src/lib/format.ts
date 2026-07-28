@@ -101,5 +101,25 @@ export function initialsFromParts(first: string | null | undefined, last: string
  *  QA 2026-07-17: fuente única — antes había 2 copias locales + ~30 template
  *  strings inline con el mismo patrón. */
 export function formatCRC(amount: number): string {
-  return `₡${amount.toLocaleString('es-CR')}`
+  return formatMoney(amount, 'CRC')
+}
+
+/** INT-2: monedas soportadas por las tablas de dinero (CHECK en BD). */
+export const CURRENCIES = ['CRC', 'USD', 'EUR'] as const
+export type Currency = (typeof CURRENCIES)[number]
+
+const CURRENCY_SYMBOL: Record<Currency, string> = { CRC: '₡', USD: '$', EUR: '€' }
+
+/** Símbolo de la moneda ("₡"/"$"/"€"); moneda desconocida → el código mismo. */
+export function currencySymbol(currency: string | null | undefined): string {
+  return CURRENCY_SYMBOL[(currency ?? 'CRC') as Currency] ?? String(currency)
+}
+
+/** INT-2: formateo por moneda en un helper único. Default CRC (todo lo
+ *  histórico es en colones); moneda desconocida → se antepone el código. */
+export function formatMoney(amount: number, currency: string | null | undefined = 'CRC'): string {
+  const cur = (currency ?? 'CRC') as Currency
+  const symbol = CURRENCY_SYMBOL[cur]
+  const n = amount.toLocaleString('es-CR')
+  return symbol ? `${symbol}${n}` : `${currency} ${n}`
 }

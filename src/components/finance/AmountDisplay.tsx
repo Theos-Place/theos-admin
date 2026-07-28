@@ -1,26 +1,29 @@
 'use client'
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { formatCRC } from '@/lib/format'
+import { formatMoney, currencySymbol } from '@/lib/format'
 
-export function AmountDisplay({ amount, defaultHidden = true, revealed: externalRevealed }: {
+export function AmountDisplay({ amount, currency = 'CRC', defaultHidden = true, revealed: externalRevealed }: {
   /** null = monto restringido (solo rol finanzas lo recibe): oculto sin toggle. */
   amount: number | null
+  /** INT-2: moneda de la fila (default CRC, todo lo histórico). */
+  currency?: string
   defaultHidden?: boolean
   revealed?: boolean
 }) {
   const [localRevealed, setLocalRevealed] = useState(!defaultHidden)
   const isRevealed = externalRevealed !== undefined ? externalRevealed : localRevealed
+  const hidden = `${currencySymbol(currency)} •••,•••`
 
   if (amount == null) {
-    return <span className="inline-flex items-center gap-1">₡ •••,•••</span>
+    return <span className="inline-flex items-center gap-1">{hidden}</span>
   }
 
   return (
     <span className="inline-flex items-center gap-1">
       {isRevealed
-        ? `${formatCRC(amount)}`
-        : '₡ •••,•••'
+        ? `${formatMoney(amount, currency)}`
+        : hidden
       }
       {externalRevealed === undefined && (
         <button

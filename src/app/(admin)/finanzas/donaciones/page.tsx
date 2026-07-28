@@ -240,7 +240,7 @@ export default function DonacionesPage() {
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-medium font-body text-navy">
-                        <AmountDisplay amount={d.amount} revealed={revealAll} />
+                        <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} />
                       </p>
                     </td>
                     <td className="px-5 py-4">
@@ -292,7 +292,7 @@ export default function DonacionesPage() {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <p className="text-[13px] font-medium font-body text-navy">
-                    <AmountDisplay amount={d.amount} revealed={revealAll} />
+                    <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} />
                   </p>
                   <span
                     className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
@@ -356,7 +356,7 @@ export default function DonacionesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[13px] font-medium font-body text-navy">
-                        {formatDate(d.donation_date)} — <AmountDisplay amount={d.amount} defaultHidden={false} />
+                        {formatDate(d.donation_date)} — <AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} />
                       </p>
                       <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
                         {d.source_file}

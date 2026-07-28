@@ -11,6 +11,7 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { X, ChevronLeft } from 'lucide-react'
 import type { StudyType } from '@/types/study'
+import { CURRENCIES, currencySymbol } from '@/lib/format'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 const labelCls = 'text-[11px] text-navy-light/60 font-display'
@@ -85,6 +86,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
     difficulty:       studyType.difficulty ?? '',
     requires_payment: studyType.requires_payment,
     cost:             studyType.cost,
+    currency:         studyType.currency ?? 'CRC',
     req_donor:        studyType.req_donor,
     req_server:       studyType.req_server,
     req_attendee:     studyType.req_attendee,
@@ -113,6 +115,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
           difficulty: form.difficulty || null,
           requires_payment: form.requires_payment,
           cost: form.requires_payment ? form.cost : 0,
+          currency: form.currency,
           requires_donor: form.req_donor,
           requires_server: form.req_server,
           requires_attendance: form.req_attendee,
@@ -245,9 +248,18 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
 
             <Toggle checked={form.requires_payment} onChange={v => set('requires_payment', v)} label="¿Requiere pago?" />
             {form.requires_payment && (
-              <div className="space-y-1 pl-4 max-w-[220px]">
-                <label className={labelCls} htmlFor="edit-study-cost">Monto (₡)</label>
-                <input id="edit-study-cost" type="number" className={inputCls} value={form.cost} onChange={e => set('cost', Number(e.target.value))} />
+              <div className="flex gap-3 pl-4">
+                <div className="space-y-1 max-w-[220px]">
+                  <label className={labelCls} htmlFor="edit-study-cost">Monto ({currencySymbol(form.currency)})</label>
+                  <input id="edit-study-cost" type="number" className={inputCls} value={form.cost} onChange={e => set('cost', Number(e.target.value))} />
+                </div>
+                {/* INT-2: moneda del costo (el pago de matrícula la hereda). */}
+                <div className="space-y-1">
+                  <label className={labelCls} htmlFor="edit-study-currency">Moneda</label>
+                  <select id="edit-study-currency" className={inputCls} value={form.currency} onChange={e => set('currency', e.target.value)}>
+                    {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
               </div>
             )}
 

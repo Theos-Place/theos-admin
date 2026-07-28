@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { ymdCR, toYmdLocal, calcAge } from './format'
+import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol } from './format'
 
 describe('ymdCR', () => {
   it('un instante de madrugada UTC es el día ANTERIOR en CR (UTC-6)', () => {
@@ -47,5 +47,28 @@ describe('calcAge', () => {
     expect(calcAge(null)).toBe(0)
     expect(calcAge(undefined)).toBe(0)
     expect(calcAge('no-es-fecha')).toBe(0)
+  })
+})
+
+// INT-2: formateo por moneda (helper único).
+describe('formatMoney', () => {
+  it('CRC por default (todo lo histórico)', () => {
+    expect(formatMoney(50000)).toBe(`\u20a1${(50000).toLocaleString('es-CR')}`)
+    expect(formatMoney(50000, null)).toBe(formatMoney(50000, 'CRC'))
+  })
+  it('USD y EUR con su símbolo', () => {
+    expect(formatMoney(120, 'USD')).toBe('$120')
+    expect(formatMoney(75, 'EUR')).toBe('\u20ac75')
+  })
+  it('moneda desconocida antepone el código (no revienta)', () => {
+    expect(formatMoney(10, 'GBP')).toBe('GBP 10')
+  })
+  it('formatCRC delega en formatMoney', () => {
+    expect(formatCRC(1234)).toBe(formatMoney(1234, 'CRC'))
+  })
+  it('currencySymbol', () => {
+    expect(currencySymbol('CRC')).toBe('\u20a1')
+    expect(currencySymbol(undefined)).toBe('\u20a1')
+    expect(currencySymbol('EUR')).toBe('\u20ac')
   })
 })

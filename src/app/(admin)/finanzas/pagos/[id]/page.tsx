@@ -101,7 +101,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             <div className="flex flex-col items-start sm:items-end gap-2">
               <p className="text-3xl font-extrabold text-white font-display">
-                <AmountDisplay amount={payment.amount} defaultHidden={false} />
+                <AmountDisplay amount={payment.amount} currency={payment.currency} defaultHidden={false} />
               </p>
               <div className="flex items-center gap-2">
                 <PaymentMethodBadge method={payment.method} />

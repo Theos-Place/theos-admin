@@ -26,7 +26,7 @@ Padrón central: búsqueda server-side con filtros avanzados, detalle con histó
 | Estado | Funcional. **TODO real** en `queries/members.ts:189`: el QueryBar solo combina condiciones con AND; los grupos OR están pendientes |
 | Depende de | Estudios (historial), finanzas (pagos del miembro), accesos (cuentas), comunicaciones (audiencias/listas) |
 
-La BD **no** tiene UNIQUE de cédula/correo: el dedup es a nivel app (409 `duplicate` en POST, con `cedula_normalized` y email case-insensitive).
+La BD **no** tiene UNIQUE de cédula/correo: el dedup es a nivel app (409 `duplicate` en POST, con `cedula_normalized` y email case-insensitive). Desde INT-1 (2026-07-28) la identificación es **por tipo de documento**: `members.document_type` ('cedula' | 'dni_nie' | 'pasaporte' | 'otro', default 'cedula') + índice único parcial por pareja (tipo, `cedula_normalized`); el número se guarda en MAYÚSCULAS y la validación por tipo vive en `src/lib/cedula.ts` (`isValidDocument`). El lookup TSE/Hacienda solo aplica a tipo 'cedula'.
 
 ### Estudios (planes / grupos / dirigentes / solicitudes)
 Gestión de estudios y capacitaciones: catálogo de planes con prerequisitos encadenados, grupos con asistencia/sesiones/cierre, dirigentes, bloques de capacitación, análisis y solicitudes.
@@ -337,6 +337,7 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 
 **En el código (verificado):**
 1. `/terminos` — el texto legal es borrador y tiene comentario explícito de que un abogado debe revisarlo (acción externa).
+2. Multimoneda (INT-2, 2026-07-28): las tablas de dinero llevan `currency` (CRC/USD/EUR, default CRC) y los pagos heredan la moneda de su origen, pero los **reportes y stats agregados siguen sumando sin separar moneda** — decisión de producto pendiente (¿por moneda separada o conversión?) antes de capturar montos EUR reales. Formateo único: `formatMoney` en `src/lib/format.ts`.
 
 **Seguimientos cerrados 2026-07-28:** el param `vista` legacy de /eventos se retiró; el último productor de flyers base64 (detalle de evento) pasó al endpoint de Storage; `data:` en `img-src` se queda **a propósito** — el QR de TOTP en /configuracion/seguridad lo usa (data:image/svg+xml).
 

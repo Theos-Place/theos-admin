@@ -2,7 +2,7 @@
 
 import { useOrg } from '@/lib/org'
 import { SummaryRow } from './shared'
-import { formatCRC } from '@/lib/format'
+import { formatMoney } from '@/lib/format'
 
 type SubEventInput = { id: string; name: string; max_capacity: string }
 
@@ -24,6 +24,7 @@ interface EventSummaryProps {
   max_capacity: string
   requires_payment: boolean
   payment_amount: string
+  currency?: string
 }
 
 function fmt(date: string, time: string): string {
@@ -74,7 +75,7 @@ export function EventSummary(p: EventSummaryProps) {
         />
         <SummaryRow
           label="Cobro"
-          value={p.requires_payment && p.payment_amount ? `${formatCRC(Number(p.payment_amount))}` : 'Gratuito'}
+          value={p.requires_payment && p.payment_amount ? `${formatMoney(Number(p.payment_amount), p.currency)}` : 'Gratuito'}
         />
       </div>
     </div>
