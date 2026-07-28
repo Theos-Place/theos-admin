@@ -82,7 +82,7 @@ export function TemplateCard({ template, onUse, onEdit, onDuplicate, onDelete }:
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={() => onDuplicate(template)} title="Clonar" aria-label="Clonar" className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onDuplicate(template)} title="Duplicar plantilla" aria-label="Duplicar plantilla" className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
               <Copy size={13} />
             </button>
           )}

@@ -60,11 +60,17 @@ export default function PlantillasPage() {
           channel: t.channel,
           subject: t.subject ?? null,
           body: t.body,
+          // La copia debe ser fiel: sin esto, un template de texto quedaba
+          // como html (default de la columna) y se perdían las variables.
+          body_format: t.body_format,
+          variables: t.variables,
+          available_variables: t.available_variables,
           is_active: t.is_active,
         }),
       })
       if (!res.ok) throw new Error()
       await refetch()
+      toast(`Plantilla duplicada como "${t.name} (copia)".`, 'success')
     } catch {
       toast('No se pudo duplicar la plantilla. Intentá de nuevo.', 'error')
     }
