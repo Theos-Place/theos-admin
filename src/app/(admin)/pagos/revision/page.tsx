@@ -157,6 +157,24 @@ export default function RevisionPagosPage() {
   }
 
   // Transición de estado sin motivo (poner en revisión / devolver a pendiente).
+  // REV-2: recordatorio manual del pago (notificación interna con deep link a
+  // /mis-pagos?pago=<id>; el server reusa la lógica del cron semanal y limita
+  // a UN recordatorio por pago por día).
+  async function remind(row: QueueRow) {
+    if (busyId) return
+    setBusyId(row.id)
+    try {
+      const res = await fetch(`/api/payments/${row.id}/remind`, { method: 'POST' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el recordatorio.')
+      toast(`Recordatorio enviado a ${row.member_name}.`, 'success')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo enviar el recordatorio.', 'error')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   async function transition(row: QueueRow, action: 'start_review' | 'reopen') {
     if (busyId) return
     setBusyId(row.id)
@@ -470,13 +488,23 @@ export default function RevisionPagosPage() {
             {canReview ? (
               <div className="flex flex-wrap gap-2 pt-1">
                 {detail.queue_status === 'pendiente' && (
-                  <button
-                    onClick={() => transition(detail, 'start_review')}
-                    disabled={busyId === detail.id}
-                    className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
-                  >
-                    {busyId === detail.id ? '…' : 'Poner en revisión'}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => transition(detail, 'start_review')}
+                      disabled={busyId === detail.id}
+                      className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                    >
+                      {busyId === detail.id ? '…' : 'Poner en revisión'}
+                    </button>
+                    {/* REV-2: recordatorio manual (máx. 1 por pago por día). */}
+                    <button
+                      onClick={() => remind(detail)}
+                      disabled={busyId === detail.id}
+                      className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[12px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
+                    >
+                      Enviar recordatorio
+                    </button>
+                  </>
                 )}
                 {detail.queue_status === 'en_revision' && (
                   <>

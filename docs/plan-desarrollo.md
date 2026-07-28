@@ -604,7 +604,7 @@ src/app/api/cron/payment-holds-expire/route.ts) que:
 Agregá HEALTHCHECK_URL correspondiente a la lista de envs opcionales. Tests del dedupe.
 ```
 
-### [ ] REV-2 · Botón de recordatorio manual de pago
+### [x] REV-2 · Recordatorio manual de pago — HECHO 2026-07-27 (POST `/api/payments/[id]/remind` con guard revision_pagos:edit, reusa el helper del cron con deep link `/mis-pagos?pago=<id>`; 409 `ya_recordado` (máx 1/día por pago), `silenciado` (prefs) y `no_recordable` (pagado/en revisión/rechazo vencido); botón "Enviar recordatorio" en el detalle de pagos pendientes con toast de confirmación o del motivo)
 Archivos: `src/app/(admin)/pagos/revision/page.tsx`, API nueva `/api/payments/[id]/remind`. Depende de: PAG-1 y PAG-3
 
 ```
