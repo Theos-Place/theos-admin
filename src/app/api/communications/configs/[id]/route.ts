@@ -8,7 +8,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('comunicaciones', 'direccion')
+    const auth = await requireRoles('admin') // COM-1: configuración solo admin
     if (auth.res) return auth.res
   try {
     const { id } = await params
@@ -31,7 +31,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('comunicaciones', 'direccion')
+    const auth = await requireRoles('admin') // COM-1: configuración solo admin
     if (auth.res) return auth.res
   try {
     const { id } = await params

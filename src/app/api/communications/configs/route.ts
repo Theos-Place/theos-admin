@@ -16,7 +16,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-    const auth = await requireRoles('comunicaciones', 'direccion')
+    // COM-1: la configuración de remitentes/SMTP es SOLO admin. El GET queda
+    // para el módulo (componer un mensaje necesita elegir remitente y la tabla
+    // no guarda secretos — las credenciales SMTP viven en env).
+    const auth = await requireRoles('admin')
     if (auth.res) return auth.res
   try {
     const parsed = configWriteSchema.safeParse(await req.json())

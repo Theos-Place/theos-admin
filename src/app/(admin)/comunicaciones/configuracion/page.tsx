@@ -5,6 +5,7 @@ import { type ChannelConfig } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
 import { useAuth } from '@/hooks/useAuth'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import {
@@ -31,6 +32,10 @@ const INITIAL_WA_FORM = {
 }
 
 export default function ConfiguracionPage() {
+  // COM-1: la configuración de remitentes/SMTP es SOLO admin (espejo del API;
+  // por URL directa tampoco se entra). El resto de comunicaciones queda igual.
+  const { user, loaded } = useAuth()
+  const isAdmin = (user?.roles ?? []).includes('admin')
   const { configs: allConfigs, refetch } = useCommunications('configs')
   const [tab, setTab] = useState<SmtpTab>('smtp')
   const [configs, setConfigs] = useState<ChannelConfig[]>([])
@@ -289,6 +294,9 @@ export default function ConfiguracionPage() {
       </div>
     )
   }
+
+  // COM-1: gate de la página completa — solo admin.
+  if (loaded && !isAdmin) return <AccessDenied />
 
   return (
     <>

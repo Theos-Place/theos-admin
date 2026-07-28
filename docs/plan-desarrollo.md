@@ -307,7 +307,7 @@ beyondOwn para staff); las notas siguen esa misma visibilidad, sin gate adiciona
 Sin migración: las columnas ya existen. Test del mapeo grade/notes en members-detail.
 ```
 
-### [ ] COM-1 · Configuración de comunicaciones solo para admin
+### [x] COM-1 · Configuración de comunicaciones solo admin — HECHO 2026-07-27 (página con gate AccessDenied, link filtrado del sidebar, y POST/PUT/DELETE/verify de configs → requireRoles('admin'); decisión documentada: el GET queda para el módulo porque componer un mensaje elige remitente de ahí y la tabla no guarda secretos — las credenciales SMTP viven en env)
 Archivos: `src/app/(admin)/comunicaciones/configuracion/page.tsx`, `src/app/api/communications/configs/route.ts`, sidebar/nav
 
 ```

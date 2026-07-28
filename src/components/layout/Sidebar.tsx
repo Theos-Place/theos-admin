@@ -160,9 +160,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     : SERVIDORES_SUB
 
   // Formularios vive dentro de Comunicaciones (sub-ítem), no como módulo aparte.
+  // COM-1: "Configuración" (remitentes/SMTP) es SOLO admin — se filtra del sub.
+  const comunicacionesBase = userRoles.includes('admin')
+    ? COMUNICACIONES_SUB
+    : COMUNICACIONES_SUB.filter(s => s.href !== '/comunicaciones/configuracion')
   const comunicacionesSub: SubItem[] = can('formularios', 'view')
-    ? [{ href: '/formularios', label: 'Formularios', icon: FileText }, ...COMUNICACIONES_SUB]
-    : COMUNICACIONES_SUB
+    ? [{ href: '/formularios', label: 'Formularios', icon: FileText }, ...comunicacionesBase]
+    : comunicacionesBase
 
   // "Crear evento"/"Tipos de evento" son de gestión — ocultos si no se tiene
   // el módulo, aunque el ítem padre "Eventos" sí se muestre a todos.
