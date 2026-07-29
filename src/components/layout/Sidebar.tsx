@@ -41,6 +41,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
+import { landsOnProfile } from '@/lib/auth/home-route'
 
 type SubItem = { href: string; label: string; icon: LucideIcon; badge?: number }
 type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null; summaryLabel?: string; badge?: number }
@@ -188,9 +189,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   // Cada módulo se muestra solo si el rol tiene 'view' sobre él (can combina
   // múltiples roles: coordinador_estudios + comunicaciones ve comunicaciones).
-  // SEC-1 (decisión 2026-07-28): el rol miembro no tiene dashboard — su página
-  // default es su perfil, y así se llama en el menú.
-  const isMemberOnly = userRoles.length === 1 && userRoles[0] === 'miembro'
+  // SEC-1 (ampliado 2026-07-29): miembro, dirigente y líder de comité no
+  // tienen dashboard — su página default es su perfil, y así se llama en el menú.
+  const isMemberOnly = landsOnProfile(userRoles)
   const homeItem: NavModule = isMemberOnly && user?.member_id
     ? { href: `/miembros/${user.member_id}`, label: 'Mi perfil', icon: LayoutDashboard, subs: [], module: null }
     : { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, subs: [], module: null }

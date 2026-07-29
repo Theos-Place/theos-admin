@@ -18,6 +18,7 @@ import type { RoleId } from '@/lib/auth/roles'
 import { type EventType } from '@/data/event-config'
 import { useEvents } from '@/hooks/useEvents'
 import { useDashboard } from '@/hooks/useDashboard'
+import { landsOnProfile } from '@/lib/auth/home-route'
 import { formatCRC } from '@/lib/format'
 
 // Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
@@ -224,7 +225,7 @@ export default function DashboardPage() {
   // SEC-1: los KPIs y la actividad exigen alcance más allá de 'own' — mismo
   // criterio del payload recortado del API. can() no mira scope, por eso el
   // helper; el rol miembro ni siquiera dispara los fetches.
-  const isMemberOnly = !loaded || ((user?.roles ?? []).length === 1 && user?.roles?.[0] === 'miembro')
+  const isMemberOnly = !loaded || landsOnProfile(user?.roles ?? [])
   const canScope = (m: string) => can(m, 'view') && getScope(m) !== 'own'
   const { events } = useEvents({}, { enabled: loaded && !isMemberOnly && can('eventos', 'view') })
   const { stats, activity: RECENT_ACTIVITY } = useDashboard({ enabled: loaded && !isMemberOnly })
@@ -247,9 +248,10 @@ export default function DashboardPage() {
     const roles = user?.roles ?? []
     const onlyEncargado = roles.filter(r => r !== 'miembro').length === 1 && roles.includes('encargado_eventos')
     if (onlyEncargado) { router.replace('/eventos/checkin'); return }
-    // SEC-1 (decisión 2026-07-28): el rol miembro NO tiene dashboard — su
-    // página default es su PERFIL (eventos y "mis grupos" viven ahí y en /eventos).
-    if (roles.length === 1 && roles[0] === 'miembro' && user?.member_id) {
+    // SEC-1 (ampliado 2026-07-29): miembro, dirigente y líder de comité NO
+    // tienen dashboard — su página default es su PERFIL (sus herramientas
+    // viven en el sidebar: Grupos / Servidores).
+    if (landsOnProfile(roles) && user?.member_id) {
       router.replace(`/miembros/${user.member_id}`)
     }
   }, [loaded, user, router])
