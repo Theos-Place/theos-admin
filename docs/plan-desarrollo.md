@@ -389,7 +389,7 @@ Tests: beca completa → pago 0 aprobado sin comprobante; parcial → pendiente 
 cupón ya usado → 409; correo se registra y no duplica.
 ```
 
-### [ ] REU-1 · Reubicación: días y zonas con selección múltiple (feedback 2026-07-27)
+### [x] REU-1 · Reubicación: días y zonas con selección múltiple — HECHO 2026-07-29 (migración 20260729100000 aplicada: study_requests.proposed_zones text[]; el form de reubicación pregunta día(s) libres (pills, sin el tope de 2 del interés), horario single (consistente con interés) y zona(s) múltiples desde activeSedes + "Cualquiera"; API valida/sanea server-side (dedupe, tope 10, 60 chars); las solicitudes VIEJAS con una zona en proposed_location se leen igual vía regla pura `request-prefs.ts` (requestZones con fallback); la cola muestra días/horario/zonas también para reubicaciones; el RelocationResolveGroupPicker ORDENA los grupos candidatos por coincidencia (zona pedida pesa 2, día 1 — relocationGroupScore mapea nombres de día → iniciales L/M/X/J/V del grupo y resuelve el CODE de sede a nombre con sedeLabel); 9 tests de las reglas puras. Solo flujo relocation — interés intacto)
 Archivos: form de solicitar reubicación (flujo relocation en `src/components/studies/StudyRequestActions.tsx` o componente hermano), `src/app/api/studies/requests/route.ts`, esquema de `study_requests`
 
 ```

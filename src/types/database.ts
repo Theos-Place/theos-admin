@@ -3831,6 +3831,7 @@ export type Database = {
           wants_folleto: boolean
           proposed_days: string[]
           proposed_time: string | null
+          proposed_zones: string[]
           was_eligible: boolean | null
           eligibility_note: string | null
         }
@@ -3859,6 +3860,7 @@ export type Database = {
           wants_folleto?: boolean
           proposed_days?: string[]
           proposed_time?: string | null
+          proposed_zones?: string[]
           was_eligible?: boolean | null
           eligibility_note?: string | null
         }
@@ -3887,6 +3889,7 @@ export type Database = {
           wants_folleto?: boolean
           proposed_days?: string[]
           proposed_time?: string | null
+          proposed_zones?: string[]
           was_eligible?: boolean | null
           eligibility_note?: string | null
         }

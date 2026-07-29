@@ -17,6 +17,7 @@
  * Como el resto de queries, corre server-side con service role; la
  * autorización vive en requireRoles() de cada ruta API.
  */
+import { requestZones } from '@/lib/studies/request-prefs'
 import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
 import type {
   StudyRequest, StudyRequestWriteInput, StudyRequestStatus, StudyRequestType,
@@ -30,7 +31,7 @@ const REQUEST_SELECT = `
   proposed_location, proposed_schedule, reason, status,
   reviewed_by, reviewed_at, review_notes, created_at, updated_at,
   needed_study_code, last_class_attended, last_leader_name, wants_folleto,
-  proposed_days, proposed_time, was_eligible, eligibility_note,
+  proposed_days, proposed_time, proposed_zones, was_eligible, eligibility_note,
   resolved_group_id, resulting_enrollment_id, resulting_folleto_request_id,
   member:members!study_requests_member_id_fkey(first_name, last_name),
   reviewer:members!study_requests_reviewed_by_fkey(first_name, last_name),
@@ -63,6 +64,7 @@ type DbRequestRow = {
   wants_folleto: boolean
   proposed_days: string[] | null
   proposed_time: string | null
+  proposed_zones: string[] | null
   was_eligible: boolean | null
   eligibility_note: string | null
   resolved_group_id: string | null
@@ -115,6 +117,8 @@ function toDomain(r: DbRequestRow): StudyRequest {
     wants_folleto: r.wants_folleto,
     proposed_days: r.proposed_days ?? [],
     proposed_time: r.proposed_time,
+    // REU-1: zonas múltiples; las viejas tenían UNA en proposed_location.
+    proposed_zones: requestZones(r),
     was_eligible: r.was_eligible,
     eligibility_note: r.eligibility_note,
     resolved_group_id: r.resolved_group_id,
@@ -181,6 +185,7 @@ export async function createStudyRequest(input: StudyRequestWriteInput): Promise
       wants_folleto: input.wants_folleto ?? false,
       proposed_days: input.proposed_days ?? [],
       proposed_time: input.proposed_time ?? null,
+      proposed_zones: input.proposed_zones ?? [],
       was_eligible: input.was_eligible ?? null,
       eligibility_note: input.eligibility_note ?? null,
     })

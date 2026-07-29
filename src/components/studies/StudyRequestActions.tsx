@@ -53,7 +53,8 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   const [time, setTime] = useState('')
   const [zoneSel, setZoneSel] = useState('')     // id de sede | 'otra' | ''
   const [zoneOther, setZoneOther] = useState('')
-  // Reubicación
+  // Reubicación (REU-1: días y zonas con selección múltiple)
+  const [zones, setZones] = useState<string[]>([])
   const [neededStudyCode, setNeededStudyCode] = useState('')
   const [lastClassAttended, setLastClassAttended] = useState('')
   const [lastLeader, setLastLeader] = useState<ComboValue>({ kind: 'empty' })
@@ -83,7 +84,7 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
 
   function open(type: StudyRequestType) {
     setPlanId(''); setReason('')
-    setDays([]); setTime(''); setZoneSel(''); setZoneOther('')
+    setDays([]); setTime(''); setZoneSel(''); setZoneOther(''); setZones([])
     setNeededStudyCode(''); setLastClassAttended(''); setLastLeader({ kind: 'empty' }); setWantsFolleto(false)
     setError(''); setOpenModal(type); loadData()
   }
@@ -100,7 +101,12 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
   const selectedOption = options.find(o => o.plan_id === planId) ?? null
 
   function toggleDay(d: string) {
-    setDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : (prev.length >= 2 ? prev : [...prev, d]))
+    // El tope de 2 días aplica solo al interés; la reubicación es libre (REU-1).
+    const cap = openModal === 'study_interest' ? 2 : WEEK_DAYS.length
+    setDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : (prev.length >= cap ? prev : [...prev, d]))
+  }
+  function toggleZone(z: string) {
+    setZones(prev => prev.includes(z) ? prev.filter(x => x !== z) : [...prev, z])
   }
   const zoneLabel = zoneSel === 'otra' ? zoneOther.trim() : (activeSedes.find(s => s.id === zoneSel)?.name ?? '')
 
@@ -128,8 +134,9 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
           // Interés: zona en proposed_location, día(s)/horario estructurados,
           // y la elegibilidad capturada para el coordinador.
           proposed_location: openModal === 'study_interest' ? (zoneLabel || null) : null,
-          proposed_days: openModal === 'study_interest' ? days : undefined,
-          proposed_time: openModal === 'study_interest' ? (time || null) : undefined,
+          proposed_days: days,
+          proposed_time: time || null,
+          proposed_zones: openModal === 'relocation' ? zones : undefined,
           was_eligible: openModal === 'study_interest' ? (selectedOption?.is_eligible ?? null) : undefined,
           eligibility_note: openModal === 'study_interest' && selectedOption && !selectedOption.is_eligible ? selectedOption.missing.join(' · ') : undefined,
           reason: openModal === 'relocation' ? reason.trim() : undefined,
@@ -247,6 +254,39 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                       <input type="checkbox" checked={wantsFolleto} onChange={e => setWantsFolleto(e.target.checked)} className="accent-coral h-3.5 w-3.5" />
                       <span className="text-sm text-navy-light/70 font-body">Ocupo folleto</span>
                     </label>
+                    <div>
+                      <label className={LABEL_CLS}>Día(s) que te sirven</label>
+                      <div className="flex flex-wrap gap-2">
+                        {WEEK_DAYS.map(d => {
+                          const on = days.includes(d)
+                          return (
+                            <button key={d} type="button" onClick={() => toggleDay(d)}
+                              className={cn('rounded-full px-3 py-1.5 text-[13px] font-body border transition-colors',
+                                on ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{d}</button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="relocation-time" className={LABEL_CLS}>Horario</label>
+                      <select id="relocation-time" value={time} onChange={e => setTime(e.target.value)} className={SELECT_CLS}>
+                        <option value="">Seleccionar…</option>
+                        {TIME_SLOTS.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={LABEL_CLS}>Zona(s) que te sirven</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[...activeSedes.map(sd => sd.name), 'Cualquiera'].map(z => {
+                          const on = zones.includes(z)
+                          return (
+                            <button key={z} type="button" onClick={() => toggleZone(z)}
+                              className={cn('rounded-full px-3 py-1.5 text-[13px] font-body border transition-colors',
+                                on ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{z}</button>
+                          )
+                        })}
+                      </div>
+                    </div>
                     <div>
                       <label htmlFor="request-reason" className={LABEL_CLS}>Razón <span className="text-coral">*</span></label>
                       <textarea id="request-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Contanos por qué (mínimo 20 caracteres)…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')} />

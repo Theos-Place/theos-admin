@@ -168,9 +168,12 @@ export type StudyRequest = {
   proposed_schedule: string | null
   reason: string | null
   status: StudyRequestStatus
-  /** Interés de estudio v2: día(s) (hasta 2), horario y elegibilidad capturada. */
+  /** Día(s), horario y elegibilidad capturada. REU-1: la reubicación guarda
+   *  día(s) y ZONAS múltiples (las solicitudes viejas tenían 1 zona en
+   *  proposed_location — el domain la mapea a proposed_zones). */
   proposed_days: string[]
   proposed_time: string | null
+  proposed_zones: string[]
   was_eligible: boolean | null
   eligibility_note: string | null
   reviewed_by: string | null
@@ -206,9 +209,11 @@ export type StudyRequestWriteInput = {
   last_class_attended?: string | null
   last_leader_name?: string | null
   wants_folleto?: boolean
-  /** Interés de estudio v2: día(s) (hasta 2), horario, y elegibilidad capturada. */
+  /** Día(s) (interés: hasta 2; reubicación: libres), horario, zonas múltiples
+   *  (REU-1) y elegibilidad capturada. */
   proposed_days?: string[]
   proposed_time?: string | null
+  proposed_zones?: string[]
   was_eligible?: boolean | null
   eligibility_note?: string | null
 }

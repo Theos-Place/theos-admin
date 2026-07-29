@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
     const TIMES = new Set(['mañana', 'tarde', 'noche'])
     let proposedDays: string[] = []
     let proposedTime: string | null = null
+    let proposedZones: string[] = []
     let wasEligible: boolean | null = null
     let eligibilityNote: string | null = null
     if (body.request_type === 'study_interest') {
@@ -84,6 +85,19 @@ export async function POST(req: NextRequest) {
     let lastLeaderName: string | null = null
     let wantsFolleto = false
     if (body.request_type === 'relocation') {
+      // REU-1: días y zonas con selección múltiple (horario single, consistente
+      // con el form de interés). Zonas = nombres de sede o "Cualquiera",
+      // saneadas y topeadas server-side.
+      proposedDays = Array.isArray(body?.proposed_days)
+        ? ([...new Set(body.proposed_days.filter((d: unknown) => typeof d === 'string' && DAYS.has(d)))] as string[])
+        : []
+      proposedTime = TIMES.has(body?.proposed_time) ? body.proposed_time : null
+      proposedZones = Array.isArray(body?.proposed_zones)
+        ? ([...new Set(body.proposed_zones
+            .filter((z: unknown) => typeof z === 'string')
+            .map((z: string) => z.trim().slice(0, 60))
+            .filter(Boolean))] as string[]).slice(0, 10)
+        : []
       if (reason.length < 20) {
         return NextResponse.json({ error: 'La razón debe tener al menos 20 caracteres' }, { status: 400 })
       }
@@ -117,6 +131,7 @@ export async function POST(req: NextRequest) {
       wants_folleto: wantsFolleto,
       proposed_days: proposedDays,
       proposed_time: proposedTime,
+      proposed_zones: proposedZones,
       was_eligible: wasEligible,
       eligibility_note: eligibilityNote,
     })

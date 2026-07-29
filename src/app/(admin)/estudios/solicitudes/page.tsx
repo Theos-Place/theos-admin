@@ -155,10 +155,11 @@ export default function SolicitudesPage() {
             {r.existing_group_name && r.request_type === 'study_interest' && (
               <span className="font-medium text-navy">{r.existing_group_name}</span>
             )}
-            {r.proposed_location && (
+            {/* REU-1: zonas múltiples (incluye la zona única de solicitudes viejas). */}
+            {r.proposed_zones.length > 0 && (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin size={13} className="text-navy-light/60" />
-                {r.proposed_location}
+                {r.proposed_zones.join(', ')}
               </span>
             )}
             {r.proposed_schedule && (
@@ -167,7 +168,7 @@ export default function SolicitudesPage() {
                 {r.proposed_schedule}
               </span>
             )}
-            {r.request_type === 'study_interest' && r.proposed_days.length > 0 && (
+            {r.proposed_days.length > 0 && (
               <span className="inline-flex items-center gap-1.5">
                 <Calendar size={13} className="text-navy-light/60" />
                 {r.proposed_days.join(', ')}{r.proposed_time ? ` · ${r.proposed_time}` : ''}

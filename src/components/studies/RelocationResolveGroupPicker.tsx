@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { sedeLabel } from '@/lib/sedes'
+import { relocationGroupScore, requestZones } from '@/lib/studies/request-prefs'
 import type { StudyRequest } from '@/types/study'
 
 type GroupOption = {
@@ -55,6 +56,11 @@ export function RelocationResolveGroupPicker({
           (g.status === 'en_matricula' || g.status === 'en_curso')
           && (!request.needed_study_code || g.plan?.code === request.needed_study_code),
         )
+        // REU-1: los candidatos que calzan con las zonas/días pedidos van primero.
+        const prefs = { zones: requestZones(request), days: request.proposed_days ?? [] }
+        filtered.sort((a, b) =>
+          relocationGroupScore({ zoneName: b.zone ? sedeLabel(b.zone) : null, schedule_days: b.schedule_days }, prefs)
+          - relocationGroupScore({ zoneName: a.zone ? sedeLabel(a.zone) : null, schedule_days: a.schedule_days }, prefs))
         setGroups(filtered)
         // Preselecciona el grupo que la persona había pedido, si sigue disponible.
         const preferred = request.existing_group_id && filtered.some(g => g.id === request.existing_group_id)

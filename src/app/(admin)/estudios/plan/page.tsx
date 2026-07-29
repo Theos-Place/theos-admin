@@ -13,12 +13,7 @@ import { CommitmentIcons } from '@/components/studies/CommitmentIcons'
 import { ExpandableDescription } from '@/components/studies/ExpandableDescription'
 import { ChevronRight, ArrowDown, Plus, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCRC } from '@/lib/format'
-
-function formatCost(cost: number) {
-  if (cost === 0) return 'Gratis'
-  return formatCRC(cost)
-}
+import { studyCostLabel } from '@/lib/studies/cost-label'
 
 function StageLabel({ children, color }: { children: React.ReactNode; color: 'navy' | 'teal' | 'coral' | 'purple' }) {
   const styles = {
@@ -331,7 +326,7 @@ export default function PlanDeEstudiosPage() {
                   </td>
                   <td className="px-4 py-3 text-sm whitespace-nowrap font-body">
                     <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/70'}>
-                      {formatCost(s.cost)}
+                      {studyCostLabel(s.code, s.cost)}
                     </span>
                   </td>
                   {canManage && (

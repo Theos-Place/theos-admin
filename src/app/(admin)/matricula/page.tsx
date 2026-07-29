@@ -20,6 +20,7 @@ import { summarizeStageRequirements } from '@/lib/studies/stage-requirements-sum
 import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 import { formatDateLong, formatCRC } from '@/lib/format'
+import { studyCostLabel } from '@/lib/studies/cost-label'
 
 type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña'
 
@@ -774,7 +775,8 @@ function StudyCard({
           ) : (
             <span className="flex items-center gap-1 text-teal-deep">
               <DollarSign size={12} />
-              Gratuito
+              {/* DIS2/DIS3 no son gratis: van incluidos en el pago de DIS1. */}
+              {studyCostLabel(result.study_code, studyType?.cost ?? 0) === 'Gratis' ? 'Gratuito' : studyCostLabel(result.study_code, studyType?.cost ?? 0)}
             </span>
           )}
           {studyType?.requires_payment && (studyType.cost ?? 0) > 0 && (
