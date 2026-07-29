@@ -17,6 +17,10 @@ type Req = {
   requester: { id: string; first_name: string; last_name: string } | null
   spouse: { id: string; first_name: string; last_name: string } | null
   payment: { review_status: string | null; status: string | null } | null
+  /** PRE-8: la evaluación de cierre dejó a la pareja en seguimiento. */
+  needs_follow_up?: boolean
+  /** Plan concreto — solo llega a coordinador_estudios/direccion/admin. */
+  follow_up_plan?: 'listos' | 'consejeria' | 'posponer' | null
 }
 
 const STATUS_LABEL: Record<Req['status'], string> = {
@@ -108,6 +112,14 @@ export function PrematrimonialQueue() {
               {r.status === 'pago_en_revision' && <p className="text-amber-700">Esperando que finanzas apruebe el pago.</p>}
               {r.status === 'cancelada' && r.cancel_reason && <p className="text-navy-light/60">Motivo: {r.cancel_reason}</p>}
             </div>
+
+            {/* PRE-8: marca de seguimiento pastoral tras el cierre. */}
+            {r.needs_follow_up && (
+              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-800 font-body">
+                ⚑ En seguimiento tras el cierre
+                {r.follow_up_plan === 'consejeria' ? ': consejería/mentoría recomendada' : r.follow_up_plan === 'posponer' ? ': se sugirió posponer la boda' : ''}
+              </p>
+            )}
 
             {r.status === 'grupo_creado' && r.resulting_group_id && (
               <Link href={`/estudios/grupos/${r.resulting_group_id}`} className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-teal-deep font-body">Ver grupo →</Link>

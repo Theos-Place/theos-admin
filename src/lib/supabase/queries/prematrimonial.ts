@@ -4,6 +4,7 @@
 // con la pareja, y cancelación con devolución vía finance_request.
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { normalizeCedula } from '@/lib/cedula'
 import { normalizePhone } from '@/lib/phone'
 import { getMemberStudyProfile } from '@/lib/supabase/queries/studies-eligibility'
@@ -131,11 +132,76 @@ export async function getPrematrimonialQueue(statuses = ['pendiente', 'pago_en_r
     .select(`*,
       requester:members!prematrimonial_requests_requester_member_id_fkey(id, first_name, last_name),
       spouse:members!prematrimonial_requests_spouse_member_id_fkey(id, first_name, last_name),
-      payment:payments!prematrimonial_requests_payment_id_fkey(id, review_status, status)`)
+      payment:payments!prematrimonial_requests_payment_id_fkey(id, review_status, status),
+      evaluation:prematrimonial_evaluations!prematrimonial_evaluations_request_id_fkey(action_plan)`)
     .in('status', statuses)
     .order('created_at', { ascending: false })
   if (error) throw error
   return data ?? []
+}
+
+/** PRE-8: parejas de un grupo prematrimonial (solicitudes con
+ *  resulting_group_id = grupo), para el form de evaluación del cierre. */
+export async function getRequestsForGroup(groupId: string) {
+  const sb = loose()
+  const { data, error } = await sb.from('prematrimonial_requests')
+    .select(`id, status, requester_member_id, spouse_member_id,
+      requester:members!prematrimonial_requests_requester_member_id_fkey(first_name, last_name),
+      spouse:members!prematrimonial_requests_spouse_member_id_fkey(first_name, last_name)`)
+    .eq('resulting_group_id', groupId)
+    .eq('status', 'grupo_creado')
+  if (error) throw error
+  return (data ?? []) as unknown as Array<{
+    id: string; status: string; requester_member_id: string; spouse_member_id: string
+    requester: { first_name: string; last_name: string } | null
+    spouse: { first_name: string; last_name: string } | null
+  }>
+}
+
+/** PRE-8: guarda las evaluaciones de pareja del cierre (upsert por request_id:
+ *  un retry del cierre no duplica). SENSIBLE: solo se lee vía endpoints con
+ *  gate PREMAT_EVAL_ROLES. */
+export async function savePrematEvaluations(
+  groupId: string,
+  evaluations: PrematEvaluationInput[],
+  filledBy: string | null,
+): Promise<void> {
+  if (evaluations.length === 0) return
+  const sb = loose()
+  const { error } = await sb.from('prematrimonial_evaluations').upsert(
+    evaluations.map(e => ({
+      request_id: e.request_id,
+      group_id: groupId,
+      commitment: e.commitment,
+      strengths: e.strengths,
+      strengths_notes: (e.strengths_notes ?? '').trim() || null,
+      topics_to_work: e.topics_to_work,
+      observations: (e.observations ?? '').trim() || null,
+      blind_spot: !!e.blind_spot,
+      blind_spot_notes: e.blind_spot ? ((e.blind_spot_notes ?? '').trim() || null) : null,
+      action_plan: e.action_plan,
+      blessing: (e.blessing ?? '').trim() || null,
+      filled_by: filledBy,
+    })),
+    { onConflict: 'request_id' },
+  )
+  if (error) throw error
+}
+
+/** PRE-8: evaluaciones (contenido pastoral) por solicitud o por miembro de la
+ *  pareja. El GATE es del caller (PREMAT_EVAL_ROLES). */
+export async function getPrematEvaluations(filter: { requestIds?: string[]; memberId?: string }) {
+  const sb = loose()
+  let q = sb.from('prematrimonial_evaluations')
+    .select(`*, request:prematrimonial_requests!prematrimonial_evaluations_request_id_fkey(requester_member_id, spouse_member_id)`)
+  if (filter.requestIds?.length) q = q.in('request_id', filter.requestIds)
+  const { data, error } = await q.order('created_at', { ascending: false })
+  if (error) throw error
+  let rows = (data ?? []) as Array<Record<string, unknown> & { request: { requester_member_id: string; spouse_member_id: string } | null }>
+  if (filter.memberId) {
+    rows = rows.filter(r => r.request?.requester_member_id === filter.memberId || r.request?.spouse_member_id === filter.memberId)
+  }
+  return rows
 }
 
 /** El coordinador crea el grupo prematrimonial y agrega a la pareja. El pago ya

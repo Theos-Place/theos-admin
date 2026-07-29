@@ -7,6 +7,7 @@ import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
 import { MemberRecommendations } from './MemberRecommendations'
+import { ACTION_PLAN_OPTIONS, COMMITMENT_OPTIONS, needsFollowUp } from '@/lib/studies/premat-evaluation'
 
 type AdminData = {
   not_recommended_to_lead_studies: boolean
@@ -353,6 +354,77 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
 
       {/* Recomendaciones (todas, para roles administrativos) */}
       <MemberRecommendations memberId={memberId} />
+
+      {/* PRE-8: evaluación del prematrimonial (pastoral). El endpoint gatea a
+          coordinador_estudios/direccion/admin — con 403 la sección no aparece
+          (coordinador_dirigentes ve este tab pero NO esta información). */}
+      <PrematEvaluationPanel memberId={memberId} />
+    </div>
+  )
+}
+
+// ─── PRE-8: evaluación del curso prematrimonial (solo lectura) ───────────────
+type EvalRow = {
+  id: string
+  commitment: string
+  strengths: string[]
+  strengths_notes: string | null
+  topics_to_work: string[]
+  observations: string | null
+  blind_spot: boolean
+  blind_spot_notes: string | null
+  action_plan: string
+  blessing: string | null
+  created_at: string
+}
+
+function PrematEvaluationPanel({ memberId }: { memberId: string }) {
+  const [rows, setRows] = useState<EvalRow[] | null>(null)
+  useEffect(() => {
+    let alive = true
+    fetch(`/api/studies/prematrimonial/evaluations?member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive) setRows(d?.items ?? []) })
+      .catch(() => { if (alive) setRows([]) })
+    return () => { alive = false }
+  }, [memberId])
+
+  if (!rows || rows.length === 0) return null
+
+  return (
+    <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
+      <div>
+        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Evaluación del prematrimonial</h3>
+        <p className="mt-1 text-[12px] text-navy-light/60 font-body">
+          Información pastoral confidencial: visible solo para coordinación de estudios, dirección y admin. No la ve el miembro ni su pareja.
+        </p>
+      </div>
+      {rows.map(e => {
+        const plan = ACTION_PLAN_OPTIONS.find(o => o.value === e.action_plan)
+        const commitment = COMMITMENT_OPTIONS.find(o => o.value === e.commitment)
+        return (
+          <div key={e.id} className="rounded-xl border border-outline p-4 space-y-2 text-[13px] font-body">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-navy-light/60">{formatDate(e.created_at)}</span>
+              {needsFollowUp(e.action_plan) && (
+                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 font-display">⚑ En seguimiento</span>
+              )}
+            </div>
+            <p className="text-navy"><strong>Plan de acción:</strong> {plan?.label ?? e.action_plan}</p>
+            <p className="text-navy-light/80"><strong className="text-navy">Compromiso:</strong> {commitment?.label ?? e.commitment}</p>
+            {e.strengths.length > 0 && <p className="text-navy-light/80"><strong className="text-navy">Fortalezas:</strong> {e.strengths.join(' · ')}</p>}
+            {e.strengths_notes && <p className="text-navy-light/70">{e.strengths_notes}</p>}
+            {e.topics_to_work.length > 0 && <p className="text-navy-light/80"><strong className="text-navy">A profundizar:</strong> {e.topics_to_work.join(' · ')}</p>}
+            {e.observations && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Observaciones:</strong> {e.observations}</p>}
+            {e.blind_spot && (
+              <p className="rounded-lg bg-coral/5 px-3 py-2 text-coral-deep">
+                <strong>Punto ciego / tema no resuelto:</strong> {e.blind_spot_notes ?? '(sin descripción)'}
+              </p>
+            )}
+            {e.blessing && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Bendición:</strong> {e.blessing}</p>}
+          </div>
+        )
+      })}
     </div>
   )
 }

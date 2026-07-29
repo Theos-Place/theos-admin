@@ -8,6 +8,7 @@ import {
 import { PREMAT_REQUIREMENT_LABEL } from '@/lib/studies/premat-requirement'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { minCeremonyDate, ceremonyDateTooSoon, PREMAT_MIN_MONTHS } from '@/lib/studies/premat-dates'
+import { PREMAT_EVAL_ROLES, needsFollowUp } from '@/lib/studies/premat-evaluation'
 import { checkCoupleGender, SAME_GENDER_MESSAGE, missingGenderMessage } from '@/lib/studies/premat-gender'
 import { todayCR, formatDate } from '@/lib/format'
 
@@ -19,7 +20,23 @@ export async function GET() {
   const auth = await requireModuleView('estudios', { beyondOwn: true })
   if (auth.res) return auth.res
   try {
-    return NextResponse.json({ items: await getPrematrimonialQueue() })
+    // PRE-8: la marca de SEGUIMIENTO (plan de acción != "listos") viaja como
+    // flag para toda la cola; el plan concreto solo para PREMAT_EVAL_ROLES
+    // (el contenido de la evaluación se lee aparte, con gate estrecho).
+    const canSeeEval = auth.ctx.roles.some(r => (PREMAT_EVAL_ROLES as string[]).includes(r))
+    const items = (await getPrematrimonialQueue()).map(raw => {
+      const r = raw as Record<string, unknown> & { evaluation?: { action_plan: string } | { action_plan: string }[] | null }
+      const ev = Array.isArray(r.evaluation) ? r.evaluation[0] : r.evaluation
+      const plan = ev?.action_plan ?? null
+      const rest = { ...r }
+      delete rest.evaluation
+      return {
+        ...rest,
+        needs_follow_up: plan ? needsFollowUp(plan) : false,
+        follow_up_plan: canSeeEval ? plan : null,
+      }
+    })
+    return NextResponse.json({ items })
   } catch (error) {
     console.error('GET prematrimonial:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

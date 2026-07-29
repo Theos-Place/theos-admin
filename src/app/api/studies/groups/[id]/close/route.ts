@@ -4,6 +4,8 @@ import { closeGroup, type CloseResult } from '@/lib/supabase/queries/studies'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
+import { PREMAT_PLAN_CODE, getRequestsForGroup, savePrematEvaluations } from '@/lib/supabase/queries/prematrimonial'
+import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 
 // POST: cierra el grupo. Body: { results: CloseResult[] }. (FOL-1: el campo
 // folleto del body viejo se ignora — el cierre ya no genera folletos.)
@@ -15,13 +17,39 @@ export async function POST(
   if (auth.res) return auth.res
   // Body y params fuera del try: el catch de YA_CERRADO los necesita para reconciliar.
   const { id } = await params
-  const { results } = (await req.json().catch(() => ({ results: [] }))) as { results: CloseResult[] }
+  const body = (await req.json().catch(() => ({}))) as { results?: CloseResult[]; evaluations?: PrematEvaluationInput[] }
+  const results = body.results ?? []
   try {
     const supabase = createAdminClient()
     const { data: g } = await supabase
       .from('study_groups').select('plan:study_plans(code)').eq('id', id).maybeSingle()
     const planEmbed = (g as { plan: { code: string | null } | { code: string | null }[] | null } | null)?.plan
     const sourceCode = (Array.isArray(planEmbed) ? planEmbed[0] : planEmbed)?.code ?? null
+
+    // PRE-8: los grupos PREMAT exigen la evaluación de CADA pareja del grupo
+    // antes de cerrar (una por prematrimonial_request). Se guarda ANTES del
+    // cierre: si el cierre falla, la evaluación queda (upsert por pareja) y el
+    // retry no la duplica ni la pierde.
+    if (sourceCode === PREMAT_PLAN_CODE) {
+      const parejas = await getRequestsForGroup(id)
+      const evaluations = body.evaluations ?? []
+      const byRequest = new Map(evaluations.map(e => [e.request_id, e]))
+      const faltantes = parejas.filter(p => !byRequest.has(p.id))
+      if (faltantes.length > 0) {
+        return NextResponse.json(
+          { error: `Falta la evaluación de ${faltantes.length} pareja(s) del grupo.`, code: 'evaluacion_requerida' },
+          { status: 400 },
+        )
+      }
+      // Solo las parejas de ESTE grupo (ignora request_id ajenos).
+      const validIds = new Set(parejas.map(p => p.id))
+      const propias = evaluations.filter(e => validIds.has(e.request_id))
+      for (const e of propias) {
+        const err = validatePrematEvaluation(e)
+        if (err) return NextResponse.json({ error: err, code: 'evaluacion_invalida' }, { status: 400 })
+      }
+      await savePrematEvaluations(id, propias, auth.ctx.memberId)
+    }
 
     // EST-3: recomendaciones solo en N4+ o capacitaciones (DIS). Si el cliente
     // las manda para otro plan, se ignoran (el gate de la UI es solo UX).

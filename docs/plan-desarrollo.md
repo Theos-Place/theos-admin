@@ -546,7 +546,62 @@ Después de arreglar, hacé una pasada de verificación general: creá un test (
 se vuelva a colar. Correr tsc, lint, vitest.
 ```
 
-### [ ] PRE-8 · Cierre especial para estudios prematrimoniales (evaluación de la pareja)
+### [ ] EST-9 · Cierre especial D3/Panorama: recomendación a CDEB por estudiante
+Archivos: `src/app/(admin)/estudios/grupos/[id]/cierre/page.tsx`, `src/app/api/studies/groups/[id]/close/route.ts`, migración (tabla nueva), `src/lib/studies/close-recommendations.ts` (gate de EST-3), cola de dirigentes/CDEB
+
+```
+Cierre especial para grupos de Discípulos 3 (DIS3) y Panorama (PAN): al cerrar, el dirigente
+puede recomendar estudiantes para capacitarse en CDEB (Cómo Dar Estudios de Biblia).
+NO es para todos los estudiantes: es un botón "Recomendar para CDEB" POR ESTUDIANTE en la
+lista de cierre; solo al tocarlo se abre el formulario de evaluación.
+
+Principio rector: el dirigente llena esto en el celular, al final de un cierre. Que sea
+CORTO. Aplicá estas simplificaciones (decididas con la usuaria):
+- Prellenar lo que el sistema ya sabe: fecha de finalización = fecha de cierre del grupo
+  (editable, con el texto "Si no lo has terminado, ingresá la fecha prevista"); dirigente y
+  estudiante vienen del contexto, no se preguntan.
+- Convicciones POR EXCEPCIÓN: los 5 temas (sexualidad y relaciones antes del matrimonio,
+  mayordomía, autoridad de la Biblia, salvación por gracia, identidad de género) arrancan
+  todos en "convicción firme" con la instrucción "Marcá solo los temas donde viste dudas o
+  postura contraria". Al marcar "tiene dudas" o "postura contraria" en un tema, se abre su
+  campo de explicación (obligatorio solo en ese caso). Sin observaciones = cero toques.
+- Escalas 1-5 como botones en fila (no dropdown), con la etiqueta del nivel visible al
+  seleccionar. Aplica a: Testimonio, Pasión por enseñar/dar a conocer a Jesús, Conocimiento
+  bíblico, Expresión verbal. Testimonio y Pasión tienen además la opción "X - Sin
+  información suficiente", disponible SOLO en grupos de Panorama (no en DIS3).
+- Textos libres: obligatorios solo dos — "Describa brevemente el testimonio del estudiante"
+  y "Comentarios adicionales para el comité de dirigentes". Los otros dos (ejemplo de
+  compartir su fe / ejemplo de expresión verbal) y el comentario sobre compromiso quedan
+  OPCIONALES (no obligar a escribir "NA").
+- Recomendación final (obligatoria, una de cuatro): Sí, sin reservas · Sí, pero debería
+  llevar otro estudio primero · Sí, con reservas (ver comentarios) · No lo recomiendo.
+- Encabezado del form con el texto de contexto: que recomendar es una responsabilidad, que
+  se ore antes, y que recomendar no asegura la invitación al curso porque se evalúan otros
+  aspectos.
+
+Implementación:
+- Migración: tabla nueva (p. ej. cdeb_recommendations) por estudiante, ligada a
+  member_id + group_id + enrollment_id, con el dirigente que la llenó, fecha, todos los
+  campos anteriores y estado (borrador / enviada).
+- El botón/form solo aparece en grupos cuyo plan es DIS3 o PAN. Reutilizá el gate de nivel
+  de src/lib/studies/close-recommendations.ts (EST-3) extendiéndolo, no dupliqués la lógica.
+- NO bloquear el cierre: el grupo cierra aunque las recomendaciones queden en borrador; el
+  dirigente puede completarlas después desde su grupo cerrado. Guardado parcial automático.
+- Destino: las recomendaciones enviadas alimentan al comité de dirigentes (cola visible para
+  coordinador_dirigentes, coordinador_estudios, direccion, admin) y se conectan con el flujo
+  de invitaciones a planes invitation-only, que es como se entra a CDEB (ver EST-5: CDEB
+  pasa a etapa avanzada, solo por invitación). Mostrar en el perfil del miembro solo para
+  esos roles — es información sensible sobre la persona.
+- Relación con lo existente: esto NO reemplaza el bloque simple de "Recomendar para
+  (oración/servicio/dirigente)" de EST-3; es un flujo aparte y más profundo, específico de
+  DIS3/PAN → CDEB. Verificá que no queden dos cosas compitiendo en la misma pantalla:
+  si el grupo es DIS3/PAN, mostrá este flujo; decidí con la usuaria si el bloque simple se
+  oculta ahí.
+Tests: visibilidad solo en DIS3/PAN, opción X solo en Panorama, convicciones por excepción
+(explicación obligatoria solo al marcar dudas/contraria), cierre no bloqueado por borradores.
+```
+
+### [x] PRE-8 · Cierre especial para estudios prematrimoniales (evaluación de la pareja) — HECHO 2026-07-29 (migración 20260729120000 aplicada: tabla `prematrimonial_evaluations` ligada a request_id (UNIQUE, una por pareja) + group_id, con RLS habilitado y CERO policies = deny-by-default para clientes con sesión, solo service role — a propósito: la policy premat_select deja que la pareja lea su propia SOLICITUD, así que la evaluación no podía vivir ahí. Catálogos con los TEXTOS EXACTOS de la spec + validación en módulo puro `premat-evaluation.ts` (10 tests: los 10 temas, 6 fortalezas, 3 planes, punto ciego exige descripción). Grupo PREMAT detectado por plan code; el form (`PrematCoupleEvaluation.tsx`) sale en el paso 1 del cierre, UNA evaluación por pareja (parejas desde /premat-pairs = solicitudes con resulting_group_id), y bloquea Continuar hasta completarlas; el POST de cierre las EXIGE server-side (400 `evaluacion_requerida`/`evaluacion_invalida`), ignora request_id ajenos y las guarda ANTES del cierre con upsert por pareja (un retry del cierre no duplica ni pierde la evaluación). Plan de acción != 'listos' ⇒ SEGUIMIENTO: flag `needs_follow_up` en la cola prematrimonial (badge ⚑) y panel de solo lectura en la ficha Administrativa del perfil. VISIBILIDAD: contenido solo para coordinador_estudios/direccion/admin (`PREMAT_EVAL_ROLES`) vía GET /api/studies/prematrimonial/evaluations — coordinador_dirigentes PUEDE cerrar el grupo pero NO ve la evaluación (con 403 el panel simplemente no se pinta) y el plan concreto en la cola también se recorta a esos roles (el flag booleano sí lo ve quien ve la cola). El cierre de grupos no PREMAT no cambió en nada)
 Archivos: `src/app/(admin)/estudios/grupos/[id]/cierre/page.tsx` (flujo de cierre actual), `src/app/api/studies/groups/[id]/close/route.ts`, `prematrimonial_requests`, migración para la evaluación
 
 ```

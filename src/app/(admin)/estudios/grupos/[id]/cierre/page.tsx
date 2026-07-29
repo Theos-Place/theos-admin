@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useCallback } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -9,6 +9,8 @@ import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
+import { PrematCoupleEvaluation } from '@/components/studies/PrematCoupleEvaluation'
+import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star } from 'lucide-react'
 
 type ParticipantResult = {
@@ -72,6 +74,12 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   const router = useRouter()
   const toast = useToast()
   const [step, setStep] = useState(1)
+  // PRE-8: evaluaciones de pareja (solo grupos PREMAT).
+  const [evals, setEvals] = useState<PrematEvaluationInput[]>([])
+  const [pairsCount, setPairsCount] = useState(0)
+  const handleEvalsChange = useCallback((next: PrematEvaluationInput[], count: number) => {
+    setEvals(next); setPairsCount(count)
+  }, [])
   const [submitting, setSubmitting] = useState(false)
   const [results, setResults] = useState<ParticipantResult[]>(() =>
     group.participants.map(p => ({
@@ -107,6 +115,13 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   // EST-3: recomendaciones solo en cierres de N4+ o capacitaciones (DIS).
   const canRecommend = allowsCloseRecommendations(group.study_type_id)
 
+  // PRE-8: los grupos prematrimoniales llevan una evaluación POR PAREJA antes
+  // de cerrar (el API la exige igual; esto es el form + gate de UX).
+  const isPremat = group.study_type_id === 'PREMAT'
+  const evalsIncomplete = isPremat && (
+    evals.length < pairsCount || evals.some(e => validatePrematEvaluation(e) !== null)
+  )
+
   // FOL-1: el cierre ya no genera folletos (reglas nuevas: cupo lleno /
   // fin de matrícula durante la matrícula + manual).
 
@@ -135,6 +150,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           results: payload,
+          ...(isPremat ? { evaluations: evals } : {}),
         }),
       })
       if (!res.ok) throw new Error('Error en el cierre de estudio')
@@ -343,11 +359,27 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </div>
           </div>
 
+          {/* PRE-8: cierre especial de prematrimonial — evaluación por pareja. */}
+          {isPremat && (
+            <div className="space-y-3">
+              <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                Evaluación de la pareja (mentores)
+              </h2>
+              <PrematCoupleEvaluation groupId={group.id} onChange={handleEvalsChange} />
+            </div>
+          )}
+
+          {triedNext && evalsIncomplete && (
+            <p className="rounded-xl bg-coral/5 px-4 py-3 text-[13px] text-coral-deep font-body" role="alert">
+              Completá la evaluación de {pairsCount === 1 ? 'la pareja' : 'cada pareja'}: el compromiso, si hay punto ciego (con su descripción) y el plan de acción son obligatorios.
+            </p>
+          )}
+
           <div className="flex justify-end">
             <button
               onClick={() => {
                 setTriedNext(true)
-                if (unevaluated === 0 && failsWithoutReason === 0) setStep(2)
+                if (unevaluated === 0 && failsWithoutReason === 0 && !evalsIncomplete) setStep(2)
               }}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >
