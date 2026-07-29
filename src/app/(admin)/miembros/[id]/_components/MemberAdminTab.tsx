@@ -8,6 +8,10 @@ import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
 import { MemberRecommendations } from './MemberRecommendations'
 import { ACTION_PLAN_OPTIONS, COMMITMENT_OPTIONS, needsFollowUp } from '@/lib/studies/premat-evaluation'
+import {
+  SCALE_LABELS, RECOMMENDATION_OPTIONS, CONVICTION_TOPICS, CONVICTION_STANCES,
+  TESTIMONY_LABEL, BIBLE_LABEL, SPEECH_LABEL,
+} from '@/lib/studies/cdeb-recommendation'
 
 type AdminData = {
   not_recommended_to_lead_studies: boolean
@@ -359,6 +363,11 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
           coordinador_estudios/direccion/admin — con 403 la sección no aparece
           (coordinador_dirigentes ve este tab pero NO esta información). */}
       <PrematEvaluationPanel memberId={memberId} />
+
+      {/* EST-9: recomendaciones a CDEB. Gate en el API: coordinador_dirigentes,
+          coordinador_estudios y admin — NI el propio miembro, NI el dirigente
+          que la escribió, NI dirección (con 403 no se pinta). */}
+      <CdebRecommendationsPanel memberId={memberId} />
     </div>
   )
 }
@@ -422,6 +431,92 @@ function PrematEvaluationPanel({ memberId }: { memberId: string }) {
               </p>
             )}
             {e.blessing && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Bendición:</strong> {e.blessing}</p>}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── EST-9: recomendaciones a CDEB (solo lectura, gate en el API) ────────────
+type CdebRow = {
+  id: string
+  status: string
+  completion_date: string | null
+  convictions: Array<{ topic: string; stance: string; notes?: string | null }>
+  testimony_score: string | null
+  testimony_notes: string | null
+  passion_score: string | null
+  passion_notes: string | null
+  bible_knowledge_score: string | null
+  speech_score: string | null
+  speech_notes: string | null
+  commitment_notes: string | null
+  committee_notes: string | null
+  recommendation: string | null
+  created_at: string
+  group?: { name: string | null; plan?: { code: string | null } | null } | null
+  leader?: { first_name: string; last_name: string } | null
+}
+
+function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
+  const [rows, setRows] = useState<CdebRow[] | null>(null)
+  useEffect(() => {
+    let alive = true
+    fetch(`/api/studies/cdeb-recommendations?member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive) setRows(d?.items ?? []) })
+      .catch(() => { if (alive) setRows([]) })
+    return () => { alive = false }
+  }, [memberId])
+
+  if (!rows || rows.length === 0) return null
+
+  const scale = (v: string | null) => (v ? `${v === 'x' ? 'X' : v} · ${SCALE_LABELS[v] ?? ''}` : '—')
+
+  return (
+    <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
+      <div>
+        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Recomendaciones a CDEB</h3>
+        <p className="mt-1 text-[12px] text-navy-light/60 font-body">
+          Evaluación de dirigentes para el comité. Confidencial: no la ve el miembro ni quien la escribió.
+        </p>
+      </div>
+      {rows.map(r => {
+        const rec = RECOMMENDATION_OPTIONS.find(o => o.value === r.recommendation)
+        const leader = r.leader ? `${r.leader.first_name} ${r.leader.last_name}`.trim() : null
+        return (
+          <div key={r.id} className="rounded-xl border border-outline p-4 space-y-2 text-[13px] font-body">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-navy-light/60">
+                {r.group?.plan?.code ?? '—'}{r.group?.name ? ` · ${r.group.name}` : ''}{leader ? ` · ${leader}` : ''}
+              </span>
+              <span className="text-navy-light/60">{formatDate(r.created_at)}</span>
+            </div>
+            <p className="text-navy"><strong>Recomendación:</strong> {rec?.label ?? r.recommendation ?? '—'}</p>
+            <p className="text-navy-light/80">
+              <strong className="text-navy">{TESTIMONY_LABEL}:</strong> {scale(r.testimony_score)}
+              {' · '}<strong className="text-navy">Pasión:</strong> {scale(r.passion_score)}
+              {' · '}<strong className="text-navy">{BIBLE_LABEL}:</strong> {scale(r.bible_knowledge_score)}
+              {' · '}<strong className="text-navy">{SPEECH_LABEL}:</strong> {scale(r.speech_score)}
+            </p>
+            {r.testimony_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Testimonio:</strong> {r.testimony_notes}</p>}
+            {r.passion_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Comparte su fe:</strong> {r.passion_notes}</p>}
+            {r.speech_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Expresión:</strong> {r.speech_notes}</p>}
+            {r.commitment_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Compromiso:</strong> {r.commitment_notes}</p>}
+            {r.convictions?.length > 0 && (
+              <div className="rounded-lg bg-coral/5 px-3 py-2 space-y-1">
+                <p className="text-coral-deep font-semibold">Convicciones a trabajar</p>
+                {r.convictions.map((c, i) => (
+                  <p key={i} className="text-coral-deep">
+                    · {CONVICTION_TOPICS.find(t => t.value === c.topic)?.label ?? c.topic}
+                    {' — '}{CONVICTION_STANCES.find(sx => sx.value === c.stance)?.label ?? c.stance}
+                    {c.notes ? `: ${c.notes}` : ''}
+                  </p>
+                ))}
+              </div>
+            )}
+            {r.committee_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Para el comité:</strong> {r.committee_notes}</p>}
           </div>
         )
       })}

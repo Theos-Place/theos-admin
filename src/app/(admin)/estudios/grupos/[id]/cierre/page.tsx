@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useCallback } from 'react'
+import { use, useState, useCallback, useEffect } from 'react'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -9,9 +9,11 @@ import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
+import { allowsCdebRecommendation } from '@/lib/studies/cdeb-recommendation'
+import { CdebRecommendationModal } from '@/components/studies/CdebRecommendationModal'
 import { PrematCoupleEvaluation } from '@/components/studies/PrematCoupleEvaluation'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
-import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star } from 'lucide-react'
+import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, Sparkles } from 'lucide-react'
 
 type ParticipantResult = {
   member_id: string
@@ -112,8 +114,29 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   const retirados = results.filter(r => r.status_result === 'retirado').length
   const autoPromotable = studyType?.auto_promote && studyType?.next_study_id
 
-  // EST-3: recomendaciones solo en cierres de N4+ o capacitaciones (DIS).
-  const canRecommend = allowsCloseRecommendations(group.study_type_id)
+  // EST-9: en DIS3 / Panorama el cierre lleva el flujo de recomendación a CDEB
+  // POR ESTUDIANTE, y el bloque simple de EST-3 (oración/servicio/dirigente)
+  // NO se muestra — nunca los dos juntos (decisión confirmada).
+  const isCdebSource = allowsCdebRecommendation(group.study_type_id)
+  // EST-3: recomendaciones simples solo en N4+ o capacitaciones (DIS), y solo
+  // cuando el grupo no es de los que llevan el flujo CDEB.
+  const canRecommend = !isCdebSource && allowsCloseRecommendations(group.study_type_id)
+
+  // EST-9: modal de recomendación a CDEB (un estudiante a la vez) + estado de
+  // lo ya guardado (borrador/enviada) para mostrarlo en la lista.
+  const [cdebTarget, setCdebTarget] = useState<{ id: string; name: string } | null>(null)
+  const [cdebByMember, setCdebByMember] = useState<Record<string, { status: string } & Record<string, unknown>>>({})
+  const loadCdeb = useCallback(() => {
+    if (!isCdebSource) return
+    fetch(`/api/studies/cdeb-recommendations?group_id=${group.id}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const items: Array<{ member_id: string; status: string }> = d?.items ?? []
+        setCdebByMember(Object.fromEntries(items.map(i => [i.member_id, i as never])))
+      })
+      .catch(() => {})
+  }, [isCdebSource, group.id])
+  useEffect(() => { loadCdeb() }, [loadCdeb])
 
   // PRE-8: los grupos prematrimoniales llevan una evaluación POR PAREJA antes
   // de cerrar (el API la exige igual; esto es el form + gate de UX).
@@ -319,6 +342,29 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                     </div>
                   )}
 
+                  {/* EST-9: recomendación a CDEB por estudiante (DIS3/Panorama).
+                      El form se abre SOLO al tocar el botón — no es para todos. */}
+                  {isCdebSource && r.status_result === 'aprobado' && (() => {
+                    const saved = cdebByMember[r.member_id]
+                    return (
+                      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-surface-low px-3 py-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setCdebTarget({ id: r.member_id, name: r.member_name })}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-coral/40 px-3 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
+                        >
+                          <Sparkles size={12} /> {saved ? 'Editar recomendación a CDEB' : 'Recomendar para CDEB'}
+                        </button>
+                        {saved && (
+                          <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
+                            saved.status === 'enviada' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-amber-50 text-amber-700')}>
+                            {saved.status === 'enviada' ? 'Enviada al comité' : 'Borrador guardado'}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })()}
+
                   {/* Recomendaciones opcionales — solo N4+ o capacitaciones (EST-3) */}
                   {canRecommend && r.status_result !== '' && r.status_result !== 'retirado' && (
                     <div className="rounded-xl bg-surface-low px-3 py-2.5 space-y-2">
@@ -458,6 +504,19 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </button>
           </div>
         </div>
+      )}
+
+      {cdebTarget && (
+        <CdebRecommendationModal
+          groupId={group.id}
+          planCode={group.study_type_id}
+          member={cdebTarget}
+          enrollmentId={null}
+          defaultDate={new Date().toISOString().slice(0, 10)}
+          initial={cdebByMember[cdebTarget.id] as never}
+          onClose={() => setCdebTarget(null)}
+          onSaved={() => loadCdeb()}
+        />
       )}
 
       <DeleteConfirmModal
