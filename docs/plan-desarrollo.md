@@ -532,7 +532,7 @@ normal intacto para otros planes.
 
 ### Activación masiva de cuentas (feedback 2026-07-28; hacer en orden: AUTH-1 → AUTH-2)
 
-### [ ] AUTH-1 · Cuentas para todos los miembros + flujo "Crear mi contraseña"
+### [x] AUTH-1 · Cuentas para todos los miembros + flujo "Crear mi contraseña" — HECHO 2026-07-28 (script `scripts/create-member-accounts.ts` (dry-run/--apply, reglas puras testeadas en `account-creation-rules.ts`) EJECUTADO: 18,100 miembros con cuenta (14,897+3,213 creadas hoy con password aleatorio y correo SIN confirmar + 6 enlazadas + las 16 previas); `account_confirmed_at` queda NULL hasta que la persona reclame — verificado que `resetPasswordForEmail` funciona con cuentas sin confirmar y el verify confirma (punto 3 gratis por el trigger espejo). Exclusiones: 5,096 sin correo, 76 MENORES DE 12 (regla agregada a mitad de corrida a pedido de TI; las 16 ya creadas se limpiaron — gotcha: deleteUser del admin API da 500 en este proyecto, se borró por SQL directo), 23 sistema, 4 inactivos, 5 con correo duplicado (decisión TI: duplicados SE IGNORAN — familias bajo un correo; el titular ve a su familia con su cuenta). 3,104 sin fecha de nacimiento se incluyen (edad indeterminable). Login con bloque "¿Primera vez? Creá tu contraseña acá" → `/recuperar?nueva=1` (mismo flujo de recuperación con copy de crear contraseña). PREREQUISITO VIGENTE para reclamar a escala: SMTP propio en Supabase Auth (Fase 0))
 Archivos: script nuevo en `scripts/`, endpoint existente de crear cuenta (`/api/members/[id]/create-account`), `src/app/(auth)/login/page.tsx`, flujo de recuperación existente
 Prerequisito operativo: SMTP propio configurado en Supabase Auth (pendiente de Fase 0) — sin eso, los correos de reset tienen rate limit y esto no escala.
 

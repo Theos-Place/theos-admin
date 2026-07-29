@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -12,7 +13,12 @@ const INPUT = [
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
 ].join(' ')
 
-export default function RecuperarPage() {
+function RecuperarContent() {
+  // AUTH-1: ?nueva=1 → misma mecánica de recuperación con copy de "crear tu
+  // contraseña" (las cuentas se crearon en lote con contraseña aleatoria; la
+  // persona la define acá la primera vez, con un link a demanda que no expira
+  // guardado en ningún correo viejo).
+  const isFirstTime = useSearchParams().get('nueva') === '1'
   const [email, setEmail]       = useState('')
   const [emailErr, setEmailErr] = useState('')
   const [loading, setLoading]   = useState(false)
@@ -71,7 +77,9 @@ export default function RecuperarPage() {
         </h2>
 
         <p className="text-sm text-navy-light/55 leading-relaxed mb-2 font-body">
-          Si el correo ingresado está registrado en el sistema, recibirás las instrucciones en los próximos minutos.
+          {isFirstTime
+            ? 'Si el correo ingresado está registrado en el sistema, en los próximos minutos vas a recibir el enlace para crear tu contraseña. Abrilo y usalo de una vez.'
+            : 'Si el correo ingresado está registrado en el sistema, recibirás las instrucciones en los próximos minutos.'}
         </p>
 
         <p className="text-[12px] text-navy-light/60 mb-8 font-body">
@@ -110,11 +118,12 @@ export default function RecuperarPage() {
         <h1
           className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]"
         >
-          Recuperá tu acceso
+          {isFirstTime ? 'Creá tu contraseña' : 'Recuperá tu acceso'}
         </h1>
         <p className="text-sm text-navy-light/60 leading-relaxed font-body">
-          Ingresá tu correo y te enviaremos<br />
-          instrucciones para restablecer tu contraseña.
+          {isFirstTime
+            ? 'Ingresá el correo con el que estás registrado en Theos Place y te enviaremos el enlace para definir tu contraseña.'
+            : <>Ingresá tu correo y te enviaremos<br />instrucciones para restablecer tu contraseña.</>}
         </p>
       </div>
 
@@ -161,9 +170,18 @@ export default function RecuperarPage() {
         >
           {loading ? (
             <><Loader2 size={16} className="animate-spin" /> Enviando...</>
-          ) : 'Enviar instrucciones'}
+          ) : isFirstTime ? 'Enviarme el enlace' : 'Enviar instrucciones'}
         </button>
       </form>
     </div>
+  )
+}
+
+export default function RecuperarPage() {
+  // useSearchParams exige Suspense en App Router.
+  return (
+    <Suspense fallback={null}>
+      <RecuperarContent />
+    </Suspense>
   )
 }

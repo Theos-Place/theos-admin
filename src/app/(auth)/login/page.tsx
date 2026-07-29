@@ -425,8 +425,20 @@ export default function LoginPage() {
         </>
       )}
 
+      {/* AUTH-1: primera vez — la cuenta ya existe (creada en lote con
+          contraseña aleatoria); la persona la reclama con el flujo de
+          recuperación, solo cambia el copy. */}
+      <div className="mt-5 rounded-xl border border-teal-deep/25 bg-teal-soft/15 px-4 py-3 text-center">
+        <p className="text-[13px] text-navy font-body">
+          ¿Primera vez en la nueva plataforma?{' '}
+          <Link href="/recuperar?nueva=1" className="font-semibold text-teal-deep hover:underline">
+            Creá tu contraseña acá →
+          </Link>
+        </p>
+      </div>
+
       {/* Recuperar */}
-      <p className="mt-5 text-center text-[13px] text-navy-light/60 font-body">
+      <p className="mt-4 text-center text-[13px] text-navy-light/60 font-body">
         ¿Olvidaste tu contraseña?{' '}
         <Link href="/recuperar" className="text-navy-light hover:text-navy font-medium transition-colors">
           Recuperar acceso →
