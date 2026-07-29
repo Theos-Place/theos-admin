@@ -483,7 +483,7 @@ Tres cambios en la página de eventos del admin (/eventos):
 Tests: página visible como miembro sin botones de gestión; botones visibles según rol.
 ```
 
-### [x] SEC-1 · Fugas de permisos para el rol miembro — HECHO 2026-07-29 (auditado con 2 barridos + matriz automatizada. (1) DASHBOARD: /api/dashboard recorta el payload por módulo con beyondOwn (403 si nada aplica) y /api/dashboard/activity exige un módulo administrativo — antes cualquier sesión recibía KPIs de finanzas y audit_log; la vista de miembro ya no dispara esos fetches y sus paneles usan datos reales (eventos del endpoint PÚBLICO — antes 403 y bloque siempre vacío — y "Mis grupos" del propio perfil con deep link read-only). (2) ESTUDIOS: raíz del problema = NINGÚN endpoint honraba scope own; nuevo `studies-scope.ts` (puro, 9 tests): lista de grupos filtrada a leader/co-leader para dirigente (todas las variantes: paginada, ?all=1, ?include=enrollments, y la rama sin filtros que se escapaba), detalle+sessions con scope por relación (`viewer_scope`: admin/leader/member/none — miembro inscrito recibe SOLO su inscripción, sin roster ajeno), beyondOwn en leaders (evaluaciones+is_donor), analysis y prematrimonial; ModuleGuard: dirigente solo raíz/grupos/detalle-asistencia, miembro solo detalle de grupo; sidebar acorde. (3) Deep link "Ver grupo": el del perfil ya era correcto; el del dashboard era MOCK — bloque del dirigente reescrito con sus grupos reales y links al detalle; detalle de grupo con modo read-only (sin añadir/desinscribir/perfiles/WhatsApp editable). (4) SERVIDORES: rol miembro ya estaba bloqueado (module servidores); EXTRA hallado y cerrado: lider_comite recibía TODOS los comités con contactos → /api/servers/committees filtra a sus comités liderados (helper `moduleScope` en roles.ts). (5) MIEMBROS: ya estaba bien para miembro; EXTRA cerrado: lider_comite (scope committee) podía listar/EXPORTAR el padrón completo → GET/export/counts/ids exigen scope 'all' + sidebar/ModuleGuard acordes (a su gente la ve en /servidores). MATRIZ: scripts/access-matrix.ts (login real con seed users por rol contra BASE_URL) — 14 endpoints × 5 roles + 2 checks de contenido: verde. Notas: usuario seed estudios@ tenía 3 roles acumulados (limpiado a coordinador_estudios); pendiente conocido: detalle de perfil sigue accesible a lider_comite por URL (scope committee granular = cambio mayor, documentado); páginas de asistencia POST del dirigente siguen coordinador-only como antes — no se otorgaron permisos nuevos)
+### [x] SEC-1 · Fugas de permisos para el rol miembro — HECHO 2026-07-29, actualizado mismo día con la spec nueva: el rol miembro NO tiene dashboard — /dashboard lo redirige a su PERFIL (cubre post-login y raíz en un solo punto), el ítem del sidebar pasa a llamarse "Mi perfil", y se eliminó la vista simplificada (eventos y grupos viven en el perfil y /eventos); el punto 6 (ocultar /estudios, /estudios/solicitudes y resúmenes de gestión al miembro) ya quedaba cubierto por el ModuleGuard de la primera pasada. (Detalle de la primera pasada: auditado con 2 barridos + matriz automatizada. (1) DASHBOARD: /api/dashboard recorta el payload por módulo con beyondOwn (403 si nada aplica) y /api/dashboard/activity exige un módulo administrativo — antes cualquier sesión recibía KPIs de finanzas y audit_log; la vista de miembro ya no dispara esos fetches y sus paneles usan datos reales (eventos del endpoint PÚBLICO — antes 403 y bloque siempre vacío — y "Mis grupos" del propio perfil con deep link read-only). (2) ESTUDIOS: raíz del problema = NINGÚN endpoint honraba scope own; nuevo `studies-scope.ts` (puro, 9 tests): lista de grupos filtrada a leader/co-leader para dirigente (todas las variantes: paginada, ?all=1, ?include=enrollments, y la rama sin filtros que se escapaba), detalle+sessions con scope por relación (`viewer_scope`: admin/leader/member/none — miembro inscrito recibe SOLO su inscripción, sin roster ajeno), beyondOwn en leaders (evaluaciones+is_donor), analysis y prematrimonial; ModuleGuard: dirigente solo raíz/grupos/detalle-asistencia, miembro solo detalle de grupo; sidebar acorde. (3) Deep link "Ver grupo": el del perfil ya era correcto; el del dashboard era MOCK — bloque del dirigente reescrito con sus grupos reales y links al detalle; detalle de grupo con modo read-only (sin añadir/desinscribir/perfiles/WhatsApp editable). (4) SERVIDORES: rol miembro ya estaba bloqueado (module servidores); EXTRA hallado y cerrado: lider_comite recibía TODOS los comités con contactos → /api/servers/committees filtra a sus comités liderados (helper `moduleScope` en roles.ts). (5) MIEMBROS: ya estaba bien para miembro; EXTRA cerrado: lider_comite (scope committee) podía listar/EXPORTAR el padrón completo → GET/export/counts/ids exigen scope 'all' + sidebar/ModuleGuard acordes (a su gente la ve en /servidores). MATRIZ: scripts/access-matrix.ts (login real con seed users por rol contra BASE_URL) — 14 endpoints × 5 roles + 2 checks de contenido: verde. Notas: usuario seed estudios@ tenía 3 roles acumulados (limpiado a coordinador_estudios); pendiente conocido: detalle de perfil sigue accesible a lider_comite por URL (scope committee granular = cambio mayor, documentado); páginas de asistencia POST del dirigente siguen coordinador-only como antes — no se otorgaron permisos nuevos))
 Archivos: `src/app/(admin)/dashboard/*` + `/api/dashboard`, `src/app/(admin)/estudios/*`, `src/app/(admin)/servidores/*`, `src/app/(admin)/miembros/page.tsx`, `src/lib/auth/roles.ts`, sidebar
 
 ```
@@ -492,11 +492,14 @@ Arreglalas verificando en cada caso el gate en TRES capas: sidebar (no mostrar),
 (redirect/404 al entrar por URL) y API (requireRoles/requireModuleView) — recordá que el
 middleware excluye /api, así que cada endpoint debe defenderse solo.
 
-1) DASHBOARD para rol miembro: debe mostrar ÚNICAMENTE los eventos de hoy y "mis grupos".
-   Los bloques de KPIs de miembros, estudios, servidores y "pendientes de tu atención" NO
-   son para todos: verificá que cada bloque respete can() del rol también en el API
-   /api/dashboard y /api/dashboard/activity (no solo esconder la UI: el payload no debe
-   incluir datos de módulos que el rol no ve).
+1) DASHBOARD: el rol miembro NO tiene dashboard (decisión actualizada 2026-07-28: se
+   elimina para miembros, no se recorta). La página default al loguearse como miembro es
+   su PERFIL: cambiar el redirect post-login y el destino raíz según rol (roles de gestión
+   siguen aterrizando en /dashboard). /dashboard con rol miembro → redirect al perfil.
+   Igual verificá que /api/dashboard y /api/dashboard/activity no devuelvan datos de
+   módulos que el rol no ve (defensa del API aunque la UI ya no exista para miembros).
+   Los eventos de hoy y "mis grupos" que veía en el dashboard viven en el perfil y en
+   /eventos (EVE-3), no se pierden.
 2) ESTUDIOS como dirigente: un dirigente solo debe ver SUS grupos (scope own, permiso
    view/edit de sus grupos según ROLES). Hoy puede ver todo el módulo de estudios,
    incluyendo eliminar estudios y páginas internas (plan, bloques, dirigentes, análisis,
@@ -519,6 +522,11 @@ middleware excluye /api, así que cada endpoint debe defenderse solo.
    (su propio perfil se accede por otra vía). Verificá página + APIs de listado/búsqueda
    (/api/members con beyondOwn ya existe — confirmá que el gate funcione y que el sidebar
    no muestre la entrada).
+6) PÁGINAS ADICIONALES ocultas para el rol miembro (agregado 2026-07-28): la página de
+   estudios bíblicos (/estudios y su resumen), la página de solicitudes (/estudios/
+   solicitudes) y cualquier página de "resumen" de módulos de gestión. El miembro
+   interactúa con estudios SOLO vía /matricula, su perfil (historial, mis grupos) y el
+   detalle read-only de su grupo (punto 3). Mismas tres capas: sidebar + página + API.
 Después de arreglar, hacé una pasada de verificación general: creá un test (o script) de
 "matriz de acceso" que recorra las rutas principales con un usuario de cada rol clave
 (miembro, dirigente, lider_comite) y confirme qué ve y qué recibe 403 — para que esto no

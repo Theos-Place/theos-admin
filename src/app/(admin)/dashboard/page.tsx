@@ -246,7 +246,12 @@ export default function DashboardPage() {
     if (!loaded) return
     const roles = user?.roles ?? []
     const onlyEncargado = roles.filter(r => r !== 'miembro').length === 1 && roles.includes('encargado_eventos')
-    if (onlyEncargado) router.replace('/eventos/checkin')
+    if (onlyEncargado) { router.replace('/eventos/checkin'); return }
+    // SEC-1 (decisión 2026-07-28): el rol miembro NO tiene dashboard — su
+    // página default es su PERFIL (eventos y "mis grupos" viven ahí y en /eventos).
+    if (roles.length === 1 && roles[0] === 'miembro' && user?.member_id) {
+      router.replace(`/miembros/${user.member_id}`)
+    }
   }, [loaded, user, router])
 
   const today = now
@@ -277,53 +282,9 @@ export default function DashboardPage() {
 
   if (!loaded) return null
 
-  // ── Simplified member view ──────────────────────────────────────────────────
-  if (isMember) {
-    return (
-      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-        <div className="bg-navy rounded-2xl px-6 py-6 text-white relative overflow-hidden">
-          {HEADER_THETAS.map((p) => (
-            <div key={p.id} className="absolute" style={{ top: p.top, left: p.left, right: p.right }}>
-              <ThetaSVG size={p.size} opacity={p.opacity} />
-            </div>
-          ))}
-          <div className="relative">
-            <h1 className="text-2xl text-white mb-1 font-display font-extrabold">
-              {getGreeting(today.getHours())}, {user?.name?.split(' ')[0] ?? 'bienvenido'} 👋
-            </h1>
-            <p className="text-white/70 text-[13px] font-body">
-              {formatDay(today)} · {formatTime(today)}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-            <div className="text-lg font-bold text-navy mb-4 font-display">
-              Mi perfil
-            </div>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 rounded-2xl bg-coral flex items-center justify-center text-white font-bold text-lg font-display">
-                {user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2) ?? 'U'}
-              </div>
-              <div>
-                <div className="font-semibold text-navy font-body">{user?.name ?? 'Usuario'}</div>
-                <div className="text-[12px] text-navy/70 font-body">{user?.email}</div>
-              </div>
-            </div>
-            {user?.member_id && (
-              <Link href={`/miembros/${user.member_id}`}
-                className="inline-flex items-center gap-1 text-[12px] font-medium text-coral font-body">
-                Ver mi perfil completo <ChevronRight size={13} />
-              </Link>
-            )}
-          </div>
-
-          <MemberHomePanels memberId={user?.member_id ?? null} now={today} />
-        </div>
-      </div>
-    )
-  }
+  // SEC-1: miembro puro no tiene dashboard (el effect de arriba lo manda a
+  // su perfil); no se pinta nada mientras redirige.
+  if (isMember) return null
 
   // ── Full dashboard ──────────────────────────────────────────────────────────
   return (
@@ -784,90 +745,5 @@ function DirigenteGroupsModule() {
         ))}
       </div>
     </div>
-  )
-}
-
-// ─── SEC-1: paneles reales del dashboard de miembro ──────────────────────────
-// "Mis grupos" sale del propio perfil (endpoint self-access) con deep link al
-// detalle read-only; "Próximos eventos" usa el endpoint PÚBLICO (el de admin
-// devuelve 403 al rol miembro y el bloque quedaba siempre vacío).
-function MemberHomePanels({ memberId, now }: { memberId: string | null; now: Date }) {
-  const [groups, setGroups] = useState<Array<{ group_id: string; name: string; status: string }>>([])
-  const [events, setEvents] = useState<Array<{ id: string; title: string; start_at: string; event_type: string }>>([])
-
-  useEffect(() => {
-    let alive = true
-    if (memberId) {
-      fetch(`/api/members/${memberId}`)
-        .then(r => (r.ok ? r.json() : null))
-        .then(d => {
-          if (!alive || !d?.study_history) return
-          const active = (d.study_history as Array<{ group_id: string | null; name: string; status: string }>)
-            .filter(h => h.group_id && (h.status === 'enrolled' || h.status === 'pendiente_de_pago'))
-            .map(h => ({ group_id: h.group_id as string, name: h.name, status: h.status }))
-          setGroups(active)
-        })
-        .catch(() => {})
-    }
-    fetch('/api/public/events')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => {
-        if (!alive || !Array.isArray(d)) return
-        const rangeable = d.map((e: Record<string, unknown>) => ({
-          id: e.id, start_at: e.starts_at, end_at: e.ends_at ?? e.starts_at,
-          is_recurring: e.is_recurring, recurrence_rule: e.recurrence_rule, recurrence_end: e.recurrence_end,
-          title: e.title, event_type: e.event_type,
-        })) as unknown as Parameters<typeof eventsInRange>[0]
-        const in30 = new Date(now.getTime() + 30 * 86400000)
-        const próximos = eventsInRange(rangeable, now, in30)
-          .slice(0, 5)
-          .map(e => {
-            const raw = e as unknown as { id: string; title?: string; start_at: string; event_type?: string }
-            return { id: raw.id, title: raw.title ?? '', start_at: raw.start_at, event_type: raw.event_type ?? '' }
-          })
-        setEvents(próximos)
-      })
-      .catch(() => {})
-    return () => { alive = false }
-    // now cambia cada minuto; el fetch es solo al montar a propósito.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memberId])
-
-  return (
-    <>
-      {groups.length > 0 && (
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-          <div className="text-lg font-bold text-navy mb-4 font-display">Mis grupos</div>
-          <div className="space-y-3">
-            {groups.map(g => (
-              <div key={g.group_id} className="flex items-center justify-between gap-3">
-                <div className="text-[13px] font-medium text-navy truncate font-body">{g.name}</div>
-                <Link href={`/estudios/grupos/${g.group_id}`} className="text-[12px] font-medium text-coral shrink-0 font-body">
-                  Ver grupo →
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {events.length > 0 && (
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-          <div className="text-lg font-bold text-navy mb-4 font-display">Próximos eventos</div>
-          <div className="space-y-3">
-            {events.map(ev => (
-              <div key={`${ev.id}-${ev.start_at}`} className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type as EventType] ?? '#161440' }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium text-navy truncate font-body">{ev.title}</div>
-                  <div className="text-[11px] text-navy/70 font-body">
-                    {formatShortDate(ev.start_at)} · {formatEventTime(ev.start_at)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
   )
 }
