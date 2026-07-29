@@ -24,6 +24,7 @@ import { MonthNav } from '@/components/events/MonthNav'
 import { recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
+import { eventPageActions } from '@/lib/events/page-actions'
 import { downloadBlob } from '@/lib/export'
 import { Plus, Calendar, Download, Code, ExternalLink, Repeat, CheckCircle2, X } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -107,13 +108,14 @@ function EventosContent() {
   const registerSearchParams = useSearchParams()
   // Dos fuentes: activos con relaciones (stats, próximos) + TODOS en liviano
   // (históricos para calendario y "Realizados"). Se fusionan por id.
-  const { user, hasRole } = useAuth()
+  const { user } = useAuth()
   const { can } = usePermissions()
   // Sin permiso sobre el módulo: vista de solo inscripción (antes vivía en la
   // página aparte /mis-eventos) — mismas 3 vistas, sin acciones de gestión.
   const canManage = can('eventos', 'view')
-  const canShare = hasRole('comunicaciones', 'direccion', 'admin')
-  const canCheckin = hasRole('encargado_eventos', 'direccion', 'admin')
+  // EVE-3: compartir = solo admin/comunicaciones; check-in = EVENT_CHECKIN_ROLES
+  // (incluye direccion a propósito — es la constante que exigen los endpoints).
+  const { share: canShare, checkin: canCheckin } = eventPageActions(user?.roles ?? [])
 
   // Elegibilidad de inscripción del propio usuario — disponible para
   // cualquiera con member_id, gestione o no el módulo (un miembro del staff

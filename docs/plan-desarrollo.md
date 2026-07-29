@@ -468,7 +468,7 @@ Cuatro ajustes a la página de mis pagos (la de PAG-1, visible para todos los mi
 Tests: el deep link del acordeón, el acceso self-only y que solo listen becas propias.
 ```
 
-### [ ] EVE-3 · Página de eventos: renombrar "Resumen" a "Calendario" + permisos de botones
+### [x] EVE-3 · Página de eventos: renombrar "Resumen" a "Calendario" + permisos de botones — HECHO 2026-07-29 (1) el "Resumen" era el label default del primer sub-ítem del sidebar → Eventos usa summaryLabel "Calendario" (los tabs internos ya se llamaban Calendario/Lista/Cuadrícula). (2) Visibilidad para todos ya estaba (sidebar siempre + excepción del ModuleGuard para /eventos raíz; la página tiene vista de solo-inscripción para no-gestores) — verificado. (3) Botones por regla pura `page-actions.ts` (3 tests): "Compartir calendario" SOLO admin+comunicaciones (dirección quedó FUERA — antes la tenía) y /eventos/embed gana gate propio con AccessDenied (antes cualquier rol con módulo eventos entraba por URL); check-in usa EVENT_CHECKIN_ROLES (incluye direccion a propósito — es la constante que ya exigen los endpoints de check-in). El API de check-in ya exigía esos roles; compartir no tiene API (el embed construye el link del calendario público).
 Archivos: `src/app/(admin)/eventos/page.tsx`, `src/lib/auth/roles.ts` (visibilidad del módulo), sidebar
 
 ```

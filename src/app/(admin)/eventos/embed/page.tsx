@@ -5,12 +5,19 @@ import Link from 'next/link'
 import { ChevronLeft, Copy, Check, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEventTypes } from '@/hooks/useEventTypes'
+import { useAuth } from '@/hooks/useAuth'
+import { eventPageActions } from '@/lib/events/page-actions'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60'
 
 export default function EmbedPage() {
+  // EVE-3: compartir/embeber el calendario es SOLO admin y comunicaciones —
+  // antes cualquier rol con el módulo eventos entraba por URL directa.
+  const { user, loaded } = useAuth()
+  const { share } = eventPageActions(user?.roles ?? [])
   // Tipos desde la BD (no mock): los checkboxes reflejan el catálogo real.
   const eventTypes = useEventTypes()
   const [cfg, setCfg] = useState({
@@ -35,6 +42,9 @@ export default function EmbedPage() {
     typesInit.current = true
     setCfg(prev => ({ ...prev, types: eventTypes.map(t => t.id) }))
   }, [eventTypes])
+
+  // El gate va DESPUÉS de todos los hooks (rules-of-hooks).
+  if (loaded && !share) return <AccessDenied />
 
   function toggleType(id: string) {
     setCfg(prev => ({
