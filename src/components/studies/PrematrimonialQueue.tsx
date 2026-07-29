@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Loader2, Check, X, Users, MapPin, Clock, Calendar, Home } from 'lucide-react'
+import { Loader2, Check, X, Users, MapPin, Clock, Calendar, Home, Heart } from 'lucide-react'
+import { DATING_TIME_OPTIONS, LIVING_OPTIONS } from '@/lib/studies/premat-background'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
 
@@ -21,6 +22,15 @@ type Req = {
   needs_follow_up?: boolean
   /** Plan concreto — solo llega a coordinador_estudios/direccion/admin. */
   follow_up_plan?: 'listos' | 'consejeria' | 'posponer' | null
+  /** PRE-9: antecedentes (null en solicitudes viejas → se muestran "—"). */
+  dating_time?: string | null
+  first_marriage?: boolean | null
+  /** SENSIBLE: el API los recorta a null para roles no autorizados. */
+  previous_marriage_notes?: string | null
+  has_children?: boolean | null
+  children_ages?: string | null
+  living_arrangement?: string | null
+  diagnostic_notes?: string | null
 }
 
 const STATUS_LABEL: Record<Req['status'], string> = {
@@ -109,6 +119,25 @@ export function PrematrimonialQueue() {
               {r.can_host && <p className="flex items-center gap-1.5"><Home size={13} /> Ofrece casa{r.host_address ? `: ${r.host_address}` : ''}{r.host_maps_url ? ` · ${r.host_maps_url}` : ''}</p>}
               {(r.ceremony_date || r.officiant) && <p className="flex items-center gap-1.5"><Clock size={13} /> Boda: {r.ceremony_date ? `${r.ceremony_date}${r.ceremony_date_defined ? '' : ' (aprox)'}` : 'sin fecha'}{r.venue_outside_gam ? ' · fuera del GAM' : ''}{r.officiant ? ` · oficia: ${r.officiant}` : ''}</p>}
               {r.comments && <p className="text-navy-light/60">“{r.comments}”</p>}
+              {/* PRE-9: antecedentes de la pareja. Las solicitudes viejas no
+                  los tienen → se muestran con "—". */}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-navy-light/70">
+                <Heart size={13} className="text-coral" />
+                <span>Novios: {DATING_TIME_OPTIONS.find(o => o.value === r.dating_time)?.label ?? '—'}</span>
+                <span className="text-navy-light/30">·</span>
+                <span>Primer matrimonio: {r.first_marriage === true ? 'Sí' : r.first_marriage === false ? 'No' : '—'}</span>
+                <span className="text-navy-light/30">·</span>
+                <span>Hijos: {r.has_children === true ? (r.children_ages ? `sí (${r.children_ages})` : 'sí') : r.has_children === false ? 'no' : '—'}</span>
+                <span className="text-navy-light/30">·</span>
+                <span>{LIVING_OPTIONS.find(o => o.value === r.living_arrangement)?.label ?? '—'}</span>
+              </p>
+              {/* Pastoral: solo llega con permiso (el API lo recorta). */}
+              {r.previous_marriage_notes && (
+                <p className="rounded-lg bg-navy/4 px-3 py-2 text-navy-light/80"><strong className="text-navy">Situación previa:</strong> {r.previous_marriage_notes}</p>
+              )}
+              {r.diagnostic_notes && (
+                <p className="rounded-lg bg-amber-50 px-3 py-2 text-amber-800"><strong>A conversar con los dirigentes:</strong> {r.diagnostic_notes}</p>
+              )}
               {r.status === 'pago_en_revision' && <p className="text-amber-700">Esperando que finanzas apruebe el pago.</p>}
               {r.status === 'cancelada' && r.cancel_reason && <p className="text-navy-light/60">Motivo: {r.cancel_reason}</p>}
             </div>

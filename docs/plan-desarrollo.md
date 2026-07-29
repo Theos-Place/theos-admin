@@ -569,10 +569,12 @@ CORTO. Aplicá estas simplificaciones (decididas con la usuaria):
   seleccionar. Aplica a: Testimonio, Pasión por enseñar/dar a conocer a Jesús, Conocimiento
   bíblico, Expresión verbal. Testimonio y Pasión tienen además la opción "X - Sin
   información suficiente", disponible SOLO en grupos de Panorama (no en DIS3).
-- Textos libres: obligatorios solo dos — "Describa brevemente el testimonio del estudiante"
-  y "Comentarios adicionales para el comité de dirigentes". Los otros dos (ejemplo de
-  compartir su fe / ejemplo de expresión verbal) y el comentario sobre compromiso quedan
-  OPCIONALES (no obligar a escribir "NA").
+- Textos libres: TODOS obligatorios (decisión confirmada) — "Describa brevemente el
+  testimonio del estudiante" (acepta "NA" si no lo compartió), "¿Le ha visto compartir su
+  fe o invitar a alguien por iniciativa propia? Describa un ejemplo" (acepta "NA"),
+  "Ejemplo o comentario sobre cómo se expresa" y "Comentarios adicionales para el comité de
+  dirigentes". El único opcional es "Comentario adicional sobre su compromiso", que en el
+  form original ya viene marcado como opcional.
 - Recomendación final (obligatoria, una de cuatro): Sí, sin reservas · Sí, pero debería
   llevar otro estudio primero · Sí, con reservas (ver comentarios) · No lo recomiendo.
 - Encabezado del form con el texto de contexto: que recomendar es una responsabilidad, que
@@ -587,16 +589,19 @@ Implementación:
   de src/lib/studies/close-recommendations.ts (EST-3) extendiéndolo, no dupliqués la lógica.
 - NO bloquear el cierre: el grupo cierra aunque las recomendaciones queden en borrador; el
   dirigente puede completarlas después desde su grupo cerrado. Guardado parcial automático.
-- Destino: las recomendaciones enviadas alimentan al comité de dirigentes (cola visible para
-  coordinador_dirigentes, coordinador_estudios, direccion, admin) y se conectan con el flujo
-  de invitaciones a planes invitation-only, que es como se entra a CDEB (ver EST-5: CDEB
-  pasa a etapa avanzada, solo por invitación). Mostrar en el perfil del miembro solo para
-  esos roles — es información sensible sobre la persona.
-- Relación con lo existente: esto NO reemplaza el bloque simple de "Recomendar para
-  (oración/servicio/dirigente)" de EST-3; es un flujo aparte y más profundo, específico de
-  DIS3/PAN → CDEB. Verificá que no queden dos cosas compitiendo en la misma pantalla:
-  si el grupo es DIS3/PAN, mostrá este flujo; decidí con la usuaria si el bloque simple se
-  oculta ahí.
+- Destino: las recomendaciones enviadas alimentan al comité de dirigentes y se conectan con
+  el flujo de invitaciones a planes invitation-only, que es como se entra a CDEB (ver EST-5:
+  CDEB pasa a etapa avanzada, solo por invitación).
+- VISIBILIDAD (decisión confirmada): la recomendación queda guardada en el PERFIL de la
+  persona evaluada, pero visible ÚNICAMENTE para coordinador_dirigentes,
+  coordinador_estudios y admin. Nadie más — ni el propio miembro, ni el dirigente que la
+  escribió una vez enviada, ni direccion, ni otros coordinadores. Es información sensible.
+  Aplicá el gate en la sección del perfil Y en el API que la sirve (el guard del /api es
+  obligatorio: el middleware no protege /api).
+- Relación con lo existente (decisión confirmada): si el grupo es DIS3 o PAN, el bloque
+  simple de "Recomendar para (oración/servicio/dirigente)" de EST-3 SE OCULTA y solo se
+  muestra este flujo. En los demás grupos (N4+, capacitaciones) el bloque simple sigue
+  igual. No se muestran los dos juntos nunca.
 Tests: visibilidad solo en DIS3/PAN, opción X solo en Panorama, convicciones por excepción
 (explicación obligatoria solo al marcar dudas/contraria), cierre no bloqueado por borradores.
 ```
@@ -648,7 +653,7 @@ Tests: evaluación requerida por pareja al cerrar grupo premat, gate de visibili
 normal intacto para otros planes.
 ```
 
-### [ ] PRE-9 · Wizard prematrimonial: ceremonia ajustada + antecedentes + diagnóstico
+### [x] PRE-9 · Wizard prematrimonial: ceremonia ajustada + antecedentes + diagnóstico — HECHO 2026-07-29 (migración 20260729140000 aplicada: 7 columnas nuevas en prematrimonial_requests con CHECK en las cerradas; venue_defined/venue_outside_gam NO se borran — datos históricos — y las solicitudes nuevas las guardan en false. (1) Ceremonia: se quitó la pregunta del lugar; queda la fecha con el COPY EXACTO de la spec (CEREMONY_DATE_QUESTION) + el flag definida/aproximada y la validación de +6 meses de PRE-3. (2) Sección "Antecedentes de la pareja" al final del paso 2: tiempo de novios, primer matrimonio (No → detalle obligatorio), hijos (Sí → edades obligatorias) y convivencia — textos y opciones exactos. (3) Sección "Diagnóstico" al inicio del paso 4, antes del pago (texto libre opcional). Validación en módulo puro `premat-background.ts` (11 tests) usada por el wizard (gate del Continuar en el paso 2) Y por el POST (400 `antecedentes_invalidos`) — fuente única; el detalle no se arrastra si la respuesta cambia (no guarda texto huérfano). La cola muestra los antecedentes ("—" en solicitudes viejas). SENSIBLE: previous_marriage_notes y diagnostic_notes se RECORTAN a null en el API de la cola para roles fuera de PREMAT_EVAL_ROLES (mismo criterio que PRE-8; coordinador_dirigentes ve la cola pero no esos dos campos))
 Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (wizard), `src/app/api/studies/prematrimonial/route.ts`, migración en `prematrimonial_requests`, `src/components/studies/PrematrimonialQueue.tsx`
 
 ```

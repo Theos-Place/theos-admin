@@ -5,6 +5,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
+import { type PrematBackground } from '@/lib/studies/premat-background'
 import { normalizeCedula } from '@/lib/cedula'
 import { normalizePhone } from '@/lib/phone'
 import { getMemberStudyProfile } from '@/lib/supabase/queries/studies-eligibility'
@@ -75,6 +76,8 @@ export async function createPrematrimonialRequest(input: {
   spouseMemberId: string
   logistica: PrematLogistica
   ceremonia: PrematCeremonia
+  /** PRE-9: antecedentes de la pareja + diagnóstico. */
+  background?: PrematBackground | null
   receiptPath: string
   referenceCode: string | null
 }): Promise<{ id: string; payment_id: string }> {
@@ -112,6 +115,8 @@ export async function createPrematrimonialRequest(input: {
     venue_outside_gam: input.ceremonia.venue_outside_gam,
     officiant: input.ceremonia.officiant ?? null,
     comments: input.ceremonia.comments ?? null,
+    // PRE-9: antecedentes + diagnóstico (null en solicitudes viejas).
+    ...(input.background ?? {}),
     payment_id: payment.id,
     created_by: input.requesterMemberId,
   }).select('id').single()

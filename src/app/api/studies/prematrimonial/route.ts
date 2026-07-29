@@ -9,6 +9,7 @@ import { PREMAT_REQUIREMENT_LABEL } from '@/lib/studies/premat-requirement'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { minCeremonyDate, ceremonyDateTooSoon, PREMAT_MIN_MONTHS } from '@/lib/studies/premat-dates'
 import { PREMAT_EVAL_ROLES, needsFollowUp } from '@/lib/studies/premat-evaluation'
+import { parsePrematBackground, redactSensitiveBackground } from '@/lib/studies/premat-background'
 import { checkCoupleGender, SAME_GENDER_MESSAGE, missingGenderMessage } from '@/lib/studies/premat-gender'
 import { todayCR, formatDate } from '@/lib/format'
 
@@ -30,8 +31,9 @@ export async function GET() {
       const plan = ev?.action_plan ?? null
       const rest = { ...r }
       delete rest.evaluation
+      const safe = canSeeEval ? rest : redactSensitiveBackground(rest)
       return {
-        ...rest,
+        ...safe,
         needs_follow_up: plan ? needsFollowUp(plan) : false,
         follow_up_plan: canSeeEval ? plan : null,
       }
@@ -76,6 +78,20 @@ export async function POST(req: NextRequest) {
     try {
       logistica = JSON.parse((form.get('logistica') as string) || '{}')
       ceremonia = JSON.parse((form.get('ceremonia') as string) || '{}')
+    } catch {
+      return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 })
+    }
+
+    // PRE-9: antecedentes de la pareja + diagnóstico (opciones cerradas
+    // validadas server-side; los condicionales se exigen según la respuesta).
+    let background = null
+    try {
+      const raw = form.get('background')
+      if (typeof raw === 'string' && raw) {
+        const parsed = parsePrematBackground(JSON.parse(raw))
+        if (!parsed.ok) return NextResponse.json({ error: parsed.error, code: 'antecedentes_invalidos' }, { status: 400 })
+        background = parsed.value
+      }
     } catch {
       return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 })
     }
@@ -149,6 +165,7 @@ export async function POST(req: NextRequest) {
         host_address: logistica.host_address ?? null,
         host_maps_url: logistica.host_maps_url ?? null,
       },
+      background,
       ceremonia: {
         ceremony_date: ceremonia.ceremony_date || null,
         ceremony_date_defined: !!ceremonia.ceremony_date_defined,

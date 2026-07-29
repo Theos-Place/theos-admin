@@ -4,7 +4,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Heart, Search, Check, IdCard, ArrowLeft, ArrowRight, Loader2, AlertCircle, Upload, UserCog } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, isValidDocument, documentFormatMessage, type DocumentType } from '@/lib/cedula'
+import {
+  DATING_TIME_QUESTION, DATING_TIME_OPTIONS, FIRST_MARRIAGE_QUESTION, PREVIOUS_MARRIAGE_LABEL,
+  CHILDREN_QUESTION, CHILDREN_AGES_LABEL, LIVING_QUESTION, LIVING_OPTIONS,
+  CEREMONY_DATE_QUESTION, DIAGNOSTIC_QUESTION, parsePrematBackground,
+} from '@/lib/studies/premat-background'
 import { useAuth } from '@/hooks/useAuth'
 import { minCeremonyDate } from '@/lib/studies/premat-dates'
 import { toYmdLocal } from '@/lib/format'
@@ -119,9 +125,19 @@ export default function PrematrimonialWizardPage() {
   const minWeddingDate = minCeremonyDate(toYmdLocal(new Date()))
   const [ceremonyDate, setCeremonyDate] = useState(minWeddingDate)
   const [dateDefined, setDateDefined] = useState(false)
-  const [venueDefined, setVenueDefined] = useState(false)
-  const [venueOutsideGam, setVenueOutsideGam] = useState(false)
+  // PRE-9: el lugar ya no se pregunta — las columnas venue_* quedan en la BD
+  // (datos históricos) y las solicitudes nuevas las guardan en false.
+  const venueDefined = false
+  const venueOutsideGam = false
   const [officiant, setOfficiant] = useState('')
+  // PRE-9: antecedentes de la pareja (paso 2) + diagnóstico (paso 4).
+  const [datingTime, setDatingTime] = useState('')
+  const [firstMarriage, setFirstMarriage] = useState<boolean | null>(null)
+  const [prevMarriageNotes, setPrevMarriageNotes] = useState('')
+  const [hasChildren, setHasChildren] = useState<boolean | null>(null)
+  const [childrenAges, setChildrenAges] = useState('')
+  const [living, setLiving] = useState('')
+  const [diagnostic, setDiagnostic] = useState('')
   const [comments, setComments] = useState('')
 
   // Paso 5 — pago
@@ -152,6 +168,17 @@ export default function PrematrimonialWizardPage() {
     finally { setSearching(false) }
   }
 
+  // PRE-9: misma validación que el POST (fuente única) para el gate del paso 2.
+  const backgroundError = (() => {
+    const parsed = parsePrematBackground({
+      dating_time: datingTime, first_marriage: firstMarriage,
+      previous_marriage_notes: prevMarriageNotes, has_children: hasChildren,
+      children_ages: childrenAges, living_arrangement: living,
+      diagnostic_notes: diagnostic,
+    })
+    return parsed.ok ? null : parsed.error
+  })()
+
   async function submit() {
     setError('')
     if (!spouse) { setError('Falta seleccionar a tu pareja.'); return }
@@ -163,6 +190,12 @@ export default function PrematrimonialWizardPage() {
       fd.set('reference_code', reference.trim())
       fd.set('logistica', JSON.stringify({ available_days: days, available_times: times, zones, can_host: canHost, host_address: hostAddress.trim() || null, host_maps_url: hostMaps.trim() || null }))
       fd.set('ceremonia', JSON.stringify({ ceremony_date: ceremonyDate || null, ceremony_date_defined: dateDefined, venue_defined: venueDefined, venue_outside_gam: venueOutsideGam, officiant: officiant || null, comments: comments.trim() || null }))
+      fd.set('background', JSON.stringify({
+        dating_time: datingTime, first_marriage: firstMarriage,
+        previous_marriage_notes: prevMarriageNotes, has_children: hasChildren,
+        children_ages: childrenAges, living_arrangement: living,
+        diagnostic_notes: diagnostic,
+      }))
       fd.set('receipt', file)
       if (onBehalf) fd.set('on_behalf_of', requestedMemberId)
       const res = await fetch('/api/studies/prematrimonial', { method: 'POST', body: fd })
@@ -313,6 +346,63 @@ export default function PrematrimonialWizardPage() {
                 <input value={hostMaps} onChange={e => setHostMaps(e.target.value)} placeholder="Link de Waze / Google Maps (opcional)" className="w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
               </div>
             )}
+            {/* PRE-9: Antecedentes de la pareja */}
+            <div className="mt-2 space-y-4 border-t border-navy/10 pt-4">
+              <h3 className="font-semibold text-navy font-display">Antecedentes de la pareja</h3>
+              <div>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{DATING_TIME_QUESTION} <span className="text-coral">*</span></p>
+                <div className="flex flex-wrap gap-2">
+                  {DATING_TIME_OPTIONS.map(o => (
+                    <button key={o.value} type="button" aria-pressed={datingTime === o.value} onClick={() => setDatingTime(o.value)}
+                      className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-body border transition-colors',
+                        datingTime === o.value ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{FIRST_MARRIAGE_QUESTION} <span className="text-coral">*</span></p>
+                <div className="flex gap-2">
+                  {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
+                    <button key={o.l} type="button" aria-pressed={firstMarriage === o.v} onClick={() => setFirstMarriage(o.v)}
+                      className={cn('rounded-full px-4 py-1.5 text-[13px] font-body border transition-colors',
+                        firstMarriage === o.v ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.l}</button>
+                  ))}
+                </div>
+                {firstMarriage === false && (
+                  <textarea value={prevMarriageNotes} onChange={e => setPrevMarriageNotes(e.target.value)} rows={2}
+                    placeholder={PREVIOUS_MARRIAGE_LABEL} aria-label={PREVIOUS_MARRIAGE_LABEL}
+                    className="mt-2 w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+                )}
+              </div>
+              <div>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{CHILDREN_QUESTION} <span className="text-coral">*</span></p>
+                <div className="flex gap-2">
+                  {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
+                    <button key={o.l} type="button" aria-pressed={hasChildren === o.v} onClick={() => setHasChildren(o.v)}
+                      className={cn('rounded-full px-4 py-1.5 text-[13px] font-body border transition-colors',
+                        hasChildren === o.v ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.l}</button>
+                  ))}
+                </div>
+                {hasChildren === true && (
+                  <input value={childrenAges} onChange={e => setChildrenAges(e.target.value)}
+                    placeholder={CHILDREN_AGES_LABEL} aria-label={CHILDREN_AGES_LABEL}
+                    className="mt-2 w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+                )}
+              </div>
+              <div>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{LIVING_QUESTION} <span className="text-coral">*</span></p>
+                <div className="flex flex-wrap gap-2">
+                  {LIVING_OPTIONS.map(o => (
+                    <button key={o.value} type="button" aria-pressed={living === o.value} onClick={() => setLiving(o.value)}
+                      className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-body border transition-colors',
+                        living === o.value ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+              {backgroundError && (
+                <p className="rounded-xl bg-coral/5 px-4 py-3 text-[13px] text-coral-deep font-body" role="alert">{backgroundError}</p>
+              )}
+            </div>
           </div>
         )}
 
@@ -320,14 +410,13 @@ export default function PrematrimonialWizardPage() {
         {step === 3 && (
           <div className="space-y-4">
             <h2 className="font-semibold text-navy font-display">La ceremonia</h2>
+            {/* PRE-9: la pregunta del LUGAR se quitó (las columnas venue_* quedan
+                por los datos históricos). Solo la fecha, con el copy exacto. */}
             <div>
-              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Fecha de la boda {dateDefined ? '(definida)' : '(aproximada)'}</p>
+              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{CEREMONY_DATE_QUESTION}</p>
               <input type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
               <label className="ml-3 text-[13px] text-navy font-body"><input type="checkbox" checked={dateDefined} onChange={e => setDateDefined(e.target.checked)} /> Fecha ya definida</label>
             </div>
-            <label className="flex items-center gap-2 text-sm text-navy font-body"><input type="checkbox" checked={venueDefined} onChange={e => setVenueDefined(e.target.checked)} /> Ya tenemos el lugar definido</label>
-            <label className="flex items-center gap-2 text-sm text-navy font-body"><input type="checkbox" checked={venueOutsideGam} onChange={e => setVenueOutsideGam(e.target.checked)} /> La boda será fuera del GAM</label>
-            {venueOutsideGam && <p className="rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-700 font-body">Si la boda es fuera del GAM, avisanos para coordinar.</p>}
             <div>
               <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">¿Quién te gustaría que dirigiera la ceremonia?</p>
               <select value={officiant} onChange={e => setOfficiant(e.target.value)} className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body">
@@ -339,9 +428,17 @@ export default function PrematrimonialWizardPage() {
           </div>
         )}
 
-        {/* PASO 4 — pago */}
+        {/* PASO 4 — diagnóstico + pago */}
         {step === 4 && (
           <div className="space-y-4">
+            {/* PRE-9: diagnóstico (opcional) antes del pago. */}
+            <div className="space-y-2 border-b border-navy/10 pb-4">
+              <h2 className="font-semibold text-navy font-display">Diagnóstico</h2>
+              <label htmlFor="premat-diagnostic" className="block text-[13px] text-navy-light/70 font-body">{DIAGNOSTIC_QUESTION}</label>
+              <textarea id="premat-diagnostic" value={diagnostic} onChange={e => setDiagnostic(e.target.value)} rows={3}
+                placeholder="Opcional — lo que escribas lo ve solo la coordinación de estudios."
+                className="w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+            </div>
             <h2 className="font-semibold text-navy font-display">Pago — ₡25.000 por pareja</h2>
             <div className="rounded-xl bg-surface-low p-4 text-[13px] text-navy font-body space-y-1">
               <p><strong>Cuenta BAC:</strong> 908921570</p>
@@ -396,7 +493,10 @@ export default function PrematrimonialWizardPage() {
             <ArrowLeft size={15} /> {step === 1 ? 'Salir' : 'Atrás'}
           </button>
           {step < 4 ? (
-            <button type="button" disabled={step === 1 && (!spouse || spouse.same_gender || !!spouse.gender_missing)}
+            <button type="button" disabled={
+              (step === 1 && (!spouse || spouse.same_gender || !!spouse.gender_missing))
+              || (step === 2 && backgroundError !== null)
+            }
               onClick={() => setStep(s => s + 1)}
               className="inline-flex items-center gap-1.5 rounded-full bg-teal px-5 py-2 text-sm font-medium text-white disabled:opacity-50 font-body">
               Continuar <ArrowRight size={15} />
