@@ -8,6 +8,7 @@ import {
 import { PREMAT_REQUIREMENT_LABEL } from '@/lib/studies/premat-requirement'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { minCeremonyDate, ceremonyDateTooSoon, PREMAT_MIN_MONTHS } from '@/lib/studies/premat-dates'
+import { checkCoupleGender, SAME_GENDER_MESSAGE, missingGenderMessage } from '@/lib/studies/premat-gender'
 import { todayCR, formatDate } from '@/lib/format'
 
 const MAX_BYTES = 8 * 1024 * 1024
@@ -83,6 +84,21 @@ export async function POST(req: NextRequest) {
     // Cónyuge: debe existir y no ser el mismo que se inscribe.
     if (!spouseMemberId) return NextResponse.json({ error: 'Falta seleccionar a la pareja.' }, { status: 400 })
     if (spouseMemberId === requester) return NextResponse.json({ error: 'La pareja no puede ser el mismo miembro que se inscribe.' }, { status: 400 })
+
+    // PRE-7: género de la pareja (server-side, confiable). Género faltante o
+    // fuera de M/F pide completar el perfil; mismo género se trata como error
+    // de selección/dato.
+    const { data: genderRows } = await admin.from('members').select('id, gender').in('id', [requester, spouseMemberId])
+    const genderById = new Map((genderRows ?? []).map(g => [(g as { id: string }).id, (g as { gender: string | null }).gender]))
+    const genderCheck = checkCoupleGender(genderById.get(requester) ?? null, genderById.get(spouseMemberId) ?? null)
+    if (!genderCheck.ok) {
+      return NextResponse.json(
+        genderCheck.code === 'mismo_genero'
+          ? { error: SAME_GENDER_MESSAGE, code: 'mismo_genero' }
+          : { error: missingGenderMessage(genderCheck.who), code: 'genero_faltante' },
+        { status: 409 },
+      )
+    }
 
     // Requisito PRE-5 para AMBOS (server-side, sobre los member_id — confiable):
     // N1 completado + al menos inscrito en N2. El code se mantiene 'requisito_n2'

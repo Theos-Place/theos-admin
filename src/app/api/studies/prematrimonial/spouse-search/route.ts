@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { findSpouseByContact, meetsPrematRequirement } from '@/lib/supabase/queries/prematrimonial'
+import { checkCoupleGender } from '@/lib/studies/premat-gender'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // Búsqueda del cónyuge por cédula/email/teléfono (exacta). PRIVACIDAD: solo se
 // devuelve el nombre + si cumple el requisito (N2), nunca otros datos.
@@ -33,8 +35,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ found: false, message: 'La pareja no puede ser el mismo miembro que se inscribe.' })
     }
     const meetsReq = await meetsPrematRequirement(spouse.id)
-    // Solo el nombre (y si cumple el requisito PRE-5). Nada más.
-    return NextResponse.json({ found: true, name: spouse.name, spouse_member_id: spouse.id, meets_requirement: meetsReq })
+    // PRE-7: chequeo de género de la pareja — se devuelven FLAGS (mismo género /
+    // a quién le falta el dato), nunca el género en sí (privacidad).
+    const admin = createAdminClient()
+    const { data: genders } = await admin.from('members').select('id, gender').in('id', [enrolleeId, spouse.id].filter(Boolean) as string[])
+    const genderOf = (id: string | null) => (genders ?? []).find(g => (g as { id: string }).id === id) as { gender: string | null } | undefined
+    const genderCheck = checkCoupleGender(genderOf(enrolleeId)?.gender ?? null, genderOf(spouse.id)?.gender ?? null)
+    // Solo el nombre, el requisito PRE-5 y los flags de género. Nada más.
+    return NextResponse.json({
+      found: true, name: spouse.name, spouse_member_id: spouse.id, meets_requirement: meetsReq,
+      same_gender: !genderCheck.ok && genderCheck.code === 'mismo_genero',
+      gender_missing: !genderCheck.ok && genderCheck.code === 'genero_faltante' ? genderCheck.who : null,
+    })
   } catch (error) {
     console.error('POST prematrimonial/spouse-search:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

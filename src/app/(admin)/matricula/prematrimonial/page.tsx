@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Heart, Search, Check, IdCard, ArrowLeft, ArrowRight, Loader2, AlertCircle, Upload, UserCog } from 'lucide-react'
+import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, isValidDocument, documentFormatMessage, type DocumentType } from '@/lib/cedula'
 import { useAuth } from '@/hooks/useAuth'
 import { minCeremonyDate } from '@/lib/studies/premat-dates'
 import { toYmdLocal } from '@/lib/format'
@@ -75,10 +76,34 @@ export default function PrematrimonialWizardPage() {
     return () => { alive = false }
   }, [onBehalf, requestedMemberId])
 
+  // PRE-7: captura inline del documento cuando el inscrito no tiene cédula.
+  const [docType, setDocType] = useState<DocumentType>('cedula')
+  const [docNumber, setDocNumber] = useState('')
+  const [docSaving, setDocSaving] = useState(false)
+  const [docSaved, setDocSaved] = useState(false)
+  const [docError, setDocError] = useState('')
+  async function saveDocument() {
+    if (docSaving) return
+    if (!isValidDocument(docType, docNumber)) { setDocError(documentFormatMessage(docType)); return }
+    setDocError(''); setDocSaving(true)
+    try {
+      const targetId = onBehalf ? requestedMemberId : user?.member_id
+      const res = await fetch(`/api/members/${targetId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_type: docType, cedula: docNumber.trim() }),
+      })
+      const d = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(d?.error || 'No se pudo guardar el documento.')
+      setDocSaved(true)
+    } catch (e) {
+      setDocError(e instanceof Error ? e.message : 'No se pudo guardar el documento.')
+    } finally { setDocSaving(false) }
+  }
+
   // Paso 2 — pareja
   const [spouseQuery, setSpouseQuery] = useState('')
   const [searching, setSearching] = useState(false)
-  const [spouse, setSpouse] = useState<{ id: string; name: string; meets_requirement: boolean } | null>(null)
+  const [spouse, setSpouse] = useState<{ id: string; name: string; meets_requirement: boolean; same_gender: boolean; gender_missing: 'requester' | 'spouse' | 'both' | null } | null>(null)
   const [spouseMsg, setSpouseMsg] = useState('')
 
   // Paso 3 — logística
@@ -121,7 +146,7 @@ export default function PrematrimonialWizardPage() {
         body: JSON.stringify({ query: spouseQuery.trim(), ...(onBehalf ? { on_behalf_of: requestedMemberId } : {}) }),
       })
       const d = await res.json()
-      if (d.found) setSpouse({ id: d.spouse_member_id, name: d.name, meets_requirement: d.meets_requirement })
+      if (d.found) setSpouse({ id: d.spouse_member_id, name: d.name, meets_requirement: d.meets_requirement, same_gender: !!d.same_gender, gender_missing: d.gender_missing ?? null })
       else setSpouseMsg(d.message || 'No encontrado.')
     } catch { setSpouseMsg('No se pudo buscar. Intentá de nuevo.') }
     finally { setSearching(false) }
@@ -162,21 +187,41 @@ export default function PrematrimonialWizardPage() {
     )
   }
 
-  // Bloqueo por cédula: en onBehalf lo evaluamos solo cuando ya cargó el miembro.
-  if (loaded && (!onBehalf || enrollee) && !hasCedula) {
+  // Bloqueo por cédula (PRE-7: el documento se completa ACÁ MISMO — el PATCH
+  // de members valida por tipo, normaliza y dedupea con 409 si pertenece a
+  // otro miembro; permite self y staff del padrón).
+  if (loaded && (!onBehalf || enrollee) && !hasCedula && !docSaved) {
     return (
       <div className="page max-w-2xl mx-auto">
-        <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6 text-center">
-          <IdCard className="mx-auto mb-3 text-coral-deep" size={28} />
-          <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? 'El miembro necesita su documento de identidad registrado' : 'Necesitás registrar tu documento de identidad'}</h2>
-          <p className="mt-2 text-sm text-navy-light/70 font-body">
-            {onBehalf
-              ? `Antes de inscribir a ${enrolleeName} al prematrimonial, su documento de identidad debe estar registrado en el perfil.`
-              : 'La inscripción al prematrimonial requiere tu documento de identidad. Completalo en tu perfil y volvé.'}
-          </p>
-          <Link href={`/miembros/${onBehalf ? requestedMemberId : user?.member_id}/editar?completar=cedula`} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
-            <IdCard size={14} /> Completar documento
-          </Link>
+        <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6">
+          <div className="text-center">
+            <IdCard className="mx-auto mb-3 text-coral-deep" size={28} />
+            <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? `${enrolleeName} no tiene documento registrado` : 'Necesitás registrar tu documento de identidad'}</h2>
+            <p className="mt-2 text-sm text-navy-light/70 font-body">
+              {onBehalf
+                ? 'Esta persona no tiene documento registrado. Ingresá su cédula o número de documento de identidad para continuar — queda guardado en su perfil.'
+                : 'La inscripción al prematrimonial requiere tu documento de identidad. Ingresalo acá para continuar — queda guardado en tu perfil.'}
+            </p>
+          </div>
+          <div className="mx-auto mt-4 max-w-sm space-y-3">
+            <div>
+              <label htmlFor="doc-type" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">Tipo de documento</label>
+              <select id="doc-type" value={docType} onChange={e => setDocType(e.target.value as DocumentType)}
+                className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body bg-white">
+                {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{DOCUMENT_TYPE_LABEL[t]}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="doc-number" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">Número de documento</label>
+              <input id="doc-number" value={docNumber} onChange={e => setDocNumber(e.target.value)}
+                className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />
+            </div>
+            {docError && <p className="text-[13px] text-coral-deep font-body" role="alert">{docError}</p>}
+            <button type="button" onClick={saveDocument} disabled={docSaving || !docNumber.trim()}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 font-body">
+              {docSaving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : <><IdCard size={14} /> Guardar documento y continuar</>}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -238,6 +283,13 @@ export default function PrematrimonialWizardPage() {
               <div className="rounded-xl border border-teal/25 bg-teal/5 px-4 py-3 text-sm font-body">
                 <p className="text-navy inline-flex items-center gap-1.5"><Check size={15} className="text-teal-deep" /> Encontrado: <strong>{spouse.name}</strong></p>
                 {!spouse.meets_requirement && <p className="mt-1 text-coral-deep text-[13px]">⚠ Tu pareja aún no cumple el requisito (Nivel 1 completado y estar inscrita en Nivel 2); no podrás inscribirte hasta que lo cumpla.</p>}
+                {/* PRE-7: mismo género = probable error de selección o de dato. */}
+                {spouse.same_gender && (
+                  <p className="mt-1 text-coral-deep text-[13px]">⚠ La persona seleccionada tiene el mismo género registrado. Verificá que seleccionaste a la persona correcta; si el género en el perfil está incorrecto, contactá al equipo para corregirlo.</p>
+                )}
+                {spouse.gender_missing && (
+                  <p className="mt-1 text-coral-deep text-[13px]">⚠ {spouse.gender_missing === 'both' ? 'A ambos perfiles les falta' : spouse.gender_missing === 'requester' ? (onBehalf ? 'Al perfil del miembro le falta' : 'A tu perfil le falta') : 'Al perfil de la pareja le falta'} el género registrado. Completá ese dato en el perfil antes de continuar.</p>
+                )}
               </div>
             )}
             {spouseMsg && <p className="rounded-xl bg-coral/5 px-4 py-3 text-[13px] text-coral-deep font-body">{spouseMsg}</p>}
@@ -344,7 +396,7 @@ export default function PrematrimonialWizardPage() {
             <ArrowLeft size={15} /> {step === 1 ? 'Salir' : 'Atrás'}
           </button>
           {step < 4 ? (
-            <button type="button" disabled={step === 1 && !spouse}
+            <button type="button" disabled={step === 1 && (!spouse || spouse.same_gender || !!spouse.gender_missing)}
               onClick={() => setStep(s => s + 1)}
               className="inline-flex items-center gap-1.5 rounded-full bg-teal px-5 py-2 text-sm font-medium text-white disabled:opacity-50 font-body">
               Continuar <ArrowRight size={15} />

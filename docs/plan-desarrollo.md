@@ -248,6 +248,12 @@ Archivos: `src/components/studies/StudyRequestActions.tsx` (disclaimer ~195-199,
 Dos cambios sobre las solicitudes de estudio tipo "me interesa" (study_interest). Decisión
 confirmada: quedan como DATOS DE DEMANDA de solo lectura, sin flujo de gestión. Las de
 REUBICACIÓN (relocation) mantienen su flujo completo tal cual.
+BUG REPORTADO (2026-07-28) que este punto debe dejar resuelto: en la vista de reubicaciones
+aparecen mezcladas las solicitudes de interés de estudio. Son dos cosas distintas que
+comparten la tabla study_requests: la separación por tipo debe ser estricta en TODAS las
+vistas — la vista/tab de reubicaciones filtra SOLO relocation, y la de intereses SOLO
+study_interest (revisá el filtro por tipo en la página y en el API /api/studies/requests;
+lo ideal es que queden como dos vistas claramente separadas, no un board mezclado).
 1) Texto del form (src/components/studies/StudyRequestActions.tsx): dejar claro que NO vamos
    a contactar a la persona. Reemplazar el disclaimer (~195-199) por algo como: "Esta
    solicitud es informativa: nos ayuda a ver qué estudios tienen demanda para abrir grupos
@@ -409,7 +415,7 @@ Coordinar con EST-6/EST-7: esto aplica SOLO al flujo relocation, que mantiene su
 Tests del guardado múltiple y de lectura de solicitudes viejas.
 ```
 
-### [ ] PRE-7 · Prematrimonial: validación de género de la pareja + mensaje claro de documento (feedback 2026-07-27)
+### [x] PRE-7 · Prematrimonial: validación de género de la pareja + mensaje claro de documento — HECHO 2026-07-29 (1) Género: regla pura `premat-gender.ts` (5 tests) — M+F ok; mismo género → 409 `mismo_genero` con el mensaje de "error de selección" de la spec; género vacío o fuera de M/F → 409 `genero_faltante` que pide completar el perfil (nunca se trata como mismo género). Validado en spouse-search (devuelve FLAGS same_gender/gender_missing, nunca el género — privacidad), en el paso 1 del wizard (aviso + "Continuar" deshabilitado) y server-side en el POST. (2) Documento: la pantalla de bloqueo por cédula ahora captura el documento AHÍ MISMO (selector de tipo INT-1 + número, validación por tipo client-side) y lo guarda vía PATCH /api/members/[id] — que ya normaliza, valida por tipo y dedupea con 409 si pertenece a otro miembro; funciona en autoservicio (self) y onBehalf (staff). Mensaje según spec)
 Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (wizard, paso 2), `src/app/api/studies/prematrimonial/route.ts`, `src/app/api/studies/prematrimonial/spouse-search/route.ts`
 
 ```
