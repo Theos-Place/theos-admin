@@ -558,7 +558,7 @@ el flujo de recuperación existente cuando quiera entrar.
 Tests: script idempotente (correrlo dos veces no duplica), exclusiones correctas.
 ```
 
-### [ ] AUTH-2 · Correo masivo "Cambiamos de plataforma" + plantilla de cambios de sistema
+### [x] AUTH-2 · Correo masivo "Cambiamos de plataforma" + plantilla de cambios de sistema — PLANTILLA Y VERIFICACIONES HECHAS 2026-07-28; queda el ENVÍO (operativo). Plantilla "Cambio de sistema / anuncio de plataforma" creada en message_templates (no is_system, seed `scripts/seed-platform-announcement-template.mjs`): anuncio editable, paso a paso numerado 1-4 para celular, CTA coral al login, nota de confianza con correo de ayuda; SIN links de invitación ni tokens que expiran; verificada con el pipeline real (applyVars+renderEmail). VERIFICADO el límite diario: el sistema ENCOLA solo — `distributeEmailSchedule` reparte los destinatarios en bloques de EMAIL_DAILY_LIMIT (5,000/día) con `scheduled_date` y el cron procesa respetando el cupo del día, así que ~18k salen automáticamente en ~4 días sin batching manual. AUDIENCIA: ya existe el filtro "Cuenta sin activar" en el constructor de segmentos (condición `account`) — es exactamente los 18k de AUTH-1. Pasos operativos pendientes ANTES del envío real: (1) SMTP propio en Supabase Auth (Fase 0) — el broadcast sale por SES, pero los correos de "crear contraseña" que la gente pedirá al recibirlo salen por el SMTP de Auth y sin configurarlo se atascan; (2) prueba con lista pequeña (staff) desde /comunicaciones/nueva con la plantilla y audiencia manual.
 Archivos: `message_templates`, `/comunicaciones` (broadcast), depende de AUTH-1
 Depende de: AUTH-1 (las cuentas deben existir antes de invitar a la gente a entrar)
 
