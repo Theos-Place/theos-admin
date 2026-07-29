@@ -19,6 +19,7 @@ const positionUpdateSchema = z
     study_requirement: z.string().trim().nullish(),
     functions: z.string().trim().nullish(),
     profile: z.string().trim().nullish(),
+    skills: z.string().trim().nullish(),
     expires_at: z.string().trim().min(1).nullish(),
     is_featured: z.boolean().optional(),
   })

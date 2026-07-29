@@ -247,6 +247,17 @@ export default function VacanteDetailPage() {
             </div>
           )}
 
+          {vacancy.position_skills && (
+            <div className="space-y-2">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                Habilidades
+              </p>
+              <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
+                {vacancy.position_skills}
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">

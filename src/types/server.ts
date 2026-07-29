@@ -31,6 +31,7 @@ export type CommitteePosition = {
   description?: string | null
   functions?: string | null
   profile?: string | null
+  skills?: string | null
   study_requirement?: string | null
 }
 
@@ -72,6 +73,7 @@ export type Vacancy = {
   position_description?: string | null
   position_functions?: string | null
   position_profile?: string | null
+  position_skills?: string | null
   position_study_requirement?: string | null
   /** Logística propia de la vacante. */
   expires_at?: string | null

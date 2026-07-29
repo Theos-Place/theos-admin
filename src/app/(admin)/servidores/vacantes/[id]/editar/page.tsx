@@ -91,6 +91,7 @@ export default function EditarVacantePage() {
   const desc = vacancy.position_description
   const funcs = vacancy.position_functions
   const profile = vacancy.position_profile
+  const skills = vacancy.position_skills
   const nivel = vacancy.position_study_requirement
 
   return (
@@ -112,7 +113,7 @@ export default function EditarVacantePage() {
       {error && <p className="text-sm text-coral font-body mb-2">{error}</p>}
 
       {/* Contenido del PUESTO (solo lectura): para cambiarlo, editá el puesto. */}
-      {(desc || funcs || profile || nivel) && (
+      {(desc || funcs || profile || skills || nivel) && (
         <div className="card py-4 px-[22px] mb-3">
           <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Del puesto (no editable acá)</p>
           <div className="space-y-3">
@@ -120,6 +121,7 @@ export default function EditarVacantePage() {
             {desc && <div><p className="text-[11px] font-semibold text-navy font-display">Descripción</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line">{desc}</p></div>}
             {funcs && <div><p className="text-[11px] font-semibold text-navy font-display">Funciones</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{funcs}</p></div>}
             {profile && <div><p className="text-[11px] font-semibold text-navy font-display">Perfil</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{profile}</p></div>}
+            {skills && <div><p className="text-[11px] font-semibold text-navy font-display">Habilidades</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{skills}</p></div>}
           </div>
         </div>
       )}

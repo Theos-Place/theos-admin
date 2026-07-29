@@ -437,6 +437,154 @@ Tests: mismo género → 409; género vacío → pide completar perfil; matrícu
 cédula → pide documento y lo guarda con dedup.
 ```
 
+### Feedback 2026-07-28
+
+### [ ] PAG-4 · Página de mis pagos: responsive, renombrar y link al historial
+Archivos: página de mis pagos (`/mis-pagos`, creada en PAG-1), sidebar/nav, `src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx` (acordeón de pagos)
+Depende de: PAG-1
+
+```
+Cuatro ajustes a la página de mis pagos (la de PAG-1, visible para todos los miembros):
+1) Layout full width y responsive: hoy no aprovecha el ancho ni se adapta bien a celular.
+   Revisala en móvil (la mayoría de miembros entra desde el teléfono): tabla → cards en
+   pantallas angostas, siguiendo el patrón responsive que ya usan otras páginas del admin.
+2) Renombrarla a "Pagos pendientes" (título de la página, breadcrumb y entrada del menú).
+   Mantener la ruta actual con redirect si se cambia el path, para no romper los deep links
+   de las notificaciones de PAG-1/PAG-3.
+3) Agregar un link "Ver historial de pagos" que lleve al historial que vive en el perfil
+   del miembro, tab Participación, con el acordeón de pagos ABIERTO directamente: agregá
+   soporte de query param en el perfil (p. ej. /miembros/[id]?tab=participacion&open=pagos)
+   que seleccione el tab y expanda ese acordeón al cargar. Para el miembro común el link va
+   a su propio perfil (respetando el scope own existente).
+4) Posición en el menú: debajo de "Matrícula", visible para cualquier sesión (rol miembro
+   incluido).
+Tests: el deep link del acordeón y el acceso self-only.
+```
+
+### [ ] EVE-3 · Página de eventos: renombrar "Resumen" a "Calendario" + permisos de botones
+Archivos: `src/app/(admin)/eventos/page.tsx`, `src/lib/auth/roles.ts` (visibilidad del módulo), sidebar
+
+```
+Tres cambios en la página de eventos del admin (/eventos):
+1) La vista/tab que se llama "Resumen" pasa a llamarse "Calendario" (título, tab y cualquier
+   referencia en el menú).
+2) Visibilidad: la página debe ser visible para TODOS los usuarios autenticados, incluido el
+   rol miembro (ya funciona como vista de inscripción para no-gestores — verificá que el
+   módulo eventos tenga view para cualquier sesión en roles.ts y que aparezca en el sidebar
+   del miembro; cada bloque interno respeta su permiso).
+3) Permisos de botones dentro de la página:
+   - Botón "Compartir calendario" (el del embed/link público): visible SOLO para admin y
+     comunicaciones.
+   - Botón de check-in: visible SOLO para los roles de check-in (encargado_eventos y los que
+     define EVENT_CHECKIN_ROLES — mantené admin, que siempre pasa; si direccion está en esa
+     constante, decidí con el patrón actual y anotalo).
+   Los gates son de UI Y de API: verificá que los endpoints detrás de cada botón ya exijan
+   esos roles (el de check-in ya usa EVENT_CHECKIN_ROLES; el de compartir/embed revisalo).
+Tests: página visible como miembro sin botones de gestión; botones visibles según rol.
+```
+
+### [ ] PRE-8 · Cierre especial para estudios prematrimoniales (evaluación de la pareja)
+Archivos: `src/app/(admin)/estudios/grupos/[id]/cierre/page.tsx` (flujo de cierre actual), `src/app/api/studies/groups/[id]/close/route.ts`, `prematrimonial_requests`, migración para la evaluación
+
+```
+Los grupos de estudios tipo prematrimonial necesitan un CIERRE ESPECIAL, distinto del cierre
+regular: además del resultado por estudiante, los mentores llenan una evaluación por PAREJA.
+Detectá los grupos prematrimoniales por su plan (el flujo prematrimonial ya existe:
+prematrimonial_requests, grupos creados desde esa cola) y mostrá este form de evaluación en
+el cierre, una por pareja del grupo. Campos exactos (respetar textos y opciones):
+
+1) "¿Sienten que la pareja logró afianzar su compromiso mutuo y con Dios a lo largo del
+   curso?" — opciones: Sí / En proceso / Requiere atención.
+2) "¿Cuáles son las mayores fortalezas o áreas de mayor madurez que observaron en la
+   pareja?" — selección múltiple + texto libre opcional:
+   Comunicación y resolución de conflictos · Alineación en principios espirituales y
+   relación con Dios · Claridad y acuerdo en finanzas y metas · Manejo del pasado y
+   familias de origen · Visión compartida sobre la crianza de hijos y roles · Intimidad y
+   expectativas sobre la sexualidad.
+3) "¿En cuál(es) de los 10 temas del curso consideran que la pareja necesita profundizar o
+   seguir trabajando?" — selección múltiple:
+   Relación con Dios · Compromiso matrimonial · Roles en el hogar · Resolución de
+   conflictos · Manejo del pasado · Finanzas / Manejo del dinero · Hijos y crianza ·
+   Relación con padres y suegros · Sexualidad e intimidad · Metas y plan de vida juntos.
+4) "Observaciones específicas sobre las áreas a trabajar" — texto libre.
+5) "¿Detectaron algún punto ciego, desacuerdo grave o tema no resuelto que pudiera generar
+   fricción en el matrimonio?" — Sí/No; si Sí, campo de descripción breve.
+6) "Plan de acción y recomendaciones de mentores" — una de tres:
+   Listos para el matrimonio (cierre regular) · Recomendado un tiempo de consejería/
+   mentoría enfocada en un tema específico · Se sugiere pausar o posponer la fecha de boda
+   para abordar temas críticos.
+7) "Bendición final" — texto libre (palabras de bendición).
+
+Implementación:
+- Migración: tabla nueva (p. ej. prematrimonial_evaluations) ligada a la pareja
+  (prematrimonial_request_id) y al grupo, con quién la llenó y cuándo. No metás esto en
+  study_enrollments: la evaluación es por pareja, no por estudiante.
+- El resultado del punto 6 puede condicionar el cierre: "listos" → cierre regular de ambos;
+  las otras dos opciones cierran el grupo igual pero dejan la pareja marcada para
+  seguimiento (visible en la cola prematrimonial y en el perfil de ambos).
+- SENSIBLE: esta evaluación contiene información pastoral delicada (punto 5 especialmente).
+  Visibilidad restringida: solo coordinador_estudios, direccion y admin — NO aparece en el
+  perfil general del miembro ni la ve el propio miembro. Definí el gate explícito en el API.
+- El cierre regular de grupos no prematrimoniales no cambia en nada.
+Tests: evaluación requerida por pareja al cerrar grupo premat, gate de visibilidad, cierre
+normal intacto para otros planes.
+```
+
+### Activación masiva de cuentas (feedback 2026-07-28; hacer en orden: AUTH-1 → AUTH-2)
+
+### [ ] AUTH-1 · Cuentas para todos los miembros + flujo "Crear mi contraseña"
+Archivos: script nuevo en `scripts/`, endpoint existente de crear cuenta (`/api/members/[id]/create-account`), `src/app/(auth)/login/page.tsx`, flujo de recuperación existente
+Prerequisito operativo: SMTP propio configurado en Supabase Auth (pendiente de Fase 0) — sin eso, los correos de reset tienen rate limit y esto no escala.
+
+```
+Objetivo: que todos los miembros del padrón puedan entrar al sistema sin invitaciones que
+expiran. Estrategia decidida: crear las cuentas masivamente con contraseña ALEATORIA que
+nadie conoce (nunca una contraseña genérica compartida), y que cada persona la reclame con
+el flujo de recuperación existente cuando quiera entrar.
+1) Script one-off en scripts/ (service role, dry-run primero) que recorra members activos
+   con correo válido y sin auth_user_id, y les cree el usuario de Supabase Auth con password
+   aleatorio fuerte (no guardarlo en ningún lado), vinculando auth_user_id. Reutilizá la
+   lógica del endpoint existente /api/members/[id]/create-account si es generalizable.
+   Excluir: correos rebotados (email_bounced), con queja (email_complained), miembros
+   is_system y desactivados. Reporte: creadas, excluidas por causa, y correos duplicados
+   entre miembros (dos personas con el mismo email — listarlos, NO crear esas cuentas
+   hasta resolver el duplicado).
+2) Login (src/app/(auth)/login/page.tsx): agregar un bloque visible "¿Primera vez en la
+   nueva plataforma? Creá tu contraseña acá" que lleve al flujo de recuperación existente
+   (mismo mecanismo de forgot password, solo cambia el copy: "crear contraseña" en vez de
+   "recuperar"). El correo de reset lo pide la persona a demanda, así la expiración del
+   link deja de ser problema.
+3) En el primer login exitoso, marcar account_confirmed_at si no lo hace ya el flujo.
+Tests: script idempotente (correrlo dos veces no duplica), exclusiones correctas.
+```
+
+### [ ] AUTH-2 · Correo masivo "Cambiamos de plataforma" + plantilla de cambios de sistema
+Archivos: `message_templates`, `/comunicaciones` (broadcast), depende de AUTH-1
+Depende de: AUTH-1 (las cuentas deben existir antes de invitar a la gente a entrar)
+
+```
+Crear una plantilla de correo reutilizable "Cambio de sistema / anuncio de plataforma" en
+message_templates (la de /comunicaciones/plantillas, no is_system) y usarla para el
+broadcast de lanzamiento. Contenido de la plantilla, con la identidad visual de Theos
+(header navy #161440 + logo, CTA coral #EF5554, footer estándar):
+- Anuncio editable: estamos cambiando de plataforma (de CCB al sistema nuevo).
+- Paso a paso numerado, claro y para celular:
+  1. Entrá a [URL del sistema] (botón CTA).
+  2. Tocá "Creá tu contraseña" e ingresá este mismo correo donde recibiste el mensaje.
+  3. Revisá tu correo y abrí el enlace — llega en segundos, usalo de una vez.
+  4. Definí tu contraseña y listo: vas a poder ver tu perfil, matricularte y gestionar
+     tus pagos.
+- Nota de confianza editable: por qué reciben esto (ya eran parte del sistema anterior)
+  y a dónde escribir si necesitan ayuda.
+IMPORTANTE: el correo NO lleva links de invitación ni tokens que expiren — solo el link
+al login. El link de reset lo pide cada persona a demanda.
+Envío: usar el flujo normal de broadcasts con audiencia = miembros con cuenta creada en
+AUTH-1. Ojo con EMAIL_DAILY_LIMIT (default 5000/día): para ~23k destinatarios planificar
+el envío escalonado en tandas por día (por sede o alfabético) y documentarlo en el
+broadcast; verificá cómo se comporta el sistema al tocar el límite diario (¿encola o
+falla?) antes del envío real. Probar primero con una lista pequeña (staff).
+```
+
 ### Calendario público y eventos (feedback 2026-07-26)
 
 ### [x] EVE-1 · Detalle de evento público + inscribirse con login — HECHO 2026-07-27 (modal con fecha completa, costo en colones y "requiere inscripción" — campos que el endpoint ya exponía con whitelist, sin campos nuevos; botón funcional con login-gate patrón /vacantes → `/login?redirect=/eventos?register=<id>`; deep link `?register=` en /eventos abre el modal de inscripción vía elegibilidad y limpia la URL; botón visible solo con requires_registration y respetando showBtn; 2 tests)

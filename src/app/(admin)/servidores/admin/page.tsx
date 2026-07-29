@@ -199,11 +199,11 @@ function DeactivateConfirm({
 /** Edición enfocada de los campos descriptivos de un puesto (título, nivel de
  *  estudio, descripción, funciones, perfil). Solo envía estos campos (PUT parcial)
  *  para no tocar ubicación/cantidad/expiración/destacado. */
-type PosDescFields = { title: string; study_requirement: string; description: string; functions: string; profile: string }
+type PosDescFields = { title: string; study_requirement: string; description: string; functions: string; profile: string; skills: string }
 function PositionEditModal({
   initial, onSave, onClose,
 }: {
-  initial: { title: string; study_requirement?: string | null; description?: string | null; functions?: string | null; profile?: string | null }
+  initial: { title: string; study_requirement?: string | null; description?: string | null; functions?: string | null; profile?: string | null; skills?: string | null }
   onSave: (data: PosDescFields) => void
   onClose: () => void
 }) {
@@ -213,6 +213,7 @@ function PositionEditModal({
     description: initial.description ?? '',
     functions: initial.functions ?? '',
     profile: initial.profile ?? '',
+    skills: initial.skills ?? '',
   })
   const set = <K extends keyof PosDescFields>(k: K, v: PosDescFields[K]) => setF(p => ({ ...p, [k]: v }))
   const valid = f.title.trim().length > 0
@@ -239,6 +240,10 @@ function PositionEditModal({
         <div className="space-y-1.5">
           <label className={labelCls}>Perfil (una por línea, con •)</label>
           <textarea aria-label="Perfil" className={cn(inputCls, 'resize-y font-mono text-[12px]')} rows={8} value={f.profile} onChange={e => set('profile', e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label className={labelCls}>Habilidades</label>
+          <textarea aria-label="Habilidades" className={cn(inputCls, 'resize-y')} rows={2} value={f.skills} onChange={e => set('skills', e.target.value)} />
         </div>
         <div className="flex gap-2 pt-1">
           <button disabled={!valid}
@@ -299,7 +304,7 @@ export default function ServidoresAdminPage() {
   function togglePos(id: string) {
     setExpandedPos(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s })
   }
-  async function savePositionDesc(data: { title: string; study_requirement: string; description: string; functions: string; profile: string }) {
+  async function savePositionDesc(data: PosDescFields) {
     const target = editPos
     setEditPos(null)
     if (!target) return
@@ -313,6 +318,7 @@ export default function ServidoresAdminPage() {
           description: data.description || null,
           functions: data.functions || null,
           profile: data.profile || null,
+          skills: data.skills || null,
         }),
       })
       if (!res.ok) throw new Error()
@@ -851,7 +857,7 @@ export default function ServidoresAdminPage() {
               <div className="flex-1 overflow-y-auto py-1.5">
                 {selectedCommPositions.map((p, i) => {
                   const open = expandedPos.has(p.id)
-                  const hasDetail = !!(p.description || p.functions || p.profile || p.study_requirement)
+                  const hasDetail = !!(p.description || p.functions || p.profile || p.skills || p.study_requirement)
                   return (
                   <div key={p.id} className={cn(i < selectedCommPositions.length - 1 && 'border-b border-[var(--outline-variant)]')}>
                     <div className="group flex items-center gap-2 px-5 py-2.5 hover:bg-surface-low transition-colors">
@@ -902,6 +908,12 @@ export default function ServidoresAdminPage() {
                           <div>
                             <p className={labelCls}>Perfil</p>
                             <p className="text-[13px] text-navy-light/80 font-body mt-0.5 whitespace-pre-line leading-relaxed">{p.profile}</p>
+                          </div>
+                        )}
+                        {p.skills && (
+                          <div>
+                            <p className={labelCls}>Habilidades</p>
+                            <p className="text-[13px] text-navy-light/80 font-body mt-0.5 whitespace-pre-line leading-relaxed">{p.skills}</p>
                           </div>
                         )}
                         {!hasDetail && <p className="text-[12px] text-navy-light/70 font-body">Sin información descriptiva.</p>}

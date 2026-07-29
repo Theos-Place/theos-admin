@@ -21,6 +21,7 @@ export type DbCommittee = {
     description: string | null
     functions: string | null
     profile: string | null
+    skills: string | null
     study_requirement: string | null
     volunteers: Array<{
       member_id: string
@@ -38,7 +39,7 @@ export type DbVacancy = {
   committee: { name: string; parent: { name: string } | null } | null
   /** Contenido del puesto enlazado (descripción/funciones/perfil/nivel): la vacante
    *  los MUESTRA pero no los edita — viven en el puesto. */
-  pos: { description: string | null; functions: string | null; profile: string | null; study_requirement: string | null } | null
+  pos: { description: string | null; functions: string | null; profile: string | null; skills: string | null; study_requirement: string | null } | null
   title: string
   position: string | null
   description: string | null
@@ -104,6 +105,7 @@ export type DbServicePosition = {
   study_requirement: string | null
   functions: string | null
   profile: string | null
+  skills: string | null
   expires_at: string | null
   is_featured: boolean | null
   is_active: boolean | null
@@ -122,7 +124,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
       id, name, ideal_capacity, leader_id, parent_id,
       leader:members!areas_leader_id_fkey(first_name, last_name),
       positions:service_positions!service_positions_area_id_fkey(
-        id, title, description, functions, profile, study_requirement,
+        id, title, description, functions, profile, skills, study_requirement,
         volunteers(
           member_id, status, start_date,
           member:members(first_name, last_name, email, phone, birth_date)
@@ -179,7 +181,7 @@ export async function getVacancies(): Promise<DbVacancy[]> {
       id, committee_id, position_id, title, position, description, functions, schedule, commitment,
       slots_total, slots_filled, status, published_at, created_at, expires_at, location, notes, is_featured,
       committee:areas!vacancies_committee_id_fkey(name),
-      pos:service_positions!vacancies_position_id_fkey(description, functions, profile, study_requirement),
+      pos:service_positions!vacancies_position_id_fkey(description, functions, profile, skills, study_requirement),
       applications:applications(count)
     `)
     .order('created_at', { ascending: false })
@@ -303,7 +305,7 @@ export async function getAreas(): Promise<DbArea[]> {
 
 const SERVICE_POSITION_SELECT = `
   id, area_id, base_area_id, title, description, location, quantity,
-  study_requirement, functions, profile, expires_at, is_featured, is_active,
+  study_requirement, functions, profile, skills, expires_at, is_featured, is_active,
   area:areas!service_positions_area_id_fkey(id, name),
   base_area:areas!service_positions_base_area_id_fkey(id, name),
   volunteers:volunteers(count)
@@ -638,6 +640,7 @@ export type ServicePositionWriteInput = {
   study_requirement?: string | null
   functions?: string | null
   profile?: string | null
+  skills?: string | null
   expires_at?: string | null
   is_featured?: boolean
 }
@@ -692,6 +695,7 @@ export type ImportPositionRow = {
   study_requirement?: string | null
   functions?: string | null
   profile?: string | null
+  skills?: string | null
   expires_at?: string | null
   is_featured?: boolean
 }

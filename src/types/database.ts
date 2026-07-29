@@ -3204,6 +3204,7 @@ export type Database = {
           profile: string | null
           quantity: number | null
           requirements: string | null
+          skills: string | null
           study_requirement: string | null
           title: string
           updated_at: string | null
@@ -3223,6 +3224,7 @@ export type Database = {
           profile?: string | null
           quantity?: number | null
           requirements?: string | null
+          skills?: string | null
           study_requirement?: string | null
           title: string
           updated_at?: string | null
@@ -3242,6 +3244,7 @@ export type Database = {
           profile?: string | null
           quantity?: number | null
           requirements?: string | null
+          skills?: string | null
           study_requirement?: string | null
           title?: string
           updated_at?: string | null
