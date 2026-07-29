@@ -25,7 +25,10 @@ const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
 const PASSWORD = process.env.SEED_TEST_PASSWORD
 if (!PASSWORD) { console.error('Falta SEED_TEST_PASSWORD'); process.exit(1) }
 
-// Roles a probar (los clave de SEC-1) → su usuario seed.
+// Roles a probar (los clave de SEC-1) → su usuario seed. La matriz asume que
+// cada usuario tiene EXACTAMENTE ese rol: si alguien le agregó roles a mano
+// (pasó con estudios@ el 2026-07-29), la columna se SALTA con un aviso en vez
+// de reportar fallos falsos.
 const USERS: Record<string, string> = {
   miembro: 'miembro@theosplace.org',
   dirigente: 'dirigente@theosplace.org',
@@ -70,14 +73,28 @@ async function login(email: string): Promise<string> {
 async function main() {
   let failures = 0
   const sessions: Record<string, string> = {}
+  const skipped = new Set<string>()
   for (const [role, email] of Object.entries(USERS)) {
-    sessions[role] = await login(email)
+    const cookie = await login(email)
+    // Verificar que el usuario seed tenga SOLO el rol esperado (+ 'miembro',
+    // que es el default de cualquier sesión).
+    const me = await fetch(`${BASE}/api/auth/me`, { headers: { cookie } }).then(r => r.json())
+    const actual: string[] = (me?.user?.roles ?? []).filter((r: string) => r !== 'miembro')
+    const expected = role === 'miembro' ? [] : [role]
+    const drift = actual.length !== expected.length || actual.some(r => !expected.includes(r))
+    if (drift) {
+      skipped.add(role)
+      console.log(`⚠ ${role}: roles cambiaron (${actual.join(', ') || 'ninguno'}) — columna saltada`)
+      continue
+    }
+    sessions[role] = cookie
     console.log(`✓ login ${role}`)
   }
 
   for (const { path, expected } of MATRIX) {
     const row: string[] = []
     for (const [role, want] of Object.entries(expected)) {
+      if (skipped.has(role)) { row.push(`${role}:—`); continue }
       const res = await fetch(`${BASE}${path}`, { headers: { cookie: sessions[role] } })
       const got = res.status
       const pass = want === 'ok' ? got >= 200 && got < 300 : got === want
@@ -89,7 +106,7 @@ async function main() {
 
   // Verificaciones de CONTENIDO (no solo status):
   // 1) dirigente en /api/studies/groups: solo grupos donde es leader/co-leader.
-  {
+  if (!skipped.has('dirigente')) {
     const res = await fetch(`${BASE}/api/studies/groups`, { headers: { cookie: sessions.dirigente } })
     const data = await res.json()
     const groups: Array<{ leader_id?: string | null; co_leader_id?: string | null }> = Array.isArray(data) ? data : data.groups ?? []
@@ -101,7 +118,7 @@ async function main() {
     console.log(`/api/studies/groups (dirigente, contenido): ${groups.length} grupos, ${foreign.length} ajenos ${pass ? '✓' : '✗'}`)
   }
   // 2) dashboard de coordinador_estudios: sin bloque finance.
-  {
+  if (!skipped.has('coordinador_estudios')) {
     const res = await fetch(`${BASE}/api/dashboard`, { headers: { cookie: sessions.coordinador_estudios } })
     const data = await res.json()
     const pass = res.ok && data.finance === undefined && data.studies !== undefined
@@ -109,7 +126,8 @@ async function main() {
     console.log(`/api/dashboard (coordinador, payload recortado): finance=${String(data.finance !== undefined)} studies=${String(data.studies !== undefined)} ${pass ? '✓' : '✗'}`)
   }
 
-  console.log(failures === 0 ? '\nMATRIZ OK — sin fugas.' : `\n${failures} FALLOS en la matriz.`)
+  if (skipped.size > 0) console.log(`\n(${skipped.size} columna(s) saltada(s) por roles cambiados: ${[...skipped].join(', ')})`)
+  console.log(failures === 0 ? 'MATRIZ OK — sin fugas.' : `${failures} FALLOS en la matriz.`)
   process.exit(failures === 0 ? 0 : 1)
 }
 

@@ -10,6 +10,7 @@ import { SedesProvider } from '@/lib/sedes'
 import { OrgProvider } from '@/lib/org'
 import { AuthProvider, useAuth } from '@/lib/auth/auth-context'
 import { usePermissions } from '@/hooks/usePermissions'
+import { canSeeModuleSummary } from '@/lib/auth/module-summary'
 import { ToastProvider } from '@/components/shared/Toast'
 import { CedulaReminderBanner } from '@/components/members/CedulaReminderBanner'
 
@@ -84,6 +85,10 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // /eventos/[id]/editar, etc.) siguen exigiendo el módulo normalmente.
   if (pathname === '/eventos') return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
+  // SEC-1: la RAÍZ de estudios/servidores es un resumen de toda la organización
+  // — exige alcance 'all' (dirigente ve sus grupos; lider_comite, su comité).
+  const mod = MODULE_BY_PREFIX[prefix]
+  if (pathname === prefix && !canSeeModuleSummary(mod, getScope(mod))) return <AccessDenied />
   // SEC-1: estudios con alcance 'own' (can() no mira scope, así que dirigente
   // y miembro pasan el chequeo de arriba). Dirigente: solo la raíz, sus grupos
   // y el detalle/asistencia de un grupo (el API ya filtra a los suyos).
@@ -95,8 +100,9 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
     const groupDetail = /^\/estudios\/grupos\/[0-9a-f-]{36}(\/asistencia)?$/i.test(pathname)
     const isDirigente = (user.roles ?? []).includes('dirigente')
     const isPlanCurriculum = pathname === '/estudios/plan'
+    // (El resumen /estudios ya quedó bloqueado arriba: exige alcance 'all'.)
     const allowed = isPlanCurriculum || (isDirigente
-      ? pathname === '/estudios' || pathname === '/estudios/grupos' || groupDetail
+      ? pathname === '/estudios/grupos' || groupDetail
       : /^\/estudios\/grupos\/[0-9a-f-]{36}$/i.test(pathname))
     if (!allowed) return <AccessDenied />
   }

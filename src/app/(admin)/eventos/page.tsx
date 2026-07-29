@@ -10,6 +10,8 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { useEventTypes, useEventTypeStyle } from '@/hooks/useEventTypes'
 import { type EventType, type AdminEvent } from '@/data/event-config'
 import { useEvents, useAllEventsLight } from '@/hooks/useEvents'
+import { toDomainEvent } from '@/lib/events/adapter'
+import type { DbEventEnriched } from '@/lib/supabase/queries/events'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { useEventRegistration } from '@/components/events/useEventRegistration'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
@@ -203,21 +205,47 @@ function EventosContent() {
     setVisibleCount(PAGE_SIZE)
   }
 
-  // Sin permiso de gestión, la vista se arma solo con la elegibilidad propia
-  // (eventos abiertos a inscripción) — nunca con /api/events.
+  // SEC-1 (2026-07-29): sin el módulo eventos la vista se arma con el endpoint
+  // PÚBLICO — así se ven TODOS los eventos publicados (incluidos los
+  // históricos), sin datos de gestión: el whitelist público no trae
+  // inscripciones ni check-ins, y los cancelados/archivados quedan fuera.
+  // La elegibilidad se sigue usando para el botón de inscripción.
+  const [publicEvents, setPublicEvents] = useState<AdminEvent[]>([])
+  useEffect(() => {
+    if (canManage) return
+    let alive = true
+    fetch('/api/public/events')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        // El endpoint público responde { events, total } con la forma de BD
+        // (starts_at/ends_at) → el mismo adaptador del listado admin.
+        if (!alive || !Array.isArray(d?.events)) return
+        setPublicEvents((d.events as DbEventEnriched[]).map(toDomainEvent))
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [canManage])
+
+  // Fallback: si el endpoint público no trae nada, al menos los eventos a los
+  // que la persona puede inscribirse (comportamiento anterior).
   const memberEvents: AdminEvent[] = useMemo(
     () => eligibility.map(eligibilityToStubEvent),
     [eligibility],
   )
   const merged = useMemo(() => {
-    if (!canManage) return memberEvents
+    if (!canManage) {
+      if (publicEvents.length === 0) return memberEvents
+      // Los datos de elegibilidad (cupo, precio) enriquecen al público.
+      const eligById = new Map(memberEvents.map(e => [e.id, e]))
+      return publicEvents.map(e => ({ ...e, ...(eligById.get(e.id) ?? {}) }))
+    }
     const fullById = new Map(events.map(e => [e.id, e]))
     const result = allEventsLight.map(e => fullById.get(e.id) ?? e)
     if (result.length === 0) return events // el liviano aún no llega
     const seen = new Set(result.map(e => e.id))
     for (const e of events) if (!seen.has(e.id)) result.push(e)
     return result
-  }, [canManage, memberEvents, events, allEventsLight])
+  }, [canManage, memberEvents, publicEvents, events, allEventsLight])
 
   // Ocurrencias del mes en curso (recurrentes contados por día).
   const thisMonthEvents = monthEvents(merged, now.getMonth(), now.getFullYear())
@@ -428,7 +456,7 @@ function EventosContent() {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  {['Evento', 'Tipo', 'Fecha', 'Capacidad', 'Inscritos', 'Estado', 'Inscripción'].map(h => (
+                  {['Evento', 'Tipo', 'Fecha', ...(canManage ? ['Capacidad', 'Inscritos'] : []), 'Estado', 'Inscripción'].map(h => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
@@ -480,12 +508,18 @@ function EventosContent() {
                       <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
                         {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
-                      <td className="px-4 py-3">
-                        <CapacityBar current={event.registrations.length} max={event.max_capacity} />
-                      </td>
-                      <td className="px-4 py-3 text-sm text-navy tabular-nums font-body">
-                        {event.registrations.length}
-                      </td>
+                      {/* Conteos de inscripción = datos de gestión: no para
+                          quien solo ve los eventos públicos. */}
+                      {canManage && (
+                        <>
+                          <td className="px-4 py-3">
+                            <CapacityBar current={event.registrations.length} max={event.max_capacity} />
+                          </td>
+                          <td className="px-4 py-3 text-sm text-navy tabular-nums font-body">
+                            {event.registrations.length}
+                          </td>
+                        </>
+                      )}
                       <td className="px-4 py-3">
                         {past ? <RealizadoBadge /> : <EventStatusBadge status={event.status} />}
                       </td>
@@ -545,7 +579,7 @@ function EventosContent() {
                     <p className="truncate text-sm font-medium text-navy font-body">{event.name}</p>
                     <p className="truncate text-[12px] text-navy-light/60 font-body">
                       {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      {' · '}{event.registrations.length} inscritos
+                      {canManage && <>{' · '}{event.registrations.length} inscritos</>}
                     </p>
                     {event.is_recurring && (
                       <p className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 font-body">

@@ -42,9 +42,10 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { landsOnProfile } from '@/lib/auth/home-route'
+import { canSeeModuleSummary } from '@/lib/auth/module-summary'
 
 type SubItem = { href: string; label: string; icon: LucideIcon; badge?: number }
-type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null; summaryLabel?: string; badge?: number }
+type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null; summaryLabel?: string; badge?: number; hideSummary?: boolean }
 
 const EVENTOS_SUB: SubItem[] = [
   { href: '/eventos/nuevo',  label: 'Crear evento',     icon: Plus },
@@ -207,8 +208,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // la propia página muestra solo la inscripción a eventos (antes vivía
     // aparte en /mis-eventos); "Crear evento"/"Tipos de evento" siguen ocultos.
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: eventosSub,        module: 'eventos', summaryLabel: 'Calendario' },
-    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
-    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores' },
+    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios', hideSummary: !canSeeModuleSummary('estudios', getScope('estudios')) },
+    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores', hideSummary: !canSeeModuleSummary('servidores', getScope('servidores')) },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
@@ -341,10 +342,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         >
           <div className="overflow-hidden min-h-0">
             <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3 pb-1">
-              <SubLink
-                sub={{ href: mod.href, label: mod.summaryLabel ?? 'Resumen', icon: Icon }}
-                exactActive={pathname === mod.href}
-              />
+              {/* SEC-1: sin alcance 'all' no hay resumen del módulo. */}
+              {!mod.hideSummary && (
+                <SubLink
+                  sub={{ href: mod.href, label: mod.summaryLabel ?? 'Resumen', icon: Icon }}
+                  exactActive={pathname === mod.href}
+                />
+              )}
               {mod.subs.map(sub => <SubLink key={sub.href} sub={sub} />)}
             </div>
           </div>
