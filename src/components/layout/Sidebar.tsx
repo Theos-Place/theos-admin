@@ -147,7 +147,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       ...(can('folletos', 'view') ? [{ href: '/estudios/folletos', label: 'Folletos', icon: FileText }] : []),
     ]
     : userRoles.includes('dirigente')
-      ? [{ href: '/estudios/grupos', label: 'Grupos', icon: LayoutList }]
+      ? [
+        { href: '/estudios/grupos', label: 'Grupos', icon: LayoutList },
+        // El currículo es abierto para cualquier sesión (decisión 2026-07-29).
+        { href: '/estudios/plan', label: 'Plan de Estudios', icon: BookText },
+      ]
       : []
   const finanzasSub: SubItem[] = [
     // Suite completa de finanzas: solo con el módulo 'finanzas' (becas/revision_pagos
@@ -194,13 +198,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     homeItem,
     { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros', summaryLabel: 'Buscar miembros' },
     { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
+    // PAG-1/PAG-4: pagos pendientes propios (y de la familia) — cualquier
+    // sesión con perfil de miembro (el endpoint gatea a self/familia/staff);
+    // va debajo de Matrícula a propósito.
+    { href: '/mis-pagos',      label: 'Pagos pendientes', icon: CreditCard,    subs: [],                 module: null },
     // Eventos es visible para cualquier autenticado: sin el permiso del módulo,
     // la propia página muestra solo la inscripción a eventos (antes vivía
     // aparte en /mis-eventos); "Crear evento"/"Tipos de evento" siguen ocultos.
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: eventosSub,        module: 'eventos' },
-    // PAG-1: pagos pendientes propios (y de la familia) — cualquier sesión con
-    // perfil de miembro; el endpoint gatea a self/familia/staff.
-    { href: '/mis-pagos',      label: 'Mis pagos',      icon: CreditCard,      subs: [],                 module: null },
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios' },
     { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores' },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },

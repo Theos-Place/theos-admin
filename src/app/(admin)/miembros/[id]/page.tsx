@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { openSectionsFromParam } from '@/lib/members/profile-deeplink'
 import { notFound } from 'next/navigation'
 import { useMember } from '@/hooks/useMember'
 import { useStudies } from '@/hooks/useStudies'
@@ -81,6 +82,8 @@ export default function MiembroDetailPage() {
   const [revealDonations, setRevealDonations] = useState(false)
   const [showAddStudy, setShowAddStudy] = useState(false)
   const [showMerge, setShowMerge] = useState(false)
+  // PAG-4: ?open=<sección> (p. ej. "Ver historial de pagos" de /mis-pagos usa
+  // ?tab=participacion&open=pagos) arranca con ese acordeón expandido.
   const [openSections, setOpenSections] = useState({
     estudios: true,
     ledStudies: false,
@@ -90,6 +93,7 @@ export default function MiembroDetailPage() {
     misBecas: false,
     pagos: false,
     donaciones: false,
+    ...openSectionsFromParam(searchParams.get('open')),
   })
 
   function changeTab(tab: string) {

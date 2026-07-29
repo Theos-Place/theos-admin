@@ -439,7 +439,7 @@ cédula → pide documento y lo guarda con dedup.
 
 ### Feedback 2026-07-28
 
-### [ ] PAG-4 · Página de mis pagos: responsive, renombrar y link al historial
+### [x] PAG-4 · Página de mis pagos: responsive, renombrar y link al historial — HECHO 2026-07-29 (1) full-width responsive: grid 2/3 pagos + 1/3 becas en desktop, apilado en móvil; las filas de MemberPaymentsList se apilan en pantallas angostas. (2) Renombrada a "Pagos pendientes" (título, pageTitles del layout y entrada del menú) — la ruta /mis-pagos NO cambió, así que los deep links de notificaciones siguen intactos sin redirect. (3) "Ver historial de pagos" → /miembros/[id]?tab=participacion&open=pagos; el perfil soporta ?open=<sección> vía regla pura `profile-deeplink.ts` con whitelist (3 tests) — abre el acordeón "Pagos y cobros" al cargar; el link respeta la pestaña de familia seleccionada (scope self/familia del guard existente). (4) Menú: debajo de Matrícula, visible para cualquier sesión. (5) Sección "Mis becas": endpoint nuevo GET /api/members/[id]/scholarships (guard self/familia/staff, espejo del de pagos) que lista solo becas ASIGNADAS (kind asignada) con concepto, descuento y estado; hint de beca activa ("se aplica automáticamente al pagar X"). EXTRA de la sesión: /estudios/plan (currículo) reabierto para cualquier sesión (decisión 2026-07-29 — el ModuleGuard de SEC-1 lo había cerrado y matrícula linkea ahí) + entrada "Plan de Estudios" en el submenú del dirigente.
 Archivos: página de mis pagos (`/mis-pagos`, creada en PAG-1), sidebar/nav, `src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx` (acordeón de pagos)
 Depende de: PAG-1
 
@@ -458,7 +458,14 @@ Cuatro ajustes a la página de mis pagos (la de PAG-1, visible para todos los mi
    a su propio perfil (respetando el scope own existente).
 4) Posición en el menú: debajo de "Matrícula", visible para cualquier sesión (rol miembro
    incluido).
-Tests: el deep link del acordeón y el acceso self-only.
+5) Sección "Mis becas" (agregado 2026-07-28): dentro de la misma página, una sección donde
+   el miembro vea las becas y cupones ASIGNADOS a él: nombre/concepto, monto o porcentaje,
+   estado (activa / usada / revocada) y a qué se aplica. Fuente: scholarships del miembro
+   (kind asignada; las genéricas con código no se listan). Solo lectura y solo las propias
+   (mismo scope self/familia del resto de la página). Si tiene una beca activa aplicable,
+   un hint que la conecte con el pago pendiente correspondiente ("Tenés una beca activa
+   para X — se aplica al pagar").
+Tests: el deep link del acordeón, el acceso self-only y que solo listen becas propias.
 ```
 
 ### [ ] EVE-3 · Página de eventos: renombrar "Resumen" a "Calendario" + permisos de botones

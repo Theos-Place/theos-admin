@@ -32,6 +32,7 @@ const pageTitles: Record<string, string> = {
   '/configuracion':  'Configuración',
   // REV-3: /pagos/revision ahora redirige a /finanzas/pagos (página unificada).
   '/finanzas/pagos': 'Pagos',
+  '/mis-pagos':      'Pagos pendientes',
 }
 
 function getTitle(pathname: string): string {
@@ -86,14 +87,17 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // SEC-1: estudios con alcance 'own' (can() no mira scope, así que dirigente
   // y miembro pasan el chequeo de arriba). Dirigente: solo la raíz, sus grupos
   // y el detalle/asistencia de un grupo (el API ya filtra a los suyos).
-  // Miembro: ÚNICAMENTE el detalle de un grupo (vista read-only de SU grupo,
-  // gateada por inscripción en el API); nada más de /estudios.
+  // Miembro: el detalle de un grupo (vista read-only de SU grupo, gateada por
+  // inscripción en el API). /estudios/plan (el CURRÍCULO) es abierto para
+  // cualquier sesión — decisión 2026-07-29; el detalle/edición de un plan
+  // sigue gateado en su propia página (STUDY_ADMIN).
   if (prefix === '/estudios' && getScope('estudios') === 'own') {
     const groupDetail = /^\/estudios\/grupos\/[0-9a-f-]{36}(\/asistencia)?$/i.test(pathname)
     const isDirigente = (user.roles ?? []).includes('dirigente')
-    const allowed = isDirigente
+    const isPlanCurriculum = pathname === '/estudios/plan'
+    const allowed = isPlanCurriculum || (isDirigente
       ? pathname === '/estudios' || pathname === '/estudios/grupos' || groupDetail
-      : /^\/estudios\/grupos\/[0-9a-f-]{36}$/i.test(pathname)
+      : /^\/estudios\/grupos\/[0-9a-f-]{36}$/i.test(pathname))
     if (!allowed) return <AccessDenied />
   }
   // SEC-1: el LISTADO del padrón exige alcance 'all' — lider_comite (scope

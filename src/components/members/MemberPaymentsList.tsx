@@ -68,7 +68,7 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
           <div
             key={p.id}
             ref={highlighted ? highlightRef : undefined}
-            className={cn('flex items-center justify-between gap-3 px-4 py-3', highlighted && 'ring-2 ring-coral/50 rounded-xl bg-coral/5')}
+            className={cn('flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3', highlighted && 'ring-2 ring-coral/50 rounded-xl bg-coral/5')}
           >
             <div className="min-w-0">
               <p className="text-[13px] text-navy font-body truncate">{p.description}</p>
