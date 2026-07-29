@@ -5,10 +5,11 @@ import { getCurrentBlock, getNextBlock, suggestedGroups } from '@/lib/studies/bl
 
 // GET /api/studies/analysis?study_code=XX — demanda por zona de un estudio,
 // con contexto del bloque actual y el siguiente (para el que se calcula).
-// Información de planificación interna: solo módulo estudios.
+// Información de planificación interna: solo módulo estudios más allá de
+// 'own' (SEC-1: dirigente/miembro no ven la demanda global).
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('estudios')
+    const auth = await requireModuleView('estudios', { beyondOwn: true })
     if (auth.res) return auth.res
     const code = req.nextUrl.searchParams.get('study_code')
     if (!code) return NextResponse.json({ error: 'Se requiere study_code' }, { status: 400 })

@@ -41,8 +41,12 @@ function toActivityItem(db: DbActivity, now: number): ActivityItem {
   }
 }
 
-export function useDashboard() {
-  const [stats, setStats]       = useState<DashboardStats | null>(null)
+/** SEC-1: `enabled:false` (dashboard de miembro) no dispara los fetches —
+ *  los endpoints igual devuelven 403, esto evita el round-trip inútil. El
+ *  payload de /api/dashboard viene RECORTADO por permiso (bloques parciales). */
+export function useDashboard(opts: { enabled?: boolean } = {}) {
+  const enabled = opts.enabled ?? true
+  const [stats, setStats]       = useState<Partial<DashboardStats> | null>(null)
   const [dbActivity, setActivity] = useState<DbActivity[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
@@ -62,7 +66,7 @@ export function useDashboard() {
     }
   }, [])
 
-  useEffect(() => { fetchAll() }, [fetchAll])
+  useEffect(() => { if (enabled) fetchAll() }, [enabled, fetchAll])
 
   const activity: ActivityItem[] = useMemo(() => {
     const now = Date.now()

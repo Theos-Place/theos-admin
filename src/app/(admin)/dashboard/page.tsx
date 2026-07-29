@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { eventsInRange, upcomingEvents as upcomingEventsView } from '@/lib/events/event-views'
+import { eventsInRange } from '@/lib/events/event-views'
 import {
   Users, BookOpen, Calendar, DollarSign,
   Heart, Hammer,
@@ -220,10 +220,15 @@ function ModuleCard({
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user, loaded, hasRole } = useAuth()
-  const { can } = usePermissions()
-  const { events } = useEvents()
-  const { stats, activity: RECENT_ACTIVITY } = useDashboard()
-  const DASHBOARD_STATS = stats ?? EMPTY_STATS
+  const { can, getScope } = usePermissions()
+  // SEC-1: los KPIs y la actividad exigen alcance más allá de 'own' — mismo
+  // criterio del payload recortado del API. can() no mira scope, por eso el
+  // helper; el rol miembro ni siquiera dispara los fetches.
+  const isMemberOnly = !loaded || ((user?.roles ?? []).length === 1 && user?.roles?.[0] === 'miembro')
+  const canScope = (m: string) => can(m, 'view') && getScope(m) !== 'own'
+  const { events } = useEvents({}, { enabled: loaded && !isMemberOnly && can('eventos', 'view') })
+  const { stats, activity: RECENT_ACTIVITY } = useDashboard({ enabled: loaded && !isMemberOnly })
+  const DASHBOARD_STATS = { ...EMPTY_STATS, ...(stats ?? {}) }
 
   const [now, setNow] = useState(new Date())
   const [showAmounts, setShowAmounts] = useState(false)
@@ -247,7 +252,7 @@ export default function DashboardPage() {
   const today = now
   const isAdminOrDir = hasRole('admin', 'direccion')
   const isFinance    = hasRole('admin', 'direccion', 'finanzas')
-  const isMember     = !loaded || (user?.roles?.length === 1 && user.roles[0] === 'miembro')
+  const isMember     = isMemberOnly
 
   // Events today and upcoming — EXPANDIENDO recurrentes (las charlas de hoy son
   // ocurrencias del evento padre; no existen como fila con la fecha de hoy).
@@ -255,13 +260,6 @@ export default function DashboardPage() {
     const start = new Date(today); start.setHours(0, 0, 0, 0)
     const end = new Date(start); end.setDate(end.getDate() + 1)
     return eventsInRange(events, start, end)
-  }, [events, today])
-
-  const upcomingEvents = useMemo(() => {
-    const in30 = new Date(today.getTime() + 1000 * 60 * 60 * 24 * 30)
-    return upcomingEventsView(events, today)
-      .filter(e => new Date(e.start_at) < in30)
-      .slice(0, 5)
   }, [events, today])
 
   // Today check-ins (mock last 5)
@@ -321,26 +319,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {upcomingEvents.length > 0 && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-              <div className="text-lg font-bold text-navy mb-4 font-display">
-                Próximos eventos
-              </div>
-              <div className="space-y-3">
-                {upcomingEvents.map(ev => (
-                  <div key={ev.id} className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type] ?? '#161440' }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-navy truncate font-body">{ev.name}</div>
-                      <div className="text-[11px] text-navy/70 font-body">
-                        {formatShortDate(ev.start_at)} · {formatEventTime(ev.start_at)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <MemberHomePanels memberId={user?.member_id ?? null} now={today} />
         </div>
       </div>
     )
@@ -490,7 +469,7 @@ export default function DashboardPage() {
 
       {/* Módulo 3 — Resumen por módulo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {can('miembros', 'view') && (
+        {canScope('miembros') && (
           <ModuleCard
             icon={Users} title="Miembros"
             subtitle={`${DASHBOARD_STATS.members.total.toLocaleString('es-CR')} total · ${DASHBOARD_STATS.members.active.toLocaleString('es-CR')} activos`}
@@ -503,7 +482,7 @@ export default function DashboardPage() {
           />
         )}
 
-        {can('estudios', 'view') && (
+        {canScope('estudios') && (
           <ModuleCard
             icon={BookOpen} title="Estudios Bíblicos"
             subtitle={`${DASHBOARD_STATS.studies.active_estudios} estudios · ${DASHBOARD_STATS.studies.active_capacitaciones} capacitaciones · ${DASHBOARD_STATS.studies.students} estudiantes`}
@@ -517,7 +496,7 @@ export default function DashboardPage() {
           />
         )}
 
-        {can('eventos', 'view') && (
+        {canScope('eventos') && (
           <ModuleCard
             icon={Calendar} title="Eventos"
             subtitle={`${DASHBOARD_STATS.events.upcoming_this_month} próximos este mes`}
@@ -530,7 +509,7 @@ export default function DashboardPage() {
           />
         )}
 
-        {can('servidores', 'view') && (
+        {canScope('servidores') && (
           <ModuleCard
             icon={Hammer} title="Servidores"
             subtitle={`${DASHBOARD_STATS.servers.active} activos en ${DASHBOARD_STATS.servers.committees} comités`}
@@ -585,7 +564,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {can('comunicaciones', 'view') && (
+        {canScope('comunicaciones') && (
           <ModuleCard
             icon={MessageCircle} title="Comunicaciones"
             subtitle="Mensajes enviados"
@@ -614,19 +593,19 @@ export default function DashboardPage() {
           {isAdminOrDir && DASHBOARD_STATS.members.duplicates_suggested > 0 && (
             <AlertRow level="red" text={`${DASHBOARD_STATS.members.duplicates_suggested} perfiles duplicados sugeridos por el sistema`} href="/miembros/duplicados" />
           )}
-          {can('estudios', 'view') && DASHBOARD_STATS.studies.closing_soon > 0 && (
+          {canScope('estudios') && DASHBOARD_STATS.studies.closing_soon > 0 && (
             <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.closing_soon} grupos de estudio prontos a cerrar (próximos 30 días)`} href="/estudios/grupos?filter=closing_soon" />
           )}
-          {can('estudios', 'view') && DASHBOARD_STATS.studies.without_leader > 0 && (
+          {canScope('estudios') && DASHBOARD_STATS.studies.without_leader > 0 && (
             <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.without_leader} grupos de estudio sin dirigente asignado`} href="/estudios/grupos?filter=without_leader" />
           )}
-          {can('servidores', 'view') && DASHBOARD_STATS.servers.pending_applications > 0 && (
+          {canScope('servidores') && DASHBOARD_STATS.servers.pending_applications > 0 && (
             <AlertRow level="yellow" text={`${DASHBOARD_STATS.servers.pending_applications} aplicaciones de servicio sin revisar`} href="/servidores/aplicaciones" />
           )}
-          {can('estudios', 'view') && DASHBOARD_STATS.studies.open_requests > 0 && (
+          {canScope('estudios') && DASHBOARD_STATS.studies.open_requests > 0 && (
             <AlertRow level="yellow" text={`${DASHBOARD_STATS.studies.open_requests} solicitud${DASHBOARD_STATS.studies.open_requests !== 1 ? 'es' : ''} de estudios abierta${DASHBOARD_STATS.studies.open_requests !== 1 ? 's' : ''}`} href="/estudios/solicitudes" />
           )}
-          {can('comunicaciones', 'view') && DASHBOARD_STATS.communications.failed === 0 && (
+          {canScope('comunicaciones') && DASHBOARD_STATS.communications.failed === 0 && (
             <AlertRow level="green" text="Todo al día en comunicaciones" />
           )}
         </div>
@@ -689,36 +668,7 @@ export default function DashboardPage() {
 // ─── Role-specific module ─────────────────────────────────────────────────────
 function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolean }) {
   if (hasRole('dirigente')) {
-    return (
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-        <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
-          Mis grupos
-        </div>
-        <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
-        <div className="space-y-3 mb-3">
-          {[
-            { name: 'Nivel 4 — San José B', participants: 10, total: 12, week: 6, weeks: 10 },
-            { name: 'Nivel 2 — Heredia A',  participants: 8,  total: 12, week: 3, weeks: 11 },
-          ].map((g, i) => (
-            <div key={i} className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
-              <div>
-                <div className="text-[13px] font-semibold text-navy font-body">{g.name}</div>
-                <div className="text-[11px] text-navy/70 mt-0.5 font-body">
-                  {g.participants}/{g.total} participantes · Semana {g.week}/{g.weeks}
-                </div>
-              </div>
-              <Link href="/estudios/grupos"
-                className="text-[12px] font-medium text-coral shrink-0 font-body">
-                Ver grupo →
-              </Link>
-            </div>
-          ))}
-        </div>
-        <div className="text-[12px] text-[#E9B949] font-medium font-body">
-          3 evaluaciones pendientes de recibir
-        </div>
-      </div>
-    )
+    return <DirigenteGroupsModule />
   }
 
   if (hasRole('lider_comite')) {
@@ -782,4 +732,142 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
   }
 
   return null
+}
+
+
+// ─── SEC-1: "Mis grupos" del dirigente con datos REALES ──────────────────────
+// El bloque anterior era mock hardcodeado y "Ver grupo" abría la lista general.
+// GET /api/studies/groups ya viene filtrado a los grupos del dirigente
+// (leader/co-leader) y el link deep-linkea al detalle.
+function DirigenteGroupsModule() {
+  const [groups, setGroups] = useState<Array<{ id: string; name: string | null; enrolled: number; max: number | null; week: number | null }>>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/studies/groups?status=en_matricula&status=en_curso')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!alive) return
+        const rows = Array.isArray(d) ? d : (d?.groups ?? [])
+        setGroups(rows.map((g: { id: string; name: string | null; enrollment_counts?: { enrolled?: number }; max_students: number | null; current_week: number | null }) => ({
+          id: g.id, name: g.name,
+          enrolled: g.enrollment_counts?.enrolled ?? 0,
+          max: g.max_students, week: g.current_week,
+        })))
+      })
+      .catch(() => {})
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [])
+
+  if (loading || groups.length === 0) return null
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
+      <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
+        Mis grupos
+      </div>
+      <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
+      <div className="space-y-3 mb-3">
+        {groups.map(g => (
+          <div key={g.id} className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
+            <div>
+              <div className="text-[13px] font-semibold text-navy font-body">{g.name ?? 'Grupo'}</div>
+              <div className="text-[11px] text-navy/70 mt-0.5 font-body">
+                {g.enrolled}{g.max ? `/${g.max}` : ''} participantes{g.week ? ` · Semana ${g.week}` : ''}
+              </div>
+            </div>
+            <Link href={`/estudios/grupos/${g.id}`}
+              className="text-[12px] font-medium text-coral shrink-0 font-body">
+              Ver grupo →
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── SEC-1: paneles reales del dashboard de miembro ──────────────────────────
+// "Mis grupos" sale del propio perfil (endpoint self-access) con deep link al
+// detalle read-only; "Próximos eventos" usa el endpoint PÚBLICO (el de admin
+// devuelve 403 al rol miembro y el bloque quedaba siempre vacío).
+function MemberHomePanels({ memberId, now }: { memberId: string | null; now: Date }) {
+  const [groups, setGroups] = useState<Array<{ group_id: string; name: string; status: string }>>([])
+  const [events, setEvents] = useState<Array<{ id: string; title: string; start_at: string; event_type: string }>>([])
+
+  useEffect(() => {
+    let alive = true
+    if (memberId) {
+      fetch(`/api/members/${memberId}`)
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => {
+          if (!alive || !d?.study_history) return
+          const active = (d.study_history as Array<{ group_id: string | null; name: string; status: string }>)
+            .filter(h => h.group_id && (h.status === 'enrolled' || h.status === 'pendiente_de_pago'))
+            .map(h => ({ group_id: h.group_id as string, name: h.name, status: h.status }))
+          setGroups(active)
+        })
+        .catch(() => {})
+    }
+    fetch('/api/public/events')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!alive || !Array.isArray(d)) return
+        const rangeable = d.map((e: Record<string, unknown>) => ({
+          id: e.id, start_at: e.starts_at, end_at: e.ends_at ?? e.starts_at,
+          is_recurring: e.is_recurring, recurrence_rule: e.recurrence_rule, recurrence_end: e.recurrence_end,
+          title: e.title, event_type: e.event_type,
+        })) as unknown as Parameters<typeof eventsInRange>[0]
+        const in30 = new Date(now.getTime() + 30 * 86400000)
+        const próximos = eventsInRange(rangeable, now, in30)
+          .slice(0, 5)
+          .map(e => {
+            const raw = e as unknown as { id: string; title?: string; start_at: string; event_type?: string }
+            return { id: raw.id, title: raw.title ?? '', start_at: raw.start_at, event_type: raw.event_type ?? '' }
+          })
+        setEvents(próximos)
+      })
+      .catch(() => {})
+    return () => { alive = false }
+    // now cambia cada minuto; el fetch es solo al montar a propósito.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberId])
+
+  return (
+    <>
+      {groups.length > 0 && (
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
+          <div className="text-lg font-bold text-navy mb-4 font-display">Mis grupos</div>
+          <div className="space-y-3">
+            {groups.map(g => (
+              <div key={g.group_id} className="flex items-center justify-between gap-3">
+                <div className="text-[13px] font-medium text-navy truncate font-body">{g.name}</div>
+                <Link href={`/estudios/grupos/${g.group_id}`} className="text-[12px] font-medium text-coral shrink-0 font-body">
+                  Ver grupo →
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {events.length > 0 && (
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
+          <div className="text-lg font-bold text-navy mb-4 font-display">Próximos eventos</div>
+          <div className="space-y-3">
+            {events.map(ev => (
+              <div key={`${ev.id}-${ev.start_at}`} className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: EVENT_TYPE_COLORS[ev.event_type as EventType] ?? '#161440' }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-medium text-navy truncate font-body">{ev.title}</div>
+                  <div className="text-[11px] text-navy/70 font-body">
+                    {formatShortDate(ev.start_at)} · {formatEventTime(ev.start_at)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )
 }

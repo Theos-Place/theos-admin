@@ -10,9 +10,10 @@ export async function GET() {
     if (auth.res) return auth.res
     const leaders = await getStudyLeaders()
     // Evaluaciones (puntajes/comentarios) e is_donor solo para el módulo
-    // estudios; el resto de sesiones (el hook useStudies se usa en pantallas
-    // de otros módulos) recibe la lista sin los campos sensibles.
-    const mod = await requireModuleView('estudios')
+    // estudios MÁS ALLÁ de 'own' (SEC-1: dirigente/miembro reciben la lista
+    // saneada); el resto de sesiones (el hook useStudies se usa en pantallas
+    // de otros módulos) también recibe la lista sin los campos sensibles.
+    const mod = await requireModuleView('estudios', { beyondOwn: true })
     if (!mod.res) return NextResponse.json(leaders)
     return NextResponse.json(leaders.map(l => ({
       ...l,

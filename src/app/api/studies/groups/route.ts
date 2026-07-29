@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES, GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
+import { studiesViewScope } from '@/lib/auth/studies-scope'
 import {
   getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode,
 } from '@/lib/supabase/queries/studies'
 import { groupCreateSchema } from './schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 
-// Roles que pueden listar todos los grupos: los de estudios + dirigentes, más
-// los consumidores cross-módulo del listado (finanzas en sus solicitudes,
+// Roles que pueden listar grupos: los de estudios + dirigentes, más los
+// consumidores cross-módulo del listado (finanzas en sus solicitudes,
 // comunicaciones para destinatarios, solo_lectura). 'miembro' queda fuera: el
 // detalle del plan no es para ellos (defensa server-side, la UI ya lo oculta).
+// SEC-1: el dirigente (scope 'own') recibe SOLO sus grupos (leader/co-leader).
 const GROUPS_LIST_ROLES = [...STUDY_ADMIN_ROLES, 'dirigente', 'finanzas', 'comunicaciones', 'solo_lectura'] as const
 
 // GET /api/studies/groups
@@ -26,13 +28,23 @@ export async function GET(req: NextRequest) {
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
 
+    // SEC-1: dirigente sin permisos más amplios → solo sus grupos. finanzas/
+    // comunicaciones no tienen módulo estudios pero SÍ necesitan el listado
+    // completo (por eso están en la allowlist y no se filtran acá).
+    const leaderMemberId =
+      studiesViewScope(auth.ctx.roles) === 'leader'
+      && !auth.ctx.roles.some(r => r === 'finanzas' || r === 'comunicaciones')
+        ? auth.ctx.memberId
+        : null
+
     if (searchParams.get('include') === 'enrollments') {
-      return NextResponse.json(await getStudyGroupsWithEnrollments())
+      return NextResponse.json(await getStudyGroupsWithEnrollments({ leaderMemberId }))
     }
 
     // Filtros del listado — viajan al servidor (status[], plan, zona, día, búsqueda).
     const statuses = searchParams.getAll('status')
     const filters = {
+      leaderMemberId,
       statuses: statuses.length ? statuses : undefined,
       planCode: searchParams.get('plan') ?? undefined,
       zone: searchParams.get('zone') ?? undefined,
@@ -52,8 +64,9 @@ export async function GET(req: NextRequest) {
     const rawPage = searchParams.get('page')
     const rawPageSize = searchParams.get('pageSize')
     if (rawPage === null && rawPageSize === null && !hasFilter) {
-      // Sin params ni filtros: comportamiento histórico (array plano con todos).
-      const { data } = await getStudyGroups()
+      // Sin params ni filtros: comportamiento histórico (array plano con todos)
+      // — filters igual viaja: lleva el scope del dirigente (SEC-1).
+      const { data } = await getStudyGroups({ filters })
       return NextResponse.json(data)
     }
 

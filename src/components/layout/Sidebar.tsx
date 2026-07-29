@@ -133,14 +133,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     ...(canViewDuplicados ? [{ href: '/miembros/duplicados', label: 'Duplicados', icon: Users }] : []),
   ]
 
-  const estudiosSub: SubItem[] = [
-    ...ESTUDIOS_SUB.map(s => s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s),
-    // Bloques de capacitación: solo coordinador de estudios y admin.
-    ...(userRoles.some(r => ['coordinador_estudios', 'admin'].includes(r))
-      ? [{ href: '/estudios/bloques', label: 'Bloques', icon: CalendarRange }] : []),
-    // Folletos: quienes tienen el permiso folletos (dentro del módulo Estudios).
-    ...(can('folletos', 'view') ? [{ href: '/estudios/folletos', label: 'Folletos', icon: FileText }] : []),
-  ]
+  // SEC-1: el submenú completo de Estudios es solo para alcance más allá de
+  // 'own'; el dirigente ve únicamente "Grupos" (el API le filtra los suyos) y
+  // el rol miembro no ve el módulo (su grupo se abre por deep link del perfil).
+  const studiesBeyondOwn = can('estudios', 'view') && getScope('estudios') !== 'own'
+  const estudiosSub: SubItem[] = studiesBeyondOwn
+    ? [
+      ...ESTUDIOS_SUB.map(s => s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s),
+      // Bloques de capacitación: solo coordinador de estudios y admin.
+      ...(userRoles.some(r => ['coordinador_estudios', 'admin'].includes(r))
+        ? [{ href: '/estudios/bloques', label: 'Bloques', icon: CalendarRange }] : []),
+      // Folletos: quienes tienen el permiso folletos (dentro del módulo Estudios).
+      ...(can('folletos', 'view') ? [{ href: '/estudios/folletos', label: 'Folletos', icon: FileText }] : []),
+    ]
+    : userRoles.includes('dirigente')
+      ? [{ href: '/estudios/grupos', label: 'Grupos', icon: LayoutList }]
+      : []
   const finanzasSub: SubItem[] = [
     // Suite completa de finanzas: solo con el módulo 'finanzas' (becas/revision_pagos
     // solas NO destapan donaciones/devoluciones/reportes/solicitudes).
@@ -200,9 +208,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // adentro (folletos → Estudios; revision_pagos → Finanzas), aunque no tenga el módulo.
   const NAV = ALL_NAV.filter(m => {
     if (!m.module) return true
-    if (m.href === '/estudios') return can('estudios', 'view') || can('folletos', 'view')
+    // SEC-1: estudios con scope 'own' solo aparece para el dirigente (sus
+    // grupos); el rol miembro no ve la entrada.
+    if (m.href === '/estudios') return studiesBeyondOwn || userRoles.includes('dirigente') || can('folletos', 'view')
     if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view')
-    if (m.href === '/miembros') return can('miembros', 'view') && getScope('miembros') !== 'own'
+    // SEC-1: el padrón es solo para alcance 'all' (lider_comite ve a su gente
+    // en /servidores, no en el listado completo).
+    if (m.href === '/miembros') return can('miembros', 'view') && getScope('miembros') === 'all'
     // Eventos: visible para cualquier autenticado (auto-inscripción), aunque
     // no tenga el módulo de gestión.
     if (m.href === '/eventos') return true

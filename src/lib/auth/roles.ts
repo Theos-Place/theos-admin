@@ -53,6 +53,26 @@ export const STAFF_IMPORT_ROLES: RoleId[] = ['encargado_staff', 'coordinador_ser
 export const EVENT_CHECKIN_ROLES: RoleId[] = ['encargado_eventos', 'direccion', 'admin']
 
 /**
+ * Alcance efectivo de un módulo para un set de roles (espejo server-side de
+ * getScope() del cliente): el más amplio gana. null = sin el módulo.
+ * SEC-1: lo usan endpoints que deben acotar el payload por alcance
+ * (p. ej. lider_comite ve solo SUS comités en /api/servers/committees).
+ */
+export function moduleScope(roleIds: RoleId[], module: string): 'all' | 'committee' | 'own' | null {
+  const scopes = roleIds.flatMap(roleId => {
+    const role = ROLES.find(r => r.id === roleId)
+    if (!role) return []
+    return role.permissions
+      .filter(p => p.module === module || p.module === 'all')
+      .map(p => p.scope ?? 'all')
+  })
+  if (scopes.includes('all')) return 'all'
+  if (scopes.includes('committee')) return 'committee'
+  if (scopes.includes('own')) return 'own'
+  return null
+}
+
+/**
  * ¿Alguno de los roles otorga `action` sobre alguno de los `modules`?
  * Lógica pura compartida por el guard server-side (requireModuleView) y
  * testeable sin Supabase. `modules` acepta uno o varios (semántica any-of:

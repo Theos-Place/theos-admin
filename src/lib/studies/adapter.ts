@@ -71,7 +71,7 @@ function stubParticipants(counts: { enrolled: number; pending: number; withdrawn
   ]
 }
 
-export function toDomainStudyGroup(db: DbGroupForDomain): StudyGroup {
+export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admin' | 'leader' | 'member' | 'none' }): StudyGroup {
   const leaderName = db.leader ? `${db.leader.first_name} ${db.leader.last_name}`.trim() : null
   const coLeaderName = db.co_leader ? `${db.co_leader.first_name} ${db.co_leader.last_name}`.trim() : null
 
@@ -91,6 +91,7 @@ export function toDomainStudyGroup(db: DbGroupForDomain): StudyGroup {
     : stubParticipants(db.enrollment_counts ?? { enrolled: 0, pending: 0, withdrawn: 0 })
 
   return {
+    viewer_scope: db.viewer_scope,
     id: db.id,
     name: db.name ?? '',
     study_type_id: db.plan?.code ?? '',

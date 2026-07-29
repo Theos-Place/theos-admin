@@ -139,6 +139,7 @@ export default function NuevoTipoPage() {
   const niveles    = studyTypes.filter(s => s.stage === 'niveles')
   const inicial    = studyTypes.filter(s => s.stage === 'inicial')
   const intermedia = studyTypes.filter(s => s.stage === 'intermedia')
+  const avanzada   = studyTypes.filter(s => s.stage === 'avanzada')
 
   if (saved) {
     return (
@@ -204,6 +205,7 @@ export default function NuevoTipoPage() {
               <option value="niveles">Niveles</option>
               <option value="etapa_inicial">Etapa Inicial</option>
               <option value="etapa_intermedia">Etapa Intermedia</option>
+              <option value="etapa_avanzada">Etapa Avanzada (solo por invitación)</option>
               <option value="campanas">Campañas</option>
             </select>
           </div>
@@ -233,6 +235,7 @@ export default function NuevoTipoPage() {
           { label: 'Niveles',         items: niveles },
           { label: 'Etapa Inicial',   items: inicial },
           { label: 'Etapa Intermedia',items: intermedia },
+          { label: 'Etapa Avanzada',  items: avanzada },
         ].map(group => (
           <div key={group.label}>
             <p className="text-[11px] text-navy-light/60 mb-2 font-display">{group.label}</p>

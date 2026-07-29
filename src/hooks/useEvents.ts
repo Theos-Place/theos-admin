@@ -10,7 +10,10 @@ type Filters = {
   is_active?: boolean
 }
 
-export function useEvents(filters: Filters = {}) {
+export function useEvents(filters: Filters = {}, opts: { enabled?: boolean } = {}) {
+  // SEC-1: `enabled:false` evita el fetch (p. ej. dashboard de miembro, que
+  // recibiría 403 de /api/events y solo ensuciaría la consola).
+  const enabled = opts.enabled ?? true
   const [dbEvents, setDbEvents] = useState<DbEventEnriched[]>([])
   const [total, setTotal]       = useState(0)
   const [loading, setLoading]   = useState(true)
@@ -39,7 +42,7 @@ export function useEvents(filters: Filters = {}) {
     }
   }, [filters.search, filters.event_type, filters.status, filters.is_active])
 
-  useEffect(() => { fetchEvents() }, [fetchEvents])
+  useEffect(() => { if (enabled) fetchEvents() }, [enabled, fetchEvents])
 
   const events: AdminEvent[] = useMemo(
     () => dbEvents.map(toDomainEvent),

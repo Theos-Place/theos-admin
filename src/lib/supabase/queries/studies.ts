@@ -200,6 +200,9 @@ export type GroupFilters = {
   /** Solo grupos "prontos a cerrar": ends_at entre hoy y +30 días (mismo criterio
    *  que el conteo del dashboard `closing_soon`). */
   closingSoon?: boolean
+  /** SEC-1: scope 'own' del dirigente — solo grupos donde es leader o co-leader.
+   *  Viene del ctx del guard (uuid confiable), nunca del query string. */
+  leaderMemberId?: string | null
 }
 
 /** Resuelve las partes de los filtros que viven en tablas relacionadas:
@@ -262,6 +265,7 @@ export async function getStudyGroups(
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
+    if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
     const { data, error, count } = await query.range(from, from + pageSize - 1)
     if (error) throw error
     return { data: ((data ?? []) as RawListGroup[]).map(toListItem), total: count ?? 0 }
@@ -282,6 +286,7 @@ export async function getStudyGroups(
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
+    if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
     const { data, error } = await query.range(from, from + 999)
     if (error) throw error
     const batch = (data ?? []) as RawListGroup[]
@@ -294,15 +299,17 @@ export async function getStudyGroups(
 /** Variante con enrollments embebidos (member_id + status) para consumidores
  *  que necesitan los IDs de los inscritos por grupo (ej. RecipientSelector de
  *  comunicaciones). Usar solo cuando los conteos no alcanzan. */
-export async function getStudyGroupsWithEnrollments(): Promise<DbGroupEnriched[]> {
+export async function getStudyGroupsWithEnrollments(opts: { leaderMemberId?: string | null } = {}): Promise<DbGroupEnriched[]> {
   const supabase = createAdminClient()
   const all: DbGroupEnriched[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
+    let query = supabase
       .from('study_groups')
       .select(LIST_GROUP_MEMBERS_SELECT)
       .order('starts_at', { ascending: false })
-      .range(from, from + 999)
+    // SEC-1: el dirigente solo recibe SUS grupos también en esta variante.
+    if (opts.leaderMemberId) query = query.or(`leader_id.eq.${opts.leaderMemberId},co_leader_id.eq.${opts.leaderMemberId}`)
+    const { data, error } = await query.range(from, from + 999)
     if (error) throw error
     const batch = (data ?? []) as DbGroupEnriched[]
     all.push(...batch)
@@ -351,6 +358,27 @@ const LIST_GROUP_MEMBERS_SELECT = `
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(member_id, status)
 `
+
+/** SEC-1: leader/co-leader de un grupo (para el guard por-grupo sin cargar el
+ *  detalle completo). null = grupo inexistente. */
+export async function getGroupLeaderIds(groupId: string): Promise<{ leader_id: string | null; co_leader_id: string | null } | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_groups').select('leader_id, co_leader_id').eq('id', groupId).maybeSingle()
+  if (error) throw error
+  return (data as { leader_id: string | null; co_leader_id: string | null } | null) ?? null
+}
+
+/** SEC-1: ¿el miembro tiene (o tuvo) una inscripción en el grupo? Cualquier
+ *  estado cuenta: su propia historia con el grupo justifica la vista read-only. */
+export async function isMemberOfGroup(groupId: string, memberId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_enrollments').select('id')
+    .eq('group_id', groupId).eq('member_id', memberId).limit(1)
+  if (error) throw error
+  return (data ?? []).length > 0
+}
 
 export async function getGroupById(id: string): Promise<DbGroupEnriched | null> {
   const supabase = createAdminClient()

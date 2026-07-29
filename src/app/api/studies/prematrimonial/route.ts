@@ -12,9 +12,10 @@ import { todayCR, formatDate } from '@/lib/format'
 
 const MAX_BYTES = 8 * 1024 * 1024
 
-// GET: cola de solicitudes para el coordinador de estudios / finanzas.
+// GET: cola de solicitudes para la coordinación de estudios.
+// SEC-1: beyondOwn — dirigente/miembro no ven la cola (datos de parejas).
 export async function GET() {
-  const auth = await requireModuleView('estudios')
+  const auth = await requireModuleView('estudios', { beyondOwn: true })
   if (auth.res) return auth.res
   try {
     return NextResponse.json({ items: await getPrematrimonialQueue() })

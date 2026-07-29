@@ -83,6 +83,23 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // /eventos/[id]/editar, etc.) siguen exigiendo el módulo normalmente.
   if (pathname === '/eventos') return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
+  // SEC-1: estudios con alcance 'own' (can() no mira scope, así que dirigente
+  // y miembro pasan el chequeo de arriba). Dirigente: solo la raíz, sus grupos
+  // y el detalle/asistencia de un grupo (el API ya filtra a los suyos).
+  // Miembro: ÚNICAMENTE el detalle de un grupo (vista read-only de SU grupo,
+  // gateada por inscripción en el API); nada más de /estudios.
+  if (prefix === '/estudios' && getScope('estudios') === 'own') {
+    const groupDetail = /^\/estudios\/grupos\/[0-9a-f-]{36}(\/asistencia)?$/i.test(pathname)
+    const isDirigente = (user.roles ?? []).includes('dirigente')
+    const allowed = isDirigente
+      ? pathname === '/estudios' || pathname === '/estudios/grupos' || groupDetail
+      : /^\/estudios\/grupos\/[0-9a-f-]{36}$/i.test(pathname)
+    if (!allowed) return <AccessDenied />
+  }
+  // SEC-1: el LISTADO del padrón exige alcance 'all' — lider_comite (scope
+  // 'committee') ve a su gente en /servidores; el detalle de un perfil sí le
+  // queda accesible por link directo (mismo criterio del API).
+  if (pathname === '/miembros' && getScope('miembros') !== 'all') return <AccessDenied />
   // El padrón exige alcance más allá de 'own' (espejo del guard de la API);
   // el rol base 'miembro' ve su perfil o el de su familia desde ACÁ mismo
   // (/miembros/{id} de detalle), no el listado completo (/miembros).

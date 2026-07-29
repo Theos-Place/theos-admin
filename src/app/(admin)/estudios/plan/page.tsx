@@ -322,7 +322,9 @@ export default function PlanDeEstudiosPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-navy-light/60 font-body">
-                    {s.stage === 'niveles' ? 'Niveles' : s.stage === 'inicial' ? 'Inicial' : s.stage === 'campaña' ? 'Campaña' : 'Intermedia'}
+                    {/* Mapa explícito: el ternario anterior caía a "Intermedia"
+                        para cualquier etapa nueva (mostraba mal la Avanzada). */}
+                    {{ niveles: 'Niveles', inicial: 'Inicial', intermedia: 'Intermedia', avanzada: 'Avanzada', 'campaña': 'Campaña' }[s.stage] ?? s.stage}
                   </td>
                   <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[12px]">
                     {s.weeks}

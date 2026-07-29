@@ -252,6 +252,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const canSendMessage = can('comunicaciones', 'create')
   // Crear/editar/eliminar grupos: STUDY_ADMIN + editor_grupos_estudio.
   const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
+  // SEC-1: 'member'/'none' = vista de solo lectura (miembro inscrito viendo SU
+  // grupo): sin añadir/desinscribir, sin links a perfiles ajenos, sin editar
+  // el link de WhatsApp. El server ya recorta el roster a su propia inscripción.
+  const readOnly = group?.viewer_scope === 'member' || group?.viewer_scope === 'none'
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
@@ -519,12 +523,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             <p className="text-sm text-navy-light/60 font-body">
               {enrolled.length} inscritos de {group.max_capacity} lugares
             </p>
+            {!readOnly && (
             <button
               onClick={() => setShowAddMember(true)}
               className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
             >
               <Plus size={12} /> Añadir miembro
             </button>
+            )}
           </div>
 
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] overflow-x-auto">
@@ -588,7 +594,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     )}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        {group.status !== 'finalizado' && p.status !== 'withdrawn' && (
+                        {!readOnly && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
                           <button
                             onClick={() => { setWithdrawError(false); setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name }) }}
                             className="rounded-lg px-2 py-1 text-[10px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
@@ -596,12 +602,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                             Desinscribir
                           </button>
                         )}
+                        {!readOnly && (
                         <Link
                           href={`/miembros/${p.member_id}`}
                           className="rounded-lg px-2 py-1 text-[10px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         >
                           Perfil
                         </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -625,9 +633,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   Ver grupo de WhatsApp
                 </a>
               </div>
-            ) : group.status === 'finalizado' ? (
+            ) : group.status === 'finalizado' || readOnly ? (
               <p className="text-sm text-navy-light/60 font-body">
-                Grupo finalizado — sin grupo de WhatsApp.
+                {group.status === 'finalizado' ? 'Grupo finalizado — sin grupo de WhatsApp.' : 'Sin grupo de WhatsApp todavía.'}
               </p>
             ) : (
               <div className="space-y-2">

@@ -483,6 +483,48 @@ Tres cambios en la página de eventos del admin (/eventos):
 Tests: página visible como miembro sin botones de gestión; botones visibles según rol.
 ```
 
+### [x] SEC-1 · Fugas de permisos para el rol miembro — HECHO 2026-07-29 (auditado con 2 barridos + matriz automatizada. (1) DASHBOARD: /api/dashboard recorta el payload por módulo con beyondOwn (403 si nada aplica) y /api/dashboard/activity exige un módulo administrativo — antes cualquier sesión recibía KPIs de finanzas y audit_log; la vista de miembro ya no dispara esos fetches y sus paneles usan datos reales (eventos del endpoint PÚBLICO — antes 403 y bloque siempre vacío — y "Mis grupos" del propio perfil con deep link read-only). (2) ESTUDIOS: raíz del problema = NINGÚN endpoint honraba scope own; nuevo `studies-scope.ts` (puro, 9 tests): lista de grupos filtrada a leader/co-leader para dirigente (todas las variantes: paginada, ?all=1, ?include=enrollments, y la rama sin filtros que se escapaba), detalle+sessions con scope por relación (`viewer_scope`: admin/leader/member/none — miembro inscrito recibe SOLO su inscripción, sin roster ajeno), beyondOwn en leaders (evaluaciones+is_donor), analysis y prematrimonial; ModuleGuard: dirigente solo raíz/grupos/detalle-asistencia, miembro solo detalle de grupo; sidebar acorde. (3) Deep link "Ver grupo": el del perfil ya era correcto; el del dashboard era MOCK — bloque del dirigente reescrito con sus grupos reales y links al detalle; detalle de grupo con modo read-only (sin añadir/desinscribir/perfiles/WhatsApp editable). (4) SERVIDORES: rol miembro ya estaba bloqueado (module servidores); EXTRA hallado y cerrado: lider_comite recibía TODOS los comités con contactos → /api/servers/committees filtra a sus comités liderados (helper `moduleScope` en roles.ts). (5) MIEMBROS: ya estaba bien para miembro; EXTRA cerrado: lider_comite (scope committee) podía listar/EXPORTAR el padrón completo → GET/export/counts/ids exigen scope 'all' + sidebar/ModuleGuard acordes (a su gente la ve en /servidores). MATRIZ: scripts/access-matrix.ts (login real con seed users por rol contra BASE_URL) — 14 endpoints × 5 roles + 2 checks de contenido: verde. Notas: usuario seed estudios@ tenía 3 roles acumulados (limpiado a coordinador_estudios); pendiente conocido: detalle de perfil sigue accesible a lider_comite por URL (scope committee granular = cambio mayor, documentado); páginas de asistencia POST del dirigente siguen coordinador-only como antes — no se otorgaron permisos nuevos)
+Archivos: `src/app/(admin)/dashboard/*` + `/api/dashboard`, `src/app/(admin)/estudios/*`, `src/app/(admin)/servidores/*`, `src/app/(admin)/miembros/page.tsx`, `src/lib/auth/roles.ts`, sidebar
+
+```
+Probando el sistema logueado como MIEMBRO (sin roles) se encontraron fugas de permisos.
+Arreglalas verificando en cada caso el gate en TRES capas: sidebar (no mostrar), página
+(redirect/404 al entrar por URL) y API (requireRoles/requireModuleView) — recordá que el
+middleware excluye /api, así que cada endpoint debe defenderse solo.
+
+1) DASHBOARD para rol miembro: debe mostrar ÚNICAMENTE los eventos de hoy y "mis grupos".
+   Los bloques de KPIs de miembros, estudios, servidores y "pendientes de tu atención" NO
+   son para todos: verificá que cada bloque respete can() del rol también en el API
+   /api/dashboard y /api/dashboard/activity (no solo esconder la UI: el payload no debe
+   incluir datos de módulos que el rol no ve).
+2) ESTUDIOS como dirigente: un dirigente solo debe ver SUS grupos (scope own, permiso
+   view/edit de sus grupos según ROLES). Hoy puede ver todo el módulo de estudios,
+   incluyendo eliminar estudios y páginas internas (plan, bloques, dirigentes, análisis,
+   solicitudes, folletos). Auditá TODAS las páginas internas de /estudios/* y sus APIs:
+   dirigente accede solo a sus grupos (asistencia, sesiones, cierre de los suyos); el
+   resto exige STUDY_ADMIN_ROLES como corresponde. El rol miembro no ve nada de /estudios
+   de gestión.
+3) "Mis grupos" (dashboard/perfil): el link "Ver grupo" abre la página general de grupos
+   en vez del grupo específico. Debe deep-linkear al grupo referenciado
+   (/estudios/grupos/[id]) en modo SOLO LECTURA para el miembro: puede VER su grupo
+   (horario, dirigente, sesiones), no editar nada. Verificá que la página de detalle de
+   grupo tenga vista read-only gateada para miembros del grupo (scope own vía su
+   enrollment) sin exponer acciones ni datos de otros estudiantes más allá de lo necesario.
+4) SERVIDORES: (a) las solicitudes (/servidores/vacantes/solicitudes, aplicaciones,
+   position-requests) NO deben ser visibles para el rol miembro — ni páginas ni APIs.
+   (b) La página de resumen de servidores debe mostrar SOLO los comités a los que el
+   miembro pertenece; si el miembro no es servidor de ningún comité, NO tiene acceso a esa
+   página (ni entrada en el sidebar).
+5) MIEMBROS: la página /miembros (padrón) no debe estar disponible para el rol miembro
+   (su propio perfil se accede por otra vía). Verificá página + APIs de listado/búsqueda
+   (/api/members con beyondOwn ya existe — confirmá que el gate funcione y que el sidebar
+   no muestre la entrada).
+Después de arreglar, hacé una pasada de verificación general: creá un test (o script) de
+"matriz de acceso" que recorra las rutas principales con un usuario de cada rol clave
+(miembro, dirigente, lider_comite) y confirme qué ve y qué recibe 403 — para que esto no
+se vuelva a colar. Correr tsc, lint, vitest.
+```
+
 ### [ ] PRE-8 · Cierre especial para estudios prematrimoniales (evaluación de la pareja)
 Archivos: `src/app/(admin)/estudios/grupos/[id]/cierre/page.tsx` (flujo de cierre actual), `src/app/api/studies/groups/[id]/close/route.ts`, `prematrimonial_requests`, migración para la evaluación
 
@@ -528,6 +570,48 @@ Implementación:
 - El cierre regular de grupos no prematrimoniales no cambia en nada.
 Tests: evaluación requerida por pareja al cerrar grupo premat, gate de visibilidad, cierre
 normal intacto para otros planes.
+```
+
+### [ ] PRE-9 · Wizard prematrimonial: ceremonia ajustada + antecedentes + diagnóstico
+Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (wizard), `src/app/api/studies/prematrimonial/route.ts`, migración en `prematrimonial_requests`, `src/components/studies/PrematrimonialQueue.tsx`
+
+```
+Tres modificaciones al form de matrícula prematrimonial (aparte de lo ya implementado:
+fecha mínima +6 meses, zonas fijas, pregunta del oficiante, búsqueda de pareja):
+
+1) Sección "Ceremonia": QUITAR la pregunta del lugar. Queda solo la fecha, con este copy
+   exacto: "¿Tienen fecha definida o aproximada para la boda? (Si ya la tienen, indicá la
+   fecha. Recordá que el curso debe iniciar mínimo 6 meses antes)." — mantiene el flag
+   existente de fecha definida/aproximada y la validación de +6 meses ya implementada.
+   Si el campo lugar existe en prematrimonial_requests, no borrés la columna (datos
+   históricos); solo se deja de preguntar y de mostrar en el form.
+
+2) Sección NUEVA "Antecedentes de la pareja" (después de los datos de la pareja):
+   - "¿Cuánto tiempo tienen de estar de novios?" — opciones: Menos de 1 año / 1 a 2 años /
+     3 a 4 años / Más de 4 años.
+   - "¿Es el primer matrimonio para ambos?" — Sí/No; si No, campo de texto: "Por favor
+     indicar brevemente la situación previo a este proceso."
+   - "¿Tienen hijos de relaciones anteriores o en común?" — Sí/No; si Sí, campo para
+     indicar edades.
+   - "¿Actualmente viven en casas separadas o ya conviven juntos?" — opciones: Casas
+     separadas / Ya convivimos.
+
+3) Sección NUEVA "Diagnóstico" (al final, antes del pago):
+   - "¿Existe alguna situación particular o conversación difícil que hayan estado evitando
+     o que quisieran abordar con el apoyo de sus futuros dirigentes?" — texto libre,
+     opcional.
+
+Implementación:
+- Migración: columnas nuevas en prematrimonial_requests (tiempo de novios, primer
+  matrimonio + detalle, hijos + edades, convivencia, diagnóstico). Las solicitudes viejas
+  quedan con esos campos null y se muestran como "—" en la cola.
+- Validación server-side de las opciones cerradas (zod en el POST, patrón del repo).
+- La cola prematrimonial (PrematrimonialQueue) muestra los datos nuevos a los gestores.
+- SENSIBLE: el detalle de matrimonio previo y el diagnóstico son información pastoral
+  delicada. Misma visibilidad restringida que la evaluación de cierre (PRE-8):
+  coordinador_estudios, direccion y admin; no visibles para otros roles.
+Tests: guardado de secciones nuevas, condicionales (No→detalle, Sí→edades), lectura de
+solicitudes viejas sin los campos.
 ```
 
 ### Activación masiva de cuentas (feedback 2026-07-28; hacer en orden: AUTH-1 → AUTH-2)

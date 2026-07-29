@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
-import { updateGroup, getGroupById, deleteGroup, countActiveEnrollments } from '@/lib/supabase/queries/studies'
+import { groupViewerScope } from '@/lib/auth/studies-scope'
+import { updateGroup, getGroupById, deleteGroup, countActiveEnrollments, isMemberOfGroup } from '@/lib/supabase/queries/studies'
 import { groupWriteSchema } from '../schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 
@@ -16,12 +17,26 @@ export async function GET(
     const { id } = await params
     const group = await getGroupById(id)
     if (!group) return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 })
-    // El roster (nombres y notas de los inscritos) es solo para el módulo
-    // estudios; otras sesiones (p. ej. la confirmación de matrícula) reciben
-    // el grupo sin inscripciones.
-    const mod = await requireModuleView('estudios')
-    if (mod.res) return NextResponse.json({ ...group, enrollments: [] })
-    return NextResponse.json(group)
+    // SEC-1: el roster completo (nombres y notas de los inscritos) es solo para
+    // quien tiene estudios más allá de 'own' o para el dirigente DE ESTE grupo.
+    // Un miembro inscrito ve el grupo con SOLO su propia inscripción (vista
+    // read-only); cualquier otra sesión (p. ej. la confirmación de matrícula)
+    // recibe el grupo sin inscripciones — comportamiento histórico.
+    const g = group as { leader_id: string | null; co_leader_id: string | null; enrollments?: Array<{ member_id: string }> }
+    const scope = groupViewerScope({
+      roles: auth.ctx.roles,
+      memberId: auth.ctx.memberId,
+      group: g,
+      isEnrolled: auth.ctx.memberId ? await isMemberOfGroup(id, auth.ctx.memberId) : false,
+    })
+    if (scope === 'admin' || scope === 'leader') {
+      return NextResponse.json({ ...group, viewer_scope: scope })
+    }
+    if (scope === 'member') {
+      const own = (g.enrollments ?? []).filter(e => e.member_id === auth.ctx.memberId)
+      return NextResponse.json({ ...group, enrollments: own, viewer_scope: 'member' })
+    }
+    return NextResponse.json({ ...group, enrollments: [], viewer_scope: 'none' })
   } catch (error) {
     console.error('GET /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
