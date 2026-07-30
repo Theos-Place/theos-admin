@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView, resolveTargetMemberId } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
-import { getFormResponses, submitResponse } from '@/lib/supabase/queries/forms'
+import { getFormResponses, submitResponse, hasMemberResponded } from '@/lib/supabase/queries/forms'
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params
+    // ?mine=1 → SOLO un booleano: ¿esta sesión ya respondió? Lo usa el llenado
+    // para el dedupe (una respuesta por persona), así que lo puede consultar
+    // cualquier sesión — no expone ninguna respuesta.
+    if (req.nextUrl.searchParams.get('mine') === '1') {
+      const self = await requireRoles()
+      if (self.res) return self.res
+      if (!self.ctx.memberId) return NextResponse.json({ answered: false })
+      return NextResponse.json({ answered: await hasMemberResponded(id, self.ctx.memberId) })
+    }
     const auth = await requireModuleView('formularios')
     if (auth.res) return auth.res
-    const { id } = await params
     return NextResponse.json(await getFormResponses(id))
   } catch (error) {
     console.error('GET /api/forms/[id]/responses:', error)

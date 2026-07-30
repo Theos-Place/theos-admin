@@ -42,6 +42,7 @@ const FIELD_GROUPS: { label: string; types: { type: FieldType; label: string }[]
     types: [
       { type: 'scale',      label: 'Escala'        },
       { type: 'section',    label: 'Separador'     },
+      { type: 'info',       label: 'Texto informativo' },
     ],
   },
   {

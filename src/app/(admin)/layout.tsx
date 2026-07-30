@@ -79,6 +79,10 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // roles de revisión (revision_pagos, folletos, coordinadores) la ven sin el
   // módulo finanzas completo. Espejo del guard de GET /api/finance/payments.
   if (pathname.startsWith('/finanzas/pagos') && can('revision_pagos', 'view')) return <>{children}</>
+  // Excepción: /formularios/[id]/responder es el llenado de un formulario —
+  // cualquier sesión autenticada (las convocatorias por correo apuntan ahí).
+  // El módulo formularios (dirección/admin) sigue exigiéndose para el resto.
+  if (/^\/formularios\/[0-9a-f-]{36}\/responder$/i.test(pathname)) return <>{children}</>
   // Excepción: /eventos (raíz) es también la pantalla de auto-inscripción de
   // cualquier miembro (antes /mis-eventos aparte); la propia página decide qué
   // mostrar según el permiso. Las subrutas de gestión (/eventos/nuevo,

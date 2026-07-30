@@ -11,7 +11,9 @@ import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { resolveZoneCode } from '@/lib/zones'
 import { zoneOnVirtualToggle } from '@/lib/studies/virtual-zone'
+import { toYmdLocal } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { minEnrollmentEnd, maxEnrollmentEnd } from '@/lib/studies/enrollment-window'
 import { ChevronLeft } from 'lucide-react'
 import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
 
@@ -307,11 +309,11 @@ function EditarForm({ group, studyType, refetch }: {
           {/* GRU-1: ventana de matrícula (vacías = modo manual). */}
           <div className="space-y-1">
             <label className={labelCls}>Inicio de matrícula</label>
-            <input type="date" className={inputCls} value={enrollStart} max={enrollEnd || startDate || undefined} onChange={e => setEnrollStart(e.target.value)} />
+            <input type="date" className={inputCls} value={enrollStart} max={enrollEnd || undefined} onChange={e => setEnrollStart(e.target.value)} />
           </div>
           <div className="space-y-1">
             <label className={labelCls}>Fin de matrícula</label>
-            <input type="date" className={inputCls} value={enrollEnd} min={enrollStart || undefined} max={startDate || undefined} onChange={e => setEnrollEnd(e.target.value)} />
+            <input type="date" className={inputCls} value={enrollEnd} min={minEnrollmentEnd(enrollStart, toYmdLocal(new Date()))} max={maxEnrollmentEnd(startDate, toYmdLocal(new Date()))} onChange={e => setEnrollEnd(e.target.value)} />
           </div>
 
           {/* WhatsApp */}

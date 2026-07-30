@@ -12,6 +12,23 @@ interface PublicFieldProps {
 export function PublicField({ field, value, onChange }: PublicFieldProps) {
   const inputBase = 'w-full rounded-xl border px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 transition-colors border-[var(--outline-variant)] bg-surface-low'
 
+  // EST-10: bloque de TEXTO INFORMATIVO — sin input. El cuerpo va en
+  // `description` (el label es el título opcional del bloque).
+  if (field.type === 'info') {
+    return (
+      <div className="rounded-xl bg-surface-low border border-[var(--outline-variant)] px-4 py-3.5 space-y-1.5">
+        {field.label && (
+          <p className="text-[13px] font-bold text-navy font-display">{field.label}</p>
+        )}
+        {field.description && (
+          <div className="text-[13px] text-navy-light/80 font-body leading-relaxed whitespace-pre-line">
+            {field.description}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (field.type === 'section') {
     return (
       <div className="pt-4">

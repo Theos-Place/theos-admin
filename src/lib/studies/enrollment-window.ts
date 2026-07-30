@@ -33,17 +33,41 @@ export function shouldCloseEnrollment(
     && !!g.starts_at && g.starts_at.slice(0, 10) <= todayYmd
 }
 
-/** Validación compartida de las fechas (forms + rutas): inicio <= fin, y fin <=
- *  fecha de inicio del grupo si existe. Devuelve el mensaje de error o null. */
+/** Ventana por defecto al crear un grupo: hoy → hoy (siempre editable). */
+export function defaultEnrollmentWindow(todayYmd: string): { start: string; end: string } {
+  return { start: todayYmd, end: todayYmd }
+}
+
+/** Mínimo del input "fin de matrícula": nunca antes del inicio de matrícula ni
+ *  antes de hoy (la ventana se cierra hacia el futuro). */
+export function minEnrollmentEnd(startYmd: string | null | undefined, todayYmd: string): string {
+  const s = (startYmd ?? '').slice(0, 10)
+  return s && s > todayYmd ? s : todayYmd
+}
+
+/** Máximo del input "fin de matrícula": la fecha de inicio del grupo, SOLO si
+ *  es futura. Si el grupo arranca hoy o ya arrancó (p. ej. se registra un grupo
+ *  en curso), no se acota — antes ese caso dejaba el campo inservible: el
+ *  navegador bloqueaba toda fecha futura y el server devolvía 400. */
+export function maxEnrollmentEnd(groupStart: string | null | undefined, todayYmd: string): string | undefined {
+  const g = (groupStart ?? '').slice(0, 10)
+  return g && g > todayYmd ? g : undefined
+}
+
+/** Validación compartida de las fechas (forms + rutas). Espejo exacto de los
+ *  límites del input: inicio <= fin, y fin <= inicio del grupo SOLO si el grupo
+ *  arranca en el futuro. `todayYmd` se inyecta para poder testear. */
 export function validateEnrollmentDates(input: {
   enrollment_start_date?: string | null
   enrollment_end_date?: string | null
   starts_at?: string | null
-}): string | null {
+}, todayYmd?: string): string | null {
   const s = input.enrollment_start_date ?? null
   const e = input.enrollment_end_date ?? null
   if (s && e && s > e) return 'El inicio de matrícula no puede ser después del fin de matrícula.'
-  if (e && input.starts_at && e > input.starts_at.slice(0, 10)) {
+  const today = todayYmd ?? new Date().toISOString().slice(0, 10)
+  const maxEnd = maxEnrollmentEnd(input.starts_at, today)
+  if (e && maxEnd && e > maxEnd) {
     return 'El fin de matrícula no puede ser después de la fecha de inicio del grupo.'
   }
   return null

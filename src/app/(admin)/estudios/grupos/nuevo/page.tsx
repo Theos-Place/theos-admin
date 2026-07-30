@@ -15,6 +15,7 @@ import { isCapacitacion, addDays } from '@/lib/studies/bloques'
 import { zoneOnVirtualToggle } from '@/lib/studies/virtual-zone'
 import { toYmdLocal } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { minEnrollmentEnd, maxEnrollmentEnd } from '@/lib/studies/enrollment-window'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import type { GroupStatus } from '@/types/study'
 
@@ -63,8 +64,9 @@ export default function NuevoGrupoPage() {
     location: '',
     capacity: '10',
     start_date: '',
-    enrollment_start: '',
-    enrollment_end: '',
+    // La ventana de matrícula abre por defecto HOY → HOY (editable).
+    enrollment_start: toYmdLocal(new Date()),
+    enrollment_end: toYmdLocal(new Date()),
     is_virtual: false,
   })
   const [selectedLeader, setSelectedLeader] = useState('')
@@ -86,13 +88,16 @@ export default function NuevoGrupoPage() {
 
   const studyType = studyTypes.find(s => s.id === step1.study_type_id)
 
+  // Si el usuario ya tocó las fechas a mano, la precarga del bloque no las pisa.
+  const [enrollTouched, setEnrollTouched] = useState(false)
+
   // GRU-1: si el plan es una capacitación, precargar la ventana de matrícula
   // desde el bloque vigente/próximo (primer hito = apertura − 3 semanas; fin =
   // cierre de matrícula del bloque). Siempre editable; best-effort (el fetch de
   // bloques exige coordinador_estudios — otros roles simplemente no precargan).
   useEffect(() => {
     if (!studyType?.code || !isCapacitacion(studyType.code)) return
-    if (step1.enrollment_start || step1.enrollment_end) return
+    if (enrollTouched) return
     let alive = true
     fetch('/api/studies/bloques')
       .then(r => (r.ok ? r.json() : []))
@@ -103,11 +108,11 @@ export default function NuevoGrupoPage() {
           .filter(b => b.fecha_cierre_matricula >= today)
           .sort((a, b) => a.fecha_apertura.localeCompare(b.fecha_apertura))[0]
         if (!vigente) return
-        setStep1(prev => (prev.enrollment_start || prev.enrollment_end) ? prev : {
+        setStep1(prev => ({
           ...prev,
           enrollment_start: addDays(vigente.fecha_apertura, -21),
           enrollment_end: vigente.fecha_cierre_matricula,
-        })
+        }))
       })
       .catch(() => {})
     return () => { alive = false }
@@ -398,10 +403,13 @@ export default function NuevoGrupoPage() {
                 type="date"
                 className={inputCls}
                 value={step1.enrollment_start}
-                max={step1.enrollment_end || step1.start_date || undefined}
-                onChange={e => setS1('enrollment_start', e.target.value)}
+                max={step1.enrollment_end || undefined}
+                onChange={e => { setEnrollTouched(true); setS1('enrollment_start', e.target.value) }}
               />
             </div>
+            {/* Fin de matrícula: nunca antes del inicio ni antes de hoy; el
+                tope es el arranque del grupo SOLO si es futuro (acotar por un
+                arranque pasado dejaba el campo inservible). */}
             <div className="space-y-1">
               <label className="text-[11px] text-navy-light/60 font-display">
                 Fin de matrícula
@@ -410,9 +418,9 @@ export default function NuevoGrupoPage() {
                 type="date"
                 className={inputCls}
                 value={step1.enrollment_end}
-                min={step1.enrollment_start || undefined}
-                max={step1.start_date || undefined}
-                onChange={e => setS1('enrollment_end', e.target.value)}
+                min={minEnrollmentEnd(step1.enrollment_start, toYmdLocal(new Date()))}
+                max={maxEnrollmentEnd(step1.start_date, toYmdLocal(new Date()))}
+                onChange={e => { setEnrollTouched(true); setS1('enrollment_end', e.target.value) }}
               />
             </div>
 

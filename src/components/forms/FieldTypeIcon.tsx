@@ -9,6 +9,7 @@ import {
   ToggleLeft,
   Star,
   Minus,
+  Info,
   FileText,
   User,
   type LucideIcon,
@@ -26,6 +27,7 @@ const ICON_MAP: Record<FieldType, LucideIcon> = {
   yes_no:        ToggleLeft,
   scale:         Star,
   section:       Minus,
+  info:          Info,
   page_break:    FileText,
   personal_data: User,
 }

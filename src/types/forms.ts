@@ -27,6 +27,8 @@ export type FieldType =
   | 'date'
   | 'number'
   | 'section'
+  /** EST-10: bloque de texto informativo, sin input (contexto, declaraciones). */
+  | 'info'
   | 'page_break'
   | 'personal_data'
 
@@ -64,6 +66,10 @@ export interface FormFieldNew {
   is_required: boolean
   sort_order: number
   options?: string[]
+  /** EST-10: opciones resueltas en el servidor (grupos abiertos de un plan).
+   *  Cuando viene, `options` llega ya poblado por el API. */
+  options_source?: 'study_groups_open' | null
+  options_source_param?: string | null
   scale_min?: number
   scale_max?: number
   scale_min_label?: string
@@ -82,6 +88,8 @@ export interface FormTemplate {
   is_active: boolean
   is_public: boolean
   requires_auth: boolean
+  /** EST-10: si es false, una respuesta por persona (el llenado lo verifica). */
+  allow_multiple_responses: boolean
   created_at: string
   created_by: string
   fields: FormFieldNew[]

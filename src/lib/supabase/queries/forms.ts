@@ -31,6 +31,7 @@ export type DbFormTemplate = {
   is_active: boolean
   is_public: boolean
   requires_auth: boolean
+  allow_multiple_responses: boolean | null
   created_at: string
   created_by: string | null
   fields: DbFormField[]
@@ -48,10 +49,10 @@ export type DbFormResponse = {
 }
 
 const FORM_SELECT = `
-  id, title, description, category, entity_type, entity_id, is_active, is_public, requires_auth, created_at, created_by,
+  id, title, description, category, entity_type, entity_id, is_active, is_public, requires_auth, allow_multiple_responses, created_at, created_by,
   fields:form_fields(
     id, field_type, label, placeholder, help_text, description, is_required,
-    options, conditions, sort_order, scale_min, scale_max, scale_min_label, scale_max_label
+    options, options_source, options_source_param, conditions, sort_order, scale_min, scale_max, scale_min_label, scale_max_label
   ),
   responses:form_responses(submitted_at)
 `
@@ -234,6 +235,16 @@ export async function deleteForm(id: string): Promise<void> {
 
 /** Registra una respuesta: crea form_response y sus form_response_values.
  *  `answers` viene keyed por field_id. */
+/** EST-10: ¿este miembro ya respondió el formulario? (dedupe del llenado). */
+export async function hasMemberResponded(formId: string, memberId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('form_responses').select('id')
+    .eq('form_id', formId).eq('member_id', memberId).limit(1)
+  if (error) throw error
+  return (data ?? []).length > 0
+}
+
 export async function submitResponse(
   formId: string,
   input: {

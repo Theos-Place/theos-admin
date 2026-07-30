@@ -1297,6 +1297,8 @@ export type Database = {
           is_required: boolean | null
           label: string
           options: Json | null
+          options_source: string | null
+          options_source_param: string | null
           placeholder: string | null
           scale_max: number | null
           scale_max_label: string | null
@@ -1315,6 +1317,8 @@ export type Database = {
           is_required?: boolean | null
           label: string
           options?: Json | null
+          options_source?: string | null
+          options_source_param?: string | null
           placeholder?: string | null
           scale_max?: number | null
           scale_max_label?: string | null
@@ -1333,6 +1337,8 @@ export type Database = {
           is_required?: boolean | null
           label?: string
           options?: Json | null
+          options_source?: string | null
+          options_source_param?: string | null
           placeholder?: string | null
           scale_max?: number | null
           scale_max_label?: string | null

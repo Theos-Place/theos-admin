@@ -9,7 +9,7 @@ const FIELD_TYPE_MAP: Record<string, FieldType> = {
   text: 'text', textarea: 'textarea', number: 'number', date: 'date',
   select: 'select', radio: 'radio', checkbox: 'checkbox', scale: 'scale',
   yes_no: 'yes_no', personal_data: 'personal_data', page_break: 'page_break',
-  section: 'section', section_header: 'section',
+  section: 'section', section_header: 'section', info: 'info',
   // aproximaciones de tipos que el builder no tiene:
   email: 'text', phone: 'text', multiselect: 'select', file: 'text',
 }
@@ -25,6 +25,8 @@ function toLogicRules(raw: unknown): LogicRule[] | undefined {
 
 function toDomainField(db: DbFormField): FormFieldNew {
   return {
+    options_source: (db as { options_source?: string | null }).options_source as 'study_groups_open' | null ?? null,
+    options_source_param: (db as { options_source_param?: string | null }).options_source_param ?? null,
     id: db.id,
     type: FIELD_TYPE_MAP[db.field_type] ?? 'text',
     label: db.label,
@@ -55,6 +57,7 @@ export function toDomainFormTemplate(db: DbFormTemplate): FormTemplate {
     is_active: db.is_active,
     is_public: db.is_public ?? false,
     requires_auth: db.requires_auth ?? true,
+    allow_multiple_responses: db.allow_multiple_responses ?? false,
     created_at: db.created_at,
     created_by: db.created_by ?? '',
     fields: db.fields.map(toDomainField),
