@@ -20,12 +20,13 @@ export type DisplayBadge = {
   label: string
   /** Códigos reales que representa (1 para individuales, varios para grupos). */
   codes: string[]
-  /** Grupo presente pero incompleto (datos heredados: tiene algunos, no todos). */
-  partial: boolean
 }
 
 /** Colapsa una lista de códigos en badges de presentación: "Niveles"/"Discípulos"
- *  (con "(parcial)" si no están todos) + los demás estudios individuales. */
+ *  + los demás estudios individuales.
+ *
+ *  El grupo NO se marca como parcial: dar un estudio de Niveles habilita para dar
+ *  todos, así que tener N1 vale igual que tener N1–N4 y el badge dice "Niveles". */
 export function groupCodesForDisplay(codes: string[], labelOf: (code: string) => string): DisplayBadge[] {
   const set = new Set(codes)
   const out: DisplayBadge[] = []
@@ -37,11 +38,9 @@ export function groupCodesForDisplay(codes: string[], labelOf: (code: string) =>
       if (usedGroups.has(gk)) continue
       usedGroups.add(gk)
       const g = STUDY_GROUPS[gk]
-      const present = g.codes.filter(c => set.has(c))
-      const partial = present.length < g.codes.length
-      out.push({ value: `GRP:${gk}`, label: g.label + (partial ? ' (parcial)' : ''), codes: present, partial })
+      out.push({ value: `GRP:${gk}`, label: g.label, codes: g.codes.filter(c => set.has(c)) })
     } else {
-      out.push({ value: code, label: labelOf(code), codes: [code], partial: false })
+      out.push({ value: code, label: labelOf(code), codes: [code] })
     }
   }
   return out

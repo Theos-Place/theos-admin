@@ -108,6 +108,9 @@ export type FieldInput = {
   description?: string | null
   is_required?: boolean
   options?: unknown
+  /** EST-10: fuente dinámica de opciones (se resuelve al abrir el formulario). */
+  options_source?: string | null
+  options_source_param?: string | null
   conditions?: unknown
   scale_min?: number | null
   scale_max?: number | null
@@ -156,6 +159,8 @@ function buildFieldRows(formId: string, fields: FieldInput[], existingIds?: Set<
     description: f.description ?? null,
     is_required: Boolean(f.is_required),
     options: f.options ?? null,
+    options_source: f.options_source ?? null,
+    options_source_param: f.options_source_param ?? null,
     conditions: remapConditions(f.conditions, idMap),
     scale_min: f.scale_min ?? null,
     scale_max: f.scale_max ?? null,
@@ -236,6 +241,49 @@ export async function deleteForm(id: string): Promise<void> {
 /** Registra una respuesta: crea form_response y sus form_response_values.
  *  `answers` viene keyed por field_id. */
 /** EST-10: ¿este miembro ya respondió el formulario? (dedupe del llenado). */
+/**
+ * EST-10: resuelve las opciones DINÁMICAS de los campos que las declaran.
+ * Hoy la única fuente es 'study_groups_open': grupos en matrícula del plan
+ * indicado, etiquetados con dirigente, día y hora + "No me sirve" al final.
+ * Se llama al servir el formulario, así la lista siempre está al día.
+ */
+export async function resolveDynamicOptions(form: DbFormTemplate): Promise<DbFormTemplate> {
+  const dynamic = form.fields.filter(f => (f as { options_source?: string | null }).options_source === 'study_groups_open')
+  if (dynamic.length === 0) return form
+  const supabase = createAdminClient()
+  const byPlan = new Map<string, string[]>()
+  for (const f of dynamic) {
+    const planCode = ((f as { options_source_param?: string | null }).options_source_param ?? '').trim().toUpperCase()
+    if (!planCode || byPlan.has(planCode)) continue
+    const { data } = await supabase
+      .from('study_groups')
+      .select('name, zone, schedule_days, schedule_time, status, plan:study_plans!inner(code), leader:members!study_groups_leader_id_fkey(first_name, last_name)')
+      .eq('status', 'en_matricula')
+      .eq('study_plans.code', planCode)
+    type Row = {
+      name: string | null; zone: string | null; schedule_days: string[] | null; schedule_time: string | null
+      leader: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
+    }
+    const DAY: Record<string, string> = { L: 'Lun', M: 'Mar', X: 'Mié', J: 'Jue', V: 'Vie', S: 'Sáb', D: 'Dom' }
+    const opts = ((data ?? []) as unknown as Row[]).map(g => {
+      const l = Array.isArray(g.leader) ? g.leader[0] : g.leader
+      const leader = l ? `${l.first_name} ${l.last_name}`.trim() : 'Sin dirigente'
+      const days = (g.schedule_days ?? []).map(d => DAY[d] ?? d).join('/')
+      return [g.name ?? planCode, leader, g.zone, days, g.schedule_time].filter(Boolean).join(' · ')
+    })
+    byPlan.set(planCode, [...opts, 'No me sirve'])
+  }
+  return {
+    ...form,
+    fields: form.fields.map(f => {
+      const src = (f as { options_source?: string | null }).options_source
+      if (src !== 'study_groups_open') return f
+      const planCode = ((f as { options_source_param?: string | null }).options_source_param ?? '').trim().toUpperCase()
+      return { ...f, options: byPlan.get(planCode) ?? ['No me sirve'] }
+    }),
+  }
+}
+
 export async function hasMemberResponded(formId: string, memberId: string): Promise<boolean> {
   const supabase = createAdminClient()
   const { data, error } = await supabase

@@ -49,6 +49,8 @@ export function formToFields(body: Record<string, unknown>): FieldInput[] {
   return (body.fields as RawField[]).map((f) => ({
     id: f.id,
     field_type: f.field_type ?? f.type ?? 'text',
+    options_source: (f as { options_source?: string | null }).options_source ?? null,
+    options_source_param: (f as { options_source_param?: string | null }).options_source_param ?? null,
     label: f.label ?? '',
     placeholder: f.placeholder ?? null,
     help_text: f.helper_text ?? null,

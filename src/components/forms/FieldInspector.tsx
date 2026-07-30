@@ -220,6 +220,36 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
     )
   }
 
+  // EST-10: inspector del bloque de TEXTO INFORMATIVO — título opcional y
+  // cuerpo largo (va en `description`, que es lo que se renderiza).
+  if (field.type === 'info') {
+    return (
+      <div className="space-y-4 p-4">
+        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
+          Texto informativo
+        </p>
+        <p className="text-[12px] text-navy-light/60 font-body">
+          Bloque de solo lectura: no pide respuesta. Útil para contexto, instrucciones o
+          declaraciones largas.
+        </p>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Título (opcional)</label>
+          <input className={inputCls} value={field.label} onChange={e => set('label', e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Texto</label>
+          <textarea
+            rows={10}
+            className={cn(inputCls, 'resize-y')}
+            placeholder="Escribí el texto que verá la persona. Los saltos de línea se respetan."
+            value={field.description ?? ''}
+            onChange={e => set('description', e.target.value || undefined)}
+          />
+        </div>
+      </div>
+    )
+  }
+
   // section inspector
   if (field.type === 'section') {
     return (
@@ -349,6 +379,40 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
               <Plus size={13} />
               Agregar opción
             </button>
+
+            {/* EST-10: opciones DINÁMICAS desde la BD. Con esto activo, las
+                opciones fijas de arriba se ignoran y el servidor arma la lista
+                al abrir el formulario (siempre actualizada). */}
+            <div className="mt-4 space-y-2 border-t border-[var(--outline-variant)] pt-3">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-coral mt-0.5"
+                  checked={field.options_source === 'study_groups_open'}
+                  onChange={e => {
+                    set('options_source', e.target.checked ? 'study_groups_open' : null)
+                    if (!e.target.checked) set('options_source_param', null)
+                  }}
+                />
+                <span>
+                  <span className="block text-[13px] text-navy font-body">Opciones automáticas: grupos abiertos</span>
+                  <span className="block text-[11px] text-navy-light/60 font-body">
+                    La lista se arma con los grupos en matrícula del plan indicado (dirigente, día y hora), más &quot;No me sirve&quot;.
+                  </span>
+                </span>
+              </label>
+              {field.options_source === 'study_groups_open' && (
+                <div className="space-y-1 pl-6">
+                  <label className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Código del plan</label>
+                  <input
+                    className={inputCls}
+                    placeholder="ej. CDEB"
+                    value={field.options_source_param ?? ''}
+                    onChange={e => set('options_source_param', e.target.value.toUpperCase() || null)}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 

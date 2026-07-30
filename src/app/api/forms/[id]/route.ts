@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { getFormById, updateForm, deleteForm } from '@/lib/supabase/queries/forms'
+import { getFormById, updateForm, deleteForm, resolveDynamicOptions } from '@/lib/supabase/queries/forms'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
 
@@ -19,7 +19,7 @@ export async function GET(
     const { id } = await params
     const form = await getFormById(id)
     if (!form) return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
-    return NextResponse.json(form)
+    return NextResponse.json(await resolveDynamicOptions(form))
   } catch (error) {
     console.error('GET /api/forms/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
