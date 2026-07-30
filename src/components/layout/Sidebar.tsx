@@ -43,6 +43,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { landsOnProfile } from '@/lib/auth/home-route'
 import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
+import { canSeeServiceApplications } from '@/lib/auth/service-applications'
 
 type SubItem = { href: string; label: string; icon: LucideIcon; badge?: number }
 type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null; summaryLabel?: string; badge?: number; hideSummary?: boolean }
@@ -73,8 +74,9 @@ const COMUNICACIONES_SUB: SubItem[] = [
 
 const SERVIDORES_SUB: SubItem[] = [
   { href: '/servidores/vacantes',     label: 'Puestos de Servicio', icon: Bookmark      },
-  { href: '/servidores/aplicaciones', label: 'Solicitudes',         icon: ClipboardList },
 ]
+/** Solicitudes de servicio: solo coordinador de servidores y admin (2026-07-30). */
+const SERVIDORES_APPS_SUB: SubItem = { href: '/servidores/aplicaciones', label: 'Solicitudes', icon: ClipboardList }
 
 // Roles que ven la página de mantenimiento (áreas/comités/puestos).
 const SERVICE_ADMIN = ['encargado_staff', 'coordinador_servidores', 'direccion', 'admin']
@@ -171,9 +173,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   // Mantenimiento de áreas/comités/puestos: solo para roles de admin de servidores.
   const canServiceAdmin = userRoles.some(r => SERVICE_ADMIN.includes(r))
-  const servidoresSub: SubItem[] = canServiceAdmin
-    ? [...SERVIDORES_SUB, { href: '/servidores/admin', label: 'Áreas y comités', icon: Wrench }]
-    : SERVIDORES_SUB
+  const servidoresSub: SubItem[] = [
+    ...SERVIDORES_SUB,
+    ...(canSeeServiceApplications(userRoles) ? [SERVIDORES_APPS_SUB] : []),
+    ...(canServiceAdmin ? [{ href: '/servidores/admin', label: 'Áreas y comités', icon: Wrench }] : []),
+  ]
 
   // Formularios vive dentro de Comunicaciones (sub-ítem), no como módulo aparte.
   // COM-1: "Configuración" (remitentes/SMTP) es SOLO admin — se filtra del sub.

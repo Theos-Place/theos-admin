@@ -44,6 +44,10 @@ export function useServers(...slices: ServersSlice[]) {
         const hit = cache.get(slice)
         if (!force && hit && Date.now() - hit.ts < TTL_MS) return [slice, hit.data]
         const res = await fetch(ENDPOINT[slice])
+        // 403 en UNA porción (p. ej. la bandeja de solicitudes, restringida a
+        // coordinador de servidores/admin) deja esa porción vacía sin tumbar el
+        // resto de la página.
+        if (res.status === 403) return [slice, []]
         if (!res.ok) throw new Error('Error cargando servidores')
         const rows = (await res.json()) as unknown[]
         cache.set(slice, { data: rows, ts: Date.now() })

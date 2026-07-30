@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles } from '@/lib/auth/guard'
+import { SERVICE_APPLICATIONS_ROLES } from '@/lib/auth/service-applications'
 import {
   getApplications, getApplicationsPage, getApplicationStats, createApplication,
   type ApplicationFilters,
@@ -7,7 +8,10 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('servidores')
+    // La BANDEJA de solicitudes de servicio es solo del coordinador de
+    // servidores y admin (2026-07-30). Gestionar UNA aplicación desde el
+    // detalle de la vacante sigue con su propio guard (PUT applications/[id]).
+    const auth = await requireRoles(...SERVICE_APPLICATIONS_ROLES)
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
 

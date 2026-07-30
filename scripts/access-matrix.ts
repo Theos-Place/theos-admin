@@ -52,7 +52,9 @@ const MATRIX: Array<{ path: string; expected: Expected }> = [
   { path: '/api/studies/prematrimonial', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
   { path: '/api/studies/requests?count=open', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
   { path: '/api/servers/committees', expected: { miembro: 403, dirigente: 403, lider_comite: 'ok', coordinador_estudios: 403, admin: 'ok' } }, // lider: 200 pero SOLO sus comités
-  { path: '/api/servers/applications', expected: { miembro: 403, dirigente: 403, lider_comite: 'ok', coordinador_estudios: 403, admin: 'ok' } },
+  // Bandeja de solicitudes de servicio: SOLO coordinador_servidores y admin
+  // (2026-07-30) — lider_comite y dirección quedaron fuera.
+  { path: '/api/servers/applications', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 403, admin: 'ok' } },
   { path: '/api/servers/position-requests', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 403, admin: 'ok' } },
   { path: '/api/finance/payments?page=1&pageSize=1', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } }, // REV-3: revision_pagos
   { path: '/api/payments/queue', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },

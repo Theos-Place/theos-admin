@@ -13,6 +13,9 @@ import { toDomainApplication } from '@/lib/servers/adapter'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, ClipboardList, Check, Loader2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { AccessDenied } from '@/components/shared/AccessDenied'
+import { useAuth } from '@/hooks/useAuth'
+import { canSeeServiceApplications } from '@/lib/auth/service-applications'
 
 const APP_STATUS_COLORS: Record<ApplicationStatus, string> = {
   pending:   'bg-amber-500/10 text-amber-600',
@@ -39,6 +42,9 @@ const STATUS_FILTERS: { key: ApplicationStatus | 'all'; label: string }[] = [
 type BulkAction = 'approve' | 'reject'
 
 export default function AplicacionesPage() {
+  const { user, loaded } = useAuth()
+  const canSee = canSeeServiceApplications(user?.roles ?? [])
+
   const [search, setSearch]             = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   useEffect(() => {
@@ -122,6 +128,9 @@ export default function AplicacionesPage() {
     }
   }
 
+
+  // Solo coordinador de servidores y admin (2026-07-30).
+  if (loaded && !canSee) return <AccessDenied />
   return (
     <div className="space-y-6">
       {/* Header */}
