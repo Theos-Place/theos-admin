@@ -10,7 +10,7 @@ import { SedesProvider } from '@/lib/sedes'
 import { OrgProvider } from '@/lib/org'
 import { AuthProvider, useAuth } from '@/lib/auth/auth-context'
 import { usePermissions } from '@/hooks/usePermissions'
-import { canSeeModuleSummary } from '@/lib/auth/module-summary'
+import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
 import { ToastProvider } from '@/components/shared/Toast'
 import { CedulaReminderBanner } from '@/components/members/CedulaReminderBanner'
 
@@ -87,8 +87,9 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // SEC-1: la RAÍZ de estudios/servidores es un resumen de toda la organización
   // — exige alcance 'all' (dirigente ve sus grupos; lider_comite, su comité).
-  const mod = MODULE_BY_PREFIX[prefix]
-  if (pathname === prefix && !canSeeModuleSummary(mod, getScope(mod))) return <AccessDenied />
+  // La regla es por RUTA: /matricula mapea al módulo estudios pero es el
+  // autoservicio del miembro, no un resumen.
+  if (!canSeeSummaryRoute(pathname, getScope(MODULE_BY_PREFIX[prefix]))) return <AccessDenied />
   // SEC-1: estudios con alcance 'own' (can() no mira scope, así que dirigente
   // y miembro pasan el chequeo de arriba). Dirigente: solo la raíz, sus grupos
   // y el detalle/asistencia de un grupo (el API ya filtra a los suyos).

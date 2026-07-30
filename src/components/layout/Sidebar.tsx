@@ -42,7 +42,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { landsOnProfile } from '@/lib/auth/home-route'
-import { canSeeModuleSummary } from '@/lib/auth/module-summary'
+import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
 
 type SubItem = { href: string; label: string; icon: LucideIcon; badge?: number }
 type NavModule = { href: string; label: string; icon: LucideIcon; subs: SubItem[]; module: string | null; summaryLabel?: string; badge?: number; hideSummary?: boolean }
@@ -208,8 +208,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // la propia página muestra solo la inscripción a eventos (antes vivía
     // aparte en /mis-eventos); "Crear evento"/"Tipos de evento" siguen ocultos.
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: eventosSub,        module: 'eventos', summaryLabel: 'Calendario' },
-    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios', hideSummary: !canSeeModuleSummary('estudios', getScope('estudios')) },
-    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores', hideSummary: !canSeeModuleSummary('servidores', getScope('servidores')) },
+    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios', hideSummary: !canSeeSummaryRoute('/estudios', getScope('estudios')) },
+    { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores', hideSummary: !canSeeSummaryRoute('/servidores', getScope('servidores')) },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
