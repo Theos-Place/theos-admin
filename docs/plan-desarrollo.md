@@ -546,6 +546,93 @@ Después de arreglar, hacé una pasada de verificación general: creá un test (
 se vuelva a colar. Correr tsc, lint, vitest.
 ```
 
+### [x] COM-2 · Tres plantillas de invitación a estudios — HECHO 2026-07-30 (seed `scripts/seed-invitation-templates.mjs`, idempotente): las 3 en message_templates, categoría `inscripcion`, is_system=false (editables/borrables desde /comunicaciones/plantillas). Guardan SOLO el cuerpo — renderEmail pone header navy + logo propio + footer + pie de baja; sin URLs de CCB. CTA coral al link de matrícula (editable) y bloque "¿Primera vez que entrás al sistema?" con los 4 pasos de AUTH-2, SIN links que expiren (solo el link al sistema; el enlace de crear contraseña lo pide cada persona). Cuerpos con placeholders "(editá…)" para fechas/horarios/zona/requisitos y reutilizarlas cada ciclo; las de seleccionados llevan la caja navy con la FECHA LÍMITE de matrícula. Fragmento reutilizable: el editor guarda HTML plano y no soporta includes, así que la fuente única del bloque es la constante FIRST_TIME_BLOCK del seed — re-correrlo actualiza las tres de una vez (documentado en el propio HTML). Verificadas con el pipeline real (applyVars + renderEmail): {nombre} resuelve, CTA a /matricula, bloque presente, sin CCB y sin tokens. PENDIENTE OPERATIVO: envío de prueba por SES (a confirmar con TI antes de mandar un correo real).
+Archivos: `message_templates`, `/comunicaciones/plantillas`, referencia de diseño: `docs/referencias/theos_email_campa_servidores_preventa.html`
+
+```
+Crear tres plantillas de correo en message_templates (visibles en /comunicaciones/plantillas,
+no is_system, editables por quien arma el broadcast). Las tres comparten estructura e
+identidad visual de Theos (header navy #161440 con logo, CTA coral #EF5554, footer estándar;
+ver docs/referencias/theos_email_campa_servidores_preventa.html como referencia de estilo,
+pero SIN las URLs de CCB — logo desde asset propio y links al sistema nuevo):
+1) "Invitación a Nivel 1 / Capacitaciones" — invitación abierta a inscribirse.
+2) "Invitación seleccionados CDEB" — para quienes fueron elegidos tras la preinscripción
+   (ver EST-10): tono de "fuiste seleccionado", con fecha límite de matrícula.
+3) "Invitación seleccionados Hermenéutica" — misma idea, para HER.
+Las tres llevan:
+- CTA principal al link de la página de matrícula (editable).
+- Un bloque "¿Primera vez que entrás al sistema?" con el paso a paso corto de AUTH-2:
+  entrá al sistema → tocá "Creá tu contraseña" con este mismo correo → abrí el enlace que
+  te llega → definí tu contraseña y matriculate. Sin links que expiren en el correo.
+- Cuerpo editable (fechas, horarios, grupo, requisitos) para reutilizarlas cada ciclo.
+Hacer el bloque de "primera vez" un fragmento reutilizable si el editor lo permite, para no
+mantener el mismo texto en tres lugares. Probar el render en el preview y con envío de
+prueba (SES).
+```
+
+### [ ] EST-10 · Flujo de preinscripción CDEB (convocatoria → formulario → selección → invitación)
+Archivos: módulo de formularios (`forms`, `form_fields`, `form_responses`, `form_response_values`), `study_invitations`, cola del comité de dirigentes, `message_templates` (COM-2)
+Depende de: COM-2. Relacionado: EST-5 (CDEB invitation-only), EST-9 (recomendaciones como fuente de audiencia)
+
+```
+Implementar el flujo completo de preinscripción a CDEB dentro del sistema (hoy vive fuera,
+en un formulario de CCB). IMPORTANTE: no construir un módulo nuevo — componé las piezas
+existentes: el módulo de FORMULARIOS (forms/form_fields/form_responses, con builder de
+campos configurables) para el formulario, y STUDY_INVITATIONS (planes invitation-only) para
+la invitación final. Lo único nuevo es el puente de revisión/selección.
+
+Etapas:
+1) CONVOCATORIA: se elige una audiencia (lista de miembros; idealmente pre-cargada con las
+   recomendaciones de dirigentes de EST-9 que estén enviadas/aprobadas) y se les manda un
+   correo con el link al formulario de preinscripción, usando el flujo de broadcasts.
+2) FORMULARIO DE PREINSCRIPCIÓN construido con el builder. La persona ya está autenticada:
+   nombre y teléfono se PRELLENAN del perfil, no se re-escriben. Contenido:
+   - Encabezado de contexto: alegría por la preinscripción, que se evaluarán las respuestas,
+     que si es aprobado se le enviará la invitación al curso, e invitación a orar antes de
+     responder.
+   - "Compromisos del dirigente": 9 checkboxes — comunicación constante con Dios en oración
+     y lectura · preparar el estudio semanalmente con antelación · puntualidad en los
+     estudios · testimonio ejemplar · escuchar y orar por los estudiantes aun fuera del
+     estudio · asistir a las actividades de Theos e invitar al estudio · aportar
+     económicamente a la misión de Theos Place · asistir a las charlas mínimo 2 veces al
+     mes · usar las redes sociales sabiamente, dando el ejemplo.
+   - Declaración Doctrinal de Theos (los 7 puntos completos: Biblia · relación íntima y
+     pecado · salvación por gracia como regalo de Dios · Padre, Hijo y Espíritu Santo ·
+     madurez espiritual · unión de los creyentes / cuerpo de Cristo · adoración y oración
+     solo a Dios) + "¿Estás de acuerdo con la Declaración doctrinal de Theos?" Sí/No.
+   - Abiertas obligatorias: cómo describirías tu relación con Dios · por qué querés ser
+     dirigente y qué te motiva · si considerás la Biblia autoridad máxima, completa y veraz,
+     y por qué · cómo explicarías el plan de salvación a alguien nuevo (con referencias
+     bíblicas) · posición sobre relaciones sexuales fuera del matrimonio · posición sobre
+     identidad de género · si tu testimonio inspira a otros y qué debés trabajar (con el
+     texto de contexto de 1 Cor 11:1 y la invitación a contar luchas con pecado recurrente
+     para poder acompañar el proceso).
+   - "¿Tenés el tiempo para capacitarte (aprox. 2 meses) y tener a cargo un grupo de estudio
+     con compromiso de 1 año luego de la capacitación?" Sí/No.
+   - "¿Considerás que tenés el compromiso y el tiempo necesarios para prepararte y dirigir?"
+     con el texto de contexto: modalidad presencial, posible pasantía de al menos 8 semanas,
+     preparación semanal y seguimiento a estudiantes.
+   - "¿Si sos seleccionado, cuál grupo te serviría?" — opciones DINÁMICAS desde los grupos
+     CDEB abiertos (dirigente, dirección, día y hora), más "No me sirve".
+   - Cierre amable ("si no te considerás listo, no es la última oportunidad — contanos en
+     comentarios y más adelante te tomamos en cuenta de nuevo") + campo de comentarios.
+   Si el builder actual NO soporta algún tipo de campo (bloque de texto largo informativo,
+   grupo de checkboxes, opciones dinámicas desde grupos), decímelo ANTES de improvisar.
+3) REVISIÓN Y SELECCIÓN (lo nuevo): pantalla donde el comité vea las respuestas, las compare
+   y marque aprobado / rechazado / en espera por persona, con notas internas. Filtros:
+   aceptó la declaración doctrinal, disponibilidad, grupo elegido. Si la persona tiene
+   recomendación de EST-9, mostrarla al lado de su respuesta.
+4) INVITACIÓN: botón que, para los aprobados, genere la invitación en study_invitations (lo
+   que desbloquea el plan invitation-only) y dispare el correo "Invitación seleccionados
+   CDEB" (COM-2) con link a matrícula. Rechazados/en espera no reciben nada automático.
+Permisos: convocar, revisar y seleccionar → coordinador_dirigentes, coordinador_estudios,
+admin. Las respuestas traen información personal sensible (luchas con pecado, posiciones
+doctrinales): NO visibles para otros roles, mismo criterio de EST-9.
+Reutilizable: debe servir para futuras convocatorias y para el mismo esquema en otro estudio
+(p. ej. Hermenéutica) — no hardcodear "CDEB Madrid 2026".
+Tests: creación de invitación desde la selección, gate de visibilidad, prellenado del perfil.
+```
+
 ### [x] EST-9 · Cierre especial D3/Panorama: recomendación a CDEB por estudiante — HECHO 2026-07-29 (migración 20260729160000 aplicada: tabla `cdeb_recommendations` (member+group UNIQUE para el upsert del guardado parcial, enrollment_id, filled_by, status borrador/enviada, convicciones en jsonb, 4 escalas, textos y recomendación final) con RLS y CERO policies = deny-by-default, solo service role. Módulo puro `cdeb-recommendation.ts` (17 tests) con los textos exactos: encabezado de contexto, fecha prellenada con la del cierre + hint, convicciones POR EXCEPCIÓN (los 5 temas arrancan en "convicción firme"; marcar dudas/contraria abre su explicación OBLIGATORIA), escalas 1-5 como botones en fila con la etiqueta del nivel visible, opción X "sin información suficiente" SOLO en Panorama y solo para testimonio/pasión, textos libres obligatorios que aceptan "NA" (el de compromiso es el único opcional), recomendación final de 4 opciones. Botón "Recomendar para CDEB" POR ESTUDIANTE (solo aprobados) en la lista de cierre — el form se abre solo al tocarlo; muestra badge de borrador/enviada. NO bloquea el cierre: el borrador no se valida (ni en el cliente ni en el server) y se puede completar después; el envío valida en ambos lados. En DIS3/PAN el bloque simple de EST-3 SE OCULTA (nunca los dos juntos). VISIBILIDAD: `CDEB_REC_VIEW_ROLES` = coordinador_dirigentes/coordinador_estudios/admin — NI el miembro, NI el dirigente que la escribió, NI dirección; panel de solo lectura en la ficha Administrativa del perfil (con 403 no se pinta) y GET de la cola del comité que además marca si la persona YA tiene invitación activa a CDEB (conexión con el flujo invitation-only de EST-5). El dirigente del grupo SÍ puede escribir/editar su borrador (gate por leader/co_leader del grupo).)
 Archivos: `src/app/(admin)/estudios/grupos/[id]/cierre/page.tsx`, `src/app/api/studies/groups/[id]/close/route.ts`, migración (tabla nueva), `src/lib/studies/close-recommendations.ts` (gate de EST-3), cola de dirigentes/CDEB
 
