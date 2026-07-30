@@ -29,7 +29,7 @@ const MATRICULA_URL = 'https://admin.theosplace.org/matricula'
 // ── Bloque reutilizable: primera vez en el sistema (AUTH-2) ──────────────────
 // SIN links que expiren: solo el link al sistema; el enlace para crear la
 // contraseña lo pide cada persona a demanda.
-const FIRST_TIME_BLOCK = `<div class="divider"></div>
+const firstTimeBlock = (lastStep = 'Ya adentro, entrá a <strong>Matrícula</strong> y matriculate.') => `<div class="divider"></div>
 
 <div style="background:#f4f4f0; border-radius:12px; padding:20px 22px;">
   <p style="font-size:14px; font-weight:700; color:#161440; margin-bottom:10px;">¿Primera vez que entrás al sistema?</p>
@@ -41,10 +41,12 @@ const FIRST_TIME_BLOCK = `<div class="divider"></div>
     <tr><td style="vertical-align:top; width:26px; padding:6px 0; font-size:14px; font-weight:700; color:#EF5554;">3.</td>
         <td style="padding:6px 0; font-size:14px; color:#555; line-height:1.6;">Abrí el enlace que te llega al correo y definí tu contraseña.</td></tr>
     <tr><td style="vertical-align:top; width:26px; padding:6px 0; font-size:14px; font-weight:700; color:#EF5554;">4.</td>
-        <td style="padding:6px 0; font-size:14px; color:#555; line-height:1.6;">Ya adentro, entrá a <strong>Matrícula</strong> y matriculate.</td></tr>
+        <td style="padding:6px 0; font-size:14px; color:#555; line-height:1.6;">${lastStep}</td></tr>
   </table>
   <p style="font-size:12px; color:#777; margin-top:10px;">Si ya tenés tu contraseña, entrá directo con el botón de arriba.</p>
 </div>`
+
+const FIRST_TIME_BLOCK = firstTimeBlock()
 
 const cta = (label = 'Ir a Matrícula →') =>
   `<div class="cta-wrapper">\n  <a class="cta-button" href="${MATRICULA_URL}">${label}</a>\n</div>`
@@ -143,7 +145,38 @@ ${FIRST_TIME_BLOCK}
 
 <p style="font-size:13px; color:#777; line-height:1.7; margin-top:20px;">Si no vas a poder participar en este ciclo, avisanos a <a href="mailto:estudios@theosplace.org" style="color:#519DA2;">estudios@theosplace.org</a> para darle el cupo a otra persona.</p>`
 
+// ── 4) Convocatoria a preinscribirse (EST-10, etapa 1) ──────────────────────
+// El link al formulario lo inyecta el sistema donde esté {link_formulario}
+// (pantalla de selección → botón "Convocar"), así la plantilla sirve para
+// cualquier convocatoria y para otro estudio.
+const CONVOCATORIA = `<!-- EST-10 · Convocatoria a preinscripción. NO borres {link_formulario}:
+     el sistema lo reemplaza por el link del formulario al enviar.
+     {nombre} se reemplaza por el nombre de cada destinatario. -->
+<p class="greeting">Hola, {nombre}</p>
+
+<p>Tu dirigente te recomendó para capacitarte como dirigente de estudios bíblicos, y queremos invitarte a <strong>preinscribirte</strong>.</p>
+
+<p>La preinscripción es un formulario para conocerte: cómo está tu relación con Dios, por qué querés dar estudios y con qué te podés comprometer. No hay respuestas correctas ni incorrectas — te pedimos orar antes de llenarlo y contestar con honestidad.</p>
+
+<div class="info-box">
+  <p class="info-title">Antes de empezar</p>
+  <p style="font-size:14px; color:#555; line-height:1.8;">
+    <strong>Toma:</strong> unos 20 minutos<br />
+    <strong>Fecha límite:</strong> (editá la fecha)<br />
+    <strong>Después:</strong> el comité revisa las respuestas y, si sos seleccionado, te llega la invitación al curso
+  </p>
+</div>
+
+<div class="cta-wrapper">
+  <a class="cta-button" href="{link_formulario}">Llenar la preinscripción →</a>
+</div>
+
+${firstTimeBlock('Volvé a este correo y tocá el botón de arriba para llenar la preinscripción.')}
+
+<p style="font-size:13px; color:#777; line-height:1.7; margin-top:20px;">¿Dudas? Escribinos a <a href="mailto:estudios@theosplace.org" style="color:#519DA2;">estudios@theosplace.org</a>.</p>`
+
 const TEMPLATES = [
+  { name: 'Convocatoria a preinscripción de dirigentes', subject: 'Te invitamos a preinscribirte para dar estudios', body: CONVOCATORIA },
   { name: 'Invitación a Nivel 1 / Capacitaciones', subject: 'Te invitamos a un grupo nuevo de estudio', body: NIVEL1 },
   { name: 'Invitación seleccionados CDEB', subject: 'Fuiste seleccionado para CDEB', body: CDEB },
   { name: 'Invitación seleccionados Hermenéutica', subject: 'Fuiste seleccionado para Hermenéutica', body: HER },

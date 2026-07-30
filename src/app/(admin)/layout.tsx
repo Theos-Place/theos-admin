@@ -11,6 +11,7 @@ import { OrgProvider } from '@/lib/org'
 import { AuthProvider, useAuth } from '@/lib/auth/auth-context'
 import { usePermissions } from '@/hooks/usePermissions'
 import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
+import { SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 import { ToastProvider } from '@/components/shared/Toast'
 import { CedulaReminderBanner } from '@/components/members/CedulaReminderBanner'
 
@@ -83,6 +84,13 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // cualquier sesión autenticada (las convocatorias por correo apuntan ahí).
   // El módulo formularios (dirección/admin) sigue exigiéndose para el resto.
   if (/^\/formularios\/[0-9a-f-]{36}\/responder$/i.test(pathname)) return <>{children}</>
+  // Excepción (EST-10): /formularios/[id]/seleccion es la revisión del comité de
+  // una preinscripción — la ven los coordinadores de dirigentes/estudios sin el
+  // módulo formularios. Espejo del gate de /api/forms/[id]/selection.
+  if (/^\/formularios\/[0-9a-f-]{36}\/seleccion$/i.test(pathname)
+      && (user.roles ?? []).some(r => (SELECTION_REVIEW_ROLES as readonly string[]).includes(r))) {
+    return <>{children}</>
+  }
   // Excepción: /eventos (raíz) es también la pantalla de auto-inscripción de
   // cualquier miembro (antes /mis-eventos aparte); la propia página decide qué
   // mostrar según el permiso. Las subrutas de gestión (/eventos/nuevo,

@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils'
 import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { generateCSV } from '@/lib/export'
+import { isSelectionForm, SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
+import { useAuth } from '@/hooks/useAuth'
 
 function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   if (!form) return
@@ -34,6 +36,7 @@ export default function RespuestasPage() {
   const [responses, setResponses] = useState<FormResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [detailResponse, setDetailResponse] = useState<FormResponse | null>(null)
+  const { hasRole } = useAuth()
 
   useEffect(() => {
     let alive = true
@@ -151,6 +154,19 @@ export default function RespuestasPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {/* EST-10: los formularios de preinscripción tienen su pantalla de
+              selección (decisión del comité + invitación), solo para el comité. */}
+          {isSelectionForm(form.fields.map(f => ({
+            id: f.id, type: f.type, label: f.label,
+            options_source: f.options_source, options_source_param: f.options_source_param,
+          }))) && hasRole(...SELECTION_REVIEW_ROLES) && (
+            <Link
+              href={`/formularios/${id}/seleccion`}
+              className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:bg-navy-light transition-colors font-body"
+            >
+              Selección del comité
+            </Link>
+          )}
           <Link
             href={`/formularios/${id}`}
             className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
