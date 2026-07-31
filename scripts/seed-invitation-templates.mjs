@@ -149,34 +149,57 @@ ${FIRST_TIME_BLOCK}
 // El link al formulario lo inyecta el sistema donde esté {link_formulario}
 // (pantalla de selección → botón "Convocar"), así la plantilla sirve para
 // cualquier convocatoria y para otro estudio.
+const STEP = (n, color, text) => `<tr>
+      <td style="vertical-align:top; width:44px; padding:0 0 16px;">
+        <div style="width:32px; height:32px; background:${color}; border-radius:50%; text-align:center; line-height:32px;">
+          <span style="font-size:13px; font-weight:700; color:#ffffff;">${n}</span>
+        </div>
+      </td>
+      <td style="padding:4px 0 16px; font-size:14px; color:#444; line-height:1.7;">${text}</td>
+    </tr>`
+
+// Copy tomado del correo que se usaba en CCB ("Proceso de selección CDEB"),
+// adaptado a este sistema: el paso 1 ya no habla de adjuntos (la Declaración
+// Doctrinal y los Compromisos van DENTRO del formulario) y el CTA usa el token
+// del link. Los pasos van en <table>: flexbox no funciona en clientes de correo.
 const CONVOCATORIA = `<!-- EST-10 · Convocatoria a preinscripción. NO borres {link_formulario}:
      el sistema lo reemplaza por el link del formulario al enviar.
-     {nombre} se reemplaza por el nombre de cada destinatario. -->
-<p class="greeting">Hola, {nombre}</p>
+     {nombre} se reemplaza por el nombre de cada destinatario.
+     Editá cada ciclo: la fecha límite y el bloque en que se daría la capacitación. -->
+<span class="tag">Proceso de selección CDEB</span>
 
-<p>Tu dirigente te recomendó para capacitarte como dirigente de estudios bíblicos, y queremos invitarte a <strong>preinscribirte</strong>.</p>
+<p class="greeting">Hola, {nombre}, ¿cómo estás?</p>
 
-<p>La preinscripción es un formulario para conocerte: cómo está tu relación con Dios, por qué querés dar estudios y con qué te podés comprometer. No hay respuestas correctas ni incorrectas — te pedimos orar antes de llenarlo y contestar con honestidad.</p>
+<p>Notamos que tenés un gran potencial para convertirte en <strong>Dirigente de Estudios Bíblicos</strong> y queremos invitarte a participar en el proceso de selección para recibir la capacitación <strong>Cómo Dar Estudios Bíblicos</strong>. En ella vas a aprender técnicas y herramientas para ayudar a otros a crecer en una relación cada vez más cercana con Dios.</p>
 
-<div class="info-box">
-  <p class="info-title">Antes de empezar</p>
-  <p style="font-size:14px; color:#555; line-height:1.8;">
-    <strong>Toma:</strong> unos 20 minutos<br />
-    <strong>Fecha límite:</strong> (editá la fecha)<br />
-    <strong>Después:</strong> el comité revisa las respuestas y, si sos seleccionado, te llega la invitación al curso
-  </p>
-</div>
+<p class="info-title" style="margin-top:28px;">¿Cómo aplicar?</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+  ${STEP(1, '#161440', 'Leé la <strong>Declaración Doctrinal de Theos</strong> y los <strong>Compromisos del Dirigente</strong>: los vas a encontrar dentro del formulario, antes de las preguntas.')}
+  ${STEP(2, '#161440', 'Orá y pedile guía a Dios para saber si este es el servicio que tiene para vos.')}
+  ${STEP(3, '#EF5554', 'Completá el formulario de preinscripción <strong>a más tardar el (editá la fecha límite)</strong>.')}
+</table>
 
 <div class="cta-wrapper">
-  <a class="cta-button" href="{link_formulario}">Llenar la preinscripción →</a>
+  <a class="cta-button" href="{link_formulario}">Completar preinscripción →</a>
+</div>
+
+<div class="info-box">
+  <p style="font-size:13px; color:#555; line-height:1.75; margin:0;">El <strong>Comité de Dirigentes</strong> va a revisar tu preinscripción y te avisa lo antes posible si quedás seleccionado para llevar la capacitación en el <strong>(editá el bloque y el año)</strong>.</p>
+</div>
+
+<div style="background:#fff8f0; border-left:3px solid #EF5554; border-radius:0 8px 8px 0; padding:14px 18px; margin:0 0 28px;">
+  <p style="font-size:13px; color:#777; line-height:1.7; margin:0;">Si no te interesa llevar esta capacitación o no podés en este momento, avisanos al <a href="https://wa.me/message/WEQS3TUW66MAN1" style="color:#EF5554; text-decoration:none; font-weight:600;">7261-1001</a> para invitar a alguien más y aprovechar todos los cupos.</p>
 </div>
 
 ${firstTimeBlock('Volvé a este correo y tocá el botón de arriba para llenar la preinscripción.')}
 
-<p style="font-size:13px; color:#777; line-height:1.7; margin-top:20px;">¿Dudas? Escribinos a <a href="mailto:estudios@theosplace.org" style="color:#519DA2;">estudios@theosplace.org</a>.</p>`
+<div class="divider"></div>
+
+<p style="margin-bottom:0;">Un abrazo,<br /><strong style="color:#161440;">Comité de Estudios · Theos Place</strong></p>`
 
 const TEMPLATES = [
-  { name: 'Convocatoria a preinscripción de dirigentes', subject: 'Te invitamos a preinscribirte para dar estudios', body: CONVOCATORIA },
+  { name: 'Convocatoria a preinscripción de dirigentes', subject: 'Te invitamos al proceso de selección para dar estudios bíblicos', body: CONVOCATORIA },
   { name: 'Invitación a Nivel 1 / Capacitaciones', subject: 'Te invitamos a un grupo nuevo de estudio', body: NIVEL1 },
   { name: 'Invitación seleccionados CDEB', subject: 'Fuiste seleccionado para CDEB', body: CDEB },
   { name: 'Invitación seleccionados Hermenéutica', subject: 'Fuiste seleccionado para Hermenéutica', body: HER },
