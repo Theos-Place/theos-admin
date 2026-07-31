@@ -13,6 +13,7 @@ import { allowsCdebRecommendation } from '@/lib/studies/cdeb-recommendation'
 import { CdebRecommendationModal } from '@/components/studies/CdebRecommendationModal'
 import { PrematCoupleEvaluation } from '@/components/studies/PrematCoupleEvaluation'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
+import { toClosePayload, failsWithoutReason as countFailsWithoutReason } from '@/lib/studies/close-payload'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, Sparkles } from 'lucide-react'
 
 type ParticipantResult = {
@@ -23,6 +24,8 @@ type ParticipantResult = {
   grade: string
   /** Justificación obligatoria al reprobar. */
   fail_reason: string
+  /** Comentario OPCIONAL al retirar (pedido 2026-07-31): por qué se retiró. */
+  withdraw_reason: string
   rec_oracion: boolean
   rec_servicio: boolean
   rec_dirigente: boolean
@@ -91,6 +94,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       status_result: (p.status === 'withdrawn' ? 'retirado' : '') as ParticipantResult['status_result'],
       grade: p.grade?.toString() ?? '',
       fail_reason: '',
+      withdraw_reason: '',
       rec_oracion: false,
       rec_servicio: false,
       rec_dirigente: false,
@@ -108,7 +112,8 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   }
 
   const unevaluated = results.filter(r => r.status_result === '').length
-  const failsWithoutReason = results.filter(r => r.status_result === 'reprobado' && !r.fail_reason.trim()).length
+  // Regla pura (con tests): el comentario del retirado NO bloquea, es opcional.
+  const failsWithoutReason = countFailsWithoutReason(results)
   const aprobados = results.filter(r => r.status_result === 'aprobado').length
   const reprobados = results.filter(r => r.status_result === 'reprobado').length
   const retirados = results.filter(r => r.status_result === 'retirado').length
@@ -152,22 +157,9 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
     if (submitting) return
     setSubmitting(true)
     try {
-      const payload = results
-        .filter(r => r.status_result !== '')
-        .map(r => ({
-          member_id: r.member_id,
-          status_result: r.status_result,
-          grade: r.grade ? Number(r.grade) : null,
-          fail_reason: r.status_result === 'reprobado' ? r.fail_reason.trim() : null,
-          recommendations: canRecommend && (r.rec_oracion || r.rec_servicio || r.rec_dirigente)
-            ? {
-                oracion: r.rec_oracion,
-                servicio: r.rec_servicio,
-                dirigente: r.rec_dirigente,
-                justification: r.rec_justification.trim() || null,
-              }
-            : null,
-        }))
+      // Cada campo viaja solo con su resultado (ver lib/studies/close-payload.ts).
+      const payload = toClosePayload(results, canRecommend)
+
       const res = await fetch(`/api/studies/groups/${group.id}/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -338,6 +330,24 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                           'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50',
                           triedNext && !r.fail_reason.trim() && 'ring-1 ring-coral',
                         )}
+                      />
+                    </div>
+                  )}
+
+                  {/* Comentario OPCIONAL al retirar: se abre solo al elegir
+                      "Retirado". Queda en drop_reason de la inscripción. */}
+                  {r.status_result === 'retirado' && (
+                    <div>
+                      <label htmlFor={`withdraw-${r.member_id}`} className="block text-[11px] font-medium text-navy-light/70 font-body mb-1">
+                        Comentario (opcional) — por qué se retiró
+                      </label>
+                      <textarea
+                        id={`withdraw-${r.member_id}`}
+                        rows={2}
+                        value={r.withdraw_reason}
+                        onChange={e => setResult(r.member_id, 'withdraw_reason', e.target.value)}
+                        placeholder="Ej.: se mudó de zona, cambió de horario de trabajo, motivos de salud…"
+                        className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50"
                       />
                     </div>
                   )}
