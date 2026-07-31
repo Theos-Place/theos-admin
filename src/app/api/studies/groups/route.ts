@@ -4,7 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES, GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { studiesViewScope } from '@/lib/auth/studies-scope'
 import {
-  getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode,
+  getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode, getStudyGroupZones,
 } from '@/lib/supabase/queries/studies'
 import { groupCreateSchema } from './schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
@@ -41,6 +41,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(await getStudyGroupsWithEnrollments({ leaderMemberId }))
     }
 
+    // ?facet=zones → solo las zonas presentes en los grupos, para armar el filtro
+    // del listado (ver src/lib/studies/group-zone-filter.ts).
+    if (searchParams.get('facet') === 'zones') {
+      return NextResponse.json(await getStudyGroupZones({ leaderMemberId }))
+    }
+
     // Filtros del listado — viajan al servidor (status[], plan, zona, día, búsqueda).
     const statuses = searchParams.getAll('status')
     const filters = {
@@ -48,12 +54,13 @@ export async function GET(req: NextRequest) {
       statuses: statuses.length ? statuses : undefined,
       planCode: searchParams.get('plan') ?? undefined,
       zone: searchParams.get('zone') ?? undefined,
+      zoneNull: searchParams.get('zone_null') === '1' || undefined,
       day: searchParams.get('day') ?? undefined,
       search: searchParams.get('search') ?? undefined,
       noLeader: searchParams.get('no_leader') === '1' || undefined,
       closingSoon: searchParams.get('closing_soon') === '1' || undefined,
     }
-    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.day || filters.search || filters.noLeader || filters.closingSoon
+    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.zoneNull || filters.day || filters.search || filters.noLeader || filters.closingSoon
 
     // ?all=1 → set COMPLETO filtrado (para el export, sin paginar).
     if (searchParams.get('all') === '1') {

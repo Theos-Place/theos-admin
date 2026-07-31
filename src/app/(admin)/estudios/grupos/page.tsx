@@ -6,6 +6,7 @@ import type { GroupStatus, StudyGroup, StudyType } from '@/types/study'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
+import { groupZoneFilterOptions, zoneFilterParam } from '@/lib/studies/group-zone-filter'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import type { DbGroupListItem } from '@/lib/supabase/queries/studies'
 import { toDomainStudyGroup } from '@/lib/studies/adapter'
@@ -108,6 +109,23 @@ export default function GruposPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>(['en_matricula', 'en_curso'])
   const [selectedType, setSelectedType] = useState('')
   const [selectedZone, setSelectedZone] = useState('')
+  // Zonas que de verdad aparecen en los grupos: sin esto el filtro ofrecía las 29
+  // sedes históricas (solo 2 con grupos) y NO ofrecía "Todas las zonas", que es la
+  // de la enorme mayoría.
+  const [zonesInGroups, setZonesInGroups] = useState<string[]>([])
+  const [hasGroupsWithoutZone, setHasGroupsWithoutZone] = useState(false)
+  useEffect(() => {
+    let alive = true
+    fetch('/api/studies/groups?facet=zones')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!alive || !d) return
+        setZonesInGroups(Array.isArray(d.zones) ? d.zones : [])
+        setHasGroupsWithoutZone(!!d.hasGroupsWithoutZone)
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
   const [selectedDay, setSelectedDay] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -148,12 +166,23 @@ export default function GruposPage() {
     )
   }
 
+  const zoneOptions = useMemo(
+    () => groupZoneFilterOptions({
+      activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES,
+      zonesInGroups, hasGroupsWithoutZone,
+    }),
+    [ACTIVE_SEDES, HISTORICAL_SEDES, zonesInGroups, hasGroupsWithoutZone],
+  )
+
   // Filtros → query string. Viajan al servidor; nada se filtra en memoria.
   const filterQS = useCallback(() => {
     const u = new URLSearchParams()
     selectedStatuses.forEach(s => u.append('status', s))
     if (selectedType) u.set('plan', selectedType)
-    if (selectedZone) u.set('zone', selectedZone)
+    // "Todas las zonas" (zone IS NULL) viaja como zone_null, no como zone.
+    const zoneParam = zoneFilterParam(selectedZone)
+    if (zoneParam.zone) u.set('zone', zoneParam.zone)
+    if (zoneParam.zoneNull) u.set('zone_null', '1')
     if (selectedDay)  u.set('day', selectedDay)
     if (search.trim()) u.set('search', search.trim())
     if (noLeaderOnly) u.set('no_leader', '1')
@@ -322,12 +351,16 @@ export default function GruposPage() {
               onChange={e => setSelectedZone(e.target.value)}
             >
               <option value="">Todas</option>
-              <optgroup label="── Sedes activas ──">
-                {ACTIVE_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </optgroup>
-              <optgroup label="── Sedes históricas ──">
-                {HISTORICAL_SEDES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </optgroup>
+              {zoneOptions.filter(o => !o.historical).map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+              {zoneOptions.some(o => o.historical) && (
+                <optgroup label="── Sedes históricas (con grupos) ──">
+                  {zoneOptions.filter(o => o.historical).map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
 

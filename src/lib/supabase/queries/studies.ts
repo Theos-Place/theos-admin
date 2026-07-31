@@ -191,6 +191,8 @@ export type GroupFilters = {
   statuses?: string[]
   planCode?: string | null
   zone?: string | null
+  /** true → solo los grupos SIN zona específica (zone IS NULL). */
+  zoneNull?: boolean
   /** Día de la semana abreviado (L/M/X/J/V/S/D); match contra schedule_days. */
   day?: string | null
   /** Búsqueda por nombre de grupo o de dirigente/co-dirigente. */
@@ -238,6 +240,34 @@ async function resolveGroupFilters(
   return { planId, searchOr }
 }
 
+/** Zonas que de verdad aparecen en los grupos: los códigos distintos y si hay
+ *  grupos sin zona específica. Alimenta el filtro del listado, para no ofrecer
+ *  40 sedes de las cuales solo 2 tienen grupos. Respeta el scope del dirigente. */
+export async function getStudyGroupZones(opts?: { leaderMemberId?: string | null }): Promise<{
+  zones: string[]
+  hasGroupsWithoutZone: boolean
+}> {
+  const supabase = createAdminClient()
+  const zones = new Set<string>()
+  let sinZona = false
+  // PostgREST corta en 1000 filas y hay >2.000 grupos: se pagina hasta agotar.
+  for (let from = 0; ; from += 1000) {
+    let q = supabase.from('study_groups').select('zone').order('id').range(from, from + 999)
+    if (opts?.leaderMemberId) {
+      q = q.or(`leader_id.eq.${opts.leaderMemberId},co_leader_id.eq.${opts.leaderMemberId}`)
+    }
+    const { data, error } = await q
+    if (error) throw error
+    const batch = (data ?? []) as Array<{ zone: string | null }>
+    for (const r of batch) {
+      if (r.zone) zones.add(r.zone)
+      else sinZona = true
+    }
+    if (batch.length < 1000) break
+  }
+  return { zones: [...zones].sort(), hasGroupsWithoutZone: sinZona }
+}
+
 export async function getStudyGroups(
   opts: { page?: number; pageSize?: number; filters?: GroupFilters } = {},
 ): Promise<{ data: DbGroupListItem[]; total: number }> {
@@ -260,6 +290,7 @@ export async function getStudyGroups(
       .order('ends_at', { ascending: false, nullsFirst: false })
     if (f.statuses?.length) query = query.in('status', f.statuses)
     if (f.zone)  query = query.eq('zone', f.zone)
+    if (f.zoneNull) query = query.is('zone', null)
     if (f.day)   query = query.contains('schedule_days', [f.day])
     if (f.noLeader) query = query.is('leader_id', null)
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')
@@ -281,6 +312,7 @@ export async function getStudyGroups(
       .order('ends_at', { ascending: false, nullsFirst: false })
     if (f.statuses?.length) query = query.in('status', f.statuses)
     if (f.zone)  query = query.eq('zone', f.zone)
+    if (f.zoneNull) query = query.is('zone', null)
     if (f.day)   query = query.contains('schedule_days', [f.day])
     if (f.noLeader) query = query.is('leader_id', null)
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')

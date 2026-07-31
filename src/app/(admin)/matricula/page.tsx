@@ -22,7 +22,10 @@ import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } fr
 import { formatDateLong, formatCRC } from '@/lib/format'
 import { studyCostLabel } from '@/lib/studies/cost-label'
 
-type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña'
+// 'prematrimonial' NO es una etapa: es una pestaña propia (pedido 2026-07-31),
+// porque el curso tiene su propio flujo (pareja, logística, ceremonia y pago) y
+// antes vivía escondido como tarjeta dentro de "Todos" y "Etapa Inicial".
+type FilterTab = 'all' | 'available' | 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña' | 'prematrimonial'
 
 const STAGE_ORDER: FilterTab[] = ['niveles', 'inicial', 'intermedia', 'avanzada', 'campaña']
 
@@ -109,9 +112,14 @@ export default function MatriculaPage() {
   )
 
   const hasCampaignGroups = availableResults.some(r => r.stage === 'campaña')
-  const filterTabs = hasCampaignGroups
-    ? [...FILTER_TABS_BASE, { id: 'campaña' as FilterTab, label: 'Campañas' }]
-    : FILTER_TABS_BASE
+  const filterTabs = [
+    ...FILTER_TABS_BASE,
+    ...(hasCampaignGroups ? [{ id: 'campaña' as FilterTab, label: 'Campañas' }] : []),
+    // La pestaña SIEMPRE está, cumpla o no el requisito: si no lo cumple, adentro
+    // se explica qué falta. Esconderla dejaba a la gente preguntando dónde se
+    // inscribe el prematrimonial.
+    { id: 'prematrimonial' as FilterTab, label: 'Prematrimonial' },
+  ]
 
   const filteredResults = useMemo(() => {
     let res = availableResults
@@ -375,7 +383,31 @@ export default function MatriculaPage() {
         </div>
       )}
 
-      {prematOk && (activeFilter === 'all' || activeFilter === 'inicial') && (
+      {/* Prematrimonial sin el requisito: se dice qué falta en vez de dejar el
+          tab vacío (PRE-5 mantiene el gate real en el servidor). */}
+      {!prematOk && activeFilter === 'prematrimonial' && (
+        <div className="rounded-2xl border-2 border-teal/20 bg-teal/[0.04] px-6 py-5 space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal/15">
+              <Heart size={20} className="text-teal-deep" strokeWidth={1.75} />
+            </div>
+            <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em]">Curso Prematrimonial</p>
+          </div>
+          <p className="text-[13px] text-navy-light/80 font-body leading-relaxed">
+            Se inscribe en pareja, y <strong className="text-navy">cada uno</strong> debe tener
+            Nivel 1 completado y estar inscrito en Nivel 2.{' '}
+            {selectedMember
+              ? 'Esta persona todavía no cumple ese requisito.'
+              : 'Todavía no cumplís ese requisito.'}
+          </p>
+          <p className="text-[12px] text-navy-light/70 font-body">
+            Cuando lo cumplan, la inscripción aparece acá con su propio formulario
+            (logística, ceremonia y pago).
+          </p>
+        </div>
+      )}
+
+      {prematOk && (activeFilter === 'all' || activeFilter === 'prematrimonial') && (
         <Link
           href={selectedMember ? `/matricula/prematrimonial?member_id=${selectedMember.id}` : '/matricula/prematrimonial'}
           className="group flex items-center gap-4 rounded-2xl px-6 py-5 border-2 border-teal/25 bg-teal/5 hover:bg-teal/10 hover:border-teal/40 transition-colors"
@@ -395,8 +427,23 @@ export default function MatriculaPage() {
         </Link>
       )}
 
-      {/* Lista de estudios */}
-      {loading ? (
+      {/* Etapa avanzada: los tres estudios activos de esta etapa son POR
+          INVITACIÓN (CDC, CDEB, HER — requires_invitation en study_plans), así que
+          sin invitación la lista sale vacía y parece un error. Se explica. */}
+      {activeFilter === 'avanzada' && (
+        <div className="flex items-start gap-3 rounded-2xl border border-navy/15 bg-navy/[0.04] px-5 py-4">
+          <Info size={18} className="mt-0.5 shrink-0 text-navy-light/70" aria-hidden />
+          <p className="text-[13px] text-navy-light/80 font-body leading-relaxed">
+            Los estudios de esta etapa son <strong className="text-navy">solo por invitación</strong>:
+            Cómo Dar Estudios Bíblicos, Hermenéutica y Cómo Dar Charlas. Aparecen acá únicamente
+            si el comité correspondiente {selectedMember ? 'lo invitó' : 'te invitó'}, y la
+            invitación llega por correo. Si no ves ninguno, todavía no hay invitación.
+          </p>
+        </div>
+      )}
+
+      {/* Lista de estudios — el tab del prematrimonial solo muestra su tarjeta. */}
+      {activeFilter === 'prematrimonial' ? null : loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
         </div>
