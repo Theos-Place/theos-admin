@@ -92,7 +92,7 @@ export default function TerminosPage() {
             </p>
             <p>
               El responsable del sistema y del tratamiento de los datos personales es Theos,
-              a quien podés contactar en <a href="mailto:sistema_admin@theosplace.org">sistema_admin@theosplace.org</a>.
+              a quien podés contactar en <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a>.
             </p>
           </section>
 
@@ -123,7 +123,7 @@ export default function TerminosPage() {
               Cada persona usuaria es responsable de la actividad realizada desde su cuenta. Debés resguardar tu
               contraseña, elegir una contraseña segura y notificar de inmediato a Theos ante cualquier uso
               no autorizado o sospecha de compromiso de tu cuenta, escribiendo a{' '}
-              <a href="mailto:sistema_admin@theosplace.org">sistema_admin@theosplace.org</a>.
+              <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a>.
             </p>
           </section>
 
@@ -173,7 +173,7 @@ export default function TerminosPage() {
               Como titular de los datos, tenés derecho a acceder a tu información, rectificarla, actualizarla y
               solicitar su eliminación, así como a retirar tu consentimiento, conforme a la Ley N.° 8968.
               Para ejercer estos derechos, escribí a{' '}
-              <a href="mailto:sistema_admin@theosplace.org">sistema_admin@theosplace.org</a>. Atenderemos tu solicitud en los
+              <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a>. Atenderemos tu solicitud en los
               plazos que establece la normativa aplicable.
             </p>
 
@@ -199,7 +199,7 @@ export default function TerminosPage() {
               <li>
                 Los padres, madres o representantes legales pueden solicitar el acceso, la rectificación o la
                 eliminación de los datos de las personas menores a su cargo, escribiendo a{' '}
-                <a href="mailto:sistema_admin@theosplace.org">sistema_admin@theosplace.org</a>.
+                <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a>.
               </li>
             </ul>
           </section>
@@ -223,7 +223,7 @@ export default function TerminosPage() {
             <p>
               Podés cancelar en cualquier momento la suscripción a las comunicaciones no esenciales mediante el
               enlace incluido en cada correo o escribiendo a{' '}
-              <a href="mailto:sistema_admin@theosplace.org">sistema_admin@theosplace.org</a>. Las comunicaciones transaccionales
+              <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a>. Las comunicaciones transaccionales
               se mantienen mientras exista tu cuenta.
             </p>
           </section>
@@ -269,7 +269,7 @@ export default function TerminosPage() {
             </p>
             <p className="mt-2 text-navy">
               <strong>Theos</strong><br />
-              <a href="mailto:sistema_admin@theosplace.org">sistema_admin@theosplace.org</a>
+              <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a>
             </p>
           </section>
         </article>
