@@ -8,9 +8,11 @@ import { useCommunications } from '@/hooks/useCommunications'
 import type { MemberList } from '@/types/member-list'
 import { MessagePreview } from '@/components/communications/MessagePreview'
 import { type RecipientState, type RecipientMode } from '@/components/communications/RecipientSelector'
+import {
+  inferEmailKind, emailKindNotice, NOTICE_OVERRIDE_LABEL, NOTICE_OVERRIDE_HINT, type EmailKind,
+} from '@/lib/communications/email-kind'
 import { ChevronLeft, Send, Save, Check } from 'lucide-react'
 import { useToast } from '@/components/shared/Toast'
-import { cn } from '@/lib/utils'
 
 import { RecipientsSection } from './_components/RecipientsSection'
 import { ChannelSection } from './_components/ChannelSection'
@@ -75,9 +77,10 @@ function NuevaComunicacionContent() {
 
   // Canal por defecto: alerta interna (decisión 2026-06-11). Email ya envía por SES.
   const [channel, setChannel] = useState<CommunicationChannel>(reenviarMsg?.channel ?? 'interna')
-  // Tipo de correo: marketing/newsletter (lleva baja, respeta opt-out) vs
-  // transaccional (siempre se envía, sin baja). Solo aplica a email/both.
-  const [emailKind, setEmailKind] = useState<'marketing' | 'transactional'>('marketing')
+  // Tipo de correo: NO se elige, se infiere de la plantilla (decisión
+  // 2026-07-31, ver src/lib/communications/email-kind.ts). Queda la casilla
+  // "es un aviso necesario" como única escapatoria.
+  const [emailKind, setEmailKind] = useState<EmailKind>('marketing')
   const [subject, setSubject] = useState(reenviarMsg?.subject ?? '')
   const [waBody, setWaBody] = useState(reenviarMsg?.channel !== 'email' ? (reenviarMsg?.body ?? '') : '')
   const [emailBody, setEmailBody] = useState(reenviarMsg?.channel !== 'whatsapp' ? (reenviarMsg?.body ?? '') : '')
@@ -137,7 +140,7 @@ function NuevaComunicacionContent() {
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
     if (tpl.channel === 'both') { setWaBody(tpl.body); setEmailBody(tpl.body); setSubject(tpl.subject) }
     // Plantilla transaccional → el tipo de correo arranca en Transaccional.
-    if (tpl.is_system || tpl.category === 'transaccional') setEmailKind('transactional')
+    setEmailKind(inferEmailKind(tpl))
     setShowTemplateModal(false)
   }
 
@@ -152,7 +155,7 @@ function NuevaComunicacionContent() {
     setChannel(tpl.channel)
     if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
     if (tpl.channel !== 'email') setWaBody(tpl.body)
-    if (tpl.is_system || tpl.category === 'transaccional') setEmailKind('transactional')
+    setEmailKind(inferEmailKind(tpl))
     setTplApplied(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tplApplied, templates])
@@ -323,27 +326,22 @@ function NuevaComunicacionContent() {
           />
 
           {(channel === 'email' || channel === 'both') && (
-            <div className="rounded-2xl bg-surface-card p-4 sm:p-5 shadow-[var(--shadow-md)] space-y-2">
-              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Tipo de correo</p>
-              <div className="flex flex-wrap gap-2">
-                {([
-                  ['marketing', 'Newsletter / Marketing', 'Lleva link de baja y respeta a quienes se dieron de baja'],
-                  ['transactional', 'Transaccional', 'Aviso operativo; siempre se envía, sin link de baja'],
-                ] as const).map(([val, label, hint]) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setEmailKind(val)}
-                    className={cn(
-                      'flex-1 min-w-[180px] text-left rounded-xl border p-3 transition-colors font-body',
-                      emailKind === val ? 'border-coral bg-coral/[0.06]' : 'border-[var(--outline-variant)] hover:bg-surface-low',
-                    )}
-                  >
-                    <span className={cn('block text-sm font-medium', emailKind === val ? 'text-coral' : 'text-navy')}>{label}</span>
-                    <span className="block text-[11px] text-navy-light/60 mt-0.5">{hint}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="rounded-2xl bg-surface-card p-4 sm:p-5 shadow-[var(--shadow-md)] space-y-3">
+              <p className="text-[13px] text-navy-light/70 font-body leading-relaxed">
+                {emailKindNotice(emailKind)}
+              </p>
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={emailKind === 'transactional'}
+                  onChange={e => setEmailKind(e.target.checked ? 'transactional' : 'marketing')}
+                  className="mt-0.5 h-4 w-4 accent-coral"
+                />
+                <span>
+                  <span className="block text-sm text-navy font-body">{NOTICE_OVERRIDE_LABEL}</span>
+                  <span className="block text-[11px] text-navy-light/70 font-body mt-0.5">{NOTICE_OVERRIDE_HINT}</span>
+                </span>
+              </label>
             </div>
           )}
 
