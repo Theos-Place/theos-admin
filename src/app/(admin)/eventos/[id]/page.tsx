@@ -535,6 +535,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         showCalendarPopover={showCalendarPopover}
         onCalendarPopoverToggle={() => setShowCalendarPopover(p => !p)}
         onCalendarPopoverClose={() => setShowCalendarPopover(false)}
+        canManage={canManage}
+        canCheckin={canCheckin}
         icsWithRRule={icsWithRRule}
         onIcsWithRRuleChange={setIcsWithRRule}
       />

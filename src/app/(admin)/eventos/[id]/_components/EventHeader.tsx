@@ -63,6 +63,11 @@ type Props = {
   onCalendarPopoverClose: () => void
   icsWithRRule: boolean
   onIcsWithRRuleChange: (val: boolean) => void
+  /** Gestión de eventos: sin esto no se muestran Editar, el menú de cancelar/
+   *  eliminar ni el conteo de inscritos (2026-07-31: la ficha la abre cualquiera). */
+  canManage?: boolean
+  /** Permiso de check-in: muestra el botón de check-in. */
+  canCheckin?: boolean
 }
 
 export function EventHeader({
@@ -80,6 +85,8 @@ export function EventHeader({
   onCalendarPopoverClose,
   icsWithRRule,
   onIcsWithRRuleChange,
+  canManage = false,
+  canCheckin = false,
 }: Props) {
   const startDate = new Date(event.start_at)
   const endDate = new Date(event.end_at)
@@ -136,10 +143,13 @@ export function EventHeader({
                 <MapPin size={13} className="text-white/70" />
                 {event.location}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Users size={13} className="text-white/70" />
-                {registrationCount} inscritos
-              </span>
+              {/* Cuántos se inscribieron es dato de gestión. */}
+              {canManage && (
+                <span className="flex items-center gap-1.5">
+                  <Users size={13} className="text-white/70" />
+                  {registrationCount} inscritos
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:shrink-0">
@@ -209,20 +219,25 @@ export function EventHeader({
                 </div>
               )}
             </div>
-            <Link
-              href={`/eventos/${id}/editar${occQuery}`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
-            >
-              <Edit2 size={13} />
-              Editar
-            </Link>
-            <Link
-              href={`/eventos/${id}/checkin${occQuery}`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
-            >
-              <QrCode size={13} />
-              Check-in →
-            </Link>
+            {canManage && (
+              <Link
+                href={`/eventos/${id}/editar${occQuery}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
+              >
+                <Edit2 size={13} />
+                Editar
+              </Link>
+            )}
+            {canCheckin && (
+              <Link
+                href={`/eventos/${id}/checkin${occQuery}`}
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
+              >
+                <QrCode size={13} />
+                Check-in →
+              </Link>
+            )}
+            {canManage && (
             <div className="relative">
               <button
                 onClick={onMenuToggle}
@@ -249,6 +264,7 @@ export function EventHeader({
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
       </div>

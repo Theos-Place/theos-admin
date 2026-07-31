@@ -648,7 +648,10 @@ function EventosContent() {
                   <EventCard
                     key={`${event.id}-${event.start_at}`}
                     event={event}
-                    linkToDetail={canManage}
+                    // La ficha del evento es para cualquiera (2026-07-31): la
+                    // propia ficha deja solo el tab de Información a quien no
+                    // gestiona, y ofrece el botón de inscripción.
+                    linkToDetail
                     eligibility={eligibilityByEventId.get(event.id)}
                     onRegister={() => { const e = eligibilityByEventId.get(event.id); if (e) openRegister(e) }}
                     onRequestScholarship={() => { const e = eligibilityByEventId.get(event.id); if (e) requestScholarship(e) }}
@@ -688,7 +691,7 @@ function EventosContent() {
           onToday={handleToday}
           onSetMonth={setCurrentMonth}
           onSetYear={setCurrentYear}
-          canViewDetail={canManage}
+          canViewDetail
           eligibilityByEventId={eligibilityByEventId}
           onRegister={openRegister}
         />

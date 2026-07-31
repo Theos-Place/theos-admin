@@ -6,6 +6,7 @@ import { useOrg } from '@/lib/org'
 import type { AdminEvent } from '@/data/event-config'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
 import { formatCRC } from '@/lib/format'
+import { recurrenceLabel } from '@/lib/events/expand-recurrence'
 
 type Event = AdminEvent
 
@@ -155,7 +156,10 @@ export function EventInfoTab({
         <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
           <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Configuración</h3>
           {[
-            { label: 'Recurrente', value: event.is_recurring ? event.recurrence_rule ?? 'Sí' : 'No' },
+            // recurrenceLabel traduce la regla a algo legible ("El día 21 de cada
+            // mes"); la regla cruda (FREQ=MONTHLY;BYMONTHDAY=21) no le dice nada a
+            // nadie y además se desborda de la tarjeta.
+            { label: 'Recurrente', value: event.is_recurring ? (recurrenceLabel(event.recurrence_rule) ?? 'Sí') : 'No' },
             { label: 'Encuesta', value: event.requires_survey ? 'Requerida' : 'No' },
             { label: 'Pago', value: event.requires_payment ? formatCRC(event.payment_amount ?? 0) : 'Gratuito' },
           ].map(({ label, value }) => (
