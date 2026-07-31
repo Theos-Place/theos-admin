@@ -670,7 +670,7 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
           <p className="text-base font-bold text-navy font-display">
             {anyEligible
               ? `Ya cumplís los requisitos de ${meta.label}`
-              : `Para acceder a los estudios de ${meta.label} te falta:`}
+              : `Requisitos para ${meta.label}`}
           </p>
           <p className="text-[13px] text-navy-light/60 font-body mt-0.5">
             {anyEligible
@@ -697,7 +697,7 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
           )}
           {missing.length > 0 && (
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Te falta</p>
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Requisitos para esta etapa</p>
               <div className="space-y-1.5">
                 {missing.map(item => (
                   <div key={item.key} className="flex items-start gap-1.5">

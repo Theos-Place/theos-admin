@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Search, X, Users, BookOpen, UsersRound, Megaphone } from 'lucide-react'
+import { Search, X, Users, BookOpen, UsersRound, Megaphone, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSedes } from '@/lib/sedes'
 type MemberLite = { id: string; first_name: string; last_name: string; email: string | null }
@@ -42,6 +42,12 @@ export type RecipientState = {
 interface Props {
   value: RecipientState
   onChange: (v: RecipientState) => void
+  /** Abre el modal de listas guardadas. Va como 4º botón de la fila de modos
+   *  (2026-07-31): estaba suelto debajo del selector y no se veía. */
+  onOpenListModal?: () => void
+  /** true cuando los destinatarios vienen de una lista guardada, para marcar ese
+   *  botón como activo. */
+  fromList?: boolean
 }
 
 const MODE_OPTIONS: { key: RecipientMode; label: string; icon: React.ElementType; description: string }[] = [
@@ -50,7 +56,7 @@ const MODE_OPTIONS: { key: RecipientMode; label: string; icon: React.ElementType
   { key: 'group',   label: 'Grupo existente',   icon: UsersRound, description: 'Evento, estudio o comité' },
 ]
 
-export function RecipientSelector({ value, onChange }: Props) {
+export function RecipientSelector({ value, onChange, onOpenListModal, fromList = false }: Props) {
   const [memberSearch, setMemberSearch] = useState('')
   const [memberResults, setMemberResults] = useState<MemberLite[]>([])
   const [selectedMembers, setSelectedMembers] = useState<MemberLite[]>([])
@@ -168,6 +174,12 @@ export function RecipientSelector({ value, onChange }: Props) {
     } catch { /* deja 0 si falla */ }
   }
 
+  /** Deshace la selección de grupo/evento/comité (la X): si fue un error, no hay
+   *  que recargar la página ni cambiar de modo. */
+  function clearGroupSelection() {
+    onChange({ ...value, groupId: '', manualMemberIds: [], count: 0, label: '' })
+  }
+
   function setGroupCommittee(committeeId: string) {
     const committee = committees.find(c => c.id === committeeId)
     if (!committee) {
@@ -252,6 +264,24 @@ export function RecipientSelector({ value, onChange }: Props) {
             </span>
           </button>
         ))}
+        {onOpenListModal && (
+          <button
+            type="button"
+            onClick={onOpenListModal}
+            className={cn(
+              'flex flex-col items-center gap-1.5 rounded-xl p-3 border text-center transition-all',
+              fromList
+                ? 'bg-navy border-navy text-white'
+                : 'border-outline-variant text-navy-light/60 hover:border-navy/30 hover:text-navy',
+            )}
+            style={{ borderColor: fromList ? undefined : 'var(--outline-variant)' }}
+          >
+            <List size={16} />
+            <span className="text-[11px] font-medium leading-tight font-body">
+              Lista guardada
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Mode content */}
@@ -463,11 +493,22 @@ export function RecipientSelector({ value, onChange }: Props) {
           )}
 
           {value.label && (
-            <div className="rounded-xl px-3 py-2 bg-surface-low">
-              <p className="text-[12px] text-navy font-body">{value.label}</p>
-              <p className="text-[11px] text-teal-deep font-semibold mt-0.5 font-display">
-                {value.count} destinatario{value.count !== 1 ? 's' : ''}
-              </p>
+            <div className="flex items-start gap-2 rounded-xl px-3 py-2 bg-surface-low">
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] text-navy font-body">{value.label}</p>
+                <p className="text-[11px] text-teal-deep font-semibold mt-0.5 font-display">
+                  {value.count} destinatario{value.count !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={clearGroupSelection}
+                title="Quitar la selección"
+                aria-label="Quitar la selección de destinatarios"
+                className="shrink-0 rounded-full p-1 text-navy-light/60 hover:bg-navy/5 hover:text-navy transition-colors"
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>

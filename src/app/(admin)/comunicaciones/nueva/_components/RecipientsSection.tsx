@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { RecipientSelector, type RecipientState } from '@/components/communications/RecipientSelector'
 import { cn } from '@/lib/utils'
-import { Check, X, List } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import type { CommunicationMessage } from '@/types/communication'
 
 const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/60 font-display'
@@ -124,17 +124,14 @@ export function RecipientsSection({
           </div>
         </div>
       ) : (
-        <>
-          <RecipientSelector value={recipients} onChange={setRecipients} />
-          <button
-            type="button"
-            onClick={onOpenListModal}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-          >
-            <List size={12} />
-            Usar lista existente
-          </button>
-        </>
+        // "Lista guardada" es el 4º botón de la fila del selector (antes estaba
+        // suelto debajo y pasaba desapercibido).
+        <RecipientSelector
+          value={recipients}
+          onChange={setRecipients}
+          onOpenListModal={onOpenListModal}
+          fromList={isImported}
+        />
       )}
     </div>
   )
