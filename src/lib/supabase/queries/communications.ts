@@ -10,6 +10,9 @@
  */
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
+import {
+  emptySkipReasons, totalSkipped, noRecipientsMessage, type SkipReasons,
+} from '@/lib/communications/skip-reasons'
 import { bodyToHtml } from '@/lib/email/render'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { unsubscribeUrl } from '@/lib/email/footer'
@@ -221,6 +224,10 @@ export async function createBroadcast(input: BroadcastWriteInput): Promise<{ id:
 
 export type Recipient = { member_id?: string | null; channel: 'whatsapp' | 'email' | 'interna'; recipient: string }
 
+/** Prefijo del error de "nadie quedó elegible": el endpoint lo traduce a 409
+ *  con el motivo (lo que va después de los dos puntos). */
+export const NO_RECIPIENTS = 'SIN_DESTINATARIOS'
+
 // "Hoy" SIEMPRE en zona Costa Rica (UTC-6): el runtime corre en UTC y
 // `toISOString()` daría el día equivocado de noche, desfasando el rate limit
 // diario y las comparaciones de scheduled_date.
@@ -347,6 +354,7 @@ async function resolveEmailRecipients(
   supabase: ReturnType<typeof createAdminClient>,
   raw: Recipient[],
   isMarketing: boolean,
+  reasons: SkipReasons = emptySkipReasons(),
 ): Promise<Recipient[]> {
   const ids = Array.from(new Set(raw.map(r => r.member_id).filter(Boolean))) as string[]
   type MRow = { id: string; email: string | null; email_bounced: boolean; email_complained: boolean; newsletter_opt_out: boolean }
@@ -362,9 +370,12 @@ async function resolveEmailRecipients(
   for (const r of raw) {
     const m = r.member_id ? byId.get(r.member_id) : null
     const email = r.recipient && r.recipient.includes('@') ? r.recipient : (m?.email ?? '')
-    if (!email) continue                                   // sin correo → no se puede enviar
-    if (m?.email_bounced || m?.email_complained) continue  // rebote/queja → excluir siempre
-    if (isMarketing && m?.newsletter_opt_out) continue     // baja de newsletter → excluir en marketing
+    // Se cuenta la causa de cada exclusión: si al final no queda NADIE, el
+    // envío explica por qué en vez de dejar un 'fallido' sin motivo.
+    if (!email) { reasons.sin_correo++; continue }                     // sin correo → no se puede enviar
+    if (m?.email_bounced) { reasons.rebotado++; continue }             // rebote → excluir siempre
+    if (m?.email_complained) { reasons.queja++; continue }             // queja → excluir siempre
+    if (isMarketing && m?.newsletter_opt_out) { reasons.baja++; continue } // baja → excluir en marketing
     out.push({ ...r, recipient: email })
   }
   return out
@@ -401,7 +412,8 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   // recipient vacío) y EXCLUIR a quienes no deben recibir:
   //   · siempre: rebotados (email_bounced) y quejas (email_complained)
   //   · marketing: además los que se dieron de baja (newsletter_opt_out)
-  const emailRecipients = await resolveEmailRecipients(supabase, emailRecipientsRaw, isMarketing)
+  const skipReasons = emptySkipReasons()
+  const emailRecipients = await resolveEmailRecipients(supabase, emailRecipientsRaw, isMarketing, skipReasons)
 
   // Canal interna: notificación en el sistema para cada destinatario con member_id.
   // Es un anuncio general → respeta el toggle "Mensajes del sistema" del miembro
@@ -411,6 +423,16 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     await filterByNotifPref(supabase, internalRecipientsRaw.map(r => r.member_id!), 'mensajes_sistema'),
   )
   const internalRecipients = internalRecipientsRaw.filter(r => internalAllowed.has(r.member_id!))
+  skipReasons.silenciado += internalRecipientsRaw.length - internalRecipients.length
+  // NADIE elegible: se aborta con el motivo. El catch de abajo devuelve el
+  // broadcast a 'draft' (no hay logs), así el usuario puede corregir el tipo de
+  // correo o el destinatario y reintentar — antes quedaba 'fallido' sin
+  // explicación y sin forma de reenviarlo.
+  const waCount = recipients.filter(r => r.channel === 'whatsapp').length
+  if (emailRecipients.length + internalRecipients.length + waCount === 0) {
+    throw new Error(`${NO_RECIPIENTS}:${noRecipientsMessage(skipReasons, isMarketing)}`)
+  }
+
   if (internalRecipients.length > 0) {
     const { data: b, error: bErr } = await supabase
       .from('message_broadcasts').select('subject, body').eq('id', id).single()
@@ -478,8 +500,7 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
 
   // Saltados = email excluidos (baja/rebote/queja) + internos que silenciaron
   // "Mensajes del sistema".
-  const skipped = (emailRecipientsRaw.length - emailRecipients.length)
-    + (internalRecipientsRaw.length - internalRecipients.length)
+  const skipped = totalSkipped(skipReasons)
   await supabase.from('message_broadcasts')
     .update({
       total_recipients: internalLogs.length + emailLogs.length + waLogs.length,

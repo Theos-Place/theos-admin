@@ -103,6 +103,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(result)
   } catch (error) {
     const msg = error instanceof Error ? error.message : ''
+    // Nadie elegible para el correo (bajas, rebotes, sin correo): el motivo ya
+    // viene armado desde sendBroadcast.
+    if (msg.startsWith('SIN_DESTINATARIOS:')) {
+      return NextResponse.json({ error: msg.slice('SIN_DESTINATARIOS:'.length) }, { status: 409 })
+    }
     const known: Record<string, { error: string; status: number }> = {
       FORM_NO_ENCONTRADO: { error: 'Formulario no encontrado', status: 404 },
       FORM_SIN_PLAN: { error: 'Este formulario no está ligado a un plan de estudio (falta la pregunta de grupo)', status: 409 },
