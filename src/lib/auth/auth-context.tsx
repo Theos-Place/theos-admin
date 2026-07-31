@@ -16,6 +16,10 @@ export interface AuthUser {
   has_cedula: boolean
   /** Perfil de sistema (cuenta institucional): excluido del recordatorio de cédula. */
   is_system: boolean
+  /** Puesto activo en el comité de estudios bíblicos: habilita
+   *  /estudios/solicitudes con alcance acotado (solo lo asignado a la persona),
+   *  incluso sin ningún rol. */
+  in_study_committee?: boolean
 }
 
 interface AuthState {

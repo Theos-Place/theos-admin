@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { updateStudyRequestStatus, assignStudyRequest, resolveStudyRequest } from '@/lib/supabase/queries/study-requests'
+import {
+  updateStudyRequestStatus, assignStudyRequest, resolveStudyRequest, isStudyCommitteeMember,
+} from '@/lib/supabase/queries/study-requests'
+import { requestQueueScope, canAssignRequests, canWorkRequest } from '@/lib/studies/request-assignment'
 
 const ACTIONS: Record<string, 'in_review' | 'rejected'> = {
   take: 'in_review',
@@ -13,10 +16,18 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles('direccion', 'coordinador_estudios', 'coordinador_dirigentes')
+    const auth = await requireRoles()
     if (auth.res) return auth.res
     if (!auth.ctx.memberId) {
       return NextResponse.json({ error: 'Tu usuario no está vinculado a un perfil de miembro' }, { status: 409 })
+    }
+
+    const scope = requestQueueScope({
+      roles: auth.ctx.roles,
+      inStudyCommittee: await isStudyCommitteeMember(auth.ctx.memberId),
+    })
+    if (scope === 'none') {
+      return NextResponse.json({ error: 'No tenés acceso a las solicitudes de estudios' }, { status: 403 })
     }
 
     const { id } = await params
@@ -37,7 +48,28 @@ export async function PATCH(
       }
     }
 
-    // assign: pasa a in_review con reviewed_by = el coordinador ASIGNADO.
+    // El del comité solo puede trabajar LA SUYA (la que le asignaron); el
+    // coordinador, cualquiera. Se chequea con el estado actual de la solicitud.
+    if (scope !== 'all') {
+      const supabase = (await import('@/lib/supabase/admin')).createAdminClient()
+      const { data: own } = await supabase
+        .from('study_requests').select('reviewed_by').eq('id', id).maybeSingle()
+      if (!canWorkRequest(scope, (own ?? {}) as { reviewed_by?: string | null }, auth.ctx.memberId)) {
+        return NextResponse.json(
+          { error: 'Solo podés trabajar las solicitudes que te asignaron' }, { status: 403 },
+        )
+      }
+    }
+
+    // assign y take son de los coordinadores: el comité recibe trabajo, no lo reparte.
+    if ((body?.action === 'assign' || body?.action === 'take') && !canAssignRequests(auth.ctx.roles)) {
+      return NextResponse.json(
+        { error: 'Solo un coordinador de estudios o de dirigentes puede asignar o tomar solicitudes' },
+        { status: 403 },
+      )
+    }
+
+    // assign: pasa a in_review con reviewed_by = el ASIGNADO.
     if (body?.action === 'assign') {
       if (typeof body?.assignee_member_id !== 'string' || !body.assignee_member_id) {
         return NextResponse.json({ error: 'Se requiere assignee_member_id' }, { status: 400 })

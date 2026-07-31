@@ -96,6 +96,10 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // mostrar según el permiso. Las subrutas de gestión (/eventos/nuevo,
   // /eventos/[id]/editar, etc.) siguen exigiendo el módulo normalmente.
   if (pathname === '/eventos') return <>{children}</>
+  // Excepción: /estudios/solicitudes también la abre el COMITÉ de estudios
+  // bíblicos (sin rol): la pantalla y la API le muestran solo lo que le
+  // asignaron. Espejo de requestQueueScope.
+  if (pathname === '/estudios/solicitudes' && user.in_study_committee) return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // SEC-1: la RAÍZ de estudios/servidores es un resumen de toda la organización
   // — exige alcance 'all' (dirigente ve sus grupos; lider_comite, su comité).

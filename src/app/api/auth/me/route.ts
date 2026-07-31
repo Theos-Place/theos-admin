@@ -29,7 +29,7 @@ export async function GET() {
     if (!member) {
       // Usuario de auth sin member enlazado: sin acceso a módulos.
       return NextResponse.json({
-        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false },
+        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false },
       })
     }
 
@@ -57,6 +57,17 @@ export async function GET() {
     // por defecto (solo ve su propio perfil) si no tiene otros roles activos.
     const explicitRoles = (roleRows ?? []).map(r => r.role as RoleId)
     const roles: RoleId[] = explicitRoles.length ? explicitRoles : ['miembro']
+    // ¿Está en el comité de estudios bíblicos? Habilita /estudios/solicitudes
+    // con alcance acotado (solo lo asignado) para gente SIN rol en el sistema.
+    let inStudyCommittee = false
+    try {
+      const { isStudyCommitteeMember } = await import('@/lib/supabase/queries/study-requests')
+      inStudyCommittee = await isStudyCommitteeMember(member.id)
+    } catch (e) {
+      // Best-effort: si falla, la persona simplemente no ve la pantalla.
+      console.warn('auth/me: comité de estudios:', e instanceof Error ? e.message : e)
+    }
+
     const name = `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim() || (member.email ?? '')
 
     return NextResponse.json({
@@ -71,6 +82,7 @@ export async function GET() {
         // perfiles de sistema, que nunca tienen cédula por diseño).
         has_cedula: !!(member.cedula && String(member.cedula).trim()),
         is_system: !!member.is_system,
+        in_study_committee: inStudyCommittee,
       },
     })
   } catch (error) {

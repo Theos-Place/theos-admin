@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
 import {
   getStudyRequests, countOpenStudyRequests, createStudyRequest, notifyRecipientsOfRequest, hasOpenStudyInterest,
+  isStudyCommitteeMember,
 } from '@/lib/supabase/queries/study-requests'
+import { requestQueueScope } from '@/lib/studies/request-assignment'
 import type { StudyRequestStatus, StudyRequestType } from '@/types/study'
 
 const TYPES = new Set(['relocation', 'study_interest'])
@@ -10,15 +12,31 @@ const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
 const NEEDED_STUDY_CODES = new Set(['N2', 'N3', 'N4', 'DIS2', 'DIS3'])
 const CLASS_OPTIONS = new Set([...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'no_recuerda'])
 
-// GET: lista (solo coordinadores/admin). ?count=open devuelve solo el conteo.
+// GET: la cola. Coordinadores/dirección/admin ven TODO; el comité de estudios
+// bíblicos ve SOLO lo que le asignaron (decisión 2026-07-31). ?count=open
+// devuelve el conteo del alcance de quien pregunta.
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles('direccion', 'coordinador_estudios', 'coordinador_dirigentes')
+    const auth = await requireRoles()
     if (auth.res) return auth.res
+
+    const scope = requestQueueScope({
+      roles: auth.ctx.roles,
+      inStudyCommittee: await isStudyCommitteeMember(auth.ctx.memberId),
+    })
+    if (scope === 'none') {
+      return NextResponse.json({ error: 'No tenés acceso a las solicitudes de estudios' }, { status: 403 })
+    }
+    // Alcance acotado: todo lo que se lea va filtrado por el asignado.
+    const assignedTo = scope === 'assigned' ? (auth.ctx.memberId ?? '') : undefined
 
     const { searchParams } = req.nextUrl
     if (searchParams.get('count') === 'open') {
-      return NextResponse.json({ count: await countOpenStudyRequests() })
+      return NextResponse.json({
+        count: scope === 'all'
+          ? await countOpenStudyRequests()
+          : (await getStudyRequests({ assigned_to: assignedTo })).filter(r => r.status !== 'resolved' && r.status !== 'rejected').length,
+      })
     }
     const status = searchParams.get('status') ?? undefined
     const type = searchParams.get('type') ?? undefined
@@ -27,6 +45,7 @@ export async function GET(req: NextRequest) {
       status: status && STATUSES.has(status) ? (status as StudyRequestStatus) : undefined,
       type: type && TYPES.has(type) ? (type as StudyRequestType) : undefined,
       member_id,
+      assigned_to: assignedTo,
     })
     return NextResponse.json(result)
   } catch (error) {

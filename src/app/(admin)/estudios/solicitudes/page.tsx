@@ -12,6 +12,7 @@ import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { RelocationResolveGroupPicker } from '@/components/studies/RelocationResolveGroupPicker'
 import type { StudyRequest } from '@/types/study'
 import { getInitials } from '@/lib/format'
+import { requestQueueScope } from '@/lib/studies/request-assignment'
 
 const TABS = [
   { key: 'relocation', label: 'Reubicaciones' },
@@ -33,16 +34,27 @@ function classLabel(v: string | null): string {
 }
 
 export default function SolicitudesPage() {
-  const { user, loaded, hasRole } = useAuth()
+  const { user, loaded } = useAuth()
   const [requests, setRequests] = useState<StudyRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [reloadKey, setReloadKey] = useState(0)
   const [createOpen, setCreateOpen] = useState(false)
   const [createFor, setCreateFor] = useState<MemberHit | null>(null)
-  const [section, setSection] = useState<'prematrimonial' | 'relocation' | 'study_interest'>('prematrimonial')
+  const [sectionState, setSection] = useState<'prematrimonial' | 'relocation' | 'study_interest'>('prematrimonial')
 
-  // EST-7: 'direccion' puede ejecutar el PATCH de gestión — también debe ver la página.
-  const allowed = hasRole('coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin')
+  // EST-7: 'direccion' puede ejecutar el PATCH de gestión — también debe ver la
+  // página. 2026-07-31: el comité de estudios bíblicos entra con alcance
+  // 'assigned' (solo lo que le asignaron) aunque no tenga rol. Espejo de
+  // requestQueueScope en la API.
+  const scope = requestQueueScope({
+    roles: user?.roles,
+    inStudyCommittee: !!user?.in_study_committee,
+  })
+  const allowed = scope !== 'none'
+  const fullQueue = scope === 'all'
+  // El comité solo tiene el tab de reubicaciones: sin esto, el default
+  // ('prematrimonial') le abriría una cola que no le corresponde.
+  const section = fullQueue ? sectionState : 'relocation'
 
   useEffect(() => {
     if (!allowed) return
@@ -69,8 +81,9 @@ export default function SolicitudesPage() {
           <Lock size={22} className="text-navy-light/60" />
         </div>
         <p className="text-base font-semibold text-navy font-display mb-1">Acceso restringido</p>
-        <p className="text-sm text-navy-light/60 font-body max-w-sm">
-          Esta sección es solo para coordinadores de estudios, coordinadores de dirigentes y administradores.
+        <p className="text-sm text-navy-light/70 font-body max-w-sm">
+          Esta sección es para coordinadores de estudios y de dirigentes, y para el comité de
+          estudios bíblicos (que ve las solicitudes que le asignaron).
         </p>
       </div>
     )
@@ -85,10 +98,12 @@ export default function SolicitudesPage() {
             Solicitudes de estudios
           </h1>
           <p className="mt-1 text-sm text-white/70 font-body">
-            Reubicaciones e intereses de estudio de los miembros
+            {fullQueue
+              ? 'Reubicaciones e intereses de estudio de los miembros'
+              : 'Las solicitudes que te asignaron'}
           </p>
         </div>
-        {section !== 'prematrimonial' && (
+        {section !== 'prematrimonial' && fullQueue && (
           <button
             onClick={() => { setCreateFor(null); setCreateOpen(true) }}
             className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white font-body hover:bg-coral-deep transition-colors shrink-0"
@@ -102,10 +117,14 @@ export default function SolicitudesPage() {
       {/* Tres tabs planos: prematrimonial (flujo propio), reubicaciones e
           intereses de estudio (RequestBoard, un tipo por tab). */}
       <RequestTabs
-        tabs={[
+        tabs={fullQueue ? [
           { key: 'prematrimonial', label: 'Prematrimonial' },
           { key: 'relocation', label: 'Reubicaciones' },
           { key: 'study_interest', label: 'Intereses de estudio' },
+        ] : [
+          // El comité solo trabaja reubicaciones asignadas: prematrimonial es
+          // otro flujo y los intereses son datos de demanda.
+          { key: 'relocation', label: 'Reubicaciones' },
         ]}
         active={section}
         onChange={k => setSection(k as 'prematrimonial' | 'relocation' | 'study_interest')}
@@ -122,7 +141,7 @@ export default function SolicitudesPage() {
         // EST-6: los intereses son datos de demanda de SOLO LECTURA (el API
         // también rechaza acciones); las reubicaciones mantienen su flujo.
         readOnly={section === 'study_interest'}
-        assigneesUrl={section === 'study_interest' ? undefined : '/api/studies/requests/assignees'}
+        assigneesUrl={section === 'study_interest' || !fullQueue ? undefined : '/api/studies/requests/assignees'}
         onUpdated={updated => setRequests(prev => prev.map(r => (r.id === updated.id ? updated : r)))}
         renderDetails={r => (
           <>

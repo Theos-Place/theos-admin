@@ -18,6 +18,7 @@
  * autorización vive en requireRoles() de cada ruta API.
  */
 import { requestZones } from '@/lib/studies/request-prefs'
+import { isStudyCommitteeArea } from '@/lib/studies/request-assignment'
 import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
 import type {
   StudyRequest, StudyRequestWriteInput, StudyRequestStatus, StudyRequestType,
@@ -141,6 +142,8 @@ export async function getStudyRequests(filters?: {
   status?: StudyRequestStatus
   type?: StudyRequestType
   member_id?: string
+  /** Alcance 'assigned' (comité de estudios): solo las asignadas a esta persona. */
+  assigned_to?: string
 }): Promise<StudyRequest[]> {
   const supabase = createAdminClient()
   let q = supabase
@@ -151,6 +154,7 @@ export async function getStudyRequests(filters?: {
   if (filters?.status) q = q.eq('status', filters.status)
   if (filters?.type) q = q.eq('request_type', filters.type)
   if (filters?.member_id) q = q.eq('member_id', filters.member_id)
+  if (filters?.assigned_to) q = q.eq('reviewed_by', filters.assigned_to)
   const { data, error } = await q
   if (error) throw error
   return ((data ?? []) as DbRequestRow[]).map(toDomain)
@@ -284,18 +288,15 @@ export async function assignStudyRequest(
 ): Promise<StudyRequest> {
   const supabase = createAdminClient()
 
-  // El asignado debe tener rol activo de coordinador_dirigentes o coordinador_estudios.
-  const { data: roleRow, error: roleErr } = await supabase
-    .from('member_roles')
-    .select('member_id, member:members!member_roles_member_id_fkey(first_name, last_name)')
-    .eq('member_id', assigneeMemberId)
-    .in('role', ['coordinador_dirigentes', 'coordinador_estudios'])
-    .eq('is_active', true)
-    .limit(1)
-    .maybeSingle()
-  if (roleErr) throw roleErr
-  if (!roleRow) throw new Error('La persona asignada debe tener rol activo de coordinador de dirigentes o coordinador de estudios')
-  const assigneeName = fullName((roleRow as { member: { first_name: string | null; last_name: string | null } | null }).member)
+  // El asignado debe ser coordinador de estudios/dirigentes O tener puesto
+  // activo en el comité de estudios bíblicos (decisión 2026-07-31: el comité
+  // trabaja solicitudes; ve solo las suyas).
+  const assignable = await getAssignableForRequests()
+  const target = assignable.find(a => a.member_id === assigneeMemberId)
+  if (!target) {
+    throw new Error('La persona asignada debe ser coordinador de estudios/dirigentes o estar en el comité de estudios bíblicos')
+  }
+  const assigneeName = target.member_name
 
   // Estado anterior, para el historial.
   const { data: before } = await supabase
@@ -550,6 +551,69 @@ export async function getStudyNotificationRecipients(): Promise<string[]> {
 }
 
 /** Miembros elegibles como destinatarios: con rol activo de coordinación/admin. */
+/** Ids de miembros ACTIVOS con puesto activo en el comité de estudios bíblicos.
+ *  Se resuelve por NOMBRE del área (no por uuid) para no clavar un id de
+ *  producción en el código; ver STUDY_COMMITTEE_AREA_NAME. */
+export async function getStudyCommitteeMembers(): Promise<Array<{ member_id: string; member_name: string }>> {
+  const supabase = createAdminClient()
+  const { data: areas, error: aErr } = await supabase
+    .from('areas').select('id, name').eq('area_type', 'committee').eq('is_active', true)
+  if (aErr) throw aErr
+  const areaIds = ((areas ?? []) as Array<{ id: string; name: string }>)
+    .filter(a => isStudyCommitteeArea(a.name)).map(a => a.id)
+  if (areaIds.length === 0) return []
+
+  const { data: positions, error: pErr } = await supabase
+    .from('service_positions').select('id').in('area_id', areaIds)
+  if (pErr) throw pErr
+  const positionIds = ((positions ?? []) as Array<{ id: string }>).map(p => p.id)
+  if (positionIds.length === 0) return []
+
+  const byMember = new Map<string, string>()
+  for (let i = 0; i < positionIds.length; i += 200) {
+    const { data, error } = await supabase
+      .from('volunteers')
+      .select('member_id, member:members!volunteers_member_id_fkey(first_name, last_name, is_active)')
+      .in('position_id', positionIds.slice(i, i + 200))
+      .eq('status', 'active')
+    if (error) throw error
+    for (const v of (data ?? []) as unknown as Array<{
+      member_id: string
+      member: { first_name: string | null; last_name: string | null; is_active: boolean } | null
+    }>) {
+      if (!v.member?.is_active || byMember.has(v.member_id)) continue
+      byMember.set(v.member_id, fullName(v.member))
+    }
+  }
+  return [...byMember].map(([member_id, member_name]) => ({ member_id, member_name }))
+}
+
+/** ¿Esta persona está en el comité? (gate de la pantalla y de la API). */
+export async function isStudyCommitteeMember(memberId: string | null): Promise<boolean> {
+  if (!memberId) return false
+  const all = await getStudyCommitteeMembers()
+  return all.some(m => m.member_id === memberId)
+}
+
+/** Asignables: coordinadores de estudios/dirigentes + comité de estudios
+ *  bíblicos, deduplicados y ordenados por nombre. */
+export async function getAssignableForRequests(): Promise<Array<{
+  member_id: string; member_name: string; roles: string[]; in_committee: boolean
+}>> {
+  const [coords, committee] = await Promise.all([getEligibleCoordinators(), getStudyCommitteeMembers()])
+  const byId = new Map<string, { member_id: string; member_name: string; roles: string[]; in_committee: boolean }>()
+  for (const c of coords) {
+    if (!c.roles.includes('coordinador_estudios') && !c.roles.includes('coordinador_dirigentes')) continue
+    byId.set(c.member_id, { ...c, in_committee: false })
+  }
+  for (const m of committee) {
+    const cur = byId.get(m.member_id)
+    if (cur) cur.in_committee = true
+    else byId.set(m.member_id, { ...m, roles: [], in_committee: true })
+  }
+  return [...byId.values()].sort((a, b) => a.member_name.localeCompare(b.member_name, 'es'))
+}
+
 export async function getEligibleCoordinators(): Promise<Array<{ member_id: string; member_name: string; roles: string[] }>> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
