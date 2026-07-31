@@ -8,6 +8,7 @@ import { useCommunications } from '@/hooks/useCommunications'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { TemplateCard } from '@/components/communications/TemplateCard'
+import { TemplatePreviewModal } from '@/components/communications/TemplatePreviewModal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import { Plus, FileText } from 'lucide-react'
@@ -32,6 +33,7 @@ export default function PlantillasPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
   const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null)
+  const [previewTarget, setPreviewTarget] = useState<MessageTemplate | null>(null)
 
   // Filtros de categoría: conocidas + las que existan en las plantillas.
   const categoryFilters = useMemo(() => {
@@ -173,6 +175,7 @@ export default function PlantillasPage() {
                 key={t.id}
                 template={t}
                 onUse={handleUse}
+                onPreview={setPreviewTarget}
                 onEdit={() => router.push(`/comunicaciones/plantillas/${t.id}/editar`)}
                 onDuplicate={handleDuplicate}
                 onDelete={setDeleteTarget}
@@ -189,6 +192,14 @@ export default function PlantillasPage() {
             increment={15}
           />
         </>
+      )}
+
+      {previewTarget && (
+        <TemplatePreviewModal
+          template={previewTarget}
+          onClose={() => setPreviewTarget(null)}
+          onUse={t => { setPreviewTarget(null); handleUse(t) }}
+        />
       )}
 
       <DeleteConfirmModal

@@ -5,8 +5,10 @@ import type { CommunicationChannel, MessageTemplate } from '@/types/communicatio
 import type { MemberList } from '@/types/member-list'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import type { RecipientState } from '@/components/communications/RecipientSelector'
-import { Search, Send, AlertTriangle } from 'lucide-react'
+import { Search, Send, AlertTriangle, Eye } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { TemplatePreviewBody } from '@/components/communications/TemplatePreviewModal'
+import { templateSnippet } from '@/lib/communications/template-snippet'
 
 // ─── List Modal ──────────────────────────────────────────────────────────────
 
@@ -79,11 +81,26 @@ function norm(s: string): string {
 
 export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: TemplateModalProps) {
   const [q, setQ] = useState('')
+  // Preview EN EL MISMO modal (no anidado): el ojo reemplaza la lista y el
+  // botón "Volver" regresa a elegir.
+  const [preview, setPreview] = useState<MessageTemplate | null>(null)
   const term = norm(q)
   const visible = term
     ? filteredTemplates.filter(t =>
         norm(t.name).includes(term) || norm(t.subject ?? '').includes(term) || norm(t.category ?? '').includes(term))
     : filteredTemplates
+
+  if (preview) {
+    return (
+      <Modal onClose={onClose} titleId="preview-plantilla" width={680}>
+        <TemplatePreviewBody
+          template={preview}
+          onBack={() => setPreview(null)}
+          onUse={t => onApplyTemplate(t.id)}
+        />
+      </Modal>
+    )
+  }
 
   return (
     <Modal onClose={onClose} titleId="seleccionar-plantilla" width={512}>
@@ -111,21 +128,37 @@ export function TemplateModal({ filteredTemplates, onApplyTemplate, onClose }: T
             </p>
           ) : (
             visible.map(tpl => (
-              <button
+              <div
                 key={tpl.id}
-                type="button"
-                onClick={() => onApplyTemplate(tpl.id)}
-                className="w-full text-left rounded-xl border px-4 py-3 hover:bg-surface-low transition-colors space-y-1 border-[var(--outline-variant)]"
+                className="flex items-start gap-2 rounded-xl border px-3 py-3 hover:bg-surface-low transition-colors border-[var(--outline-variant)]"
               >
-                <div className="flex items-center gap-2">
-                  <p className="text-[13px] font-medium text-navy font-body">{tpl.name}</p>
-                  <ChannelBadge channel={tpl.channel} size="sm" />
-                </div>
-                <p className="text-[12px] text-navy-light/60 line-clamp-1 font-body">
-                  {tpl.body.split('\n')[0]}
-                </p>
-                <p className="text-[11px] text-navy-light/60 font-body">Usado {tpl.used_count} veces</p>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onApplyTemplate(tpl.id)}
+                  className="flex-1 min-w-0 text-left space-y-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <p className="text-[13px] font-medium text-navy font-body">{tpl.name}</p>
+                    <ChannelBadge channel={tpl.channel} size="sm" />
+                  </div>
+                  {/* El cuerpo es HTML: la primera línea suele ser un comentario
+                      o un <style>, así que se resume a texto legible. */}
+                  <p className="text-[12px] text-navy-light/70 line-clamp-2 font-body">
+                    {templateSnippet(tpl.body, 110) || 'Sin texto visible'}
+                  </p>
+                  <p className="text-[11px] text-navy-light/70 font-body">Usado {tpl.used_count} veces</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreview(tpl)}
+                  title="Ver cómo se ve"
+                  aria-label={`Ver cómo se ve la plantilla ${tpl.name}`}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-card transition-colors font-body"
+                >
+                  <Eye size={11} />
+                  Ver
+                </button>
+              </div>
             ))
           )}
         </div>
