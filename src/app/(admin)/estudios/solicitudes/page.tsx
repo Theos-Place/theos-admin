@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Lock, Loader2, ArrowRight, MapPin, Clock, BookOpen, Plus, X, Calendar, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Modal } from '@/components/shared/Modal'
@@ -40,7 +41,16 @@ export default function SolicitudesPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [createOpen, setCreateOpen] = useState(false)
   const [createFor, setCreateFor] = useState<MemberHit | null>(null)
-  const [sectionState, setSection] = useState<'prematrimonial' | 'relocation' | 'study_interest'>('prematrimonial')
+  // Tab inicial: si la URL lo dice (?tab=), se respeta — así una notificación
+  // abre el tab correcto y no el default. Las notificaciones viejas traen solo
+  // ?request=<id>: ese caso se resuelve al cargar, con el tipo de la solicitud.
+  const searchParams = useSearchParams()
+  const [sectionState, setSection] = useState<'prematrimonial' | 'relocation' | 'study_interest'>(() => {
+    const tab = searchParams.get('tab')
+    return tab === 'relocation' || tab === 'study_interest' || tab === 'prematrimonial'
+      ? tab
+      : searchParams.get('request') ? 'relocation' : 'prematrimonial'
+  })
 
   // EST-7: 'direccion' puede ejecutar el PATCH de gestión — también debe ver la
   // página. 2026-07-31: el comité de estudios bíblicos entra con alcance
@@ -61,10 +71,22 @@ export default function SolicitudesPage() {
     let alive = true
     fetch('/api/studies/requests')
       .then(r => (r.ok ? r.json() : []))
-      .then(d => { if (alive) { setRequests(Array.isArray(d) ? d : []); setLoading(false) } })
+      .then(d => {
+        if (!alive) return
+        const list: StudyRequest[] = Array.isArray(d) ? d : []
+        setRequests(list)
+        setLoading(false)
+        // Deep-link de una notificación sin ?tab= : el tab sale del TIPO de la
+        // solicitud enlazada (RequestBoard después expande la fila y scrollea).
+        const id = searchParams.get('request')
+        if (id && !searchParams.get('tab')) {
+          const target = list.find(r => r.id === id)
+          if (target) setSection(target.request_type)
+        }
+      })
       .catch(() => { if (alive) { setRequests([]); setLoading(false) } })
     return () => { alive = false }
-  }, [allowed, reloadKey])
+  }, [allowed, reloadKey, searchParams])
 
   if (!loaded) {
     return (
