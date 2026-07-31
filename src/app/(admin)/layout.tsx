@@ -1,19 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { Topbar } from '@/components/layout/Topbar'
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { AccessDenied } from '@/components/shared/AccessDenied'
-import { SedesProvider } from '@/lib/sedes'
-import { OrgProvider } from '@/lib/org'
-import { AuthProvider, useAuth } from '@/lib/auth/auth-context'
+import { useAuth } from '@/lib/auth/auth-context'
+import { AppShell } from '@/components/layout/AppShell'
 import { usePermissions } from '@/hooks/usePermissions'
 import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
 import { SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
-import { ToastProvider } from '@/components/shared/Toast'
-import { CedulaReminderBanner } from '@/components/members/CedulaReminderBanner'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':      'Dashboard',
@@ -149,37 +142,15 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
-  const title = getTitle(pathname)
 
+  // El cascarón (sidebar + topbar + providers) vive en AppShell, compartido con
+  // /ayuda cuando hay sesión. Acá solo se agrega el gate de módulo.
   return (
-    <AuthProvider>
-    <ToastProvider>
-    <SedesProvider>
-      <OrgProvider>
-      <div className="min-h-screen bg-surface">
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-        {/* Main content — offset for the fixed sidebar on desktop */}
-        <div className="lg:pl-60 flex flex-col min-h-screen min-w-0">
-          <Topbar title={title} onMenuToggle={() => setSidebarOpen(true)} />
-          {/* overflow-x-clip: ninguna página puede provocar scroll horizontal del
-              viewport en mobile; clip (no hidden) no crea contenedor de scroll, así
-              que no rompe los position:sticky internos (p. ej. la barra de editar). */}
-          <main className="flex-1 p-4 lg:p-6 min-w-0 overflow-x-clip">
-            <CedulaReminderBanner />
-            <ErrorBoundary>
-              <ModuleGuard pathname={pathname}>
-                {children}
-              </ModuleGuard>
-            </ErrorBoundary>
-          </main>
-        </div>
-      </div>
-      </OrgProvider>
-    </SedesProvider>
-    </ToastProvider>
-    </AuthProvider>
+    <AppShell title={getTitle(pathname)}>
+      <ModuleGuard pathname={pathname}>
+        {children}
+      </ModuleGuard>
+    </AppShell>
   )
 }

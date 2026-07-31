@@ -22,6 +22,14 @@ export default async function AyudaPage() {
       </div>
 
       <HelpIndex docs={docs} />
+
+      <p className="text-[12px] text-navy-light/70 font-body">
+        ¿No encontrás lo que buscás? Escribinos a{' '}
+        <a href="mailto:soporte@theosplace.org" className="text-teal-deep underline">
+          soporte@theosplace.org
+        </a>
+        .
+      </p>
     </div>
   )
 }
