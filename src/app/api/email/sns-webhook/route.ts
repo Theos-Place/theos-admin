@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'node:crypto'
-import { markEmailBounced, markEmailComplained } from '@/lib/email/suppression'
+import { markEmailBounced, markEmailComplained, markEmailDelivered } from '@/lib/email/suppression'
 
 // Webhook de Amazon SNS para notificaciones de SES (bounces y complaints).
 //
@@ -79,8 +79,10 @@ export async function POST(req: NextRequest) {
     if (msg.Type === 'Notification') {
       const payload = JSON.parse(msg.Message) as {
         notificationType?: string; eventType?: string
+        mail?: { messageId?: string }
         bounce?: { bounceType?: string; bouncedRecipients?: Array<{ emailAddress: string }> }
         complaint?: { complainedRecipients?: Array<{ emailAddress: string }> }
+        delivery?: { recipients?: string[] }
       }
       const type = payload.notificationType ?? payload.eventType
 
@@ -94,6 +96,14 @@ export async function POST(req: NextRequest) {
       } else if (type === 'Complaint' && payload.complaint) {
         for (const r of payload.complaint.complainedRecipients ?? []) {
           if (r.emailAddress) await markEmailComplained(r.emailAddress)
+        }
+      } else if (type === 'Delivery' && payload.delivery) {
+        // Confirmación de entrega: sin esto el contador de "Entregados" de un
+        // comunicado se quedaba en 0 para siempre (solo se atendían Bounce y
+        // Complaint). Requiere que el configuration set de SES publique el
+        // evento Delivery en este tema de SNS.
+        for (const addr of payload.delivery.recipients ?? []) {
+          if (addr) await markEmailDelivered(addr, payload.mail?.messageId ?? null)
         }
       }
       return NextResponse.json({ ok: true })

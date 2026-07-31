@@ -2312,6 +2312,7 @@ export type Database = {
           id: string
           last_error: string | null
           member_id: string | null
+          provider_message_id: string | null
           recipient: string
           scheduled_date: string | null
           sent_at: string | null
@@ -2328,6 +2329,7 @@ export type Database = {
           id?: string
           last_error?: string | null
           member_id?: string | null
+          provider_message_id?: string | null
           recipient: string
           scheduled_date?: string | null
           sent_at?: string | null
@@ -2344,6 +2346,7 @@ export type Database = {
           id?: string
           last_error?: string | null
           member_id?: string | null
+          provider_message_id?: string | null
           recipient?: string
           scheduled_date?: string | null
           sent_at?: string | null

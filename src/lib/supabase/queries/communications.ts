@@ -730,7 +730,10 @@ export async function processPendingEmails(
     const html = renderEmail(bodyHtml, kind === 'marketing' && token ? { unsubscribeUrl: unsubscribeUrl(token) } : undefined)
     const subject = applyVars(broadcast.subject ?? 'Mensaje de Theos Place', { nombre })
     try {
-      await sendEmail({
+      // El messageId de SES se guarda para casar después el evento de entrega
+      // (SNS → /api/email/sns-webhook) con ESTE envío y no con otro de la misma
+      // dirección.
+      const { messageId } = await sendEmail({
         to: { email: log.recipient, name: (log.member_id && names.get(log.member_id)) || log.recipient },
         fromName: broadcast.config?.smtp_from_name ?? undefined,
         subject,
@@ -739,7 +742,10 @@ export async function processPendingEmails(
         unsubscribeToken: token,
       })
       await supabase.from('message_logs')
-        .update({ status: 'sent', sent_at: new Date().toISOString(), attempts, last_error: null })
+        .update({
+          status: 'sent', sent_at: new Date().toISOString(), attempts, last_error: null,
+          provider_message_id: messageId ?? null,
+        })
         .eq('id', log.id)
       sent++
       // Pausa corta entre envíos para no exceder el rate de SES.
