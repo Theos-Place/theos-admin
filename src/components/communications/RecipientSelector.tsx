@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Search, X, Users, Filter, BookOpen, UsersRound, Megaphone } from 'lucide-react'
+import { Search, X, Users, BookOpen, UsersRound, Megaphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSedes } from '@/lib/sedes'
 type MemberLite = { id: string; first_name: string; last_name: string; email: string | null }
@@ -20,7 +20,10 @@ type GroupLite = {
 const groupEnrolledIds = (g: GroupLite) =>
   Array.from(new Set(g.enrollments.filter(e => e.status === 'enrolled').map(e => e.member_id)))
 
-export type RecipientMode = 'filters' | 'manual' | 'group' | 'audience'
+// 'filters' (constructor de segmentos) se eliminó el 2026-07-31: el botón no
+// funcionaba y la forma real de mandar a un segmento es guardarlo como LISTA y
+// usar "Usar lista existente".
+export type RecipientMode = 'manual' | 'group' | 'audience'
 
 type AudiencePreset = 'all' | 'sede' | 'servidonantes'
 
@@ -29,7 +32,7 @@ export type RecipientState = {
   // manual
   manualMemberIds: string[]
   // group
-  groupEntity: 'event' | 'study_group' | null
+  groupEntity: 'event' | 'study_group' | 'committee' | null
   groupId: string
   // computed label
   label: string
@@ -39,25 +42,24 @@ export type RecipientState = {
 interface Props {
   value: RecipientState
   onChange: (v: RecipientState) => void
-  onOpenFilters?: () => void
-  filtersLabel?: string
-  filtersCount?: number
 }
 
 const MODE_OPTIONS: { key: RecipientMode; label: string; icon: React.ElementType; description: string }[] = [
   { key: 'audience', label: 'Audiencia', icon: Megaphone, description: 'Todos / por sede / servidonantes' },
-  { key: 'filters', label: 'Filtros avanzados', icon: Filter, description: 'Usar el constructor de segmentos' },
   { key: 'manual',  label: 'Selección manual',  icon: Users,  description: 'Elegir 1-5 personas específicas' },
   { key: 'group',   label: 'Grupo existente',   icon: UsersRound, description: 'Evento, estudio o comité' },
 ]
 
-export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel, filtersCount = 0 }: Props) {
+export function RecipientSelector({ value, onChange }: Props) {
   const [memberSearch, setMemberSearch] = useState('')
   const [memberResults, setMemberResults] = useState<MemberLite[]>([])
   const [selectedMembers, setSelectedMembers] = useState<MemberLite[]>([])
   const [events, setEvents] = useState<EventLite[]>([])
 
   const [groups, setGroups] = useState<GroupLite[]>([])
+  // Comités con los ids de sus servidores activos (facet del endpoint de
+  // audiencia: el rol comunicaciones no tiene el módulo servidores).
+  const [committees, setCommittees] = useState<Array<{ id: string; name: string; member_ids: string[] }>>([])
 
   // Modo "audiencia": preset + sedes seleccionadas + estado de carga del conteo.
   const { activeSedes } = useSedes()
@@ -80,6 +82,10 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
       .then(r => (r.ok ? r.json() : []))
       .then(d => { if (alive && Array.isArray(d)) setGroups(d as GroupLite[]) })
       .catch(() => { if (alive) setGroups([]) })
+    fetch('/api/communications/audience?facet=committees')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d?.committees) setCommittees(d.committees) })
+      .catch(() => {})
     return () => { alive = false }
   }, [])
 
@@ -160,6 +166,22 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
       const ids = (d.member_ids ?? []) as string[]
       onChange({ ...value, groupEntity: 'event', groupId: eventId, manualMemberIds: ids, count: ids.length, label: labelFor(ids.length) })
     } catch { /* deja 0 si falla */ }
+  }
+
+  function setGroupCommittee(committeeId: string) {
+    const committee = committees.find(c => c.id === committeeId)
+    if (!committee) {
+      onChange({ ...value, groupEntity: 'committee', groupId: '', manualMemberIds: [], count: 0, label: '' })
+      return
+    }
+    onChange({
+      ...value,
+      groupEntity: 'committee',
+      groupId: committeeId,
+      manualMemberIds: committee.member_ids,
+      count: committee.member_ids.length,
+      label: `Servidores de "${committee.name}"`,
+    })
   }
 
   function setGroupStudy(groupId: string) {
@@ -278,30 +300,6 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
         </div>
       )}
 
-      {value.mode === 'filters' && (
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={onOpenFilters}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-sm text-navy-light/60 hover:border-navy/30 hover:text-navy transition-all border-[var(--outline-variant)] font-body"
-          >
-            <Filter size={15} />
-            Abrir filtros de miembros
-          </button>
-          {filtersLabel && (
-            <div className="rounded-xl p-3 flex items-center justify-between gap-2 bg-surface-low">
-              <div>
-                <p className="text-[12px] font-medium text-navy font-body">{filtersLabel}</p>
-                <p className="text-[11px] text-navy-light/60 font-body">~{filtersCount} miembros</p>
-              </div>
-              <span className="text-[11px] text-teal-deep font-semibold font-display">
-                ✓ Aplicado
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
       {value.mode === 'manual' && (
         <div className="space-y-3">
           <div className="relative">
@@ -358,7 +356,7 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
 
       {value.mode === 'group' && (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => onChange({ ...value, groupEntity: 'event', groupId: '', count: 0, label: '' })}
@@ -385,7 +383,36 @@ export function RecipientSelector({ value, onChange, onOpenFilters, filtersLabel
               <UsersRound size={14} />
               Grupo de estudio
             </button>
+            <button
+              type="button"
+              onClick={() => onChange({ ...value, groupEntity: 'committee', groupId: '', manualMemberIds: [], count: 0, label: '' })}
+              className={cn(
+                'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all font-body',
+                value.groupEntity === 'committee'
+                  ? 'bg-navy/10 border-navy/30 text-navy font-medium'
+                  : 'text-navy-light/60 hover:text-navy'
+              , 'border-outline')}
+            >
+              <Users size={14} />
+              Comité
+            </button>
           </div>
+
+          {value.groupEntity === 'committee' && (
+            <select
+              className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              value={value.groupId}
+              onChange={e => setGroupCommittee(e.target.value)}
+              aria-label="Comité"
+            >
+              <option value="">Seleccionar comité...</option>
+              {committees.map(c => (
+                <option key={c.id} value={c.id} disabled={c.member_ids.length === 0}>
+                  {c.name} ({c.member_ids.length} servidor{c.member_ids.length === 1 ? '' : 'es'})
+                </option>
+              ))}
+            </select>
+          )}
 
           {value.groupEntity === 'event' && (
             <select

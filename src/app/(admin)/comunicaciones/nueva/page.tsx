@@ -41,7 +41,9 @@ function NuevaComunicacionContent() {
   const [savingDraft, setSavingDraft] = useState(false)
   const { templates, messages, configs } = useCommunications('templates', 'messages', 'configs')
 
-  const initialMode = (searchParams.get('mode') as RecipientMode) || 'filters'
+  // 'audience' es el default desde que se quitó el constructor de segmentos
+  // (2026-07-31): es el modo que sirve para un comunicado masivo.
+  const initialMode = (searchParams.get('mode') as RecipientMode) || 'audience'
   const initialMemberIds = useMemo(
     () => searchParams.get('members')?.split(',').filter(Boolean) ?? [],
     // eslint-disable-next-line react-hooks/exhaustive-deps

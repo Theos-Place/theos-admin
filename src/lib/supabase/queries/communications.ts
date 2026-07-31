@@ -348,6 +348,49 @@ export async function getEligibleAudience(
   return { member_ids: out, count: out.length }
 }
 
+/** Comités (areas.area_type='committee' activos) con los member_id de sus
+ *  servidores ACTIVOS. Vive acá y no en el módulo servidores porque el selector
+ *  de destinatarios lo usa con el rol 'comunicaciones', que no tiene ese módulo:
+ *  se devuelven ids y nombres del comité, nada de datos de contacto. */
+export async function getCommitteeAudiences(): Promise<Array<{
+  id: string
+  name: string
+  member_ids: string[]
+}>> {
+  const supabase = createAdminClient()
+  const { data: areas, error: aErr } = await supabase
+    .from('areas').select('id, name').eq('area_type', 'committee').eq('is_active', true).order('name')
+  if (aErr) throw aErr
+  const committees = (areas ?? []) as Array<{ id: string; name: string }>
+  if (committees.length === 0) return []
+
+  const { data: positions, error: pErr } = await supabase
+    .from('service_positions').select('id, area_id').in('area_id', committees.map(c => c.id))
+  if (pErr) throw pErr
+  const areaByPosition = new Map(
+    ((positions ?? []) as Array<{ id: string; area_id: string }>).map(p => [p.id, p.area_id]),
+  )
+  if (areaByPosition.size === 0) return committees.map(c => ({ ...c, member_ids: [] }))
+
+  const byArea = new Map<string, Set<string>>()
+  const positionIds = [...areaByPosition.keys()]
+  for (let i = 0; i < positionIds.length; i += 200) {
+    const { data, error } = await supabase
+      .from('volunteers')
+      .select('member_id, position_id')
+      .in('position_id', positionIds.slice(i, i + 200))
+      .eq('status', 'active')
+    if (error) throw error
+    for (const v of (data ?? []) as Array<{ member_id: string; position_id: string }>) {
+      const areaId = areaByPosition.get(v.position_id)
+      if (!areaId) continue
+      if (!byArea.has(areaId)) byArea.set(areaId, new Set())
+      byArea.get(areaId)!.add(v.member_id)
+    }
+  }
+  return committees.map(c => ({ ...c, member_ids: [...(byArea.get(c.id) ?? [])] }))
+}
+
 /** Resuelve el correo real (desde members) de los destinatarios email y excluye
  *  a los bloqueados: bounced/complained siempre; opt-out solo si es marketing. */
 async function resolveEmailRecipients(
