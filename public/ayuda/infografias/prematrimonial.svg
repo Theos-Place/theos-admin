@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1060" role="img" aria-labelledby="t-pre d-pre" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-pre">Prematrimonial, de principio a fin</title>
+  <desc id="d-pre">Requisitos de cada persona de la pareja, y los cinco estados del trámite: solicitud, pago en revisión, pendiente, grupo creado y cierre con evaluación.</desc>
+
+  <rect width="720" height="1060" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Prematrimonial</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Se inscribe en pareja y tiene su propia cola.</text>
+
+  <!-- Requisitos -->
+  <g>
+    <rect x="48" y="148" width="624" height="152" rx="14" fill="#161440"/>
+    <text x="76" y="180" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">REQUISITOS · APLICAN A CADA PERSONA, NO A LA PAREJA</text>
+    <g font-size="15" fill="#FFFFFF">
+      <circle cx="88" cy="212" r="6" fill="#EF5554"/>
+      <text x="108" y="218"><tspan font-weight="bold">Nivel 2 completado.</tspan> Los dos. Si a uno le falta, no arranca.</text>
+      <circle cx="88" cy="248" r="6" fill="#EF5554"/>
+      <text x="108" y="254"><tspan font-weight="bold">Documento de identidad</tspan> registrado en su ficha.</text>
+    </g>
+    <text x="76" y="286" font-size="13" fill="#9FA8C7">El sistema los verifica al enviar, y dice cuál de los dos es el que no cumple.</text>
+  </g>
+
+  <!-- Estados -->
+  <text x="48" y="352" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">EL RECORRIDO</text>
+  <g>
+    <rect x="48" y="368" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="406" r="18" fill="#161440"/>
+    <text x="88" y="412" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="400" font-size="17" font-weight="bold" fill="#161440">Solicitud</text>
+    <text x="122" y="424" font-size="14" fill="#5B5975">La llena la pareja, o alguien del equipo por ellos.</text>
+  </g>
+  <path d="M360 444 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+
+  <g>
+    <rect x="48" y="470" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="508" r="18" fill="#161440"/>
+    <text x="88" y="514" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="502" font-size="17" font-weight="bold" fill="#161440">Pago en revisión</text>
+    <text x="122" y="526" font-size="14" fill="#5B5975">Entra a la cola de pagos como cualquier otro cobro.</text>
+  </g>
+  <path d="M360 546 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+
+  <g>
+    <rect x="48" y="572" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="610" r="18" fill="#161440"/>
+    <text x="88" y="616" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="604" font-size="17" font-weight="bold" fill="#161440">Pendiente</text>
+    <text x="122" y="628" font-size="14" fill="#5B5975">Con el pago APROBADO, espera que se arme el grupo.</text>
+  </g>
+  <path d="M360 648 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+
+  <g>
+    <rect x="48" y="674" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="712" r="18" fill="#161440"/>
+    <text x="88" y="718" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="122" y="706" font-size="17" font-weight="bold" fill="#161440">Grupo creado</text>
+    <text x="122" y="730" font-size="14" fill="#5B5975">Se les asigna el grupo y empieza el curso.</text>
+  </g>
+  <path d="M360 750 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+
+  <g>
+    <rect x="48" y="776" width="624" height="86" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
+    <circle cx="88" cy="819" r="18" fill="#70BDC2"/>
+    <text x="88" y="825" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
+    <text x="122" y="808" font-size="17" font-weight="bold" fill="#161440">Cierre con evaluación</text>
+    <text x="122" y="832" font-size="14" fill="#5B5975">De la pareja. Visible solo para coordinación de estudios</text>
+    <text x="122" y="852" font-size="14" fill="#5B5975">y dirección.</text>
+  </g>
+
+  <!-- Errores comunes -->
+  <g>
+    <rect x="48" y="892" width="624" height="126" rx="14" fill="#FFF8F0"/>
+    <rect x="48" y="892" width="6" height="126" rx="3" fill="#EF5554"/>
+    <text x="76" y="922" font-size="15" font-weight="bold" fill="#161440">Los dos errores de siempre</text>
+    <text x="76" y="950" font-size="14" fill="#5B5975">"No me deja inscribirlos" → el Nivel 2 de uno, o el documento sin registrar.</text>
+    <text x="76" y="972" font-size="14" fill="#5B5975">"Ya pagaron y sigue en revisión" → avanza cuando el pago queda APROBADO,</text>
+    <text x="76" y="992" font-size="14" fill="#5B5975">no cuando se sube el comprobante.</text>
+    <text x="76" y="1012" font-size="13" fill="#8B8AA0">Si la pareja se retira, cancelá la solicitud: si no, cuenta como demanda pendiente.</text>
+  </g>
+
+  <defs>
+    <marker id="pr" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 0 L5 10 z" fill="#EF5554"/>
+    </marker>
+  </defs>
+</svg>

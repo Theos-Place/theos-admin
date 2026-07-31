@@ -1,13 +1,15 @@
 ---
 titulo: La ruta de un pago
 seccion: Pagos
-tipo: tutorial
+tipo: infografia
 visibilidad: publica
 orden: 1
 resumen: Qué pasa después de subir tu comprobante, cuánto tarda y qué significan las 72 horas.
 ---
 
 # La ruta de un pago
+
+![Los cuatro estados de un pago y el plazo de 72 horas cuando el comprobante se rechaza](/ayuda/infografias/ruta-de-un-pago.svg)
 
 Cuando algo tiene costo — un estudio, un evento, el folleto, el prematrimonial — el sistema
 te crea un **pago pendiente**. Vos subís el comprobante y alguien lo revisa.

@@ -1,13 +1,15 @@
 ---
 titulo: Ciclo de un evento y el check-in
 seccion: Eventos
-tipo: tutorial
+tipo: infografia
 roles: [encargado_eventos, comunicaciones, encargado_staff, direccion]
 orden: 10
 resumen: De crear el evento al check-in del día, con lo que el check-in cambia sin que se note.
 ---
 
 # Ciclo de un evento y el check-in
+
+![Los cinco pasos de un evento y lo que el check-in recalcula](/ayuda/infografias/ciclo-de-un-evento.svg)
 
 ## El recorrido
 

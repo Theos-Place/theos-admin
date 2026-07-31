@@ -1,13 +1,15 @@
 ---
 titulo: Becas y cupones (gestión)
 seccion: Finanzas
-tipo: tutorial
+tipo: infografia
 roles: [becas, finanzas, direccion]
 orden: 10
 resumen: Diferencia entre beca asignada y cupón, cómo se revisa una solicitud y por qué una beca no se puede usar dos veces.
 ---
 
 # Becas y cupones (gestión)
+
+![Beca asignada vs. cupón, la regla de un solo uso y las tres respuestas posibles](/ayuda/infografias/becas-y-cupones.svg)
 
 Son dos herramientas distintas para el mismo problema: que el costo no deje a alguien afuera.
 

@@ -1,13 +1,15 @@
 ---
 titulo: Quién ve qué — mapa de roles
 seccion: Primeros pasos
-tipo: tutorial
+tipo: infografia
 visibilidad: gestion
 orden: 20
 resumen: Por qué vos ves unas pantallas y otra persona ve otras, y cómo se pide un acceso.
 ---
 
 # Quién ve qué
+
+![Los roles agrupados por familia y los tres alcances posibles](/ayuda/infografias/mapa-de-roles.svg)
 
 La pregunta número uno cuando se estrena un sistema es *"¿por qué yo no veo eso?"*. La
 respuesta casi siempre es la misma: **el sistema muestra únicamente lo que podés hacer**.

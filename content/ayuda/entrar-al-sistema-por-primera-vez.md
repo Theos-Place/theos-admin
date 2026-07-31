@@ -1,13 +1,15 @@
 ---
 titulo: Entrar al sistema por primera vez
 seccion: Primeros pasos
-tipo: tutorial
+tipo: infografia
 visibilidad: publica
 orden: 1
 resumen: Cómo creás tu contraseña y entrás a tu cuenta, incluso si nunca usaste el sistema.
 ---
 
 # Entrar al sistema por primera vez
+
+![Los cuatro pasos para crear tu contraseña y entrar al sistema](/ayuda/infografias/primera-vez-en-el-sistema.svg)
 
 Ya tenés una cuenta: la creamos con el correo que está en tu perfil de Theos Place.
 Lo que falta es que le pongas una contraseña, y eso lo hacés vos — nadie más la conoce.

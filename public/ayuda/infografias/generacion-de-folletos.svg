@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1000" role="img" aria-labelledby="t-fol d-fol" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-fol">Cuándo se generan los folletos</title>
+  <desc id="d-fol">Los cuatro motivos por los que nace un pedido de folletos y los cuatro estados lineales por los que pasa, sin retroceso.</desc>
+
+  <rect width="720" height="1000" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Cuándo se generan los folletos</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Casi nunca se crean a mano: los dispara lo que pasa en estudios.</text>
+
+  <!-- Qué los dispara -->
+  <text x="48" y="164" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">QUÉ DISPARA UN PEDIDO</text>
+  <g>
+    <rect x="48" y="180" width="624" height="86" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="180" width="6" height="86" rx="3" fill="#EF5554"/>
+    <text x="76" y="210" font-size="16" font-weight="bold" fill="#161440">Cierre de grupo</text>
+    <text x="76" y="236" font-size="14" fill="#5B5975">Al cerrar N1–N3 o DIS1–DIS2 se pide el folleto del SIGUIENTE nivel:</text>
+    <text x="76" y="256" font-size="14" fill="#5B5975">la cohorte avanza junta.</text>
+  </g>
+  <g>
+    <rect x="48" y="278" width="624" height="86" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="278" width="6" height="86" rx="3" fill="#161440"/>
+    <text x="76" y="308" font-size="16" font-weight="bold" fill="#161440">Hitos de un bloque de capacitación</text>
+    <text x="76" y="334" font-size="14" fill="#5B5975">Al caer cada hito: preliminar, confirmación y final.</text>
+    <text x="76" y="354" font-size="13" fill="#8B8AA0">Avisa por correo y notificación.</text>
+  </g>
+  <g>
+    <rect x="48" y="376" width="304" height="86" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="376" width="6" height="86" rx="3" fill="#70BDC2"/>
+    <text x="76" y="406" font-size="16" font-weight="bold" fill="#161440">Reubicación</text>
+    <text x="76" y="432" font-size="14" fill="#5B5975">Alguien se mueve de grupo</text>
+    <text x="76" y="452" font-size="14" fill="#5B5975">y necesita su folleto ahí.</text>
+  </g>
+  <g>
+    <rect x="368" y="376" width="304" height="86" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="368" y="376" width="6" height="86" rx="3" fill="#8B8AA0"/>
+    <text x="396" y="406" font-size="16" font-weight="bold" fill="#161440">Manual</text>
+    <text x="396" y="432" font-size="14" fill="#5B5975">Para lo que no encaja en</text>
+    <text x="396" y="452" font-size="14" fill="#5B5975">los anteriores.</text>
+  </g>
+
+  <!-- Estados -->
+  <text x="48" y="512" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LOS CUATRO ESTADOS · LINEALES, SIN RETROCESO</text>
+  <g>
+    <rect x="48" y="528" width="624" height="118" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <g font-size="14" font-weight="bold" text-anchor="middle">
+      <rect x="76" y="556" width="120" height="34" rx="17" fill="#161440"/>
+      <text x="136" y="578" fill="#FFFFFF">creada</text>
+      <rect x="216" y="556" width="150" height="34" rx="17" fill="#161440"/>
+      <text x="291" y="578" fill="#FFFFFF">en impresión</text>
+      <rect x="386" y="556" width="150" height="34" rx="17" fill="#161440"/>
+      <text x="461" y="578" fill="#FFFFFF">entregado</text>
+      <rect x="556" y="556" width="96" height="34" rx="17" fill="#70BDC2"/>
+      <text x="604" y="578" fill="#FFFFFF">cerrada</text>
+    </g>
+    <g stroke="#EF5554" stroke-width="2" fill="none">
+      <path d="M200 573 h12" marker-end="url(#fo)"/>
+      <path d="M370 573 h12" marker-end="url(#fo)"/>
+      <path d="M540 573 h12" marker-end="url(#fo)"/>
+    </g>
+    <text x="76" y="622" font-size="13" fill="#8B8AA0">Si te pasaste de estado por error, no se devuelve: se documenta y se corrige la cantidad.</text>
+  </g>
+
+  <!-- Qué revisar -->
+  <text x="48" y="694" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">QUÉ REVISAR ANTES DE MANDAR A IMPRIMIR</text>
+  <g font-size="14">
+    <rect x="48" y="710" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="736" font-weight="bold" fill="#161440">La sede</text>
+    <text x="72" y="756" fill="#5B5975">Los pedidos se agrupan por sede: mal la sede, mal el destino.</text>
+
+    <rect x="48" y="780" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="806" font-weight="bold" fill="#161440">La cantidad contra los matriculados de HOY</text>
+    <text x="72" y="826" fill="#5B5975">La matrícula se sigue moviendo después de generado el pedido.</text>
+
+    <rect x="48" y="850" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="876" font-weight="bold" fill="#161440">Los duplicados</text>
+    <text x="72" y="896" fill="#5B5975">Un grupo cerrado dos veces deja dos pedidos del mismo folleto.</text>
+  </g>
+
+  <text x="48" y="948" font-size="13" fill="#8B8AA0">La fecha estimada es el cierre + 2 semanas: sirve para planificar la impresión,</text>
+  <text x="48" y="968" font-size="13" fill="#8B8AA0">no es una promesa a nadie.</text>
+
+  <defs>
+    <marker id="fo" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#EF5554"/>
+    </marker>
+  </defs>
+</svg>

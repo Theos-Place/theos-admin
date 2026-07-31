@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1200" role="img" aria-labelledby="t-flujos d-flujos" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-flujos">Los tres flujos de servicio</title>
+  <desc id="d-flujos">Diferencia entre solicitud de puesto nuevo, solicitud de vacante y aplicación: qué es lo que no existe todavía en cada caso, quién lo hace y en qué orden van.</desc>
+
+  <rect width="720" height="1200" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Los tres flujos de servicio</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Tienen nombres parecidos y se piden al revés todo el tiempo.</text>
+
+  <!-- La pregunta que los distingue -->
+  <g>
+    <rect x="48" y="146" width="624" height="76" rx="14" fill="#161440"/>
+    <text x="76" y="180" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">LA PREGUNTA QUE LOS DISTINGUE</text>
+    <text x="76" y="208" font-size="17" font-weight="bold" fill="#FFFFFF">¿Qué es lo que NO existe todavía?</text>
+  </g>
+
+  <!-- 1 -->
+  <g>
+    <rect x="48" y="248" width="624" height="180" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="248" width="6" height="180" rx="3" fill="#161440"/>
+    <circle cx="90" cy="284" r="18" fill="#161440"/>
+    <text x="90" y="291" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="291" font-size="19" font-weight="bold" fill="#161440">Solicitud de puesto nuevo</text>
+    <text x="76" y="326" font-size="14" fill="#8B8AA0">No existe: EL PUESTO. Nadie lo ha hecho nunca en ese comité.</text>
+    <text x="76" y="356" font-size="14" fill="#5B5975">Se pide la definición: funciones, perfil, requisitos.</text>
+    <text x="76" y="376" font-size="14" fill="#5B5975">Todavía no estás pidiendo gente.</text>
+    <rect x="76" y="392" width="560" height="24" rx="12" fill="#F0EFE9"/>
+    <text x="90" y="409" font-size="13" fill="#5B5975">Ejemplo: nunca hubo un encargado de transmisión en vivo y ahora hace falta.</text>
+  </g>
+  <path d="M360 428 v22" stroke="#EF5554" stroke-width="2" marker-end="url(#f)"/>
+
+  <!-- 2 -->
+  <g>
+    <rect x="48" y="458" width="624" height="204" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="458" width="6" height="204" rx="3" fill="#EF5554"/>
+    <circle cx="90" cy="494" r="18" fill="#EF5554"/>
+    <text x="90" y="501" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="501" font-size="19" font-weight="bold" fill="#161440">Solicitud de vacante</text>
+    <text x="76" y="536" font-size="14" fill="#8B8AA0">No existe: LA PLAZA ABIERTA. El puesto sí existe.</text>
+    <text x="76" y="566" font-size="14" fill="#5B5975">Pasa por autorización:</text>
+    <g font-size="13" text-anchor="middle">
+      <rect x="76" y="580" width="104" height="30" rx="15" fill="#F0EFE9"/><text x="128" y="600" fill="#161440">creado</text>
+      <rect x="196" y="580" width="150" height="30" rx="15" fill="#F0EFE9"/><text x="271" y="600" fill="#161440">enviado al líder</text>
+      <rect x="362" y="580" width="120" height="30" rx="15" fill="#F0EFE9"/><text x="422" y="600" fill="#161440">aprobado</text>
+      <rect x="498" y="580" width="120" height="30" rx="15" fill="#F0EFE9"/><text x="558" y="600" fill="#161440">cerrada</text>
+    </g>
+    <g stroke="#8B8AA0" stroke-width="1.5" fill="none">
+      <path d="M182 595 h10"/><path d="M348 595 h10"/><path d="M484 595 h10"/>
+    </g>
+    <rect x="76" y="622" width="560" height="24" rx="12" fill="#FFF8F0"/>
+    <text x="90" y="639" font-size="13" fill="#C4383A">La ventana para pedir vacantes abre el día 25 de cada mes.</text>
+  </g>
+  <path d="M360 662 v22" stroke="#EF5554" stroke-width="2" marker-end="url(#f)"/>
+
+  <!-- 3 -->
+  <g>
+    <rect x="48" y="692" width="624" height="170" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="692" width="6" height="170" rx="3" fill="#70BDC2"/>
+    <circle cx="90" cy="728" r="18" fill="#70BDC2"/>
+    <text x="90" y="735" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="735" font-size="19" font-weight="bold" fill="#161440">Aplicación</text>
+    <text x="76" y="770" font-size="14" fill="#8B8AA0">No existe: LA PERSONA. La vacante ya está abierta y publicada.</text>
+    <text x="76" y="800" font-size="14" fill="#5B5975">La hace quien quiere servir, desde la página de vacantes.</text>
+    <text x="76" y="820" font-size="14" fill="#5B5975">El comité revisa las aplicaciones y elige.</text>
+    <rect x="76" y="826" width="560" height="24" rx="12" fill="#F0EFE9"/>
+    <text x="90" y="843" font-size="13" fill="#5B5975">Aplicar no es un compromiso firmado: es decir "me interesa".</text>
+  </g>
+
+  <!-- Secuencia -->
+  <text x="48" y="908" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LA SECUENCIA COMPLETA</text>
+  <g>
+    <rect x="48" y="924" width="624" height="86" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="958" font-size="15" fill="#5B5975">puesto nuevo → vacante de ese puesto → aplicaciones → entra al comité</text>
+    <text x="76" y="988" font-size="13" fill="#8B8AA0">Si el puesto ya existe, arrancás en el 2. Si la vacante ya está abierta, en el 3.</text>
+  </g>
+
+  <!-- Efecto lateral -->
+  <g>
+    <rect x="48" y="1038" width="624" height="118" rx="14" fill="#161440"/>
+    <text x="76" y="1070" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">LO QUE PASA SIN QUE SE NOTE</text>
+    <text x="76" y="1100" font-size="15" fill="#FFFFFF">Entrar a un comité sincroniza los ROLES automáticamente.</text>
+    <text x="76" y="1126" font-size="14" fill="#9FA8C7">Salir se los quita. Por eso al líder de un comité no hay que pedirle accesos</text>
+    <text x="76" y="1146" font-size="14" fill="#9FA8C7">aparte: le llegan con el puesto.</text>
+  </g>
+
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 0 L5 10 z" fill="#EF5554"/>
+    </marker>
+  </defs>
+</svg>

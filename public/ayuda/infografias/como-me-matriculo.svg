@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1140" role="img" aria-labelledby="t-mat d-mat" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-mat">Cómo me matriculo</title>
+  <desc id="d-mat">Cinco pasos para matricularse en un estudio y las cinco razones por las que un estudio puede no aparecer en la pantalla de matrícula.</desc>
+
+  <rect width="720" height="1140" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Cómo me matriculo</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Todo pasa en una sola pantalla: Matrícula.</text>
+
+  <!-- Pasos -->
+  <g font-size="16">
+    <rect x="48" y="148" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="181" r="18" fill="#161440"/>
+    <text x="88" y="188" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="188" fill="#161440">Entrá a <tspan font-weight="bold">Matrícula</tspan></text>
+
+    <rect x="48" y="226" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="259" r="18" fill="#161440"/>
+    <text x="88" y="266" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="266" fill="#161440">Elegí el estudio y el grupo que te sirva</text>
+
+    <rect x="48" y="304" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="337" r="18" fill="#161440"/>
+    <text x="88" y="344" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="344" fill="#161440">Confirmá — el costo se muestra antes</text>
+
+    <rect x="48" y="382" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="415" r="18" fill="#161440"/>
+    <text x="88" y="422" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="122" y="422" fill="#161440">Si hay que pagar, subí el comprobante</text>
+
+    <rect x="48" y="460" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
+    <circle cx="88" cy="493" r="18" fill="#70BDC2"/>
+    <text x="88" y="500" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
+    <text x="122" y="500" fill="#161440">Listo: quedás matriculado</text>
+  </g>
+
+  <!-- No aparece -->
+  <text x="48" y="576" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">¿NO APARECE EL ESTUDIO QUE QUERÉS? SON CINCO RAZONES</text>
+  <g font-size="14">
+    <rect x="48" y="592" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="618" font-weight="bold" fill="#161440">Te falta el estudio anterior</text>
+    <text x="72" y="638" fill="#5B5975">Los niveles van en cadena. No se puede saltar uno.</text>
+
+    <rect x="48" y="662" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="688" font-weight="bold" fill="#161440">No hay grupo abierto</text>
+    <text x="72" y="708" fill="#5B5975">El estudio existe, pero ninguno está en matrícula ahora.</text>
+
+    <rect x="48" y="732" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="758" font-weight="bold" fill="#161440">El grupo está lleno</text>
+    <text x="72" y="778" fill="#5B5975">Tenía cupo máximo y ya se ocupó.</text>
+
+    <rect x="48" y="802" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="828" font-weight="bold" fill="#161440">Es solo por invitación</text>
+    <text x="72" y="848" fill="#5B5975">CDEB, Hermenéutica, Cómo Dar Charlas. El comité invita.</text>
+
+    <rect x="48" y="872" width="624" height="58" rx="12" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="898" font-weight="bold" fill="#161440">Falta un compromiso de la etapa</text>
+    <text x="72" y="918" fill="#5B5975">Asistencia, ser donante o servir en un comité, según la etapa.</text>
+  </g>
+
+  <!-- Pago -->
+  <g>
+    <rect x="48" y="960" width="624" height="90" rx="14" fill="#161440"/>
+    <text x="76" y="992" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">SI HAY QUE PAGAR</text>
+    <text x="76" y="1020" font-size="15" fill="#FFFFFF">Primero quedás inscrito; después subís el comprobante.</text>
+    <text x="76" y="1040" font-size="14" fill="#9FA8C7">Si te lo rechazan, tenés 72 horas para subir otro o se libera tu cupo.</text>
+  </g>
+
+  <text x="48" y="1088" font-size="14" fill="#5B5975">¿No podés pagar? Pedí una beca ANTES de subir cualquier comprobante.</text>
+  <text x="48" y="1112" font-size="13" fill="#8B8AA0">Si ya no vas a poder llevar el estudio, avisá: el cupo le sirve a otra persona.</text>
+</svg>

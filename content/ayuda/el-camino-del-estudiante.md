@@ -1,13 +1,15 @@
 ---
 titulo: El camino del estudiante
 seccion: Estudios
-tipo: tutorial
+tipo: infografia
 visibilidad: publica
 orden: 3
 resumen: Las cadenas de estudios, las etapas y qué compromiso pide cada una.
 ---
 
 # El camino del estudiante
+
+![Las cadenas de niveles y de Discípulos, las etapas con sus compromisos y los números de asistencia](/ayuda/infografias/camino-del-estudiante.svg)
 
 Los estudios no son una lista suelta: van en cadena, y cada etapa pide algo distinto de vos.
 Este es el mapa completo.

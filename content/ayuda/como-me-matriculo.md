@@ -1,13 +1,15 @@
 ---
 titulo: Cómo me matriculo en un estudio
 seccion: Estudios
-tipo: tutorial
+tipo: infografia
 visibilidad: publica
 orden: 2
 resumen: Desde ver qué estudios te tocan hasta quedar matriculado, con lo que hay que hacer si hay que pagar.
 ---
 
 # Cómo me matriculo en un estudio
+
+![Los cinco pasos para matricularse y las cinco razones por las que un estudio puede no aparecer](/ayuda/infografias/como-me-matriculo.svg)
 
 Todo pasa en una sola pantalla: **Matrícula**. Ahí aparecen los estudios que podés llevar
 ahora, con los grupos abiertos de cada uno.

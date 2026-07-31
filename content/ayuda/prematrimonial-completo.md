@@ -1,13 +1,15 @@
 ---
 titulo: Prematrimonial, de principio a fin
 seccion: Estudios
-tipo: tutorial
+tipo: infografia
 roles: [coordinador_estudios, direccion]
 orden: 20
 resumen: Requisitos de la pareja, la solicitud, el pago, el grupo y el cierre con evaluación.
 ---
 
 # Prematrimonial, de principio a fin
+
+![Requisitos de la pareja y los cinco estados del trámite prematrimonial](/ayuda/infografias/prematrimonial.svg)
 
 El prematrimonial no es un estudio normal: se inscribe **en pareja**, tiene su propio wizard y
 su propia cola de revisión.

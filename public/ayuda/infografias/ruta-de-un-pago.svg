@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1120" role="img" aria-labelledby="t-pago d-pago" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-pago">La ruta de un pago</title>
+  <desc id="d-pago">Los cuatro estados de un pago: pendiente, en revisión, aprobado o rechazado, con el plazo de 72 horas para volver a subir el comprobante y qué pasa con las becas.</desc>
+
+  <rect width="720" height="1120" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">La ruta de un pago</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Qué pasa desde que te cobran hasta que queda confirmado.</text>
+
+  <!-- Paso 1 -->
+  <g>
+    <rect x="48" y="150" width="624" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="198" r="20" fill="#161440"/>
+    <text x="88" y="205" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="124" y="186" font-size="18" font-weight="bold" fill="#161440">Pendiente</text>
+    <text x="124" y="212" font-size="14" fill="#5B5975">El cobro existe y espera tu comprobante. Lo ves en</text>
+    <text x="124" y="232" font-size="14" fill="#5B5975">Pagos pendientes, en el menú de tu cuenta.</text>
+  </g>
+  <path d="M360 246 v22" stroke="#EF5554" stroke-width="2" marker-end="url(#pp)"/>
+
+  <!-- Paso 2 -->
+  <g>
+    <rect x="48" y="276" width="624" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="324" r="20" fill="#161440"/>
+    <text x="88" y="331" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="124" y="312" font-size="18" font-weight="bold" fill="#161440">En revisión</text>
+    <text x="124" y="338" font-size="14" fill="#5B5975">Hacés el SINPE o la transferencia por fuera y subís la</text>
+    <text x="124" y="358" font-size="14" fill="#5B5975">captura. La revisa una persona, no es automático.</text>
+  </g>
+
+  <!-- Bifurcación -->
+  <g stroke="#EF5554" stroke-width="2" fill="none">
+    <path d="M360 372 v20"/>
+    <path d="M200 392 h320"/>
+    <path d="M200 392 v26" marker-end="url(#pp)"/>
+    <path d="M520 392 v26" marker-end="url(#pp)"/>
+  </g>
+
+  <!-- Aprobado -->
+  <g>
+    <rect x="48" y="426" width="296" height="150" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
+    <text x="76" y="458" font-size="12" font-weight="bold" fill="#2C7A7F" letter-spacing="2">APROBADO</text>
+    <text x="76" y="486" font-size="14" fill="#5B5975">Queda confirmado solo: la</text>
+    <text x="76" y="506" font-size="14" fill="#5B5975">matrícula, el tiquete del evento</text>
+    <text x="76" y="526" font-size="14" fill="#5B5975">o el trámite. No hay que</text>
+    <text x="76" y="546" font-size="14" fill="#5B5975">avisarle a nadie.</text>
+  </g>
+
+  <!-- Rechazado -->
+  <g>
+    <rect x="376" y="426" width="296" height="150" rx="14" fill="#FFFFFF" stroke="#EF5554" stroke-width="2"/>
+    <text x="404" y="458" font-size="12" font-weight="bold" fill="#C4383A" letter-spacing="2">RECHAZADO</text>
+    <text x="404" y="486" font-size="14" fill="#5B5975">Te llega el motivo y arranca el</text>
+    <text x="404" y="506" font-size="14" fill="#5B5975">plazo para subir otro</text>
+    <text x="404" y="526" font-size="14" fill="#5B5975">comprobante. Casi siempre es</text>
+    <text x="404" y="546" font-size="14" fill="#5B5975">que no se lee el monto.</text>
+  </g>
+
+  <!-- Las 72 horas -->
+  <g>
+    <rect x="48" y="606" width="624" height="164" rx="14" fill="#161440"/>
+    <text x="76" y="640" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">EL PLAZO QUE NADIE SABE</text>
+    <text x="76" y="686" font-size="42" font-weight="bold" fill="#FFFFFF">72 horas</text>
+    <text x="76" y="716" font-size="15" fill="#FFFFFF">para subir un comprobante nuevo si te rechazaron el primero.</text>
+    <text x="76" y="742" font-size="14" fill="#9FA8C7">Si pasan y no subís nada, el sistema libera tu cupo automáticamente</text>
+    <text x="76" y="762" font-size="14" fill="#9FA8C7">y hay que volver a matricularse, si todavía queda espacio.</text>
+  </g>
+
+  <!-- Atajos -->
+  <text x="48" y="820" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">CUANDO NO HAY QUE PAGAR</text>
+  <g>
+    <rect x="48" y="836" width="304" height="112" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="866" font-size="15" font-weight="bold" fill="#161440">Beca completa</text>
+    <text x="76" y="892" font-size="14" fill="#5B5975">No hay comprobante que</text>
+    <text x="76" y="912" font-size="14" fill="#5B5975">subir: se confirma sin pago.</text>
+    <text x="76" y="936" font-size="13" fill="#8B8AA0">Parcial → pagás la diferencia.</text>
+  </g>
+  <g>
+    <rect x="368" y="836" width="304" height="112" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="396" y="866" font-size="15" font-weight="bold" fill="#161440">Servidor del comité</text>
+    <text x="396" y="892" font-size="14" fill="#5B5975">Si servís en el comité que</text>
+    <text x="396" y="912" font-size="14" fill="#5B5975">organiza el evento, tu tiquete</text>
+    <text x="396" y="932" font-size="14" fill="#5B5975">sale exento.</text>
+  </g>
+
+  <!-- Pie -->
+  <g>
+    <rect x="48" y="978" width="624" height="96" rx="14" fill="#FFF8F0"/>
+    <rect x="48" y="978" width="6" height="96" rx="3" fill="#EF5554"/>
+    <text x="76" y="1008" font-size="15" font-weight="bold" fill="#161440">Si algo se atasca</text>
+    <text x="76" y="1034" font-size="14" fill="#5B5975">Subí el comprobante completo, sin recortar. El mismo comprobante no sirve</text>
+    <text x="76" y="1054" font-size="14" fill="#5B5975">para dos cobros: el sistema detecta la referencia repetida.</text>
+  </g>
+
+  <defs>
+    <marker id="pp" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 0 L5 10 z" fill="#EF5554"/>
+    </marker>
+  </defs>
+</svg>

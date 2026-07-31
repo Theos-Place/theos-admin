@@ -1,13 +1,15 @@
 ---
 titulo: Cuándo se generan los folletos
 seccion: Estudios
-tipo: tutorial
+tipo: infografia
 roles: [folletos, coordinador_estudios]
 orden: 30
-resumen: Los cinco motivos por los que nace un pedido de folletos, sus cuatro estados y por qué no se puede volver atrás.
+resumen: Los cuatro motivos por los que nace un pedido de folletos, sus cuatro estados y por qué no se puede volver atrás.
 ---
 
 # Cuándo se generan los folletos
+
+![Los cuatro motivos por los que nace un pedido de folletos y sus cuatro estados](/ayuda/infografias/generacion-de-folletos.svg)
 
 Los pedidos de folletos **casi nunca se crean a mano**: los dispara el sistema cuando pasa algo
 en estudios. Saber qué los dispara evita pedidos duplicados.

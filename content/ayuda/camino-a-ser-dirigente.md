@@ -1,13 +1,15 @@
 ---
 titulo: El camino a ser dirigente (CDEB)
 seccion: Estudios
-tipo: tutorial
+tipo: infografia
 roles: [dirigente, coordinador_dirigentes, coordinador_estudios]
 orden: 21
 resumen: De la recomendación al cerrar Discípulos 3 o Panorama, a la convocatoria, la selección y la invitación.
 ---
 
 # El camino a ser dirigente (CDEB)
+
+![Los seis pasos del camino a dirigente, con quién hace cada uno](/ayuda/infografias/camino-a-ser-dirigente.svg)
 
 Cómo Dar Estudios Bíblicos es la capacitación de dirigentes, y **no se matricula libremente**:
 se entra por invitación. Este es el camino completo, con quién hace qué en cada paso.

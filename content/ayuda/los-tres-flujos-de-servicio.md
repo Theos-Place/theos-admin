@@ -1,13 +1,15 @@
 ---
 titulo: Los tres flujos de servicio que se confunden
 seccion: Servidores
-tipo: tutorial
+tipo: infografia
 roles: [lider_comite, coordinador_servidores, encargado_staff, direccion]
 orden: 10
 resumen: Puesto nuevo, vacante y aplicación son tres cosas distintas con nombres parecidos. Cuál usar en cada caso.
 ---
 
 # Los tres flujos de servicio que se confunden
+
+![Los tres flujos comparados: puesto nuevo, vacante y aplicación, con la secuencia completa](/ayuda/infografias/tres-flujos-de-servicio.svg)
 
 Son tres trámites distintos y se parecen tanto en el nombre que se piden al revés todo el
 tiempo. La diferencia está en **qué es lo que no existe todavía**.

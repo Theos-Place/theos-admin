@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1000" role="img" aria-labelledby="t-primera d-primera" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-primera">Tu primera vez en el sistema</title>
+  <desc id="d-primera">Cuatro pasos para crear tu contraseña y entrar: abrir el sistema, tocar crear tu contraseña, revisar el correo y definir la contraseña.</desc>
+
+  <rect width="720" height="1000" fill="#F6F5F2"/>
+
+  <!-- Cabecera navy -->
+  <rect x="0" y="0" width="720" height="150" fill="#161440"/>
+  <text x="48" y="72" font-size="32" font-weight="bold" fill="#FFFFFF">Tu primera vez</text>
+  <text x="48" y="110" font-size="32" font-weight="bold" fill="#FFFFFF">en el sistema</text>
+  <text x="418" y="96" font-size="14" fill="#70BDC2">Ya tenés cuenta.</text>
+  <text x="418" y="118" font-size="14" fill="#70BDC2">Falta tu contraseña.</text>
+
+  <!-- Paso 1 -->
+  <g>
+    <rect x="48" y="190" width="624" height="118" rx="16" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="102" cy="249" r="26" fill="#161440"/>
+    <text x="102" y="258" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="150" y="238" font-size="19" font-weight="bold" fill="#161440">Abrí el sistema</text>
+    <text x="150" y="268" font-size="16" fill="#5B5975">admin.theosplace.org</text>
+    <text x="150" y="292" font-size="13" fill="#8B8AA0">Desde el celular sirve igual. No hay que instalar nada.</text>
+  </g>
+
+  <!-- Paso 2 -->
+  <g>
+    <rect x="48" y="326" width="624" height="118" rx="16" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="102" cy="385" r="26" fill="#161440"/>
+    <text x="102" y="394" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="150" y="374" font-size="19" font-weight="bold" fill="#161440">Tocá "Creá tu contraseña"</text>
+    <text x="150" y="404" font-size="16" fill="#5B5975">Está debajo del botón de iniciar sesión.</text>
+    <text x="150" y="428" font-size="13" fill="#8B8AA0">Escribí el MISMO correo con el que te llegan los mensajes de Theos.</text>
+  </g>
+
+  <!-- Paso 3 -->
+  <g>
+    <rect x="48" y="462" width="624" height="118" rx="16" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="102" cy="521" r="26" fill="#161440"/>
+    <text x="102" y="530" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="150" y="510" font-size="19" font-weight="bold" fill="#161440">Revisá tu correo</text>
+    <text x="150" y="540" font-size="16" fill="#5B5975">Te llega un enlace en un par de minutos.</text>
+    <text x="150" y="564" font-size="13" fill="#8B8AA0">Si no aparece, mirá spam o la pestaña de Promociones.</text>
+  </g>
+
+  <!-- Paso 4 -->
+  <g>
+    <rect x="48" y="598" width="624" height="118" rx="16" fill="#FFFFFF" stroke="#EF5554" stroke-width="2"/>
+    <circle cx="102" cy="657" r="26" fill="#EF5554"/>
+    <text x="102" y="666" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="150" y="646" font-size="19" font-weight="bold" fill="#161440">Definí tu contraseña</text>
+    <text x="150" y="676" font-size="16" fill="#5B5975">Y ya estás dentro.</text>
+    <text x="150" y="700" font-size="13" fill="#8B8AA0">De ahí en adelante entrás con tu correo y esa contraseña.</text>
+  </g>
+
+  <!-- Qué vas a ver -->
+  <g>
+    <rect x="48" y="750" width="624" height="112" rx="16" fill="#161440"/>
+    <text x="76" y="782" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">QUÉ VAS A VER ADENTRO</text>
+    <text x="76" y="812" font-size="15" fill="#FFFFFF">Tu perfil, tus estudios y tus pagos pendientes.</text>
+    <text x="76" y="840" font-size="14" fill="#9FA8C7">Si dirigís un grupo o servís en un comité, también las pantallas de eso.</text>
+  </g>
+
+  <!-- Si algo falla -->
+  <g>
+    <rect x="48" y="890" width="624" height="76" rx="16" fill="#FFF8F0"/>
+    <rect x="48" y="890" width="6" height="76" rx="3" fill="#EF5554"/>
+    <text x="76" y="920" font-size="14" font-weight="bold" fill="#161440">¿Dice que tu correo no existe?</text>
+    <text x="76" y="946" font-size="14" fill="#5B5975">Escribinos a soporte@theosplace.org y lo corregimos.</text>
+  </g>
+</svg>
