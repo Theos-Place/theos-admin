@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { hasModulePermission } from '@/lib/auth/roles'
+import { canSeeEventManagementData } from '@/lib/events/detail-access'
 import {
   getEventById, updateEventScoped, deleteEventScoped, cancelEvent,
   EventHasAttendanceError, type EventScope, type OccurrenceRef,
@@ -26,6 +28,17 @@ export async function GET(
     const event = await getEventById(id)
     if (!event) {
       return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+    }
+    // La INFORMACIÓN GENERAL del evento la ve cualquier sesión (decisión
+    // 2026-07-31), pero los datos de gestión NO viajan a quien no gestiona:
+    // `registrations` y `checkins` traen nombres de personas inscritas.
+    const perms = {
+      canManage: hasModulePermission(auth.ctx.roles, 'eventos', 'create'),
+      canCheckin: hasModulePermission(auth.ctx.roles, 'eventos', 'edit'),
+      canReport: hasModulePermission(auth.ctx.roles, 'eventos', 'export'),
+    }
+    if (!canSeeEventManagementData(perms)) {
+      return NextResponse.json({ ...event, registrations: [], checkins: [], volunteers: [] })
     }
     return NextResponse.json(event)
   } catch (error) {

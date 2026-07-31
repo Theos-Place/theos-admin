@@ -103,7 +103,7 @@ export function renderEmail(content: string, opts?: { unsubscribeUrl?: string; l
 ${content}
     </div>
     <div class="footer">
-      <p class="footer-contact">¿Tenés alguna pregunta? Escribinos a <a href="mailto:info@theosplace.org">info@theosplace.org</a></p>
+      <p class="footer-contact">¿Tenés alguna pregunta? Escribinos a <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a></p>
       <div class="footer-divider"></div>
       <p class="footer-legal">© 2026 · Mensaje enviado automáticamente, por favor no respondas a este correo.</p>
     </div>

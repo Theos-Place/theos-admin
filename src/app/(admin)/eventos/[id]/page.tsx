@@ -14,11 +14,18 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { useToast } from '@/components/shared/Toast'
 import { useOrg } from '@/lib/org'
 import { generateCSV } from '@/lib/export'
-import { Send, Download } from 'lucide-react'
+import { Send, Download, Check, X } from 'lucide-react'
 import { TOAST_MS } from '@/lib/constants'
 import { useRef } from 'react'
 import { EventHeader } from './_components/EventHeader'
+import { useAuth } from '@/hooks/useAuth'
 import { EventInfoTab } from './_components/EventInfoTab'
+import { useEventRegistration } from '@/components/events/useEventRegistration'
+import {
+  visibleEventTabs, canSeeEventManagementData, registrationCta,
+  type EventTab,
+} from '@/lib/events/detail-access'
+import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { EventRegistrationsTab } from './_components/EventRegistrationsTab'
 import { EventCheckinTab } from './_components/EventCheckinTab'
 import { EventServersTab } from './_components/EventServersTab'
@@ -136,8 +143,7 @@ function SendMessageModal({ eventTitle, memberIds, onClose }: {
   )
 }
 
-const TABS = ['informacion', 'inscripciones', 'checkin', 'servidores', 'comunicaciones', 'reportes'] as const
-type Tab = typeof TABS[number]
+type Tab = EventTab
 const TAB_LABELS: Record<Tab, string> = {
   informacion: 'Información',
   inscripciones: 'Inscripciones',
@@ -171,13 +177,38 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const canManage  = can('eventos', 'create')
   // El envío usa los endpoints de comunicaciones, que exigen ese rol.
   const canSendMessage = can('comunicaciones', 'create')
-  const visibleTabs = TABS.filter(t =>
-    t === 'informacion' ? true
-    : t === 'checkin'   ? canCheckin
-    : t === 'reportes'  ? canReport
-    : canManage,
-  )
+  // Regla pura compartida (src/lib/events/detail-access.ts): Información es de
+  // cualquier sesión; el resto exige permiso de eventos.
+  const visibleTabs = visibleEventTabs({ canManage, canCheckin, canReport })
+  const seeManagementData = canSeeEventManagementData({ canManage, canCheckin, canReport })
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
+
+  // Inscripción desde la ficha: misma elegibilidad y mismo modal que la lista
+  // de eventos, para no tener dos caminos que se puedan desincronizar.
+  const { user } = useAuth()
+  const memberId = user?.member_id ?? null
+  const [elig, setElig] = useState<EventEligibilityResult | null>(null)
+  const [eligRefresh, setEligRefresh] = useState(0)
+  useEffect(() => {
+    if (!memberId) return
+    let alive = true
+    fetch(`/api/eventos/elegibilidad?member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!alive) return
+        const list = (d?.eligibility ?? []) as EventEligibilityResult[]
+        setElig(list.find(e => e.event_id === id) ?? null)
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [memberId, id, eligRefresh])
+  const { openRegister, successEvent, clearSuccess, modals: registrationModals } =
+    useEventRegistration(memberId, () => setEligRefresh(n => n + 1))
+  const cta = event ? registrationCta(
+    { requires_registration: event.requires_registration, status: event.status, end_at: event.end_at },
+    elig,
+    new Date(),
+  ) : { kind: 'ninguno' as const }
   const [showMenu, setShowMenu] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showDeleteScope, setShowDeleteScope] = useState(false) // selector de alcance (recurrentes)
@@ -536,7 +567,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
-      {/* Tab: Información */}
+      {/* Tab: Información — la parte de la ficha que ve cualquiera. Si el evento
+          pide inscripción, acá mismo está el botón (mismo modal que la lista). */}
       {activeTab === 'informacion' && (
         <EventInfoTab
           event={event}
@@ -548,6 +580,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           onFlyerClear={() => { void persistFlyer(null) }}
           flyerError={flyerError}
           canEditFlyer={canManage}
+          showManagementData={seeManagementData}
+          cta={cta}
+          onRegister={() => { if (elig) openRegister(elig) }}
         />
       )}
 
@@ -720,6 +755,17 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       )}
+      {/* Inscripción (confirmación, comprobante, beca) y aviso de éxito. */}
+      {successEvent && (
+        <div className="rounded-2xl bg-teal-soft/20 px-4 py-3 text-sm text-teal-deep font-body flex items-center gap-2">
+          <Check size={16} />
+          Quedaste inscrito/a en {successEvent}.
+          <button onClick={clearSuccess} className="ml-auto text-navy-light/60 hover:text-navy" aria-label="Cerrar aviso">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      {registrationModals}
     </div>
   )
 }

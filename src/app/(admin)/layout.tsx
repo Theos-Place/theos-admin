@@ -96,6 +96,11 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // mostrar según el permiso. Las subrutas de gestión (/eventos/nuevo,
   // /eventos/[id]/editar, etc.) siguen exigiendo el módulo normalmente.
   if (pathname === '/eventos') return <>{children}</>
+  // Excepción (2026-07-31): la FICHA de un evento muestra su información general
+  // a cualquier sesión — la propia página deja solo el tab de Información a quien
+  // no gestiona, y el API no le manda inscritos ni check-ins. Las subrutas de
+  // gestión (/editar, /checkin) siguen exigiendo el módulo.
+  if (/^\/eventos\/[0-9a-f-]{36}$/i.test(pathname)) return <>{children}</>
   // Excepción: /estudios/solicitudes también la abre el COMITÉ de estudios
   // bíblicos (sin rol): la pantalla y la API le muestran solo lo que le
   // asignaron. Espejo de requestQueueScope.

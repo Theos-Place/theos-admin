@@ -51,7 +51,7 @@ const BODY = `<!-- Plantilla del anuncio de cambio de plataforma (AUTH-2).
 <div class="divider"></div>
 
 <!-- Nota de confianza (editable) -->
-<p style="font-size:13px; color:#777; line-height:1.7;">Recibís este correo porque ya eras parte del sistema anterior de Theos Place y tu cuenta ya está lista en la nueva plataforma. Si necesitás ayuda, escribinos a <a href="mailto:info@theosplace.org" style="color:#519DA2;">info@theosplace.org</a> y con gusto te acompañamos.</p>`
+<p style="font-size:13px; color:#777; line-height:1.7;">Recibís este correo porque ya eras parte del sistema anterior de Theos Place y tu cuenta ya está lista en la nueva plataforma. Si necesitás ayuda, escribinos a <a href="mailto:soporte@theosplace.org" style="color:#519DA2;">soporte@theosplace.org</a> y con gusto te acompañamos.</p>`
 
 const row = {
   name: NAME,

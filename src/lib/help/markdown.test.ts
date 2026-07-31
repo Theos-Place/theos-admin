@@ -30,6 +30,21 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('---')).toBe('<hr />')
   })
 
+  it('varias líneas de cita seguidas son UNA sola cita', () => {
+    expect(renderMarkdown('> Una ficha inactiva no desaparece:\n> su historial queda.'))
+      .toBe('<blockquote>Una ficha inactiva no desaparece: su historial queda.</blockquote>')
+  })
+
+  it('dos citas separadas por una línea vacía siguen siendo dos', () => {
+    expect(renderMarkdown('> Uno\n\n> Dos'))
+      .toBe('<blockquote>Uno</blockquote>\n<blockquote>Dos</blockquote>')
+  })
+
+  it('la cita se cierra al volver a texto normal', () => {
+    expect(renderMarkdown('> Cita\nTexto'))
+      .toBe('<blockquote>Cita</blockquote>\n<p>Texto</p>')
+  })
+
   it('enlaces internos y externos', () => {
     expect(renderMarkdown('[matrícula](/matricula)')).toBe('<p><a href="/matricula">matrícula</a></p>')
     const ext = renderMarkdown('[sitio](https://theosplace.org)')

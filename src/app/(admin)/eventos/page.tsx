@@ -476,10 +476,12 @@ function EventosContent() {
                   return (
                     <tr
                       key={`${event.id}-${event.start_at}`}
-                      onClick={canManage ? () => router.push(`/eventos/${event.id}`) : undefined}
+                      // La ficha del evento es para cualquiera (decisión
+                      // 2026-07-31): muestra la info general y, si el evento pide
+                      // inscripción, el botón para inscribirse.
+                      onClick={() => router.push(`/eventos/${event.id}`)}
                       className={cn(
-                        'transition-colors',
-                        canManage && 'hover:bg-navy/5 cursor-pointer',
+                        'transition-colors hover:bg-navy/5 cursor-pointer',
                         idx % 2 === 1 ? 'bg-surface-low/40' : ''
                       )}
                     >
@@ -538,14 +540,13 @@ function EventosContent() {
                               Ya inscrito/a
                             </span>
                           ) : null}
-                          {canManage && (
-                            <Link
-                              href={`/eventos/${event.id}`}
-                              className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
-                            >
-                              →
-                            </Link>
-                          )}
+                          <Link
+                            href={`/eventos/${event.id}`}
+                            aria-label={`Ver ${event.name}`}
+                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                          >
+                            →
+                          </Link>
                         </div>
                       </td>
                     </tr>
@@ -566,8 +567,8 @@ function EventosContent() {
               return (
                 <li
                   key={`${event.id}-${event.start_at}`}
-                  onClick={canManage ? () => router.push(`/eventos/${event.id}`) : undefined}
-                  className={cn('flex items-center gap-3 px-4 py-3', canManage && 'active:bg-surface-low cursor-pointer')}
+                  onClick={() => router.push(`/eventos/${event.id}`)}
+                  className={cn('flex items-center gap-3 px-4 py-3', 'active:bg-surface-low cursor-pointer')}
                   style={idx < visibleRows.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
                   {event.flyer_url ? (

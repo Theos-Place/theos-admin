@@ -1,4 +1,5 @@
-import { Image as ImageIcon } from 'lucide-react'
+import { Image as ImageIcon, UserPlus, Check } from 'lucide-react'
+import type { RegistrationCta } from '@/lib/events/detail-access'
 import { CapacityBar } from '@/components/events/CapacityBar'
 import { cn } from '@/lib/utils'
 import { useOrg } from '@/lib/org'
@@ -19,6 +20,12 @@ type Props = {
   flyerError?: string | null
   /** Sin permiso de gestión el flyer es solo lectura. */
   canEditFlyer?: boolean
+  /** false = quien mira no gestiona eventos: no se muestran cupos ocupados ni
+   *  nada derivado de inscritos/check-ins (el API tampoco se los manda). */
+  showManagementData?: boolean
+  /** Qué mostrar sobre la inscripción (regla en lib/events/detail-access.ts). */
+  cta?: RegistrationCta
+  onRegister?: () => void
 }
 
 export function EventInfoTab({
@@ -31,6 +38,9 @@ export function EventInfoTab({
   onFlyerClear,
   flyerError,
   canEditFlyer = false,
+  showManagementData = true,
+  cta = { kind: 'ninguno' },
+  onRegister,
 }: Props) {
   const { adminCommittees } = useOrg()
   const committeeName = event.organizing_committee_ids
@@ -42,6 +52,51 @@ export function EventInfoTab({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="space-y-4">
+      {/* Inscripción: primero, porque para quien entra a ver el evento es lo que
+          vino a hacer. */}
+      {cta.kind !== 'ninguno' && (
+        <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+          {cta.kind === 'inscribirse' && (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-navy font-body font-semibold">Este evento requiere inscripción</p>
+                <p className="text-[13px] text-navy-light/70 font-body mt-0.5">
+                  {event.requires_payment && event.payment_amount
+                    ? `Tiene un costo de ${formatCRC(event.payment_amount)}.`
+                    : 'Es gratuito.'}
+                  {event.max_capacity != null && ' El cupo es limitado.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onRegister}
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body shrink-0"
+              >
+                <UserPlus size={15} />
+                Inscribirme
+              </button>
+            </div>
+          )}
+          {cta.kind === 'inscrito' && (
+            <p className="flex items-center gap-2 text-sm text-teal-deep font-body font-semibold">
+              <Check size={16} />
+              Ya estás inscrito/a en este evento
+            </p>
+          )}
+          {cta.kind === 'bloqueado' && (
+            <div>
+              <p className="text-sm text-navy font-body font-semibold">No podés inscribirte todavía</p>
+              <ul className="mt-1 space-y-0.5">
+                {cta.reasons.map(r => (
+                  <li key={r} className="text-[13px] text-navy-light/70 font-body">· {r}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Descripción</h3>
         <p className="text-sm text-navy-light/70 leading-relaxed font-body">{event.description}</p>
@@ -76,6 +131,7 @@ export function EventInfoTab({
           </div>
         )}
       </div>
+      </div>
 
       <div className="space-y-4">
         {event.sub_events.length > 0 && (
@@ -87,7 +143,8 @@ export function EventInfoTab({
                 return (
                   <div key={se.id} className="rounded-xl px-3 py-2.5 bg-surface-low">
                     <p className="text-sm font-medium text-navy font-body">{se.name}</p>
-                    <CapacityBar current={seCheckins} max={se.max_capacity} />
+                    {/* El cupo ocupado sale de los check-ins: dato de gestión. */}
+                    {showManagementData && <CapacityBar current={seCheckins} max={se.max_capacity} />}
                   </div>
                 )
               })}

@@ -27,7 +27,7 @@ Listo. Desde ahí en adelante entrás con tu correo y esa contraseña.
 mirá también la pestaña de *Promociones*. El enlace tarda un par de minutos como máximo.
 
 **Dice que mi correo no existe.** Probablemente tenemos otro correo en tu perfil, o el
-tuyo está escrito distinto. Escribinos a [info@theosplace.org](mailto:info@theosplace.org)
+tuyo está escrito distinto. Escribinos a [soporte@theosplace.org](mailto:soporte@theosplace.org)
 y lo corregimos.
 
 **Me olvidé la contraseña.** Es el mismo camino: tocá **"Recuperar acceso"** en la pantalla
