@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 
 interface Props {
@@ -13,6 +13,10 @@ interface Props {
   /** true = `body` ya es un documento HTML completo (layout incluido): el iframe
    *  lo usa tal cual, sin envolverlo en el wrapper de 600px. */
   fullDocument?: boolean
+  /** Alto máximo del marco. El default (1200) sirve para el editor, donde el
+   *  preview vive en una columna; en un modal que ya scrollea conviene subirlo,
+   *  porque pasado ese alto el correo QUEDA CORTADO (el iframe no scrollea). */
+  maxHeight?: number
 }
 
 /** Documento HTML aislado para el iframe del preview. El cuerpo del email se
@@ -30,17 +34,30 @@ function srcDocFor(html: string): string {
 <body><div class="wrap">${html}</div></body></html>`
 }
 
-export function EmailPreview({ subject, body, fromName = 'Theos Place', previewName = 'María', format = 'text', fullDocument = false }: Props) {
+export function EmailPreview({ subject, body, fromName = 'Theos Place', previewName = 'María', format = 'text', fullDocument = false, maxHeight = 1200 }: Props) {
   const hydratedBody = body.replace(/\{nombre\}/g, previewName)
   const hydratedSubject = subject.replace(/\{nombre\}/g, previewName)
   const [frameH, setFrameH] = useState(420)
 
+  const observerRef = useRef<ResizeObserver | null>(null)
+
+  // El alto se sigue midiendo DESPUÉS del load: al disparar 'load' el logo
+  // todavía no ocupa su alto final, y medir una sola vez dejaba el correo
+  // cortado unos píxeles antes de la firma.
   function onFrameLoad(e: React.SyntheticEvent<HTMLIFrameElement>) {
     try {
       const doc = e.currentTarget.contentDocument
-      if (doc?.body) setFrameH(Math.min(1200, Math.max(240, doc.body.scrollHeight + 8)))
+      if (!doc?.body) return
+      const measure = () => setFrameH(Math.min(maxHeight, Math.max(240, doc.body.scrollHeight + 8)))
+      measure()
+      observerRef.current?.disconnect()
+      const ro = new ResizeObserver(measure)
+      ro.observe(doc.body)
+      observerRef.current = ro
     } catch { /* sandbox: ignorar */ }
   }
+
+  useEffect(() => () => observerRef.current?.disconnect(), [])
 
   return (
     <div className="rounded-2xl overflow-hidden border border-[var(--outline-variant)] bg-white">

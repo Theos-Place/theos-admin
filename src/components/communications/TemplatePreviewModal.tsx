@@ -102,7 +102,15 @@ export function TemplatePreviewBody({
               <p className="text-[12px] text-navy-light/70 font-body leading-relaxed">
                 {emailKindNotice(kind)}
               </p>
-              <EmailPreview subject={template.subject} body={emailHtml} format="html" fullDocument />
+              {/* maxHeight alto: el modal ya scrollea, y con el default (1200)
+                  los correos largos se cortaban antes de la firma. */}
+              <EmailPreview
+                subject={template.subject}
+                body={emailHtml}
+                format="html"
+                fullDocument
+                maxHeight={5000}
+              />
             </>
           )}
 
