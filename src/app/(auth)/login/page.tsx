@@ -437,6 +437,15 @@ export default function LoginPage() {
         </p>
       </div>
 
+      {/* Ayuda: pública, se lee SIN sesión (el tutorial de crear la contraseña
+          está ahí, así que tiene que abrirse desde acá). */}
+      <p className="mt-4 text-center text-[13px] text-navy-light/70 font-body">
+        ¿No sabés cómo entrar?{' '}
+        <Link href="/ayuda" className="text-teal-deep hover:underline font-medium">
+          Mirá el centro de ayuda →
+        </Link>
+      </p>
+
       {/* Recuperar */}
       <p className="mt-4 text-center text-[13px] text-navy-light/60 font-body">
         ¿Olvidaste tu contraseña?{' '}

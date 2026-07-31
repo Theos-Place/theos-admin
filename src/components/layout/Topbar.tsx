@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield, Loader2 } from 'lucide-react'
+import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield, Loader2, CircleQuestionMark } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { ROLES } from '@/lib/auth/roles'
@@ -72,6 +72,17 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
 
       {/* Search global de miembros */}
       <GlobalMemberSearch />
+
+      {/* Ayuda: el centro de ayuda muestra solo los procesos que esta persona
+          puede ejecutar (el filtro por rol vive en el servidor). */}
+      <Link
+        href="/ayuda"
+        title="Centro de ayuda"
+        aria-label="Centro de ayuda"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-navy-light/70 hover:bg-surface-low hover:text-navy transition-colors"
+      >
+        <CircleQuestionMark size={18} />
+      </Link>
 
       {/* Notifications */}
       <NotificationsBell />

@@ -8,6 +8,13 @@ export default defineConfig({
     environment: 'node',
   },
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      // Los módulos de servidor marcan `import 'server-only'`, que revienta
+      // fuera de un Server Component. En los tests apunta al stub vacío del
+      // propio paquete (lo que hace Next con la condición react-server), así se
+      // pueden testear loaders reales — p. ej. src/lib/help/loader.ts.
+      'server-only': path.resolve(__dirname, 'node_modules/server-only/empty.js'),
+    },
   },
 })

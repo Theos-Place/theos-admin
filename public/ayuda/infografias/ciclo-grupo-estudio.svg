@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="titulo-ciclo desc-ciclo">
+  <title id="titulo-ciclo">Ciclo de vida de un grupo de estudio</title>
+  <desc id="desc-ciclo">Cinco etapas en orden: borrador, en matrícula, en curso, cerrado y archivado, con lo que pasa en cada una.</desc>
+
+  <rect width="900" height="420" fill="#f4f4f0"/>
+
+  <text x="40" y="52" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#161440">
+    Ciclo de vida de un grupo de estudio
+  </text>
+  <rect x="40" y="66" width="56" height="4" rx="2" fill="#EF5554"/>
+
+  <!-- Etapas -->
+  <g font-family="Arial, sans-serif">
+    <!-- 1 -->
+    <rect x="40" y="110" width="150" height="96" rx="12" fill="#ffffff" stroke="#dcdcd4"/>
+    <circle cx="64" cy="134" r="12" fill="#161440"/>
+    <text x="64" y="139" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+    <text x="84" y="139" font-size="14" font-weight="bold" fill="#161440">Borrador</text>
+    <text x="56" y="166" font-size="12" fill="#555">Se crea con plan,</text>
+    <text x="56" y="183" font-size="12" fill="#555">dirigente, zona y</text>
+    <text x="56" y="200" font-size="12" fill="#555">horario. Nadie lo ve.</text>
+
+    <!-- 2 -->
+    <rect x="215" y="110" width="150" height="96" rx="12" fill="#ffffff" stroke="#dcdcd4"/>
+    <circle cx="239" cy="134" r="12" fill="#161440"/>
+    <text x="239" y="139" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+    <text x="259" y="139" font-size="14" font-weight="bold" fill="#161440">En matrícula</text>
+    <text x="231" y="166" font-size="12" fill="#555">Aparece en Matrícula</text>
+    <text x="231" y="183" font-size="12" fill="#555">entre las fechas de</text>
+    <text x="231" y="200" font-size="12" fill="#555">apertura y cierre.</text>
+
+    <!-- 3 -->
+    <rect x="390" y="110" width="150" height="96" rx="12" fill="#ffffff" stroke="#dcdcd4"/>
+    <circle cx="414" cy="134" r="12" fill="#EF5554"/>
+    <text x="414" y="139" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+    <text x="434" y="139" font-size="14" font-weight="bold" fill="#161440">En curso</text>
+    <text x="406" y="166" font-size="12" fill="#555">Se toma asistencia</text>
+    <text x="406" y="183" font-size="12" fill="#555">clase por clase y se</text>
+    <text x="406" y="200" font-size="12" fill="#555">cobra el folleto.</text>
+
+    <!-- 4 -->
+    <rect x="565" y="110" width="150" height="96" rx="12" fill="#ffffff" stroke="#dcdcd4"/>
+    <circle cx="589" cy="134" r="12" fill="#161440"/>
+    <text x="589" y="139" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+    <text x="609" y="139" font-size="14" font-weight="bold" fill="#161440">Cerrado</text>
+    <text x="581" y="166" font-size="12" fill="#555">El dirigente aprueba</text>
+    <text x="581" y="183" font-size="12" fill="#555">o reprueba a cada</text>
+    <text x="581" y="200" font-size="12" fill="#555">estudiante.</text>
+
+    <!-- 5 -->
+    <rect x="740" y="110" width="120" height="96" rx="12" fill="#ffffff" stroke="#dcdcd4"/>
+    <circle cx="764" cy="134" r="12" fill="#161440"/>
+    <text x="764" y="139" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">5</text>
+    <text x="784" y="139" font-size="14" font-weight="bold" fill="#161440">Archivado</text>
+    <text x="756" y="166" font-size="12" fill="#555">Queda como</text>
+    <text x="756" y="183" font-size="12" fill="#555">historial, fuera</text>
+    <text x="756" y="200" font-size="12" fill="#555">de los listados.</text>
+
+    <!-- Flechas -->
+    <g stroke="#EF5554" stroke-width="2" fill="none">
+      <path d="M195 158 h15" marker-end="url(#punta)"/>
+      <path d="M370 158 h15" marker-end="url(#punta)"/>
+      <path d="M545 158 h15" marker-end="url(#punta)"/>
+      <path d="M720 158 h15" marker-end="url(#punta)"/>
+    </g>
+
+    <!-- Nota de cierre -->
+    <rect x="40" y="248" width="820" height="76" rx="12" fill="#161440"/>
+    <text x="64" y="278" font-size="11" font-weight="bold" fill="#70BDC2" letter-spacing="1.5">
+      AL CERRAR
+    </text>
+    <text x="64" y="302" font-size="13" fill="#ffffff">
+      Los aprobados suman el estudio a su historial y se les habilita el siguiente nivel.
+    </text>
+
+    <text x="40" y="360" font-size="12" fill="#777">
+      El grupo no salta etapas hacia atrás: si hay que corregir algo después del cierre, se ajusta
+    </text>
+    <text x="40" y="378" font-size="12" fill="#777">
+      la matrícula de la persona, no el estado del grupo.
+    </text>
+  </g>
+
+  <defs>
+    <marker id="punta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF5554"/>
+    </marker>
+  </defs>
+</svg>

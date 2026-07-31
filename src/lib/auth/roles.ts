@@ -47,6 +47,17 @@ export const SERVICE_ADMIN_ROLES: RoleId[] = [
  *  solicitud global son de staff, no de dirección). 'admin' pasa siempre aparte. */
 export const STAFF_IMPORT_ROLES: RoleId[] = ['encargado_staff', 'coordinador_servidores']
 
+/** Roles que NO son de gestión: el rol base 'miembro' (autoservicio de su propio
+ *  perfil). Todo lo demás implica trabajar algo del sistema para otras personas.
+ *  Se agregó para el centro de ayuda (visibilidad 'gestion'), que necesita
+ *  distinguir "cualquier persona con sesión" de "cualquier persona que gestiona". */
+export const SELF_SERVICE_ROLES: RoleId[] = ['miembro']
+
+/** ¿Alguno de estos roles es de gestión (algo más que el autoservicio)? */
+export function hasManagementRole(roleIds: readonly RoleId[] | null | undefined): boolean {
+  return (roleIds ?? []).some(r => !SELF_SERVICE_ROLES.includes(r))
+}
+
 /** Roles que operan el check-in y los reportes de eventos (ver detalle, hacer
  *  check-in, exportar). Reutilizar en guards de UI (usePermissions/hasRole) y de
  *  API (requireRoles) de eventos/check-in/reportes. */

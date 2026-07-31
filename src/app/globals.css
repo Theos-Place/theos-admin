@@ -393,3 +393,80 @@ body {
 .font-display { font-family: var(--font-display); }
 .font-body    { font-family: var(--font-body); }
 .font-mono    { font-family: var(--font-mono); }
+
+/* ─── Centro de ayuda (/ayuda): tipografía de lectura ──────────────────────── */
+/* El HTML lo genera renderMarkdown desde los .md de content/ayuda, sin clases:
+   el estilo vive acá. Mobile-first — la mayoría lee esto desde el celular. */
+.help-prose {
+  font-family: var(--font-body);
+  color: var(--color-navy);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.help-prose > * + * { margin-top: 1rem; }
+.help-prose h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.help-prose h2 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 2rem;
+}
+.help-prose h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+}
+.help-prose p { color: rgba(60, 58, 90, 0.92); }
+.help-prose strong { font-weight: 700; color: var(--color-navy); }
+.help-prose a { color: var(--color-teal-deep); text-decoration: underline; }
+.help-prose ul, .help-prose ol { padding-left: 1.35rem; }
+.help-prose ul { list-style: disc; }
+.help-prose ol { list-style: decimal; }
+.help-prose li { margin-top: 0.5rem; color: rgba(60, 58, 90, 0.92); }
+.help-prose li::marker { color: var(--color-coral); }
+.help-prose blockquote {
+  border-left: 3px solid var(--color-coral);
+  background: var(--surface-low);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.85rem 1rem;
+  color: rgba(60, 58, 90, 0.9);
+  font-size: 0.95rem;
+}
+.help-prose hr {
+  border: 0;
+  border-top: 1px solid var(--outline-variant);
+  margin: 2rem 0;
+}
+.help-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface-low);
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.35rem;
+}
+.help-prose pre {
+  background: var(--color-navy);
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;   /* el bloque scrollea solo; la página nunca en horizontal */
+}
+.help-prose pre code { background: none; padding: 0; color: inherit; }
+/* Imágenes e infografías: nunca se desbordan y se pueden tocar para ampliar. */
+.help-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--outline-variant);
+  background: #fff;
+  cursor: zoom-in;
+}
