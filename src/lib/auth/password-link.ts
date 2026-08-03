@@ -15,10 +15,13 @@ import { renderEmail } from '@/lib/email/baseLayout'
 //  2. Ese correo sale por el SMTP de Supabase Auth, no por nuestro SES: otra
 //     tubería que hay que configurar y vigilar aparte.
 //
+//  3. El token se gastaba solo: los filtros del correo (Safe Links de Microsoft
+//     365) abren los enlaces antes que la persona para revisarlos.
+//
 // Ahora se genera el token con la API de admin (`generateLink`, que devuelve
-// `hashed_token`), se arma un enlace a /auth/confirm — donde el servidor lo
-// canjea con verifyOtp, sin verifier — y el correo sale por SES con la plantilla
-// de Theos, quedando registrado como cualquier otro envío.
+// `hashed_token`) y se arma un enlace a /auth/continuar — una pantalla inofensiva
+// con un botón; el canje real pasa en /auth/confirm cuando alguien lo toca, con
+// verifyOtp y sin verifier. El correo sale por SES con la plantilla de Theos.
 
 export type PasswordLinkKind = 'invite' | 'recovery'
 
@@ -41,7 +44,10 @@ export async function buildPasswordLink(
   if (!hashed) return null
 
   const next = kind === 'invite' ? '/completar-perfil' : '/recuperar/nueva-contrasena'
-  const url = new URL('/auth/confirm', SITE())
+  // /auth/continuar (no /auth/confirm): abrir esta URL NO gasta el token. Los
+  // filtros de seguridad del correo abren los enlaces antes que la persona; si el
+  // enlace canjeara de una, llegarían a "el enlace ya venció" sin tocar nada.
+  const url = new URL('/auth/continuar', SITE())
   url.searchParams.set('token_hash', hashed)
   url.searchParams.set('type', kind === 'invite' ? 'invite' : 'recovery')
   url.searchParams.set('next', next)

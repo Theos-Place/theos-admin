@@ -9,7 +9,7 @@ import { buildCsp, newNonce } from '@/lib/csp'
 // '/auth/confirm' canjea el token del correo: por definición se abre SIN sesión
 // (es lo que la crea). Sin esto el proxy lo mandaba al login y el enlace del
 // correo nunca funcionaba.
-const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda', '/auth/confirm']
+const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda', '/auth/confirm', '/auth/continuar']
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
