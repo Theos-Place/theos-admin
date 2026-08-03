@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, AlertCircle, Loader2, CheckCircle, Check, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { readAuthLinkError, authLinkMessage, type AuthLinkMessage } from '@/lib/auth/link-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const INPUT = [
@@ -33,6 +34,9 @@ export default function NuevaContrasenaPage() {
   const [submitErr, setSubmitErr]   = useState('')
   // null = verificando el link; true = sesión de recuperación válida; false = inválido/expirado.
   const [recoveryReady, setRecoveryReady] = useState<boolean | null>(null)
+  // Motivo real del fallo (Supabase lo manda en el fragmento de la URL): sirve
+  // para no decirle "enlace inválido" a quien simplemente ya lo usó.
+  const [linkMsg, setLinkMsg] = useState<AuthLinkMessage | null>(null)
   const supabaseRef = useRef<SupabaseClient | null>(null)
 
   // Supabase establece una sesión temporal de recuperación al abrir el link del
@@ -51,7 +55,11 @@ export default function NuevaContrasenaPage() {
       if (event === 'PASSWORD_RECOVERY' || session) setRecoveryReady(true)
     })
     // Margen para que el client procese el token de la URL antes de declarar inválido.
-    const t = setTimeout(() => { if (alive) setRecoveryReady(prev => (prev === null ? false : prev)) }, 2500)
+    const t = setTimeout(() => {
+      if (!alive) return
+      setRecoveryReady(prev => (prev === null ? false : prev))
+      setLinkMsg(authLinkMessage(readAuthLinkError(window.location), 'recuperacion'))
+    }, 2500)
 
     return () => { alive = false; sub.subscription.unsubscribe(); clearTimeout(t) }
   }, [])
@@ -105,16 +113,26 @@ export default function NuevaContrasenaPage() {
             <AlertCircle size={28} className="text-coral" />
           </div>
         </div>
-        <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">Enlace inválido o expirado</h2>
-        <p className="text-sm text-navy-light/55 leading-relaxed mb-8 font-body">
-          Este enlace expiró o no es válido. Solicitá uno nuevo para restablecer tu contraseña.
+        <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">
+          {linkMsg?.titulo ?? 'Este enlace ya se usó o venció'}
+        </h2>
+        <p className="text-sm text-navy-light/70 leading-relaxed mb-8 font-body">
+          {linkMsg?.detalle ?? 'Los enlaces sirven una sola vez. Si ya cambiaste tu contraseña, entrá con la nueva.'}
         </p>
-        <Link
-          href="/recuperar"
-          className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral hover:bg-coral-deep font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
-        >
-          Solicitar un nuevo enlace
-        </Link>
+        <div className="space-y-2">
+          <Link
+            href="/login"
+            className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral hover:bg-coral-deep font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
+          >
+            Iniciar sesión
+          </Link>
+          <Link
+            href="/recuperar"
+            className="inline-flex items-center justify-center w-full rounded-xl border border-[var(--outline-variant)] py-3.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+          >
+            Pedir un enlace nuevo
+          </Link>
+        </div>
       </div>
     )
   }

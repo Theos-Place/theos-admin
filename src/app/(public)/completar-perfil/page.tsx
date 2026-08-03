@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Check, Lock, Mail, AlertTriangle } from 'lucide-react'
+import { readAuthLinkError, authLinkMessage, type AuthLinkMessage } from '@/lib/auth/link-error'
 
 // Primer ingreso: el usuario llega desde el correo de invitación de Supabase Auth
 // con los tokens en el FRAGMENTO (#access_token=…&type=invite). El fragmento no se
@@ -24,10 +25,15 @@ export default function CompletarPerfilPage() {
   const [done, setDone] = useState(false)
 
   // El tipo de link (invite vs recovery) viaja en el fragmento → cambia el mensaje.
+  // Y si el link falló, Supabase manda el motivo ahí mismo: con eso se distingue
+  // "ya se usó" de "está roto" en vez de mandar a todo el mundo a pedir otro.
+  const [linkMsg, setLinkMsg] = useState<AuthLinkMessage | null>(null)
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
     if (params.get('type') === 'recovery') setIsRecovery(true)
+    const err = readAuthLinkError(window.location)
+    setLinkMsg(authLinkMessage(err, params.get('type') === 'recovery' ? 'recuperacion' : 'invitacion'))
   }, [])
 
   // El client procesa los tokens del fragmento y establece la sesión temporal.
@@ -100,14 +106,32 @@ export default function CompletarPerfilPage() {
                 <AlertTriangle size={24} className="text-coral" />
               </div>
               <div className="space-y-1">
-                <p className="text-base font-bold text-navy font-display">Enlace inválido o expirado</p>
-                <p className="text-sm text-navy-light/70 font-body">
-                  Este enlace expiró o ya no es válido. Pedile a un administrador que te reenvíe la invitación.
+                <p className="text-base font-bold text-navy font-display">
+                  {linkMsg?.titulo ?? 'Este enlace ya se usó o venció'}
+                </p>
+                <p className="text-sm text-navy-light/70 font-body leading-relaxed">
+                  {linkMsg?.detalle ?? 'Los enlaces sirven una sola vez. Si ya definiste tu contraseña, entrá con ella.'}
                 </p>
               </div>
-              <Link href="/login" className="inline-block text-sm text-coral hover:text-coral-deep font-body font-medium">
-                Ir al inicio de sesión →
-              </Link>
+              <div className="flex flex-col gap-2">
+                {(linkMsg?.acciones ?? ['login', 'pedir_enlace']).map(accion => accion === 'login' ? (
+                  <Link
+                    key="login"
+                    href="/login"
+                    className="rounded-2xl bg-coral px-4 py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
+                  >
+                    Iniciar sesión
+                  </Link>
+                ) : (
+                  <Link
+                    key="pedir"
+                    href="/recuperar?nueva=1"
+                    className="rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+                  >
+                    Pedir un enlace nuevo
+                  </Link>
+                ))}
+              </div>
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-4">
