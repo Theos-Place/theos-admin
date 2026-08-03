@@ -36,19 +36,27 @@ export default function CompletarPerfilPage() {
     setLinkMsg(authLinkMessage(err, params.get('type') === 'recovery' ? 'recuperacion' : 'invitacion'))
   }, [])
 
-  // El client procesa los tokens del fragmento y establece la sesión temporal.
-  // Se crea dentro del effect para no correr en el prerender (sin env vars).
+  // Quién es la persona se resuelve con getUser(), que PREGUNTA AL SERVIDOR con
+  // la cookie actual — no con getSession(), que puede devolver la sesión cacheada
+  // en memoria.
+  //
+  // BUG que arregla (2026-08-03): si alguien abría la invitación en un navegador
+  // donde YA había otra cuenta abierta, la pantalla mostraba el correo VIEJO. Y lo
+  // peligroso no era el rótulo: la contraseña se le podía terminar poniendo a la
+  // cuenta equivocada.
   useEffect(() => {
     let alive = true
     const supabase = createClient()
-    function apply(session: { user?: { email?: string | null } } | null) {
+    async function resolver() {
+      const { data, error } = await supabase.auth.getUser()
       if (!alive) return
-      setHasSession(!!session)
-      setEmail(session?.user?.email ?? null)
+      setHasSession(!!data.user && !error)
+      setEmail(data.user?.email ?? null)
       setReady(true)
     }
-    supabase.auth.getSession().then(({ data }) => apply(data.session))
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => apply(session))
+    void resolver()
+    // Si el token del fragmento se procesa después, se vuelve a preguntar.
+    const { data: sub } = supabase.auth.onAuthStateChange(() => { void resolver() })
     return () => { alive = false; sub.subscription.unsubscribe() }
   }, [])
 

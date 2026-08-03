@@ -34,6 +34,9 @@ export default function NuevaContrasenaPage() {
   const [submitErr, setSubmitErr]   = useState('')
   // null = verificando el link; true = sesión de recuperación válida; false = inválido/expirado.
   const [recoveryReady, setRecoveryReady] = useState<boolean | null>(null)
+  // Se muestra de QUIÉN es la cuenta: si alguien abre el enlace donde había otra
+  // sesión, tiene que ver claro a quién le está cambiando la contraseña.
+  const [email, setEmail] = useState<string | null>(null)
   // Motivo real del fallo (Supabase lo manda en el fragmento de la URL): sirve
   // para no decirle "enlace inválido" a quien simplemente ya lo usó.
   const [linkMsg, setLinkMsg] = useState<AuthLinkMessage | null>(null)
@@ -47,12 +50,18 @@ export default function NuevaContrasenaPage() {
     const supabase = createClient()
     supabaseRef.current = supabase
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (alive && data.session) setRecoveryReady(true)
+    // getUser() (no getSession): pregunta al servidor con la cookie actual, así
+    // no se confunde con una sesión vieja cacheada de otra cuenta en el mismo
+    // navegador — ver el bug del correo viejo en /completar-perfil.
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (alive && data.user && !error) { setRecoveryReady(true); setEmail(data.user.email ?? null) }
     })
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!alive) return
-      if (event === 'PASSWORD_RECOVERY' || session) setRecoveryReady(true)
+      if (event === 'PASSWORD_RECOVERY' || session) {
+        setRecoveryReady(true)
+        setEmail(session?.user?.email ?? null)
+      }
     })
     // Margen para que el client procese el token de la URL antes de declarar inválido.
     const t = setTimeout(() => {
@@ -169,7 +178,10 @@ export default function NuevaContrasenaPage() {
           <Lock size={20} className="text-navy-light/60" />
         </div>
         <h1 className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]">Creá tu nueva contraseña</h1>
-        <p className="text-[13px] text-navy-light/60 font-body">Elegí una contraseña segura.</p>
+        <p className="text-[13px] text-navy-light/70 font-body">
+          Elegí una contraseña segura{email ? ' para ' : '.'}
+          {email && <span className="font-medium text-navy">{email}</span>}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
