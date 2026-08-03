@@ -7,7 +7,7 @@ import { ROLES, assignableRoleIds, type RoleId, type UserAccess, type AccessHist
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { useAuth } from '@/hooks/useAuth'
-import { formatDate, todayCR } from '@/lib/format'
+import { formatDate, todayCR, getInitials } from '@/lib/format'
 
 const AVATAR_COLORS = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949', '#3DB97A']
 function avatarBg(id: string) {
@@ -22,28 +22,72 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
   // solo los delegados). Filtra la UI para que no aparezcan como editables los que
   // no puede tocar. El server valida igual.
   const allow = assignableRoleIds(actor?.roles ?? [])
+  // Quién queda en el historial: la persona logueada. Antes decía "Admin Theos"
+  // fijo, así que el historial atribuía todo cambio al mismo nombre inventado.
+  const actorName = actor?.name?.trim() || 'Vos'
   const canManageRole = (id: RoleId) => allow === 'all' || allow.has(id)
 
   const [user, setUser]               = useState<UserAccess | null>(null)
   const [confirmAdd, setConfirmAdd]   = useState<RoleId | null>(null)
   const [history, setHistory]         = useState<AccessHistoryEntry[]>([])
 
-  // Carga el acceso del miembro desde la BD.
+  const [cargando, setCargando] = useState(true)
+
+  // Carga el acceso del miembro desde la BD. /api/accesos solo devuelve a quienes
+  // TIENEN roles (la tabla member_roles es la fuente), así que para alguien sin
+  // ninguno se arma la ficha desde /api/members/[id]: antes esta pantalla decía
+  // "Miembro no encontrado" y no había forma de darle el primer rol desde acá.
   useEffect(() => {
-    fetch('/api/accesos')
-      .then(r => (r.ok ? r.json() : []))
-      .then((data: UserAccess[]) => {
+    let alive = true
+    async function cargar() {
+      try {
+        const res = await fetch('/api/accesos')
+        const data = res.ok ? ((await res.json()) as UserAccess[]) : []
         const found = Array.isArray(data) ? data.find(u => u.member_id === memberId) ?? null : null
-        setUser(found)
-        setHistory(found?.history ?? [])
-      })
-      .catch(() => {})
+        if (found) {
+          if (!alive) return
+          setUser(found)
+          setHistory(found.history ?? [])
+          return
+        }
+        const mRes = await fetch(`/api/members/${memberId}`)
+        if (!mRes.ok) return
+        const m = await mRes.json() as { id: string; first_name?: string; last_name?: string; name?: string; email?: string | null }
+        if (!alive) return
+        const nombre = m.name ?? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim()
+        setUser({
+          id: `sin-roles-${memberId}`,
+          member_id: memberId,
+          member_name: nombre || 'Sin nombre',
+          member_email: m.email ?? '',
+          member_initials: getInitials(nombre) || '—',
+          roles: [],
+          granted_by: '',
+          granted_at: '',
+          last_login: null,
+          is_active: false,
+        })
+        setHistory([])
+      } finally {
+        if (alive) setCargando(false)
+      }
+    }
+    void cargar()
+    return () => { alive = false }
   }, [memberId])
+
+  if (cargando) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <p className="text-navy-light/70 text-sm font-body">Cargando…</p>
+      </div>
+    )
+  }
 
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-        <p className="text-navy-light/60 text-sm font-body">Miembro no encontrado</p>
+        <p className="text-navy-light/70 text-sm font-body">Miembro no encontrado</p>
         <Link href="/accesos" className="text-sm text-coral hover:text-coral-deep font-body">
           ← Volver a Accesos
         </Link>
@@ -58,7 +102,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
     const prevHistory = history
     setUser(prev => prev ? { ...prev, roles: prev.roles.filter(r => r !== roleId) } : prev)
     setHistory(prev => [
-      { date: todayCR(), actor: 'Admin Theos', action: 'revoked', role: roleId },
+      { date: todayCR(), actor: actorName, action: 'revoked', role: roleId },
       ...prev,
     ])
     try {
@@ -80,7 +124,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
     const prevHistory = history
     setUser(prev => prev ? { ...prev, roles: [...prev.roles, roleId], is_active: true } : prev)
     setHistory(prev => [
-      { date: todayCR(), actor: 'Admin Theos', action: 'assigned', role: roleId },
+      { date: todayCR(), actor: actorName, action: 'assigned', role: roleId },
       ...prev,
     ])
     setConfirmAdd(null)

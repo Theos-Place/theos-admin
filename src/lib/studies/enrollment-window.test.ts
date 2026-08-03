@@ -28,12 +28,22 @@ describe('enrollment-window (GRU-1)', () => {
     expect(shouldCloseEnrollment({ status: 'en_matricula', enrollment_end_date: '2026-07-20', starts_at: null }, '2026-07-27')).toBe(false)
   })
 
+  // El "hoy" se INYECTA siempre: sin eso, el tope de fin de matrícula depende de
+  // la fecha real y el test caduca solo (pasó el 2026-08-03, cuando el grupo del
+  // caso quedó en el pasado y dejó de haber tope).
   it('validación de fechas: inicio <= fin <= inicio del grupo', () => {
-    expect(validateEnrollmentDates({ enrollment_start_date: '2026-07-01', enrollment_end_date: '2026-07-31' })).toBeNull()
-    expect(validateEnrollmentDates({ enrollment_start_date: '2026-08-01', enrollment_end_date: '2026-07-31' })).toMatch(/inicio de matrícula/)
-    expect(validateEnrollmentDates({ enrollment_end_date: '2026-08-10', starts_at: '2026-08-01' })).toMatch(/fin de matrícula/)
-    expect(validateEnrollmentDates({ enrollment_end_date: '2026-08-01', starts_at: '2026-08-01' })).toBeNull()
-    expect(validateEnrollmentDates({})).toBeNull()
+    const HOY = '2026-07-15'
+    expect(validateEnrollmentDates({ enrollment_start_date: '2026-07-01', enrollment_end_date: '2026-07-31' }, HOY)).toBeNull()
+    expect(validateEnrollmentDates({ enrollment_start_date: '2026-08-01', enrollment_end_date: '2026-07-31' }, HOY)).toMatch(/inicio de matrícula/)
+    expect(validateEnrollmentDates({ enrollment_end_date: '2026-08-10', starts_at: '2026-08-01' }, HOY)).toMatch(/fin de matrícula/)
+    expect(validateEnrollmentDates({ enrollment_end_date: '2026-08-01', starts_at: '2026-08-01' }, HOY)).toBeNull()
+    expect(validateEnrollmentDates({}, HOY)).toBeNull()
+  })
+
+  it('un grupo que YA empezó no tiene tope de fin de matrícula (regla de 2026-07-30)', () => {
+    // Este es el comportamiento que hacía caducar el test de arriba: con el grupo
+    // en el pasado, el fin de matrícula puede ser cualquier fecha futura.
+    expect(validateEnrollmentDates({ enrollment_end_date: '2026-08-10', starts_at: '2026-08-01' }, '2026-08-03')).toBeNull()
   })
 })
 
