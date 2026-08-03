@@ -58,10 +58,13 @@ export async function POST(req: NextRequest) {
 
     const email = member?.email?.trim()
     if (email) {
-      // 'invite' cuando todavía no reclamó la cuenta: el texto del correo cambia
-      // ("definí tu contraseña" en vez de "restablecé la tuya").
-      const kind = member?.auth_user_id ? 'recovery' : 'invite'
-      const res = await sendPasswordLink({ email, kind, nombre: member?.first_name ?? null })
+      // El tipo (definir vs restablecer) lo resuelve sendPasswordLink: acá solo
+      // va la pista, porque auth_user_id puede estar desincronizado.
+      const res = await sendPasswordLink({
+        email,
+        tieneCuenta: !!member?.auth_user_id,
+        nombre: member?.first_name ?? null,
+      })
       if (!res.sent && res.reason !== 'sin_cuenta') {
         console.error('password-link:', res.reason)
       }

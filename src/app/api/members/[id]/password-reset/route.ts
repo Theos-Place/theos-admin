@@ -27,8 +27,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const m = full as { first_name: string | null; auth_user_id: string | null } | null
     const res = await sendPasswordLink({
       email,
-      // Sin cuenta reclamada todavía → el texto habla de DEFINIR la contraseña.
-      kind: m?.auth_user_id ? 'recovery' : 'invite',
+      tieneCuenta: !!m?.auth_user_id,
       nombre: m?.first_name ?? null,
     })
     if (!res.sent) {

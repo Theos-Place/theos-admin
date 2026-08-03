@@ -46,7 +46,8 @@ export async function inviteMemberToCompleteProfile(
     const { data: m } = await supabase.from('members').select('first_name').eq('id', memberId).maybeSingle()
     const res = await sendPasswordLink({
       email,
-      kind: 'invite',
+      // La cuenta se acaba de crear/enlazar arriba.
+      tieneCuenta: true,
       nombre: (m as { first_name: string | null } | null)?.first_name ?? null,
     })
     if (!res.sent) return { sent: false, reason: res.reason }
