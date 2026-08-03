@@ -83,10 +83,36 @@ export default function AccesosPage() {
     showToast(`Accesos revocados para ${u.member_name}`)
   }
 
-  function handleAccessGranted(memberId: string, memberName: string, memberEmail: string, memberInitials: string, roles: RoleId[]) {
+  // BUG hasta 2026-08-03: esto solo pintaba el resultado en pantalla y mostraba
+  // "Acceso otorgado" — NUNCA llamaba al API, así que los roles no se guardaban y
+  // al recargar no había nada. Ahora persiste cada rol y solo confirma si el
+  // servidor los aceptó.
+  async function handleAccessGranted(memberId: string, memberName: string, memberEmail: string, memberInitials: string, roles: RoleId[]) {
+    const results = await Promise.all(roles.map(async role => {
+      try {
+        const res = await fetch(`/api/accesos/${memberId}/roles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role }),
+        })
+        if (res.ok) return { role, ok: true as const }
+        const d = await res.json().catch(() => null)
+        return { role, ok: false as const, error: d?.error as string | undefined }
+      } catch {
+        return { role, ok: false as const }
+      }
+    }))
+    const guardados = results.filter(r => r.ok).map(r => r.role)
+    const fallidos = results.filter(r => !r.ok)
+
+    if (guardados.length === 0) {
+      showToast(fallidos[0]?.error ?? 'No se pudieron guardar los roles. Intentá de nuevo.')
+      return
+    }
+
     const existing = users.find(u => u.member_id === memberId)
     if (existing) {
-      setUsers(prev => prev.map(u => u.id === existing.id ? { ...u, roles: [...new Set([...u.roles, ...roles])], is_active: true } : u))
+      setUsers(prev => prev.map(u => u.id === existing.id ? { ...u, roles: [...new Set([...u.roles, ...guardados])], is_active: true } : u))
     } else {
       const newEntry: UserAccess = {
         id: `access-new-${Date.now()}`,
@@ -94,7 +120,7 @@ export default function AccesosPage() {
         member_name: memberName,
         member_email: memberEmail,
         member_initials: memberInitials,
-        roles,
+        roles: guardados,
         granted_by: 'Admin Theos',
         granted_at: new Date().toISOString().split('T')[0],
         last_login: null,
@@ -102,7 +128,9 @@ export default function AccesosPage() {
       }
       setUsers(prev => [...prev, newEntry])
     }
-    showToast(`Acceso otorgado · Notificación enviada a ${memberName}`)
+    showToast(fallidos.length === 0
+      ? `Acceso otorgado a ${memberName}`
+      : `Se guardaron ${guardados.length} de ${roles.length} roles. Revisá los que faltan.`)
     setShowModal(false)
   }
 
