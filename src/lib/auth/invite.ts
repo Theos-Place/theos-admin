@@ -15,20 +15,26 @@ export async function inviteMemberToCompleteProfile(
   email: string,
 ): Promise<{ sent: boolean; reason?: string }> {
   const supabase = createAdminClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'
-  const redirectTo = `${siteUrl}/completar-perfil`
-
   try {
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: { member_id: memberId, source: 'checkin_new_person' },
+    // createUser (no inviteUserByEmail): el correo lo mandamos NOSOTROS por SES
+    // con un enlace que sirve en cualquier dispositivo. inviteUserByEmail
+    // dependía del SMTP de Supabase Auth y de su enlace de un solo navegador.
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      email_confirm: false,
+      user_metadata: { member_id: memberId, source: 'invite_admin' },
     })
+    let authUserId = data?.user?.id ?? null
     if (error) {
-      console.error('inviteUserByEmail falló:', error.message)
-      return { sent: false, reason: error.message }
+      // Ya existía el usuario de Auth: se recupera para enlazarlo igual.
+      const existing = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+      authUserId = existing.data?.users.find(u => u.email?.toLowerCase() === email.toLowerCase())?.id ?? null
+      if (!authUserId) {
+        console.error('createUser falló:', error.message)
+        return { sent: false, reason: error.message }
+      }
     }
     // Enlaza el usuario de Auth con el miembro.
-    const authUserId = data.user?.id
     if (authUserId) {
       const { error: linkErr } = await supabase
         .from('members')
@@ -36,6 +42,14 @@ export async function inviteMemberToCompleteProfile(
         .eq('id', memberId)
       if (linkErr) console.error('No se pudo enlazar auth_user_id:', linkErr.message)
     }
+    const { sendPasswordLink } = await import('@/lib/auth/password-link')
+    const { data: m } = await supabase.from('members').select('first_name').eq('id', memberId).maybeSingle()
+    const res = await sendPasswordLink({
+      email,
+      kind: 'invite',
+      nombre: (m as { first_name: string | null } | null)?.first_name ?? null,
+    })
+    if (!res.sent) return { sent: false, reason: res.reason }
     return { sent: true }
   } catch (err) {
     const reason = err instanceof Error ? err.message : 'error desconocido'

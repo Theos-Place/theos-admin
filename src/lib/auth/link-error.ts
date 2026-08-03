@@ -63,3 +63,14 @@ export function authLinkMessage(
     acciones: ['pedir_enlace', 'login'],
   }
 }
+
+/** Ruta interna a la que volver después de canjear el token. Solo rutas del
+ *  propio sitio: sin esto, un `next` con URL absoluta convertiría el enlace del
+ *  correo en un redirector abierto hacia cualquier dominio. */
+export function safeNextPath(next: string | null | undefined, fallback = '/completar-perfil'): string {
+  const value = (next ?? '').trim()
+  if (!value.startsWith('/')) return fallback
+  // '//host' y '/\host' los interpreta el navegador como otro dominio.
+  if (/^\/[\\/]/.test(value)) return fallback
+  return value
+}

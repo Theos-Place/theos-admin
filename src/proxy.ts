@@ -6,7 +6,10 @@ import { buildCsp, newNonce } from '@/lib/csp'
 // '/ayuda' es público a propósito: los correos de invitación linkean ahí y el
 // tutorial de "crear mi contraseña" se lee ANTES de poder entrar. El contenido
 // interno igual se filtra en el servidor por rol (src/lib/help/loader.ts).
-const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda']
+// '/auth/confirm' canjea el token del correo: por definición se abre SIN sesión
+// (es lo que la crea). Sin esto el proxy lo mandaba al login y el enlace del
+// correo nunca funcionaba.
+const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda', '/auth/confirm']
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))

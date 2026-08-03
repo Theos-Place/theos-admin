@@ -4,7 +4,6 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -38,14 +37,21 @@ function RecuperarContent() {
     setLoading(true)
     setError('')
     try {
-      const supabase = createClient()
-      // El link del correo redirige a la página donde se pone la nueva contraseña.
-      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/recuperar/nueva-contrasena`,
+      // Nuestro endpoint genera el enlace y lo manda por SES. Antes esto usaba
+      // supabase.auth.resetPasswordForEmail, cuyo enlace SOLO funcionaba en el
+      // mismo navegador donde se pedía (flujo PKCE): quien lo abría en el celular
+      // veía "enlace inválido".
+      const res = await fetch('/api/auth/password-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email.trim() }),
       })
-      // Por seguridad NO se revela si el correo existe: ante un fallo de red sí
-      // mostramos error genérico, pero el caso normal es confirmación neutral.
-      if (err && err.status && err.status >= 500) throw err
+      if (res.status === 429) {
+        const d = await res.json().catch(() => null)
+        setError(d?.error ?? 'Demasiados intentos. Esperá unos minutos.')
+        return
+      }
+      // La respuesta es neutral a propósito: no revela si el correo existe.
       setSent(true)
     } catch {
       setError('No pudimos enviar el correo. Revisá tu conexión e intentá de nuevo.')

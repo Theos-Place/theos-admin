@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readAuthLinkError, authLinkMessage } from './link-error'
+import { readAuthLinkError, authLinkMessage, safeNextPath } from './link-error'
 
 describe('readAuthLinkError', () => {
   it('lee el error del fragmento (donde lo pone Supabase)', () => {
@@ -58,5 +58,24 @@ describe('authLinkMessage', () => {
         expect(authLinkMessage(p, flow).detalle.toLowerCase()).not.toContain('administrador')
       }
     }
+  })
+})
+
+describe('safeNextPath', () => {
+  it('acepta rutas internas', () => {
+    expect(safeNextPath('/completar-perfil')).toBe('/completar-perfil')
+    expect(safeNextPath('/recuperar/nueva-contrasena')).toBe('/recuperar/nueva-contrasena')
+  })
+
+  it('rechaza dominios externos (redirector abierto)', () => {
+    expect(safeNextPath('https://malo.com')).toBe('/completar-perfil')
+    expect(safeNextPath('//malo.com')).toBe('/completar-perfil')
+    expect(safeNextPath('/\\malo.com')).toBe('/completar-perfil')
+  })
+
+  it('vacío o ausente cae al default', () => {
+    expect(safeNextPath(null)).toBe('/completar-perfil')
+    expect(safeNextPath('')).toBe('/completar-perfil')
+    expect(safeNextPath('  ', '/login')).toBe('/login')
   })
 })
