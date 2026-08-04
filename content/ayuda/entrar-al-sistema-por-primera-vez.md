@@ -23,6 +23,10 @@ Lo que falta es que le pongas una contraseña, y eso lo hacés vos — nadie má
 
 Listo. Desde ahí en adelante entrás con tu correo y esa contraseña.
 
+> **Hacé los cuatro pasos de una sentada.** El enlace del paso 4 vence a las dos horas y
+> sirve una sola vez, así que conviene pedirlo cuando ya estés frente a la pantalla. Si se
+> te venció, no pasa nada: volvés al paso 2 y pedís otro.
+
 ## Si algo no funciona
 
 **No me llega el correo.** Revisá la carpeta de spam o correo no deseado. Si usás Gmail,
@@ -34,6 +38,10 @@ y lo corregimos.
 
 **Me olvidé la contraseña.** Es el mismo camino: tocá **"Recuperar acceso"** en la pantalla
 de inicio y seguí los pasos.
+
+**Me mandaron un correo con instrucciones, no un enlace para entrar.** Es a propósito. Los
+enlaces vencen, y entre que alguien te lo manda y vos abrís el correo se moría solo. Por eso
+el correo te explica cómo pedirlo vos, y así lo usás recién hecho.
 
 > Podés entrar desde el celular sin instalar nada. Es una página web normal: si querés,
 > agregala a la pantalla de inicio para abrirla como una app.

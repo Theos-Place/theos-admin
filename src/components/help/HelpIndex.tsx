@@ -15,7 +15,9 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="relative">
+      {/* El buscador NO se estira a todo el ancho: un input de 1.400 px es
+          incómodo de leer y de apuntar (layout.md, acotar elementos internos). */}
+      <div className="relative max-w-xl">
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-light/60" />
         <input
           value={q}
@@ -38,12 +40,15 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
             <h2 className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display px-1">
               {seccion}
             </h2>
-            <ul className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] divide-y divide-[var(--outline-variant)]">
+            {/* Listado, no lectura: en desktop se reparte en columnas en vez de
+                quedar como una tira angosta centrada. En celular es una lista
+                de una columna, igual que antes. */}
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {sectionDocs.map(doc => (
-                <li key={doc.slug}>
+                <li key={doc.slug} className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
                   <Link
                     href={`/ayuda/${doc.slug}`}
-                    className="flex items-center gap-3 px-4 py-4 active:bg-surface-low hover:bg-surface-low transition-colors"
+                    className="flex h-full items-center gap-3 px-4 py-4 active:bg-surface-low hover:bg-surface-low transition-colors"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy/[0.06] text-navy-light">
                       {doc.tipo === 'infografia' ? <ImageIcon size={16} /> : <FileText size={16} />}

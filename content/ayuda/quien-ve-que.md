@@ -35,7 +35,13 @@ los módulos pero no toca los accesos.
 **Roles acotados** — hacen una cosa sola, y por eso son los más útiles para delegar sin dar
 poder de más: `folletos` (la cola de folletos), `revision_pagos` (revisar comprobantes),
 `becas` (becas y cupones), `editor_perfiles` (editar fichas), `editor_grupos_estudio` (crear y
-editar grupos, nada más de estudios), `reportes`, `solo_lectura`.
+editar grupos, y nada más de estudios: sin plan, dirigentes, análisis ni solicitudes),
+`forms` (todos los formularios y sus respuestas), `reportes`, `solo_lectura`.
+
+**Acceso a un formulario suelto** — sin ser un rol: en la configuración de un formulario se
+puede dar acceso a personas concretas, para que vean y exporten las respuestas de **ese**
+formulario y de ningún otro (el caso típico es la encargada de una actividad). No las
+habilita a editar las preguntas ni a ver los demás formularios.
 
 **Roles que salen de servir** — `dirigente` (dirige un grupo de estudio) y `lider_comite`
 (lidera un comité). Estos dos no se piden: se asignan cuando entrás a ese puesto, y se quitan

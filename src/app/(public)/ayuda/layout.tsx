@@ -16,13 +16,20 @@ export const metadata: Metadata = {
 // CON SESIÓN se pinta dentro del cascarón del sistema — con sidebar y topbar —
 // porque la ayuda se consulta en medio de una tarea y perder el menú obliga a
 // volver con el botón del navegador. SIN SESIÓN va sola: no hay menú que mostrar.
+//
+// ANCHO (2026-08-04): el layout ya NO encajona todo en max-w-3xl. Eso dejaba el
+// ÍNDICE —que es un listado— como una tira angosta en medio de la pantalla, y
+// recortaba las infografías. Cada página decide: el índice va full-width con
+// grid responsive y el artículo se pone su propio ancho de lectura
+// (Theos Place Design System/layout.md: la excepción de lectura aplica al TEXTO,
+// no al cascarón).
 export default async function AyudaLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getAuthContext()
 
   if (ctx) {
     return (
       <AppShell title="Centro de ayuda" showCedulaReminder={false}>
-        <div className="mx-auto max-w-3xl">{children}</div>
+        {children}
       </AppShell>
     )
   }
@@ -30,7 +37,7 @@ export default async function AyudaLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-surface-low">
       <header className="bg-navy">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo-theos-white.png"
@@ -50,7 +57,7 @@ export default async function AyudaLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 py-6 pb-16">{children}</main>
+      <main className="mx-auto max-w-6xl px-5 py-6 pb-16">{children}</main>
 
     </div>
   )

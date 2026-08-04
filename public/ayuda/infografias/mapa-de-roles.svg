@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1240" role="img" aria-labelledby="t-roles d-roles" font-family="Arial, Helvetica, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1320" role="img" aria-labelledby="t-roles d-roles" font-family="Arial, Helvetica, sans-serif">
   <title id="t-roles">Quién ve qué — mapa de roles</title>
   <desc id="d-roles">Los roles agrupados por familia: dirección, coordinaciones, roles acotados y roles que salen de servir; con la regla de que sin rol asignado la persona solo ve lo suyo, y los tres alcances posibles.</desc>
 
-  <rect width="720" height="1240" fill="#F6F5F2"/>
+  <rect width="720" height="1320" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Quién ve qué</text>
   <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
@@ -47,49 +47,52 @@
   <!-- Familia 3 -->
   <text x="48" y="652" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">ROLES ACOTADOS · hacen UNA cosa (los mejores para delegar)</text>
   <g>
-    <rect x="48" y="668" width="624" height="180" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <rect x="48" y="668" width="6" height="180" rx="3" fill="#70BDC2"/>
+    <rect x="48" y="668" width="624" height="206" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="668" width="6" height="206" rx="3" fill="#70BDC2"/>
     <g font-size="14" fill="#5B5975">
       <text x="76" y="700"><tspan font-weight="bold" fill="#161440">folletos</tspan> — la cola de folletos (y por eso, la de pagos)</text>
       <text x="76" y="726"><tspan font-weight="bold" fill="#161440">revision_pagos</tspan> — revisar comprobantes</text>
       <text x="76" y="752"><tspan font-weight="bold" fill="#161440">becas</tspan> — becas y cupones</text>
       <text x="76" y="778"><tspan font-weight="bold" fill="#161440">editor_perfiles</tspan> — editar fichas de personas</text>
       <text x="76" y="804"><tspan font-weight="bold" fill="#161440">editor_grupos_estudio</tspan> — crear y editar grupos, nada más</text>
-      <text x="76" y="830"><tspan font-weight="bold" fill="#161440">reportes</tspan> · <tspan font-weight="bold" fill="#161440">solo_lectura</tspan> — mirar sin tocar</text>
+      <text x="76" y="830"><tspan font-weight="bold" fill="#161440">forms</tspan> — todos los formularios y sus respuestas</text>
+      <text x="76" y="856"><tspan font-weight="bold" fill="#161440">reportes</tspan> · <tspan font-weight="bold" fill="#161440">solo_lectura</tspan> — mirar sin tocar</text>
     </g>
   </g>
 
   <!-- Familia 4 -->
-  <text x="48" y="892" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">ROLES QUE SALEN DE SERVIR · no se piden, se asignan con el puesto</text>
+  <text x="48" y="918" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">ROLES QUE SALEN DE SERVIR · no se piden, se asignan con el puesto</text>
   <g>
-    <rect x="48" y="908" width="624" height="94" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <rect x="48" y="908" width="6" height="94" rx="3" fill="#8B8AA0"/>
+    <rect x="48" y="934" width="624" height="94" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="934" width="6" height="94" rx="3" fill="#8B8AA0"/>
     <g font-size="14" fill="#5B5975">
-      <text x="76" y="940"><tspan font-weight="bold" fill="#161440">dirigente</tspan> — dirige un grupo de estudio</text>
-      <text x="76" y="966"><tspan font-weight="bold" fill="#161440">lider_comite</tspan> — lidera un comité</text>
+      <text x="76" y="966"><tspan font-weight="bold" fill="#161440">dirigente</tspan> — dirige un grupo de estudio</text>
+      <text x="76" y="992"><tspan font-weight="bold" fill="#161440">lider_comite</tspan> — lidera un comité</text>
     </g>
-    <text x="76" y="990" font-size="13" fill="#8B8AA0">Entrar a un comité los otorga; salir los quita.</text>
+    <text x="76" y="1016" font-size="13" fill="#8B8AA0">Entrar a un comité los otorga; salir los quita.</text>
   </g>
 
   <!-- Alcance -->
-  <text x="48" y="1046" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">EL ALCANCE IMPORTA TANTO COMO EL ROL</text>
+  <text x="48" y="1072" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">EL ALCANCE IMPORTA TANTO COMO EL ROL</text>
   <g font-size="14">
-    <rect x="48" y="1062" width="198" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <text x="72" y="1092" font-weight="bold" fill="#161440">Todo</text>
-    <text x="72" y="1118" fill="#5B5975">La organización</text>
-    <text x="72" y="1138" fill="#5B5975">completa.</text>
+    <rect x="48" y="1088" width="198" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="1118" font-weight="bold" fill="#161440">Todo</text>
+    <text x="72" y="1144" fill="#5B5975">La organización</text>
+    <text x="72" y="1164" fill="#5B5975">completa.</text>
 
-    <rect x="261" y="1062" width="198" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <text x="285" y="1092" font-weight="bold" fill="#161440">Su comité</text>
-    <text x="285" y="1118" fill="#5B5975">El líder ve a su</text>
-    <text x="285" y="1138" fill="#5B5975">gente, no el padrón.</text>
+    <rect x="261" y="1088" width="198" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="285" y="1118" font-weight="bold" fill="#161440">Su comité</text>
+    <text x="285" y="1144" fill="#5B5975">El líder ve a su</text>
+    <text x="285" y="1164" fill="#5B5975">gente, no el padrón.</text>
 
-    <rect x="474" y="1062" width="198" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <text x="498" y="1092" font-weight="bold" fill="#161440">Lo propio</text>
-    <text x="498" y="1118" fill="#5B5975">El dirigente, sus</text>
-    <text x="498" y="1138" fill="#5B5975">grupos.</text>
+    <rect x="474" y="1088" width="198" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="498" y="1118" font-weight="bold" fill="#161440">Lo propio</text>
+    <text x="498" y="1144" fill="#5B5975">El dirigente, sus</text>
+    <text x="498" y="1164" fill="#5B5975">grupos.</text>
   </g>
 
-  <text x="48" y="1196" font-size="13" fill="#8B8AA0">Los resúmenes generales (portada de Estudios, de Servidores) piden alcance completo:</text>
-  <text x="48" y="1216" font-size="13" fill="#8B8AA0">son la foto de toda la organización, no de tu pedazo. Los accesos los da admin.</text>
+  <text x="48" y="1222" font-size="13" fill="#8B8AA0">Los resúmenes generales (portada de Estudios, de Servidores) piden alcance completo:</text>
+  <text x="48" y="1242" font-size="13" fill="#8B8AA0">son la foto de toda la organización, no de tu pedazo. Los accesos los da admin.</text>
+  <text x="48" y="1274" font-size="13" fill="#8B8AA0">Aparte de los roles: en la configuración de un formulario se le puede dar acceso a una</text>
+  <text x="48" y="1294" font-size="13" fill="#8B8AA0">persona concreta, y ve solo las respuestas de ESE formulario.</text>
 </svg>

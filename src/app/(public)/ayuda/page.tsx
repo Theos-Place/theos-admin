@@ -14,7 +14,7 @@ export default async function AyudaPage() {
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Centro de ayuda
         </h1>
-        <p className="mt-1 text-[15px] text-navy-light/70 font-body leading-relaxed">
+        <p className="mt-1 max-w-2xl text-[15px] text-navy-light/70 font-body leading-relaxed">
           {ctx
             ? 'Las guías de los procesos que podés hacer con tu cuenta.'
             : 'Guías para entrar al sistema, matricularte y hacer tus trámites. Al iniciar sesión vas a ver además las guías de lo que te toca hacer.'}

@@ -40,8 +40,13 @@ export default async function AyudaArticuloPage(
   const html = renderMarkdown(doc.content)
   const hasImages = html.includes('<img')
 
+  // Ancho de lectura (layout.md): el TEXTO no debe pasar de ~75 caracteres por
+  // línea. Las infografías son imágenes anchas y en una columna de 768 px se
+  // ven diminutas, así que esas guías usan un ancho mayor.
+  const ancho = doc.tipo === 'infografia' ? 'max-w-5xl' : 'max-w-3xl'
+
   return (
-    <article className="space-y-5">
+    <article className={`mx-auto ${ancho} space-y-5`}>
       <div className="space-y-2">
         <Link
           href="/ayuda"
