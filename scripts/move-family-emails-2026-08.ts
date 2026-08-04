@@ -50,7 +50,23 @@ const CASOS: Array<[string, string, string]> = [
   ['19316', 'marshaepc@gmail.com',          '23943'], // Marsha Ramos       ← Silvia Alfaro
   ['1451',  'maxalvaradomora@yahoo.com',    '6202'],  // Max Alvarado       ← Diego Alvarado mora
   ['21844', 'paoqb2@gmail.com',             '22304'], // Paola Quirós       ← Grace Barrantes
+  // Segunda tanda (2026-08-04): los dos que quedaban donde el dueño actual NO está
+  // en la lista del campa, así que mover no le quita el correo a otro participante.
+  ['716',   'cristipaum@gmail.com',         '17462'], // Cristina Pacheco   ← Lucas Loaiza Pacheco
+  ['2361',  'projas@pczonecr.com',          '3919'],  // José Pablo Rojas   ← Anelyss Paola Rojas
 ]
+
+/**
+ * NO se pueden arreglar moviendo, y por eso no están arriba:
+ *
+ *   hdiazm@ice.co.cr  → Hilda Diaz Marin (5110) y Geovanny Rizo Alvarez (5111)
+ *   kwebbc2@gmail.com → Jorge Montero Sibaja (16538) y Kimberly Webb Campos (16539)
+ *
+ * En los dos casos el export de CCB trae LA MISMA dirección para las DOS personas,
+ * y las dos están en la lista del campa. Mover el correo solo cambia cuál de los dos
+ * queda sin recibir: es suma cero. Necesitan una segunda dirección, y eso lo tiene
+ * que dar la persona.
+ */
 
 type Member = {
   id: string; first_name: string | null; last_name: string | null; external_id: string | null
