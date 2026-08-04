@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
+import { isStudyGroupsOnly } from '@/lib/auth/roles'
 import { getStudyDemand } from '@/lib/supabase/queries/studies'
 import { getCurrentBlock, getNextBlock, suggestedGroups } from '@/lib/studies/blocks'
 
@@ -11,6 +12,11 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await requireModuleView('estudios', { beyondOwn: true })
     if (auth.res) return auth.res
+    // El rol acotado de grupos pasa el permiso de módulo (lo necesita para el
+    // listado de grupos) pero la demanda es planificación: no es suya.
+    if (isStudyGroupsOnly(auth.ctx.roles)) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
     const code = req.nextUrl.searchParams.get('study_code')
     if (!code) return NextResponse.json({ error: 'Se requiere study_code' }, { status: 400 })
 

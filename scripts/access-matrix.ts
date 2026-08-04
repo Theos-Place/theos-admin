@@ -34,6 +34,7 @@ const USERS: Record<string, string> = {
   dirigente: 'dirigente@theosplace.org',
   lider_comite: 'lider@theosplace.org',
   coordinador_estudios: 'estudios@theosplace.org',
+  editor_grupos_estudio: 'grupos@theosplace.org',
   admin: 'admin@theosplace.org',
 }
 
@@ -44,13 +45,13 @@ type Expected = Record<string, 'ok' | 403>
 const MATRIX: Array<{ path: string; expected: Expected }> = [
   { path: '/api/dashboard', expected: { miembro: 403, dirigente: 403, lider_comite: 'ok', coordinador_estudios: 'ok', admin: 'ok' } },
   { path: '/api/dashboard/activity', expected: { miembro: 403, dirigente: 403, lider_comite: 'ok', coordinador_estudios: 'ok', admin: 'ok' } },
-  { path: '/api/members', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
+  { path: '/api/members', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', editor_grupos_estudio: 403, admin: 'ok' } },
   { path: '/api/members/export', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
-  { path: '/api/studies/groups', expected: { miembro: 403, dirigente: 'ok', lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
+  { path: '/api/studies/groups', expected: { miembro: 403, dirigente: 'ok', lider_comite: 403, coordinador_estudios: 'ok', editor_grupos_estudio: 'ok', admin: 'ok' } },
   { path: '/api/studies/leaders', expected: { miembro: 'ok', dirigente: 'ok', lider_comite: 'ok', coordinador_estudios: 'ok', admin: 'ok' } }, // saneado sin evaluaciones/is_donor para scope own
-  { path: '/api/studies/analysis?study_code=N1', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
-  { path: '/api/studies/prematrimonial', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
-  { path: '/api/studies/requests?count=open', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
+  { path: '/api/studies/analysis?study_code=N1', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', editor_grupos_estudio: 403, admin: 'ok' } },
+  { path: '/api/studies/prematrimonial', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', editor_grupos_estudio: 403, admin: 'ok' } },
+  { path: '/api/studies/requests?count=open', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', editor_grupos_estudio: 403, admin: 'ok' } },
   { path: '/api/servers/committees', expected: { miembro: 403, dirigente: 403, lider_comite: 'ok', coordinador_estudios: 403, admin: 'ok' } }, // lider: 200 pero SOLO sus comités
   // Bandeja de solicitudes de servicio: SOLO coordinador_servidores y admin
   // (2026-07-30) — lider_comite y dirección quedaron fuera.

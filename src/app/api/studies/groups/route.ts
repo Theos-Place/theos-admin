@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
-import { STUDY_ADMIN_ROLES, GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
+import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { studiesViewScope } from '@/lib/auth/studies-scope'
 import {
   getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode, getStudyGroupZones,
@@ -9,12 +9,15 @@ import {
 import { groupCreateSchema } from './schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 
-// Roles que pueden listar grupos: los de estudios + dirigentes, más los
-// consumidores cross-módulo del listado (finanzas en sus solicitudes,
-// comunicaciones para destinatarios, solo_lectura). 'miembro' queda fuera: el
-// detalle del plan no es para ellos (defensa server-side, la UI ya lo oculta).
+// Roles que pueden listar grupos: los que gestionan grupos (STUDY_ADMIN +
+// editor_grupos_estudio) + dirigentes, más los consumidores cross-módulo del
+// listado (finanzas en sus solicitudes, comunicaciones para destinatarios,
+// solo_lectura). 'miembro' queda fuera: el detalle del plan no es para ellos
+// (defensa server-side, la UI ya lo oculta).
 // SEC-1: el dirigente (scope 'own') recibe SOLO sus grupos (leader/co-leader).
-const GROUPS_LIST_ROLES = [...STUDY_ADMIN_ROLES, 'dirigente', 'finanzas', 'comunicaciones', 'solo_lectura'] as const
+// Bug 2026-08-04: 'editor_grupos_estudio' faltaba acá y el rol veía la página
+// de grupos vacía (podía editar un grupo, pero no listarlos).
+const GROUPS_LIST_ROLES = [...GROUP_ADMIN_ROLES, 'dirigente', 'finanzas', 'comunicaciones', 'solo_lectura'] as const
 
 // GET /api/studies/groups
 //  - default: TODOS los grupos con enrollment_counts (sin enrollments embebidos

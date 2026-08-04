@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { isStudyGroupsOnly } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
 import {
@@ -20,6 +21,11 @@ const MAX_BYTES = 8 * 1024 * 1024
 export async function GET() {
   const auth = await requireModuleView('estudios', { beyondOwn: true })
   if (auth.res) return auth.res
+  // El rol acotado de grupos tiene el módulo estudios solo para gestionar
+  // grupos: la cola de solicitudes (incluida esta) no es suya.
+  if (isStudyGroupsOnly(auth.ctx.roles)) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+  }
   try {
     // PRE-8: la marca de SEGUIMIENTO (plan de acción != "listos") viaja como
     // flag para toda la cola; el plan concreto solo para PREMAT_EVAL_ROLES

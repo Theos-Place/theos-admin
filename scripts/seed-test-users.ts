@@ -47,6 +47,7 @@ const TEST_USERS: { email: string; role: RoleId; name: string }[] = [
   { email: 'dirigente@theosplace.org',      role: 'dirigente',              name: 'Usuario Dirigente' },
   { email: 'lider@theosplace.org',          role: 'lider_comite',           name: 'Líder de Comité' },
   { email: 'perfiles@theosplace.org',       role: 'editor_perfiles',        name: 'Editor de Perfiles' },
+  { email: 'grupos@theosplace.org',         role: 'editor_grupos_estudio',  name: 'Editor de Grupos' },
   { email: 'lectura@theosplace.org',        role: 'solo_lectura',           name: 'Usuario Solo Lectura' },
   { email: 'miembro@theosplace.org',        role: 'miembro',                name: 'Usuario Miembro' },
 ]
