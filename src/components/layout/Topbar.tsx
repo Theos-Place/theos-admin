@@ -49,7 +49,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
 
   return (
     <header
-      className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b px-4 lg:px-6 bg-[var(--glass-bg)] [backdrop-filter:var(--glass-blur)] border-[var(--outline-variant)]"
+      className="sticky top-0 z-20 flex h-16 items-center gap-1.5 sm:gap-4 border-b px-3 sm:px-4 lg:px-6 bg-[var(--glass-bg)] [backdrop-filter:var(--glass-blur)] border-[var(--outline-variant)]"
     >
       {/* Hamburger — mobile only */}
       <button
@@ -60,9 +60,12 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
         <Menu size={22} />
       </button>
 
-      {/* Page title */}
+      {/* Page title — se recorta antes que empujar los botones fuera de pantalla.
+          Con shrink-0 un título largo ("Comunicaciones") desbordaba el header en
+          celular y el menú del usuario quedaba inalcanzable. */}
       <h1
-        className="text-lg text-navy shrink-0 font-display font-extrabold tracking-[-0.01em]"
+        className="min-w-0 truncate text-base sm:text-lg text-navy sm:shrink-0 font-display font-extrabold tracking-[-0.01em]"
+        title={title}
       >
         {title}
       </h1>
