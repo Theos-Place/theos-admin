@@ -25,15 +25,20 @@ Cuatro cosas, en este orden:
 
 ## Qué pasa al aprobar
 
-Aprobar no es solo marcar el pago: **propaga al objeto que se estaba pagando**. Según el
-concepto, confirma la matrícula del estudio, el tiquete del evento, el folleto o el trámite
-prematrimonial. No hay que ir a confirmarlo aparte.
+Aprobar el pago **no confirma la matrícula**: la matrícula ya estaba confirmada desde que la
+persona se matriculó (el pago va por un carril aparte). Lo que sí propaga la aprobación es el
+tiquete del evento y el trámite prematrimonial, que sí dependen del pago.
 
 ## Qué pasa al rechazar
 
-A la persona le llega el aviso con el motivo, y arranca el **plazo de 72 horas** para subir un
-comprobante nuevo. Si no lo sube, un proceso automático libera el cupo: la matrícula queda
-vencida y el lugar se abre para otra persona.
+A la persona le llega el aviso con el motivo y sube un comprobante nuevo.
+
+**Rechazar un pago de matrícula no desmatricula a nadie**: la persona sigue en su grupo y el
+cobro queda abierto para que ustedes le den seguimiento. Lo que sí la frena es matricularse
+en otro estudio: con un pago de estudios sin resolver, el sistema no la deja.
+
+En **eventos** es distinto: ahí el cupo se reserva contra el pago, y si pasan 72 horas sin un
+comprobante nuevo, un proceso automático vence la inscripción y libera el lugar.
 
 Por eso el motivo del rechazo importa: si escribís "no se ve", la persona sabe qué corregir;
 si no escribís nada, va a volver a subir lo mismo.

@@ -357,11 +357,14 @@ export async function assignStudyRequest(
  * (comportamiento histórico). Para 'relocation' es una ACCIÓN real: matricula
  * al miembro en el grupo elegido por el encargado (`target_group_id`,
  * obligatorio), transfiere la inscripción anterior si había una activa, y —
- * si marcó "Ocupo folleto" al pedir la reubicación — fuerza la matrícula a
- * 'pendiente_de_pago' (costo = study_plans.cost del plan destino, el mismo
- * campo que usa la matrícula normal), crea el pago pendiente (concept
- * 'folletos') y el tiquete de folleto en la cola existente (mismo flujo de
+ * si marcó "Ocupo folleto" al pedir la reubicación — le crea el pago pendiente
+ * del folleto (costo = study_plans.cost del plan destino, el mismo campo que
+ * usa la matrícula normal) y el tiquete en la cola existente (mismo flujo de
  * impresión/entrega que los folletos de cierre de grupo).
+ *
+ * 2026-08-04: la matrícula queda EFECTIVA en los dos caminos. Antes, la del
+ * camino con folleto nacía 'pendiente_de_pago' y la persona quedaba reubicada a
+ * medias hasta que alguien aprobara el comprobante.
  */
 export async function resolveStudyRequest(
   id: string,
@@ -395,8 +398,7 @@ export async function resolveStudyRequest(
 
   // QA 2026-07-17: guard del DESTINO antes de tocar nada — mismos guards que
   // enrollMember. Sin esto, el upsert del camino con folleto resucitaba una
-  // inscripción 'completed' (pisando el registro académico) o degradaba una
-  // 'enrolled' a pendiente_de_pago.
+  // inscripción 'completed' (pisando el registro académico).
   const { data: destEnr } = await supabase
     .from('study_enrollments')
     .select('id, status')
@@ -405,8 +407,9 @@ export async function resolveStudyRequest(
     .maybeSingle()
   const prevDest = destEnr as { id: string; status: string } | null
   if (prevDest?.status === 'completed') throw new Error('YA_COMPLETADO')
-  if (prevDest?.status === 'pendiente_de_pago') throw new Error('PAGO_PENDIENTE')
-  if (prevDest?.status === 'enrolled') throw new Error('YA_MATRICULADO')
+  if (prevDest?.status === 'enrolled' || prevDest?.status === 'pendiente_de_pago') {
+    throw new Error('YA_MATRICULADO')
+  }
 
   // Transfiere la inscripción actual (si había una activa) al grupo destino.
   // QA 2026-07-17: si esta escritura falla hay que abortar ANTES de matricular
@@ -438,15 +441,15 @@ export async function resolveStudyRequest(
       .from('study_enrollments')
       .upsert({
         member_id: row.member_id, group_id: targetGroupId, plan_id: plan?.id ?? null,
-        status: 'pendiente_de_pago', enrolled_at: new Date().toISOString(),
+        status: 'enrolled', enrolled_at: new Date().toISOString(),
       }, { onConflict: 'group_id,member_id' })
       .select('id').single()
     if (enrErr) throw enrErr
     enrollmentId = (enr as { id: string }).id
 
-    // QA 2026-07-17: si el pago no se pudo crear, revertir la inscripción — una
-    // matrícula pendiente_de_pago sin fila en payments es invisible para
-    // finanzas y la API habría respondido éxito.
+    // QA 2026-07-17: si el pago no se pudo crear, revertir la inscripción — el
+    // folleto sin su cobro es invisible para finanzas y la API habría
+    // respondido éxito igual.
     const { error: payErr } = await supabase.from('payments').insert({
       member_id: row.member_id, amount, currency: 'CRC', payment_method: 'comprobante',
       concept: 'folletos', enrollment_id: enrollmentId, study_group_id: targetGroupId,
@@ -484,11 +487,17 @@ export async function resolveStudyRequest(
     enrollmentId = result.enrollment_id
   }
 
-  try {
-    const { notifyEnrollment } = await import('@/lib/email/enrollment-notify')
-    await notifyEnrollment(targetGroupId, row.member_id, row.wants_folleto ? 'pendiente_de_pago' : 'enrolled')
-  } catch (e) {
-    console.warn('resolveStudyRequest: notifyEnrollment falló:', e)
+  // Solo se avisa si de verdad hubo matrícula: cuando la reubicación se
+  // resuelve con folleto no se matricula a nadie. (Antes esto se colaba pasando
+  // 'pendiente_de_pago' como estado para que el correo se callara; el parámetro
+  // desapareció con la regla de matrícula inmediata.)
+  if (enrollmentId) {
+    try {
+      const { notifyEnrollment } = await import('@/lib/email/enrollment-notify')
+      await notifyEnrollment(targetGroupId, row.member_id)
+    } catch (e) {
+      console.warn('resolveStudyRequest: notifyEnrollment falló:', e)
+    }
   }
 
   const { data: before } = await supabase.from('study_requests').select('status').eq('id', id).maybeSingle()

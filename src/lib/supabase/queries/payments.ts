@@ -214,8 +214,9 @@ export async function autoEnrollApprovedToNextLevel(
     ...((byGroup.data ?? []) as Array<{ member_id: string }>).map(r => r.member_id),
   ])
 
-  // Si el nivel siguiente es gratis (costo 0), la matrícula queda ACTIVA de una;
-  // si tiene costo, queda 'pendiente_de_pago' + pago pendiente por comprobante.
+  // La matrícula queda ACTIVA siempre (regla 2026-08-04: el pago es un carril
+  // aparte). Si el nivel tiene costo se crea además el pago pendiente, que
+  // finanzas revisa por su cuenta sin tocar la matrícula.
   const free = amount <= 0
   const now = new Date().toISOString()
   let enrolled = 0
@@ -230,7 +231,7 @@ export async function autoEnrollApprovedToNextLevel(
         member_id: memberId,
         plan_id: np.id,
         group_id: successorGroupId,
-        status: memberFree ? 'enrolled' : 'pendiente_de_pago',
+        status: 'enrolled',
         enrolled_at: now,
       })
       .select('id').single()

@@ -50,8 +50,9 @@ para lo que dice; no se puede aplicar a otra cosa.
 
 ## Mientras esperás la respuesta
 
-Tu lugar no queda reservado indefinidamente. Si el grupo tiene cupo limitado, la beca no
-congela el espacio: pedila con tiempo y no el último día de matrícula.
+La beca no congela un espacio: si el grupo tiene cupo limitado y se llena, se llenó. Pedila
+con tiempo y no el último día de matrícula. Si ya te matriculaste, el lugar es tuyo y la beca
+se aplica al cobro.
 
 > Una beca se aplica a un cobro concreto, no a tu cuenta. Si el próximo ciclo también la
 > necesitás, se pide de nuevo.

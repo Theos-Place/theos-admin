@@ -158,6 +158,7 @@ export default function MiembroDetailPage() {
       rawStatus: s.status,
       requiresPayment: s.requires_payment,
       paymentStatus: s.payment_status,
+      paymentsCount: s.payments_count ?? 0,
       cost: s.cost,
       grade: s.grade ?? null,
       notes: s.notes ?? null,

@@ -295,6 +295,26 @@ export type PaymentWriteInput = {
   scholarship_id?: string | null
   paid_at?: string | null
   description?: string | null
+  /** Matrícula a la que se liga el pago (2026-08-04). Con esto, el pago sale en
+   *  la ficha de la matrícula y en la cola de revisión como uno más. */
+  enrollment_id?: string | null
+  concept?: 'matricula' | 'evento' | 'folletos' | 'prematrimonial' | 'otro' | null
+}
+
+/** Matrícula a la que se le quiere colgar un pago (2026-08-04). Devuelve null
+ *  si no existe. La usa el alta manual de finanzas para validar el
+ *  enrollment_id y heredar el miembro y el grupo. */
+export async function getEnrollmentForPayment(
+  enrollmentId: string,
+): Promise<{ member_id: string; group_id: string | null } | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .select('member_id, group_id')
+    .eq('id', enrollmentId)
+    .maybeSingle()
+  if (error) throw error
+  return (data as { member_id: string; group_id: string | null } | null) ?? null
 }
 
 export async function createPayment(input: PaymentWriteInput): Promise<{ id: string }> {

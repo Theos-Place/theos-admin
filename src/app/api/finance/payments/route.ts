@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import {
-  getPayments, getPaymentsPage, getPaymentStats, createPayment,
+  getPayments, getPaymentsPage, getPaymentStats, createPayment, getEnrollmentForPayment,
 } from '@/lib/supabase/queries/finance'
 
 // Validación runtime del alta manual de pagos. El input va directo al insert
@@ -23,8 +23,18 @@ const paymentWriteSchema = z
     scholarship_id: z.string().trim().min(1).nullish(),
     paid_at: z.string().trim().min(1).nullish(),
     description: z.string().trim().nullish(),
+    // 2026-08-04: finanzas puede colgar un pago de una MATRÍCULA existente —
+    // el cobro que quedó sin registrar, o el que se creó mal. Entra a la cola
+    // de revisión como cualquier otro y NO altera el estado de la matrícula
+    // (que es efectiva desde que se hizo).
+    enrollment_id: z.string().uuid().nullish(),
+    concept: z.enum(['matricula', 'evento', 'folletos', 'prematrimonial', 'otro']).nullish(),
   })
   .strict()
+  .refine(v => !v.enrollment_id || v.concept === 'matricula', {
+    message: 'Un pago ligado a una matrícula tiene que llevar concept "matricula".',
+    path: ['concept'],
+  })
 
 export async function GET(req: NextRequest) {
   try {
@@ -79,6 +89,27 @@ export async function POST(req: NextRequest) {
         { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
         { status: 400 },
       )
+    }
+    // La matrícula tiene que existir: un enrollment_id inventado dejaría el
+    // pago colgando de nada y no aparecería en la ficha de nadie.
+    if (parsed.data.enrollment_id) {
+      const enr = await getEnrollmentForPayment(parsed.data.enrollment_id)
+      if (!enr) {
+        return NextResponse.json({ error: 'La matrícula no existe.' }, { status: 404 })
+      }
+      // El pago es de quien tiene la matrícula: si vienen distintos, manda la
+      // matrícula (evita cobrarle a la persona equivocada por un typo).
+      if (parsed.data.member_id && parsed.data.member_id !== enr.member_id) {
+        return NextResponse.json(
+          { error: 'El pago es de otra persona que la de la matrícula.' },
+          { status: 409 },
+        )
+      }
+      parsed.data.member_id = enr.member_id
+      if (enr.group_id) {
+        parsed.data.study_group_id = parsed.data.study_group_id ?? enr.group_id
+        parsed.data.entity_type = parsed.data.entity_type ?? 'study_group'
+      }
     }
     const payment = await createPayment(parsed.data)
     return NextResponse.json(payment, { status: 201 })

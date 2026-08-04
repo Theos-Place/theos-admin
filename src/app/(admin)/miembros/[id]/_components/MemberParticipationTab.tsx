@@ -74,7 +74,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; cost: number; grade: number | null; notes: string | null }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -243,6 +243,14 @@ export function MemberParticipationTab({
                     })()}
                     <td className="px-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-3">
+                        {/* Más de un pago colgando de la misma matrícula: pasa
+                            cuando finanzas agrega un cobro de seguimiento. El
+                            badge de al lado es el estado del más nuevo. */}
+                        {row.paymentsCount > 1 && (
+                          <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
+                            {row.paymentsCount} pagos
+                          </span>
+                        )}
                         {(row.rawStatus === 'enrolled' || row.rawStatus === 'pendiente_de_pago') && row.requiresPayment && (
                           row.paymentStatus === 'en_revision' ? (
                             <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">Pago en revisión</span>

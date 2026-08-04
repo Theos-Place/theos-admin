@@ -305,6 +305,10 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   // payments tiene columnas nuevas fuera de los tipos generados → cliente laxo.
   const enrollmentIds = enrollments.map(e => e.id).filter(Boolean)
   const paymentStatusByEnrollment = new Map<string, string>()
+  // Cuántos pagos cuelgan de cada matrícula: desde 2026-08-04 finanzas puede
+  // agregar uno de seguimiento, así que puede haber más de uno y la ficha lo
+  // tiene que decir (el badge muestra el estado del MÁS NUEVO).
+  const paymentCountByEnrollment = new Map<string, number>()
   if (enrollmentIds.length) {
     const loose = supabase as unknown as SupabaseClient
     const { data: pays } = await loose
@@ -312,7 +316,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       .in('enrollment_id', enrollmentIds).eq('concept', 'matricula')
       .order('created_at', { ascending: false })
     for (const p of (pays ?? []) as Array<{ enrollment_id: string | null; review_status: string | null }>) {
-      if (p.enrollment_id && p.review_status && !paymentStatusByEnrollment.has(p.enrollment_id)) {
+      if (!p.enrollment_id) continue
+      paymentCountByEnrollment.set(p.enrollment_id, (paymentCountByEnrollment.get(p.enrollment_id) ?? 0) + 1)
+      if (p.review_status && !paymentStatusByEnrollment.has(p.enrollment_id)) {
         paymentStatusByEnrollment.set(p.enrollment_id, p.review_status)
       }
     }
@@ -378,6 +384,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         status: e.status,
         requires_payment: !!plan.requires_payment && Number(plan.cost ?? 0) > 0,
         payment_status: paymentStatusByEnrollment.get(e.id) ?? null,
+        payments_count: paymentCountByEnrollment.get(e.id) ?? 0,
         cost: Number(plan.cost ?? 0),
         // EST-8: nota numérica y resultado del cierre ('aprobado' | 'reprobado: motivo').
         grade: e.grade ?? null,

@@ -6,6 +6,7 @@ import { notifyEnrollment } from '@/lib/email/enrollment-notify'
 import { createAutoFolletoIfNeeded } from '@/lib/supabase/queries/folletos'
 import { ymdCR } from '@/lib/format'
 import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
+import { groupFullMessage } from '@/lib/studies/enrollment-capacity'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
 // Autoservicio real: cualquier autenticado puede matricularse a sí mismo; el
@@ -33,12 +34,13 @@ export async function POST(
       allowPendingStudyPayments: isStaff && override_pago_pendiente === true,
     })
     // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
-    await notifyEnrollment(id, targetMemberId, result.status)
+    await notifyEnrollment(id, targetMemberId)
     // FOL-1: si esta matrícula llenó el cupo, genera el tiquete de folletos
     // (idempotente vía índice único; best-effort: no revierte la matrícula).
-    if (result.status === 'enrolled') {
-      try { await createAutoFolletoIfNeeded(id, 'cupo_lleno', ymdCR()) } catch (e) { console.warn('folleto cupo_lleno:', e) }
-    }
+    // Desde 2026-08-04 toda matrícula cuenta acá: antes, las que tenían costo
+    // quedaban 'pendiente_de_pago' y no disparaban la regla hasta que alguien
+    // aprobara el comprobante — el folleto salía tarde.
+    try { await createAutoFolletoIfNeeded(id, 'cupo_lleno', ymdCR()) } catch (e) { console.warn('folleto cupo_lleno:', e) }
     return NextResponse.json({ ok: true, ...result }, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_COMPLETADO') {
@@ -47,9 +49,17 @@ export async function POST(
         { status: 409 },
       )
     }
+    if (error instanceof Error && error.message.startsWith('CUPO_LLENO')) {
+      const max = Number(error.message.split(':')[1] || 0)
+      return NextResponse.json(
+        { error: groupFullMessage(max), code: 'cupo_lleno' },
+        { status: 409 },
+      )
+    }
+    // A3: deuda del MISMO plan (se retiró debiendo la matrícula y vuelve).
     if (error instanceof Error && error.message === 'PAGO_PENDIENTE') {
       return NextResponse.json(
-        { error: 'El miembro ya tiene una matrícula pendiente de pago para este estudio; debe subir el comprobante para activarla.' },
+        { error: 'El miembro tiene el pago de este mismo estudio sin resolver; hay que completarlo antes de volver a matricularlo.' },
         { status: 409 },
       )
     }
