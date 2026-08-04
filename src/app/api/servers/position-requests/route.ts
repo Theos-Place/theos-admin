@@ -65,10 +65,18 @@ export async function POST(req: NextRequest) {
       const supabase = createAdminClient()
       const { data: committee } = await supabase.from('areas').select('name').eq('id', input.committee_id).maybeSingle()
       const { data: roleRows } = await supabase
-        .from('member_roles').select('member_id')
+        .from('member_roles')
+        .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
         .in('role', ['encargado_staff', 'coordinador_servidores', 'direccion', 'admin'])
         .eq('is_active', true)
-      const recipientIds = [...new Set(((roleRows ?? []) as Array<{ member_id: string }>).map(r => r.member_id))]
+      // Solo miembros ACTIVOS y sin auto-aviso al solicitante (mismo criterio
+      // que las solicitudes de estudio y de finanzas, 2026-08-04).
+      const recipientIds = [...new Set(
+        ((roleRows ?? []) as Array<{ member_id: string; member: { is_active: boolean } | null }>)
+          .filter(r => r.member?.is_active === true)
+          .map(r => r.member_id)
+          .filter(id => id !== auth.ctx.memberId),
+      )]
       if (recipientIds.length) {
         await supabase.from('internal_notifications').insert(recipientIds.map(rid => ({
           recipient_member_id: rid,

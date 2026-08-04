@@ -14,6 +14,7 @@ import { RelocationResolveGroupPicker } from '@/components/studies/RelocationRes
 import type { StudyRequest } from '@/types/study'
 import { getInitials } from '@/lib/format'
 import { requestQueueScope } from '@/lib/studies/request-assignment'
+import { resolveRequestSection, type RequestSection } from '@/lib/studies/request-deeplink'
 
 const TABS = [
   { key: 'relocation', label: 'Reubicaciones' },
@@ -41,16 +42,15 @@ export default function SolicitudesPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [createOpen, setCreateOpen] = useState(false)
   const [createFor, setCreateFor] = useState<MemberHit | null>(null)
-  // Tab inicial: si la URL lo dice (?tab=), se respeta — así una notificación
-  // abre el tab correcto y no el default. Las notificaciones viejas traen solo
-  // ?request=<id>: ese caso se resuelve al cargar, con el tipo de la solicitud.
+  // Tab inicial: lo resuelve resolveRequestSection (regla pura y testeada). Las
+  // notificaciones viejas traen solo ?request=<id> y las nuevas ?tab=&request=;
+  // en ambos casos, cuando la lista carga manda el TIPO real de la solicitud.
   const searchParams = useSearchParams()
-  const [sectionState, setSection] = useState<'prematrimonial' | 'relocation' | 'study_interest'>(() => {
-    const tab = searchParams.get('tab')
-    return tab === 'relocation' || tab === 'study_interest' || tab === 'prematrimonial'
-      ? tab
-      : searchParams.get('request') ? 'relocation' : 'prematrimonial'
-  })
+  const [sectionState, setSection] = useState<RequestSection>(() => resolveRequestSection({
+    tabParam: searchParams.get('tab'),
+    requestId: searchParams.get('request'),
+    fullQueue: true, // se corrige abajo si la persona solo ve reubicaciones
+  }))
 
   // EST-7: 'direccion' puede ejecutar el PATCH de gestión — también debe ver la
   // página. 2026-07-31: el comité de estudios bíblicos entra con alcance
@@ -76,12 +76,19 @@ export default function SolicitudesPage() {
         const list: StudyRequest[] = Array.isArray(d) ? d : []
         setRequests(list)
         setLoading(false)
-        // Deep-link de una notificación sin ?tab= : el tab sale del TIPO de la
-        // solicitud enlazada (RequestBoard después expande la fila y scrollea).
+        // Deep-link de una notificación: el tab sale del TIPO real de la
+        // solicitud enlazada — manda sobre el ?tab= (que puede faltar en las
+        // notificaciones viejas o no coincidir). RequestBoard después expande
+        // la fila y hace scroll.
         const id = searchParams.get('request')
-        if (id && !searchParams.get('tab')) {
-          const target = list.find(r => r.id === id)
-          if (target) setSection(target.request_type)
+        const target = id ? list.find(r => r.id === id) : undefined
+        if (target) {
+          setSection(resolveRequestSection({
+            tabParam: searchParams.get('tab'),
+            requestId: id,
+            requestType: target.request_type,
+            fullQueue: true,
+          }))
         }
       })
       .catch(() => { if (alive) { setRequests([]); setLoading(false) } })
@@ -149,7 +156,7 @@ export default function SolicitudesPage() {
           { key: 'relocation', label: 'Reubicaciones' },
         ]}
         active={section}
-        onChange={k => setSection(k as 'prematrimonial' | 'relocation' | 'study_interest')}
+        onChange={k => setSection(k as RequestSection)}
       />
 
       {section === 'prematrimonial' ? <PrematrimonialQueue /> : (

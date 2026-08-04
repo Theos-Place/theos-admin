@@ -315,11 +315,18 @@ export async function notifyFinanceRolesOfRequest(req: FinanceRequest): Promise<
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('member_roles')
-    .select('member_id')
+    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
     .in('role', ['admin', 'finanzas'])
     .eq('is_active', true)
   if (error) { console.warn('notifyFinanceRolesOfRequest:', error.message); return }
-  const recipients = Array.from(new Set((data ?? []).map(r => (r as { member_id: string }).member_id)))
+  // Mismo criterio que las solicitudes de estudio (2026-08-04): solo miembros
+  // ACTIVOS, y el solicitante no se notifica a sí mismo.
+  const recipients = Array.from(new Set(
+    (data ?? [])
+      .filter(r => (r as { member: { is_active: boolean } | null }).member?.is_active === true)
+      .map(r => (r as { member_id: string }).member_id)
+      .filter(id => id !== req.member_id),
+  ))
   if (recipients.length === 0) return
 
   const isScholarship = req.request_type === 'scholarship'

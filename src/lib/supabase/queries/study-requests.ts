@@ -19,6 +19,10 @@
  */
 import { requestZones } from '@/lib/studies/request-prefs'
 import { isStudyCommitteeArea } from '@/lib/studies/request-assignment'
+import {
+  STUDY_REQUEST_NOTIFY_ROLES, selectStudyRequestRecipients,
+} from '@/lib/studies/request-notifications'
+import { requestDeepLink } from '@/lib/studies/request-deeplink'
 import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
 import type {
   StudyRequest, StudyRequestWriteInput, StudyRequestStatus, StudyRequestType,
@@ -333,7 +337,7 @@ export async function assignStudyRequest(
     type: 'study_request_assigned',
     title: 'Te asignaron una solicitud',
     body: `Te asignaron una solicitud de ${TYPE_LABEL_NOTIF[result.request_type]} de ${result.member_name}`,
-    link: `/estudios/solicitudes?tab=${result.request_type}&request=${result.id}`,
+    link: requestDeepLink(result.request_type, result.id),
   })
   if (nErr) console.warn('assignStudyRequest: notificación falló:', nErr.message)
 
@@ -529,25 +533,31 @@ export async function resolveStudyRequest(
 
 // ── Destinatarios de notificaciones ─────────────────────────────────────────
 
-const STUDY_NOTIFY_ROLES = ['coordinador_estudios', 'coordinador_dirigentes', 'admin'] as const
-
-/** member_id de TODOS los miembros activos con rol activo de coordinación de
- *  estudios/dirigentes o admin. Deduplicado: si tiene varios de esos roles,
- *  aparece una sola vez. Es la audiencia automática de las notificaciones de
- *  solicitudes de estudio (reemplaza la lista manual). */
-export async function getStudyNotificationRecipients(): Promise<string[]> {
+/** member_id de los miembros ACTIVOS con rol ACTIVO de la allowlist
+ *  (coordinación de estudios/dirigentes, dirección, admin). Deduplicado.
+ *  Es la audiencia automática de las notificaciones de solicitudes de estudio.
+ *  La regla vive en selectStudyRequestRecipients (pura y testeada): acá solo
+ *  se traen las filas. `excludeMemberId` saca al solicitante, que no necesita
+ *  el aviso de su propia solicitud aunque sea coordinador. */
+export async function getStudyNotificationRecipients(
+  opts: { excludeMemberId?: string | null } = {},
+): Promise<string[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('member_roles')
-    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
-    .in('role', STUDY_NOTIFY_ROLES as unknown as string[])
+    .select('member_id, role, is_active, member:members!member_roles_member_id_fkey(is_active)')
+    .in('role', STUDY_REQUEST_NOTIFY_ROLES as unknown as string[])
     .eq('is_active', true)
   if (error) throw error
-  const ids = new Set<string>()
-  for (const r of (data ?? []) as Array<{ member_id: string; member: { is_active: boolean } | null }>) {
-    if (r.member?.is_active) ids.add(r.member_id)
-  }
-  return Array.from(ids)
+  const rows = ((data ?? []) as Array<{
+    member_id: string; role: string; is_active: boolean; member: { is_active: boolean } | null
+  }>).map(r => ({
+    member_id: r.member_id,
+    role: r.role,
+    role_active: r.is_active !== false,
+    member_active: r.member?.is_active === true,
+  }))
+  return selectStudyRequestRecipients(rows, opts)
 }
 
 /** Miembros elegibles como destinatarios: con rol activo de coordinación/admin. */
@@ -647,7 +657,7 @@ const NOTIF_META: Record<StudyRequestType, { type: InternalNotificationType; tit
  *  (deduplicados). Best-effort. */
 export async function notifyRecipientsOfRequest(req: StudyRequest): Promise<void> {
   const supabase = createAdminClient()
-  const memberIds = await getStudyNotificationRecipients()
+  const memberIds = await getStudyNotificationRecipients({ excludeMemberId: req.member_id })
   if (memberIds.length === 0) return
   const meta = NOTIF_META[req.request_type]
   const rows = memberIds.map(memberId => ({
@@ -655,7 +665,7 @@ export async function notifyRecipientsOfRequest(req: StudyRequest): Promise<void
     type: meta.type,
     title: meta.title,
     body: `${req.member_name} envió una solicitud.${req.reason ? ` Motivo: ${req.reason.slice(0, 140)}` : req.plan_name ? ` Interés: ${req.plan_name}` : ''}`,
-    link: `/estudios/solicitudes?tab=${req.request_type}&request=${req.id}`,
+    link: requestDeepLink(req.request_type, req.id),
   }))
   const { error } = await supabase.from('internal_notifications').insert(rows)
   if (error) console.warn('notifyRecipientsOfRequest:', error.message)

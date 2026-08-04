@@ -122,12 +122,21 @@ export function RequestBoard<R extends BaseRequest>({
   // específica — cambia al tab de su tipo, quita el filtro de estado, expande
   // su año y la fila, y hace scroll. Una sola vez por carga.
   const focusedRef = useRef(false)
+  // `tabs` llega inline desde la página (array nuevo en cada render): la dep va
+  // por las keys para no re-disparar el efecto de gusto.
+  const tabKeys = tabs.map(t => t.key).join(',')
   useEffect(() => {
     if (focusedRef.current || requests.length === 0) return
     const id = new URLSearchParams(window.location.search).get('request')
     if (!id) return
     const req = requests.find(r => r.id === id)
     if (!req) return
+    // El tablero puede estar montado con UN solo tipo (la página de estudios
+    // renderiza un tab por sección): si la solicitud es de otro tipo, la que
+    // cambia de sección es la página — acá cambiar el tab dejaría la lista
+    // filtrada por un tipo que no está en `tabs` y se vería vacía (bug
+    // 2026-08-04: el deep link "abría otro tab" sin la solicitud).
+    if (!tabKeys.split(',').includes(req.request_type)) return
     focusedRef.current = true
     setTab(req.request_type)
     setStatusFilter('all')
@@ -136,7 +145,7 @@ export function RequestBoard<R extends BaseRequest>({
     setTimeout(() => {
       document.querySelector(`[data-request-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 150)
-  }, [requests])
+  }, [requests, tabKeys])
 
   const visible = useMemo(() => {
     const fromTs = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() : null
@@ -186,7 +195,7 @@ export function RequestBoard<R extends BaseRequest>({
     for (const t of tabs) m[t.key] = 0
     for (const r of requests) if (r.status === 'open' || r.status === 'in_review') m[r.request_type] = (m[r.request_type] ?? 0) + 1
     return m
-  }, [requests, tabs])
+  }, [requests, tabKeys])
 
   function toggleYear(y: number) {
     setExpandedYears(prev => {
