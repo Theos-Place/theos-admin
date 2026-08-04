@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView, resolveTargetMemberId } from '@/lib/auth/guard'
+import { requireRoles, resolveTargetMemberId, getAuthContext } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
-import { getFormResponses, submitResponse, hasMemberResponded } from '@/lib/supabase/queries/forms'
+import {
+  getFormResponses, submitResponse, hasMemberResponded, hasFormAccessGrant,
+} from '@/lib/supabase/queries/forms'
+import { formViewerScope } from '@/lib/auth/forms-scope'
 
 export async function GET(
   req: NextRequest,
@@ -18,8 +21,17 @@ export async function GET(
       if (!self.ctx.memberId) return NextResponse.json({ answered: false })
       return NextResponse.json({ answered: await hasMemberResponded(id, self.ctx.memberId) })
     }
-    const auth = await requireModuleView('formularios')
-    if (auth.res) return auth.res
+    // Las respuestas las lee el módulo formularios o quien tenga un acceso
+    // puntual a ESTE formulario (form_access_grants). Regla pura: formViewerScope.
+    const ctx = await getAuthContext()
+    if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    const scope = formViewerScope({
+      roles: ctx.roles,
+      memberId: ctx.memberId,
+      form: { id },
+      hasGrant: await hasFormAccessGrant(id, ctx.memberId),
+    })
+    if (scope === 'none') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     return NextResponse.json(await getFormResponses(id))
   } catch (error) {
     console.error('GET /api/forms/[id]/responses:', error)

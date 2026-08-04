@@ -345,3 +345,92 @@ export async function submitResponse(
 
   return { id: responseId }
 }
+
+// ── Accesos puntuales por formulario (2026-08-04) ───────────────────────────
+// Tabla form_access_grants: dar a una persona la LECTURA y EXPORTACIÓN de las
+// respuestas de UN formulario. La decisión de autorización vive en
+// src/lib/auth/forms-scope.ts (pura); acá solo se leen y escriben las filas.
+
+export type FormAccessGrant = {
+  id: string
+  form_id: string
+  member_id: string
+  member_name: string
+  member_email: string | null
+  granted_by_name: string | null
+  granted_at: string
+}
+
+/** ¿Esta persona tiene acceso puntual a ESTE formulario? */
+export async function hasFormAccessGrant(formId: string, memberId: string | null): Promise<boolean> {
+  if (!memberId) return false
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('form_access_grants')
+    .select('id')
+    .eq('form_id', formId)
+    .eq('member_id', memberId)
+    .maybeSingle()
+  if (error) { console.warn('hasFormAccessGrant:', error.message); return false }
+  return !!data
+}
+
+/** Formularios a los que esta persona tiene acceso puntual (para acotar el
+ *  listado de quien no tiene el módulo). */
+export async function getGrantedFormIds(memberId: string | null): Promise<string[]> {
+  if (!memberId) return []
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('form_access_grants').select('form_id').eq('member_id', memberId)
+  if (error) { console.warn('getGrantedFormIds:', error.message); return [] }
+  return (data ?? []).map(r => (r as { form_id: string }).form_id)
+}
+
+/** Personas con acceso puntual a un formulario (para la pantalla de config). */
+export async function getFormAccessGrants(formId: string): Promise<FormAccessGrant[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('form_access_grants')
+    .select(`
+      id, form_id, member_id, granted_at,
+      member:members!form_access_grants_member_id_fkey(first_name, last_name, email),
+      granter:members!form_access_grants_granted_by_fkey(first_name, last_name)
+    `)
+    .eq('form_id', formId)
+    .order('granted_at', { ascending: true })
+  if (error) throw error
+  type Row = {
+    id: string; form_id: string; member_id: string; granted_at: string
+    member: { first_name: string; last_name: string; email: string | null } | null
+    granter: { first_name: string; last_name: string } | null
+  }
+  return ((data ?? []) as Row[]).map(r => ({
+    id: r.id,
+    form_id: r.form_id,
+    member_id: r.member_id,
+    member_name: [r.member?.first_name, r.member?.last_name].filter(Boolean).join(' ') || '—',
+    member_email: r.member?.email ?? null,
+    granted_by_name: r.granter ? [r.granter.first_name, r.granter.last_name].filter(Boolean).join(' ') : null,
+    granted_at: r.granted_at,
+  }))
+}
+
+/** Alta idempotente: repetir el mismo acceso no falla ni duplica (UNIQUE). */
+export async function grantFormAccess(
+  formId: string, memberId: string, grantedBy: string | null,
+): Promise<{ created: boolean }> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('form_access_grants')
+    .upsert({ form_id: formId, member_id: memberId, granted_by: grantedBy },
+      { onConflict: 'form_id,member_id', ignoreDuplicates: true })
+  if (error) throw error
+  return { created: true }
+}
+
+export async function revokeFormAccess(formId: string, memberId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('form_access_grants').delete().eq('form_id', formId).eq('member_id', memberId)
+  if (error) throw error
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getFormById, updateForm, deleteForm, resolveDynamicOptions } from '@/lib/supabase/queries/forms'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
@@ -30,7 +30,9 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('comunicaciones', 'direccion', 'encargado_staff')
+    // Editar la ESTRUCTURA del formulario: permiso de edición del módulo. El
+    // acceso puntual (form_access_grants) NO alcanza — ese es solo de lectura.
+    const auth = await requireModuleView('formularios', { action: 'edit' })
     if (auth.res) return auth.res
   try {
     const { id } = await params
@@ -51,6 +53,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+    // Borrar SÍ queda con lista explícita: se lleva las respuestas por delante,
+    // así que el rol 'forms' (view/create/edit/export) no lo tiene.
     const auth = await requireRoles('comunicaciones', 'direccion', 'encargado_staff')
     if (auth.res) return auth.res
   try {

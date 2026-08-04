@@ -29,7 +29,7 @@ export async function GET() {
     if (!member) {
       // Usuario de auth sin member enlazado: sin acceso a módulos.
       return NextResponse.json({
-        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false },
+        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false, granted_form_ids: [] },
       })
     }
 
@@ -68,6 +68,17 @@ export async function GET() {
       console.warn('auth/me: comité de estudios:', e instanceof Error ? e.message : e)
     }
 
+    // Accesos puntuales a formularios (form_access_grants): habilitan
+    // /formularios y la pantalla de respuestas de ESOS formularios a gente sin
+    // el módulo. Mismo patrón que in_study_committee.
+    let grantedFormIds: string[] = []
+    try {
+      const { getGrantedFormIds } = await import('@/lib/supabase/queries/forms')
+      grantedFormIds = await getGrantedFormIds(member.id)
+    } catch (e) {
+      console.warn('auth/me: accesos a formularios:', e instanceof Error ? e.message : e)
+    }
+
     const name = `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim() || (member.email ?? '')
 
     return NextResponse.json({
@@ -83,6 +94,7 @@ export async function GET() {
         has_cedula: !!(member.cedula && String(member.cedula).trim()),
         is_system: !!member.is_system,
         in_study_committee: inStudyCommittee,
+        granted_form_ids: grantedFormIds,
       },
     })
   } catch (error) {

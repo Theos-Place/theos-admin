@@ -14,6 +14,7 @@ import { Modal } from '@/components/shared/Modal'
 import { generateCSV } from '@/lib/export'
 import { isSelectionForm, SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 import { useAuth } from '@/hooks/useAuth'
+import { usePermissions } from '@/hooks/usePermissions'
 
 function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   if (!form) return
@@ -37,6 +38,10 @@ export default function RespuestasPage() {
   const [loading, setLoading] = useState(true)
   const [detailResponse, setDetailResponse] = useState<FormResponse | null>(null)
   const { hasRole } = useAuth()
+  // Acceso puntual (form_access_grants): lee y exporta, pero no edita la
+  // estructura del formulario — el botón de editar solo con el módulo.
+  const { can } = usePermissions()
+  const canEditForm = can('formularios', 'edit')
 
   useEffect(() => {
     let alive = true
@@ -167,12 +172,14 @@ export default function RespuestasPage() {
               Selección del comité
             </Link>
           )}
-          <Link
-            href={`/formularios/${id}`}
-            className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-          >
-            Editar formulario
-          </Link>
+          {canEditForm && (
+            <Link
+              href={`/formularios/${id}`}
+              className="rounded-full border px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+            >
+              Editar formulario
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => exportToCSV(form, responses)}

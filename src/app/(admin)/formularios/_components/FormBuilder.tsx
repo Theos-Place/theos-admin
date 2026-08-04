@@ -9,8 +9,9 @@ import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2 } from 'lucide-react'
+import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2, ShieldCheck } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { FormAccessPanel } from './FormAccessPanel'
 import { useToast } from '@/components/shared/Toast'
 
 // Tipos estructurales que no exigen label (el separador de página es un divisor).
@@ -107,6 +108,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
   const [focusLogic, setFocusLogic]   = useState(false)
   const [showLogicPanel, setShowLogicPanel] = useState(false)
+  const [showAccessPanel, setShowAccessPanel] = useState(false)
   const [saved, setSaved]             = useState(false)
   const [saving, setSaving]           = useState(false)
   const [nameError, setNameError]     = useState(false)
@@ -263,6 +265,16 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             <GitBranch size={12} />
             Lógica
           </button>
+          {formId && (
+            <button
+              type="button"
+              onClick={() => setShowAccessPanel(true)}
+              className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+            >
+              <ShieldCheck size={12} />
+              Accesos
+            </button>
+          )}
           <Link
             href={formId ? `/formularios/${formId}/preview` : '#'}
             className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
@@ -419,6 +431,23 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           )}
         </div>
       </div>
+
+      {/* Accesos puntuales a ESTE formulario (ver/exportar respuestas) */}
+      {showAccessPanel && formId && (
+        <Modal onClose={() => setShowAccessPanel(false)} titleId="accesos-formulario-title" width={520}>
+          <div className="flex flex-col">
+            <div className="sticky top-0 flex items-center gap-2 px-5 py-4 border-b shrink-0 border-[var(--outline-variant)] bg-surface-card">
+              <ShieldCheck size={16} className="text-navy-light/60" />
+              <p id="accesos-formulario-title" className="text-sm font-bold text-navy font-display">
+                Personas con acceso a este formulario
+              </p>
+            </div>
+            <div className="p-5">
+              <FormAccessPanel formId={formId} />
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Logic overview modal */}
       {showLogicPanel && (
