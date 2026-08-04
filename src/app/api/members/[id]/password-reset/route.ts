@@ -3,14 +3,17 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendPasswordLink } from '@/lib/auth/password-link'
+import { sendAccountReadyEmail } from '@/lib/auth/account-ready'
 
-// Envía al miembro el correo para definir/restablecer su contraseña.
-// Solo roles administrativos (los que ven el tab Administrativo).
+// Envía al miembro las INSTRUCCIONES para recuperar su acceso. Solo roles
+// administrativos (los que ven el tab Administrativo).
 //
 // 2026-08-03: dejó de usar resetPasswordForEmail (correo por el SMTP de Supabase
-// y enlace que solo servía en el navegador donde se pedía). Ahora usa el mismo
-// camino que el flujo público: enlace propio + envío por SES.
+// y enlace que solo servía en el navegador donde se pedía).
+// 2026-08-04: y dejó de mandar el enlace con token. Lo dispara un admin, así que
+// tiene el mismo problema que la invitación: el enlace vence antes de que la
+// persona abra el correo. Ahora manda el paso a paso para que ella lo pida desde
+// la pantalla de ingreso y lo use en el momento (ver account-ready.ts).
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireRoles(...STUDY_ADMIN_ROLES)
   if (auth.res) return auth.res
@@ -25,22 +28,23 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const { data: full } = await supabase
       .from('members').select('first_name, auth_user_id').eq('id', id).maybeSingle()
     const m = full as { first_name: string | null; auth_user_id: string | null } | null
-    const res = await sendPasswordLink({
-      email,
-      tieneCuenta: !!m?.auth_user_id,
-      nombre: m?.first_name ?? null,
-    })
-    if (!res.sent) {
+    // Sin cuenta de Auth no hay nada que recuperar: primero hay que crearla
+    // (el botón de la ficha ya distingue los dos casos).
+    if (!m?.auth_user_id) {
       return NextResponse.json(
-        { error: res.reason === 'sin_cuenta'
-            ? 'Este miembro todavía no tiene cuenta de acceso: creála primero.'
-            : 'No se pudo enviar el correo.' },
+        { error: 'Este miembro todavía no tiene cuenta de acceso: creála primero.' },
         { status: 400 },
       )
     }
+    const res = await sendAccountReadyEmail({
+      email,
+      nombre: m?.first_name ?? null,
+      kind: 'restablecer',
+    })
+    if (!res.sent) return NextResponse.json({ error: 'No se pudo enviar el correo.' }, { status: 400 })
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('POST /api/members/[id]/password-reset:', error)
-    return NextResponse.json({ error: 'No se pudo enviar el correo de restablecimiento.' }, { status: 500 })
+    return NextResponse.json({ error: 'No se pudieron enviar las instrucciones.' }, { status: 500 })
   }
 }

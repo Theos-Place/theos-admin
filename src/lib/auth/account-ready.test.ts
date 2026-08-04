@@ -37,6 +37,21 @@ describe('correo de instrucciones para entrar', () => {
   })
 })
 
+describe('variante "restablecer" (la manda un admin desde la ficha)', () => {
+  const reset = accountReadyBody('Floriana', loginUrlFor(SITE), 'floriana@theosplace.org', 'restablecer')
+
+  it('tampoco lleva token', () => {
+    for (const rastro of ['token_hash', 'token=', '/auth/continuar', '/auth/confirm', 'type=invite', 'type=recovery']) {
+      expect(reset).not.toContain(rastro)
+    }
+  })
+
+  it('manda al enlace de recuperar, no al de primera vez', () => {
+    expect(reset).toContain('Recuperar acceso')
+    expect(reset).not.toContain('Primera vez en la nueva plataforma')
+  })
+})
+
 describe('los caminos de administración no mandan links con token', () => {
   // Guarda de regresión: si alguien vuelve a meter inviteUserByEmail o el correo
   // con token en estos dos caminos, el link vencido regresa.
@@ -46,6 +61,7 @@ describe('los caminos de administración no mandan links con token', () => {
   const rutas = [
     'src/lib/auth/invite.ts',
     'src/app/api/members/[id]/resend-activation/route.ts',
+    'src/app/api/members/[id]/password-reset/route.ts',
   ]
 
   for (const ruta of rutas) {

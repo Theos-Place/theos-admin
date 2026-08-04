@@ -155,7 +155,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       const res = await fetch(`/api/members/${memberId}/password-reset`, { method: 'POST' })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el correo.')
-      setPwMsg({ ok: true, text: 'Correo de restablecimiento enviado.' })
+      setPwMsg({ ok: true, text: 'Instrucciones para recuperar el acceso enviadas.' })
     } catch (e) {
       setPwMsg({ ok: false, text: e instanceof Error ? e.message : 'No se pudo enviar el correo.' })
     } finally {
@@ -251,7 +251,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
                 disabled={pwBusy}
                 className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
               >
-                {pwBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><KeyRound size={14} /> Enviar enlace de restablecer contraseña</>}
+                {pwBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><KeyRound size={14} /> Enviar instrucciones para recuperar el acceso</>}
               </button>
             </div>
 
