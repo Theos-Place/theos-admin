@@ -192,7 +192,7 @@ export function RequestBoard<R extends BaseRequest>({
 
   const countByTab = useMemo(() => {
     const m: Record<string, number> = {}
-    for (const t of tabs) m[t.key] = 0
+    for (const key of tabKeys.split(',')) m[key] = 0
     for (const r of requests) if (r.status === 'open' || r.status === 'in_review') m[r.request_type] = (m[r.request_type] ?? 0) + 1
     return m
   }, [requests, tabKeys])

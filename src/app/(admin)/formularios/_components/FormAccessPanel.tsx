@@ -7,7 +7,7 @@
 //
 // La administración vive acá, en la configuración de CADA formulario (no en el
 // evento). API: /api/forms/[id]/access.
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2, Trash2, UserPlus, ShieldCheck } from 'lucide-react'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
@@ -28,18 +28,18 @@ export function FormAccessPanel({ formId }: { formId: string }) {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/forms/${formId}/access`)
-      setGrants(res.ok ? await res.json() : [])
-    } catch {
-      setGrants([])
-    } finally {
-      setLoading(false)
-    }
-  }, [formId])
-
-  useEffect(() => { load() }, [load])
+  // Recarga desde el servidor. `reloadKey` la dispara después de agregar a
+  // alguien (el alta devuelve la fila, pero la lista se relee para traer el
+  // nombre de quien dio el acceso, que lo resuelve el server).
+  const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    let alive = true
+    fetch(`/api/forms/${formId}/access`)
+      .then(r => (r.ok ? r.json() : []))
+      .then(d => { if (alive) { setGrants(Array.isArray(d) ? d : []); setLoading(false) } })
+      .catch(() => { if (alive) { setGrants([]); setLoading(false) } })
+    return () => { alive = false }
+  }, [formId, reloadKey])
 
   async function add(m: MemberHit) {
     setBusy(m.id)
@@ -50,7 +50,7 @@ export function FormAccessPanel({ formId }: { formId: string }) {
         body: JSON.stringify({ member_id: m.id }),
       })
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'No se pudo dar el acceso')
-      await load()
+      setReloadKey(k => k + 1)
       toast(`${m.first_name} ya puede ver las respuestas de este formulario`, 'success')
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo dar el acceso', 'error')
