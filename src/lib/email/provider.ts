@@ -11,6 +11,7 @@
  */
 import nodemailer from 'nodemailer'
 import { listUnsubscribeHeader } from '@/lib/email/footer'
+import { providerMessageId } from '@/lib/email/ses-message-id'
 
 /** Token de error cuando no hay proveedor configurado (la UI lo traduce). */
 export const EMAIL_NOT_CONFIGURED = 'EMAIL_NOT_CONFIGURED'
@@ -114,5 +115,8 @@ export async function sendEmail({ to, subject, html, fromName, kind, unsubscribe
       ...headers,
     },
   })
-  return { messageId: result.messageId ?? '' }
+  // El ID de SES, no el Message-ID que generó nodemailer: es el que llega en los
+  // eventos de SNS, así que es el único que empareja entregas y rebotes con su
+  // envío. Ver ses-message-id.ts.
+  return { messageId: providerMessageId(result.response, result.messageId) }
 }

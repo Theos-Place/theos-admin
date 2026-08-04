@@ -5,6 +5,7 @@
  * Server-side (service role).
  */
 import { createAdminClient } from '@/lib/supabase/admin'
+import { normalizeSesMessageId } from '@/lib/email/ses-message-id'
 
 type Kind = 'bounced' | 'complained'
 
@@ -59,10 +60,13 @@ export async function markEmailDelivered(email: string, messageId?: string | nul
   if (!addr) return
   const now = new Date().toISOString()
 
-  if (messageId) {
+  // Se normaliza igual que al guardar (provider.ts): SNS manda el ID pelado, pero
+  // si algún día llegara como Message-ID con <> y dominio, seguiría emparejando.
+  const sesId = normalizeSesMessageId(messageId)
+  if (sesId) {
     const { data } = await supabase.from('message_logs')
       .update({ status: 'delivered', delivered_at: now })
-      .eq('provider_message_id', messageId)
+      .eq('provider_message_id', sesId)
       .in('status', ['sent', 'pending'])
       .select('id')
     if ((data ?? []).length > 0) return
