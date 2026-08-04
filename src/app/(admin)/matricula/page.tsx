@@ -1108,9 +1108,14 @@ function ConfirmModal({
 // PayMatriculaButton del perfil del miembro, pero abierto de una vez en vez de
 // requerir un click extra.
 //
-// 2026-08-04: la matrícula YA está hecha cuando este modal se abre. Cerrar sin
-// subir nada NO la deshace — el cobro queda pendiente y finanzas le da
-// seguimiento. Antes, cerrar acá anulaba la matrícula recién creada.
+// 2026-08-04: la matrícula YA está hecha cuando este modal se abre — cerrar no
+// la deshace (antes sí: cerrar anulaba la matrícula recién creada).
+// El comprobante se pide ACÁ y no se ofrece salida: sin botón de "después" y
+// sin cierre por fondo ni Esc. Decisión de TI: el momento de subirlo es este,
+// con el SINPE recién hecho; la gente que "lo sube después" no lo sube.
+// Lo único que no se puede impedir es que cierren la pestaña, y ahí la
+// matrícula queda igual con su cobro pendiente — eso es la regla, no un
+// agujero.
 function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
   enrollmentId: string; studyName: string; amount: number; onDone: () => void
 }) {
@@ -1139,9 +1144,9 @@ function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
 
   return (
     <Modal
-      // Cerrar es una salida legítima: la matrícula ya está hecha y el cobro
-      // queda pendiente.
-      onClose={() => { if (!busy) onDone() }}
+      // Sin salida por fondo ni Esc mientras falte el comprobante: el único
+      // camino es enviarlo. Ya enviado, cerrar es lo normal.
+      onClose={() => { if (done) onDone() }}
       titleId="comprobante-matricula-title" width={420}
     >
       <div className="p-6 space-y-4">
@@ -1164,9 +1169,9 @@ function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
             <h3 id="comprobante-matricula-title" className="text-base font-bold text-navy font-display">Pagar matrícula</h3>
             <p className="text-[13px] text-navy-light/70 font-body">
               <strong className="text-navy">La matrícula de {studyName} ya quedó hecha.</strong>{' '}
-              Falta el pago de {formatCRC(amount)}: subí el comprobante (screenshot del SINPE
-              o transferencia) y el número de referencia. Si preferís, lo hacés después desde
-              tu perfil — el lugar no se pierde.
+              Falta el pago de {formatCRC(amount)}: subí acá el comprobante (screenshot del
+              SINPE o transferencia) y el número de referencia. Hacelo ahora, con el pago
+              recién hecho — es el momento en que tenés la captura a mano.
             </p>
             <div className="space-y-1">
               <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>
@@ -1189,20 +1194,13 @@ function ReceiptModal({ enrollmentId, studyName, amount, onDone }: {
               />
             </div>
             {error && <p className="text-[12px] text-coral font-body">{error}</p>}
-            <div className="flex gap-2 pt-1">
+            <div className="pt-1">
               <button
                 onClick={submit}
                 disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+                className={cn('w-full rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
               >
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
-              </button>
-              <button
-                onClick={onDone}
-                disabled={busy}
-                className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
-              >
-                Lo subo después
               </button>
             </div>
           </>
