@@ -63,8 +63,42 @@ export function toClosePayload(rows: readonly CloseRow[], canRecommend: boolean)
   return rows.filter(r => r.status_result !== '').map(r => toClosePayloadItem(r, canRecommend))
 }
 
-/** Cuántos reprobados quedaron SIN justificación (bloquea el cierre). El
- *  comentario del retirado es opcional, así que no entra en esta cuenta. */
-export function failsWithoutReason(rows: readonly CloseRow[]): number {
-  return rows.filter(r => r.status_result === 'reprobado' && !r.fail_reason.trim()).length
+/** Qué motivo exige cada resultado. 'aprobado' no pide ninguno. */
+export type MissingReason = { member_id: string; status: 'reprobado' | 'retirado' }
+
+/**
+ * Filas a las que les falta el motivo OBLIGATORIO. Bloquean el cierre.
+ *  · reprobado → fail_reason (justificación)
+ *  · retirado  → withdraw_reason (motivo del retiro)
+ *
+ * 2026-08-04: el motivo del retiro pasó de opcional a OBLIGATORIO. Un retiro sin
+ * motivo deja al estudiante fuera del grupo sin rastro de por qué, y es el dato
+ * que se necesita después para reubicarlo o darle seguimiento.
+ */
+export function missingReasons(rows: readonly CloseRow[]): MissingReason[] {
+  const falta: MissingReason[] = []
+  for (const r of rows) {
+    if (r.status_result === 'reprobado' && !r.fail_reason.trim()) {
+      falta.push({ member_id: r.member_id, status: 'reprobado' })
+    }
+    if (r.status_result === 'retirado' && !r.withdraw_reason.trim()) {
+      falta.push({ member_id: r.member_id, status: 'retirado' })
+    }
+  }
+  return falta
+}
+
+/** Texto del bloqueo: qué falta y de cuál estudiante. `nameOf` resuelve el
+ *  nombre (la regla es pura y no conoce el roster). */
+export function missingReasonsMessage(
+  falta: readonly MissingReason[],
+  nameOf: (memberId: string) => string,
+): string {
+  if (falta.length === 0) return ''
+  const partes = falta.map(f => `${nameOf(f.member_id)} (${
+    f.status === 'reprobado' ? 'falta la justificación de la reprobación' : 'falta el motivo del retiro'
+  })`)
+  return partes.length === 1
+    ? `Antes de cerrar: ${partes[0]}.`
+    : `Antes de cerrar faltan ${partes.length} motivos: ${partes.join('; ')}.`
 }

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { toClosePayloadItem, toClosePayload, failsWithoutReason, type CloseRow } from './close-payload'
+import {
+  toClosePayloadItem, toClosePayload, missingReasons, missingReasonsMessage, type CloseRow,
+} from './close-payload'
 
 const row = (over: Partial<CloseRow> = {}): CloseRow => ({
   member_id: 'm1', status_result: 'aprobado', grade: '', fail_reason: '', withdraw_reason: '',
@@ -30,7 +32,7 @@ describe('toClosePayloadItem', () => {
     expect(item.fail_reason).toBeNull()
   })
 
-  it('el comentario del retiro es OPCIONAL: vacío viaja como null', () => {
+  it('el motivo del retiro vacío viaja como null (el bloqueo lo hace missingReasons)', () => {
     expect(toClosePayloadItem(row({ status_result: 'retirado' }), false).withdraw_reason).toBeNull()
     expect(toClosePayloadItem(row({ status_result: 'retirado', withdraw_reason: '   ' }), false).withdraw_reason).toBeNull()
   })
@@ -63,16 +65,51 @@ describe('toClosePayload', () => {
   })
 })
 
-describe('failsWithoutReason', () => {
-  it('cuenta los reprobados sin justificación', () => {
-    expect(failsWithoutReason([
-      row({ status_result: 'reprobado' }),
-      row({ status_result: 'reprobado', fail_reason: 'ok' }),
-      row({ status_result: 'aprobado' }),
-    ])).toBe(1)
+describe('missingReasons', () => {
+  it('marca los reprobados sin justificación', () => {
+    expect(missingReasons([
+      row({ member_id: 'a', status_result: 'reprobado' }),
+      row({ member_id: 'b', status_result: 'reprobado', fail_reason: 'ok' }),
+      row({ member_id: 'c', status_result: 'aprobado' }),
+    ])).toEqual([{ member_id: 'a', status: 'reprobado' }])
   })
 
-  it('un retirado sin comentario NO bloquea (es opcional)', () => {
-    expect(failsWithoutReason([row({ status_result: 'retirado' })])).toBe(0)
+  it('un retirado SIN motivo bloquea (obligatorio desde 2026-08-04)', () => {
+    expect(missingReasons([row({ member_id: 'a', status_result: 'retirado' })]))
+      .toEqual([{ member_id: 'a', status: 'retirado' }])
+    expect(missingReasons([row({ member_id: 'a', status_result: 'retirado', withdraw_reason: '   ' })]))
+      .toEqual([{ member_id: 'a', status: 'retirado' }])
+  })
+
+  it('con motivo escrito, el retirado pasa', () => {
+    expect(missingReasons([row({ status_result: 'retirado', withdraw_reason: 'se mudó' })])).toEqual([])
+  })
+
+  it('el aprobado nunca pide motivo', () => {
+    expect(missingReasons([row({ status_result: 'aprobado' })])).toEqual([])
+    expect(missingReasons([row({ status_result: '' })])).toEqual([])
+  })
+})
+
+describe('missingReasonsMessage', () => {
+  const nameOf = (id: string) => (id === 'a' ? 'Ana Ruiz' : 'Beto Mora')
+
+  it('sin faltantes, sin mensaje', () => {
+    expect(missingReasonsMessage([], nameOf)).toBe('')
+  })
+
+  it('dice QUÉ falta y DE QUIÉN', () => {
+    expect(missingReasonsMessage([{ member_id: 'a', status: 'retirado' }], nameOf))
+      .toBe('Antes de cerrar: Ana Ruiz (falta el motivo del retiro).')
+  })
+
+  it('varios: los lista a todos', () => {
+    const msg = missingReasonsMessage([
+      { member_id: 'a', status: 'retirado' },
+      { member_id: 'b', status: 'reprobado' },
+    ], nameOf)
+    expect(msg).toContain('faltan 2 motivos')
+    expect(msg).toContain('Ana Ruiz (falta el motivo del retiro)')
+    expect(msg).toContain('Beto Mora (falta la justificación de la reprobación)')
   })
 })

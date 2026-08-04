@@ -13,7 +13,7 @@ import { allowsCdebRecommendation } from '@/lib/studies/cdeb-recommendation'
 import { CdebRecommendationModal } from '@/components/studies/CdebRecommendationModal'
 import { PrematCoupleEvaluation } from '@/components/studies/PrematCoupleEvaluation'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
-import { toClosePayload, failsWithoutReason as countFailsWithoutReason } from '@/lib/studies/close-payload'
+import { toClosePayload, missingReasons, missingReasonsMessage } from '@/lib/studies/close-payload'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, Sparkles } from 'lucide-react'
 
 type ParticipantResult = {
@@ -112,8 +112,13 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   }
 
   const unevaluated = results.filter(r => r.status_result === '').length
-  // Regla pura (con tests): el comentario del retirado NO bloquea, es opcional.
-  const failsWithoutReason = countFailsWithoutReason(results)
+  // Regla pura (con tests): reprobado exige justificación y retirado exige
+  // motivo (obligatorio desde 2026-08-04). Las dos bloquean el cierre.
+  const faltanMotivos = missingReasons(results)
+  const faltanMotivosMsg = missingReasonsMessage(
+    faltanMotivos,
+    id => results.find(r => r.member_id === id)?.member_name ?? 'un estudiante',
+  )
   const aprobados = results.filter(r => r.status_result === 'aprobado').length
   const reprobados = results.filter(r => r.status_result === 'reprobado').length
   const retirados = results.filter(r => r.status_result === 'retirado').length
@@ -246,12 +251,12 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       {/* Step 1: Results */}
       {step === 1 && (
         <div className="space-y-4">
-          {triedNext && (unevaluated > 0 || failsWithoutReason > 0) && (
-            <div className="flex items-center gap-2 rounded-xl bg-coral/10 px-4 py-3">
-              <AlertTriangle size={16} className="text-coral" />
+          {triedNext && (unevaluated > 0 || faltanMotivos.length > 0) && (
+            <div className="flex items-start gap-2 rounded-xl bg-coral/10 px-4 py-3" role="alert">
+              <AlertTriangle size={16} className="text-coral shrink-0 mt-0.5" />
               <p className="text-sm text-coral font-body">
                 {unevaluated > 0 && `${unevaluated} estudiante${unevaluated > 1 ? 's' : ''} sin estado asignado. `}
-                {failsWithoutReason > 0 && `${failsWithoutReason} reprobado${failsWithoutReason > 1 ? 's' : ''} sin justificación.`}
+                {faltanMotivosMsg}
               </p>
             </div>
           )}
@@ -334,12 +339,12 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                     </div>
                   )}
 
-                  {/* Comentario OPCIONAL al retirar: se abre solo al elegir
-                      "Retirado". Queda en drop_reason de la inscripción. */}
+                  {/* Motivo OBLIGATORIO al retirar (2026-08-04): se abre solo al
+                      elegir "Retirado". Queda en drop_reason de la inscripción. */}
                   {r.status_result === 'retirado' && (
                     <div>
                       <label htmlFor={`withdraw-${r.member_id}`} className="block text-[11px] font-medium text-navy-light/70 font-body mb-1">
-                        Comentario (opcional) — por qué se retiró
+                        Motivo del retiro *
                       </label>
                       <textarea
                         id={`withdraw-${r.member_id}`}
@@ -347,7 +352,12 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                         value={r.withdraw_reason}
                         onChange={e => setResult(r.member_id, 'withdraw_reason', e.target.value)}
                         placeholder="Ej.: se mudó de zona, cambió de horario de trabajo, motivos de salud…"
-                        className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50"
+                        aria-required="true"
+                        aria-invalid={triedNext && !r.withdraw_reason.trim() ? true : undefined}
+                        className={cn(
+                          'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50',
+                          triedNext && !r.withdraw_reason.trim() && 'ring-1 ring-coral',
+                        )}
                       />
                     </div>
                   )}
@@ -435,7 +445,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             <button
               onClick={() => {
                 setTriedNext(true)
-                if (unevaluated === 0 && failsWithoutReason === 0 && !evalsIncomplete) setStep(2)
+                if (unevaluated === 0 && faltanMotivos.length === 0 && !evalsIncomplete) setStep(2)
               }}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >

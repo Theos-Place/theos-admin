@@ -923,8 +923,9 @@ export type CloseResult = {
   grade?: number | null
   /** Justificación obligatoria cuando status_result === 'reprobado'. */
   fail_reason?: string | null
-  /** Comentario OPCIONAL cuando status_result === 'retirado' (2026-07-31): el
-   *  RPC lo guarda en study_enrollments.drop_reason. */
+  /** Motivo OBLIGATORIO cuando status_result === 'retirado' (obligatorio desde
+   *  2026-08-04; antes era opcional). El RPC lo guarda en
+   *  study_enrollments.drop_reason. */
   withdraw_reason?: string | null
   /** Recomendaciones opcionales del cierre (tabla member_recommendations). */
   recommendations?: {

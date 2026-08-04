@@ -51,6 +51,27 @@ export async function POST(
       await savePrematEvaluations(id, propias, auth.ctx.memberId)
     }
 
+    // El motivo es obligatorio: justificación al reprobar y motivo al retirar
+    // (2026-08-04). Defensa server-side del mismo chequeo de la pantalla — un
+    // retiro sin motivo deja al estudiante fuera del grupo sin rastro de por qué.
+    const sinMotivo = (results ?? []).filter(r =>
+      (r.status_result === 'reprobado' && !(r.fail_reason ?? '').trim())
+      || (r.status_result === 'retirado' && !(r.withdraw_reason ?? '').trim()))
+    if (sinMotivo.length > 0) {
+      const { data: quienes } = await supabase
+        .from('members').select('id, first_name, last_name')
+        .in('id', sinMotivo.map(r => r.member_id))
+      const nombre = new Map(((quienes ?? []) as Array<{ id: string; first_name: string; last_name: string }>)
+        .map(m => [m.id, `${m.first_name} ${m.last_name}`.trim()]))
+      const detalle = sinMotivo.map(r => `${nombre.get(r.member_id) ?? 'un estudiante'} (${
+        r.status_result === 'reprobado' ? 'falta la justificación de la reprobación' : 'falta el motivo del retiro'
+      })`).join('; ')
+      return NextResponse.json(
+        { error: `No se puede cerrar: ${detalle}.`, code: 'motivo_requerido' },
+        { status: 400 },
+      )
+    }
+
     // EST-3: recomendaciones solo en N4+ o capacitaciones (DIS). Si el cliente
     // las manda para otro plan, se ignoran (el gate de la UI es solo UX).
     const sanitized = allowsCloseRecommendations(sourceCode)
