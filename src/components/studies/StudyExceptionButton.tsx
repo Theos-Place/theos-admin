@@ -7,6 +7,9 @@ import { useToast } from '@/components/shared/Toast'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import {
+  validateExceptionReason, isValidExceptionReason, REASON_MAX,
+} from '@/lib/studies/exception-reason'
 
 type Exception = {
   id: string; plan_code: string; plan_name: string
@@ -62,18 +65,26 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
   async function submit() {
     const reqs = waiveAll ? ['all'] : [...waived]
     if (!planId || reqs.length === 0 || saving) return
+    // La razón es obligatoria (2026-08-04): misma regla que valida el API.
+    const reasonError = validateExceptionReason(reason)
+    if (reasonError) { setError(reasonError); return }
     setSaving(true); setError(null)
     try {
       const res = await fetch('/api/studies/exceptions', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: memberId, plan_id: planId, waived_requirements: reqs, reason: reason.trim() || null }),
+        body: JSON.stringify({ member_id: memberId, plan_id: planId, waived_requirements: reqs, reason: reason.trim() }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(data?.error || `HTTP ${res.status}`)
+      }
       setPlanId(''); setWaiveAll(false); setWaived(new Set()); setReason('')
       refetch()
     } catch (e) {
       console.error('No se pudo crear la excepción:', e)
-      setError('No se pudo crear la excepción. Intentá de nuevo.')
+      setError(e instanceof Error && e.message && !e.message.startsWith('HTTP')
+        ? e.message
+        : 'No se pudo crear la excepción. Intentá de nuevo.')
     } finally {
       setSaving(false)
     }
@@ -82,7 +93,10 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
   async function revoke(id: string) {
     try {
       const res = await fetch(`/api/studies/exceptions/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(data?.error || `HTTP ${res.status}`)
+      }
       refetch()
     } catch (e) {
       console.error('No se pudo revocar:', e)
@@ -162,14 +176,23 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Razón (opcional)</label>
+                <label htmlFor="exc-reason" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                  Razón *
+                </label>
                 <textarea
+                  id="exc-reason"
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   rows={2}
+                  maxLength={REASON_MAX}
+                  aria-required="true"
+                  aria-invalid={reason.trim() !== '' && !isValidExceptionReason(reason) ? true : undefined}
                   className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none"
-                  placeholder="Motivo de la excepción…"
+                  placeholder="Ej.: lleva 3 años sirviendo en alabanza y el sistema no registra su asistencia a charlas."
                 />
+                <p className="text-[11px] text-navy-light/60 font-body">
+                  Queda registrada con tu nombre: explicá por qué se hace la excepción.
+                </p>
               </div>
 
               {error && <p className="text-[12px] text-coral font-body">{error}</p>}
@@ -177,7 +200,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                 <button onClick={close} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cerrar</button>
                 <button
                   onClick={submit}
-                  disabled={!planId || (!waiveAll && waived.size === 0) || saving}
+                  disabled={!planId || (!waiveAll && waived.size === 0) || !isValidExceptionReason(reason) || saving}
                   className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
                 >
                   {saving ? 'Creando…' : 'Crear excepción'}

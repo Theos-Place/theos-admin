@@ -13,7 +13,9 @@ export type StudyException = {
   plan_code: string
   plan_name: string
   waived_requirements: string[]
-  reason: string | null
+  /** Obligatoria desde 2026-08-04 (columna NOT NULL). Las excepciones viejas
+   *  traen el texto de relleno de la migración. */
+  reason: string
   granted_by: string | null
   granted_by_name: string | null
   status: 'active' | 'revoked' | 'used'
@@ -25,7 +27,7 @@ type Embedded = {
   member_id: string
   plan_id: string
   waived_requirements: string[] | null
-  reason: string | null
+  reason: string
   granted_by: string | null
   status: 'active' | 'revoked' | 'used'
   created_at: string
@@ -103,7 +105,10 @@ export async function activeExceptionsByPlanForMember(memberId: string): Promise
 
 /** Crea/actualiza la excepción activa de (member, plan). Idempotente por el UNIQUE. */
 export async function createException(input: {
-  member_id: string; plan_id: string; waived_requirements: string[]; reason?: string | null; granted_by?: string | null
+  member_id: string; plan_id: string; waived_requirements: string[]
+  /** Obligatoria: la valida el zod de la ruta antes de llegar acá. */
+  reason: string
+  granted_by?: string | null
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
   const { data, error } = await supabase.from('study_requirement_exceptions')
@@ -111,7 +116,7 @@ export async function createException(input: {
       member_id: input.member_id,
       plan_id: input.plan_id,
       waived_requirements: input.waived_requirements,
-      reason: input.reason ?? null,
+      reason: input.reason.trim(),
       granted_by: input.granted_by ?? null,
       status: 'active',
       revoked_at: null,

@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { listExceptionsForMember, createException } from '@/lib/supabase/queries/study-exceptions'
+import { REASON_MIN, REASON_MAX } from '@/lib/studies/exception-reason'
+
+// La razón es OBLIGATORIA (2026-08-04): una excepción salta compromisos sin
+// dejar rastro de por qué, y es la decisión más discrecional del módulo.
+const exceptionSchema = z.object({
+  member_id: z.string().uuid(),
+  plan_id: z.string().uuid(),
+  waived_requirements: z
+    .array(z.enum(['donor', 'attendance', 'server', 'prerequisite', 'age', 'all']))
+    .min(1, 'Elegí al menos un requisito a eximir'),
+  reason: z.string().trim().min(REASON_MIN, 'Contá en una frase por qué se hace la excepción').max(REASON_MAX),
+}).strict()
 
 // GET /api/studies/exceptions?member_id=X → excepciones del miembro.
 export async function GET(req: NextRequest) {
@@ -22,22 +35,18 @@ export async function POST(req: NextRequest) {
   const auth = await requireRoles(...STUDY_ADMIN_ROLES)
   if (auth.res) return auth.res
   try {
-    const body = await req.json() as {
-      member_id?: string; plan_id?: string; waived_requirements?: string[]; reason?: string
-    }
-    if (!body.member_id || !body.plan_id) {
-      return NextResponse.json({ error: 'Se requieren member_id y plan_id' }, { status: 400 })
-    }
-    const allowed = new Set(['donor', 'attendance', 'server', 'prerequisite', 'all'])
-    const waived = (body.waived_requirements ?? []).filter(r => allowed.has(r))
-    if (waived.length === 0) {
-      return NextResponse.json({ error: 'Elegí al menos un requisito a eximir' }, { status: 400 })
+    const parsed = exceptionSchema.safeParse(await req.json().catch(() => null))
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', code: 'datos_invalidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
     }
     const result = await createException({
-      member_id: body.member_id,
-      plan_id: body.plan_id,
-      waived_requirements: waived,
-      reason: body.reason ?? null,
+      member_id: parsed.data.member_id,
+      plan_id: parsed.data.plan_id,
+      waived_requirements: parsed.data.waived_requirements,
+      reason: parsed.data.reason,
       granted_by: auth.ctx.memberId,
     })
     return NextResponse.json(result, { status: 201 })
