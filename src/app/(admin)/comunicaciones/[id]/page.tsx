@@ -10,7 +10,9 @@ import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { ChannelBadge } from '@/components/communications/ChannelBadge'
 import { DeliveryStats } from '@/components/communications/DeliveryStats'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, Send, Clock, Zap } from 'lucide-react'
+import { generateCSV } from '@/lib/export'
+import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, Send, Clock, Zap, MinusCircle, Download } from 'lucide-react'
+import { skipReasonLabel, skipReasonAction } from '@/lib/communications/skip-reasons'
 
 type QueueStats = {
   total: number
@@ -23,7 +25,7 @@ type QueueStats = {
   sentToday: number
 }
 
-type RecipientFilter = 'all' | 'sent' | 'failed'
+type RecipientFilter = 'all' | 'sent' | 'failed' | 'skipped'
 
 const STATUS_STYLE: Record<CommunicationStatus, string> = {
   draft:   'bg-navy/10 text-navy-light/60',
@@ -41,8 +43,42 @@ type RecipientRow = {
   name: string
   email: string | null
   phone: string | null
-  status: 'sent' | 'failed'
+  channel: 'whatsapp' | 'email'
+  status: 'sent' | 'failed' | 'skipped'
   delivered_at: string | null
+  /** En 'skipped' es el código del motivo; en 'failed', el texto del error. */
+  reason: string | null
+}
+
+/** Estado de un destinatario. 'skipped' no es un fallo: a esa persona nunca se
+ *  le intentó enviar, y mostrarla como "Fallido" haría pensar que el sistema falló. */
+function RecipientStatus({ status }: { status: RecipientRow['status'] }) {
+  if (status === 'sent') {
+    return (
+      <span className="inline-flex items-center gap-1 text-[12px] text-teal-deep font-body">
+        <CheckCircle2 size={12} /> Enviado
+      </span>
+    )
+  }
+  if (status === 'skipped') {
+    return (
+      <span className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 font-body">
+        <MinusCircle size={12} /> No se envió
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[12px] text-coral font-body">
+      <XCircle size={12} /> Fallido
+    </span>
+  )
+}
+
+/** Motivo legible. En los saltados traduce el código; en los fallidos muestra el
+ *  error real, que antes se guardaba y nunca se veía. */
+function reasonText(r: RecipientRow): string {
+  if (r.status === 'sent') return ''
+  return r.status === 'skipped' ? skipReasonLabel(r.reason) : (r.reason?.trim() || 'Error no registrado')
 }
 
 export default function ComunicacionDetallePage() {
@@ -55,6 +91,48 @@ export default function ComunicacionDetallePage() {
   const [queue, setQueue] = useState<QueueStats | null>(null)
   const [actionMsg, setActionMsg] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+
+  const [exporting, setExporting] = useState(false)
+  const [exportMsg, setExportMsg] = useState('')
+
+  // Exportar: trae TODAS las páginas, no solo las 50 que están en pantalla. Sin
+  // esto el CSV saldría recortado justo cuando más se necesita (una lista de 400).
+  async function handleExport() {
+    if (!id || exporting) return
+    setExporting(true)
+    try {
+      const rows: RecipientRow[] = []
+      for (let page = 1; ; page++) {
+        const u = new URLSearchParams({ page: String(page), pageSize: '200' })
+        if (recipientFilter !== 'all') u.set('status', recipientFilter)
+        const res = await fetch(`/api/communications/messages/${id}/recipients?${u}`)
+        if (!res.ok) throw new Error()
+        const d = await res.json()
+        const batch: RecipientRow[] = d.recipients ?? []
+        rows.push(...batch)
+        if (batch.length < 200 || rows.length >= (d.total ?? rows.length)) break
+      }
+      generateCSV(
+        ['Nombre', 'Correo', 'Teléfono', 'Canal', 'Estado', 'Hora de entrega', 'Motivo', 'Qué hacer'],
+        rows.map(r => [
+          r.name,
+          r.email ?? '',
+          r.phone ?? '',
+          r.channel,
+          r.status === 'sent' ? 'Enviado' : r.status === 'skipped' ? 'No se envió' : 'Fallido',
+          r.delivered_at ? new Date(r.delivered_at).toLocaleString('es-CR') : '',
+          reasonText(r),
+          skipReasonAction(r.reason) ?? '',
+        ]),
+        'destinatarios-comunicado',
+      )
+      setExportMsg(`Exportados ${rows.length} destinatarios.`)
+    } catch {
+      setExportMsg('No se pudo exportar. Intentá de nuevo.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   // Destinatarios reales: paginados server-side (count exacto + filtro al servidor).
   const recipBuildUrl = (page: number) => {
@@ -279,11 +357,24 @@ export default function ComunicacionDetallePage() {
       {/* Recipients table */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-5 py-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-[var(--outline-variant)]">
-          <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-            Destinatarios ({recipTotal})
-          </p>
-          <div className="flex gap-1">
-            {(['all', 'sent', 'failed'] as RecipientFilter[]).map(f => (
+          <div>
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
+              Destinatarios ({recipTotal})
+            </p>
+            {exportMsg && (
+              <p className="mt-1 text-[11px] text-navy-light/70 font-body" role="status">{exportMsg}</p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={exporting || recipTotal === 0}
+              className="mr-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[11px] font-medium text-navy-light/70 transition-all hover:text-navy disabled:opacity-50 font-display"
+            >
+              <Download size={12} /> {exporting ? 'Exportando…' : 'Exportar'}
+            </button>
+            {(['all', 'sent', 'failed', 'skipped'] as RecipientFilter[]).map(f => (
               <button
                 key={f}
                 type="button"
@@ -293,7 +384,7 @@ export default function ComunicacionDetallePage() {
                   recipientFilter === f ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy'
                 )}
               >
-                {f === 'all' ? 'Todos' : f === 'sent' ? 'Exitosos' : 'Fallidos'}
+                {f === 'all' ? 'Todos' : f === 'sent' ? 'Exitosos' : f === 'failed' ? 'Fallidos' : 'Saltados'}
               </button>
             ))}
           </div>
@@ -302,7 +393,7 @@ export default function ComunicacionDetallePage() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {['Miembro', 'Canal', 'Estado', 'Entrega'].map(h => (
+                {['Miembro', 'Canal', 'Estado', 'Entrega', 'Motivo'].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
                     {h}
                   </th>
@@ -324,20 +415,24 @@ export default function ComunicacionDetallePage() {
                     <ChannelBadge channel={message.channel === 'both' ? (idx % 2 === 0 ? 'whatsapp' : 'email') : message.channel} size="sm" />
                   </td>
                   <td className="px-4 py-3">
-                    {r.status === 'sent' ? (
-                      <span className="inline-flex items-center gap-1 text-[12px] text-teal-deep font-body">
-                        <CheckCircle2 size={12} /> Enviado
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[12px] text-coral font-body">
-                        <XCircle size={12} /> Fallido
-                      </span>
-                    )}
+                    <RecipientStatus status={r.status} />
                   </td>
                   <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
                     {r.delivered_at
                       ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
                       : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
+                    {r.status === 'sent' ? (
+                      <span className="text-navy-light/40">—</span>
+                    ) : (
+                      <>
+                        {reasonText(r)}
+                        {skipReasonAction(r.reason) && (
+                          <span className="block text-[11px] text-navy-light/60">{skipReasonAction(r.reason)}</span>
+                        )}
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -355,20 +450,16 @@ export default function ComunicacionDetallePage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] text-navy font-body">{r.name}</p>
                 <p className="text-[11px] text-navy-light/60 font-body">
-                  {r.delivered_at
-                    ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
-                    : '—'}
+                  {r.status === 'sent'
+                    ? (r.delivered_at
+                        ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
+                        : '—')
+                    : reasonText(r)}
                 </p>
               </div>
-              {r.status === 'sent' ? (
-                <span className="inline-flex items-center gap-1 text-[12px] text-teal-deep shrink-0 font-body">
-                  <CheckCircle2 size={12} /> Enviado
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[12px] text-coral shrink-0 font-body">
-                  <XCircle size={12} /> Fallido
-                </span>
-              )}
+              <span className="shrink-0">
+                <RecipientStatus status={r.status} />
+              </span>
             </li>
           ))}
         </ul>

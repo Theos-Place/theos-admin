@@ -46,3 +46,39 @@ export function noRecipientsMessage(r: SkipReasons, isMarketing: boolean): strin
     : ''
   return `Nadie quedó elegible para recibirlo: ${detalle}. El comunicado quedó como borrador, no se envió nada.${salida}`
 }
+
+/** El código de un motivo, tal como se guarda en message_logs.error_message. */
+export type SkipReason = keyof SkipReasons
+
+const LABEL: Record<SkipReason, string> = {
+  sin_correo: 'Sin correo en la ficha',
+  rebotado: 'Correo rebotado',
+  queja: 'Marcó un correo como spam',
+  baja: 'Se dio de baja del newsletter',
+  silenciado: 'Silenció los mensajes del sistema',
+}
+
+/** Qué hacer con cada caso, para que la lista de saltados sea accionable y no
+ *  solo informativa. */
+const ACCION: Record<SkipReason, string> = {
+  sin_correo: 'Pedile el correo y agregalo a su ficha',
+  rebotado: 'La dirección no existe o rechaza correo: confirmá la correcta',
+  queja: 'No se le puede volver a escribir salvo que lo pida',
+  baja: 'Si es un aviso necesario, mandalo como transaccional',
+  silenciado: 'Lo eligió en sus preferencias; avisale por otro canal',
+}
+
+export function isSkipReason(v?: string | null): v is SkipReason {
+  return !!v && v in LABEL
+}
+
+/** Texto para mostrar. Un código desconocido se muestra tal cual en vez de
+ *  desaparecer: es mejor un motivo raro que una celda vacía. */
+export function skipReasonLabel(v?: string | null): string {
+  if (isSkipReason(v)) return LABEL[v]
+  return (v ?? '').trim() || 'Sin motivo registrado'
+}
+
+export function skipReasonAction(v?: string | null): string | null {
+  return isSkipReason(v) ? ACCION[v] : null
+}

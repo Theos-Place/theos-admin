@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { CheckCircle2, XCircle, Users, TrendingUp, Send } from 'lucide-react'
+import { CheckCircle2, XCircle, Users, TrendingUp, Send, MinusCircle } from 'lucide-react'
 import { deliveryCards, deliveryRate, type DeliveryCard } from '@/lib/communications/delivery-stats'
 import type { CommunicationMessage } from '@/data/communication-utils'
 
@@ -14,8 +14,11 @@ export function DeliveryStats({ message }: Props) {
   // leía como "no llegó ninguno" cuando en realidad todos habían salido.
   const cards = deliveryCards(stats)
   const rate = deliveryRate(stats)
-  const failRate = stats.total > 0 ? Math.round((stats.failed / stats.total) * 100) : 0
-  const sentRate = stats.total > 0 ? Math.round((stats.sent / stats.total) * 100) : 0
+  // Sobre los que SALIERON, igual que deliveryRate: los saltados no son un fallo
+  // del envío y no deben inflar ni castigar estos porcentajes.
+  const intentados = stats.sent + stats.failed
+  const failRate = intentados > 0 ? Math.round((stats.failed / intentados) * 100) : 0
+  const sentRate = intentados > 0 ? Math.round((stats.sent / intentados) * 100) : 0
 
   const TONE: Record<DeliveryCard['tone'], { color: string; bg: string }> = {
     neutral: { color: 'text-navy', bg: 'bg-navy/5' },
@@ -24,7 +27,8 @@ export function DeliveryStats({ message }: Props) {
     bad:     { color: 'text-coral', bg: 'bg-coral/10' },
   }
   const ICON: Record<DeliveryCard['key'], typeof Users> = {
-    total: Users, enviados: Send, entregados: CheckCircle2, fallidos: XCircle, tasa: TrendingUp,
+    total: Users, enviados: Send, entregados: CheckCircle2, fallidos: XCircle,
+    saltados: MinusCircle, tasa: TrendingUp,
   }
 
   return (

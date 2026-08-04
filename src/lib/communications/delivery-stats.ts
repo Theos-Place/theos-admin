@@ -15,10 +15,12 @@ export type BroadcastStats = {
   sent: number
   delivered: number
   failed: number
+  /** Excluidos antes de enviar (sin correo, rebotado, queja, baja). */
+  skipped?: number
 }
 
 export type DeliveryCard = {
-  key: 'total' | 'enviados' | 'entregados' | 'fallidos' | 'tasa'
+  key: 'total' | 'enviados' | 'entregados' | 'fallidos' | 'saltados' | 'tasa'
   label: string
   value: string
   /** Nota al pie de la tarjeta (por qué no hay tasa, por ejemplo). */
@@ -26,9 +28,16 @@ export type DeliveryCard = {
   tone: 'neutral' | 'good' | 'bad' | 'warn'
 }
 
+/**
+ * Entregados sobre los que SALIERON, no sobre el total.
+ *
+ * El total incluye a los saltados (sin correo, rebotados, baja), y a esos nunca se
+ * les intentó enviar: meterlos en el denominador castiga la tasa por algo que el
+ * correo no hizo mal. 401 de 401 entregados con 19 saltados es 100%, no 95%.
+ */
 export function deliveryRate(stats: BroadcastStats): number | null {
-  if (stats.total <= 0 || stats.delivered <= 0) return null
-  return Math.round((stats.delivered / stats.total) * 100)
+  if (stats.sent <= 0 || stats.delivered <= 0) return null
+  return Math.round((stats.delivered / stats.sent) * 100)
 }
 
 /** ¿Llegó alguna confirmación de entrega del proveedor para este comunicado? */
@@ -61,6 +70,17 @@ export function deliveryCards(stats: BroadcastStats): DeliveryCard[] {
     value: String(stats.failed),
     tone: stats.failed > 0 ? 'bad' : 'neutral',
   })
+
+  // Solo si hay: una tarjeta en 0 ocupa espacio y no dice nada.
+  if ((stats.skipped ?? 0) > 0) {
+    cards.push({
+      key: 'saltados',
+      label: 'No se les envió',
+      value: String(stats.skipped),
+      hint: 'Sin correo, rebotado o dado de baja — mirá la lista de abajo',
+      tone: 'warn',
+    })
+  }
 
   cards.push(
     confirmed && rate != null

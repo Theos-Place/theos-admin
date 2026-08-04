@@ -54,7 +54,9 @@ export default function ComunicacionesPage() {
 
   const stats = useMemo(() => {
     const sentThisMonth = sent.filter(m => thisMonth(m.sent_at))
-    const totalRecipients = sentThisMonth.reduce((sum, m) => sum + m.stats.total, 0)
+    // "Alcanzados" son los que RECIBIERON, no el total al que apuntaba el
+    // comunicado: ese total incluye a los saltados (sin correo, rebotados, baja).
+    const totalRecipients = sentThisMonth.reduce((sum, m) => sum + m.stats.sent, 0)
     const totalDelivered = sentThisMonth.reduce((sum, m) => sum + m.stats.delivered, 0)
     const avgRate = totalRecipients > 0 ? Math.round((totalDelivered / totalRecipients) * 100) : 0
     const withErrors = sent.filter(m => m.stats.failed > 0).length

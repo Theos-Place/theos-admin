@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { deliveryCards, deliveryRate, hasDeliveryConfirmations } from './delivery-stats'
 
-const stats = (over: Partial<{ total: number; sent: number; delivered: number; failed: number }> = {}) => ({
-  total: 19, sent: 19, delivered: 0, failed: 0, ...over,
-})
+const stats = (
+  over: Partial<{ total: number; sent: number; delivered: number; failed: number; skipped: number }> = {},
+) => ({ total: 19, sent: 19, delivered: 0, failed: 0, ...over })
 
 describe('deliveryRate', () => {
   it('null cuando no hay confirmaciones (no se inventa 0%)', () => {
@@ -13,7 +13,12 @@ describe('deliveryRate', () => {
 
   it('porcentaje cuando sí hay', () => {
     expect(deliveryRate(stats({ delivered: 19 }))).toBe(100)
-    expect(deliveryRate(stats({ delivered: 10, total: 20 }))).toBe(50)
+    expect(deliveryRate(stats({ delivered: 10, sent: 20, total: 20 }))).toBe(50)
+  })
+
+  it('los saltados NO castigan la tasa: se mide sobre los que salieron', () => {
+    // La lista del campa: 420 apuntados, 19 sin correo, 401 enviados y entregados.
+    expect(deliveryRate(stats({ total: 420, sent: 401, delivered: 401, skipped: 19 }))).toBe(100)
   })
 })
 
@@ -51,5 +56,20 @@ describe('deliveryCards', () => {
   it('los fallidos se marcan en rojo solo si hay', () => {
     expect(deliveryCards(stats()).find(c => c.key === 'fallidos')?.tone).toBe('neutral')
     expect(deliveryCards(stats({ failed: 2 })).find(c => c.key === 'fallidos')?.tone).toBe('bad')
+  })
+})
+
+describe('tarjeta de saltados', () => {
+  it('aparece con su motivo cuando hubo excluidos', () => {
+    const cards = deliveryCards(stats({ total: 420, sent: 401, delivered: 401, skipped: 19 }))
+    const saltados = cards.find(c => c.key === 'saltados')
+    expect(saltados?.value).toBe('19')
+    expect(saltados?.label).toBe('No se les envió')
+    expect(saltados?.hint).toBeTruthy()
+  })
+
+  it('NO aparece cuando no hubo: una tarjeta en 0 solo ocupa espacio', () => {
+    expect(deliveryCards(stats({ skipped: 0 })).some(c => c.key === 'saltados')).toBe(false)
+    expect(deliveryCards(stats()).some(c => c.key === 'saltados')).toBe(false)
   })
 })

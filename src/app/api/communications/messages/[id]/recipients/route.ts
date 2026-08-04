@@ -13,7 +13,8 @@ export async function GET(
     const { id } = await params
     const { searchParams } = req.nextUrl
     const statusParam = searchParams.get('status')
-    const status = statusParam === 'sent' || statusParam === 'failed' ? statusParam : 'all'
+    const status = statusParam === 'sent' || statusParam === 'failed' || statusParam === 'skipped'
+      ? statusParam : 'all'
     const page = Math.max(1, Math.trunc(Number(searchParams.get('page') ?? 1) || 1))
     const pageSize = Math.min(200, Math.max(1, Math.trunc(Number(searchParams.get('pageSize') ?? 50) || 50)))
     const { rows, total } = await getMessageRecipients(id, { page, pageSize, status })

@@ -11,7 +11,7 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import {
-  emptySkipReasons, totalSkipped, noRecipientsMessage, type SkipReasons,
+  emptySkipReasons, totalSkipped, noRecipientsMessage, type SkipReasons, type SkipReason,
 } from '@/lib/communications/skip-reasons'
 import { bodyToHtml } from '@/lib/email/render'
 import { renderEmail } from '@/lib/email/baseLayout'
@@ -393,11 +393,16 @@ export async function getCommitteeAudiences(): Promise<Array<{
 
 /** Resuelve el correo real (desde members) de los destinatarios email y excluye
  *  a los bloqueados: bounced/complained siempre; opt-out solo si es marketing. */
+/** Un destinatario que quedó fuera, con el código del motivo. Se guarda como fila
+ *  'skipped' para que la pantalla pueda decir QUIÉNES y no solo cuántos. */
+export type SkippedRecipient = { member_id: string | null; recipient: string; reason: SkipReason }
+
 async function resolveEmailRecipients(
   supabase: ReturnType<typeof createAdminClient>,
   raw: Recipient[],
   isMarketing: boolean,
   reasons: SkipReasons = emptySkipReasons(),
+  skipped: SkippedRecipient[] = [],
 ): Promise<Recipient[]> {
   const ids = Array.from(new Set(raw.map(r => r.member_id).filter(Boolean))) as string[]
   type MRow = { id: string; email: string | null; email_bounced: boolean; email_complained: boolean; newsletter_opt_out: boolean }
@@ -415,10 +420,16 @@ async function resolveEmailRecipients(
     const email = r.recipient && r.recipient.includes('@') ? r.recipient : (m?.email ?? '')
     // Se cuenta la causa de cada exclusión: si al final no queda NADIE, el
     // envío explica por qué en vez de dejar un 'fallido' sin motivo.
-    if (!email) { reasons.sin_correo++; continue }                     // sin correo → no se puede enviar
-    if (m?.email_bounced) { reasons.rebotado++; continue }             // rebote → excluir siempre
-    if (m?.email_complained) { reasons.queja++; continue }             // queja → excluir siempre
-    if (isMarketing && m?.newsletter_opt_out) { reasons.baja++; continue } // baja → excluir en marketing
+    // El motivo se cuenta Y se anota con nombre: el conteo explica un "no salió
+    // nada", la fila deja perseguir el caso (conseguir el correo que falta, etc.).
+    const fuera = (reason: SkipReason) => {
+      reasons[reason]++
+      skipped.push({ member_id: r.member_id ?? null, recipient: email || r.recipient || '', reason })
+    }
+    if (!email) { fuera('sin_correo'); continue }                          // sin correo → no se puede enviar
+    if (m?.email_bounced) { fuera('rebotado'); continue }                  // rebote → excluir siempre
+    if (m?.email_complained) { fuera('queja'); continue }                  // queja → excluir siempre
+    if (isMarketing && m?.newsletter_opt_out) { fuera('baja'); continue }  // baja → excluir en marketing
     out.push({ ...r, recipient: email })
   }
   return out
@@ -456,7 +467,8 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
   //   · siempre: rebotados (email_bounced) y quejas (email_complained)
   //   · marketing: además los que se dieron de baja (newsletter_opt_out)
   const skipReasons = emptySkipReasons()
-  const emailRecipients = await resolveEmailRecipients(supabase, emailRecipientsRaw, isMarketing, skipReasons)
+  const skippedList: SkippedRecipient[] = []
+  const emailRecipients = await resolveEmailRecipients(supabase, emailRecipientsRaw, isMarketing, skipReasons, skippedList)
 
   // Canal interna: notificación en el sistema para cada destinatario con member_id.
   // Es un anuncio general → respeta el toggle "Mensajes del sistema" del miembro
@@ -466,7 +478,11 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     await filterByNotifPref(supabase, internalRecipientsRaw.map(r => r.member_id!), 'mensajes_sistema'),
   )
   const internalRecipients = internalRecipientsRaw.filter(r => internalAllowed.has(r.member_id!))
-  skipReasons.silenciado += internalRecipientsRaw.length - internalRecipients.length
+  for (const r of internalRecipientsRaw) {
+    if (internalAllowed.has(r.member_id!)) continue
+    skipReasons.silenciado++
+    skippedList.push({ member_id: r.member_id ?? null, recipient: r.recipient || '', reason: 'silenciado' })
+  }
   // NADIE elegible: se aborta con el motivo. El catch de abajo devuelve el
   // broadcast a 'draft' (no hay logs), así el usuario puede corregir el tipo de
   // correo o el destinatario y reintentar — antes quedaba 'fallido' sin
@@ -536,17 +552,37 @@ export async function sendBroadcast(id: string, recipients: Recipient[]): Promis
     status: 'pending',
   }))
 
-  if (emailLogs.length + waLogs.length + internalLogs.length > 0) {
-    const { error } = await supabase.from('message_logs').insert([...emailLogs, ...waLogs, ...internalLogs])
-    if (error) throw error
+  // Los excluidos también dejan su fila, con el código del motivo. Van DESPUÉS
+  // del guard de NO_RECIPIENTS de arriba a propósito: si nadie quedó elegible el
+  // envío aborta y vuelve a borrador, y no queremos dejar filas huérfanas de un
+  // comunicado que nunca se mandó.
+  const skippedLogs = skippedList.map(s => ({
+    broadcast_id: id,
+    member_id: s.member_id,
+    channel: 'email' as const,
+    recipient: s.recipient || '(sin correo)',
+    status: 'skipped',
+    error_message: s.reason,
+  }))
+
+  const allLogs = [...emailLogs, ...waLogs, ...internalLogs, ...skippedLogs]
+  if (allLogs.length > 0) {
+    // Por lotes: un insert de 5.000 filas de una lista grande revienta el request.
+    for (let i = 0; i < allLogs.length; i += 500) {
+      const { error } = await supabase.from('message_logs').insert(allLogs.slice(i, i + 500))
+      if (error) throw error
+    }
   }
 
-  // Saltados = email excluidos (baja/rebote/queja) + internos que silenciaron
-  // "Mensajes del sistema".
+  // Saltados = email excluidos (baja/rebote/queja/sin correo) + internos que
+  // silenciaron "Mensajes del sistema".
   const skipped = totalSkipped(skipReasons)
   await supabase.from('message_broadcasts')
     .update({
-      total_recipients: internalLogs.length + emailLogs.length + waLogs.length,
+      // Incluye a los saltados: el total es "a cuántos apuntaba el comunicado".
+      // Los que de verdad salieron son sent_count. Sin esto, 19 personas
+      // desaparecían del total y nadie notaba que quedaron fuera.
+      total_recipients: internalLogs.length + emailLogs.length + waLogs.length + skipped,
       skipped_count: skipped,
     })
     .eq('id', id)
@@ -834,6 +870,9 @@ export async function getBroadcastQueueStats(broadcastId: string): Promise<Queue
     .select('status, scheduled_date')
     .eq('broadcast_id', broadcastId)
     .eq('channel', 'email')
+    // Los 'skipped' nunca entraron a la cola: contarlos en el total haría que
+    // enviados + pendientes + fallidos no sumara nunca el total.
+    .neq('status', 'skipped')
   if (error) throw error
   const logs = (data ?? []) as Array<{ status: string; scheduled_date: string | null }>
   const pendingDates = logs.filter(l => l.status === 'pending').map(l => l.scheduled_date).filter(Boolean) as string[]
@@ -855,15 +894,17 @@ export type MessageRecipient = {
   email: string | null
   phone: string | null
   channel: 'whatsapp' | 'email'
-  status: 'sent' | 'failed'
+  status: 'sent' | 'failed' | 'skipped'
   delivered_at: string | null
+  /** Por qué no se le envió. Solo en 'skipped' (código) y 'failed' (texto del error). */
+  reason: string | null
 }
 
 /** Destinatarios reales de un broadcast (desde message_logs + member),
  *  paginados server-side con count exacto. `status` filtra exitosos/fallidos. */
 export async function getMessageRecipients(
   broadcastId: string,
-  opts: { page?: number; pageSize?: number; status?: 'all' | 'sent' | 'failed' } = {},
+  opts: { page?: number; pageSize?: number; status?: 'all' | 'sent' | 'failed' | 'skipped' } = {},
 ): Promise<{ rows: MessageRecipient[]; total: number }> {
   const supabase = createAdminClient()
   const page = Math.max(1, Math.trunc(opts.page ?? 1))
@@ -871,16 +912,19 @@ export async function getMessageRecipients(
 
   let q = supabase
     .from('message_logs')
-    .select('id, member_id, recipient, channel, status, delivered_at, member:members(first_name, last_name, email, phone)', { count: 'exact' })
+    .select('id, member_id, recipient, channel, status, delivered_at, error_message, last_error, member:members(first_name, last_name, email, phone)', { count: 'exact' })
     .eq('broadcast_id', broadcastId)
     .order('created_at', { ascending: true })
   if (opts.status === 'failed') q = q.in('status', ['failed', 'bounced'])
-  else if (opts.status === 'sent') q = q.not('status', 'in', '("failed","bounced")')
+  else if (opts.status === 'skipped') q = q.eq('status', 'skipped')
+  // 'Exitosos' excluye también a los saltados: nunca se les intentó enviar.
+  else if (opts.status === 'sent') q = q.not('status', 'in', '("failed","bounced","skipped")')
 
   const { data, error, count } = await q.range((page - 1) * pageSize, page * pageSize - 1)
   if (error) throw error
   const rows = (data ?? []) as Array<{
     id: string; recipient: string; channel: 'whatsapp' | 'email'; status: string; delivered_at: string | null
+    error_message: string | null; last_error: string | null
     member: { first_name: string; last_name: string; email: string | null; phone: string | null } | null
   }>
   return {
@@ -890,8 +934,13 @@ export async function getMessageRecipients(
       email: r.member?.email ?? null,
       phone: r.member?.phone ?? null,
       channel: r.channel,
-      status: r.status === 'failed' || r.status === 'bounced' ? 'failed' : 'sent',
+      status: r.status === 'skipped' ? 'skipped'
+        : r.status === 'failed' || r.status === 'bounced' ? 'failed'
+        : 'sent',
       delivered_at: r.delivered_at,
+      // En 'skipped' el motivo es un código (lo traduce skipReasonLabel); en
+      // 'failed' es el texto del error real, que hasta ahora no se mostraba.
+      reason: r.status === 'skipped' ? r.error_message : (r.last_error ?? r.error_message),
     })),
     total: count ?? 0,
   }
