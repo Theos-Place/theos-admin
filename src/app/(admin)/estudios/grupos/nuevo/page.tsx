@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { minEnrollmentEnd, maxEnrollmentEnd } from '@/lib/studies/enrollment-window'
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import type { GroupStatus } from '@/types/study'
+import { canAdvanceLeaderStep, leaderStepHint } from '@/lib/studies/leader-step'
 
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
   { value: 'en_matricula', label: 'En matrícula' },
@@ -73,6 +74,12 @@ export default function NuevoGrupoPage() {
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
   const [pendingLeader, setPendingLeader] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
+
+  // Regla del paso 2 (pura y testeada): se avanza con el dirigente confirmado o
+  // dejándolo pendiente. El co-dirigente no entra en la validación.
+  const leaderStep = { selectedLeader, confirmed, pendingLeader }
+  const puedeAvanzarDirigente = canAdvanceLeaderStep(leaderStep)
+  const leaderHint = leaderStepHint(leaderStep)
   const [statusOverride, setStatusOverride] = useState<GroupStatus | ''>('')
   const [created, setCreated] = useState(false)
 
@@ -469,30 +476,50 @@ export default function NuevoGrupoPage() {
             Paso 2 — Seleccionar dirigente
           </h2>
 
-          <div className="space-y-1">
-            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+          {/* Todo lo del DIRIGENTE junto en un bloque: el combobox y sus dos
+              casillas. Antes la casilla de disponibilidad quedaba DESPUÉS del
+              co-dirigente y parecía referirse a él (bug 2026-08-04). */}
+          <fieldset className="rounded-xl border border-[var(--outline-variant)] bg-surface-low/60 p-4 space-y-3">
+            <legend className="px-1 text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
               Dirigente {pendingLeader ? '' : '*'}
-            </label>
+            </legend>
+
             <DirigentesCombobox
               value={selectedLeader || null}
               onChange={id => setSelectedLeader(id ?? '')}
               excludeId={selectedCoLeader || undefined}
               placeholder={pendingLeader ? 'Pendiente de asignar' : 'Buscar dirigente…'}
+              aria-label="Buscar dirigente"
             />
-          </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="accent-coral"
-              checked={pendingLeader}
-              onChange={e => { setPendingLeader(e.target.checked); if (e.target.checked) { setSelectedLeader(''); setConfirmed(false) } }}
-            />
-            <span className="text-sm text-navy-light/70 font-body">
-              Dejar dirigente <strong>pendiente</strong> (asignar después)
-            </span>
-          </label>
+            {!pendingLeader && selectedLeader && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-coral"
+                  checked={confirmed}
+                  onChange={e => setConfirmed(e.target.checked)}
+                />
+                <span className="text-sm text-navy-light/70 font-body">
+                  El <strong>dirigente</strong> ya fue contactado y confirmó su disponibilidad
+                </span>
+              </label>
+            )}
 
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="accent-coral"
+                checked={pendingLeader}
+                onChange={e => { setPendingLeader(e.target.checked); if (e.target.checked) { setSelectedLeader(''); setConfirmed(false) } }}
+              />
+              <span className="text-sm text-navy-light/70 font-body">
+                Dejar dirigente <strong>pendiente</strong> (asignar después)
+              </span>
+            </label>
+          </fieldset>
+
+          {/* El co-dirigente va aparte, fuera del bloque del dirigente. */}
           {!pendingLeader && selectedLeader && (
             <div className="space-y-1">
               <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
@@ -508,25 +535,9 @@ export default function NuevoGrupoPage() {
             </div>
           )}
 
-          {!pendingLeader && selectedLeader && (
-            <label className="flex items-center gap-2 mt-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="accent-coral"
-                checked={confirmed}
-                onChange={e => setConfirmed(e.target.checked)}
-              />
-              <span className="text-sm text-navy-light/70 font-body">
-                Ya fue contactado y confirmó su disponibilidad
-              </span>
-            </label>
-          )}
-
-          {!pendingLeader && (!selectedLeader || !confirmed) && (
+          {leaderHint && (
             <p className="text-[12px] text-navy-light/70 text-right font-body" role="status">
-              Para continuar, {!selectedLeader
-                ? 'seleccioná un dirigente o marcá la opción de dejarlo pendiente'
-                : 'confirmá que el dirigente fue contactado y está disponible'}.
+              Para continuar, {leaderHint}.
             </p>
           )}
           <div className="flex justify-between pt-2">
@@ -538,7 +549,7 @@ export default function NuevoGrupoPage() {
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={pendingLeader ? false : (!selectedLeader || !confirmed)}
+              disabled={!puedeAvanzarDirigente}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               Siguiente →

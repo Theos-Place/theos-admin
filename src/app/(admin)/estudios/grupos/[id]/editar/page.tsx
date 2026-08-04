@@ -162,9 +162,11 @@ function EditarForm({ group, studyType, refetch }: {
 
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="grid grid-cols-2 gap-4">
-          {/* Dirigente */}
-          <div className="space-y-1">
-            <label className={labelCls}>Dirigente</label>
+          {/* Dirigente en su propio bloque y el co-dirigente aparte, igual que
+              en el alta de un grupo: sin la agrupación, no se ve a cuál de los
+              dos campos pertenece cada cosa (bug 2026-08-04). */}
+          <fieldset className="col-span-2 sm:col-span-1 rounded-xl border border-[var(--outline-variant)] bg-surface-low/60 p-4 space-y-1">
+            <legend className={`px-1 ${labelCls}`}>Dirigente</legend>
             <DirigentesCombobox
               value={leaderId || null}
               onChange={id => setLeaderId(id ?? '')}
@@ -172,11 +174,10 @@ function EditarForm({ group, studyType, refetch }: {
               placeholder="Buscar dirigente…"
               aria-label="Buscar dirigente"
             />
-          </div>
+          </fieldset>
 
-          {/* Co-dirigente */}
-          <div className="space-y-1">
-            <label className={labelCls}>Co-dirigente</label>
+          <div className="col-span-2 sm:col-span-1 space-y-1 sm:pt-4">
+            <label className={labelCls}>Co-dirigente (opcional)</label>
             <DirigentesCombobox
               value={coLeaderId || null}
               onChange={id => setCoLeaderId(id ?? '')}
