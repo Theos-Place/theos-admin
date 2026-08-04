@@ -56,7 +56,13 @@ const STYLES = `
   .subfooter { max-width: 620px; margin: 16px auto 40px; padding: 0 24px; text-align: center; }
   .subfooter p { font-size: 12px; color: #8a8a82; line-height: 1.7; }
   .subfooter a { color: #555; text-decoration: underline; font-weight: 600; }
+  /* Dos columnas que se apilan en el celular (bloques de precios/opciones de la
+     plantilla "Anuncio con video"). Las clases van acá y no en el cuerpo de la
+     plantilla porque un <style> dentro del body lo ignoran varios clientes. */
   @media (max-width: 640px) {
+    .stack { display: block !important; width: 100% !important; }
+    .stack-pad { padding: 0 0 14px 0 !important; }
+    .btn-block a { display: block !important; width: auto !important; }
     .wrapper { margin: 0; border-radius: 0; }
     .header, .body, .footer { padding-left: 24px; padding-right: 24px; }
     .body { padding-top: 32px; padding-bottom: 28px; }

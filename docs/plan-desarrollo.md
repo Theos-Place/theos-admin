@@ -1213,6 +1213,51 @@ el baseline un comentario con los buckets requeridos (payment-receipts, employee
 email-images, event-flyers si ya existe EVE-2).
 ```
 
+### [ ] FRM-1 · Rol `forms` + encargados por evento/formulario (feedback 2026-07-30)
+Archivos: `src/lib/auth/roles.ts`, migración (CHECK de `member_roles` + tabla nueva), `src/app/api/forms/*`, configuración de evento y de formulario, patrón a copiar: `src/lib/auth/studies-scope.ts`
+
+```
+Dos cosas distintas, no las mezclés:
+
+A) ROL GLOBAL `forms`
+   Crear el rol nuevo `forms` (migración: agregarlo al CHECK de member_roles, hoy con 19
+   roles) con el módulo `formularios`: view/create/edit/export sobre cualquier formulario.
+   Aprovechá para ARREGLAR UN DESALINEAMIENTO existente: hoy el permiso de módulo
+   `formularios` en roles.ts SOLO lo declara `direccion`, pero POST/PUT/DELETE de
+   /api/forms exigen requireRoles('comunicaciones','direccion','encargado_staff'). O sea:
+   comunicaciones puede crear y editar formularios pero no ve el listado ni las respuestas.
+   Dejá los guards de escritura y el permiso de módulo consistentes entre sí.
+
+B) ENCARGADOS DE UN OBJETO PUNTUAL (lo nuevo)
+   Caso: la encargada de una actividad debe ver TODO de ese evento y su formulario
+   (respuestas, inscripciones), y NADA de los demás eventos. Eso no es un rol: es permiso
+   sobre un recurso. Hoy no existe el dato — event_volunteers está vacía y
+   event_organizing_committees solo se usa para precios, no para autorizar.
+   1) Migración: tabla genérica siguiendo el patrón polimórfico que forms ya usa:
+      entity_managers (entity_type 'event'|'study_group'|'form', entity_id, member_id,
+      granted_by, granted_at; UNIQUE por los tres primeros). Una sola tabla sirve para
+      eventos, grupos y formularios sueltos.
+   2) DÓNDE SE ADMINISTRA (decisión confirmada): en la configuración de la ENTIDAD, no en
+      dos lados. En el evento se agrega la sección "Encargados de este evento". El
+      formulario asociado HEREDA: si sos encargado del evento, ves su formulario y sus
+      respuestas. Solo los formularios sueltos (entity_type='general', sin padre) tienen
+      su propia lista de encargados en la configuración del formulario.
+   3) Autorización: función pura tipo formViewerScope({roles, memberId, form, isManager})
+      → 'admin' | 'manager' | 'none', copiando el molde de src/lib/auth/studies-scope.ts
+      (groupViewerScope) — testeable sin Supabase. Para un form con entity_type='event',
+      resolver isManager mirando entity_managers del EVENTO padre, no del form.
+      Aplicá el scope en GET /api/forms (el manager ve solo los suyos en el listado),
+      GET /api/forms/[id] y GET /api/forms/[id]/responses. El manager LEE y EXPORTA;
+      editar la estructura del formulario sigue siendo de los roles globales.
+   4) Acceso al evento: el encargado también debe poder ver los datos de SU evento
+      (inscripciones, check-ins) sin tener el rol global de eventos. Aplicá el mismo scope
+      en los endpoints del evento correspondiente.
+   Quién nombra encargados: los roles que gestionan la entidad (para eventos: direccion,
+   encargado_staff, comunicaciones, admin).
+Tests: el manager de un evento ve solo su formulario y sus respuestas (403/404 en otro);
+el rol forms ve todos; miembro sin nada no ve ninguno; nombrar y quitar encargado.
+```
+
 ---
 
 ## Backlog (fases siguientes, requieren definición de producto)
