@@ -20,6 +20,7 @@ export type RoleId =
   | 'revision_pagos'
   | 'becas'
   | 'editor_grupos_estudio'
+  | 'forms'
 
 export type Permission = {
   module: string

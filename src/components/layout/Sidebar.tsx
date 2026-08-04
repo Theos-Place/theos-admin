@@ -96,7 +96,8 @@ interface SidebarProps {
 
 // Nombres bonitos desde la fuente de verdad (ROLES): el mapa manual anterior
 // solo cubría 3 roles y el resto veía su slug crudo (p. ej. coordinador_estudios).
-import { ROLES } from '@/lib/auth/roles'
+import { ROLES, isStudyGroupsOnly } from '@/lib/auth/roles'
+import type { RoleId } from '@/types/auth'
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLES.map(r => [r.id, r.name]))
 
 export function Sidebar({ open, onClose }: SidebarProps) {
@@ -141,7 +142,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // 'own'; el dirigente ve únicamente "Grupos" (el API le filtra los suyos) y
   // el rol miembro no ve el módulo (su grupo se abre por deep link del perfil).
   const studiesBeyondOwn = can('estudios', 'view') && getScope('estudios') !== 'own'
-  const estudiosSub: SubItem[] = studiesBeyondOwn
+  // El rol acotado de grupos tiene alcance 'all' en estudios, pero solo para
+  // grupos: sin resumen ni el resto del submenú (espejo del ModuleGuard y de
+  // los guards de API).
+  const groupsOnly = isStudyGroupsOnly(userRoles as RoleId[])
+  const estudiosSub: SubItem[] = groupsOnly
+    ? [{ href: '/estudios/grupos', label: 'Grupos', icon: LayoutList }]
+    : studiesBeyondOwn
     ? [
       ...ESTUDIOS_SUB.map(s => s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s),
       // Bloques de capacitación: solo coordinador de estudios y admin.
@@ -193,6 +200,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const comunicacionesSub: SubItem[] = can('formularios', 'view')
     ? [{ href: '/formularios', label: 'Formularios', icon: FileText }, ...comunicacionesBase]
     : comunicacionesBase
+  // 2026-08-04: acceso puntual a formularios. Quien NO tiene el módulo de
+  // comunicaciones pero sí accesos (form_access_grants) necesita su propia
+  // entrada — el resto del submenú de comunicaciones no le sirve de nada.
+  const formGrants = user?.granted_form_ids ?? []
+  const onlyGrantedForms = formGrants.length > 0 && !can('comunicaciones', 'view') && !can('formularios', 'view')
 
   // "Crear evento"/"Tipos de evento" son de gestión — ocultos si no se tiene
   // el módulo, aunque el ítem padre "Eventos" sí se muestre a todos.
@@ -218,12 +230,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // la propia página muestra solo la inscripción a eventos (antes vivía
     // aparte en /mis-eventos); "Crear evento"/"Tipos de evento" siguen ocultos.
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: eventosSub,        module: 'eventos', summaryLabel: 'Calendario' },
-    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios', hideSummary: !canSeeSummaryRoute('/estudios', getScope('estudios')) },
+    { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios', hideSummary: groupsOnly || !canSeeSummaryRoute('/estudios', getScope('estudios')) },
     { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores', hideSummary: !canSeeSummaryRoute('/servidores', getScope('servidores')) },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
+    ...(onlyGrantedForms
+      ? [{ href: '/formularios', label: 'Formularios', icon: FileText, subs: [], module: null } as NavModule]
+      : []),
   ]
   // El padrón (listado de miembros) exige alcance más allá de 'own' — el rol
   // base 'miembro' ve su perfil, no el listado (espejo del guard de la API).

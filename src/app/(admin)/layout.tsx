@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { AppShell } from '@/components/layout/AppShell'
 import { usePermissions } from '@/hooks/usePermissions'
 import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
+import { isStudyGroupsOnly } from '@/lib/auth/roles'
+import { studyGroupsOnlyAllows } from '@/lib/auth/studies-scope'
 import { SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 
 const pageTitles: Record<string, string> = {
@@ -77,6 +79,14 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // cualquier sesión autenticada (las convocatorias por correo apuntan ahí).
   // El módulo formularios (dirección/admin) sigue exigiéndose para el resto.
   if (/^\/formularios\/[0-9a-f-]{36}\/responder$/i.test(pathname)) return <>{children}</>
+  // Excepción (2026-08-04): acceso puntual a UN formulario. Quien tenga grants
+  // entra al listado (la API le devuelve solo los suyos) y a las respuestas de
+  // esos formularios. Sin el módulo NO abre el editor ni ningún otro form.
+  if ((user.granted_form_ids ?? []).length > 0) {
+    if (pathname === '/formularios') return <>{children}</>
+    const m = pathname.match(/^\/formularios\/([0-9a-f-]{36})\/respuestas$/i)
+    if (m && (user.granted_form_ids ?? []).includes(m[1])) return <>{children}</>
+  }
   // Excepción (EST-10): /formularios/[id]/seleccion es la revisión del comité de
   // una preinscripción — la ven los coordinadores de dirigentes/estudios sin el
   // módulo formularios. Espejo del gate de /api/forms/[id]/selection.
@@ -99,6 +109,13 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // asignaron. Espejo de requestQueueScope.
   if (pathname === '/estudios/solicitudes' && user.in_study_committee) return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
+  // El rol acotado de grupos (editor_grupos_estudio) tiene el módulo estudios
+  // con alcance 'all' pero SOLO para grupos: nada de resumen, plan, bloques,
+  // dirigentes, análisis, solicitudes ni folletos. Espejo de los guards de API.
+  if (prefix === '/estudios' && isStudyGroupsOnly(user.roles ?? [])
+      && !studyGroupsOnlyAllows(pathname)) {
+    return <AccessDenied />
+  }
   // SEC-1: la RAÍZ de estudios/servidores es un resumen de toda la organización
   // — exige alcance 'all' (dirigente ve sus grupos; lider_comite, su comité).
   // La regla es por RUTA: /matricula mapea al módulo estudios pero es el

@@ -18,6 +18,17 @@ export function studiesViewScope(roles: RoleId[]): StudiesScope {
   return 'member'
 }
 
+/**
+ * Rutas de /estudios que abre el rol acotado de grupos (editor_grupos_estudio
+ * sin ningún rol de estudios completo): el listado y todo lo que cuelga del
+ * detalle de un grupo. El resumen (/estudios) y las secciones de coordinación
+ * (plan, bloques, dirigentes, análisis, solicitudes, folletos, importar) quedan
+ * fuera. Puro: lo usa el ModuleGuard de las páginas y es testeable sin React.
+ */
+export function studyGroupsOnlyAllows(pathname: string): boolean {
+  return pathname === '/estudios/grupos' || pathname.startsWith('/estudios/grupos/')
+}
+
 /** Nivel de acceso a UN grupo concreto. El caller resuelve la pertenencia
  *  (leader/co-leader del grupo, inscripción del miembro) y esta función decide.
  *  'none' = sesión sin relación con el grupo: recibe el grupo SIN roster

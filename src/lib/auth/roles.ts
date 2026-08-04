@@ -15,6 +15,24 @@ export const STUDY_ADMIN_ROLES: RoleId[] = [
  *  Reutilizar en los guards de UI y de API de grupos (crear/editar/eliminar). */
 export const GROUP_ADMIN_ROLES: RoleId[] = [...STUDY_ADMIN_ROLES, 'editor_grupos_estudio']
 
+/**
+ * ¿Estos roles alcanzan SOLO la sección de grupos dentro de estudios?
+ * El rol 'editor_grupos_estudio' tiene el módulo `estudios` con alcance 'all'
+ * (lo necesita para ver el listado y el detalle de cualquier grupo), pero eso
+ * NO lo habilita al resto del módulo: plan, bloques, dirigentes, análisis,
+ * solicitudes y folletos son de STUDY_ADMIN_ROLES.
+ *
+ * Falso si además trae un rol que sí abre estudios completo (coordinadores,
+ * dirección, admin) o 'solo_lectura' (que ve todo por el módulo 'all').
+ * Fuente única para el sidebar, el ModuleGuard de las páginas y los guards de
+ * API que hoy se apoyan en el permiso de módulo.
+ */
+export function isStudyGroupsOnly(roles: readonly RoleId[] | null | undefined): boolean {
+  const list = roles ?? []
+  if (!list.includes('editor_grupos_estudio')) return false
+  return !list.some(r => STUDY_ADMIN_ROLES.includes(r) || r === 'solo_lectura')
+}
+
 /** Delegación acotada de permisos: el coordinador de estudios puede asignar/quitar
  *  SOLO estos tres roles a otras personas (poder de administración acotado). El
  *  resto de los permisos siguen siendo exclusivos de 'admin'. Fuente única para
@@ -187,6 +205,17 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'forms',
+    name: 'Formularios',
+    description: 'Todos los formularios y sus respuestas (ver, crear, editar, exportar)',
+    color: '#9B7FD4',
+    // El módulo completo, sin 'delete': borrar un formulario (con sus respuestas
+    // detrás) sigue siendo de comunicaciones/staff/dirección/admin.
+    permissions: [
+      { module: 'formularios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
+    ],
+  },
+  {
     id: 'comunicaciones',
     name: 'Comunicaciones',
     description: 'Envío de mensajes y ver miembros',
@@ -194,6 +223,9 @@ export const ROLES: Role[] = [
     permissions: [
       { module: 'comunicaciones', actions: ['view', 'create', 'edit'], scope: 'all' },
       { module: 'miembros',       actions: ['view'],                   scope: 'all' },
+      // 2026-08-04: ya podía crear/editar formularios por rol explícito en
+      // /api/forms pero no veía el listado ni las respuestas. Se alinea.
+      { module: 'formularios',    actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
     ],
   },
   {
@@ -249,6 +281,8 @@ export const ROLES: Role[] = [
       { module: 'servidores', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'empleados',  actions: ['view', 'create', 'edit'],           scope: 'all' },
       { module: 'miembros',   actions: ['view'],                             scope: 'all' },
+      // 2026-08-04: mismo desalineamiento que comunicaciones (ver arriba).
+      { module: 'formularios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
     ],
   },
   {

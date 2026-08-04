@@ -20,6 +20,9 @@ export interface AuthUser {
    *  /estudios/solicitudes con alcance acotado (solo lo asignado a la persona),
    *  incluso sin ningún rol. */
   in_study_committee?: boolean
+  /** Formularios con acceso puntual (form_access_grants). Habilitan
+   *  /formularios y las respuestas de ESOS formularios sin tener el módulo. */
+  granted_form_ids?: string[]
 }
 
 interface AuthState {
