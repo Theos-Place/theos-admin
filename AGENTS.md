@@ -10,11 +10,17 @@ Toda UI nueva sigue `Theos Place Design System/accessibility.md` (estándar de l
 
 # Ancho y layout
 
-Toda pantalla nueva sigue `Theos Place Design System/layout.md`. Resumen: en desktop
-las pantallas de datos/gestión son **full-width** (sin `max-w-* mx-auto` en el contenedor
-raíz) y distribuyen el contenido en grids responsive (`grid-cols-1` → `lg:grid-cols-2/3`),
-no una columna estirada. Excepción: páginas de lectura/confirmación y párrafos de ayuda
-sí usan `max-w-*` para un ancho de lectura cómodo.
+Toda pantalla nueva sigue `Theos Place Design System/layout.md`. **Tres anchos, y
+ninguno se escribe a mano** — salen de `<PageContainer width="…">`:
+
+- `work` (1600px): tablas, listados, dashboards, colas. **Es el default**: el AppShell
+  ya lo aplica, así que una pantalla de gestión no envuelve nada.
+- `form` (896px): wizards y detalle/edición de un objeto.
+- `reading` (768px): prosa (`/terminos`, guías de `/ayuda`).
+
+Dentro del ancho, el contenido se distribuye en grids responsive (`grid-cols-1` →
+`lg:grid-cols-2/3`), no una columna estirada. Los `max-w-*` de un elemento interno
+(input, tarjeta, párrafo, pantalla de confirmación centrada) no son esto y se quedan.
 
 # Seguridad en rutas API
 

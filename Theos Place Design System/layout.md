@@ -5,6 +5,42 @@ pantallas usan todo el ancho disponible y se adaptan de forma responsive hacia
 tablet y móvil.** El shell (sidebar + padding del layout) ya define el margen; el
 contenido NO se vuelve a encajonar con un `max-w-*` centrado.
 
+## Los tres anchos (2026-08-04)
+
+Toda pantalla usa uno de tres, y **ninguno se escribe a mano**: salen de
+`<PageContainer width="…">` (`src/components/layout/PageContainer.tsx`).
+
+| Ancho | Medida | Para qué | Ejemplos |
+|---|---|---|---|
+| `work` | 1600 px | Tablas, listados, dashboards, calendarios, colas de revisión. Ver más datos importa más que la comodidad de lectura. | `/miembros`, `/finanzas/pagos`, `/estudios`, `/mis-pagos`, check-in, el índice de `/ayuda` |
+| `form` | 896 px | Wizards y el detalle/edición de UN objeto. | `/matricula/prematrimonial`, `/estudios/importar` |
+| `reading` | 768 px | Prosa. Textos largos, ~75 caracteres por línea. | `/terminos`, las guías de `/ayuda` |
+
+**El admin no necesita envolver nada**: el `AppShell` ya aplica `work` a todo, así
+que una pantalla de gestión se escribe igual que siempre (`space-y-*`, sin
+`max-w-*`). Solo las de lectura y las de formulario declaran su ancho:
+
+```tsx
+// Pantalla de gestión: nada que hacer, el AppShell la acota en 1600.
+<div className="space-y-4"> … </div>
+
+// Wizard / detalle de un objeto:
+<PageContainer width="form" className="page"> … </PageContainer>
+
+// Prosa:
+<PageContainer width="reading"> … </PageContainer>
+```
+
+Fuera del AppShell (páginas públicas) se usa con `padded` o con su propio padding.
+
+**Excepción de `/ayuda`:** el cuerpo del tutorial va en `reading`, pero las guías
+de tipo `infografia` usan `work` — son diagramas anchos que a 768 px quedan
+ilegibles. Además, tocar cualquier imagen la abre a pantalla completa.
+
+Los `max-w-xs/sm/md/[400px]` **dentro** de un componente (un input, una tarjeta,
+un párrafo de ayuda, una pantalla de confirmación centrada) no son esto: acotan un
+elemento, no la página, y se quedan.
+
 ## La regla
 
 - El contenedor raíz de una pantalla es **full-width**: `space-y-*` sin `max-w-* mx-auto`.

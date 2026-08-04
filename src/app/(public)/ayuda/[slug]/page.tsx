@@ -7,6 +7,7 @@ import { getHelpDoc, getHelpIndex } from '@/lib/help/loader'
 import { renderMarkdown } from '@/lib/help/markdown'
 import { helpNeighbors } from '@/lib/help/visibility'
 import { HelpArticle, ZoomHint } from '@/components/help/HelpArticle'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 // Un artículo. SEGURIDAD: getHelpDoc aplica la visibilidad del frontmatter en el
 // servidor — un documento con roles NO se sirve a una petición sin sesión ni a un
@@ -40,13 +41,14 @@ export default async function AyudaArticuloPage(
   const html = renderMarkdown(doc.content)
   const hasImages = html.includes('<img')
 
-  // Ancho de lectura (layout.md): el TEXTO no debe pasar de ~75 caracteres por
-  // línea. Las infografías son imágenes anchas y en una columna de 768 px se
-  // ven diminutas, así que esas guías usan un ancho mayor.
-  const ancho = doc.tipo === 'infografia' ? 'max-w-5xl' : 'max-w-3xl'
+  // El TEXTO va en ancho de lectura. Las infografías son diagramas anchos: en
+  // una columna de 768 px quedan ilegibles, así que esas guías usan el ancho de
+  // trabajo — y cualquier imagen se abre a pantalla completa al tocarla.
+  const width = doc.tipo === 'infografia' ? 'work' : 'reading'
 
   return (
-    <article className={`mx-auto ${ancho} space-y-5`}>
+    <PageContainer width={width}>
+      <article className="space-y-5">
       <div className="space-y-2">
         <Link
           href="/ayuda"
@@ -92,6 +94,7 @@ export default async function AyudaArticuloPage(
           )}
         </nav>
       )}
-    </article>
+      </article>
+    </PageContainer>
   )
 }

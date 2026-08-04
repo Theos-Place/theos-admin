@@ -3,6 +3,7 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { getAuthContext } from '@/lib/auth/guard'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 export const metadata: Metadata = {
   title: 'Centro de ayuda · Theos Place',
@@ -37,7 +38,7 @@ export default async function AyudaLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-surface-low">
       <header className="bg-navy">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
+        <PageContainer width="work" className="flex items-center justify-between gap-3 px-5 py-4">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo-theos-white.png"
@@ -54,10 +55,12 @@ export default async function AyudaLayout({ children }: { children: React.ReactN
           >
             Iniciar sesión
           </Link>
-        </div>
+        </PageContainer>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 py-6 pb-16">{children}</main>
+      {/* Sin ancho propio: cada página se acota (el índice va en work y el
+          artículo en reading). */}
+      <main className="px-5 py-6 pb-16">{children}</main>
 
     </div>
   )

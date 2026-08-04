@@ -13,6 +13,7 @@ import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { Modal } from '@/components/shared/Modal'
 import { getInitials, toYmdLocal, formatCRC } from '@/lib/format'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 // El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
 // no forma parte del bundle inicial de la página.
@@ -428,7 +429,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
       {/* Contenido */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl w-full mx-auto p-4 sm:p-6">
+        <PageContainer width="work" className="p-4 sm:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
             {/* Columna izquierda: acciones (escanear + buscar) */}
             <div className="space-y-4">
@@ -571,7 +572,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           </div>
             </div>
           </div>
-        </div>
+        </PageContainer>
       </div>
 
       {showNewPerson && (

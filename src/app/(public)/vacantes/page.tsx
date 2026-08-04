@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { MapPin, Clock, Users, Search, Briefcase } from 'lucide-react'
 import { PublicApplyButton } from '@/components/servers/PublicApplyButton'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 type PublicVacancy = {
   id: string
@@ -57,17 +58,17 @@ export default function VacantesPublicasPage() {
     <div className="min-h-screen bg-surface-low">
       {/* Encabezado público */}
       <header className="bg-navy text-white">
-        <div className="mx-auto max-w-5xl px-5 py-10">
+        <PageContainer width="work" className="px-5 py-10">
           <p className="text-[13px] font-medium text-white/60 font-body">Theos Place</p>
           <h1 className="mt-1 text-2xl font-bold font-display sm:text-3xl">Oportunidades de servicio</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/70 font-body">
             Estos son los puestos disponibles para servir. Explorá las vacantes y aplicá a la que te interese
             — para aplicar te pediremos iniciar sesión.
           </p>
-        </div>
+        </PageContainer>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 py-8">
+      <main><PageContainer width="work" className="px-5 py-8">
         {/* Filtros */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 items-center gap-2 rounded-xl bg-white px-3 py-2.5 ring-1 ring-navy/10 focus-within:ring-navy/25">
@@ -139,7 +140,7 @@ export default function VacantesPublicasPage() {
             )
           })}
         </div>
-      </main>
+      </PageContainer></main>
     </div>
   )
 }

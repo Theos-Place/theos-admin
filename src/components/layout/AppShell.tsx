@@ -18,6 +18,8 @@ import { OrgProvider } from '@/lib/org'
 import { AuthProvider } from '@/lib/auth/auth-context'
 import { ToastProvider } from '@/components/shared/Toast'
 import { CedulaReminderBanner } from '@/components/members/CedulaReminderBanner'
+import { PAGE_WIDTH } from './PageContainer'
+import { cn } from '@/lib/utils'
 
 export function AppShell({
   title,
@@ -45,9 +47,15 @@ export function AppShell({
                 {/* overflow-x-clip: ninguna página puede provocar scroll horizontal del
                     viewport en mobile; clip (no hidden) no crea contenedor de scroll, así
                     que no rompe los position:sticky internos (p. ej. la barra de editar). */}
+                {/* El ancho 'work' (1600px) se aplica UNA vez acá, para todo el
+                    admin: las pantallas de gestión no envuelven nada. Las de
+                    lectura y las de formulario declaran el suyo con
+                    <PageContainer width="reading|form"> (ver layout.md). */}
                 <main className="flex-1 p-4 lg:p-6 min-w-0 overflow-x-clip">
-                  {showCedulaReminder && <CedulaReminderBanner />}
-                  <ErrorBoundary>{children}</ErrorBoundary>
+                  <div className={cn('mx-auto w-full min-w-0', PAGE_WIDTH.work)}>
+                    {showCedulaReminder && <CedulaReminderBanner />}
+                    <ErrorBoundary>{children}</ErrorBoundary>
+                  </div>
                 </main>
               </div>
             </div>

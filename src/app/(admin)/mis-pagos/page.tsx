@@ -122,7 +122,7 @@ function MisPagosContent() {
 
   if (loaded && !selfId) {
     return (
-      <div className="page max-w-2xl mx-auto">
+      <div className="page">
         <p className="rounded-2xl bg-surface-card p-6 text-sm text-navy-light/70 font-body">Tu sesión no tiene un perfil de miembro asociado.</p>
       </div>
     )

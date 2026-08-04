@@ -4,6 +4,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 export const metadata: Metadata = {
   title: 'Términos y Condiciones y Política de Privacidad · Theos Place',
@@ -31,7 +32,7 @@ export default function TerminosPage() {
     <div className="min-h-screen bg-[#F8FAFB]">
       {/* Barra superior con logo */}
       <header className="border-b border-[var(--outline-variant)] bg-surface-card">
-        <div className="mx-auto max-w-3xl px-5 py-4 flex items-center justify-between gap-4">
+        <PageContainer width="reading" className="px-5 py-4 flex items-center justify-between gap-4">
           <Link href="/" className="inline-flex items-center" aria-label="Theos Place — inicio">
             <Image
               src="/logo-theos-original.png"
@@ -45,10 +46,10 @@ export default function TerminosPage() {
           <Link href="/login" className="text-[13px] text-navy-light/60 hover:text-navy transition-colors font-body">
             Ingresar →
           </Link>
-        </div>
+        </PageContainer>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 py-8 sm:py-12">
+      <main><PageContainer width="reading" className="px-5 py-8 sm:py-12">
         {/* Título */}
         <h1 className="text-2xl sm:text-3xl font-extrabold text-navy font-display tracking-[-0.02em] leading-tight">
           Términos y Condiciones y Política de Privacidad
@@ -279,7 +280,7 @@ export default function TerminosPage() {
           <span>© {new Date().getFullYear()} Theos</span>
           <Link href="/login" className="hover:text-navy transition-colors">Volver a ingresar</Link>
         </footer>
-      </main>
+      </PageContainer></main>
     </div>
   )
 }

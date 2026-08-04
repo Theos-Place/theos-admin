@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { GroupImportRow } from '@/lib/studies/group-import-rules'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 // EST-2: importación masiva de grupos de estudio desde CSV/XLSX (mismo patrón
 // que importar-vacantes). El preview usa el POST con dry_run=true, así los
@@ -157,7 +158,7 @@ export default function ImportarGruposPage() {
   for (const e of preview?.errors ?? []) issueByRow.set(e.row, { kind: 'error', reason: e.reason })
 
   return (
-    <div className="page max-w-5xl mx-auto space-y-5">
+    <PageContainer width="form" className="page space-y-5">
       <div className="flex items-center gap-3">
         <Link href="/estudios" className="text-navy-light/60 hover:text-navy" aria-label="Volver a estudios">
           <ArrowLeft size={18} />
@@ -275,6 +276,6 @@ export default function ImportarGruposPage() {
           </Link>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { minCeremonyDate } from '@/lib/studies/premat-dates'
 import { toYmdLocal } from '@/lib/format'
 import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 type Enrollee = { member_id: string; name: string; email: string | null; has_cedula: boolean; meets_requirement: boolean }
 
@@ -282,7 +283,7 @@ export default function PrematrimonialWizardPage() {
   }
 
   return (
-    <div className="page max-w-2xl mx-auto">
+    <PageContainer width="form" className="page">
       <div className="mb-5 flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal/15"><Heart size={20} className="text-teal-deep" /></div>
         <div>
@@ -509,6 +510,6 @@ export default function PrematrimonialWizardPage() {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   )
 }
