@@ -97,6 +97,7 @@ interface SidebarProps {
 // Nombres bonitos desde la fuente de verdad (ROLES): el mapa manual anterior
 // solo cubría 3 roles y el resto veía su slug crudo (p. ej. coordinador_estudios).
 import { ROLES, isStudyGroupsOnly } from '@/lib/auth/roles'
+import { formsNavPlacement } from '@/lib/auth/forms-scope'
 import type { RoleId } from '@/types/auth'
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLES.map(r => [r.id, r.name]))
 
@@ -197,14 +198,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const comunicacionesBase = userRoles.includes('admin')
     ? COMUNICACIONES_SUB
     : COMUNICACIONES_SUB.filter(s => s.href !== '/comunicaciones/configuracion')
-  const comunicacionesSub: SubItem[] = can('formularios', 'view')
+  // Dónde va Formularios: adentro de Comunicaciones para quien tiene ese módulo,
+  // y como entrada propia de primer nivel para quien llega por otro camino —el
+  // rol 'forms' o un acceso puntual a un formulario—, que no ve Comunicaciones.
+  // Regla única y testeada: formsNavPlacement (bug 2026-08-04: el rol forms se
+  // quedaba sin entrada porque el padre no se pintaba).
+  const formsNav = formsNavPlacement({
+    roles: userRoles as RoleId[],
+    grantedFormIds: user?.granted_form_ids,
+  })
+  const comunicacionesSub: SubItem[] = formsNav === 'submenu'
     ? [{ href: '/formularios', label: 'Formularios', icon: FileText }, ...comunicacionesBase]
     : comunicacionesBase
-  // 2026-08-04: acceso puntual a formularios. Quien NO tiene el módulo de
-  // comunicaciones pero sí accesos (form_access_grants) necesita su propia
-  // entrada — el resto del submenú de comunicaciones no le sirve de nada.
-  const formGrants = user?.granted_form_ids ?? []
-  const onlyGrantedForms = formGrants.length > 0 && !can('comunicaciones', 'view') && !can('formularios', 'view')
 
   // "Crear evento"/"Tipos de evento" son de gestión — ocultos si no se tiene
   // el módulo, aunque el ítem padre "Eventos" sí se muestre a todos.
@@ -236,7 +241,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
-    ...(onlyGrantedForms
+    ...(formsNav === 'top_level'
       ? [{ href: '/formularios', label: 'Formularios', icon: FileText, subs: [], module: null } as NavModule]
       : []),
   ]

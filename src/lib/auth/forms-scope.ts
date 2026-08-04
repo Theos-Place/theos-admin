@@ -53,3 +53,30 @@ export function canExportFormResponses(scope: FormViewerScope): boolean {
 export function canEditFormStructure(scope: FormViewerScope): boolean {
   return scope === 'admin'
 }
+
+/**
+ * Dónde va "Formularios" en el menú.
+ *
+ * Formularios vive como SUB-ÍTEM de Comunicaciones. El problema (bug 2026-08-04):
+ * el módulo padre solo se pinta con `comunicaciones:view`, así que quien llega a
+ * formularios por otro camino —el rol `forms`, o un acceso puntual a un
+ * formulario— nunca veía el hijo aunque su permiso estuviera bien.
+ *
+ *   · 'submenu'   → tiene Comunicaciones: va adentro, como siempre.
+ *   · 'top_level' → alcanza formularios pero NO Comunicaciones: entrada propia
+ *                   de primer nivel (el resto del submenú —plantillas, envíos,
+ *                   configuración— no le sirve y no debe aparecerle).
+ *   · 'none'      → no ve formularios.
+ */
+export type FormsNavPlacement = 'submenu' | 'top_level' | 'none'
+
+export function formsNavPlacement(input: {
+  roles: readonly RoleId[] | null | undefined
+  /** form_access_grants de la sesión (granted_form_ids de /api/auth/me). */
+  grantedFormIds?: readonly string[] | null
+}): FormsNavPlacement {
+  const alcanzaFormularios = hasFormsModule(input.roles) || (input.grantedFormIds ?? []).length > 0
+  if (!alcanzaFormularios) return 'none'
+  const tieneComunicaciones = hasModulePermission([...(input.roles ?? [])], 'comunicaciones', 'view')
+  return tieneComunicaciones ? 'submenu' : 'top_level'
+}

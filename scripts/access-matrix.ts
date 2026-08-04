@@ -35,6 +35,7 @@ const USERS: Record<string, string> = {
   lider_comite: 'lider@theosplace.org',
   coordinador_estudios: 'estudios@theosplace.org',
   editor_grupos_estudio: 'grupos@theosplace.org',
+  forms: 'formularios@theosplace.org',
   admin: 'admin@theosplace.org',
 }
 
@@ -59,6 +60,11 @@ const MATRIX: Array<{ path: string; expected: Expected }> = [
   { path: '/api/servers/position-requests', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 403, admin: 'ok' } },
   { path: '/api/finance/payments?page=1&pageSize=1', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } }, // REV-3: revision_pagos
   { path: '/api/payments/queue', expected: { miembro: 403, dirigente: 403, lider_comite: 403, coordinador_estudios: 'ok', admin: 'ok' } },
+  // Rol 'forms' (2026-08-04): ve TODOS los formularios y sus respuestas, y nada
+  // más. El listado de comunicaciones y el padrón le quedan cerrados.
+  { path: '/api/forms', expected: { miembro: 403, dirigente: 403, coordinador_estudios: 403, forms: 'ok', admin: 'ok' } },
+  { path: '/api/communications/templates', expected: { forms: 403, admin: 'ok' } },
+  { path: '/api/members', expected: { forms: 403 } },
 ]
 
 async function login(email: string): Promise<string> {
