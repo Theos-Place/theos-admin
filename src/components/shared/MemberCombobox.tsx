@@ -36,6 +36,9 @@ type MemberComboboxProps = {
   metaText?: (m: MemberHit) => string | null
   /** Contenido a mostrar mientras no se alcanza `minChars`. */
   emptyState?: ReactNode
+  /** Endpoint alternativo con la misma respuesta `{ members }`. Default
+   *  `/api/members` (exige el módulo miembros). */
+  searchUrl?: string
 }
 
 function initials(m: MemberHit) {
@@ -46,6 +49,11 @@ function initials(m: MemberHit) {
  * Buscador compartido de miembros contra `GET /api/members?search=…` con
  * debounce de 300ms. Al elegir una opción se llama `onSelect` y se limpia
  * la búsqueda (el estado "seleccionado" lo maneja quien lo usa).
+ *
+ * `searchUrl` permite apuntar a OTRO endpoint con la misma forma de respuesta
+ * (`{ members: [...] }`). Existe porque /api/members exige el módulo miembros:
+ * una pantalla cuyo permiso es otro (dar acceso a un formulario, por ejemplo)
+ * necesita buscar personas sin que eso implique abrirle el padrón entero.
  */
 export function MemberCombobox({
   onSelect,
@@ -59,6 +67,7 @@ export function MemberCombobox({
   secondaryText,
   metaText,
   emptyState,
+  searchUrl = '/api/members',
 }: MemberComboboxProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MemberHit[]>([])
@@ -79,7 +88,8 @@ export function MemberCombobox({
     let alive = true
     const t = setTimeout(() => {
       setSearching(true)
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=${pageSize}`, { signal: ctrl.signal })
+      const sep = searchUrl.includes('?') ? '&' : '?'
+      fetch(`${searchUrl}${sep}search=${encodeURIComponent(q)}&pageSize=${pageSize}`, { signal: ctrl.signal })
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
           if (!alive) return
@@ -92,7 +102,7 @@ export function MemberCombobox({
     }, 300)
     return () => { alive = false; clearTimeout(t); ctrl.abort() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, minChars, pageSize, excludeKey])
+  }, [query, minChars, pageSize, excludeKey, searchUrl])
 
   function pick(m: MemberHit) {
     setQuery('')

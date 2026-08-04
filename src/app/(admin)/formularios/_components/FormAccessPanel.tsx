@@ -84,9 +84,13 @@ export function FormAccessPanel({ formId }: { formId: string }) {
         <label className="text-[11px] text-navy-light/70 mb-1 block font-body" htmlFor="form-access-search">
           Agregar una persona
         </label>
+        {/* Busca por el endpoint de accesos, no por /api/members: ese exige el
+            módulo miembros y el rol 'forms' no lo tiene (bug 2026-08-04: el
+            buscador no devolvía nada). */}
         <MemberCombobox
           dropdown
           placeholder="Buscá por nombre o cédula…"
+          searchUrl={`/api/forms/${formId}/access`}
           excludeIds={grants.map(g => g.member_id)}
           onSelect={add}
         />

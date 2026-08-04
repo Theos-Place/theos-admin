@@ -4,6 +4,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import {
   getFormAccessGrants, grantFormAccess, revokeFormAccess, getFormById,
+  searchMembersForGrant,
 } from '@/lib/supabase/queries/forms'
 
 // Accesos puntuales a UN formulario (ver y exportar sus respuestas).
@@ -12,12 +13,23 @@ import {
 
 const grantSchema = z.object({ member_id: z.string().uuid() })
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await requireModuleView('formularios', { action: 'edit' })
     if (auth.res) return auth.res
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
+
+    // ?search= → a quién se le PUEDE dar acceso. Va acá y no en /api/members
+    // porque ese endpoint exige el módulo miembros (el padrón completo) y el
+    // rol 'forms' no lo tiene: sin esto, el buscador del panel de accesos no
+    // devolvía nada. Gateado por el MISMO permiso que otorga el acceso, y
+    // devuelve solo lo justo para reconocer a la persona.
+    const search = req.nextUrl.searchParams.get('search')
+    if (search !== null) {
+      const limit = Math.min(Number(req.nextUrl.searchParams.get('pageSize') ?? 8) || 8, 20)
+      return NextResponse.json({ members: await searchMembersForGrant(search, limit) })
+    }
     return NextResponse.json(await getFormAccessGrants(id))
   } catch (error) {
     console.error('GET /api/forms/[id]/access:', error)
