@@ -9,15 +9,15 @@
  * Sin --commit NO escribe nada: imprime el reporte y genera el CSV de mapeo de
  * puestos (que es un archivo de trabajo, no una escritura en la BD).
  *
- * QUÉ ESCRIBE (solo members): email, phone, cedula + cedula_normalized, workplace,
- * occupation. Nada más.
+ * QUÉ ESCRIBE (solo members): email, phone, cedula, workplace, occupation.
+ * cedula_normalized la calcula la base sola (columna generada).
  *
  * QUÉ NO ESCRIBE, a propósito:
  *   · Nombres — se comparan y se reportan; que los cambie una persona.
  *   · Puestos de servicio — el texto libre de CCB ensuciaría el catálogo canónico
  *     del Manual de Puestos Madre 2026. Sale un CSV para revisar a mano.
- *   · Nota de Panorama — va en study_enrollments.grade del plan PAN, pero la
- *     columna es numeric(4,2) y no aguanta las notas de 100+. Pendiente de decisión.
+ *   · Nota de Panorama — la escribe scripts/import-panorama-grades-2026-08.ts en
+ *     study_enrollments.grade del plan PAN (ya corrido).
  *
  * Las reglas de normalización (teléfono, cédula, "0" como vacío, nota, match difuso)
  * viven en src/lib/import/ccb-personal-data.ts, con tests.
@@ -146,7 +146,11 @@ async function main() {
   }
 
   // ── Matcheo y cálculo de cambios ──────────────────────────────────────────
-  type Patch = Partial<Pick<Member, 'email' | 'phone' | 'cedula' | 'cedula_normalized' | 'occupation' | 'workplace'>>
+  // OJO: cedula_normalized NO va acá. Es una columna GENERADA en la base
+  // (regexp_replace(cedula, '[-\s]', '')) y Postgres rechaza el UPDATE completo
+  // con "can only be updated to DEFAULT" si se la manda — se pierde también el
+  // resto del patch de esa ficha. La calcula la base sola al escribir cedula.
+  type Patch = Partial<Pick<Member, 'email' | 'phone' | 'cedula' | 'occupation' | 'workplace'>>
   type Plan = { row: Row; member: Member; patch: Patch }
 
   const planes: Plan[] = []
@@ -207,7 +211,6 @@ async function main() {
           conflictosCedulaDup.push({ row, member: m, nueva: doc.value, duenos })
         } else {
           patch.cedula = doc.value
-          patch.cedula_normalized = doc.value
           cambiosPorCampo.cedula++
           if (doc.kind !== 'cr_9') docsNoCr.push({ row, member: m, valor: doc.value, kind: doc.kind })
         }
