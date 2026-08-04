@@ -77,3 +77,53 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('\n\n')).toBe('')
   })
 })
+
+describe('ítems de lista partidos en varias líneas (bug 2026-08-04)', () => {
+  it('la continuación indentada NO reinicia la numeración', () => {
+    const html = renderMarkdown([
+      '1. Primero.',
+      '2. Segundo, con un renglón que sigue',
+      '   en la línea de abajo.',
+      '3. Tercero.',
+    ].join('\n'))
+    // Una sola lista: si se cerrara y abriera otra, el 3 saldría como 1.
+    expect(html.match(/<ol>/g) ?? []).toHaveLength(1)
+    expect(html.match(/<li>/g) ?? []).toHaveLength(3)
+    expect(html).toContain('Segundo, con un renglón que sigue en la línea de abajo.')
+    expect(html).not.toContain('<p>en la línea de abajo.</p>')
+  })
+
+  it('lo mismo con viñetas', () => {
+    const html = renderMarkdown([
+      '- Uno, que sigue',
+      '  acá abajo.',
+      '- Dos.',
+    ].join('\n'))
+    expect(html.match(/<ul>/g) ?? []).toHaveLength(1)
+    expect(html.match(/<li>/g) ?? []).toHaveLength(2)
+    expect(html).toContain('Uno, que sigue acá abajo.')
+  })
+
+  it('la continuación conserva el formato (negrita, enlaces)', () => {
+    const html = renderMarkdown([
+      '1. Algo,',
+      '   con **negrita** y [un enlace](/ayuda).',
+    ].join('\n'))
+    expect(html).toContain('<strong>negrita</strong>')
+    expect(html).toContain('<a href="/ayuda">un enlace</a>')
+  })
+
+  it('una línea SIN indentar sí cierra la lista', () => {
+    const html = renderMarkdown([
+      '1. Un ítem.',
+      'Un párrafo aparte.',
+    ].join('\n'))
+    expect(html).toContain('</ol>')
+    expect(html).toContain('<p>Un párrafo aparte.</p>')
+  })
+
+  it('una línea en blanco corta la lista, como siempre', () => {
+    const html = renderMarkdown('1. Uno.\n\n1. Otra lista.')
+    expect(html.match(/<ol>/g) ?? []).toHaveLength(2)
+  })
+})
