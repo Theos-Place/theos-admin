@@ -969,3 +969,25 @@ export {
   MEMBER_WRITE_FIELDS, normalizeEmail,
 } from '@/lib/supabase/queries/members-mutations'
 export type { DuplicateMember, DuplicatePair } from '@/lib/supabase/queries/members-mutations'
+
+/** Buscador MÍNIMO de personas para elegir a alguien en una pantalla de gestión
+ *  (check-in, becas, agregar a un grupo, dar acceso a un formulario). Nombre,
+ *  cédula y correo de miembros ACTIVOS; nada más. No es el padrón: sin filtros,
+ *  sin paginar y con tope duro. Lo autoriza GET /api/members/lookup. */
+export async function searchMembersForLookup(
+  search: string, limit = 8,
+): Promise<Array<{ id: string; first_name: string; last_name: string; cedula: string | null; email: string | null }>> {
+  const q = search.trim()
+  if (q.length < 2) return []
+  const supabase = createAdminClient()
+  const like = `%${q}%`
+  const { data, error } = await supabase
+    .from('members')
+    .select('id, first_name, last_name, cedula, email')
+    .or(`first_name.ilike.${like},last_name.ilike.${like},cedula.ilike.${like},email.ilike.${like}`)
+    .eq('is_active', true)
+    .order('first_name')
+    .limit(Math.min(limit, 20))
+  if (error) throw error
+  return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula: string | null; email: string | null }>
+}

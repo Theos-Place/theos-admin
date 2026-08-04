@@ -434,25 +434,3 @@ export async function revokeFormAccess(formId: string, memberId: string): Promis
     .from('form_access_grants').delete().eq('form_id', formId).eq('member_id', memberId)
   if (error) throw error
 }
-
-/** Personas a las que se les puede dar acceso a un formulario. Búsqueda mínima
- *  (nombre o cédula) con los campos justos para reconocer a alguien: NO es el
- *  padrón. La autoriza el guard de la ruta, que exige el permiso de edición del
- *  módulo formularios. */
-export async function searchMembersForGrant(
-  search: string, limit = 8,
-): Promise<Array<{ id: string; first_name: string; last_name: string; cedula: string | null; email: string | null }>> {
-  const q = search.trim()
-  if (q.length < 2) return []
-  const supabase = createAdminClient()
-  const like = `%${q}%`
-  const { data, error } = await supabase
-    .from('members')
-    .select('id, first_name, last_name, cedula, email')
-    .or(`first_name.ilike.${like},last_name.ilike.${like},cedula.ilike.${like},email.ilike.${like}`)
-    .eq('is_active', true)
-    .order('first_name')
-    .limit(limit)
-  if (error) throw error
-  return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula: string | null; email: string | null }>
-}

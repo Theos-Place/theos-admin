@@ -48,7 +48,9 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
     if (q.length < 2) { setResults([]); return }
     let alive = true
     const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
+      // /lookup: editor_grupos_estudio no tiene el módulo miembros y no podía
+      // buscar a quién agregar al grupo (bug 2026-08-04).
+      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=6`)
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => { if (alive) setResults(d.members ?? []) })
         .catch(() => { if (alive) setResults([]) })

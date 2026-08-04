@@ -14,7 +14,9 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import { formatDate, formatDateTime, formatCRC } from '@/lib/format'
-import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
+// MEMBER_LOOKUP_URL: el rol 'becas' no tiene el módulo miembros y el
+// buscador quedaba vacío (bug 2026-08-04).
+import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/shared/MemberCombobox'
 import type { FinanceRequest } from '@/types/finance'
 
 type Scholarship = {
@@ -387,6 +389,7 @@ export default function BecasPage() {
               </div>
             ) : (
               <MemberCombobox
+            searchUrl={MEMBER_LOOKUP_URL}
                 onSelect={m => setSendMember(m)}
                 placeholder="Buscar a quién enviárselo…"
                 autoFocus

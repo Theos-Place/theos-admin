@@ -322,7 +322,8 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
     let alive = true
     setLoading(true)
     const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=10`)
+      // /lookup: encargado_eventos no tiene el módulo miembros (bug 2026-08-04).
+      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=10`)
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => { if (alive) setResults(d.members ?? []) })
         .catch(() => { if (alive) setResults([]) })

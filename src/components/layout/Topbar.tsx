@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, Search, User, Settings, LogOut, ChevronDown, Shield, Loader2, CircleQuestionMark } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { usePermissions } from '@/hooks/usePermissions'
 import { cn } from '@/lib/utils'
 import { ROLES } from '@/lib/auth/roles'
 import { NotificationsBell } from './NotificationsDropdown'
@@ -18,6 +19,9 @@ interface TopbarProps {
 export function Topbar({ title, onMenuToggle }: TopbarProps) {
   const router = useRouter()
   const { user } = useAuth()
+  // El buscador global va contra el PADRÓN: solo lo ve quien lo tiene.
+  const { can, getScope } = usePermissions()
+  const canSearchMembers = can('miembros', 'view') && getScope('miembros') !== 'own'
   const [menuOpen, setMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -73,8 +77,12 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Search global de miembros */}
-      <GlobalMemberSearch />
+      {/* Search global de miembros: solo para quien puede usarlo. Estaba a la
+          vista de TODOS —incluidos los 18 mil con rol 'miembro'— y contra
+          /api/members, que exige el padrón: la caja aparecía y no salía nunca
+          nadie. Un buscador que nunca encuentra es peor que no tenerlo
+          (hallazgo 2026-08-04). */}
+      {canSearchMembers && <GlobalMemberSearch />}
 
       {/* Ayuda: el centro de ayuda muestra solo los procesos que esta persona
           puede ejecutar (el filtro por rol vive en el servidor). */}

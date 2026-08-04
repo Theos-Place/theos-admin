@@ -261,7 +261,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     if (q.length < 2) { setMemberResults([]); return }
     let alive = true
     const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=10`)
+      // /lookup: encargado_eventos no tiene el módulo miembros (bug 2026-08-04).
+      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=10`)
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => { if (alive) setMemberResults(((d.members ?? []) as Parameters<typeof toDomainMember>[0][]).map(toDomainMember)) })
         .catch(() => { if (alive) setMemberResults([]) })

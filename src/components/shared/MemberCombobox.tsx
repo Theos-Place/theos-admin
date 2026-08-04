@@ -6,6 +6,11 @@ import { cn } from '@/lib/utils'
 import { initialsFromParts } from '@/lib/format'
 import { useListNavigation, ComboOption, OptionAvatar } from './combobox-base'
 
+/** Buscador para pantallas de GESTIÓN que no tienen el módulo miembros
+ *  (check-in, becas, agregar a un grupo, accesos de formularios). Devuelve lo
+ *  justo para reconocer a alguien; el padrón sigue exigiendo su módulo. */
+export const MEMBER_LOOKUP_URL = '/api/members/lookup'
+
 /** Fila de miembro tal como la devuelve `GET /api/members`. */
 export type MemberHit = {
   id: string

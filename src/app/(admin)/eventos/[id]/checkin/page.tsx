@@ -124,14 +124,17 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     return () => { alive = false }
   }, [selectedMember, id])
 
-  // Búsqueda real entre TODOS los miembros (debounced).
+  // Búsqueda real entre TODOS los miembros (debounced). Va por /lookup y no
+  // por /api/members: el rol encargado_eventos —el que hace check-in— no tiene
+  // el módulo miembros, así que ahí la búsqueda devolvía siempre vacío
+  // (bug 2026-08-04).
   useEffect(() => {
     const q = query.trim()
     if (q.length < 2) { setMemberResults([]); return }
     let alive = true
     setSearching(true)
     const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`)
+      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=8`)
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
           if (!alive) return

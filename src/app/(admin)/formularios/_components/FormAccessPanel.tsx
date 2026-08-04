@@ -9,7 +9,7 @@
 // evento). API: /api/forms/[id]/access.
 import { useState, useEffect } from 'react'
 import { Loader2, Trash2, UserPlus, ShieldCheck } from 'lucide-react'
-import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
+import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
 import { formatDate } from '@/lib/format'
 
@@ -84,13 +84,12 @@ export function FormAccessPanel({ formId }: { formId: string }) {
         <label className="text-[11px] text-navy-light/70 mb-1 block font-body" htmlFor="form-access-search">
           Agregar una persona
         </label>
-        {/* Busca por el endpoint de accesos, no por /api/members: ese exige el
-            módulo miembros y el rol 'forms' no lo tiene (bug 2026-08-04: el
-            buscador no devolvía nada). */}
+        {/* Buscador compartido de gestión, no /api/members: ese exige el módulo
+            miembros y el rol 'forms' no lo tiene (bug 2026-08-04). */}
         <MemberCombobox
           dropdown
           placeholder="Buscá por nombre o cédula…"
-          searchUrl={`/api/forms/${formId}/access`}
+          searchUrl={MEMBER_LOOKUP_URL}
           excludeIds={grants.map(g => g.member_id)}
           onSelect={add}
         />
