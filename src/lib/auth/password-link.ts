@@ -95,8 +95,9 @@ function body(kind: PasswordLinkKind, link: string, nombre: string | null): stri
 
 <div class="info-box">
   <p style="font-size:14px; color:#555; line-height:1.75; margin:0;">
-    El enlace sirve <strong>una sola vez</strong> y vence en 24 horas. Podés abrirlo desde
-    cualquier dispositivo: la compu, el celular, el que tengas a mano.
+    El enlace sirve <strong>una sola vez</strong> y vence, así que usalo apenas te llegue.
+    Podés abrirlo desde cualquier dispositivo: la compu, el celular, el que tengas a mano.
+    Si ya no sirve, pedí uno nuevo desde la pantalla de ingreso.
   </p>
 </div>
 

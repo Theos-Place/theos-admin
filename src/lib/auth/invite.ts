@@ -42,12 +42,14 @@ export async function inviteMemberToCompleteProfile(
         .eq('id', memberId)
       if (linkErr) console.error('No se pudo enlazar auth_user_id:', linkErr.message)
     }
-    const { sendPasswordLink } = await import('@/lib/auth/password-link')
+    // Correo SIN token (2026-08-04): el enlace con token vencía entre que el
+    // admin lo mandaba y la persona lo abría. La cuenta ya existe (se creó
+    // arriba), así que el correo la manda al login a tocar "Creá tu contraseña
+    // acá" — ese enlace lo pide ella y lo usa en el momento. Ver account-ready.ts.
+    const { sendAccountReadyEmail } = await import('@/lib/auth/account-ready')
     const { data: m } = await supabase.from('members').select('first_name').eq('id', memberId).maybeSingle()
-    const res = await sendPasswordLink({
+    const res = await sendAccountReadyEmail({
       email,
-      // La cuenta se acaba de crear/enlazar arriba.
-      tieneCuenta: true,
       nombre: (m as { first_name: string | null } | null)?.first_name ?? null,
     })
     if (!res.sent) return { sent: false, reason: res.reason }

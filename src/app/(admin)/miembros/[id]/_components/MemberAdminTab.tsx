@@ -194,7 +194,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
               )}
             </div>
             <p className="text-[11px] text-navy-light/60 font-body">
-              Crea el usuario de acceso y le envía el correo de activación (Supabase Auth) a su correo registrado.
+              Crea el usuario de acceso y le manda el correo con el paso a paso para crear su contraseña. El correo NO lleva un enlace que venza: la persona lo pide desde la pantalla de ingreso cuando lo va a usar.
             </p>
             {createMsg && (
               <p className={`text-[12px] font-body inline-flex items-center gap-1 ${createMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>

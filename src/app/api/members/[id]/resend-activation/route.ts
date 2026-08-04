@@ -4,10 +4,11 @@ import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// Reenvía el correo de activación (invitación de Supabase Auth) a un miembro con
-// cuenta de Auth SIN confirmar. SOLO roles administrativos, service_role en backend.
-// Método: auth.admin.inviteUserByEmail — el mismo con que se crean/invitan los
-// usuarios (ver lib/auth/invite.ts). Si la cuenta ya está confirmada, no reenvía.
+// Reenvía el aviso de acceso a un miembro con cuenta de Auth SIN activar. SOLO
+// roles administrativos, service_role en backend. Manda el mismo correo sin
+// token que la creación de la cuenta (lib/auth/account-ready.ts): la persona
+// pide su enlace desde el login cuando lo va a usar. Si la cuenta ya está
+// activada, no reenvía.
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireRoles(...STUDY_ADMIN_ROLES)
   if (auth.res) return auth.res
@@ -28,12 +29,20 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: 'La cuenta ya está activada.' }, { status: 400 })
     }
 
-    const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'
-    const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${base}/completar-perfil`,
-      data: { member_id: id, source: 'resend_activation' },
+    // 2026-08-04: ANTES esto llamaba a auth.admin.inviteUserByEmail. Tres
+    // problemas reales: salía por el SMTP de Supabase (no por SES), el enlace
+    // vencía antes de que la persona lo abriera, y CADA reenvío invalidaba el
+    // enlace anterior — quien tenía el primer correo abierto se topaba con
+    // "enlace vencido" sin haber hecho nada. Ahora se manda el mismo aviso sin
+    // token que la creación de la cuenta: la persona pide su enlace desde el
+    // login cuando lo va a usar.
+    const { data: m } = await supabase.from('members').select('first_name').eq('id', id).maybeSingle()
+    const { sendAccountReadyEmail } = await import('@/lib/auth/account-ready')
+    const res = await sendAccountReadyEmail({
+      email,
+      nombre: (m as { first_name: string | null } | null)?.first_name ?? null,
     })
-    if (error) throw error
+    if (!res.sent) throw new Error(res.reason ?? 'No se pudo enviar el correo.')
     return NextResponse.json({ ok: true, email })
   } catch (error) {
     console.error('POST /api/members/[id]/resend-activation:', error)
