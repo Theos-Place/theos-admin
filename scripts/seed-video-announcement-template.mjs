@@ -37,10 +37,10 @@ const NAME = 'Anuncio con video'
 // el del campa 2026, como valor de ejemplo — en otro anuncio se sube el suyo y
 // se pega la URL que devuelve el endpoint.
 const VIDEO_LINK = 'https://jdcyptqnznmywgjvcpxm.supabase.co/storage/v1/object/public/email-media/campa-servidores-2026.mp4'
-// Valor de ejemplo del campa 2026, indicado por TI el 2026-08-04. Es EDITABLE:
-// en otro anuncio se cambia por el formulario o la pantalla que corresponda.
-// (La instrucción original pedía no dejar URLs de CCB; se deja esta porque es el
-// destino real de esta campaña y el campo se cambia en cada uso.)
+// Destino del botón. Se probó con un marcador (LINK-DEL-BOTON) y el correo salía
+// con el botón quebrado, así que va la URL real del campa 2026 como valor por
+// defecto (TI, 2026-08-04). Es contenido de EJEMPLO como el resto: en otro
+// anuncio se cambia por el formulario o la pantalla que corresponda.
 const CTA_LINK   = 'https://theosplace.ccbchurch.com/goto/forms/1231/responses/new'
 // La miniatura sube al bucket público email-images (endpoint
 // /api/communications/upload-image). Esta es la del campa 2026, como default.
@@ -58,7 +58,8 @@ const BODY = `<!-- ══════════════ ANUNCIO CON VIDEO 
                            Para subir otro: pantalla de comunicaciones, o
                            POST /api/communications/upload-media (MP4 hasta 50 MB).
        El link del botón "Apartar mi lugar" → hoy apunta al formulario del campa
-                                     2026; cambialo por el destino de tu anuncio.
+                                     2026 (ccbchurch); cambialo por el destino
+                                     de tu anuncio ANTES de enviar.
        La URL de la miniatura         → subí la tuya en el editor (botón de imagen)
                                         y pegá la URL que te da.
 
@@ -70,6 +71,16 @@ const BODY = `<!-- ══════════════ ANUNCIO CON VIDEO 
      clientes bloquean imágenes por defecto, y sin ese enlace esa persona no ve
      ni la miniatura ni cómo llegar al video.
 ════════════════════════════════════════════════ -->
+
+<!-- ===== PREHEADER — no borrar =====
+     Es lo que se lee en la bandeja DEBAJO del asunto. Va oculto en el correo.
+     renderEmail() lo iza al inicio del <body> por el atributo data-preheader,
+     así que puede quedarse acá arriba en la plantilla. Cambialo junto con el
+     asunto en cada anuncio. -->
+<div data-preheader style="display:none;font-size:1px;color:#f4f4f0;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+  Debbie te tiene un mensaje. Campa de Servidores: 29 al 31 de agosto en Playa Palo Seco. Preventa desde &#8353;78.000 hasta el 15 de agosto.
+  &#8203;&zwnj;&nbsp;&#8203;&zwnj;&nbsp;&#8203;&zwnj;&nbsp;&#8203;&zwnj;&nbsp;&#8203;&zwnj;&nbsp;&#8203;&zwnj;&nbsp;&#8203;&zwnj;&nbsp;&#8203;&zwnj;&nbsp;
+</div>
 
 <!-- ===== VIDEO ===== -->
 <a href="${VIDEO_LINK}" target="_blank" style="text-decoration:none;display:block;">
@@ -134,8 +145,9 @@ const BODY = `<!-- ══════════════ ANUNCIO CON VIDEO 
   <tr>
     <td style="padding:15px 20px;border-left:4px solid #EF5554;">
       <p style="margin:0;font-family:${FONT};font-size:15px;line-height:23px;color:#5a3535;">
-        &#128227; <strong>El 10 de agosto se abren las inscripciones para todos los servidores.</strong><br />
-        &#8987;&#65039; El precio de preventa termina el 15 de agosto; a partir del 16 sube al valor regular.
+        &#128266; <strong>Importante:</strong> El 10 de agosto se abren las inscripciones para todos los
+        servidores; adem&aacute;s record&aacute; que a partir del 16 de agosto el valor especial de preventa
+        termina, as&iacute; que aprovech&aacute; en inscribirte antes.
       </p>
     </td>
   </tr>
@@ -170,7 +182,9 @@ const row = {
   name: NAME,
   category: 'general',
   channel: 'email',
-  subject: 'Debbie te tiene un mensaje 🎥',
+  // Asunto de EJEMPLO (el del campa 2026, sugerido por TI). Se cambia en cada
+  // anuncio junto con el preheader.
+  subject: 'Debbie te tiene un mensaje 🎥 · Campa de Servidores 2026',
   body: BODY,
   body_format: 'html',
   is_active: true,

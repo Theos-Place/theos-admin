@@ -83,8 +83,28 @@ const LOGO_URL = 'https://admin.theosplace.org/logo-theos-white.png'
  * (CAN-SPAM); las transaccionales no lo pasan.
  * opts.logoUrl → sobreescribe la URL del logo (el preview usa una ruta local).
  */
+/**
+ * PREHEADER: el texto que la bandeja muestra debajo del asunto. Tiene que ser
+ * lo PRIMERO dentro de <body> — si queda después del logo, el preview arranca
+ * con el alt del logo. Como las plantillas guardan solo el cuerpo, el bloque se
+ * escribe en la plantilla con `data-preheader` y acá se IZA a su lugar:
+ *
+ *   <div data-preheader style="display:none;...">Texto de la bandeja</div>
+ *
+ * Así el texto queda editable con el resto del contenido y aun así sale bien
+ * colocado en el HTML final.
+ */
+const PREHEADER_RE = /[ \t]*<div\b[^>]*\bdata-preheader\b[^>]*>[\s\S]*?<\/div>\n?/i
+
+function hoistPreheader(content: string): { preheader: string; rest: string } {
+  const m = content.match(PREHEADER_RE)
+  if (!m) return { preheader: '', rest: content }
+  return { preheader: m[0].trim(), rest: content.replace(PREHEADER_RE, '') }
+}
+
 export function renderEmail(content: string, opts?: { unsubscribeUrl?: string; logoUrl?: string }): string {
   const logoUrl = opts?.logoUrl ?? LOGO_URL
+  const { preheader, rest } = hoistPreheader(content)
   const baja = opts?.unsubscribeUrl
     ? `
   <div class="subfooter">
@@ -101,12 +121,13 @@ export function renderEmail(content: string, opts?: { unsubscribeUrl?: string; l
   <style>${STYLES}</style>
 </head>
 <body>
+${preheader}
   <div class="wrapper">
     <div class="header">
       <img src="${logoUrl}" alt="Theos Place" />
     </div>
     <div class="body">
-${content}
+${rest}
     </div>
     <div class="footer">
       <p class="footer-contact">¿Tenés alguna pregunta? Escribinos a <a href="mailto:soporte@theosplace.org">soporte@theosplace.org</a></p>
