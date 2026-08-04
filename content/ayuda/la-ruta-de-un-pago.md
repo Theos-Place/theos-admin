@@ -28,9 +28,6 @@ Todos tus cobros están en **Pagos pendientes**, en el menú de tu cuenta.
 Hacés el SINPE o la transferencia por fuera, y después subís la **captura o el PDF** del
 comprobante en el sistema. Que se lea el monto, la fecha y la referencia.
 
-Un consejo que ahorra rechazos: subí el comprobante completo, no recortado. La mayoría de los
-rechazos son porque no se ve el monto o la referencia.
-
 ## El pago va por su carril; la matrícula, por el suyo
 
 Esto es lo que más confunde: **el pago y la matrícula son dos cosas separadas.** Cuando te
