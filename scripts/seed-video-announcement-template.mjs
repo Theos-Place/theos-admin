@@ -31,7 +31,12 @@ const NAME = 'Anuncio con video'
 
 // Los cuatro marcadores del diseño de referencia, convertidos en valores
 // editables. Los tres primeros son texto plano findable con Cmd+F en el editor.
-const VIDEO_LINK = 'PEGA-AQUI-EL-LINK-DEL-VIDEO'
+//
+// El video se aloja en el propio sistema: bucket público email-media, vía
+// /api/communications/upload-media. Sin YouTube ni Vimeo de por medio. Este es
+// el del campa 2026, como valor de ejemplo — en otro anuncio se sube el suyo y
+// se pega la URL que devuelve el endpoint.
+const VIDEO_LINK = 'https://jdcyptqnznmywgjvcpxm.supabase.co/storage/v1/object/public/email-media/campa-servidores-2026.mp4'
 // Valor de ejemplo del campa 2026, indicado por TI el 2026-08-04. Es EDITABLE:
 // en otro anuncio se cambia por el formulario o la pantalla que corresponda.
 // (La instrucción original pedía no dejar URLs de CCB; se deja esta porque es el
@@ -46,9 +51,12 @@ const FONT = "'Montserrat',Helvetica,Arial,sans-serif"
 const BODY = `<!-- ══════════════ ANUNCIO CON VIDEO ══════════════
      QUÉ CAMBIAR EN CADA USO (buscá el texto con Cmd+F):
 
-       ${VIDEO_LINK}   → el link del video. Aparece 3 VECES:
-                                     la miniatura, el link del texto y el enlace
-                                     de respaldo del pie. Cambiá las tres.
+       El link del video → aparece 3 VECES: la miniatura, el link del texto y el
+                           enlace de respaldo del pie. Cambiá las tres. Hoy es
+                           el video del campa 2026, alojado en el sistema:
+                           buscá "email-media" con Cmd+F.
+                           Para subir otro: pantalla de comunicaciones, o
+                           POST /api/communications/upload-media (MP4 hasta 50 MB).
        El link del botón "Apartar mi lugar" → hoy apunta al formulario del campa
                                      2026; cambialo por el destino de tu anuncio.
        La URL de la miniatura         → subí la tuya en el editor (botón de imagen)
@@ -150,7 +158,7 @@ const BODY = `<!-- ══════════════ ANUNCIO CON VIDEO 
 <!-- ===== RESPALDO DEL VIDEO — no borrar (imágenes bloqueadas) ===== -->
 <p style="margin:20px 0 0 0;text-align:center;font-family:${FONT};font-size:13px;line-height:20px;color:#8a8a93;">
   &iquest;No ves la imagen del video? Miralo ac&aacute;:<br />
-  <a href="${VIDEO_LINK}" target="_blank" style="color:#EF5554;text-decoration:underline;">${VIDEO_LINK}</a>
+  <a href="${VIDEO_LINK}" target="_blank" style="color:#EF5554;text-decoration:underline;word-break:break-all;">${VIDEO_LINK}</a>
 </p>
 
 <!-- ===== CIERRE ===== -->
