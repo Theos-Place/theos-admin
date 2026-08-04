@@ -20,7 +20,7 @@ export type FilterCondition =
   | { id: number; group: 'status'; type: 'status'; value: 'active' | 'inactive' }
   | { id: number; group: 'leader'; type: 'leader'; value: 'yes' | 'no' }
   | { id: number; group: 'marital'; type: 'marital'; value: string }
-  | { id: number; group: 'account'; type: 'account'; value: 'none' | 'unconfirmed' | 'active' }
+  | { id: number; group: 'account'; type: 'account'; value: 'none' | 'never_entered' | 'active' }
   | { id: number; group: 'created'; type: 'created'; from: string; to: string }
 
 export interface ConditionGroup {

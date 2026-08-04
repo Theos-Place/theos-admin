@@ -4,6 +4,8 @@
 // son data derivada de otras tablas — se mantienen acá temporalmente con datos mock
 // hasta que se conecten sus queries reales (Fase 2).
 
+import type { AccountState } from '@/lib/members/account-state'
+
 /** Roles que pueden tener los miembros. Refleja `member_roles.role` en Supabase
  *  (ver 001_theos_schema.sql). Nota: 'servidor' NO está acá — se deriva de
  *  tener registros en `volunteers` y se expone vía `is_server`. */
@@ -53,8 +55,9 @@ export type Member = {
   is_active: boolean
   /** Perfil de sistema (cuenta institucional): excluido del recordatorio de cédula. */
   is_system?: boolean
-  /** Estado de la cuenta de acceso (Supabase Auth): sin cuenta / sin activar / activada. */
-  account_state: 'none' | 'unconfirmed' | 'active'
+  /** Estado de la cuenta de acceso: sin cuenta / nunca ha entrado / activa.
+   *  Regla en src/lib/members/account-state.ts. */
+  account_state: AccountState
   deactivation_reason: string | null
   deactivated_at: string | null
   created_at: string

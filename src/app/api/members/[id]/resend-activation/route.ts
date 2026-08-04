@@ -46,7 +46,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true, email })
   } catch (error) {
     console.error('POST /api/members/[id]/resend-activation:', error)
-    const msg = error instanceof Error ? error.message : 'No se pudo reenviar el correo de activación.'
+    const msg = error instanceof Error ? error.message : 'No se pudieron enviar las instrucciones.'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

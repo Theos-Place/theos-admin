@@ -19,7 +19,17 @@ import { renderEmail } from '@/lib/email/baseLayout'
 
 const SITE = () => process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'
 
-function body(nombre: string | null, loginUrl: string, correo: string): string {
+/** URL de la pantalla de ingreso (sin token, sin parámetros). */
+export function loginUrlFor(site = SITE()): string {
+  return `${site}/login`
+}
+
+/**
+ * Cuerpo del correo. Exportado para poder testear lo esencial: que NO lleva
+ * ningún token — ni token_hash, ni /auth/continuar, ni /auth/confirm — sino el
+ * link pelado al login y el paso a paso.
+ */
+export function accountReadyBody(nombre: string | null, loginUrl: string, correo: string): string {
   const saludo = nombre ? `Hola, ${nombre}` : 'Hola'
   return `<p class="greeting">${saludo}</p>
 
@@ -57,12 +67,12 @@ export async function sendAccountReadyEmail(input: {
   email: string
   nombre?: string | null
 }): Promise<{ sent: boolean; reason?: string }> {
-  const loginUrl = `${SITE()}/login`
+  const loginUrl = loginUrlFor()
   try {
     await sendEmail({
       to: { email: input.email, name: input.nombre ?? input.email },
       subject: 'Tu cuenta de Theos Place ya está lista',
-      html: renderEmail(body(input.nombre ?? null, loginUrl, input.email)),
+      html: renderEmail(accountReadyBody(input.nombre ?? null, loginUrl, input.email)),
       // Transaccional: es el aviso de acceso a su cuenta, no una campaña.
       kind: 'transactional',
     })

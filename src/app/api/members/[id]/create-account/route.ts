@@ -5,7 +5,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { inviteMemberToCompleteProfile } from '@/lib/auth/invite'
 
-// Crea la cuenta de acceso (Supabase Auth) de un miembro y le envía la invitación
+// Crea la cuenta de acceso (Supabase Auth) de un miembro y le envía las instrucciones
 // de activación. SOLO roles administrativos, service_role en backend. Reutiliza
 // inviteMemberToCompleteProfile (crea el usuario de Auth + enlaza auth_user_id).
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

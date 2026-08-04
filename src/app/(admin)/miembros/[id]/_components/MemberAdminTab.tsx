@@ -12,6 +12,7 @@ import {
   SCALE_LABELS, RECOMMENDATION_OPTIONS, CONVICTION_TOPICS, CONVICTION_STANCES,
   TESTIMONY_LABEL, BIBLE_LABEL, SPEECH_LABEL,
 } from '@/lib/studies/cdeb-recommendation'
+import { ACCOUNT_STATE_LABEL, ACCOUNT_STATE_ACTION, type AccountState } from '@/lib/members/account-state'
 
 type AdminData = {
   not_recommended_to_lead_studies: boolean
@@ -25,7 +26,7 @@ type AdminData = {
 }
 
 type AccountStatus = {
-  state: 'none' | 'unconfirmed' | 'active'
+  state: AccountState
   linked: boolean
   email: string | null
   email_confirmed_at: string | null
@@ -72,7 +73,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       const res = await fetch(`/api/members/${memberId}/create-account`, { method: 'POST' })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudo crear la cuenta.')
-      setCreateMsg({ ok: true, text: `Cuenta creada y correo de activación enviado a ${data?.email ?? account?.email ?? 'su correo'}.` })
+      setCreateMsg({ ok: true, text: `Cuenta creada e instrucciones enviadas a ${data?.email ?? account?.email ?? 'su correo'}.` })
       await loadAccount()
     } catch (e) {
       setCreateMsg({ ok: false, text: e instanceof Error ? e.message : 'No se pudo crear la cuenta.' })
@@ -89,7 +90,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       const res = await fetch(`/api/members/${memberId}/resend-activation`, { method: 'POST' })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudo reenviar el correo.')
-      setResendMsg({ ok: true, text: `Correo de activación reenviado a ${data?.email ?? account?.email ?? 'su correo'}.` })
+      setResendMsg({ ok: true, text: `Instrucciones enviadas a ${data?.email ?? account?.email ?? 'su correo'}.` })
     } catch (e) {
       setResendMsg({ ok: false, text: e instanceof Error ? e.message : 'No se pudo reenviar el correo.' })
     } finally {
@@ -208,11 +209,11 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
             <div className="flex items-center gap-2 flex-wrap">
               {account.state === 'active' ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-[12px] font-medium text-teal-deep font-body">
-                  <UserCheck size={13} /> Cuenta activada
+                  <UserCheck size={13} /> {ACCOUNT_STATE_LABEL.active}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[12px] font-medium text-amber-700 font-body">
-                  <Clock size={13} /> Cuenta sin activar
+                  <Clock size={13} /> {ACCOUNT_STATE_LABEL.never_entered}
                 </span>
               )}
               {account.email && (
@@ -224,24 +225,24 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
 
             {/* Detalle de fechas */}
             <div className="text-[11px] text-navy-light/60 font-body space-y-0.5">
-              {account.state === 'active' && account.email_confirmed_at && (
-                <p>Activada el {formatDate(account.email_confirmed_at)}</p>
+              {account.email_confirmed_at && (
+                <p>Contraseña definida el {formatDate(account.email_confirmed_at)}</p>
               )}
               {account.last_sign_in_at
                 ? <p>Último acceso: {formatDateTime(account.last_sign_in_at)}</p>
-                : account.state === 'active' && <p>Sin accesos registrados todavía.</p>}
+                : <p>{ACCOUNT_STATE_ACTION.never_entered}</p>}
             </div>
 
             {/* Acciones */}
             <div className="flex items-center gap-2 flex-wrap pt-1">
-              {account.state === 'unconfirmed' && (
+              {account.state === 'never_entered' && (
                 <button
                   type="button"
                   onClick={resendActivation}
                   disabled={resendBusy}
                   className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
                 >
-                  {resendBusy ? <><Loader2 size={14} className="animate-spin" /> Reenviando…</> : <><Mail size={14} /> Reenviar correo de activación</>}
+                  {resendBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><Mail size={14} /> Enviar instrucciones para entrar</>}
                 </button>
               )}
               <button

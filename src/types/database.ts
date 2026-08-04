@@ -2104,6 +2104,7 @@ export type Database = {
           is_donor: boolean | null
           is_system: boolean
           last_name: string
+          last_sign_in_at: string | null
           marital_status: string | null
           medications: string | null
           newsletter_opt_out: boolean | null
@@ -2154,6 +2155,7 @@ export type Database = {
           is_donor?: boolean | null
           is_system?: boolean
           last_name: string
+          last_sign_in_at?: string | null
           marital_status?: string | null
           medications?: string | null
           newsletter_opt_out?: boolean | null
@@ -2204,6 +2206,7 @@ export type Database = {
           is_donor?: boolean | null
           is_system?: boolean
           last_name?: string
+          last_sign_in_at?: string | null
           marital_status?: string | null
           medications?: string | null
           newsletter_opt_out?: boolean | null

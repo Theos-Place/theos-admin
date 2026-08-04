@@ -47,8 +47,11 @@ export type DbMember = {
   field_updated_at: Record<string, string> | null
   /** Enlace a la cuenta de Supabase Auth (null = sin cuenta de acceso). */
   auth_user_id: string | null
-  /** Espejo de auth.users.email_confirmed_at (mig 096). Null = sin activar/sin cuenta. */
+  /** Espejo de auth.users.email_confirmed_at (mig 096). Null = sin confirmar/sin cuenta. */
   account_confirmed_at: string | null
+  /** Espejo de auth.users.last_sign_in_at (2026-08-04). Null con auth_user_id =
+   *  nunca ha entrado — es lo que separa "nunca entró" de "cuenta activa". */
+  last_sign_in_at: string | null
   created_at: string
   updated_at: string
 }
@@ -516,13 +519,14 @@ export async function resolveAdvancedConditions(
         break
       }
       case 'account': {
-        // Estado de cuenta de Auth, derivado de columnas denormalizadas (mig 096):
-        //  none → sin usuario de Auth; unconfirmed → con usuario, sin confirmar;
-        //  active → confirmado (account_confirmed_at no nulo).
+        // Estado de cuenta, derivado de columnas denormalizadas (espejo de
+        // Auth). Mismos tres casos que accountState():
+        //  none → sin usuario de Auth; never_entered → con usuario y sin login;
+        //  active → ya entró al menos una vez (last_sign_in_at no nulo).
         res.include.push(await pagedIds(q => {
           if (c.value === 'none') return q.is('auth_user_id', null)
-          if (c.value === 'active') return q.not('account_confirmed_at', 'is', null)
-          return q.not('auth_user_id', 'is', null).is('account_confirmed_at', null) // unconfirmed
+          if (c.value === 'active') return q.not('last_sign_in_at', 'is', null)
+          return q.not('auth_user_id', 'is', null).is('last_sign_in_at', null) // never_entered
         }, 'members', 'member_id:id', 'id'))
         break
       }

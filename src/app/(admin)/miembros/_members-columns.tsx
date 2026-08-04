@@ -8,6 +8,7 @@ import type { FilterCondition } from '@/types/filters'
 import { initialsFromParts, calcAge } from '@/lib/format'
 import { sedeLabel } from '@/lib/sedes'
 import { formatSedeRecency } from '@/lib/sede-attendance'
+import { ACCOUNT_STATE_LABEL, ACCOUNT_STATE_FILTER_LABEL } from '@/lib/members/account-state'
 
 export function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -51,17 +52,17 @@ const GENDER_LABELS: Record<string, string> = {
   M: 'Masculino', F: 'Femenino', otro: 'No indica',
 }
 
-/** Texto del estado de cuenta para tooltips/export. */
-export const ACCOUNT_STATE_LABEL: Record<Member['account_state'], string> = {
-  none: 'Sin cuenta', unconfirmed: 'Sin activar', active: 'Activada',
-}
+// Los textos salen de la fuente única (account-state.ts) — se re-exporta para
+// no romper a quien ya importaba ACCOUNT_STATE_LABEL desde acá.
+export { ACCOUNT_STATE_LABEL }
 
-/** Badge compacto del estado de cuenta de acceso (Auth). Tres estados. */
+/** Badge compacto del estado de cuenta de acceso. Tres estados: sin cuenta,
+ *  nunca ha entrado y activa (ver src/lib/members/account-state.ts). */
 export function AccountBadge({ state }: { state: Member['account_state'] }) {
   const cfg = {
-    active:      { Icon: UserCheck, cls: 'bg-teal-soft/30 text-teal-deep', label: 'Activada' },
-    unconfirmed: { Icon: Clock,     cls: 'bg-amber-100 text-amber-700',    label: 'Sin activar' },
-    none:        { Icon: UserX,     cls: 'bg-surface-low text-navy-light/60', label: 'Sin cuenta' },
+    active:        { Icon: UserCheck, cls: 'bg-teal-soft/30 text-teal-deep', label: ACCOUNT_STATE_LABEL.active },
+    never_entered: { Icon: Clock,     cls: 'bg-amber-100 text-amber-700',    label: ACCOUNT_STATE_LABEL.never_entered },
+    none:          { Icon: UserX,     cls: 'bg-surface-low text-navy-light/60', label: ACCOUNT_STATE_LABEL.none },
   }[state]
   return (
     <span title={`Cuenta de acceso: ${cfg.label}`} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium font-body ${cfg.cls}`}>
@@ -194,7 +195,7 @@ export function buildSegmentLabel(conditions: FilterCondition[], showDonors: boo
         parts.push(c.value === 'active' ? 'Activos' : 'Inactivos')
         break
       case 'account':
-        parts.push(c.value === 'none' ? 'Sin cuenta' : c.value === 'unconfirmed' ? 'Cuenta sin activar' : 'Cuenta activada')
+        parts.push(ACCOUNT_STATE_FILTER_LABEL[c.value])
         break
       default:
         parts.push(c.type)

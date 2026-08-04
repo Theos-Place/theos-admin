@@ -7,6 +7,7 @@ import type { DbMember, DbMemberEnriched, DbMemberFull } from '@/lib/supabase/qu
 import type { Member, ServiceRecord } from '@/types/member'
 import { calcAge } from '@/lib/format'
 import { esComiteDirigentes } from '@/lib/dirigentes'
+import { accountState } from '@/lib/members/account-state'
 
 /** Convierte un `DbMemberEnriched` a `Member`. Acepta también un `DbMember` plano
  *  (usa defaults para los campos derivados que faltan). */
@@ -42,7 +43,7 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
     is_donor: db.is_donor,
     is_active: db.is_active,
     is_system: !!(db as { is_system?: boolean }).is_system,
-    account_state: db.account_confirmed_at ? 'active' : (db.auth_user_id ? 'unconfirmed' : 'none'),
+    account_state: accountState({ authUserId: db.auth_user_id, lastSignInAt: db.last_sign_in_at }),
     deactivation_reason: db.deactivation_reason,
     deactivated_at: db.deactivated_at,
     created_at: db.created_at,

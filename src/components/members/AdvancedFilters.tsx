@@ -15,6 +15,7 @@ import { Combobox, type ComboItem, type ComboValue } from '@/components/shared/C
 import { formatDate } from '@/lib/format'
 import type { FormTemplate } from '@/types/forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator, TicketStatus } from '@/types/filters'
+import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
 
 const FORM_CATEGORY_LABEL: Record<FormTemplate['category'], string> = {
   event_registration: 'Inscripción eventos',
@@ -807,12 +808,12 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
         <Label>Estado de cuenta</Label>
         <Sel value={accountVal} onChange={v => {
           if (accountCond) removeCondition(accountCond.id)
-          if (v !== 'any') addCondition({ group: 'account', type: 'account', value: v as 'none' | 'unconfirmed' | 'active' })
+          if (v !== 'any') addCondition({ group: 'account', type: 'account', value: v as 'none' | 'never_entered' | 'active' })
         }}>
           <option value="any">Cualquiera</option>
-          <option value="none">Sin cuenta</option>
-          <option value="unconfirmed">Sin activar</option>
-          <option value="active">Activada</option>
+          <option value="none">{ACCOUNT_STATE_LABEL.none}</option>
+          <option value="never_entered">{ACCOUNT_STATE_LABEL.never_entered}</option>
+          <option value="active">{ACCOUNT_STATE_LABEL.active}</option>
         </Sel>
       </div>
 

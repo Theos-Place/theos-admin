@@ -3,8 +3,9 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { accountState, type AccountState } from '@/lib/members/account-state'
 
-export type AccountState = 'none' | 'unconfirmed' | 'active'
+export type { AccountState }
 export type AccountStatus = {
   state: AccountState
   linked: boolean
@@ -38,9 +39,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ state: 'none', linked: false, email: memberEmail, email_confirmed_at: null, last_sign_in_at: null } satisfies AccountStatus)
     }
     const u = data.user
-    const confirmed = !!u.email_confirmed_at
+    // 'active' = ya entró al menos una vez. Tener usuario creado (AUTH-1 los
+    // creó a todos) o el correo confirmado NO alcanza: quién nunca ha entrado
+    // es la métrica de adopción. Ver src/lib/members/account-state.ts.
     return NextResponse.json({
-      state: confirmed ? 'active' : 'unconfirmed',
+      state: accountState({ authUserId, lastSignInAt: u.last_sign_in_at ?? null }),
       linked: true,
       email: u.email ?? memberEmail,
       email_confirmed_at: u.email_confirmed_at ?? null,

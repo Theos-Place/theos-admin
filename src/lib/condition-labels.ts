@@ -1,5 +1,6 @@
 import type { FilterCondition } from '@/types/filters'
 import { studyLabel } from '@/data/study-catalog'
+import { ACCOUNT_STATE_FILTER_LABEL } from '@/lib/members/account-state'
 
 export function conditionLabel(c: FilterCondition): string {
   switch (c.type) {
@@ -47,7 +48,7 @@ export function conditionLabel(c: FilterCondition): string {
     case 'leader': return c.value === 'yes' ? 'Dirigente' : 'No dirigente'
     case 'marital': return `Estado civil: ${c.value}`
     case 'account':
-      return c.value === 'none' ? 'Sin cuenta' : c.value === 'unconfirmed' ? 'Cuenta sin activar' : 'Cuenta activada'
+      return ACCOUNT_STATE_FILTER_LABEL[c.value]
     case 'created':
       if (c.from && c.to) return `Creado ${c.from} – ${c.to}`
       if (c.from) return `Creado desde ${c.from}`
