@@ -127,3 +127,22 @@ describe('ítems de lista partidos en varias líneas (bug 2026-08-04)', () => {
     expect(html.match(/<ol>/g) ?? []).toHaveLength(2)
   })
 })
+
+describe('formato que cruza el corte de línea (bug 2026-08-04)', () => {
+  it('una negrita que abre en un renglón y cierra en el siguiente se renderiza', () => {
+    const html = renderMarkdown([
+      '- Pide ser **donante** y **servir en un',
+      '  comité**.',
+    ].join('\n'))
+    expect(html).toContain('<strong>servir en un comité</strong>')
+    expect(html).not.toContain('**')
+  })
+
+  it('un enlace partido también', () => {
+    const html = renderMarkdown([
+      '1. Mirá la [guía del',
+      '   estudiante](/ayuda/el-camino-del-estudiante).',
+    ].join('\n'))
+    expect(html).toContain('<a href="/ayuda/el-camino-del-estudiante">guía del estudiante</a>')
+  })
+})
