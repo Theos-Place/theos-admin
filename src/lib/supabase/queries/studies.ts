@@ -966,6 +966,8 @@ export type MemberRecommendation = {
   id: string
   recommended_for: 'oracion' | 'servicio' | 'dirigente'
   justification: string | null
+  /** member_id de quien la hizo — la ficha lo enlaza a su perfil. */
+  recommended_by: string | null
   recommended_by_name: string | null
   group_name: string | null
   created_at: string
@@ -1002,7 +1004,7 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('member_recommendations')
-    .select('id, recommended_for, justification, created_at, recommender:members!member_recommendations_recommended_by_fkey(first_name, last_name), group:study_groups(name)')
+    .select('id, recommended_for, justification, created_at, recommended_by, recommender:members!member_recommendations_recommended_by_fkey(first_name, last_name), group:study_groups(name)')
     .eq('member_id', memberId)
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -1011,12 +1013,14 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
     recommended_for: 'oracion' | 'servicio' | 'dirigente'
     justification: string | null
     created_at: string
+    recommended_by: string | null
     recommender: { first_name: string | null; last_name: string | null } | null
     group: { name: string | null } | null
   }>).map(r => ({
     id: r.id,
     recommended_for: r.recommended_for,
     justification: r.justification,
+    recommended_by: r.recommended_by,
     recommended_by_name: r.recommender
       ? [r.recommender.first_name, r.recommender.last_name].filter(Boolean).join(' ') || null
       : null,

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
-import { MemberRecommendations } from './MemberRecommendations'
+import { MemberRecommendations, PersonaLink } from './MemberRecommendations'
 import { ACTION_PLAN_OPTIONS, COMMITMENT_OPTIONS, needsFollowUp } from '@/lib/studies/premat-evaluation'
 import {
   SCALE_LABELS, RECOMMENDATION_OPTIONS, CONVICTION_TOPICS, CONVICTION_STANCES,
@@ -457,6 +457,8 @@ type CdebRow = {
   recommendation: string | null
   created_at: string
   group?: { name: string | null; plan?: { code: string | null } | null } | null
+  /** member_id de quien la escribió (se enlaza a su perfil). */
+  filled_by?: string | null
   leader?: { first_name: string; last_name: string } | null
 }
 
@@ -493,7 +495,9 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
                 nombre del grupo (2026-08-05). */}
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <p className="text-navy">
-                La hizo <strong>{leader ?? 'un dirigente'}</strong>
+                La hizo {leader
+                  ? <PersonaLink id={r.filled_by ?? null} nombre={leader} />
+                  : <strong>un dirigente</strong>}
               </p>
               <span className="text-[12px] text-navy-light/60">{formatDate(r.created_at)}</span>
             </div>

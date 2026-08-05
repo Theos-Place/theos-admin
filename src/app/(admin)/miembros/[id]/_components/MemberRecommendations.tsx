@@ -3,7 +3,19 @@
 import { useState, useEffect } from 'react'
 import { HeartHandshake } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 import { formatDate } from '@/lib/format'
+
+/** El nombre de quien hizo la recomendación abre su perfil. Sin id (dato viejo
+ *  sin `recommended_by`) queda como texto. */
+export function PersonaLink({ id, nombre }: { id: string | null; nombre: string }) {
+  if (!id) return <strong className="text-navy-light/80">{nombre}</strong>
+  return (
+    <Link href={`/miembros/${id}`} className="font-semibold text-teal-deep hover:underline">
+      {nombre}
+    </Link>
+  )
+}
 
 const REC_LABEL: Record<string, string> = { oracion: 'Oración', servicio: 'Servicio', dirigente: 'Dirigente' }
 const REC_BADGE: Record<string, string> = {
@@ -16,6 +28,7 @@ type Recommendation = {
   id: string
   recommended_for: 'oracion' | 'servicio' | 'dirigente'
   justification: string | null
+  recommended_by: string | null
   recommended_by_name: string | null
   group_name: string | null
   created_at: string
@@ -64,7 +77,7 @@ export function MemberRecommendations({ memberId, hideWhenEmpty = false }: { mem
                 </span>
                 <span className="text-[11px] text-navy-light/60 font-body">
                   {r.recommended_by_name
-                    ? <>la hizo <strong className="text-navy-light/80">{r.recommended_by_name}</strong></>
+                    ? <>la hizo <PersonaLink id={r.recommended_by} nombre={r.recommended_by_name} /></>
                     : 'sin registro de quién la hizo'}
                   {r.group_name ? ` · al cerrar ${r.group_name}` : ''} · {formatDate(r.created_at)}
                 </span>
