@@ -46,13 +46,14 @@ anterior:
 Esto es lo que más se pregunta, así que va con números exactos. Solo cuentan los check-ins de
 **charla** — no de cualquier evento.
 
-**Asistencia activa:** al menos 6 charlas en los últimos 6 meses completos, y al menos 1 en
-los últimos 60 días. Las dos condiciones, no una.
+**Asistencia activa:** al menos 6 charlas en la ventana, y al menos 1 en los últimos 60 días.
+Las dos condiciones, no una.
 
 **Asistencia reforzada:** lo mismo, pero al menos 12 charlas.
 
-El mes en curso no cuenta todavía: se miran los 6 meses cerrados anteriores. Por eso puede
-pasar que asistas seguido y el sistema tarde en reflejarlo.
+**La ventana** son los 6 meses calendario anteriores **más lo que va del mes en curso**. Si
+estamos en agosto, cuenta desde el 1.º de febrero hasta hoy. Lo de este mes suma de una: una
+charla de esta semana ya cuenta.
 
 ## Los que son solo por invitación
 

@@ -90,7 +90,7 @@
     <text x="76" y="900" font-size="15" fill="#FFFFFF"><tspan font-weight="bold">Activa:</tspan> 6 charlas en los últimos 6 meses completos</text>
     <text x="76" y="924" font-size="15" fill="#FFFFFF">+ al menos 1 en los últimos 60 días.</text>
     <text x="76" y="952" font-size="15" fill="#FFFFFF"><tspan font-weight="bold">Reforzada:</tspan> lo mismo, pero 12 charlas.</text>
-    <text x="76" y="974" font-size="13" fill="#9FA8C7">Solo cuentan check-ins de CHARLA. El mes en curso todavía no cuenta.</text>
+    <text x="76" y="974" font-size="13" fill="#9FA8C7">Solo cuentan check-ins de CHARLA. Lo de este mes cuenta de una.</text>
   </g>
 
   <!-- ── Solo por invitación ── -->

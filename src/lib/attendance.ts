@@ -21,9 +21,13 @@ export const ATTENDANCE_RECENCY_DAYS = 60
  *  general, otras etapas) sigue con ATTENDANCE_MIN_CHARLAS. */
 export const ATTENDANCE_MIN_CHARLAS_INTERMEDIA = ATTENDANCE_MIN_CHARLAS * 2
 
-/** Inicio (YYYY-MM-01) del mes completo más viejo de la ventana: últimos `months`
- *  meses calendario COMPLETOS, excluyendo el mes en curso (incluirlo dejaría a
- *  todo el mundo afuera los primeros días de cada mes). */
+/** Inicio (YYYY-MM-01) de la ventana: el día 1 del mes de hace `months` meses.
+ *
+ *  OJO con leer mal esto: lo que se excluye es el mes en curso del CONTEO de
+ *  meses hacia atrás (si contara, la ventana se acortaría y los primeros días de
+ *  cada mes dejarían a todo el mundo afuera). Los check-ins DEL MES EN CURSO SÍ
+ *  cuentan: la ventana no tiene tope superior. Con `now` = 4 ago 2026 arranca el
+ *  1 feb 2026, o sea 6 meses completos + lo que va de agosto. */
 export function attendanceWindowStart(months = ATTENDANCE_MONTHS, now = new Date()): string {
   const d = new Date(now.getFullYear(), now.getMonth() - months, 1) // inicio del mes más viejo
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
