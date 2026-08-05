@@ -69,6 +69,7 @@ Generado el 2026-08-05 por `scripts/seed-datos-de-prueba.ts`.
 | [prueba] Grupo TRANS en matrícula | TRANS | campaña | en_matricula | [prueba] Dora Dirigente | 0 | Campaña: sin compromisos ni prerequisitos |
 | [prueba] Grupo N2 listo para cierre | N2 | niveles | en_curso | [prueba] Dora Dirigente | 8 | Probar el cierre completo: aprobados, reprobados con justificación y retirados con motivo (ahora obligatorio) |
 | [prueba] Grupo DIS3 listo para cierre | DIS3 | intermedia | en_curso | [prueba] Dora Dirigente | 4 | Cierre con recomendación a CDEB por estudiante (EST-9) |
+| [prueba] Grupo Panorama cerrado | PAN | intermedia | finalizado | [prueba] Coco Codirigente | 2 | Grupo ya cerrado · aporta una SEGUNDA evaluación a CDEB del mismo candidato, hecha por otro dirigente |
 
 ## Lo demás
 
@@ -78,6 +79,8 @@ Generado el 2026-08-05 por `scripts/seed-datos-de-prueba.ts`.
 | Recomendaciones CDEB | [prueba] Dis1 Candidato CDEB | Sí, sin reservas |
 | Recomendaciones CDEB | [prueba] Dis2 Candidato CDEB | Sí, con reservas |
 | Recomendaciones CDEB | [prueba] Dis3 Candidato CDEB | No recomendado |
+| Recomendaciones CDEB | [prueba] Dis1 Candidato CDEB (2.ª) | Sí, con reservas · la hizo [prueba] Coco Codirigente al cerrar Panorama |
+| Recomendaciones CDEB | [prueba] Dis2 Candidato CDEB (2.ª) | Sí, pero debería llevar otro estudio primero · la hizo [prueba] Coco Codirigente al cerrar Panorama |
 | Prematrimonial | [prueba] Cumple Novio + [prueba] Cumple Novia | CUMPLE PRE-5: ambos con N1 completado y matriculados en N2, géneros distintos |
 | Prematrimonial | [prueba] NoCumple Novio + [prueba] NoCumple Novia | NO cumple: sirve para ver los bloqueos de PRE-5 y PRE-7 |
 | Eventos | [prueba] Evento con inscripción | Inscripción abierta, check-in activo, sin costo · en 10 días |

@@ -213,7 +213,7 @@ const horarioLibre = () => `${String(8 + (horaSeq++ % 12)).padStart(2, '0')}:00`
 async function crearGrupo(input: {
   nombre: string; planId: string; planCode: string; etapa: string
   leaderId: string; leaderNombre: string
-  estado: 'en_matricula' | 'en_curso'
+  estado: 'en_matricula' | 'en_curso' | 'finalizado'
   inicio?: Date; fin?: Date
   sirve: string
 }): Promise<string> {
@@ -580,6 +580,40 @@ async function main() {
                       : 'NO cumple: sirve para ver los bloqueos de PRE-5 y PRE-7',
     })
   }
+  // Segunda evaluación para el MISMO candidato, de otro grupo y otro dirigente:
+  // sirve para ver cómo se lee la lista cuando hay más de una (pedido 2026-08-05).
+  const grupoPanCerrado = await crearGrupo({
+    nombre: 'Grupo Panorama cerrado', planId: plan('PAN').id, planCode: 'PAN', etapa: 'intermedia',
+    leaderId: coDirigente.id, leaderNombre: coDirigente.nombre, estado: 'finalizado',
+    inicio: new Date(HOY.getTime() - 300 * 86400000),
+    fin: new Date(HOY.getTime() - 120 * 86400000),
+    sirve: 'Grupo ya cerrado · aporta una SEGUNDA evaluación a CDEB del mismo candidato, hecha por otro dirigente',
+  })
+  const segundas = [
+    { al: alumnosDis3[0], r: 'si_con_reservas', txt: 'Sí, con reservas' },
+    { al: alumnosDis3[1], r: 'si_otro_estudio', txt: 'Sí, pero debería llevar otro estudio primero' },
+  ]
+  for (const { al, r, txt } of segundas) {
+    await matricular(grupoPanCerrado, al.id, 'completed')
+    const { count: ya } = await laxo.from('cdeb_recommendations')
+      .select('id', { count: 'exact', head: true }).eq('member_id', al.id).eq('group_id', grupoPanCerrado)
+    if (!ya) {
+      const { error } = await laxo.from('cdeb_recommendations').insert({
+        member_id: al.id, group_id: grupoPanCerrado, filled_by: coDirigente.id, status: 'enviada',
+        recommendation: r,
+        testimony_score: 3, passion_score: 3, bible_knowledge_score: 4, speech_score: 4,
+        committee_notes: `Segunda evaluación, de otro grupo y otro dirigente. ${NOTA}`,
+      })
+      if (error) console.warn(`  ⚠ segunda recomendación de ${al.nombre}: ${error.message}`)
+    }
+    otros.push({
+      bloque: 'Recomendaciones CDEB',
+      que: `${al.nombre} (2.ª)`,
+      detalle: `${txt} · la hizo ${coDirigente.nombre} al cerrar Panorama`,
+    })
+  }
+  grupos.find(g => g.nombre.includes('Panorama cerrado'))!.estudiantes = segundas.length
+
   await pareja('Cumple', true)
   await pareja('NoCumple', false)
 
