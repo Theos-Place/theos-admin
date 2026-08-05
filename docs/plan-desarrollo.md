@@ -1260,6 +1260,267 @@ el rol forms ve todos; miembro sin nada no ve ninguno; nombrar y quitar encargad
 
 ---
 
+## Fase 7 — Feedback de agosto (uso real)
+
+> Puntos levantados probando el sistema con usuarios reales, a partir del 2026-08-05.
+
+### [ ] GRU-2 · Restricción opcional de audiencia al crear un grupo de estudio
+Archivos: migración (`study_groups`), `src/types/filters.ts`, `src/components/members/AdvancedFilters.tsx`, `src/lib/studies/eligibility.ts`, `src/lib/supabase/queries/studies.ts` (`enrollMember`), forms de crear/editar grupo, `src/lib/condition-labels.ts`
+
+```
+FEATURE · Restricción opcional de audiencia al crear un grupo de estudio
+
+Caso: a veces se arma un grupo de una capacitación dirigido solo a cierta gente — solo
+dirigentes, solo líderes de comité, o solo quienes ya llevaron cierto estudio. Hoy no se
+puede: la elegibilidad se calcula por PLAN (etapa, compromisos, prerequisitos) y todos los
+grupos de un mismo plan se le ofrecen a cualquiera que califique.
+
+Lo que quiero: un bloque OPCIONAL en la creación/edición de grupo, "Restringir este grupo
+a…", que limite a quién se le ofrece ese grupo en la matrícula. Si no se usa, el grupo se
+comporta exactamente como hoy.
+
+REUTILIZAR, NO INVENTAR
+El filtro avanzado del padrón (src/types/filters.ts + src/components/members/
+AdvancedFilters.tsx) ya tiene un modelo de condiciones con tipos study, leader, service,
+donor, attendance, age, status… y su UI de constructor. Usá ESE mismo modelo para las
+restricciones del grupo, en vez de crear un esquema paralelo.
+Antes de programar, revisá si el evaluador actual sirve o hace falta uno per-persona: el
+del padrón trabaja por conjuntos de ids sobre todo el padrón, y acá se necesita responder
+"¿esta persona cumple?" para un solo miembro. Si hace falta, extraé una función pura
+evaluateConditions(member, conditions) y que ambos caminos la usen — no dos
+implementaciones de la misma regla, que después se desincronizan.
+
+1) MIGRACIÓN
+Columna enrollment_restrictions (jsonb, nullable) en study_groups, guardando la lista de
+condiciones con el mismo shape del filtro del padrón. Null = sin restricción.
+
+⚠️ ALCANCE — NO CONFUNDIR CON LOS REQUISITOS DEL PLAN
+La restricción es POR GRUPO, nunca por plan ni por etapa. Son dos cosas separadas que se
+evalúan aparte:
+  · El PLAN define los compromisos de la etapa (donador, servidor, asistencia,
+    prerequisitos, invitación). Eso ya existe y NO se toca.
+  · El GRUPO puede tener, además y opcionalmente, su propia restricción de audiencia.
+Dos grupos del MISMO plan deben poder tener restricciones distintas, o uno tenerla y el
+otro no. Ejemplo concreto que tiene que funcionar: dos grupos de la misma capacitación, uno
+abierto a cualquiera que califique para esa etapa y otro restringido a dirigentes — y una
+persona que no es dirigente ve solo el primero.
+NO agregues la restricción a study_plans, ni la heredes del plan al crear el grupo, ni la
+copies al grupo sucesor cuando se cierra un grupo y avanza la cohorte (ver la herencia de
+dirigente/horario/zona en el cierre: la restricción NO se hereda salvo que yo lo pida).
+
+2) UI EN CREAR Y EDITAR GRUPO
+Sección colapsada "Restringir este grupo a… (opcional)" con el constructor de condiciones.
+Casos que deben quedar cubiertos de una:
+  - Solo dirigentes
+  - Solo líderes de comité
+  - Solo quienes completaron el estudio X
+  - Combinaciones (por ejemplo dirigentes que además completaron X)
+Mostrá un resumen legible de la restricción en la ficha del grupo, usando las mismas
+etiquetas de src/lib/condition-labels.ts.
+
+3) ELEGIBILIDAD
+En src/lib/studies/eligibility.ts, la restricción del grupo se evalúa ADEMÁS de lo que ya
+existe (etapa, compromisos, prerequisitos, invitación, grupo virtual, estado y cupo), nunca
+en lugar de. Un grupo restringido no aparece entre las opciones de quien no cumple.
+
+4) GUARD SERVER-SIDE
+Al matricular (enrollMember), si la persona no cumple la restricción → 409 con código claro.
+No alcanza con esconderlo de la UI: el staff que matricula a terceros pasa por el mismo
+endpoint, y el deep link a un grupo también.
+
+5) MENSAJE ÚTIL
+Si alguien llega al grupo por deep link, o el staff intenta matricular a quien no cumple, el
+mensaje debe decir POR QUÉ ("Este grupo es solo para dirigentes"), no un error genérico.
+
+6) OVERRIDE DEL STAFF — DECIDÍ CONMIGO, no lo resuelvas solo
+¿Los STUDY_ADMIN_ROLES pueden matricular a alguien saltándose la restricción del grupo?
+Mi inclinación es que sí, pero con confirmación explícita en la UI y quedando registrado,
+igual que el override de PAG-2. Preguntame antes de implementarlo.
+
+7) VISTA DE CONTEXTO
+En la ficha del grupo (y al guardar la restricción), mostrá cuántas personas del padrón
+cumplen esa restricción. Es fácil armar una condición demasiado estrecha y darse cuenta
+recién cuando nadie se matriculó; ver el conteo al momento lo evita.
+
+TESTS
+- Grupo sin restricción se comporta igual que hoy.
+- Grupo restringido a dirigentes no aparece para un no-dirigente.
+- El POST de matrícula devuelve 409 para quien no cumple.
+- Combinación de dos condiciones.
+- La restricción NO reemplaza los compromisos de la etapa (una persona que es dirigente
+  pero no cumple la asistencia de la etapa sigue bloqueada).
+- Dos grupos del mismo plan con restricciones distintas se ofrecen de forma distinta.
+- Al cerrar un grupo, el sucesor NO hereda la restricción.
+```
+
+### [ ] FRM-2 · Hero/header con flyer en los formularios
+Archivos: builder de formularios (`src/app/(admin)/formularios/*`), tablas `forms` / `form_fields`, `src/components/forms/FormFiller.tsx`, patrón de upload: `src/app/api/events/upload-flyer/route.ts` (EVE-2)
+
+```
+Al crear un formulario hay que poder agregarle un HERO/HEADER con imagen (flyer), para que
+el formulario se vea como una pieza de comunicación y no como un cuestionario pelado.
+Es un componente nuevo.
+
+1) MODELO: agregá al formulario los campos del hero — imagen (URL), título y subtítulo o
+   texto de bienvenida opcionales. Decidí mirando el esquema si van como columnas en `forms`
+   (hero_image_url, hero_title, hero_subtitle) o como un tipo de campo nuevo en form_fields;
+   mi inclinación es columnas en `forms`, porque el hero es del formulario, no una pregunta
+   más — pero justificá lo que elijas.
+2) UPLOAD: reutilizá el patrón de EVE-2 (bucket público, validación de MIME PNG/JPG/WebP y
+   tamaño máximo, createAdminClient, getPublicUrl). Decidí si va al bucket de event-flyers
+   o a uno propio para formularios y decímelo. NO guardes la imagen como base64 en la
+   columna: ese fue justamente el problema que EVE-2 vino a arreglar en eventos.
+3) BUILDER: sección "Encabezado (opcional)" arriba del constructor de campos, con dropzone
+   y vista previa. Debe poder quitarse.
+4) FORMULARIO PÚBLICO/LLENADO (FormFiller): renderizar el hero arriba, responsive — la
+   mayoría lo abre desde el celular, así que la imagen no puede desbordar ni empujar el
+   primer campo fuera de pantalla. Sin hero, el formulario se ve igual que hoy.
+5) Que aparezca también en la vista previa del builder.
+Tests del upload (MIME inválido, tamaño excedido) y del render sin hero.
+```
+
+### [ ] COM-3 · Bug: "usar plantilla" desde nueva comunicación no carga el contenido
+Archivos: `src/app/(admin)/comunicaciones/nueva/page.tsx`, `src/app/(admin)/comunicaciones/plantillas/*`, editor de correos
+
+```
+BUG reportado en uso real. Hay dos caminos para usar una plantilla y solo uno funciona:
+  · Desde /comunicaciones/plantillas → botón "Usar" → FUNCIONA: el contenido se carga en el
+    editor y se puede editar.
+  · Desde la pantalla de nueva comunicación → botón "Usar plantilla" → ROTO: el contenido no
+    se jala al panel izquierdo donde se muestra el cuerpo del correo, así que la plantilla no
+    se puede editar.
+
+Compará los dos caminos y arreglá el segundo para que use el mismo mecanismo que el primero
+(probablemente uno pasa el contenido por navegación/estado inicial y el otro lo setea después
+de que el editor ya montó, o lo escribe en un estado que el editor no observa). NO dupliques
+lógica: extraé la carga de plantilla a una sola función que usen ambos caminos, para que no
+se vuelva a desincronizar.
+Verificá que después de cargar la plantilla se pueda editar libremente, que el asunto
+también se cargue, y que cambiar de plantilla reemplace el contenido en vez de acumularlo.
+Test de ambos caminos.
+```
+
+### [ ] EVE-4 · Evento con formulario de inscripción y encuesta de satisfacción programada
+Archivos: crear/editar evento (`src/app/(admin)/eventos/nuevo`, `[id]/editar`), `events`, módulo de formularios, `message_templates`, cron nuevo o el de recordatorios
+
+```
+Dos capacidades nuevas al crear un evento, ambas OPCIONALES:
+
+A) FORMULARIO DE INSCRIPCIÓN
+   Poder elegir un formulario existente (o crear uno) que se use para inscribirse al evento.
+   Hoy los formularios ya se asocian a entidades (forms.entity_type = 'event' + entity_id),
+   así que la pieza existe — falta el selector en la creación del evento y que la
+   inscripción pase por ese formulario.
+   Definí y decime cómo queda la relación con event_registrations: ¿la respuesta del
+   formulario ES la inscripción, o son dos cosas que se enlazan? Mi inclinación: la
+   inscripción sigue siendo event_registrations (que es lo que maneja cupo, pago y check-in)
+   y la respuesta del formulario queda enlazada como información adicional. Confirmámelo
+   antes de implementar.
+
+B) ENCUESTA DE SATISFACCIÓN PROGRAMADA
+   El campo events.requires_survey ya existe pero no tiene flujo. Construilo:
+   - Al crear el evento, si se marca que requiere encuesta, poder elegir QUÉ se envía:
+     un formulario existente o una plantilla de correo ya creada (message_templates).
+   - Y CUÁNDO se envía: momento relativo al fin del evento (por ejemplo "2 horas después",
+     "al día siguiente", "3 días después") o una fecha y hora exactas. Guardá el momento
+     calculado, no solo la regla, para que el envío sea predecible.
+   - A QUIÉNES: definí el default y hacelo visible — mi propuesta es a quienes hicieron
+     check-in, no a todos los inscritos (quien no llegó no tiene qué evaluar). Confirmámelo.
+   - ENVÍO: un cron que despache las encuestas cuyo momento ya pasó, siguiendo el patrón
+     exacto de los crons existentes (vercel.json, auth Bearer CRON_SECRET, ping a
+     healthcheck si la env existe, dedupe para no reenviar si corre dos veces).
+     Respetá preferencias de notificación y el límite diario de correos.
+   - En la ficha del evento, mostrar el estado de la encuesta: programada para tal fecha /
+     enviada a N personas / N respuestas.
+Permisos: los mismos que gestionan eventos (direccion, encargado_staff, comunicaciones).
+Tests: evento sin encuesta se comporta igual; el cron no reenvía; la encuesta programada a
+futuro no se manda antes de tiempo.
+```
+
+### [ ] EST-11 · Plan de estudios: EB desactivados solo para staff + campañas al final
+Archivos: `src/app/(admin)/estudios/plan/*`, `src/data/study-catalog.ts` (`STUDY_STAGES`), `src/lib/studies/eligibility.ts` (`LEVEL_TO_STAGE`)
+
+```
+Dos arreglos en la página del plan de estudios:
+1) Los estudios DESACTIVADOS se le muestran hoy a todo el mundo. Deben verlos solo admin,
+   direccion y quien tenga acceso al módulo de estudios (STUDY_ADMIN_ROLES). Para el resto
+   —incluido el rol miembro— simplemente no aparecen: no es que salgan en gris, no salen.
+   Gate en la página Y en el endpoint que sirve los planes (el miembro no debe recibirlos en
+   el payload aunque adivine la URL).
+2) Las CAMPAÑAS aparecen intercaladas entre Hermenéutica y el resto de los avanzados. Deben
+   ir SIEMPRE al final, después de todas las etapas. Corregí el orden en el agrupador de
+   etapas (STUDY_STAGES en src/data/study-catalog.ts y donde se ordene en la página).
+   Orden correcto: Niveles → Etapa inicial → Etapa intermedia → Etapa avanzada → Campañas.
+   Revisá que el mismo orden se respete en /matricula y en /estudios/analisis, no solo acá.
+Tests del gate por rol y del orden de etapas.
+```
+
+### [ ] GRU-3 · Datos de contacto del dirigente en el detalle del grupo
+Archivos: detalle de grupo (`src/app/(admin)/estudios/grupos/[id]`), query del grupo
+
+```
+En el detalle de un grupo, la sección del dirigente muestra solo el nombre. Agregá teléfono
+y correo, para que quien necesite contactarlo no tenga que ir a buscar su perfil.
+Incluí también al co-dirigente si el grupo tiene.
+Que sean accionables: el teléfono como enlace tel: o de WhatsApp, el correo como mailto.
+CUIDADO CON LA VISIBILIDAD: son datos personales. Mostralos solo a quien ya puede ver el
+grupo con scope de gestión (STUDY_ADMIN_ROLES, GROUP_ADMIN_ROLES) — un estudiante del grupo
+NO debe ver el teléfono de su dirigente en esta pantalla salvo que me lo confirmes.
+Sumá los campos al select de la query del grupo; hoy probablemente solo trae el nombre.
+```
+
+### [ ] BLQ-1 · Calendario anual de bloques
+Archivos: `src/app/(admin)/estudios/bloques`, `src/lib/studies/bloques.ts`
+
+```
+La pantalla de bloques hoy es un listado. Agregá una vista de CALENDARIO ANUAL que muestre,
+sobre los 12 meses del año, los bloques de capacitación con sus hitos: apertura y cierre de
+matrícula, inicio y fin del bloque, y los hitos que disparan pedidos de folletos.
+- Selector de año, con el actual por defecto.
+- Cada bloque como una barra sobre la línea de meses, con su nombre y color propio; los
+  hitos marcados sobre la barra.
+- Clic en un bloque abre su detalle (o lo resalta en el listado existente).
+- El listado actual se mantiene: es una vista alternativa, no un reemplazo. Un toggle
+  Lista / Calendario.
+- Mobile: en pantalla angosta el calendario anual no funciona — degradá a la lista o a una
+  vista vertical por mes.
+Las fechas y los hitos salen de src/lib/studies/bloques.ts, no las recalcules aparte.
+Si ya se implementó GRU-1 (fechas de matrícula por grupo), mostrá también esos rangos.
+Permisos: los mismos de la pantalla de bloques (coordinador_estudios, admin).
+```
+
+### [ ] REU-2 · Hacer visible la reubicación como plan de contingencia
+Archivos: `src/components/studies/StudyRequestActions.tsx`, detalle de grupo, confirmación de matrícula, `/estudios/solicitudes`
+Depende de: EST-6 y EST-7 (sin esos dos arreglados el flujo existe pero no sirve)
+
+```
+Caso: una persona se matricula en el grupo equivocado y necesita cambiarse.
+EL FLUJO YA EXISTE — no construyas nada nuevo. Las solicitudes de reubicación viven en
+study_requests, el API las acepta de cualquier usuario autenticado (con
+resolveTargetMemberId como anti-suplantación) y el coordinador las resuelve desde
+/estudios/solicitudes eligiendo el grupo destino, lo que mueve la matrícula.
+EL PROBLEMA ES QUE NO SE ENCUENTRA: el botón está enterrado en la pestaña Participación del
+perfil. Quien se matriculó mal no va a buscarlo ahí, va a escribirle a alguien por WhatsApp.
+
+Ponelo donde duele:
+1) En la ficha del grupo del estudiante (su vista read-only) y en la pantalla de
+   confirmación de matrícula: un enlace discreto pero claro, "¿Te matriculaste en el grupo
+   equivocado? Pedí un cambio de grupo", que abra el mismo modal de reubicación que ya
+   existe.
+2) En /mis-pagos o donde el miembro vea sus estudios activos, la misma entrada.
+3) Que el modal explique qué pasa después: que lo revisa el coordinador de estudios, que no
+   es automático, y que mientras tanto sigue matriculado en su grupo actual.
+4) Del lado del coordinador: que la cola de reubicaciones sea visible desde el módulo de
+   estudios sin tener que recordar la URL, con contador de pendientes.
+NO agregues un sistema de "casos" ni un tipo de solicitud nuevo: es exactamente para esto
+que existe relocation.
+Ojo con el orden: EST-7 (el botón de resolver que no se habilita) y EST-6 (intereses
+mezclados en la vista de reubicaciones) tienen que estar arreglados antes, o vamos a hacer
+visible un flujo que no se puede completar.
+```
+
+---
+
 ## Backlog (fases siguientes, requieren definición de producto)
 
 - **CAM-1 · Matrículas de estudios tipo campaña** — no urge. Definir: ¿sin prerequisitos? ¿cupos? ¿pago? La etapa 'campaña' ya existe en la elegibilidad (campañas sin compromisos) y la excepción de campaña queda implementada en EST-1.

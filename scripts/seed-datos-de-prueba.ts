@@ -86,8 +86,12 @@ const otros: Array<{ bloque: string; que: string; detalle: string }> = []
 // ── Utilidades ───────────────────────────────────────────────────────────────
 let telSeq = 0
 const telefono = () => `8000-00${String(++telSeq).padStart(2, '0')}`
+/** Correo a partir del nombre. Los DÍGITOS se conservan: con `[^a-z]` (el bug
+ *  del 2026-08-05) "Est01 Para Cierre" y "Est02 Para Cierre" caían los dos en
+ *  est.para.cierre@ — doce personas compartiendo correo, que además el detector
+ *  de duplicados del sistema iba a reportar como si fuera un error suyo. */
 const correo = (nombre: string) =>
-  `${nombre.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z]+/g, '.')}@${DOMINIO}`
+  `${nombre.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z0-9]+/g, '.')}@${DOMINIO}`
 
 async function crearMiembro(input: {
   nombre: string           // "Ana Rojas" (sin la marca; se agrega acá)
@@ -104,8 +108,20 @@ async function crearMiembro(input: {
   const ext = externalId()
 
   // Idempotente por external_id: re-correr no duplica.
-  const { data: ya } = await laxo.from('members').select('id').eq('external_id', ext).maybeSingle()
-  let id = (ya as { id: string } | null)?.id ?? null
+  const { data: ya } = await laxo.from('members').select('id, email').eq('external_id', ext).maybeSingle()
+  let id = (ya as { id: string; email: string | null } | null)?.id ?? null
+
+  // Ya existe: se corrigen nombre y correo si cambiaron (así el arreglo de los
+  // correos duplicados llega a los registros que ya estaban, sin duplicar gente).
+  if (id) {
+    const actual = (ya as { email: string | null }).email
+    if (actual !== email) {
+      const { error } = await laxo.from('members')
+        .update({ first_name: `${MARCA} ${first}`, last_name: resto.join(' ') || '·', email })
+        .eq('id', id)
+      if (error) throw new Error(`actualizar ${input.nombre}: ${error.message}`)
+    }
+  }
 
   if (!id) {
     const { data, error } = await laxo.from('members').insert({
@@ -518,7 +534,7 @@ async function main() {
   const alumnosDis3: Array<{ id: string; nombre: string }> = []
   for (let i = 1; i <= 4; i++) {
     const est = await crearMiembro({
-      nombre: `Dis${i} Candidato CDEB`,
+      nombre: `Dis${String(i).padStart(2, '0')} Candidato CDEB`,
       caso: `Estudiante ${i} de DIS3, candidato a CDEB`,
       sirve: 'Llenar la recomendación a CDEB al cerrar el grupo',
     })
@@ -661,9 +677,24 @@ async function main() {
   else await laxo.from('member_lists').insert(filaLista)
   otros.push({ bloque: 'Listas', que: nombreLista, detalle: `${ids.length} personas · verlas juntas en /miembros/listas` })
 
+  // Validación de cierre: dos personas con el mismo correo rompen el alta de
+  // cuentas y el detector de duplicados las reporta como si fueran un error del
+  // sistema. Mejor que el seed falle acá que descubrirlo probando.
+  const porCorreo = new Map<string, string[]>()
+  for (const p of personas) {
+    const k = p.correo.toLowerCase()
+    porCorreo.set(k, [...(porCorreo.get(k) ?? []), p.nombre])
+  }
+  const repetidos = [...porCorreo.entries()].filter(([, quienes]) => quienes.length > 1)
+  if (repetidos.length) {
+    console.error('\n✗ Hay correos repetidos en el set:')
+    for (const [c, quienes] of repetidos) console.error(`   ${c} → ${quienes.join(', ')}`)
+    throw new Error('correos duplicados: revisá los nombres del seed')
+  }
+
   escribirHoja()
   console.log(`\n✓ Listo. ${personas.length} personas, ${grupos.length} grupos.`)
-  console.log('  Hoja de referencia: docs/datos-de-prueba.md')
+  console.log('  Hoja de referencia: content/ayuda/datos-de-prueba.md (se lee en /ayuda/datos-de-prueba)')
   console.log(`  Borrado previsto: ${ymd(BORRADO)} · scripts/limpiar-datos-de-prueba.ts\n`)
 }
 
@@ -677,12 +708,45 @@ function escribirHoja() {
     ...filas.map(f => `| ${f.map(c => c.replace(/\|/g, '\\|')).join(' | ')} |`),
   ].join('\n')
 
-  const md = `# Datos de prueba — agosto 2026
+  // El artículo del centro de ayuda es la ÚNICA copia: lo escribe el seed con su
+  // frontmatter y los testers lo leen en /ayuda/datos-de-prueba. No lleva
+  // `visibilidad: publica` a propósito — trae una contraseña compartida, así que
+  // va con `roles:` y sin sesión responde 404.
+  const md = `---
+titulo: Datos de prueba (agosto 2026)
+seccion: Primeros pasos
+tipo: tutorial
+roles: [admin, direccion, coordinador_estudios, coordinador_dirigentes, finanzas, comunicaciones, encargado_staff]
+orden: 90
+resumen: Usuarios y grupos de prueba para probar el sistema sin tocar datos reales. Se borran el ${ymd(BORRADO)}.
+---
 
-> **Borrar el ${ymd(BORRADO)}.** Después de esa fecha este set no debería seguir en la base.
-> Se borra con \`npx tsx scripts/limpiar-datos-de-prueba.ts --aplicar\` (sin \`--aplicar\` solo lista).
+# Datos de prueba (agosto 2026)
 
-Generado el ${ymd(HOY)} por \`scripts/seed-datos-de-prueba.ts\`.
+**Estos datos se borran el ${ymd(BORRADO)}.** No construyas nada encima esperando que dure:
+listas, comunicados o reportes armados sobre esta gente se quedan sin base ese día.
+
+## Qué esperamos de vos
+
+**Que pruebes los recorridos de abajo y reportes lo que se vea raro.** No es "usar el
+sistema" un rato: es seguir un recorrido, mirar si pasa lo que debería pasar, y avisar
+cuando no. Un hallazgo reportado vale más que media hora navegando sin anotar nada.
+
+Sirve todo: algo que no funciona, algo que funciona pero confunde, un texto que dice una
+cosa y el sistema hace otra, un botón que no encontraste.
+
+**Dónde reportar:** [completar: canal de reporte]
+
+## Qué NO tocar
+
+Trabajá **solo con los registros marcados \`${MARCA}\`**. En el padrón conviven con las
+23 mil personas reales de la iglesia.
+
+- No edités, matriculés ni borrés a una persona real.
+- No mandés comunicados a nadie que no sea del set (los de prueba tienen correo
+  inexistente a propósito; los reales, no).
+- Si hacés algo por error sobre un dato real, **avisá de una** — se arregla mucho más
+  fácil recién hecho que dos semanas después.
 
 ## Cómo reconocerlos
 
@@ -736,8 +800,13 @@ ${tabla(
    ver los mensajes de PRE-5 y PRE-7.
 7. **Evento y formulario.** Inscribite al evento de prueba, hacé check-in y respondé el
    formulario asociado.
+
+---
+
+*Generado el ${ymd(HOY)} por \`scripts/seed-datos-de-prueba.ts\`. Para borrar el set:
+\`npx tsx scripts/limpiar-datos-de-prueba.ts\` (sin \`--aplicar\` solo lista qué borraría).*
 `
-  writeFileSync('docs/datos-de-prueba.md', md)
+  writeFileSync('content/ayuda/datos-de-prueba.md', md)
 }
 
 main().catch(e => { console.error('\n✗', e instanceof Error ? e.message : e); process.exit(1) })
