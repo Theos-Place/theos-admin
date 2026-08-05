@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1180" role="img" aria-labelledby="t-camino d-camino" font-family="Arial, Helvetica, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1220" role="img" aria-labelledby="t-camino d-camino" font-family="Arial, Helvetica, sans-serif">
   <title id="t-camino">El camino del estudiante</title>
   <desc id="d-camino">Las cadenas de niveles N1 a N4 y Discípulos 1 a 3, las etapas con sus compromisos, los requisitos de asistencia y los estudios que son solo por invitación.</desc>
 
-  <rect width="720" height="1180" fill="#F6F5F2"/>
+  <rect width="720" height="1220" fill="#F6F5F2"/>
 
   <!-- Encabezado -->
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">El camino del estudiante</text>
@@ -10,7 +10,7 @@
   <text x="48" y="114" font-size="15" fill="#5B5975">Qué se lleva primero, qué viene después y qué pide cada etapa.</text>
 
   <!-- ── Cadena de Niveles ── -->
-  <text x="48" y="168" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">CADENA DE NIVELES</text>
+  <text x="48" y="168" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LA CADENA · PRIMERA MITAD</text>
   <g>
     <rect x="48" y="184" width="624" height="72" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
     <g font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">
@@ -28,79 +28,84 @@
       <path d="M322 221 h26" marker-end="url(#p)"/>
       <path d="M464 221 h26" marker-end="url(#p)"/>
     </g>
-    <text x="614" y="226" font-size="13" fill="#8B8AA0">fin</text>
+    <text x="610" y="226" font-size="13" fill="#8B8AA0">sigue ↓</text>
   </g>
 
-  <!-- ── Cadena de Discípulos ── -->
-  <text x="48" y="304" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">CADENA DE DISCÍPULOS</text>
+  <!-- ── Segunda mitad: SCJ → Discípulos → Panorama ── -->
+  <text x="48" y="304" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LA CADENA · SEGUNDA MITAD</text>
   <g>
-    <rect x="48" y="320" width="624" height="72" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <g font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">
-      <rect x="70" y="340" width="140" height="34" rx="17" fill="#161440"/>
-      <text x="140" y="362">Discípulos 1</text>
-      <rect x="248" y="340" width="140" height="34" rx="17" fill="#161440"/>
-      <text x="318" y="362">Discípulos 2</text>
-      <rect x="426" y="340" width="140" height="34" rx="17" fill="#161440"/>
-      <text x="496" y="362">Discípulos 3</text>
+    <rect x="48" y="320" width="624" height="112" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <g font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">
+      <rect x="70" y="340" width="196" height="34" rx="17" fill="#70BDC2"/>
+      <text x="168" y="362">Sirviendo como Jesús</text>
+      <rect x="304" y="340" width="132" height="34" rx="17" fill="#161440"/>
+      <text x="370" y="362">Discípulos 1</text>
+      <rect x="474" y="340" width="132" height="34" rx="17" fill="#161440"/>
+      <text x="540" y="362">Discípulos 2</text>
+      <rect x="70" y="386" width="132" height="34" rx="17" fill="#161440"/>
+      <text x="136" y="408">Discípulos 3</text>
+      <rect x="240" y="386" width="120" height="34" rx="17" fill="#161440"/>
+      <text x="300" y="408">Panorama</text>
     </g>
     <g stroke="#EF5554" stroke-width="2" fill="none">
-      <path d="M216 357 h26" marker-end="url(#p)"/>
-      <path d="M394 357 h26" marker-end="url(#p)"/>
+      <path d="M272 357 h26" marker-end="url(#p)"/>
+      <path d="M442 357 h26" marker-end="url(#p)"/>
+      <path d="M208 403 h26" marker-end="url(#p)"/>
     </g>
-    <text x="580" y="362" font-size="13" fill="#8B8AA0">no hay 4</text>
+    <text x="376" y="408" font-size="13" fill="#8B8AA0">de acá se abren las avanzadas</text>
   </g>
 
   <!-- ── Etapas y compromisos ── -->
-  <text x="48" y="440" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">QUÉ PIDE CADA ETAPA</text>
+  <text x="48" y="480" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">QUÉ PIDE CADA ETAPA</text>
 
   <g>
-    <rect x="48" y="456" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <rect x="48" y="456" width="6" height="88" rx="3" fill="#70BDC2"/>
-    <text x="76" y="486" font-size="17" font-weight="bold" fill="#161440">Niveles y campañas</text>
-    <text x="76" y="512" font-size="14" fill="#5B5975">Sin compromisos. Solo el estudio anterior de la cadena.</text>
-    <text x="76" y="532" font-size="13" fill="#8B8AA0">N1–N4 · campañas</text>
+    <rect x="48" y="496" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="496" width="6" height="88" rx="3" fill="#70BDC2"/>
+    <text x="76" y="526" font-size="17" font-weight="bold" fill="#161440">Niveles y campañas</text>
+    <text x="76" y="552" font-size="14" fill="#5B5975">Sin compromisos. Solo el estudio anterior de la cadena.</text>
+    <text x="76" y="572" font-size="13" fill="#8B8AA0">N1–N4 · campañas</text>
   </g>
 
   <g>
-    <rect x="48" y="560" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <rect x="48" y="560" width="6" height="88" rx="3" fill="#EF5554"/>
-    <text x="76" y="590" font-size="17" font-weight="bold" fill="#161440">Etapa inicial</text>
-    <text x="76" y="616" font-size="14" fill="#5B5975">Pide asistencia ACTIVA a las charlas.</text>
-    <text x="76" y="636" font-size="13" fill="#8B8AA0">Discípulos 1 y estudios de entrada</text>
+    <rect x="48" y="600" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="600" width="6" height="88" rx="3" fill="#EF5554"/>
+    <text x="76" y="630" font-size="17" font-weight="bold" fill="#161440">Etapa inicial</text>
+    <text x="76" y="656" font-size="14" fill="#5B5975">Pide asistencia ACTIVA a las charlas.</text>
+    <text x="76" y="676" font-size="13" fill="#8B8AA0">Discípulos 1 y estudios de entrada</text>
   </g>
 
   <g>
-    <rect x="48" y="664" width="624" height="108" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <rect x="48" y="664" width="6" height="108" rx="3" fill="#161440"/>
-    <text x="76" y="694" font-size="17" font-weight="bold" fill="#161440">Etapa intermedia</text>
-    <text x="76" y="720" font-size="14" fill="#5B5975">Pide las tres cosas, no una:</text>
-    <text x="90" y="742" font-size="14" fill="#5B5975">· asistencia REFORZADA   · ser donante   · servir en un comité</text>
-    <text x="76" y="762" font-size="13" fill="#8B8AA0">Discípulos 2 y 3</text>
+    <rect x="48" y="704" width="624" height="108" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="48" y="704" width="6" height="108" rx="3" fill="#161440"/>
+    <text x="76" y="734" font-size="17" font-weight="bold" fill="#161440">Etapa intermedia</text>
+    <text x="76" y="760" font-size="14" fill="#5B5975">Pide las tres cosas, no una:</text>
+    <text x="90" y="782" font-size="14" fill="#5B5975">· asistencia REFORZADA   · ser donante   · servir en un comité</text>
+    <text x="76" y="802" font-size="13" fill="#8B8AA0">Discípulos 2 y 3</text>
   </g>
 
   <!-- ── Asistencia en números ── -->
   <g>
-    <rect x="48" y="796" width="624" height="150" rx="14" fill="#161440"/>
-    <text x="76" y="828" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">ASISTENCIA, EN NÚMEROS</text>
-    <text x="76" y="860" font-size="15" fill="#FFFFFF"><tspan font-weight="bold">Activa:</tspan> 6 charlas en los últimos 6 meses completos</text>
-    <text x="76" y="884" font-size="15" fill="#FFFFFF">+ al menos 1 en los últimos 60 días.</text>
-    <text x="76" y="912" font-size="15" fill="#FFFFFF"><tspan font-weight="bold">Reforzada:</tspan> lo mismo, pero 12 charlas.</text>
-    <text x="76" y="934" font-size="13" fill="#9FA8C7">Solo cuentan check-ins de CHARLA. El mes en curso todavía no cuenta.</text>
+    <rect x="48" y="836" width="624" height="150" rx="14" fill="#161440"/>
+    <text x="76" y="868" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">ASISTENCIA, EN NÚMEROS</text>
+    <text x="76" y="900" font-size="15" fill="#FFFFFF"><tspan font-weight="bold">Activa:</tspan> 6 charlas en los últimos 6 meses completos</text>
+    <text x="76" y="924" font-size="15" fill="#FFFFFF">+ al menos 1 en los últimos 60 días.</text>
+    <text x="76" y="952" font-size="15" fill="#FFFFFF"><tspan font-weight="bold">Reforzada:</tspan> lo mismo, pero 12 charlas.</text>
+    <text x="76" y="974" font-size="13" fill="#9FA8C7">Solo cuentan check-ins de CHARLA. El mes en curso todavía no cuenta.</text>
   </g>
 
   <!-- ── Solo por invitación ── -->
   <g>
-    <rect x="48" y="970" width="624" height="104" rx="14" fill="#FFF8F0"/>
-    <rect x="48" y="970" width="6" height="104" rx="3" fill="#EF5554"/>
-    <text x="76" y="1000" font-size="15" font-weight="bold" fill="#161440">Solo por invitación</text>
-    <text x="76" y="1026" font-size="14" fill="#5B5975">Cómo Dar Estudios Bíblicos · Hermenéutica · Cómo Dar Charlas.</text>
-    <text x="76" y="1048" font-size="14" fill="#5B5975">No aparecen en Matrícula hasta que el comité te invita. No es un error.</text>
+    <rect x="48" y="1010" width="624" height="104" rx="14" fill="#FFF8F0"/>
+    <rect x="48" y="1010" width="6" height="104" rx="3" fill="#EF5554"/>
+    <text x="76" y="1040" font-size="15" font-weight="bold" fill="#161440">Solo por invitación</text>
+    <text x="76" y="1066" font-size="14" fill="#5B5975">Cómo Dar Estudios Bíblicos · Hermenéutica · Cómo Dar Charlas.</text>
+    <text x="76" y="1088" font-size="14" fill="#5B5975">No aparecen en Matrícula hasta que el comité te invita. No es un error.</text>
   </g>
 
   <!-- Pie -->
-  <text x="48" y="1114" font-size="13" fill="#8B8AA0">¿No te aparece un estudio? Casi siempre es el estudio anterior, que no hay grupo abierto,</text>
-  <text x="48" y="1134" font-size="13" fill="#8B8AA0">que el grupo está lleno, que es por invitación, o que falta un compromiso de la etapa.</text>
-  <text x="48" y="1158" font-size="13" fill="#8B8AA0">Casos especiales: el comité de estudios puede registrar una excepción.</text>
+  <text x="48" y="1154" font-size="13" fill="#8B8AA0">¿No te aparece un estudio? Casi siempre es el estudio anterior, que no hay grupo abierto,</text>
+  <text x="48" y="1174" font-size="13" fill="#8B8AA0">que el grupo está lleno, que es por invitación, o que falta un compromiso de la etapa.</text>
+  <text x="48" y="1198" font-size="13" fill="#8B8AA0">Casos especiales: el comité de estudios puede registrar una excepción.</text>
 
   <defs>
     <marker id="p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">

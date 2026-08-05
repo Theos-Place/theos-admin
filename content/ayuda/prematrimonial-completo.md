@@ -11,14 +11,16 @@ resumen: Requisitos de la pareja, la solicitud, el pago, el grupo y el cierre co
 
 ![Requisitos de la pareja y los cinco estados del trámite prematrimonial](/ayuda/infografias/prematrimonial.svg)
 
-El prematrimonial no es un estudio normal: se inscribe **en pareja**, tiene su propio wizard y
-su propia cola de revisión.
+El prematrimonial no es un estudio normal: se inscribe **en pareja**, tiene su propio
+formulario paso a paso y su propia cola de revisión.
 
 ## Los requisitos de la pareja
 
 Son dos, y aplican a **cada** persona:
 
-1. **Nivel 2 completado.** Los dos. Si a uno le falta, el trámite no arranca.
+1. **Nivel 1 completado y estar matriculado en Nivel 2.** Los dos. No hace falta haber
+   terminado el Nivel 2: alcanza con estar llevándolo. Si a uno le falta, el trámite no
+   arranca.
 2. **Documento de identidad registrado** en su ficha.
 
 El sistema los verifica al enviar la solicitud, no al final: si algo falta, lo dice ahí mismo
@@ -26,8 +28,8 @@ con el nombre de quién es el que no cumple.
 
 ## El recorrido
 
-1. **Solicitud.** Se llena el wizard con los datos de la pareja. Puede hacerla la pareja o
-   alguien del equipo por ellos.
+1. **Solicitud.** Se llena el formulario con los datos de la pareja, en cuatro pasos. Puede
+   hacerla la pareja o alguien del equipo por ellos.
 2. **Pago en revisión.** Si el curso tiene costo, se sube el comprobante y entra a la cola de
    pagos como cualquier otro cobro.
 3. **Pendiente.** Con el pago resuelto, la solicitud queda esperando que se arme el grupo.

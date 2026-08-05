@@ -13,8 +13,8 @@ resumen: De crear el evento al check-in del día, con lo que el check-in cambia 
 
 ## El recorrido
 
-**Crear** el evento → la gente se **inscribe** (si pide inscripción) → **paga** o queda exenta
-→ el día del evento se hace **check-in** → queda la asistencia registrada.
+**Crear** el evento → la gente se **inscribe** (si pide inscripción) → **paga** → el día del
+evento se hace **check-in** → queda la asistencia registrada.
 
 No todos los eventos piden inscripción. Una charla normal no la pide: la gente llega y se le
 hace check-in. La inscripción se activa cuando hay cupo limitado o hay que cobrar.
@@ -24,9 +24,11 @@ hace check-in. La inscripción se activa cuando hay cupo limitado o hay que cobr
 Lo que más se olvida configurar:
 
 - **Cupo máximo.** Si lo dejás vacío, no hay límite y nunca se llena.
-- **Comité organizador.** Sirve para dos cosas: saber de quién es el evento, y **exentar de
-  pago a los servidores de ese comité** — si un servidor del comité organizador se inscribe,
-  su tiquete sale exento.
+- **Comité organizador.** Dice de quién es el evento, y habilita el precio distinto para sus
+  servidores (ver abajo).
+- **Qué pagan los servidores del comité organizador.** Por defecto **pagan igual que todos**.
+  Si querés otra cosa, hay que configurarlo en el evento: o un **precio de servidor** más
+  bajo, o **exentarlos** (ahí el tiquete sale exento, sin cobro). No pasa solo.
 - **Sub-eventos**, si el evento tiene actividades internas con cupo propio.
 - **Recurrencia**, si se repite. Cancelar una fecha de una serie recurrente no cancela la
   serie: se marca esa fecha como excepción.

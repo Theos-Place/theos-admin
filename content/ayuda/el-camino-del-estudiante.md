@@ -14,15 +14,22 @@ resumen: Las cadenas de estudios, las etapas y qué compromiso pide cada una.
 Los estudios no son una lista suelta: van en cadena, y cada etapa pide algo distinto de vos.
 Este es el mapa completo.
 
-## Las dos cadenas
+## La cadena
 
-**Niveles: N1 → N2 → N3 → N4.** Es el recorrido base. Cada nivel pide el anterior aprobado.
+Es **una sola** y va así:
 
-**Discípulos: Discípulos 1 → 2 → 3.** Continúa después de los niveles. No existe un
-Discípulos 4: la cadena termina en el 3.
+`N1 → N2 → N3 → N4 → Sirviendo como Jesús → Discípulos 1 → 2 → 3 → Panorama`
 
-Aparte están las **capacitaciones** y las **campañas**, que no son parte de una cadena:
-Panorama, Hermenéutica, Cómo Dar Estudios Bíblicos, Cómo Dar Charlas, entre otras.
+Cada estudio pide el anterior aprobado. Dos cosas que se confunden seguido: **Discípulos no
+va inmediatamente después de los niveles** — en medio está *Sirviendo como Jesús* —, y **no
+existe un Discípulos 4**: después del 3 sigue *Panorama*.
+
+De ahí para adelante la cadena se abre en abanico. Cuelgan de **Panorama**: Hermenéutica,
+Cómo Dar Estudios Bíblicos, Cómo Dar Charlas, Defendiendo la Fe, Evangelios, Hechos, Hebreos,
+Romanos y Religiones del Mundo. Y de **Nivel 4**: Administrando el Dinero, Amor sin Fronteras,
+Evangelismo y Matrimonios.
+
+Aparte están las **campañas**, que no piden nada previo.
 
 ## Las etapas y sus compromisos
 

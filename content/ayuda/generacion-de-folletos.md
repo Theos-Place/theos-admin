@@ -12,17 +12,27 @@ resumen: Los cuatro motivos por los que nace un pedido de folletos, sus cuatro e
 ![Los cuatro motivos por los que nace un pedido de folletos y sus cuatro estados](/ayuda/infografias/generacion-de-folletos.svg)
 
 Los pedidos de folletos **casi nunca se crean a mano**: los dispara el sistema cuando pasa algo
-en estudios. Saber qué los dispara evita pedidos duplicados.
+en estudios.
 
 ## Por qué nace un pedido
 
-- **Cierre de grupo.** Al cerrar un grupo de N1 a N3 o DIS1 a DIS2, se genera el pedido del
-  **siguiente** nivel: la cohorte avanza junta y va a necesitar el folleto que viene.
-- **Hitos de un bloque de capacitación.** Un bloque activo tiene fechas; al caer cada hito se
-  generan los pedidos correspondientes — preliminar, confirmación y final — y se avisa por
-  correo y notificación.
-- **Reubicación.** Cuando alguien se mueve a otro grupo y necesita su folleto ahí.
+Los dos automáticos salen de la **matrícula del propio grupo** — el folleto es del nivel que
+esa gente va a cursar, no del siguiente:
+
+- **El grupo llenó su cupo.** Al confirmarse la matrícula que completa el cupo, se pide el
+  folleto de ese grupo. No hay que esperar a nada más: ya se sabe cuánta gente es.
+- **Se cerró la matrícula.** Cuando vence la ventana de matrícula del grupo, si juntó al menos
+  5 personas, se pide el folleto con lo que haya.
+
+Y dos que dispara una persona:
+
+- **Reubicación.** Cuando alguien se mueve a otro grupo y marcó que necesita el folleto ahí.
 - **Manual.** Para lo que no encaja en los anteriores.
+
+> **Cerrar un grupo ya NO genera folletos.** Antes sí: al cerrar se pedía el folleto del
+> siguiente nivel. Se cambió porque el folleto llegaba tarde — la gente ya estaba matriculada
+> en el nivel siguiente sin material. Los hitos de un bloque tampoco generan pedidos: mandan
+> el **reporte** de folletos por sede, para planificar la impresión.
 
 ## Los cuatro estados
 
@@ -41,9 +51,6 @@ folletos lleguen al lugar equivocado.
 
 **La cantidad contra los matriculados reales.** Entre que se genera el pedido y se imprime, la
 matrícula sigue moviéndose. Revisá el número antes de mandar a imprimir, no después.
-
-**Los duplicados.** Si un grupo se cerró dos veces por un error, pueden existir dos pedidos del
-mismo folleto. Se detectan mirando grupo y nivel.
 
 ## Quién trabaja esto
 

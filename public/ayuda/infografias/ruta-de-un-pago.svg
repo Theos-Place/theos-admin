@@ -78,10 +78,10 @@
   </g>
   <g>
     <rect x="368" y="836" width="304" height="112" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <text x="396" y="866" font-size="15" font-weight="bold" fill="#161440">Servidor del comité</text>
-    <text x="396" y="892" font-size="14" fill="#5B5975">Si servís en el comité que</text>
-    <text x="396" y="912" font-size="14" fill="#5B5975">organiza el evento, tu tiquete</text>
-    <text x="396" y="932" font-size="14" fill="#5B5975">sale exento.</text>
+    <text x="396" y="866" font-size="15" font-weight="bold" fill="#161440">Exención del evento</text>
+    <text x="396" y="892" font-size="14" fill="#5B5975">Solo si ESE evento exime a los</text>
+    <text x="396" y="912" font-size="14" fill="#5B5975">servidores de su comité. No es</text>
+    <text x="396" y="932" font-size="14" fill="#5B5975">automático: se configura.</text>
   </g>
 
 

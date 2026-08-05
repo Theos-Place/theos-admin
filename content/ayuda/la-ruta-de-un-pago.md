@@ -55,8 +55,9 @@ y lo rechaza.
 
 **Si te aprobaron una beca completa,** no hay comprobante que subir: no se genera cobro.
 
-**Los servidores del comité que organiza un evento** quedan exentos de pagarlo: el tiquete
-sale como exento, sin cobro.
+**Los servidores del comité que organiza un evento** pagan igual que todos, salvo que ese
+evento tenga configurado un precio de servidor o la exención. No es automático: se decide al
+crear el evento.
 
 > Los recordatorios de pagos pendientes llegan los lunes, una sola notificación con todo lo
 > que tenés al día. Si preferís no recibirlos, se puede apagar en las preferencias de tu

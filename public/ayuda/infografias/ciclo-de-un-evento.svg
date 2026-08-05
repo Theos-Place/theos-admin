@@ -32,9 +32,10 @@
     <rect x="48" y="384" width="624" height="100" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
     <circle cx="88" cy="434" r="19" fill="#161440"/>
     <text x="88" y="441" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
-    <text x="122" y="418" font-size="17" font-weight="bold" fill="#161440">Pago o exención</text>
-    <text x="122" y="442" font-size="14" fill="#5B5975">Quien sirve en el comité ORGANIZADOR queda exento.</text>
-    <text x="122" y="464" font-size="13" fill="#8B8AA0">Si llega sin pagar, se le puede cobrar en el check-in.</text>
+    <text x="122" y="418" font-size="17" font-weight="bold" fill="#161440">Pago</text>
+    <text x="122" y="442" font-size="14" fill="#5B5975">Todos pagan igual, salvo que el evento le ponga otro precio</text>
+    <text x="122" y="460" font-size="14" fill="#5B5975">—o exención— a los servidores del comité organizador.</text>
+    <text x="122" y="478" font-size="13" fill="#8B8AA0">Si llega sin pagar, se le puede cobrar en el check-in.</text>
   </g>
   <path d="M360 484 v20" stroke="#EF5554" stroke-width="2" marker-end="url(#e)"/>
 
