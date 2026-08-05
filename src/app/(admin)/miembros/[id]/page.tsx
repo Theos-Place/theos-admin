@@ -252,7 +252,6 @@ export default function MiembroDetailPage() {
       <MemberHeader
         member={member}
         onEdit={() => router.push(`/miembros/${id}/editar`)}
-        onCommunicate={() => router.push(`/comunicaciones/nueva?mode=manual&members=${id}`)}
         menuOpen={menuOpen}
         onMenuToggle={() => setMenuOpen(o => !o)}
         onMenuClose={() => setMenuOpen(false)}

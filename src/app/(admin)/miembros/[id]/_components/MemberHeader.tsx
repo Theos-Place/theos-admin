@@ -73,7 +73,6 @@ function initials(firstName: string, lastName: string) {
 type Props = {
   member: Member
   onEdit: () => void
-  onCommunicate: () => void
   menuOpen: boolean
   onMenuToggle: () => void
   onMenuClose: () => void
@@ -86,7 +85,6 @@ type Props = {
 export function MemberHeader({
   member,
   onEdit,
-  onCommunicate,
   menuOpen,
   onMenuToggle,
   canDeactivate = false,
@@ -177,12 +175,6 @@ export function MemberHeader({
             className="rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Editar
-          </button>
-          <button
-            onClick={onCommunicate}
-            className="rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-          >
-            Comunicar
           </button>
           <div className="relative">
             <button
