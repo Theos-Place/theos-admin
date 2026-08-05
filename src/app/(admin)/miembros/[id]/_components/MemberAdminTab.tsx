@@ -478,7 +478,7 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
       <div>
-        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Recomendaciones a CDEB</h3>
+        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Evaluación para la formación de dirigentes (CDEB)</h3>
         <p className="mt-1 text-[12px] text-navy-light/60 font-body">
           Evaluación de dirigentes para el comité. Confidencial: no la ve el miembro ni quien la escribió.
         </p>
@@ -488,12 +488,18 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
         const leader = r.leader ? `${r.leader.first_name} ${r.leader.last_name}`.trim() : null
         return (
           <div key={r.id} className="rounded-xl border border-outline p-4 space-y-2 text-[13px] font-body">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-navy-light/60">
-                {r.group?.plan?.code ?? '—'}{r.group?.name ? ` · ${r.group.name}` : ''}{leader ? ` · ${leader}` : ''}
-              </span>
-              <span className="text-navy-light/60">{formatDate(r.created_at)}</span>
+            {/* Quién la hizo va primero y con nombre propio: antes iba corrido
+                entre el plan y el grupo, en gris, y se leía como parte del
+                nombre del grupo (2026-08-05). */}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <p className="text-navy">
+                La hizo <strong>{leader ?? 'un dirigente'}</strong>
+              </p>
+              <span className="text-[12px] text-navy-light/60">{formatDate(r.created_at)}</span>
             </div>
+            <p className="text-[12px] text-navy-light/60">
+              Al cerrar {r.group?.plan?.code ?? 'el grupo'}{r.group?.name ? ` · ${r.group.name}` : ''}
+            </p>
             <p className="text-navy"><strong>Recomendación:</strong> {rec?.label ?? r.recommendation ?? '—'}</p>
             <p className="text-navy-light/80">
               <strong className="text-navy">{TESTIMONY_LABEL}:</strong> {scale(r.testimony_score)}

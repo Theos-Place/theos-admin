@@ -46,12 +46,14 @@ export function MemberRecommendations({ memberId, hideWhenEmpty = false }: { mem
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
       <div className="flex items-center gap-2 mb-3">
         <HeartHandshake size={15} className="text-coral" />
-        <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Recomendaciones de cierres de estudio</p>
+        <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Recomendado para oración, servicio o dar estudios</p>
       </div>
       {recs === null ? (
         <div className="h-16 rounded-xl bg-surface-low animate-pulse" />
       ) : recs.length === 0 ? (
-        <p className="text-[13px] text-navy-light/60 font-body">Sin recomendaciones registradas.</p>
+        <p className="text-[13px] text-navy-light/60 font-body">
+          Nadie lo ha recomendado para oración, servicio ni para dar estudios al cerrar un grupo.
+        </p>
       ) : (
         <ul className="space-y-2.5">
           {ordered.map(r => (
@@ -61,8 +63,10 @@ export function MemberRecommendations({ memberId, hideWhenEmpty = false }: { mem
                   {REC_LABEL[r.recommended_for]}
                 </span>
                 <span className="text-[11px] text-navy-light/60 font-body">
-                  {r.recommended_by_name ? `por ${r.recommended_by_name}` : 'recomendación del cierre'}
-                  {r.group_name ? ` · ${r.group_name}` : ''} · {formatDate(r.created_at)}
+                  {r.recommended_by_name
+                    ? <>la hizo <strong className="text-navy-light/80">{r.recommended_by_name}</strong></>
+                    : 'sin registro de quién la hizo'}
+                  {r.group_name ? ` · al cerrar ${r.group_name}` : ''} · {formatDate(r.created_at)}
                 </span>
               </div>
               {r.justification && <p className="text-[13px] text-navy-light/70 font-body">{r.justification}</p>}
