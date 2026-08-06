@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
+import { pingHealthcheck } from '@/lib/health'
 import { refreshReportSnapshots } from '@/lib/supabase/queries/reports'
 
 // Cron nocturno (medianoche CR): recalcula los datasets pesados de reportes y los
@@ -21,6 +22,10 @@ export async function GET(req: NextRequest) {
   if (denied) return denied
   try {
     const counts = await refreshReportSnapshots()
+    // Este cron es el único que no avisaba si fallaba, y su modo de fallo es
+    // silencioso por definición: los reportes siguen abriendo, pero con datos
+    // viejos. Nadie lo nota hasta que alguien compara contra la realidad.
+    await pingHealthcheck('HEALTHCHECK_URL_REPORT_SNAPSHOTS')
     return NextResponse.json({ ok: true, counts, refreshed_at: new Date().toISOString() })
   } catch (error) {
     console.error('GET /api/cron/report-snapshots:', error)

@@ -15,10 +15,20 @@
 
 Checklist de administración; nada de esto pasa por Claude Code:
 
-- [ ] Agregar las env `HEALTHCHECK_URL_*` faltantes en Vercel (incluida `HEALTHCHECK_URL_STORAGE_ORPHANS`) y decidir si `report-snapshots` debe pingear healthcheck.
+- [ ] Agregar las env `HEALTHCHECK_URL_*` en Vercel. **La lista completa (9, una por cron)
+  quedó en `.env.example` con su horario al lado** — antes solo estaban 4 y por eso "las
+  faltantes" no se sabía cuáles eran. Crear un check por cron en healthchecks.io y pegar la
+  URL. Sin la variable el cron corre igual; solo no avisa si falla.
+  · `report-snapshots` **SÍ debe pingear** — decidido e implementado 2026-08-06: su modo de
+  fallo es silencioso (los reportes siguen abriendo, con datos viejos). Ya no queda ningún
+  cron sin ping, y hay un test que lo vigila (`src/lib/health.test.ts`).
 - [ ] Configurar Sentry (`SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`).
 - [ ] Copiar las env vars de Supabase a los deploys **Preview** de Vercel (hoy solo están en Production y los previews fallan).
-- [ ] Verificar que la edge function `process-email-queue` de Supabase no duplique los crons de vercel.json.
+- [x] Verificar que la edge function `process-email-queue` de Supabase no duplique los crons
+  de vercel.json — **VERIFICADO 2026-08-06: no hay ninguna edge function desplegada** en el
+  proyecto, así que no existe tal duplicación. Los 3 jobs de pg_cron que sí existen
+  (`refresh_donor_flags` 6:30, `refresh_member_sedes` 6:45, `prune_audit_log` 4:00) son
+  funciones SQL y no se solapan con ningún cron HTTP de vercel.json.
 - [ ] Confirmar el SMTP de Supabase Auth.
 
 ---
