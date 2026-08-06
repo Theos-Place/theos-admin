@@ -30,6 +30,21 @@ import { formatDate, formatDateTime } from '@/lib/format'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { cn } from '@/lib/utils'
+import {
+  paymentDescription, paymentEntityName, paymentKindLabel, type PaymentForLabel,
+} from '@/lib/finance/payment-label'
+
+/** El adapter ya trae `description_label`/`kind_label`; esto es el respaldo para
+ *  un Payment que venga de otra ruta sin esos campos. */
+function toLabel(p: { concept?: string | null; entity_type?: string | null; entity_name?: string; notes?: string | null }): PaymentForLabel {
+  return {
+    concept: p.concept,
+    entity_type: p.entity_type,
+    event_name: p.entity_type === 'event' ? p.entity_name : null,
+    group_name: p.entity_type === 'event' ? null : p.entity_name,
+    description: p.notes,
+  }
+}
 
 function PagosContent() {
   const { loaded } = useAuth()
@@ -336,9 +351,11 @@ function PagosContent() {
                       <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-[13px] font-body text-navy">{p.entity_name}</p>
+                      {/* Qué se está pagando: el NOMBRE del estudio o del
+                          evento, y de qué tipo es (2026-08-06). */}
+                      <p className="text-[13px] font-body text-navy">{paymentEntityName(toLabel(p)) || p.entity_name}</p>
                       <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
-                        {p.entity_type === 'event' ? 'Evento' : 'Grupo de estudio'}
+                        {p.kind_label ?? paymentKindLabel(toLabel(p))}
                       </p>
                     </td>
                     <td className="px-5 py-4">
@@ -407,7 +424,9 @@ function PagosContent() {
                 <button onClick={() => openPayment(p)} className="flex items-start gap-3 w-full text-left">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium font-body text-navy truncate">{p.member_name}</p>
-                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
+                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">
+                      {p.description_label ?? paymentDescription(toLabel(p))}
+                    </p>
                     <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
@@ -470,7 +489,7 @@ function PagosContent() {
         const rows: [string, React.ReactNode][] = [
           ['Persona', p.member_name],
           ['Cédula', p.member_cedula || '—'],
-          ['Concepto', p.entity_name],
+          ['Concepto', p.description_label ?? paymentDescription(toLabel(p))],
           ['Tipo', p.entity_type === 'event' ? 'Evento' : 'Grupo de estudio'],
           ['Monto', <AmountDisplay key="m" amount={p.amount} currency={p.currency} revealed={revealAll} />],
           ['Creado', formatDateTime(p.created_at)],
@@ -530,7 +549,7 @@ function PagosContent() {
             </div>
             <div className="px-6 py-5 space-y-4">
               <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
-                <strong>{sinpeTarget.member_name}</strong> — {sinpeTarget.entity_name}
+                <strong>{sinpeTarget.member_name}</strong> — {sinpeTarget.description_label ?? sinpeTarget.entity_name}
               </p>
               <div>
                 <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">

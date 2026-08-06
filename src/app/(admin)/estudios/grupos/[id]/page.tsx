@@ -20,6 +20,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
 import { LeaderContact } from '@/components/studies/LeaderContact'
+import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -59,8 +60,10 @@ function AttendanceBar({ pct }: { pct: number }) {
   )
 }
 
-function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
+function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }: {
   groupId: string
+  /** Nombre del estudio, para el modal del comprobante. */
+  studyName: string
   enrolledIds: Set<string>
   onClose: () => void
   onEnrolled: () => void
@@ -74,6 +77,9 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
   // staff puede matricularla igual — pero confirmándolo, y queda registrado.
   const puedeSaltarRestriccion = roles.some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r))
   const [restriccion, setRestriccion] = useState<{ memberId: string; nombre: string; motivo: string } | null>(null)
+  // El comprobante SIEMPRE se pide (2026-08-06): también cuando matricula el
+  // staff. La matrícula ya quedó hecha; esto es el pago, que va por su carril.
+  const [comprobante, setComprobante] = useState<{ enrollmentId: string; amount: number } | null>(null)
 
   useEffect(() => {
     const q = query.trim()
@@ -114,12 +120,29 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
       }
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
       onEnrolled()
+      if (data?.requires_payment && data?.enrollment_id) {
+        setComprobante({ enrollmentId: data.enrollment_id, amount: Number(data.amount ?? 0) })
+        setAdding(null)
+        return   // el modal del comprobante reemplaza al de búsqueda
+      }
       onClose()
     } catch (err) {
       console.error('No se pudo inscribir al miembro:', err)
       toast(err instanceof Error && err.message ? err.message : 'No se pudo inscribir al miembro en el grupo. Intentá de nuevo.', 'error')
       setAdding(null)
     }
+  }
+
+  // Comprobante de la matrícula recién hecha.
+  if (comprobante) {
+    return (
+      <StudyReceiptModal
+        enrollmentId={comprobante.enrollmentId}
+        studyName={studyName}
+        amount={comprobante.amount}
+        onDone={() => { setComprobante(null); onClose() }}
+      />
+    )
   }
 
   // Confirmación del override: dice QUÉ restricción se está saltando.
@@ -459,6 +482,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {showAddMember && (
         <AddMemberModal
           groupId={id}
+          studyName={studyType?.name ?? group?.study_type_id ?? 'el estudio'}
           enrolledIds={new Set((group?.participants ?? []).map(p => p.member_id))}
           onClose={() => setShowAddMember(false)}
           onEnrolled={refetch}

@@ -6,7 +6,7 @@ import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance
 
 type MemberRef = { first_name: string; last_name: string; cedula: string | null } | null
 type EventRef = { title: string } | null
-type GroupRef = { name: string } | null
+type GroupRef = { name: string; plan?: { code: string | null; name: string | null } | null } | null
 
 export type DbPayment = {
   id: string
@@ -26,6 +26,8 @@ export type DbPayment = {
   scholarship_id: string | null
   paid_at: string | null
   description: string | null
+  /** Concepto del cobro: 'matricula' | 'evento' | 'prematrimonial' | 'folletos'. */
+  concept: string | null
   created_at: string
 }
 
@@ -80,9 +82,10 @@ export type DbImportBatch = {
 const PAYMENT_SELECT = `
   id, member_id, entity_type, event_id, study_group_id, amount, currency, payment_method,
   status, gateway_ref, sinpe_confirmation, scholarship_id, paid_at, description, created_at,
+  concept,
   member:members!payments_member_id_fkey(first_name, last_name, cedula),
   event:events(title),
-  study_group:study_groups(name)
+  study_group:study_groups(name, plan:study_plans(code, name))
 `
 // Con búsqueda el join al miembro es inner: filtramos por nombre/cédula y los
 // pagos sin miembro (no buscables por persona) quedan fuera.

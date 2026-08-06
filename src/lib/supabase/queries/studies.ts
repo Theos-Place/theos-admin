@@ -1063,11 +1063,22 @@ export async function enrollMember(
   },
 ): Promise<{ status: 'enrolled'; enrollment_id: string; amount: number; requires_payment: boolean }> {
   const supabase = createAdminClient()
-  const { data: g } = await supabase
+  // La columna del cupo en study_groups es `max_students` (no max_capacity: eso
+  // es el nombre del TIPO DE DOMINIO). BUG 2026-08-06: se pedía `max_capacity`,
+  // PostgREST devolvía error 42703, el error NO se miraba y `group` quedaba
+  // null. Consecuencia: todo lo que depende del grupo se apagaba en silencio —
+  // no se creaba el pago de matrícula (estudios de ₡25.000 quedaban gratis), ni
+  // se validaba el cupo, ni el grupo virtual, ni la ventana de matrícula.
+  const { data: g, error: gErr } = await supabase
     .from('study_groups')
-    .select('is_virtual, leader_id, co_leader_id, status, max_capacity, enrollment_start_date, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
+    .select('is_virtual, leader_id, co_leader_id, status, max_students, enrollment_start_date, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
     .eq('id', groupId).maybeSingle()
-  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; status: string; max_capacity: number | null; enrollment_start_date: string | null; enrollment_end_date: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
+  // Si la consulta falla, NO se sigue: matricular sin saber el plan es
+  // matricular sin cobrar.
+  if (gErr) throw gErr
+  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; status: string; max_students: number | null; enrollment_start_date: string | null; enrollment_end_date: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
+  // Un grupo que no existe tampoco se matricula.
+  if (!group) throw new Error('GRUPO_NO_ENCONTRADO')
   const plan = group?.plan
 
   // Guard GRU-1 (solo autoservicio; el staff puede matricular fuera de la
@@ -1160,8 +1171,8 @@ export async function enrollMember(
       .in('status', OCCUPYING_STATUSES as unknown as string[])
     const activeCount = ((ocupados ?? []) as Array<{ member_id: string }>)
       .filter(e => e.member_id !== memberId).length
-    if (isGroupFull({ activeCount, maxCapacity: group?.max_capacity })) {
-      throw new Error(`CUPO_LLENO:${group?.max_capacity ?? 0}`)
+    if (isGroupFull({ activeCount, maxCapacity: group?.max_students })) {
+      throw new Error(`CUPO_LLENO:${group?.max_students ?? 0}`)
     }
   }
 
@@ -1170,6 +1181,13 @@ export async function enrollMember(
   // sin importar si la hace el propio miembro o el staff.
   const amount = Number(plan?.cost ?? 0)
   const requiresPayment = !!plan?.requires_payment && amount > 0
+  // Nombre del estudio para la descripción del cobro (el `code` no le dice nada
+  // a nadie en una lista de pagos).
+  let planName: string | null = null
+  if (requiresPayment && plan?.id) {
+    const { data: pl } = await supabase.from('study_plans').select('name').eq('id', plan.id).maybeSingle()
+    planName = (pl as { name?: string } | null)?.name ?? plan.code ?? null
+  }
 
   // Beca/cupón (opcional): recalcula el monto ANTES de decidir el estado. Se
   // resuelve incluso si el resultado queda en 0 — la matrícula gratis por beca
@@ -1207,6 +1225,10 @@ export async function enrollMember(
       concept: 'matricula', enrollment_id: enrollmentId,
       study_group_id: groupId, entity_type: 'study_group', status: 'pending',
       scholarship_id: appliedScholarship?.id ?? null,
+      // Descripción legible desde el minuto cero (2026-08-06). La lista de pagos
+      // igual la sabe derivar, pero guardarla sirve para exports y para finanzas
+      // mirando la tabla directo.
+      description: `Matrícula · ${planName ?? 'estudio'}`,
     })
     if (payErr) {
       if (existingStatus) {

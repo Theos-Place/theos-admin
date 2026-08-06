@@ -21,6 +21,12 @@ export type Payment = {
   sinpe_confirmation: string | null
   scholarship_id: string | null
   paid_at: string | null
+  /** Concepto crudo del cobro ('matricula' | 'evento' | …). */
+  concept?: string | null
+  /** "Estudio" | "Evento" | "Prematrimonial" | "Folletos" | "Otro". */
+  kind_label?: string
+  /** Una línea: "Estudio · Transformados". Ver lib/finance/payment-label.ts. */
+  description_label?: string
   created_at: string
   notes: string | null
 }
