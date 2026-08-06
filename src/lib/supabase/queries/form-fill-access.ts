@@ -4,6 +4,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formFillAccess, type FillAccess } from '@/lib/forms/fill-access'
 import { isSelectionForm } from '@/lib/forms/selection-rules'
+import { CONVOKED_STATUS, CONVOKED_RECOMMENDATION_PREFIX } from '@/lib/supabase/queries/form-selection'
 import { getFormById } from '@/lib/supabase/queries/forms'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -69,10 +70,15 @@ export async function memberFormFillAccess(input: {
   const esSeleccion = isSelectionForm((f.fields ?? []) as Parameters<typeof isSelectionForm>[0])
   let convocado = false
   if (esSeleccion && !leLlego && !yaRespondio) {
+    // MISMO criterio que la lista de convocatoria (form-selection): una
+    // recomendación ya ENVIADA que dice que sí. Sin el filtro de status, una
+    // recomendación en borrador dejaba entrar a alguien que todavía no fue
+    // convocado.
     const { data } = await sb.from('cdeb_recommendations')
-      .select('id, recommendation, status')
+      .select('id')
       .eq('member_id', input.memberId)
-      .like('recommendation', 'si%')
+      .eq('status', CONVOKED_STATUS)
+      .like('recommendation', CONVOKED_RECOMMENDATION_PREFIX)
       .limit(1)
     convocado = ((data ?? []) as unknown[]).length > 0
   }

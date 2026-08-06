@@ -147,6 +147,13 @@ export async function getSelectionData(formId: string): Promise<SelectionData | 
 /** Audiencia de la convocatoria: quienes tienen una recomendación ENVIADA de
  *  EST-9 que dice "sí" (con o sin reservas), y que todavía NO se preinscribieron.
  *  Los "no lo recomiendo" quedan fuera: convocarlos sería sembrar expectativa. */
+/** Criterio ÚNICO de "está convocado a la preinscripción": una recomendación de
+ *  EST-9 ya ENVIADA que dice que sí. Lo usan la lista de convocatoria (acá) y el
+ *  guard de llenado (form-fill-access) — si se separan, alguien queda afuera del
+ *  formulario al que sí lo invitamos, o entra alguien que no. */
+export const CONVOKED_STATUS = 'enviada'
+export const CONVOKED_RECOMMENDATION_PREFIX = 'si%'
+
 async function convocationCandidates(
   sb: SupabaseClient,
   respondedMemberIds: Array<string | null>,
@@ -156,8 +163,8 @@ async function convocationCandidates(
     .from('cdeb_recommendations')
     .select(`member_id, recommendation,
              member:members!cdeb_recommendations_member_id_fkey(first_name, last_name, is_active, email)`)
-    .eq('status', 'enviada')
-    .like('recommendation', 'si%')
+    .eq('status', CONVOKED_STATUS)
+    .like('recommendation', CONVOKED_RECOMMENDATION_PREFIX)
   if (error) throw error
   const rows = (data ?? []) as unknown as Array<{
     member_id: string

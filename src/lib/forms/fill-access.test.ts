@@ -76,3 +76,24 @@ describe('formulario suelto, sin audiencia y sin envío registrado', () => {
     expect(formFillAccess({ ...BASE, entityType: null }).allowed).toBe(true)
   })
 })
+
+// ── El criterio de "convocado" no puede tener dos versiones ─────────────────
+describe('la lista de convocatoria y el guard usan la MISMA regla', () => {
+  it('las dos consultas filtran por status enviada y recomendación "si%"', async () => {
+    const { readFileSync } = await import('node:fs')
+    const seleccion = readFileSync('src/lib/supabase/queries/form-selection.ts', 'utf8')
+    const guard = readFileSync('src/lib/supabase/queries/form-fill-access.ts', 'utf8')
+
+    // Las constantes viven en un solo lado y el guard las importa.
+    expect(seleccion).toContain("export const CONVOKED_STATUS = 'enviada'")
+    expect(seleccion).toContain("export const CONVOKED_RECOMMENDATION_PREFIX = 'si%'")
+    expect(guard).toContain('CONVOKED_STATUS')
+    expect(guard).toContain('CONVOKED_RECOMMENDATION_PREFIX')
+
+    // Y ninguno de los dos tiene el criterio escrito a mano.
+    for (const [nombre, src] of [['form-selection', seleccion], ['form-fill-access', guard]] as const) {
+      const aMano = src.match(/\.like\('recommendation',\s*'si%'\)/)
+      expect(aMano, `${nombre} repite el criterio en vez de usar la constante`).toBeNull()
+    }
+  })
+})
