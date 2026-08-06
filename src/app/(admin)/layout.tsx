@@ -71,6 +71,10 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // había aplicado al sidebar del dirigente: la página seguía cerrada.
   // El DETALLE (/estudios/plan/[id]) es el editor y sigue exigiendo el módulo.
   if (pathname === '/estudios/plan') return <>{children}</>
+  // Excepción: /estudios/grupos/[id]/evaluar es la encuesta del ESTUDIANTE
+  // sobre su dirigente al cerrar el grupo — cualquier sesión entra; el endpoint
+  // decide si esa persona puede responder ese grupo.
+  if (/^\/estudios\/grupos\/[0-9a-f-]{36}\/evaluar$/i.test(pathname)) return <>{children}</>
   // Excepción: /estudios/folletos tiene su propio permiso (rol 'folletos' sin
   // módulo estudios) — espejo del sidebar, que muestra el ítem con ese permiso.
   if (pathname.startsWith('/estudios/folletos') && can('folletos', 'view')) return <>{children}</>

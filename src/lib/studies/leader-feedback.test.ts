@@ -105,3 +105,36 @@ describe('lo que ve el dirigente', () => {
     expect('comments' in v && v.comments).toHaveLength(MIN_RESPUESTAS_PARA_MOSTRAR)
   })
 })
+
+// ── Cableado: el correo y la pantalla ───────────────────────────────────────
+describe('cómo llega el estudiante a la encuesta', () => {
+  it('el cierre del grupo la dispara, y no tumba el cierre si falla', async () => {
+    const { readFileSync } = await import('node:fs')
+    const close = readFileSync('src/app/api/studies/groups/[id]/close/route.ts', 'utf8')
+    expect(close).toContain('requestLeaderFeedback(id)')
+    // Best-effort: dentro de try/catch, como el resto de los envíos del cierre.
+    const bloque = close.slice(close.indexOf('requestLeaderFeedback(id)') - 200, close.indexOf('requestLeaderFeedback(id)') + 200)
+    expect(bloque).toContain('catch')
+  })
+
+  it('el envío tiene dedupe propio: no reescribe si se reintenta', async () => {
+    const { readFileSync } = await import('node:fs')
+    const notify = readFileSync('src/lib/email/leader-feedback-notify.ts', 'utf8')
+    expect(notify).toContain('feedback_requested_at')
+    expect(notify).toMatch(/if \(grupo\.feedback_requested_at\) return/)
+    // Y solo con el grupo ya cerrado.
+    expect(notify).toMatch(/status !== 'finalizado'/)
+  })
+
+  it('no se le pide al propio dirigente ni al co-dirigente', async () => {
+    const { readFileSync } = await import('node:fs')
+    const notify = readFileSync('src/lib/email/leader-feedback-notify.ts', 'utf8')
+    expect(notify).toContain('id !== grupo.leader_id && id !== grupo.co_leader_id')
+  })
+
+  it('la pantalla se abre para cualquier sesión; el endpoint decide', async () => {
+    const { readFileSync } = await import('node:fs')
+    const layout = readFileSync('src/app/(admin)/layout.tsx', 'utf8')
+    expect(layout).toMatch(/estudios\\\/grupos\\\/\[0-9a-f-\]\{36\}\\\/evaluar/)
+  })
+})
