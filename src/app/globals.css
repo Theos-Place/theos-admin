@@ -460,6 +460,46 @@ body {
   overflow-x: auto;   /* el bloque scrollea solo; la página nunca en horizontal */
 }
 .help-prose pre code { background: none; padding: 0; color: inherit; }
+/* Tablas del centro de ayuda. El wrapper .tabla-scroll lo emite el renderizador
+   (lib/help/markdown.ts): una tabla ancha se desplaza SOLA en el celular en vez
+   de estirar la página entera. */
+.help-prose .tabla-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--outline-variant);
+  border-radius: 0.75rem;
+}
+.help-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  /* Que no se aplaste: con 6 columnas de texto, más angosto no se lee. */
+  min-width: 40rem;
+}
+.help-prose thead th {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(60, 58, 90, 0.7);
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--surface-low);
+  padding: 0.6rem 0.85rem;
+}
+.help-prose tbody td {
+  padding: 0.6rem 0.85rem;
+  color: rgba(60, 58, 90, 0.92);
+  border-top: 1px solid var(--outline-variant);
+  vertical-align: top;
+}
+/* Filas alternadas: con tablas largas, seguir la fila con el dedo es el problema. */
+.help-prose tbody tr:nth-child(even) { background: rgba(22, 20, 64, 0.02); }
+.help-prose tbody td:first-child { font-weight: 600; color: var(--color-navy); }
+.help-prose table code { white-space: nowrap; }
+
 /* Imágenes e infografías: nunca se desbordan y se pueden tocar para ampliar. */
 .help-prose img {
   display: block;

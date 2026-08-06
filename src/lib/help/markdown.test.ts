@@ -146,3 +146,52 @@ describe('formato que cruza el corte de línea (bug 2026-08-04)', () => {
     expect(html).toContain('<a href="/ayuda/el-camino-del-estudiante">guía del estudiante</a>')
   })
 })
+
+// ── Tablas (2026-08-06) ─────────────────────────────────────────────────────
+// Antes no se soportaban: las filas caían todas en un mismo párrafo con los
+// pipes a la vista (se vio en la guía de datos de prueba).
+describe('tablas', () => {
+  const md = [
+    '| Nombre | Rol |',
+    '|---|---|',
+    '| Ana | miembro |',
+    '| Dora | **dirigente** |',
+  ].join('\n')
+
+  it('arma thead y tbody', () => {
+    const html = renderMarkdown(md)
+    expect(html).toContain('<table>')
+    expect(html).toContain('<thead><tr><th>Nombre</th><th>Rol</th></tr></thead>')
+    expect(html).toContain('<td>Ana</td><td>miembro</td>')
+  })
+
+  it('formatea dentro de las celdas', () => {
+    expect(renderMarkdown(md)).toContain('<td><strong>dirigente</strong></td>')
+  })
+
+  it('va envuelta para que se desplace sola en el celular', () => {
+    expect(renderMarkdown(md)).toContain('<div class="tabla-scroll">')
+  })
+
+  it('acepta la separadora con alineaciones', () => {
+    const conAlineacion = '| a | b |\n|:--|--:|\n| 1 | 2 |'
+    expect(renderMarkdown(conAlineacion)).toContain('<table>')
+  })
+
+  it('sin fila separadora NO es tabla: sale como párrafo', () => {
+    const html = renderMarkdown('| esto | no es tabla |')
+    expect(html).not.toContain('<table>')
+    expect(html).toContain('<p>')
+  })
+
+  it('lo que sigue después de la tabla es un párrafo aparte', () => {
+    const html = renderMarkdown(`${md}\n\nDespués de la tabla.`)
+    expect(html).toContain('<p>Después de la tabla.</p>')
+    expect(html.indexOf('</table>')).toBeLessThan(html.indexOf('<p>Después'))
+  })
+
+  it('una tabla no se come el título siguiente', () => {
+    const html = renderMarkdown(`${md}\n\n## Otra sección`)
+    expect(html).toContain('<h2>Otra sección</h2>')
+  })
+})
