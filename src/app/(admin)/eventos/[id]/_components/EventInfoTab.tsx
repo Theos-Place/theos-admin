@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { Image as ImageIcon, UserPlus, Check } from 'lucide-react'
 import type { RegistrationCta } from '@/lib/events/detail-access'
 import { CapacityBar } from '@/components/events/CapacityBar'
@@ -7,6 +10,7 @@ import type { AdminEvent } from '@/data/event-config'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
 import { formatCRC } from '@/lib/format'
 import { recurrenceLabel } from '@/lib/events/expand-recurrence'
+import { surveyStatus } from '@/lib/events/survey-schedule'
 
 type Event = AdminEvent
 
@@ -44,6 +48,21 @@ export function EventInfoTab({
   onRegister,
 }: Props) {
   const { adminCommittees } = useOrg()
+  // EVE-4 · Cuántas respuestas lleva la encuesta. Solo se pide si YA se envió y
+  // el destino era un formulario: antes de eso no hay nada que contar.
+  const [respuestasEncuesta, setRespuestasEncuesta] = useState(0)
+  const encuestaFormId = event.survey_sent_at ? event.survey_form_id : null
+  useEffect(() => {
+    if (!encuestaFormId) return
+    let vivo = true
+    fetch(`/api/forms/${encuestaFormId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (vivo && Array.isArray(d?.responses)) setRespuestasEncuesta(d.responses.length)
+      })
+      .catch(() => {})
+    return () => { vivo = false }
+  }, [encuestaFormId])
   const committeeName = event.organizing_committee_ids
     .map(id => adminCommittees.find(c => c.id === id)?.name)
     .filter(Boolean)
@@ -160,7 +179,9 @@ export function EventInfoTab({
             // mes"); la regla cruda (FREQ=MONTHLY;BYMONTHDAY=21) no le dice nada a
             // nadie y además se desborda de la tarjeta.
             { label: 'Recurrente', value: event.is_recurring ? (recurrenceLabel(event.recurrence_rule) ?? 'Sí') : 'No' },
-            { label: 'Encuesta', value: event.requires_survey ? 'Requerida' : 'No' },
+            // EVE-4 · Estado real de la encuesta, no solo "requerida":
+            // programada para tal fecha / enviada a N / N respuestas.
+            { label: 'Encuesta', value: etiquetaEncuesta(event, respuestasEncuesta) },
             { label: 'Pago', value: event.requires_payment ? formatCRC(event.payment_amount ?? 0) : 'Gratuito' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between text-sm">
@@ -236,4 +257,25 @@ export function EventInfoTab({
       </div>
     </div>
   )
+}
+
+/** EVE-4 · Una línea con el estado de la encuesta para la tarjeta de
+ *  configuración. Corta a propósito: el detalle vive en la pantalla de edición. */
+function etiquetaEncuesta(
+  event: Parameters<typeof surveyStatus>[0],
+  respuestas: number,
+): string {
+  const st = surveyStatus(event, { responses: respuestas })
+  switch (st.kind) {
+    case 'sin_encuesta': return 'No'
+    case 'incompleta':   return 'Sin programar'
+    case 'programada':   return `Programada · ${fechaCorta(st.sendAt)}`
+    case 'enviada':      return `Enviada a ${st.sent} · ${st.responses} respuesta${st.responses === 1 ? '' : 's'}`
+  }
+}
+
+function fechaCorta(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('es-CR', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Costa_Rica' })
 }

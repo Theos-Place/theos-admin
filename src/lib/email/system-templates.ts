@@ -18,6 +18,7 @@ export type SystemTemplateKey =
   | 'matricula_estudiante' | 'matricula_dirigente' | 'inicio_capacitacion'
   | 'beca_aprobada' | 'beca_aprobada_parcial' | 'beca_rechazada'
   | 'cupon_asignado'
+  | 'encuesta_evento'
 
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */
@@ -38,6 +39,11 @@ const FALLBACK: Record<string, { subject: string; html: string }> = {
   beca_rechazada: {
     subject: 'Sobre tu solicitud de beca',
     html: '<p>Hola {{nombre}},</p><p>Gracias por tu solicitud de beca para {{nombre_estudio_evento}}. En esta ocasión no pudimos aprobarla.</p><p>Motivo: {{motivo_rechazo}}</p>',
+  },
+  // EVE-4: encuesta de satisfacción de un evento (destino = formulario).
+  encuesta_evento: {
+    subject: '¿Cómo te fue en {{nombre_evento}}?',
+    html: '<p>Hola {{nombre}},</p><p>Gracias por acompañarnos en <strong>{{nombre_evento}}</strong>. Nos ayudaría mucho saber cómo te fue: es una encuesta corta.</p><p><a href="{{link_encuesta}}">Responder la encuesta</a></p>',
   },
   // BEC-1: cupón genérico enviado a una persona desde /finanzas/becas.
   cupon_asignado: {

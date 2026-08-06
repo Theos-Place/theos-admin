@@ -1477,7 +1477,29 @@ también se cargue, y que cambiar de plantilla reemplace el contenido en vez de 
 Test de ambos caminos.
 ```
 
-### [ ] EVE-4 · Evento con formulario de inscripción y encuesta de satisfacción programada
+### [x] EVE-4 · Evento con formulario de inscripción y encuesta de satisfacción programada
+
+> **HECHO 2026-08-06** (migración `20260806180000_event_form_and_survey`, cron nuevo).
+>
+> **DECISIONES CONFIRMADAS CON TI (2026-08-06), las dos que el plan pedía:**
+> · (A) La inscripción SIGUE siendo `event_registrations` —cupo, pago y check-in— y la
+>   respuesta del formulario se le ENLAZA (`event_registrations.form_response_id`). El
+>   enlace se hace en `submitResponse`, no en el endpoint, para que valga por cualquier
+>   camino: el botón del evento, el link directo o el staff respondiendo por alguien.
+> · (B) La encuesta va a quienes hicieron CHECK-IN, no a todos los inscritos. Es fijo, y
+>   se dice en la pantalla al programarla.
+>
+> Columnas: `registration_form_id`, `survey_form_id` / `survey_template_id` (CHECK: uno u
+> otro), `survey_offset_hours` (la regla), `survey_send_at` (el momento CALCULADO — es lo
+> que mira el cron), `survey_sent_at` + `survey_sent_count` (dedupe y estado).
+> Reglas puras en `src/lib/events/survey-schedule.ts`; despacho en
+> `src/lib/email/event-survey-notify.ts` (prefs `mensajes_sistema`, dedupe por el sello,
+> techo `DAILY_LIMIT` compartido entre eventos); cron `/api/cron/event-surveys` 17:00 UTC
+> con el patrón de siempre (CRON_SECRET + `HEALTHCHECK_URL_EVENT_SURVEYS` opcional).
+> Plantilla del sistema nueva: `encuesta_evento`. 28 tests.
+>
+> **Verificado en producción antes de activar el cron:** de 3.372 eventos, 0 quedan en la
+> condición de despacho — encender el cron no le manda un correo a nadie por accidente.
 Archivos: crear/editar evento (`src/app/(admin)/eventos/nuevo`, `[id]/editar`), `events`, módulo de formularios, `message_templates`, cron nuevo o el de recordatorios
 
 ```

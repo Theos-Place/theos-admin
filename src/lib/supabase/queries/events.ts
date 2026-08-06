@@ -35,6 +35,14 @@ export type DbEventEnriched = {
   server_price: number | null
   servers_pay: boolean
   requires_survey: boolean
+  /** EVE-4 · Formulario de inscripción y encuesta de satisfacción. */
+  registration_form_id: string | null
+  survey_form_id: string | null
+  survey_template_id: string | null
+  survey_offset_hours: number | null
+  survey_send_at: string | null
+  survey_sent_at: string | null
+  survey_sent_count: number
   status: EventStatus
   cancellation_reason: string | null
   is_active: boolean
@@ -252,6 +260,12 @@ export type EventWriteInput = {
   server_price?: number | null
   servers_pay?: boolean
   requires_survey?: boolean
+  /** EVE-4 · Formulario de inscripción y programación de la encuesta. */
+  registration_form_id?: string | null
+  survey_form_id?: string | null
+  survey_template_id?: string | null
+  survey_offset_hours?: number | null
+  survey_send_at?: string | null
   status?: EventStatus
   cancellation_reason?: string | null
 }

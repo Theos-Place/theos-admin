@@ -352,7 +352,43 @@ export async function submitResponse(
     console.warn('submitResponse form_completado email:', e)
   }
 
+  // EVE-4 · Si este formulario es el de INSCRIPCIÓN de un evento, la respuesta
+  // se enlaza a la inscripción de esa persona. La inscripción sigue siendo la
+  // verdad (cupo, pago, check-in); esto es información adicional.
+  //
+  // Se hace acá, no en el endpoint, para que valga por cualquier camino: el
+  // botón del evento, el link directo al formulario o el staff respondiendo por
+  // alguien. Best-effort: si falla, la respuesta y la inscripción existen igual.
+  if (input.member_id) {
+    try {
+      await linkResponseToRegistration(supabase, formId, input.member_id, responseId)
+    } catch (e) {
+      console.warn('submitResponse enlace con inscripción:', e)
+    }
+  }
+
   return { id: responseId }
+}
+
+/** Enlaza la respuesta con la inscripción del miembro al evento cuyo formulario
+ *  de inscripción es `formId`. No pisa un enlace ya existente: la primera
+ *  respuesta es la que queda. */
+async function linkResponseToRegistration(
+  supabase: ReturnType<typeof createAdminClient>,
+  formId: string,
+  memberId: string,
+  responseId: string,
+): Promise<void> {
+  const { data: eventos } = await supabase
+    .from('events').select('id').eq('registration_form_id', formId)
+  const ids = ((eventos ?? []) as Array<{ id: string }>).map(e => e.id)
+  if (ids.length === 0) return
+  await supabase
+    .from('event_registrations')
+    .update({ form_response_id: responseId })
+    .in('event_id', ids)
+    .eq('member_id', memberId)
+    .is('form_response_id', null)
 }
 
 // ── Accesos puntuales por formulario (2026-08-04) ───────────────────────────

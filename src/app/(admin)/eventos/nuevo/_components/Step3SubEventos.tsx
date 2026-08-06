@@ -1,5 +1,7 @@
 import { Plus, X } from 'lucide-react'
 import { inputCls, Toggle, FieldLabel } from './shared'
+import { RegistrationFormPicker } from '@/components/events/RegistrationFormPicker'
+import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/EventSurveyFields'
 
 type SubEventInput = { id: string; name: string; max_capacity: string }
 
@@ -19,6 +21,14 @@ interface Step3Props {
   onToggleRegistration: () => void
   onMaxCapacityChange: (v: string) => void
   onToggleSatisfactionSurvey: () => void
+  /** EVE-4 · Formulario de inscripción del evento (null = sin formulario). */
+  registration_form_id: string | null
+  onRegistrationFormChange: (id: string | null) => void
+  /** EVE-4 · Programación de la encuesta. */
+  survey: SurveyFieldsValue
+  onSurveyChange: (patch: Partial<SurveyFieldsValue>) => void
+  /** Fin del evento (ISO) para calcular el momento del envío. */
+  endsAt: string | null
 }
 
 export function Step3SubEventos({
@@ -37,6 +47,11 @@ export function Step3SubEventos({
   onToggleRegistration,
   onMaxCapacityChange,
   onToggleSatisfactionSurvey,
+  registration_form_id,
+  onRegistrationFormChange,
+  survey,
+  onSurveyChange,
+  endsAt,
 }: Step3Props) {
   return (
     <div className="space-y-4">
@@ -153,16 +168,13 @@ export function Step3SubEventos({
                 {/* "Prerrequisito" se quitó: los eventos no tienen ese campo en
                     la BD y el valor se descartaba en silencio al publicar. */}
               </div>
-              <a
-                href="/formularios/nuevo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost btn-sm"
-                title="Abre el builder de formularios en otra pestaña (el wizard conserva tu avance)"
-              >
-                <Plus size={13} />
-                Crear formulario de inscripción
-              </a>
+              {/* EVE-4 · Formulario de inscripción. La inscripción sigue
+                  siendo event_registrations (cupo, pago, check-in): esto se
+                  llena además y queda enlazado a ella. */}
+              <RegistrationFormPicker
+                value={registration_form_id}
+                onChange={onRegistrationFormChange}
+              />
             </div>
           )}
         </div>
@@ -178,18 +190,7 @@ export function Step3SubEventos({
             label="Enviar encuesta al finalizar el evento"
           />
           {has_satisfaction_survey && (
-            <div className="pl-14">
-              <a
-                href="/formularios/nuevo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost btn-sm"
-                title="Abre el builder de formularios en otra pestaña (el wizard conserva tu avance)"
-              >
-                <Plus size={13} />
-                Crear encuesta
-              </a>
-            </div>
+            <EventSurveyFields value={survey} onChange={onSurveyChange} endsAt={endsAt} />
           )}
         </div>
       </div>

@@ -733,6 +733,7 @@ export type Database = {
       event_registrations: {
         Row: {
           event_id: string
+          form_response_id: string | null
           id: string
           member_id: string
           payment_status: string
@@ -740,6 +741,7 @@ export type Database = {
         }
         Insert: {
           event_id: string
+          form_response_id?: string | null
           id?: string
           member_id: string
           payment_status?: string
@@ -747,6 +749,7 @@ export type Database = {
         }
         Update: {
           event_id?: string
+          form_response_id?: string | null
           id?: string
           member_id?: string
           payment_status?: string
@@ -873,6 +876,13 @@ export type Database = {
           requires_payment: boolean | null
           requires_registration: boolean | null
           requires_survey: boolean | null
+          registration_form_id: string | null
+          survey_form_id: string | null
+          survey_offset_hours: number | null
+          survey_send_at: string | null
+          survey_sent_at: string | null
+          survey_sent_count: number
+          survey_template_id: string | null
           sede_id: string | null
           server_price: number | null
           servers_pay: boolean
@@ -907,6 +917,13 @@ export type Database = {
           requires_payment?: boolean | null
           requires_registration?: boolean | null
           requires_survey?: boolean | null
+          registration_form_id?: string | null
+          survey_form_id?: string | null
+          survey_offset_hours?: number | null
+          survey_send_at?: string | null
+          survey_sent_at?: string | null
+          survey_sent_count?: number
+          survey_template_id?: string | null
           sede_id?: string | null
           server_price?: number | null
           servers_pay?: boolean
@@ -941,6 +958,13 @@ export type Database = {
           requires_payment?: boolean | null
           requires_registration?: boolean | null
           requires_survey?: boolean | null
+          registration_form_id?: string | null
+          survey_form_id?: string | null
+          survey_offset_hours?: number | null
+          survey_send_at?: string | null
+          survey_sent_at?: string | null
+          survey_sent_count?: number
+          survey_template_id?: string | null
           sede_id?: string | null
           server_price?: number | null
           servers_pay?: boolean

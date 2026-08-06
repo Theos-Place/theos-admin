@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils'
 import { EventManagersPanel } from '../_components/EventManagersPanel'
 import { useAuth } from '@/hooks/useAuth'
 import { canGrantEventManagers } from '@/lib/auth/events-scope'
+import { RegistrationFormPicker } from '@/components/events/RegistrationFormPicker'
+import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/EventSurveyFields'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
   Users, Star, MapPin, Music, Coffee, Zap,
@@ -180,6 +182,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [serversPay, setServersPay] = useState(event?.servers_pay ?? true)
   const [showRecurringModal, setShowRecurringModal] = useState(false)
   const [saved, setSaved] = useState(false)
+  // EVE-4 · Formulario de inscripción y encuesta programada.
+  const [registrationFormId, setRegistrationFormId] = useState<string | null>(null)
+  const [survey, setSurvey] = useState<SurveyFieldsValue>({
+    survey_form_id: null, survey_template_id: null, survey_offset_hours: 24, survey_send_at: null,
+  })
+  const [requiresSurvey, setRequiresSurvey] = useState(false)
   const [saving, setSaving] = useState(false)
 
   // Poblar el formulario cuando carga el evento (fetch async).
@@ -217,6 +225,15 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setCurrency(event.currency ?? 'CRC')
     setServerPrice(event.server_price != null ? String(event.server_price) : '')
     setServersPay(event.servers_pay ?? true)
+    // EVE-4
+    setRegistrationFormId(event.registration_form_id ?? null)
+    setRequiresSurvey(event.requires_survey ?? false)
+    setSurvey({
+      survey_form_id: event.survey_form_id ?? null,
+      survey_template_id: event.survey_template_id ?? null,
+      survey_offset_hours: event.survey_offset_hours ?? (event.survey_send_at ? null : 24),
+      survey_send_at: event.survey_send_at ?? null,
+    })
      
   }, [event, occParam])
 
@@ -281,6 +298,10 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       requires_payment: requiresPayment, payment_amount: paymentAmount, currency,
       server_price: serverPrice, servers_pay: serversPay,
       sub_events: subEvents,
+      // EVE-4 · Formulario de inscripción y encuesta programada.
+      registration_form_id: registrationFormId,
+      has_satisfaction_survey: requiresSurvey,
+      ...survey,
       // Alcance para series recurrentes (lo ignora el backend si scope='all').
       scope,
       occurrence_date: occ?.date,
@@ -598,10 +619,30 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         </div>
       </Section>
 
+      <Section id="encuesta" title="⑥ Inscripción y encuesta" open={openSections.has('encuesta')} onToggle={() => toggleSection('encuesta')}>
+        <div className="space-y-5">
+          <RegistrationFormPicker value={registrationFormId} onChange={setRegistrationFormId} />
+
+          <div className="space-y-3 border-t border-[var(--outline-variant)] pt-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <button type="button" role="switch" aria-checked={requiresSurvey} aria-label="Enviar encuesta de satisfacción" onClick={() => setRequiresSurvey(v => !v)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', requiresSurvey ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresSurvey ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+              <span className="text-sm text-navy font-body">Enviar encuesta de satisfacción después del evento</span>
+            </label>
+            {requiresSurvey && (
+              <EventSurveyFields
+                value={survey}
+                onChange={patch => setSurvey(prev => ({ ...prev, ...patch }))}
+                endsAt={endDate ? new Date(`${endDate}T${endTime || '00:00'}`).toISOString() : null}
+              />
+            )}
+          </div>
+        </div>
+      </Section>
+
       {/* FRM-1 B · Encargados: quién gestiona ESTE evento sin tener el módulo.
           Va acá, en la configuración del evento, y su formulario lo hereda. */}
       {puedeNombrarEncargados && (
-        <Section id="encargados" title="⑥ Encargados de este evento" open={openSections.has('encargados')} onToggle={() => toggleSection('encargados')}>
+        <Section id="encargados" title="⑦ Encargados de este evento" open={openSections.has('encargados')} onToggle={() => toggleSection('encargados')}>
           <EventManagersPanel eventId={id} />
         </Section>
       )}

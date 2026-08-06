@@ -43,6 +43,11 @@ interface FormData {
   max_capacity: string
   prerequisite: string
   has_satisfaction_survey: boolean
+  registration_form_id: string | null
+  survey_form_id: string | null
+  survey_template_id: string | null
+  survey_offset_hours: number | null
+  survey_send_at: string | null
   requires_payment: boolean
   payment_amount: string
   currency: string
@@ -125,6 +130,12 @@ function NuevoEventoForm() {
     max_capacity: '',
     prerequisite: '',
     has_satisfaction_survey: false,
+    // EVE-4 · Formulario de inscripción y encuesta programada (opcionales).
+    registration_form_id: null,
+    survey_form_id: null,
+    survey_template_id: null,
+    survey_offset_hours: 24,   // "al día siguiente" es el default razonable
+    survey_send_at: null,
     requires_payment: false,
     payment_amount: '',
     currency: 'CRC',
@@ -136,6 +147,12 @@ function NuevoEventoForm() {
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
   }
+
+  // EVE-4 · Fin del evento en ISO: con esto se calcula el momento de la encuesta
+  // ("3 días después de que termine").
+  const endsAtIso = form.end_date
+    ? new Date(`${form.end_date}T${form.end_time || '00:00'}`).toISOString()
+    : null
 
   // El wizard no guarda borradores: si hay trabajo empezado, avisar antes de
   // recargar/cerrar la pestaña (sin esto los 4 pasos se pierden sin aviso).
@@ -407,6 +424,16 @@ function NuevoEventoForm() {
               onToggleRegistration={() => set('requires_registration', !form.requires_registration)}
               onMaxCapacityChange={v => set('max_capacity', v)}
               onToggleSatisfactionSurvey={() => set('has_satisfaction_survey', !form.has_satisfaction_survey)}
+              registration_form_id={form.registration_form_id}
+              onRegistrationFormChange={v => set('registration_form_id', v)}
+              survey={{
+                survey_form_id: form.survey_form_id,
+                survey_template_id: form.survey_template_id,
+                survey_offset_hours: form.survey_offset_hours,
+                survey_send_at: form.survey_send_at,
+              }}
+              onSurveyChange={patch => setForm(prev => ({ ...prev, ...patch }))}
+              endsAt={endsAtIso}
             />
           )}
 

@@ -67,6 +67,15 @@ export type AdminEvent = {
   /** Ids de áreas-comité organizadoras (m2m). */
   organizing_committee_ids: string[]
   requires_survey: boolean
+  /** EVE-4 · Formulario que se llena al inscribirse (null = sin formulario). */
+  registration_form_id: string | null
+  /** EVE-4 · Encuesta de satisfacción: destino, momento y sello del envío. */
+  survey_form_id: string | null
+  survey_template_id: string | null
+  survey_offset_hours: number | null
+  survey_send_at: string | null
+  survey_sent_at: string | null
+  survey_sent_count: number
   status: EventStatus
   is_recurring: boolean
   recurrence_rule: string | null
