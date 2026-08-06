@@ -479,7 +479,15 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
 
 // ─── Modal: fusionar miembro duplicado ──────────────────────────────────────────
 
-type SearchHit = { id: string; first_name: string; last_name: string; cedula: string | null; email: string | null }
+type SearchHit = { id: string; first_name: string; last_name: string; cedula: string | null; email: string | null; is_active?: boolean }
+
+/** GET /api/members devuelve `{ members, total }`. Esta pantalla leía `data`, así
+ *  que la búsqueda del modal de fusión SIEMPRE salía vacía (bug 2026-08-06). */
+function hitsFrom(payload: unknown): SearchHit[] {
+  if (Array.isArray(payload)) return payload as SearchHit[]
+  const o = (payload ?? {}) as { members?: SearchHit[]; data?: SearchHit[] }
+  return o.members ?? o.data ?? []
+}
 
 function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
   keepId: string
@@ -500,10 +508,18 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
     let alive = true
     setSearching(true)
     const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`)
-        .then(r => (r.ok ? r.json() : { data: [] }))
-        .then(d => { if (alive) setResults((Array.isArray(d) ? d : d.data ?? []).filter((m: SearchHit) => m.id !== keepId)) })
-        .catch(() => { if (alive) setResults([]) })
+      // Un duplicado suele estar DADO DE BAJA, y el padrón filtra activos por
+      // defecto: se busca en los dos lados y se juntan.
+      const buscar = (activos: boolean) =>
+        fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8&is_active=${activos}`)
+          .then(r => (r.ok ? r.json() : null))
+          .then(hitsFrom)
+          .catch(() => [] as SearchHit[])
+      Promise.all([buscar(true), buscar(false)])
+        .then(([activos, inactivos]) => {
+          if (!alive) return
+          setResults([...activos, ...inactivos].filter(m => m.id !== keepId).slice(0, 12))
+        })
         .finally(() => { if (alive) setSearching(false) })
     }, 250)
     return () => { alive = false; clearTimeout(t) }
@@ -559,7 +575,10 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
                   onClick={() => setPicked(m)}
                   className="w-full text-left rounded-xl px-3 py-2 hover:bg-surface-low transition-colors"
                 >
-                  <p className="text-sm text-navy font-body">{m.first_name} {m.last_name}</p>
+                  <p className="text-sm text-navy font-body">
+                    {m.first_name} {m.last_name}
+                    {m.is_active === false && <span className="ml-2 text-[11px] text-navy-light/60">· dado de baja</span>}
+                  </p>
                   <p className="text-[11px] text-navy-light/60 font-body">
                     {m.cedula ? `Cédula ${m.cedula}` : 'Sin cédula'}{m.email ? ` · ${m.email}` : ''}
                   </p>
