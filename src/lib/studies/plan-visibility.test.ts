@@ -83,3 +83,22 @@ describe('orden de las etapas', () => {
     expect([...planes].sort(byStageThenArchived).map(p => p.code)).toEqual(['CAMP1', 'VIEJO_N1'])
   })
 })
+
+// ── La guía tiene que decir lo mismo que el catálogo ─────────────────────────
+
+describe('el camino del estudiante (guía) coincide con las etapas reales', () => {
+  it('Discípulos 1 es de etapa INTERMEDIA, no inicial', async () => {
+    const { STUDY_CATALOG } = await import('@/data/study-catalog')
+    const dis1 = STUDY_CATALOG.find(s => s.code === 'DIS1')
+    expect(dis1?.stage).toBe('intermedia')
+
+    // La infografía lo ponía en la etapa inicial (reportado 2026-08-06).
+    const { readFileSync } = await import('node:fs')
+    const svg = readFileSync('public/ayuda/infografias/camino-del-estudiante.svg', 'utf8')
+    const bloqueInicial = svg.slice(svg.indexOf('Etapa inicial'), svg.indexOf('Etapa intermedia'))
+    expect(bloqueInicial).not.toMatch(/Discípulos/)
+
+    const bloqueIntermedia = svg.slice(svg.indexOf('Etapa intermedia'))
+    expect(bloqueIntermedia).toMatch(/Discípulos 1/)
+  })
+})

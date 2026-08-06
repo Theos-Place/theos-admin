@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1220" role="img" aria-labelledby="t-camino d-camino" font-family="Arial, Helvetica, sans-serif">
   <title id="t-camino">El camino del estudiante</title>
-  <desc id="d-camino">Las cadenas de niveles N1 a N4 y Discípulos 1 a 3, las etapas con sus compromisos, los requisitos de asistencia y los estudios que son solo por invitación.</desc>
+  <desc id="d-camino">Las cadenas de niveles N1 a N4 y Discípulos 1 a 3, las etapas con sus compromisos (Discípulos 1 está en la etapa intermedia), los requisitos de asistencia y los estudios que son solo por invitación.</desc>
 
   <rect width="720" height="1220" fill="#F6F5F2"/>
 
@@ -71,7 +71,7 @@
     <rect x="48" y="600" width="6" height="88" rx="3" fill="#EF5554"/>
     <text x="76" y="630" font-size="17" font-weight="bold" fill="#161440">Etapa inicial</text>
     <text x="76" y="656" font-size="14" fill="#5B5975">Pide asistencia ACTIVA a las charlas.</text>
-    <text x="76" y="676" font-size="13" fill="#8B8AA0">Discípulos 1 y estudios de entrada</text>
+    <text x="76" y="676" font-size="13" fill="#8B8AA0">Sirviendo como Jesús y estudios de entrada</text>
   </g>
 
   <g>
@@ -80,7 +80,7 @@
     <text x="76" y="734" font-size="17" font-weight="bold" fill="#161440">Etapa intermedia</text>
     <text x="76" y="760" font-size="14" fill="#5B5975">Pide las tres cosas, no una:</text>
     <text x="90" y="782" font-size="14" fill="#5B5975">· asistencia REFORZADA   · ser donante   · servir en un comité</text>
-    <text x="76" y="802" font-size="13" fill="#8B8AA0">Discípulos 2 y 3</text>
+    <text x="76" y="802" font-size="13" fill="#8B8AA0">Discípulos 1, 2 y 3 · Panorama · libros</text>
   </g>
 
   <!-- ── Asistencia en números ── -->

@@ -37,9 +37,12 @@ Cada estudio pertenece a una etapa, y la etapa define qué se te pide *además* 
 anterior:
 
 - **Niveles y campañas** — sin compromisos. Solo el estudio previo de la cadena.
-- **Etapa inicial** — pide **asistencia activa** a las charlas.
+- **Etapa inicial** — pide **asistencia activa** a las charlas. Acá están *Sirviendo como
+  Jesús* y los estudios que cuelgan de Nivel 4 (Administrando el Dinero, Amor sin Fronteras,
+  Evangelismo, Matrimonios, Prematrimonial).
 - **Etapa intermedia** — pide **asistencia reforzada**, ser **donante** y **servir en un
-  comité**.
+  comité**. Acá están **los tres Discípulos** —sí, también Discípulos 1—, *Panorama* y los
+  estudios de libros.
 
 ## Qué cuenta como asistencia
 
