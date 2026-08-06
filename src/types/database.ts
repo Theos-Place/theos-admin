@@ -1574,6 +1574,9 @@ export type Database = {
           ends_at: string | null
           entity_id: string | null
           entity_type: string | null
+          hero_image_url: string | null
+          hero_subtitle: string | null
+          hero_title: string | null
           id: string
           is_active: boolean | null
           is_public: boolean | null
@@ -1593,6 +1596,9 @@ export type Database = {
           ends_at?: string | null
           entity_id?: string | null
           entity_type?: string | null
+          hero_image_url?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           is_active?: boolean | null
           is_public?: boolean | null
@@ -1612,6 +1618,9 @@ export type Database = {
           ends_at?: string | null
           entity_id?: string | null
           entity_type?: string | null
+          hero_image_url?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           is_active?: boolean | null
           is_public?: boolean | null

@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type FormTemplate, type FormFieldNew, type FieldType } from '@/types/forms'
+import { HeroEditor } from '@/components/forms/HeroEditor'
+import { type FormHeroData } from '@/components/forms/FormHero'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
@@ -105,6 +107,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const [category, setCategory]       = useState<FormTemplate['category']>('event_registration')
   const [status, setStatus]           = useState<FormStatus>('draft')
   const [fields, setFields]           = useState<FormFieldNew[]>([])
+  // FRM-2 · Encabezado del formulario (flyer + título + bienvenida).
+  const [hero, setHero]               = useState<FormHeroData>({})
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
   const [focusLogic, setFocusLogic]   = useState(false)
   const [showLogicPanel, setShowLogicPanel] = useState(false)
@@ -126,6 +130,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         setCategory(f.category)
         setStatus(f.is_active ? 'active' : 'draft')
         setFields(f.fields)
+        setHero({
+          hero_image_url: f.hero_image_url,
+          hero_title: f.hero_title,
+          hero_subtitle: f.hero_subtitle,
+        })
       })
       .catch(() => {})
   }, [formId])
@@ -173,7 +182,12 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     }
     setSaving(true)
     const isActive = (nextStatus ?? status) === 'active'
-    const payload = { name, description, category, is_active: isActive, fields }
+    const payload = {
+      name, description, category, is_active: isActive, fields,
+      hero_image_url: hero.hero_image_url ?? null,
+      hero_title: hero.hero_title ?? null,
+      hero_subtitle: hero.hero_subtitle ?? null,
+    }
     try {
       if (formId) {
         const res = await fetch(`/api/forms/${formId}`, {
@@ -345,6 +359,15 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
         {/* Center: Canvas */}
         <div className="flex-1 md:overflow-y-auto px-4 md:px-6 py-5">
+          {/* FRM-2 · Encabezado, arriba del constructor de campos. */}
+          <div className="max-w-2xl mx-auto mb-4">
+            <HeroEditor
+              value={hero}
+              onChange={patch => setHero(prev => ({ ...prev, ...patch }))}
+              formName={name}
+            />
+          </div>
+
           {/* Description input */}
           <div className="max-w-2xl mx-auto mb-4">
             <input

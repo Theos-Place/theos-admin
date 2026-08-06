@@ -9,6 +9,7 @@ import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import type { Member } from '@/types/member'
 import { PublicField } from '@/components/forms/PublicField'
+import { FormHero, hasHero } from '@/components/forms/FormHero'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { calcAge } from '@/lib/format'
@@ -212,6 +213,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   }
 
   const isMultiStep = pages.length > 1
+  const tieneHero = hasHero(form)
   const totalPages = pages.length
   const isLastPage = currentPage === totalPages - 1
   const progress = totalPages > 1 ? Math.round(((currentPage + 1) / totalPages) * 100) : 100
@@ -354,14 +356,23 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
         <div
           className="w-full max-w-lg mx-auto rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
         >
+          {/* FRM-2 · Encabezado con flyer. Con hero manda el hero: la imagen va
+              al borde de la tarjeta y el título sale de ahí (o del nombre del
+              formulario si no se puso uno). Sin hero, todo se ve igual que antes. */}
+          <FormHero hero={form} fallbackTitle={form.name} />
+
           {/* Form header */}
-          <div className="px-5 sm:px-8 pt-8 pb-6 border-b border-[var(--outline-variant)]">
-            <div className="flex justify-center mb-6">
-              <Image src="/logo-theos-white.png" alt="Theos Place" width={100} height={28} className="object-contain opacity-60" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-navy text-center font-display tracking-[-0.02em]">
-              {form.name}
-            </h1>
+          <div className={cn('px-5 sm:px-8 pb-6 border-b border-[var(--outline-variant)]', tieneHero ? 'pt-4' : 'pt-8')}>
+            {!tieneHero && (
+              <>
+                <div className="flex justify-center mb-6">
+                  <Image src="/logo-theos-white.png" alt="Theos Place" width={100} height={28} className="object-contain opacity-60" />
+                </div>
+                <h1 className="text-2xl font-extrabold text-navy text-center font-display tracking-[-0.02em]">
+                  {form.name}
+                </h1>
+              </>
+            )}
             {form.description && (
               <p className="text-sm text-navy-light/60 mt-2 text-center leading-relaxed font-body">
                 {form.description}

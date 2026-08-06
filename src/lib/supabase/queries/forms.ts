@@ -34,6 +34,10 @@ export type DbFormTemplate = {
   allow_multiple_responses: boolean | null
   created_at: string
   created_by: string | null
+  /** FRM-2 · Encabezado del formulario. */
+  hero_image_url: string | null
+  hero_title: string | null
+  hero_subtitle: string | null
   fields: DbFormField[]
   responses: Array<{ submitted_at: string }>
 }
@@ -50,6 +54,7 @@ export type DbFormResponse = {
 
 const FORM_SELECT = `
   id, title, description, category, entity_type, entity_id, is_active, is_public, requires_auth, allow_multiple_responses, created_at, created_by,
+  hero_image_url, hero_title, hero_subtitle,
   fields:form_fields(
     id, field_type, label, placeholder, help_text, description, is_required,
     options, options_source, options_source_param, conditions, sort_order, scale_min, scale_max, scale_min_label, scale_max_label
@@ -177,6 +182,10 @@ export type FormWriteInput = {
   entity_id?: string | null
   slug?: string | null
   is_active?: boolean
+  /** FRM-2 · Encabezado. null limpia el campo (quitar el flyer). */
+  hero_image_url?: string | null
+  hero_title?: string | null
+  hero_subtitle?: string | null
 }
 
 async function insertFields(supabase: ReturnType<typeof createAdminClient>, formId: string, fields: FieldInput[]) {

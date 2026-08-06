@@ -11,6 +11,21 @@ export function formToWriteInput(body: Record<string, unknown>): FormWriteInput 
     entity_id: (body.entity_id as string) ?? null,
     slug: (body.slug as string) ?? null,
     is_active: body.is_active === undefined ? undefined : Boolean(body.is_active),
+    ...heroFrom(body),
+  }
+}
+
+/** FRM-2 · Campos del encabezado, normalizados: vacío o solo espacios = null,
+ *  para que "borré el título" quede como sin título y no como cadena vacía. */
+function heroFrom(body: Record<string, unknown>): Pick<FormWriteInput, 'hero_image_url' | 'hero_title' | 'hero_subtitle'> {
+  const limpio = (v: unknown) => {
+    const s = typeof v === 'string' ? v.trim() : ''
+    return s === '' ? null : s
+  }
+  return {
+    hero_image_url: limpio(body.hero_image_url),
+    hero_title: limpio(body.hero_title),
+    hero_subtitle: limpio(body.hero_subtitle),
   }
 }
 
@@ -23,6 +38,10 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   if ('entity_id' in body) out.entity_id = (body.entity_id as string) ?? null
   if ('slug' in body) out.slug = (body.slug as string) ?? null
   if ('is_active' in body) out.is_active = Boolean(body.is_active)
+  const hero = heroFrom(body)
+  if ('hero_image_url' in body) out.hero_image_url = hero.hero_image_url
+  if ('hero_title' in body) out.hero_title = hero.hero_title
+  if ('hero_subtitle' in body) out.hero_subtitle = hero.hero_subtitle
   return out
 }
 

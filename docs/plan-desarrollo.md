@@ -1405,7 +1405,24 @@ TESTS
 - Al cerrar un grupo, el sucesor NO hereda la restricción.
 ```
 
-### [ ] FRM-2 · Hero/header con flyer en los formularios
+### [x] FRM-2 · Hero/header con flyer en los formularios
+
+> **HECHO 2026-08-06** (migración `20260806160000_form_hero`, bucket `form-heroes` creado).
+> Columnas `hero_image_url` / `hero_title` / `hero_subtitle` en `forms`; sección
+> "Encabezado (opcional)" en el builder con dropzone, vista previa y quitar;
+> `FormHero` compartido por el formulario público y la vista previa;
+> `POST /api/forms/upload-hero` con el patrón de EVE-2. 12 tests.
+>
+> **DECISIONES (las dos que el plan pedía justificar/avisar):**
+> · COLUMNAS en `forms`, no un tipo de campo. Una fila de form_fields es una PREGUNTA:
+>   arrastra orden, validación de obligatorios, lógica condicional, export y
+>   form_response_values. El hero no se responde — es del formulario, como su título y
+>   su descripción, que ya son columnas.
+> · BUCKET PROPIO `form-heroes`, no `event-flyers`. Los formularios existen aparte de los
+>   eventos (hay de estudios, encuestas y sueltos); un bucket llamado "de eventos" con
+>   imágenes que no son de eventos hace imposible razonar después sobre qué se puede
+>   limpiar. Público, tope 5 MB, MIME limitado a jpeg/png/webp EN EL BUCKET (además de la
+>   validación del endpoint). Verificado en producción: sube, se lee anónimo y rechaza GIF.
 Archivos: builder de formularios (`src/app/(admin)/formularios/*`), tablas `forms` / `form_fields`, `src/components/forms/FormFiller.tsx`, patrón de upload: `src/app/api/events/upload-flyer/route.ts` (EVE-2)
 
 ```
