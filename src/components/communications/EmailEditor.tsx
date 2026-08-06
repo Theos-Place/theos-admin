@@ -10,6 +10,7 @@ import {
   List, ListOrdered, Link2, Link2Off, ImageIcon, AlignLeft, AlignCenter, AlignRight, Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FORCE_VISUAL_WARNING } from './email-html'
 
 // isAdvancedHtml vive en ./email-html (módulo sin TipTap) para poder importarlo
 // sin arrastrar el editor al bundle. Importá el editor vía ./EmailEditorLazy.
@@ -22,16 +23,24 @@ import { cn } from '@/lib/utils'
  * La fuente de verdad es el string HTML (value/onChange). El pie de baja NO va
  * acá: lo inyecta el envío de marketing.
  */
-export function EmailEditor({ value, onChange, variables = [], htmlOnly = false }: {
+export function EmailEditor({ value, onChange, variables = [], htmlOnly = false, htmlOnlyNotice }: {
   value: string
   onChange: (html: string) => void
   /** Variables insertables (ej. [{ key: '{nombre}' }]) — botones que las meten en el cuerpo. */
   variables?: Array<{ key: string; description?: string }>
-  /** true = solo modo HTML (sin pestaña Visual): para HTML complejo que el editor
-   *  visual destruiría (plantillas del sistema). */
+  /** true = arranca (y se queda) en modo HTML: para contenido que el editor
+   *  visual destruiría — plantillas del sistema o HTML avanzado. La pestaña
+   *  Visual sigue visible, pero pide confirmación explícita. */
   htmlOnly?: boolean
+  /** Aviso que explica POR QUÉ quedó en modo código. */
+  htmlOnlyNotice?: string
 }) {
   const [mode, setMode] = useState<'visual' | 'html'>(htmlOnly ? 'html' : 'visual')
+  // Bug 2026-08-06: alguien podía forzar Visual y perder el diseño sin enterarse.
+  // Ahora hay que confirmarlo; mientras no se confirme, el visual no se monta.
+  const [visualForzado, setVisualForzado] = useState(false)
+  const [confirmarVisual, setConfirmarVisual] = useState(false)
+  const soloHtml = htmlOnly && !visualForzado
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -47,7 +56,7 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false 
       Image.configure({ HTMLAttributes: { style: 'max-width:100%;height:auto' } }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
-    // En htmlOnly NO le pasamos el HTML complejo a TipTap (ni para parsearlo):
+    // En modo código NO le pasamos el HTML complejo a TipTap (ni para parsearlo):
     // el contenido vive solo en el textarea, intacto.
     content: htmlOnly ? '' : (value || ''),
     editorProps: {
@@ -61,13 +70,19 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false 
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   })
 
-  // Al volver a Visual desde HTML, sincronizar el contenido editado como crudo.
+  // Sincroniza el editor con `value`: al volver de HTML a Visual, y también
+  // cuando el value LLEGA DESPUÉS del montaje.
+  //
+  // Bug 2026-08-06 (raíz de COM-3): este efecto dependía solo de [mode]. Al
+  // aplicar una plantilla —el contenido se setea después de que el editor ya
+  // montó— el editor nunca se enteraba y el cuerpo se veía vacío. La guarda
+  // `getHTML() !== value` evita el reseteo en cada tecla: al escribir, onUpdate
+  // deja value === getHTML() y este efecto no hace nada.
   useEffect(() => {
     if (mode === 'visual' && editor && editor.getHTML() !== value) {
       editor.commands.setContent(value || '', { emitUpdate: false })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode])
+  }, [mode, value, editor])
 
   const addLink = useCallback(() => {
     if (!editor) return
@@ -128,13 +143,18 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false 
     <div className="rounded-2xl border border-[var(--outline-variant)] overflow-hidden bg-surface-card">
       {/* Tabs Visual / HTML (en htmlOnly solo HTML) */}
       <div className="flex border-b border-[var(--outline-variant)] bg-surface-low/50">
-        {(htmlOnly ? ['html'] as const : ['visual', 'html'] as const).map(m => (
+        {(['visual', 'html'] as const).map(m => (
           <button
             key={m}
             type="button"
             role="tab"
             aria-selected={mode === m}
-            onClick={() => setMode(m)}
+            onClick={() => {
+              // Forzar Visual sobre contenido avanzado se confirma; nunca pasa
+              // en silencio.
+              if (m === 'visual' && soloHtml) { setConfirmarVisual(true); return }
+              setMode(m)
+            }}
             className={cn('px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors',
               mode === m ? 'border-coral text-navy font-semibold' : 'border-transparent text-navy-light/60 hover:text-navy')}
           >
@@ -143,13 +163,35 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false 
         ))}
       </div>
 
-      {htmlOnly && (
+      {soloHtml && (
         <p className="px-3 py-2 text-[12px] text-navy-light/70 font-body bg-amber-50 border-b border-[var(--outline-variant)]">
-          Esta plantilla usa HTML avanzado. Editá el contenido en modo código para conservar el formato.
+          {htmlOnlyNotice ?? 'Esta plantilla tiene diseño avanzado; se edita en modo código para no perder el formato.'}
         </p>
       )}
 
-      {!htmlOnly && mode === 'visual' ? (
+      {confirmarVisual && (
+        <div role="alertdialog" aria-label="Confirmar edición visual" className="px-4 py-3 border-b border-[var(--outline-variant)] bg-coral-soft/20 space-y-2">
+          <p className="text-[12px] text-navy font-body">{FORCE_VISUAL_WARNING}</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setConfirmarVisual(false); setVisualForzado(true); setMode('visual') }}
+              className="rounded-full bg-coral px-3 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+            >
+              Editar en visual y perder el diseño
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmarVisual(false)}
+              className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!soloHtml && mode === 'visual' ? (
         <>
           {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[var(--outline-variant)]">

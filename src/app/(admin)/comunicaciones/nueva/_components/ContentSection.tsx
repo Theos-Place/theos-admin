@@ -2,6 +2,7 @@ import { type RefObject } from 'react'
 import type { CommunicationChannel } from '@/types/communication'
 import { VariableChips, AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { EmailEditor } from '@/components/communications/EmailEditorLazy'
+import { advancedHtmlNotice } from '@/components/communications/email-html'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 
@@ -15,6 +16,10 @@ type Props = {
   setWaBody: (v: string) => void
   emailBody: string
   setEmailBody: (v: string) => void
+  /** Bug 2026-08-06: esta pantalla montaba el editor SIN guardarraíl, así que
+   *  aplicar una plantilla con tablas la destruía siempre. Lo calcula la página
+   *  (que sabe cuál plantilla se aplicó) y queda fijo mientras dure la edición. */
+  emailHtmlOnly?: boolean
   previewChannel: 'whatsapp' | 'email'
   setPreviewChannel: (c: 'whatsapp' | 'email') => void
   waRef: RefObject<HTMLTextAreaElement | null>
@@ -30,6 +35,7 @@ export function ContentSection({
   setWaBody,
   emailBody,
   setEmailBody,
+  emailHtmlOnly = false,
   setPreviewChannel,
   waRef,
   onInsertVariable,
@@ -93,7 +99,13 @@ export function ContentSection({
       {(channel === 'email' || channel === 'both') && (
         <div className="space-y-1.5" onFocusCapture={() => setPreviewChannel('email')}>
           <p className="text-[11px] text-navy-light/60 font-body">Cuerpo del correo</p>
-          <EmailEditor value={emailBody} onChange={setEmailBody} variables={AVAILABLE_VARIABLES} />
+          <EmailEditor
+            value={emailBody}
+            onChange={setEmailBody}
+            variables={AVAILABLE_VARIABLES}
+            htmlOnly={emailHtmlOnly}
+            htmlOnlyNotice={advancedHtmlNotice(emailBody)}
+          />
           <p className="text-[11px] text-navy-light/60 font-body">
             Editá en Visual o pegá HTML. El pie de baja se agrega solo al enviar como marketing.
           </p>

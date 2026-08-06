@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo, Suspense } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { type CommunicationChannel } from '@/types/communication'
+import { type CommunicationChannel, type MessageTemplate } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
+import { editorModeFor } from '@/components/communications/email-html'
 import type { MemberList } from '@/types/member-list'
 import { MessagePreview } from '@/components/communications/MessagePreview'
 import { type RecipientState, type RecipientMode } from '@/components/communications/RecipientSelector'
@@ -135,15 +136,30 @@ function NuevaComunicacionContent() {
     t => t.channel === channel || t.channel === 'both' || channel === 'both'
   )
 
-  function applyTemplate(tplId: string) {
-    const tpl = templates.find(t => t.id === tplId)
-    if (!tpl) return
+  // COM-3 · UNA sola función para aplicar una plantilla, la usen los dos
+  // caminos: el botón "Usar plantilla" de esta pantalla y el ?template=ID que
+  // llega desde el listado. Antes eran dos bloques casi iguales y se
+  // desincronizaron (el de acá no seteaba el canal).
+  //
+  // `emailHtmlOnly` se fija ACÁ, con el cuerpo original de la plantilla: es lo
+  // que evita que aplicar una plantilla de tablas a una campaña la destruya.
+  const [emailHtmlOnly, setEmailHtmlOnly] = useState(false)
+  const applyTemplate = useCallback((tpl: MessageTemplate, opts?: { setChannelToo?: boolean }) => {
+    if (opts?.setChannelToo) setChannel(tpl.channel)
     if (tpl.channel !== 'email') setWaBody(tpl.body)
-    if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
-    if (tpl.channel === 'both') { setWaBody(tpl.body); setEmailBody(tpl.body); setSubject(tpl.subject) }
+    if (tpl.channel !== 'whatsapp') {
+      setSubject(tpl.subject)
+      setEmailBody(tpl.body)
+      setEmailHtmlOnly(editorModeFor(tpl.body, { isSystem: tpl.is_system }) === 'html')
+    }
     // Plantilla transaccional → el tipo de correo arranca en Transaccional.
     setEmailKind(inferEmailKind(tpl))
     setShowTemplateModal(false)
+  }, [])
+
+  function applyTemplateById(tplId: string) {
+    const tpl = templates.find(t => t.id === tplId)
+    if (tpl) applyTemplate(tpl)
   }
 
   // "Usar plantilla" desde el listado llega como ?template=ID: precargar esa
@@ -154,10 +170,7 @@ function NuevaComunicacionContent() {
     if (tplApplied || !tid || templates.length === 0) return
     const tpl = templates.find(t => t.id === tid)
     if (!tpl) return
-    setChannel(tpl.channel)
-    if (tpl.channel !== 'whatsapp') { setSubject(tpl.subject); setEmailBody(tpl.body) }
-    if (tpl.channel !== 'email') setWaBody(tpl.body)
-    setEmailKind(inferEmailKind(tpl))
+    applyTemplate(tpl, { setChannelToo: true })
     setTplApplied(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tplApplied, templates])
@@ -320,6 +333,7 @@ function NuevaComunicacionContent() {
             setWaBody={setWaBody}
             emailBody={emailBody}
             setEmailBody={setEmailBody}
+            emailHtmlOnly={emailHtmlOnly}
             previewChannel={previewChannel}
             setPreviewChannel={setPreviewChannel}
             waRef={waRef}
@@ -407,7 +421,7 @@ function NuevaComunicacionContent() {
       {showTemplateModal && (
         <TemplateModal
           filteredTemplates={filteredTemplates}
-          onApplyTemplate={applyTemplate}
+          onApplyTemplate={applyTemplateById}
           onClose={() => setShowTemplateModal(false)}
         />
       )}

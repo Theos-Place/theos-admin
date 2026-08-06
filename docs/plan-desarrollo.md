@@ -1431,7 +1431,15 @@ Es un componente nuevo.
 Tests del upload (MIME inválido, tamaño excedido) y del render sin hero.
 ```
 
-### [ ] COM-3 · Bug: "usar plantilla" desde nueva comunicación no carga el contenido
+### [x] COM-3 · Bug: "usar plantilla" desde nueva comunicación no carga el contenido
+
+> **HECHO 2026-08-06**, junto con los bugs del editor de plantillas — era la MISMA causa raíz.
+> El `useEffect` de sincronización de `EmailEditor` dependía solo de `[mode]`, no de `[value]`:
+> al aplicar una plantilla, el contenido se setea DESPUÉS de que el editor ya montó y el
+> editor nunca se enteraba. Se agregó `value` a las dependencias (la guarda
+> `getHTML() !== value` evita el reseteo en cada tecla). Además, los dos caminos ahora usan
+> UNA sola `applyTemplate(tpl, {setChannelToo})` — antes eran dos bloques casi iguales y ya
+> se habían desincronizado: el de esta pantalla no seteaba el canal.
 Archivos: `src/app/(admin)/comunicaciones/nueva/page.tsx`, `src/app/(admin)/comunicaciones/plantillas/*`, editor de correos
 
 ```

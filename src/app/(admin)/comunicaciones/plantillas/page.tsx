@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type MessageTemplate, type CommunicationChannel } from '@/types/communication'
 import { useCommunications } from '@/hooks/useCommunications'
+import { invalidateCommsCache } from '@/lib/communications/comms-cache'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { TemplateCard } from '@/components/communications/TemplateCard'
@@ -71,6 +72,7 @@ export default function PlantillasPage() {
         }),
       })
       if (!res.ok) throw new Error()
+      invalidateCommsCache('templates')   // la copia nueva no está en la caché
       await refetch()
       toast(`Plantilla duplicada como "${t.name} (copia)".`, 'success')
     } catch {
@@ -85,7 +87,9 @@ export default function PlantillasPage() {
     try {
       const res = await fetch(`/api/communications/templates/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
+      invalidateCommsCache('templates')   // la borrada sigue en la caché
       await refetch()
+      toast('Plantilla eliminada.', 'success')
     } catch {
       toast('No se pudo eliminar la plantilla. Intentá de nuevo.', 'error')
     }

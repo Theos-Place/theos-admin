@@ -5,14 +5,16 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/communications/EmailPreview'
 import { EmailEditor } from '@/components/communications/EmailEditorLazy'
-import { isAdvancedHtml } from '@/components/communications/email-html'
+import { editorModeFor, advancedHtmlNotice } from '@/components/communications/email-html'
+import { saveTemplate } from '@/lib/communications/save-template'
+import { useToast } from '@/components/shared/Toast'
 import { AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
 import { useCommunications } from '@/hooks/useCommunications'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { renderTemplate, PREVIEW_SAMPLE } from '@/lib/email/render-vars'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Check, X } from 'lucide-react'
+import { ChevronLeft, Check, X, RotateCcw } from 'lucide-react'
 
 const NEW_CATEGORY = '__new__'
 
@@ -20,7 +22,8 @@ export default function EditarPlantillaPage() {
   const router = useRouter()
   const params = useParams()
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : ''
-  const { templates, loading } = useCommunications('templates')
+  const { templates, loading, refetch } = useCommunications('templates')
+  const toast = useToast()
 
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -30,6 +33,11 @@ export default function EditarPlantillaPage() {
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [subject, setSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
+  // El cuerpo TAL COMO LLEGÓ del servidor. Dos usos, los dos del bug 2026-08-06:
+  //  · decidir el modo del editor UNA vez (si se decidiera sobre el estado vivo,
+  //    un cuerpo ya aplanado diría "simple" y no habría vuelta atrás);
+  //  · poder descartar los cambios y volver al original antes de guardar.
+  const [originalBody, setOriginalBody] = useState('')
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [notFound, setNotFound] = useState(false)
@@ -45,6 +53,7 @@ export default function EditarPlantillaPage() {
     setCategory(tpl.category || 'general')
     setSubject(tpl.subject || '')
     setEmailBody(tpl.body || '')
+    setOriginalBody(tpl.body || '')
     setIsSystem(tpl.is_system)
     setSystemVars(tpl.available_variables ?? [])
     setCategories([...new Set([...KNOWN_CATEGORIES, ...templates.map(t => t.category).filter(Boolean)])])
@@ -58,24 +67,27 @@ export default function EditarPlantillaPage() {
   async function handleSave() {
     if (saving) return
     setSaving(true)
-    try {
-      const res = await fetch(`/api/communications/templates/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          category: category.trim() || 'general',
-          subject: subject.trim() || null,
-          body: emailBody,
-          body_format: 'html',
-        }),
-      })
-      if (!res.ok) throw new Error()
-      setSaved(true)
-      setTimeout(() => router.push('/comunicaciones/plantillas'), 900)
-    } catch {
+    const res = await saveTemplate({
+      name: name.trim(),
+      category: category.trim() || 'general',
+      subject: subject.trim() || null,
+      body: emailBody,
+      body_format: 'html',
+    }, id)
+    if (!res.ok) {
+      // Antes esto era un `catch` mudo: el PUT fallaba y el usuario concluía
+      // "no se guarda". Ahora dice qué pasó y se queda en la pantalla.
+      toast(res.error, 'error')
       setSaving(false)
+      return
     }
+    setSaved(true)
+    setOriginalBody(emailBody)
+    toast('Plantilla guardada.', 'success')
+    // saveTemplate ya invalidó la caché; refetch deja el listado al día antes
+    // de navegar (si no, se veía la versión anterior hasta 30 s).
+    await refetch()
+    setTimeout(() => router.push('/comunicaciones/plantillas'), 900)
   }
 
   const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
@@ -84,9 +96,12 @@ export default function EditarPlantillaPage() {
   // El preview SIEMPRE muestra el correo completo (layout base), igual que el envío:
   //  · sistema → variables {{...}} con valores de ejemplo;
   //  · marketing → con el pie de baja (como en el envío real).
-  // El editor visual de TipTap destruye HTML complejo: solo-HTML para plantillas
-  // del sistema Y para cualquier cuerpo con HTML avanzado (<style>, tablas, etc.).
-  const htmlOnly = isSystem || isAdvancedHtml(emailBody)
+  // El editor visual de TipTap destruye HTML complejo: modo código para las
+  // plantillas del sistema Y para cualquier cuerpo con diseño avanzado.
+  // Se decide sobre el ORIGINAL y queda fijo mientras dura la edición.
+  const htmlOnly = editorModeFor(originalBody, { isSystem }) === 'html'
+  const htmlOnlyNotice = advancedHtmlNotice(originalBody, { isSystem })
+  const hayCambios = emailBody !== originalBody
   // Logo same-origin en el preview (la CSP de la app bloquea dominios externos
   // dentro del iframe srcDoc); el envío real usa la URL absoluta por defecto.
   const previewBody = isSystem
@@ -144,8 +159,19 @@ export default function EditarPlantillaPage() {
 
           <div>
             <label className={labelCls}>Cuerpo del correo</label>
-            <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={htmlOnly} />
-            <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">El pie de baja se agrega solo al enviar como marketing.</p>
+            <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={htmlOnly} htmlOnlyNotice={htmlOnlyNotice} />
+            <div className="mt-1.5 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-[11px] text-navy-light/60 font-body">El pie de baja se agrega solo al enviar como marketing.</p>
+              {hayCambios && (
+                <button
+                  type="button"
+                  onClick={() => setEmailBody(originalBody)}
+                  className="inline-flex items-center gap-1 text-[11px] text-coral hover:underline font-body"
+                >
+                  <RotateCcw size={12} /> Descartar cambios y volver al original
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="rounded-xl p-3 bg-surface-low">

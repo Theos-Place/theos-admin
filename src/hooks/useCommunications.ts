@@ -3,7 +3,12 @@ import type { DbBroadcast, DbTemplate, DbChannelConfig } from '@/lib/supabase/qu
 import { toDomainMessage, toDomainTemplate, toDomainChannelConfig } from '@/lib/communications/adapter'
 import type { CommunicationMessage, MessageTemplate, ChannelConfig } from '@/types/communication'
 
-export type CommsSlice = 'messages' | 'templates' | 'configs'
+import {
+  readCommsCache, writeCommsCache, invalidateCommsCache, type CommsSlice,
+} from '@/lib/communications/comms-cache'
+
+export type { CommsSlice }
+export { invalidateCommsCache }
 
 const ENDPOINT: Record<CommsSlice, string> = {
   messages: '/api/communications/messages',
@@ -11,9 +16,8 @@ const ENDPOINT: Record<CommsSlice, string> = {
   configs: '/api/communications/configs',
 }
 
-// Caché a nivel de módulo (mismo patrón que useFinance/useStudies). refetch() la salta.
-const TTL_MS = 30_000
-const cache = new Map<CommsSlice, { data: unknown[]; ts: number }>()
+// La caché vive en @/lib/communications/comms-cache para que las pantallas que
+// ESCRIBEN puedan invalidarla sin importar este hook. refetch() la salta.
 
 /** Datos de comunicaciones por slice. Sin argumentos trae todo (compatibilidad). */
 export function useCommunications(...slices: CommsSlice[]) {
@@ -31,12 +35,12 @@ export function useCommunications(...slices: CommsSlice[]) {
     setError(null)
     try {
       const results = await Promise.all(want.map(async (slice): Promise<[CommsSlice, unknown[]]> => {
-        const hit = cache.get(slice)
-        if (!force && hit && Date.now() - hit.ts < TTL_MS) return [slice, hit.data]
+        const hit = force ? null : readCommsCache(slice)
+        if (hit) return [slice, hit]
         const res = await fetch(ENDPOINT[slice])
         if (!res.ok) throw new Error('Error cargando comunicaciones')
         const rows = (await res.json()) as unknown[]
-        cache.set(slice, { data: rows, ts: Date.now() })
+        writeCommsCache(slice, rows)
         return [slice, rows]
       }))
       for (const [slice, rows] of results) {

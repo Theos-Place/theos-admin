@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/communications/EmailPreview'
 import { EmailEditor } from '@/components/communications/EmailEditorLazy'
-import { isAdvancedHtml } from '@/components/communications/email-html'
+import { isAdvancedHtml, advancedHtmlNotice } from '@/components/communications/email-html'
+import { saveTemplate } from '@/lib/communications/save-template'
+import { useToast } from '@/components/shared/Toast'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { AVAILABLE_VARIABLES } from '@/components/communications/VariableChips'
 import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories'
@@ -17,6 +19,7 @@ const NEW_CATEGORY = '__new__'
 
 export default function NuevaPlantillaPage() {
   const router = useRouter()
+  const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [name, setName] = useState('')
   const [category, setCategory] = useState('general')
@@ -28,6 +31,14 @@ export default function NuevaPlantillaPage() {
   const [emailBody, setEmailBody] = useState('')
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
+  // Pegajoso a propósito: si en algún momento el cuerpo tuvo diseño avanzado
+  // (lo pegaron en modo código), el editor NO vuelve solo a visual — volver
+  // sería justamente lo que aplana la plantilla.
+  const [everAdvanced, setEverAdvanced] = useState(false)
+  function onBodyChange(html: string) {
+    setEmailBody(html)
+    if (!everAdvanced && isAdvancedHtml(html)) setEverAdvanced(true)
+  }
 
   // Trae las categorías ya usadas para ofrecerlas en el selector.
   useEffect(() => {
@@ -53,26 +64,24 @@ export default function NuevaPlantillaPage() {
   async function handleSave() {
     if (saving) return
     setSaving(true)
-    try {
-      const res = await fetch('/api/communications/templates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          category: category.trim() || 'general',
-          channel: 'email',
-          subject: subject.trim() || null,
-          body: emailBody,
-          body_format: 'html',
-          is_active: true,
-        }),
-      })
-      if (!res.ok) throw new Error()
-      setSaved(true)
-      setTimeout(() => router.push('/comunicaciones/plantillas'), 900)
-    } catch {
+    const res = await saveTemplate({
+      name: name.trim(),
+      category: category.trim() || 'general',
+      channel: 'email',
+      subject: subject.trim() || null,
+      body: emailBody,
+      body_format: 'html',
+      is_active: true,
+    })
+    if (!res.ok) {
+      // Antes el catch era mudo y el botón volvía a "Guardar" sin explicar nada.
+      toast(res.error, 'error')
       setSaving(false)
+      return
     }
+    setSaved(true)
+    toast('Plantilla creada.', 'success')
+    setTimeout(() => router.push('/comunicaciones/plantillas'), 900)
   }
 
   const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
@@ -151,7 +160,12 @@ export default function NuevaPlantillaPage() {
 
         <div>
           <label className={labelCls}>Cuerpo del correo</label>
-          <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={isAdvancedHtml(emailBody)} />
+          <EmailEditor
+            value={emailBody}
+            onChange={onBodyChange}
+            htmlOnly={everAdvanced}
+            htmlOnlyNotice={advancedHtmlNotice(emailBody)}
+          />
           <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">
             Editá en modo Visual o pegá HTML. Mantené el HTML simple por compatibilidad con clientes de correo. El pie de baja se agrega solo al enviar como marketing.
           </p>
