@@ -1837,6 +1837,68 @@ Tests: el cron no reenvía; el formulario autollena el contexto del grupo; la vi
 resultados no muestra nombres; con menos de 3 respuestas se ocultan los comentarios.
 ```
 
+### [ ] INT-3 · Cerrar los huecos de multimoneda (antes de cobrar en euros / antes de Tilopay)
+Archivos: RPCs en la migración baseline (`donation_stats`, `payment_stats`, `dashboard_sums`, `create_refund`), `src/lib/format.ts`, `sedes` (migración), forms de plan/grupo/evento, `src/lib/supabase/queries/scholarships.ts` y `finance.ts`, exports CSV
+Continúa **INT-2** (backlog, cerrado el 2026-07-28), que dejó explícitamente pendiente la decisión de producto sobre los agregados. Decisión tomada: **por moneda separada, sin conversión automática.**
+Prioridad: **antes de la integración con Tilopay.** Si la pasarela nace asumiendo colones, cambiarla después es rehacer la integración.
+
+```
+Cerrar los huecos de multimoneda antes de empezar a cobrar en euros (Madrid).
+Lo que YA existe y no hay que rehacer: columnas currency con CHECK (CRC/USD/EUR) y default
+CRC en payments, donations, events, refunds, scholarships y study_plans; formatMoney(monto,
+moneda) con tests; y selects de moneda en crear/editar plan y crear/editar evento.
+
+REGLA DE ORO, no negociable: NUNCA sumar montos de monedas distintas y NUNCA convertir
+automáticamente. Los totales se muestran separados por moneda. Una conversión es una
+decisión contable con tipo de cambio y fecha, no algo que el sistema improvise.
+
+1) 🔴 GRAVE · LOS AGREGADOS SUMAN ENTRE MONEDAS
+Las funciones de la base hacen sum(amount) sin agrupar: donation_stats (líneas ~441-444),
+payment_stats (~837-840), dashboard_sums, create_refund (~397) y los reportes financieros.
+Hoy no se nota porque todo es CRC; el día que entre el primer euro, el dashboard muestra un
+número sin significado.
+Arreglalo agrupando por moneda: que devuelvan un total POR MONEDA en vez de un escalar
+(por ejemplo {"CRC": 1250000, "EUR": 340}). Actualizá los consumidores en dashboard,
+finanzas y reportes para mostrar los totales separados, uno debajo del otro. Donde hoy hay
+una sola tarjeta de KPI, una línea por moneda con datos — y solo una si todo es CRC, para
+que no se vea recargado mientras Madrid no arranque.
+Revisá TODOS los sum/reduce sobre amount, en SQL y en TypeScript.
+
+2) DECIMALES Y FORMATO POR MONEDA
+formatMoney usa toLocaleString('es-CR') para todas. Los colones no llevan decimales; los
+euros sí: €25,50 hoy se muestra "€25,5".
+Usá Intl.NumberFormat con la moneda como parámetro y los decimales correctos (CRC 0,
+EUR 2, USD 2). Revisá que en ningún lado se redondee a entero asumiendo colones — eso se
+comería los céntimos. Los inputs de monto deben aceptar decimales cuando la moneda los
+tiene y no cuando no. Tests con 25.50 en EUR y en CRC.
+
+3) MONEDA POR DEFECTO SEGÚN LA SEDE
+Hoy se elige a mano en cada plan y evento, así que alguien va a crear un estudio de Madrid
+en colones y nadie se va a dar cuenta hasta que cobren.
+Agregá moneda por defecto a la sede (columna currency en sedes, default CRC, Madrid EUR) y
+que los formularios de plan, grupo y evento la propongan según la sede seleccionada,
+siempre editable. Sin sede → CRC.
+IMPORTANTE: la moneda se guarda en el registro al crearlo. Si mañana cambia la moneda de la
+sede, los registros viejos NO cambian.
+
+4) BECAS Y CUPONES ENTRE MONEDAS
+scholarships ya tiene currency. Bloqueá el caso: una beca en CRC no se aplica a un pago en
+EUR → 409 con mensaje claro ("Esta beca es en colones y el cobro es en euros"). Lo mismo
+para devoluciones (el refund va en la moneda del pago original) y para los pagos manuales
+que finanzas crea ligados a una matrícula.
+
+5) VISIBILIDAD Y EXPORTS
+- Toda pantalla que muestre un monto muestra su moneda; nada asume colones.
+- Finanzas y la cola de pagos: filtro por moneda y totales separados.
+- Los exports CSV llevan columna currency; no exportes montos sin moneda.
+- El import de donaciones acepta columna de moneda opcional, default CRC.
+
+6) VERIFICACIÓN
+Creá un plan y un evento en EUR con datos de prueba, matriculá, pagá, aplicá una beca en la
+moneda correcta y una en la equivocada, y revisá que dashboard y reportes muestren los dos
+totales separados y correctos. Reportame qué encontraste que sumaba mal.
+```
+
 ---
 
 ## Backlog (fases siguientes, requieren definición de producto)

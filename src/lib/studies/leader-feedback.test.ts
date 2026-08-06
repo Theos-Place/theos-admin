@@ -2,7 +2,7 @@
 // resumen que se le muestra.
 import { describe, it, expect } from 'vitest'
 import {
-  feedbackError, canEvaluate, summarize, visibleForLeader,
+  feedbackError, canEvaluate, summarize, leaderView,
   SCORE_LABELS, COMMENT_MAX, MIN_RESPUESTAS_PARA_MOSTRAR,
 } from './leader-feedback'
 
@@ -92,17 +92,47 @@ describe('resumen', () => {
 })
 
 describe('lo que ve el dirigente', () => {
-  it('con pocas respuestas solo ve el conteo: un comentario lo delataría', () => {
-    const pocas = summarize([{ score: 5, comments: 'Fue Ana la que escribió esto' }])
-    const v = visibleForLeader(pocas)
-    expect(v).toEqual({ count: 1, pending: true })
-    expect('comments' in v).toBe(false)
+  const suficientes = Array.from({ length: MIN_RESPUESTAS_PARA_MOSTRAR }, () => ({ score: 4, comments: 'ok' }))
+
+  it('SIN REVISAR no ve NADA, ni el promedio', () => {
+    // Decisión 2026-08-06: no se le manda automáticamente. Un comentario
+    // injusto no se puede "des-leer".
+    expect(leaderView({ released: false, summary: summarize(suficientes) }))
+      .toEqual({ state: 'sin_revisar' })
   })
 
-  it('con suficientes, ve todo', () => {
-    const filas = Array.from({ length: MIN_RESPUESTAS_PARA_MOSTRAR }, () => ({ score: 4, comments: 'ok' }))
-    const v = visibleForLeader(summarize(filas))
-    expect('comments' in v && v.comments).toHaveLength(MIN_RESPUESTAS_PARA_MOSTRAR)
+  it('revisado pero con pocas respuestas: solo el conteo', () => {
+    const v = leaderView({ released: true, summary: summarize([{ score: 5, comments: 'Fue Ana' }]) })
+    expect(v).toEqual({ state: 'pocas', count: 1 })
+  })
+
+  it('revisado y con suficientes: ve todo', () => {
+    const v = leaderView({ released: true, summary: summarize(suficientes) })
+    expect(v.state).toBe('visible')
+    expect(v.state === 'visible' && v.summary.comments).toHaveLength(MIN_RESPUESTAS_PARA_MOSTRAR)
+  })
+})
+
+describe('comentarios ocultados por la coordinación', () => {
+  const filas = [
+    { score: 5, comments: 'Muy bueno' },
+    { score: 1, comments: 'algo fuera de lugar', hidden: true },
+    { score: 4, comments: 'Claro explicando' },
+  ]
+
+  it('el dirigente NO ve el comentario ocultado', () => {
+    expect(summarize(filas, { forLeader: true }).comments).toEqual(['Muy bueno', 'Claro explicando'])
+  })
+
+  it('pero la NOTA sigue contando: ocultar no es descartar la opinión', () => {
+    const s = summarize(filas, { forLeader: true })
+    expect(s.count).toBe(3)
+    expect(s.average).toBe(3.3)
+    expect(s.distribution[1]).toBe(1)
+  })
+
+  it('la coordinación los ve todos', () => {
+    expect(summarize(filas).comments).toHaveLength(3)
   })
 })
 
@@ -136,5 +166,32 @@ describe('cómo llega el estudiante a la encuesta', () => {
     const { readFileSync } = await import('node:fs')
     const layout = readFileSync('src/app/(admin)/layout.tsx', 'utf8')
     expect(layout).toMatch(/estudios\\\/grupos\\\/\[0-9a-f-\]\{36\}\\\/evaluar/)
+  })
+})
+
+// ── El paso de revisión ─────────────────────────────────────────────────────
+describe('la revisión es obligatoria antes de compartir', () => {
+  it('el endpoint expone el estado y solo la coordinación lo cambia', async () => {
+    const { readFileSync } = await import('node:fs')
+    const route = readFileSync('src/app/api/studies/groups/[id]/leader-feedback/route.ts', 'utf8')
+    // PATCH gateado a los roles de estudios: el dirigente no modera lo suyo.
+    expect(route).toContain('requireRoles(...STUDY_ADMIN_ROLES)')
+    expect(route).toContain("z.literal('compartir')")
+    expect(route).toContain("z.literal('ocultar')")
+    // Y al dirigente se le arma la vista con leaderView, no con el resumen crudo.
+    expect(route).toContain('leaderView({')
+    expect(route).toContain('forLeader: true')
+  })
+
+  it('compartir es idempotente: no se pisa quién ni cuándo fue la primera vez', async () => {
+    const { readFileSync } = await import('node:fs')
+    const q = readFileSync('src/lib/supabase/queries/leader-feedback.ts', 'utf8')
+    expect(q).toContain(".is('feedback_released_at', null)")
+  })
+
+  it('ocultar un comentario solo vale dentro de SU grupo', async () => {
+    const { readFileSync } = await import('node:fs')
+    const q = readFileSync('src/lib/supabase/queries/leader-feedback.ts', 'utf8')
+    expect(q).toContain(".eq('group_id', input.groupId)")
   })
 })

@@ -61,6 +61,15 @@ export function canEvaluate(input: {
   return { allowed: true }
 }
 
+/** Una respuesta tal como la ve la coordinación (con el estado de moderación). */
+export type FeedbackRow = {
+  id?: string
+  score: number
+  comments?: string | null
+  /** Ocultado por la coordinación: el dirigente no lo ve. */
+  hidden?: boolean
+}
+
 export type FeedbackSummary = {
   count: number
   /** Promedio con un decimal, o null si no hay respuestas. */
@@ -71,8 +80,12 @@ export type FeedbackSummary = {
   comments: string[]
 }
 
+/** `forLeader` deja fuera los comentarios ocultados por la coordinación. La
+ *  NOTA de esas respuestas SIGUE contando: ocultar un comentario fuera de lugar
+ *  no es descartar la opinión de esa persona. */
 export function summarize(
-  rows: ReadonlyArray<{ score: number; comments?: string | null }>,
+  rows: ReadonlyArray<FeedbackRow>,
+  opts?: { forLeader?: boolean },
 ): FeedbackSummary {
   const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
   let suma = 0
@@ -81,6 +94,7 @@ export function summarize(
     const n = Math.round(r.score)
     if (n >= SCORE_MIN && n <= SCORE_MAX) distribution[n]++
     suma += r.score
+    if (opts?.forLeader && r.hidden) continue
     const c = (r.comments ?? '').trim()
     if (c) comments.push(c)
   }
@@ -96,7 +110,24 @@ export function summarize(
  *  Con una o dos respuestas, un comentario identifica al autor casi seguro. */
 export const MIN_RESPUESTAS_PARA_MOSTRAR = 3
 
-export function visibleForLeader(s: FeedbackSummary): FeedbackSummary | { count: number; pending: true } {
-  if (s.count < MIN_RESPUESTAS_PARA_MOSTRAR) return { count: s.count, pending: true }
-  return s
+/** Qué ve el DIRIGENTE. Dos condiciones, en este orden:
+ *   1. que la coordinación ya lo haya REVISADO Y COMPARTIDO (decisión
+ *      2026-08-06: no se le manda automáticamente — un comentario injusto no
+ *      se puede "des-leer");
+ *   2. que haya respuestas suficientes para que nadie quede identificado.
+ *  Mientras falte cualquiera de las dos, el dirigente no ve ni el promedio. */
+export type LeaderView =
+  | { state: 'sin_revisar' }
+  | { state: 'pocas'; count: number }
+  | { state: 'visible'; summary: FeedbackSummary }
+
+export function leaderView(input: {
+  released: boolean
+  summary: FeedbackSummary
+}): LeaderView {
+  if (!input.released) return { state: 'sin_revisar' }
+  if (input.summary.count < MIN_RESPUESTAS_PARA_MOSTRAR) {
+    return { state: 'pocas', count: input.summary.count }
+  }
+  return { state: 'visible', summary: input.summary }
 }

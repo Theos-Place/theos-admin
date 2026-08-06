@@ -3,9 +3,11 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
-import { feedbackError, visibleForLeader, SCORE_MIN, SCORE_MAX, COMMENT_MAX } from '@/lib/studies/leader-feedback'
+import { feedbackError, leaderView, SCORE_MIN, SCORE_MAX, COMMENT_MAX } from '@/lib/studies/leader-feedback'
+import { summarize } from '@/lib/studies/leader-feedback'
 import {
-  memberCanEvaluate, saveLeaderFeedback, groupFeedbackSummary, feedbackGroupRef,
+  memberCanEvaluate, saveLeaderFeedback, groupFeedbackRows, feedbackGroupRef,
+  releaseGroupFeedback, setFeedbackHidden,
 } from '@/lib/supabase/queries/leader-feedback'
 
 // Retroalimentación al dirigente de un grupo cerrado.
@@ -35,10 +37,27 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     // El staff ve el resumen completo; el dirigente, el resumen protegido (sin
     // detalle mientras haya pocas respuestas, porque delataría a quien escribió).
     if (esStaff || esDirigente) {
-      const resumen = await groupFeedbackSummary(id)
+      const filas = await groupFeedbackRows(id)
+      const grupoInfo = { id: grupo.id, name: grupo.name, plan_name: grupo.plan_name, leader_name: grupo.leader_name }
+      if (esStaff) {
+        // La coordinación ve TODO —incluidos los comentarios ya ocultados— y el
+        // estado de la revisión, que es lo que le permite decidir.
+        return NextResponse.json({
+          group: grupoInfo,
+          role: 'staff',
+          released_at: grupo.feedback_released_at,
+          summary: summarize(filas),
+          rows: filas,
+        })
+      }
+      // El dirigente: nada hasta que la coordinación lo comparta.
       return NextResponse.json({
-        group: { id: grupo.id, name: grupo.name, plan_name: grupo.plan_name, leader_name: grupo.leader_name },
-        summary: esStaff ? resumen : visibleForLeader(resumen),
+        group: grupoInfo,
+        role: 'leader',
+        view: leaderView({
+          released: !!grupo.feedback_released_at,
+          summary: summarize(filas, { forLeader: true }),
+        }),
       })
     }
 
@@ -96,6 +115,51 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'El dirigente de este grupo no tiene ficha de dirigente.' }, { status: 409 })
     }
     console.error('POST /api/studies/groups/[id]/leader-feedback:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+// PATCH · acciones de REVISIÓN, solo para la coordinación de estudios.
+//   { action: 'ocultar',  evaluation_id, reason? } — el dirigente no lo ve
+//   { action: 'mostrar',  evaluation_id }
+//   { action: 'compartir' }                        — recién ahí el dirigente ve
+const patchSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('ocultar'), evaluation_id: z.string().uuid(), reason: z.string().max(300).nullish() }),
+  z.object({ action: z.literal('mostrar'), evaluation_id: z.string().uuid() }),
+  z.object({ action: z.literal('compartir') }),
+])
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    // Revisar es de la coordinación de estudios: el dirigente no modera su
+    // propia retroalimentación.
+    const auth = await requireRoles(...STUDY_ADMIN_ROLES)
+    if (auth.res) return auth.res
+    const { id } = await params
+    if (!isUuid(id)) return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 })
+
+    const parsed = patchSchema.safeParse(await req.json().catch(() => null))
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+        { status: 400 },
+      )
+    }
+
+    if (parsed.data.action === 'compartir') {
+      await releaseGroupFeedback(id, auth.ctx.memberId)
+      return NextResponse.json({ ok: true })
+    }
+    await setFeedbackHidden({
+      evaluationId: parsed.data.evaluation_id,
+      groupId: id,
+      hidden: parsed.data.action === 'ocultar',
+      reason: parsed.data.action === 'ocultar' ? parsed.data.reason ?? null : null,
+      actorMemberId: auth.ctx.memberId,
+    })
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('PATCH /api/studies/groups/[id]/leader-feedback:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

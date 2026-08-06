@@ -22,6 +22,7 @@ import { getInitials } from '@/lib/format'
 import { LeaderContact } from '@/components/studies/LeaderContact'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { LeaderFeedbackPanel } from '@/components/studies/LeaderFeedbackPanel'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -584,6 +585,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               { rol: 'Dirigente', nombre: group.leader_name, phone: group.leader_phone, email: group.leader_email },
               { rol: 'Co-dirigente', nombre: group.co_leader_name ?? null, phone: group.co_leader_phone, email: group.co_leader_email },
             ]} />
+            {/* Retroalimentación: solo tiene sentido con el grupo cerrado. El
+                panel decide qué mostrar según quién mira. */}
+            {group.status === 'finalizado' && !readOnly && (
+              <div className="pt-1"><LeaderFeedbackPanel groupId={group.id} /></div>
+            )}
             {/* GRU-2: a quién se le ofrece este grupo. Solo se pinta si hay
                 restricción — un grupo abierto no necesita decir nada. */}
             {group.has_restriction && <GroupRestrictionNote groupId={group.id} />}
