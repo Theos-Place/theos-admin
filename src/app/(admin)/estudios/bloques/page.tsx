@@ -10,6 +10,9 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { cn } from '@/lib/utils'
 import { CalendarRange, Loader2, Plus, Pencil, Trash2, Check } from 'lucide-react'
 import { bloqueMilestones, suggestedBlocksForYear, BLOQUE_ESTADO_LABEL, BLOQUE_ESTADO_BADGE, type BloqueEstado } from '@/lib/studies/bloques'
+import { BloqueCalendar } from '@/components/studies/BloqueCalendar'
+import { availableYears, type VentanaGrupo } from '@/lib/studies/bloque-calendar'
+import { ymdCR } from '@/lib/format'
 
 type Bloque = {
   id: string; nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
@@ -35,6 +38,11 @@ export default function BloquesPage() {
   const [busy, setBusy] = useState(false)
   const [del, setDel] = useState<Bloque | null>(null)
   const [warn, setWarn] = useState<string | null>(null)
+  // BLQ-1 · Vista alternativa: el listado se mantiene tal cual.
+  const [vista, setVista] = useState<'lista' | 'calendario'>('lista')
+  const [anio, setAnio] = useState(new Date().getFullYear())
+  const [ventanas, setVentanas] = useState<VentanaGrupo[]>([])
+  const [resaltado, setResaltado] = useState<string | null>(null)
 
   const refetch = useCallback(() => {
     setLoading(true)
@@ -45,6 +53,23 @@ export default function BloquesPage() {
       .finally(() => setLoading(false))
   }, [])
   useEffect(() => { if (canManage) refetch() }, [canManage, refetch])
+
+  // GRU-1: ventanas de matrícula por grupo, para el carril de abajo del
+  // calendario. Se piden solo al abrir esa vista (el listado no las usa).
+  useEffect(() => {
+    if (vista !== 'calendario' || ventanas.length > 0) return
+    let vivo = true
+    fetch('/api/studies/groups?all=1')
+      .then(r => (r.ok ? r.json() : []))
+      .then((gs: Array<{ id: string; name?: string; enrollment_start_date?: string | null; enrollment_end_date?: string | null }>) => {
+        if (!vivo || !Array.isArray(gs)) return
+        setVentanas(gs
+          .filter(g => g.enrollment_start_date && g.enrollment_end_date)
+          .map(g => ({ id: g.id, nombre: g.name ?? 'Grupo', desde: g.enrollment_start_date!, hasta: g.enrollment_end_date! })))
+      })
+      .catch(() => {})
+    return () => { vivo = false }
+  }, [vista, ventanas.length])
 
   function openNew() { setEditing(null); setForm(emptyForm); setModalOpen(true) }
   function openEdit(b: Bloque) {
@@ -142,11 +167,54 @@ export default function BloquesPage() {
 
       {msg && <p className="rounded-xl bg-surface-low px-4 py-2 text-sm text-navy-light/80 font-body inline-flex items-center gap-1.5"><Check size={14} className="text-teal-deep" /> {msg}</p>}
 
-      {/* Filtro por estado: por defecto activo + en apertura; toggle para archivados. */}
-      <label className="inline-flex items-center gap-2 text-[13px] text-navy-light/70 font-body cursor-pointer">
-        <input type="checkbox" className="accent-coral" checked={showArchivados} onChange={e => setShowArchivados(e.target.checked)} />
-        Ver también archivados
-      </label>
+      {/* BLQ-1 · Lista / Calendario. En pantalla angosta el calendario anual no
+          se lee, así que el toggle no aparece y queda la lista. */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <label className="inline-flex items-center gap-2 text-[13px] text-navy-light/70 font-body cursor-pointer">
+          <input type="checkbox" className="accent-coral" checked={showArchivados} onChange={e => setShowArchivados(e.target.checked)} />
+          Ver también archivados
+        </label>
+
+        <div className="hidden md:flex items-center gap-2">
+          {vista === 'calendario' && (
+            <select
+              className="rounded-xl bg-surface-low px-3 py-1.5 text-[13px] text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              value={anio}
+              onChange={e => setAnio(Number(e.target.value))}
+              aria-label="Año del calendario"
+            >
+              {availableYears(rows, new Date().getFullYear()).map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          )}
+          <div className="inline-flex rounded-full border border-[var(--outline-variant)] p-0.5" role="tablist" aria-label="Vista de bloques">
+            {(['lista', 'calendario'] as const).map(v => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={vista === v}
+                onClick={() => setVista(v)}
+                className={cn('rounded-full px-3 py-1 text-[12px] transition-colors font-body',
+                  vista === v ? 'bg-navy text-white' : 'text-navy-light hover:bg-surface-low')}
+              >
+                {v === 'lista' ? 'Lista' : 'Calendario'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {vista === 'calendario' && (
+        <div className="hidden md:block">
+          <BloqueCalendar
+            year={anio}
+            bloques={visibleRows}
+            ventanas={ventanas}
+            todayIso={ymdCR()}
+            onSelect={id => { setResaltado(id); setVista('lista') }}
+          />
+        </div>
+      )}
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
@@ -165,7 +233,7 @@ export default function BloquesPage() {
                 {visibleRows.map((b, idx) => {
                   const hitos = bloqueMilestones(b.fecha_apertura, b.fecha_cierre_matricula)
                   return (
-                    <tr key={b.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
+                    <tr key={b.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '', resaltado === b.id && 'ring-2 ring-inset ring-coral/60')}>
                       <td className="px-4 py-3 text-sm font-medium text-navy font-body">{b.nombre}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_apertura)}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_cierre_matricula)}</td>

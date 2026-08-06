@@ -1602,7 +1602,21 @@ NO debe ver el teléfono de su dirigente en esta pantalla salvo que me lo confir
 Sumá los campos al select de la query del grupo; hoy probablemente solo trae el nombre.
 ```
 
-### [ ] BLQ-1 · Calendario anual de bloques
+### [x] BLQ-1 · Calendario anual de bloques
+
+> **HECHO 2026-08-06.** Toggle Lista / Calendario (la lista se mantiene tal cual) + selector
+> de año con el actual por defecto. Geometría pura en `src/lib/studies/bloque-calendar.ts`,
+> vista en `src/components/studies/BloqueCalendar.tsx`. 15 tests.
+>
+> · La barra de cada bloque va del PRIMER hito (folleto preliminar, 3 semanas antes de
+>   abrir) al cierre de matrícula — esa es la vida real del bloque, no solo los días que
+>   está abierto. Los 4 hitos van marcados encima; las fechas salen de `bloqueMilestones`,
+>   no se recalculan.
+> · Un bloque a caballo entre dos años se recorta al año visible y se marca el corte.
+> · GRU-1: carril propio abajo con las ventanas de matrícula de los grupos.
+> · Clic en una barra resalta el bloque en el listado.
+> · MÓVIL: el calendario y su toggle no se muestran en pantalla angosta (`hidden md:*`) —
+>   un año entero en 360 px no se lee. Queda la lista, que ahí sí funciona.
 Archivos: `src/app/(admin)/estudios/bloques`, `src/lib/studies/bloques.ts`
 
 ```
