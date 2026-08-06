@@ -19,6 +19,7 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
+import { LeaderContact } from '@/components/studies/LeaderContact'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -441,6 +442,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
 
   const studyType = studyTypes.find(s => s.id === group.study_type_id) ?? null
   const enrolled = group.participants.filter(p => p.status !== 'withdrawn')
+  // GRU-3: ¿llegó contacto? Solo llega si quien mira gestiona el grupo.
+  const hayContactoDirigente = Boolean(
+    group.leader_phone || group.leader_email || group.co_leader_phone || group.co_leader_email,
+  )
   const tabs = ['información', 'participantes', 'asistencia', 'comunicaciones']
   const tabLabels: Record<string, string> = {
     participantes: 'Participantes',
@@ -534,13 +539,26 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
             </div>
             <div className="flex flex-wrap gap-4 text-sm text-navy-light/60 font-body">
-              <span>Dirigente: <strong className="text-navy">{group.leader_name ?? 'Sin asignar'}</strong></span>
-              {group.co_leader_name && (
-                <span>Co-dirigente: <strong className="text-navy">{group.co_leader_name}</strong></span>
+              {/* GRU-3: con contacto, el nombre se muestra en LeaderContact
+                  (abajo) junto al teléfono y el correo — no dos veces. */}
+              {!hayContactoDirigente && (
+                <>
+                  <span>Dirigente: <strong className="text-navy">{group.leader_name ?? 'Sin asignar'}</strong></span>
+                  {group.co_leader_name && (
+                    <span>Co-dirigente: <strong className="text-navy">{group.co_leader_name}</strong></span>
+                  )}
+                </>
               )}
               <span>Zona: <strong className="text-navy">{sedeLabel(group.zone)}</strong></span>
               <span>Horario: <strong className="text-navy">{group.schedule_days.join('/')} {group.schedule_time}</strong></span>
             </div>
+
+            {/* GRU-3 · Contacto accionable del dirigente y del co-dirigente.
+                Datos personales: el API solo los manda a quien gestiona el grupo. */}
+            <LeaderContact personas={[
+              { rol: 'Dirigente', nombre: group.leader_name, phone: group.leader_phone, email: group.leader_email },
+              { rol: 'Co-dirigente', nombre: group.co_leader_name ?? null, phone: group.co_leader_phone, email: group.co_leader_email },
+            ]} />
             {/* GRU-2: a quién se le ofrece este grupo. Solo se pinta si hay
                 restricción — un grupo abierto no necesita decir nada. */}
             {group.has_restriction && <GroupRestrictionNote groupId={group.id} />}

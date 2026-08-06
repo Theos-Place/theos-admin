@@ -53,8 +53,10 @@ export type DbGroupEnriched = {
   name: string
   leader_id: string | null
   co_leader_id: string | null
-  leader: { first_name: string; last_name: string } | null
-  co_leader: { first_name: string; last_name: string } | null
+  /** GRU-3: phone/email SOLO vienen en el detalle (GROUP_SELECT), nunca en los
+   *  listados — son datos personales y no tienen por qué viajar por lote. */
+  leader: { first_name: string; last_name: string; phone?: string | null; email?: string | null } | null
+  co_leader: { first_name: string; last_name: string; phone?: string | null; email?: string | null } | null
   zone: string | null
   schedule_days: string[] | null
   schedule_time: string | null
@@ -362,8 +364,8 @@ const GROUP_SELECT = `
   is_leader_training, training_modality, is_virtual, enrollment_restrictions,
   age_min, age_max,
   plan:study_plans(code),
-  leader:members!study_groups_leader_id_fkey(first_name, last_name),
-  co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
+  leader:members!study_groups_leader_id_fkey(first_name, last_name, phone, email),
+  co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name, phone, email),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(
     member_id, status, grade, notes,
     member:members(first_name, last_name)

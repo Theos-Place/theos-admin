@@ -1573,7 +1573,22 @@ Dos arreglos en la página del plan de estudios:
 Tests del gate por rol y del orden de etapas.
 ```
 
-### [ ] GRU-3 · Datos de contacto del dirigente en el detalle del grupo
+### [x] GRU-3 · Datos de contacto del dirigente en el detalle del grupo
+
+> **HECHO 2026-08-06.** Teléfono y correo del dirigente y del co-dirigente en la ficha del
+> grupo, accionables: `tel:`, `wa.me` (helper `waLink` nuevo en `src/lib/phone.ts`, prefija
+> 506 a los locales de 8 dígitos) y `mailto:`.
+>
+> **VISIBILIDAD — se respetó el default del plan, sin consultarlo:** solo lo ve quien
+> gestiona el grupo (`viewer_scope` 'admin' o 'leader'). Un estudiante inscrito ve el
+> NOMBRE de su dirigente, no su celular. Se implementó borrando los campos del PAYLOAD en
+> `GET /api/studies/groups/[id]` (`stripLeaderContact`), no escondiéndolos en la UI: si
+> viajan, están expuestos a cualquiera que mire la respuesta.
+>
+> phone/email se agregaron SOLO al select del detalle (`GROUP_SELECT`), nunca a los tres
+> selects de listado — no tiene por qué viajar el contacto de 112 dirigentes por lote.
+>
+> Datos: de 112 grupos activos con dirigente, los 112 tienen teléfono y 109 correo.
 Archivos: detalle de grupo (`src/app/(admin)/estudios/grupos/[id]`), query del grupo
 
 ```

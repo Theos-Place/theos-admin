@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { groupViewerScope } from '@/lib/auth/studies-scope'
+import { stripLeaderContact } from '@/lib/studies/leader-contact'
 import { updateGroup, getGroupById, deleteGroup, countActiveEnrollments, isMemberOfGroup } from '@/lib/supabase/queries/studies'
 import { groupWriteSchema } from '../schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
@@ -34,11 +35,15 @@ export async function GET(
     if (scope === 'admin' || scope === 'leader') {
       return NextResponse.json({ ...group, viewer_scope: scope })
     }
+    // GRU-3: el teléfono y el correo del dirigente son datos personales. Se
+    // borran del payload para quien no gestiona el grupo — un estudiante ve el
+    // nombre de su dirigente, no su celular.
+    const sinContacto = stripLeaderContact(group)
     if (scope === 'member') {
       const own = (g.enrollments ?? []).filter(e => e.member_id === auth.ctx.memberId)
-      return NextResponse.json({ ...group, enrollments: own, viewer_scope: 'member' })
+      return NextResponse.json({ ...sinContacto, enrollments: own, viewer_scope: 'member' })
     }
-    return NextResponse.json({ ...group, enrollments: [], viewer_scope: 'none' })
+    return NextResponse.json({ ...sinContacto, enrollments: [], viewer_scope: 'none' })
   } catch (error) {
     console.error('GET /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

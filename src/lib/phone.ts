@@ -13,3 +13,17 @@ export function normalizePhoneOrNull(value: string | null | undefined): string |
   const cleaned = normalizePhone(value)
   return cleaned.length > 0 ? cleaned : null
 }
+
+/** Código de país por defecto: los teléfonos del padrón se guardan sin él y
+ *  casi todos son de Costa Rica (8 dígitos). */
+export const DEFAULT_COUNTRY_CODE = '506'
+
+/** Enlace de WhatsApp (wa.me) a partir de un teléfono guardado.
+ *  Un número local de 8 dígitos se prefija con 506; uno que ya trae código de
+ *  país (más de 8 dígitos) se deja como está. */
+export function waLink(value: string | null | undefined): string {
+  const d = normalizePhone(value)
+  if (!d) return '#'
+  const conPais = d.length <= 8 ? `${DEFAULT_COUNTRY_CODE}${d}` : d
+  return `https://wa.me/${conPais}`
+}

@@ -59,6 +59,13 @@ export type StudyGroup = {
   co_leader_id?: string | null
   leader_name: string | null
   co_leader_name?: string | null
+  /** GRU-3 · Contacto del dirigente y del co-dirigente. Son DATOS PERSONALES:
+   *  el API solo los manda en el detalle del grupo y solo a quien lo gestiona
+   *  (scope 'admin' o 'leader'); para el resto llegan en null. */
+  leader_phone?: string | null
+  leader_email?: string | null
+  co_leader_phone?: string | null
+  co_leader_email?: string | null
   zone: string
   schedule_days: string[]
   schedule_time: string

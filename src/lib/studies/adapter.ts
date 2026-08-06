@@ -100,6 +100,12 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
     co_leader_id: db.co_leader_id ?? null,
     leader_name: leaderName,
     co_leader_name: coLeaderName,
+    // GRU-3 · Contacto del dirigente. Solo llega en el DETALLE del grupo y solo
+    // para quien lo gestiona: el endpoint lo borra para el resto.
+    leader_phone: db.leader?.phone ?? null,
+    leader_email: db.leader?.email ?? null,
+    co_leader_phone: db.co_leader?.phone ?? null,
+    co_leader_email: db.co_leader?.email ?? null,
     zone: db.zone ?? '',
     schedule_days: db.schedule_days ?? [],
     schedule_time: db.schedule_time ?? '',
