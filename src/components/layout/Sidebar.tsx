@@ -147,6 +147,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // grupos: sin resumen ni el resto del submenú (espejo del ModuleGuard y de
   // los guards de API).
   const groupsOnly = isStudyGroupsOnly(userRoles as RoleId[])
+  // El currículo: mismo ítem para todos los casos de abajo.
+  const CURRICULO: SubItem = { href: '/estudios/plan', label: 'Plan de Estudios', icon: BookText }
   const estudiosSub: SubItem[] = groupsOnly
     ? [{ href: '/estudios/grupos', label: 'Grupos', icon: LayoutList }]
     : studiesBeyondOwn
@@ -161,16 +163,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     : userRoles.includes('dirigente')
       ? [
         { href: '/estudios/grupos', label: 'Grupos', icon: LayoutList },
-        // El currículo es abierto para cualquier sesión (decisión 2026-07-29).
-        { href: '/estudios/plan', label: 'Plan de Estudios', icon: BookText },
+        CURRICULO,
         // Comité de estudios bíblicos: además, las solicitudes que le asignaron.
         ...(user?.in_study_committee
           ? [{ href: '/estudios/solicitudes', label: 'Solicitudes', icon: Inbox, badge: openRequests }] : []),
       ]
-      // Sin rol de estudios pero en el comité: solo su cola asignada.
-      : user?.in_study_committee
-        ? [{ href: '/estudios/solicitudes', label: 'Solicitudes', icon: Inbox, badge: openRequests }]
-        : []
+      // Sin rol de estudios: igual ve el CURRÍCULO. Es qué estudios hay y qué
+      // pide cada etapa — información para quien se va a matricular, no gestión
+      // (decisión 2026-07-29, completada el 2026-08-06: antes solo lo veía el
+      // dirigente y la página estaba cerrada por el ModuleGuard).
+      : [
+        CURRICULO,
+        ...(user?.in_study_committee
+          ? [{ href: '/estudios/solicitudes', label: 'Solicitudes', icon: Inbox, badge: openRequests }] : []),
+      ]
   const finanzasSub: SubItem[] = [
     // Suite completa de finanzas: solo con el módulo 'finanzas' (becas/revision_pagos
     // solas NO destapan donaciones/devoluciones/reportes/solicitudes).
@@ -255,7 +261,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // grupos); el rol miembro no ve la entrada.
     // El comité de estudios bíblicos entra por su cola de solicitudes asignadas,
     // aunque no tenga rol de estudios (decisión 2026-07-31).
-    if (m.href === '/estudios') return studiesBeyondOwn || userRoles.includes('dirigente') || can('folletos', 'view') || !!user?.in_study_committee
+    // 2026-08-06: el CURRÍCULO es para cualquiera, así que la entrada de
+    // Estudios se muestra siempre — adentro, quien no gestiona ve solo "Plan de
+    // Estudios" (y su resumen queda oculto por hideSummary).
+    if (m.href === '/estudios') return true
     if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view')
     // SEC-1: el padrón es solo para alcance 'all' (lider_comite ve a su gente
     // en /servidores, no en el listado completo).

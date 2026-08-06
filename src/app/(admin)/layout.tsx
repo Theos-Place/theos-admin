@@ -65,6 +65,12 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   if (!prefix) return <>{children}</>
   // Hasta que carguen los roles no se decide (evita denegar en falso).
   if (!loaded || !user) return <>{children}</>
+  // Excepción (2026-08-06): /estudios/plan es el CURRÍCULO — qué estudios hay,
+  // en qué orden y qué pide cada etapa. Es información para cualquiera que vaya
+  // a matricularse, no gestión. La decisión venía del 2026-07-29 pero solo se
+  // había aplicado al sidebar del dirigente: la página seguía cerrada.
+  // El DETALLE (/estudios/plan/[id]) es el editor y sigue exigiendo el módulo.
+  if (pathname === '/estudios/plan') return <>{children}</>
   // Excepción: /estudios/folletos tiene su propio permiso (rol 'folletos' sin
   // módulo estudios) — espejo del sidebar, que muestra el ítem con ese permiso.
   if (pathname.startsWith('/estudios/folletos') && can('folletos', 'view')) return <>{children}</>
