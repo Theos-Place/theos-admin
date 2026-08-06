@@ -3665,6 +3665,7 @@ export type Database = {
           current_week: number | null
           ends_at: string | null
           enrollment_end_date: string | null
+          enrollment_restrictions: Json | null
           enrollment_start_date: string | null
           id: string
           is_leader_training: boolean | null
@@ -3693,6 +3694,7 @@ export type Database = {
           current_week?: number | null
           ends_at?: string | null
           enrollment_end_date?: string | null
+          enrollment_restrictions?: Json | null
           enrollment_start_date?: string | null
           id?: string
           is_leader_training?: boolean | null
@@ -3721,6 +3723,7 @@ export type Database = {
           current_week?: number | null
           ends_at?: string | null
           enrollment_end_date?: string | null
+          enrollment_restrictions?: Json | null
           enrollment_start_date?: string | null
           id?: string
           is_leader_training?: boolean | null

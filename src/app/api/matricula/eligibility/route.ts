@@ -8,6 +8,7 @@ import { computeEligibility } from '@/lib/studies/eligibility'
 import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
 import { todayCR } from '@/lib/format'
 import { countBlockingStudyPayments } from '@/lib/supabase/queries/payments'
+import { passedRestrictedGroupIds } from '@/lib/supabase/queries/group-restrictions'
 
 // GET /api/matricula/eligibility?member_id=X
 // Devuelve { eligibility: EligibilityResult[], profile } calculado con datos reales.
@@ -34,12 +35,15 @@ export async function GET(req: NextRequest) {
       getMemberStudyProfile(memberId),
       activeExceptionsByCodeForMember(memberId),
     ])
+    // GRU-2: qué grupos RESTRINGIDOS cumple esta persona. Se resuelve acá (una
+    // vez por restricción distinta) y entra a la función pura como dato.
+    const passedRestrictedGroups = await passedRestrictedGroupIds(memberId, groups.data)
     const eligibility = computeEligibility(
       // Ni archivados ni charlas no curriculares (ej. BUS) se ofrecen en matrícula.
       plans.map(toDomainStudyType).filter(p => !p.is_archived && p.is_curricular !== false),
       groups.data.map(toDomainStudyGroup),
       { ...profile, exceptions },
-      { todayYmd: todayCR() }, // GRU-1: ventana de matrícula
+      { todayYmd: todayCR(), passedRestrictedGroups }, // GRU-1 ventana + GRU-2 restricción
     )
     // PRE-5: ¿puede entrar al curso prematrimonial? (N1 completado + inscrito
     // en N2). La página de matrícula usa este flag para mostrar/ocultar la

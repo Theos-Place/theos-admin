@@ -8,6 +8,7 @@ import {
 } from '@/lib/supabase/queries/studies'
 import { groupCreateSchema } from './schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
+import { normalizeRestriction } from '@/lib/studies/group-restrictions'
 
 // Roles que pueden listar grupos: los que gestionan grupos (STUDY_ADMIN +
 // editor_grupos_estudio) + dirigentes, más los consumidores cross-módulo del
@@ -104,7 +105,12 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       )
     }
-    const { study_type_id, ...input } = parsed.data
+    const { study_type_id, enrollment_restrictions: rawRestriction, ...rest } = parsed.data
+    // GRU-2: se normaliza ANTES de tocar la base — lo que quede fuera del set
+    // permitido no se guarda, y una restricción vacía se guarda como NULL.
+    const input = 'enrollment_restrictions' in parsed.data
+      ? { ...rest, enrollment_restrictions: normalizeRestriction(rawRestriction) }
+      : rest
     // GRU-1: coherencia de la ventana de matrícula.
     const dateError = validateEnrollmentDates(input)
     if (dateError) return NextResponse.json({ error: dateError, code: 'fechas_matricula' }, { status: 400 })

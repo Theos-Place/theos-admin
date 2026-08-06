@@ -29,6 +29,10 @@ export const groupWriteSchema = z
     current_week: z.number().int().min(0).max(52).optional(),
     whatsapp_group_url: z.string().trim().nullish(),
     is_virtual: z.boolean().optional(),
+    // GRU-2: restricción de audiencia del grupo. La forma la valida y depura
+    // normalizeRestriction (descarta tipos no permitidos y referencias muertas);
+    // acá solo se acepta el campo. null = quitar la restricción.
+    enrollment_restrictions: z.unknown().nullish(),
   })
   .strict()
 

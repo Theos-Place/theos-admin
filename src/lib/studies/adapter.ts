@@ -8,6 +8,7 @@ import type {
 } from '@/types/study'
 // Mapa nivel→etapa: fuente única en eligibility.ts (QA 2026-07-17).
 import { LEVEL_TO_STAGE } from '@/lib/studies/eligibility'
+import { hasRestriction, normalizeRestriction } from '@/lib/studies/group-restrictions'
 
 export function toDomainStudyType(db: DbStudyPlan): StudyType {
   // El frontend usa `id` como clave de catálogo (== code en el mock).
@@ -117,6 +118,7 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
     is_leader_training: db.is_leader_training ?? false,
     training_modality: db.training_modality ?? null,
     is_virtual: db.is_virtual ?? false,
+    has_restriction: hasRestriction(normalizeRestriction(db.enrollment_restrictions)),
   }
 }
 

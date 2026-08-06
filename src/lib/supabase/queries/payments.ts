@@ -127,6 +127,9 @@ async function findOrCreateSuccessorGroup(
       age_max: src.age_max,
       status: 'en_matricula',
       current_week: 0,
+      // GRU-2 · A PROPÓSITO no se copia enrollment_restrictions: la cohorte que
+      // avanza no arrastra la restricción de audiencia del grupo anterior. Si
+      // el sucesor debe restringirse, se pone a mano.
     })
     .select('id').single()
   if (createErr) {

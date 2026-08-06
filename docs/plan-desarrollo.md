@@ -1291,7 +1291,32 @@ el rol forms ve todos; miembro sin nada no ve ninguno; nombrar y quitar encargad
 
 > Puntos levantados probando el sistema con usuarios reales, a partir del 2026-08-05.
 
-### [ ] GRU-2 · Restricción opcional de audiencia al crear un grupo de estudio
+### [x] GRU-2 · Restricción opcional de audiencia al crear un grupo de estudio
+
+> **HECHO 2026-08-06** (migración `20260806140000_group_enrollment_restrictions`).
+> Columna `study_groups.enrollment_restrictions` (jsonb) con el MISMO shape del filtro
+> avanzado del padrón. Regla pura en `src/lib/studies/group-restrictions.ts`
+> (normalización, resumen legible, mensaje del bloqueo); lectura y evaluación en
+> `src/lib/supabase/queries/group-restrictions.ts`. UI: `AudienceRestrictionSection`
+> (el MISMO `AdvancedFilters`, con la prop nueva `allowedTypes`) en crear y editar grupo,
+> resumen en la ficha, y conteo del padrón en vivo vía `POST /api/studies/groups/restriction-count`.
+> Guard server-side en `enrollMember` → 409 `restriccion_grupo` con el motivo. 18 tests.
+>
+> **DECISIONES CONFIRMADAS CON TI (2026-08-06):**
+> · Punto 6 — el staff SÍ puede saltarse la restricción, con confirmación explícita en el
+>   modal de "Añadir miembro" y registro en la bitácora (`logAudit`), igual que PAG-2.
+> · Condiciones permitidas: solo las de AUDIENCIA (dirigente, servicio, estudio, edad,
+>   estado civil, donador). Asistencia, inscripción a eventos, formularios, estado de
+>   cuenta y fecha de creación quedan fuera — no describen a quién va dirigido un grupo y
+>   son las caras de resolver. Agregar una es una línea en `ALLOWED_RESTRICTION_TYPES`.
+>
+> **CÓMO SE EVITÓ LA SEGUNDA IMPLEMENTACIÓN** (lo que pedía el plan): `evaluateUnits` ya
+> era puro y recibe un callback, así que la semántica AND/OR se reusa tal cual. Lo que
+> faltaba era el costo: `resolveAdvancedConditions` barría las ~18 mil fichas por
+> condición. Se le agregó un ALCANCE opcional por miembro (`scopeIds`) que se propaga a
+> todas las consultas; con eso, "¿esta persona cumple?" y "¿cuánta gente cumple?" son la
+> MISMA función (`getMemberIds`). Medido en producción: 4.5 s → 0.26 s (dirigente) y
+> 5.7 s → 0.62 s (completó N1).
 Archivos: migración (`study_groups`), `src/types/filters.ts`, `src/components/members/AdvancedFilters.tsx`, `src/lib/studies/eligibility.ts`, `src/lib/supabase/queries/studies.ts` (`enrollMember`), forms de crear/editar grupo, `src/lib/condition-labels.ts`
 
 ```

@@ -147,8 +147,14 @@ export function computeEligibility(
   groups: StudyGroup[],
   profile: MemberStudyProfile,
   /** GRU-1: hoy (YYYY-MM-DD) para la ventana de matrícula de los grupos. Sin
-   *  este arg la ventana no se evalúa (compatibilidad con llamadas viejas). */
-  opts?: { todayYmd?: string },
+   *  este arg la ventana no se evalúa (compatibilidad con llamadas viejas).
+   *
+   *  GRU-2 `passedRestrictedGroups`: ids de los grupos RESTRINGIDOS que este
+   *  miembro sí cumple (los resuelve el caller contra la base). Un grupo con
+   *  restricción que no esté en el set NO se ofrece — a propósito el default es
+   *  conservador: si el caller no lo calcula, el grupo restringido se oculta en
+   *  vez de ofrecerse de más. */
+  opts?: { todayYmd?: string; passedRestrictedGroups?: ReadonlySet<string> },
 ): EligibilityResult[] {
   const invitedCodes = new Set(profile.invited_codes ?? [])
   return plans
@@ -245,7 +251,11 @@ export function computeEligibility(
             // (sin fechas = siempre; sin todayYmd no se evalúa).
             const windowOk = !opts?.todayYmd
               || isEnrollmentWindowOpen(g.enrollment_start_date, g.enrollment_end_date, opts.todayYmd)
-            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity && ageOk && virtualOk && windowOk
+            // GRU-2: la restricción de audiencia del GRUPO se suma a todo lo
+            // anterior (etapa, compromisos, prerequisitos), nunca lo reemplaza.
+            const restrictionOk = !g.has_restriction
+              || !!opts?.passedRestrictedGroups?.has(g.id)
+            return g.study_type_id === study.code && g.status === 'en_matricula' && active < g.max_capacity && ageOk && virtualOk && windowOk && restrictionOk
           })
           .map(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length

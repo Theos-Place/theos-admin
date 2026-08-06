@@ -81,6 +81,9 @@ export type StudyGroup = {
   /** Grupo virtual: solo visible/matriculable para miembros autorizados
    *  (member_admin_data.authorized_virtual_studies). */
   is_virtual?: boolean
+  /** GRU-2: este grupo tiene restricción de audiencia. El detalle (las
+   *  condiciones) no viaja al dominio: solo importa si hay que evaluarla. */
+  has_restriction?: boolean
 }
 
 export type LeaderEvaluation = {

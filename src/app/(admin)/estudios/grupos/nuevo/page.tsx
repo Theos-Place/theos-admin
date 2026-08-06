@@ -19,6 +19,8 @@ import { minEnrollmentEnd, maxEnrollmentEnd } from '@/lib/studies/enrollment-win
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import type { GroupStatus } from '@/types/study'
 import { canAdvanceLeaderStep, leaderStepHint } from '@/lib/studies/leader-step'
+import { AudienceRestrictionSection } from '@/components/studies/AudienceRestrictionSection'
+import type { GroupRestriction } from '@/lib/studies/group-restrictions'
 
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
   { value: 'en_matricula', label: 'En matrícula' },
@@ -70,6 +72,8 @@ export default function NuevoGrupoPage() {
     enrollment_end: toYmdLocal(new Date()),
     is_virtual: false,
   })
+  // GRU-2: restricción de audiencia del grupo (null = abierto, lo normal).
+  const [restriction, setRestriction] = useState<GroupRestriction | null>(null)
   const [selectedLeader, setSelectedLeader] = useState('')
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
   const [pendingLeader, setPendingLeader] = useState(false)
@@ -162,6 +166,7 @@ export default function NuevoGrupoPage() {
           enrollment_end_date: step1.enrollment_end || null,
           status: initialStatus,
           is_virtual: step1.is_virtual,
+          enrollment_restrictions: restriction,
         }),
       })
       if (!res.ok) throw new Error('Error creando el grupo')
@@ -449,6 +454,9 @@ export default function NuevoGrupoPage() {
               </label>
             </div>
           </div>
+
+          {/* GRU-2 · A quién se le ofrece este grupo (opcional). */}
+          <AudienceRestrictionSection value={restriction} onChange={setRestriction} />
 
           <div className="flex flex-col items-end gap-1.5 pt-2">
             {!step1.study_type_id && (

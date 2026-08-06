@@ -29,6 +29,11 @@ type Props = {
   conditions: FilterCondition[]
   addCondition: (c: AddableCondition) => void
   removeCondition: (id: number) => void
+  /** GRU-2 · Restringe qué tipos de condición se ofrecen. Sin esto se ofrecen
+   *  todos (el padrón). La restricción de audiencia de un grupo pasa solo las
+   *  que describen a una persona — ver ALLOWED_RESTRICTION_TYPES. Las pestañas
+   *  que se quedan sin condiciones no se pintan. */
+  allowedTypes?: readonly FilterCondition['type'][]
 }
 
 type Tab = 'study' | 'attend' | 'service' | 'form' | 'profile'
@@ -714,7 +719,8 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   )
 }
 
-function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
+function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes }: Props) {
+  const permite = (t: FilterCondition['type']) => !allowedTypes || allowedTypes.includes(t)
   const donorCond  = conditions.find(c => c.type === 'donor')  as Extract<FilterCondition, { type: 'donor'  }> | undefined
   const statusCond = conditions.find(c => c.type === 'status') as Extract<FilterCondition, { type: 'status' }> | undefined
   const leaderCond = conditions.find(c => c.type === 'leader') as Extract<FilterCondition, { type: 'leader' }> | undefined
@@ -753,7 +759,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
 
   return (
     <div className="space-y-5">
-      <div>
+      {permite('donor') && <div>
         <Label>Donador</Label>
         <Sel value={donorVal} onChange={v => {
           if (donorCond) removeCondition(donorCond.id)
@@ -763,9 +769,9 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           <option value="yes">Sí</option>
           <option value="no">No</option>
         </Sel>
-      </div>
+      </div>}
 
-      <div>
+      {permite('marital') && <div>
         <Label>Estado civil</Label>
         <Sel value={maritalVal} onChange={v => {
           if (maritalCond) removeCondition(maritalCond.id)
@@ -778,9 +784,9 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           <option value="Divorciado/a">Divorciado/a</option>
           <option value="Viudo/a">Viudo/a</option>
         </Sel>
-      </div>
+      </div>}
 
-      <div>
+      {permite('status') && <div>
         <Label>Estado del perfil</Label>
         <Sel value={statusVal} onChange={v => {
           if (statusCond) removeCondition(statusCond.id)
@@ -790,9 +796,9 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           <option value="active">Activo</option>
           <option value="inactive">Inactivo</option>
         </Sel>
-      </div>
+      </div>}
 
-      <div>
+      {permite('leader') && <div>
         <Label>Dirigente</Label>
         <Sel value={leaderVal} onChange={v => {
           if (leaderCond) removeCondition(leaderCond.id)
@@ -802,9 +808,9 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           <option value="yes">Sí</option>
           <option value="no">No</option>
         </Sel>
-      </div>
+      </div>}
 
-      <div>
+      {permite('account') && <div>
         <Label>Estado de cuenta</Label>
         <Sel value={accountVal} onChange={v => {
           if (accountCond) removeCondition(accountCond.id)
@@ -815,9 +821,9 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
           <option value="never_entered">{ACCOUNT_STATE_LABEL.never_entered}</option>
           <option value="active">{ACCOUNT_STATE_LABEL.active}</option>
         </Sel>
-      </div>
+      </div>}
 
-      <div>
+      {permite('age') && <div>
         <Label>Rango de edad</Label>
         <div className="flex items-center gap-2">
           <input
@@ -836,29 +842,32 @@ function ProfilePanel({ conditions, addCondition, removeCondition }: Props) {
             className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
         </div>
-      </div>
+      </div>}
 
-      <div>
+      {permite('created') && <div>
         <Label>Fecha de creación del perfil</Label>
         <DateRange from={createdFrom} to={createdTo}
           onFrom={v => syncCreated(v, createdTo)} onTo={v => syncCreated(createdFrom, v)} />
-      </div>
+      </div>}
     </div>
   )
 }
 
 // ─── main component ───────────────────────────────────────────────────────────
 
-export function AdvancedFilters({ conditions, addCondition, removeCondition }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>('study')
+export function AdvancedFilters({ conditions, addCondition, removeCondition, allowedTypes }: Props) {
+  const permite = (t: FilterCondition['type']) => !allowedTypes || allowedTypes.includes(t)
 
   const conditionTypes: Record<Tab, FilterCondition['type'][]> = {
-    study:   ['study'],
-    attend:  ['attendance', 'registration'],
-    service: ['service'],
-    form:    ['form'],
-    profile: ['donor', 'age', 'status', 'leader', 'marital', 'created'],
+    study:   (['study'] as const).filter(permite),
+    attend:  (['attendance', 'registration'] as const).filter(permite),
+    service: (['service'] as const).filter(permite),
+    form:    (['form'] as const).filter(permite),
+    profile: (['donor', 'age', 'status', 'leader', 'marital', 'account', 'created'] as const).filter(permite),
   }
+  // Una pestaña sin condiciones permitidas no se pinta.
+  const tabs = TABS.filter(t => conditionTypes[t.key].length > 0)
+  const [activeTab, setActiveTab] = useState<Tab>(tabs[0]?.key ?? 'study')
 
   return (
     <div
@@ -868,7 +877,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
       <div
         className="flex gap-0 border-b overflow-x-auto border-[var(--outline-variant)]"
       >
-        {TABS.map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
@@ -913,6 +922,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition }: P
               conditions={conditions}
               addCondition={addCondition}
               removeCondition={removeCondition}
+              allowedTypes={allowedTypes}
             />
           )}
         </div>

@@ -210,13 +210,16 @@ type ConditionResolution = {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function pagedIds(build: (q: any) => any, table: TableName, select: string, orderCol = 'member_id'): Promise<Set<string>> {
+async function pagedIds(build: (q: any) => any, table: TableName, select: string, orderCol = 'member_id', scopeIds?: string[]): Promise<Set<string>> {
   const supabase = createAdminClient()
   const out = new Set<string>()
   for (let from = 0; ; from += 1000) {
     // orderCol: en `members` la columna real es `id` (member_id ahí es alias del
     // select); en volunteers/event_checkins sí existe member_id.
     let q = supabase.from(table).select(select).order(orderCol).range(from, from + 999)
+    // GRU-2: con alcance, la misma consulta lee un índice en vez de barrer la
+    // tabla entera. `orderCol` es justo la columna de miembro en los dos casos.
+    if (scopeIds) q = q.in(orderCol, scopeIds)
     q = build(q)
     const { data, error } = await q
     if (error) throw error
@@ -261,7 +264,7 @@ function enrollmentInRange(r: EnrollDateRow, range: EnrollRange | undefined): bo
  *  Dos fuentes: inscripciones CON grupo (plan vía study_groups) e inscripciones
  *  SIN grupo (plan_id directo, migración 032 — así vino el histórico: ~19k
  *  completados sin grupo que el join !inner descartaba). */
-async function idsByEnrollment(planCode: string, statuses: string[], range?: EnrollRange): Promise<Set<string>> {
+async function idsByEnrollment(planCode: string, statuses: string[], range?: EnrollRange, scopeIds?: string[]): Promise<Set<string>> {
   const supabase = createAdminClient()
   const { data: plan } = await supabase
     .from('study_plans').select('id').eq('code', planCode).maybeSingle()
@@ -271,13 +274,15 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
 
   // Fuente 1: enrollments CON grupo (la fecha del grupo es starts_at del grupo).
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
+    let q1 = supabase
       .from('study_enrollments')
       .select('member_id, completed_at, enrolled_at, grp:study_groups!study_enrollments_group_id_fkey!inner(starts_at, plan:study_plans!inner(code))')
       .in('status', statuses)
       .eq('grp.plan.code', planCode)
       .order('id')
       .range(from, from + 999)
+    if (scopeIds) q1 = q1.in('member_id', scopeIds)
+    const { data, error } = await q1
     if (error) throw error
     const rows = (data ?? []) as unknown as Array<{ member_id: string | null; completed_at: string | null; enrolled_at: string | null; grp: { starts_at: string | null } | null }>
     for (const r of rows) {
@@ -292,7 +297,7 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
   // Fuente 2: enrollments SIN grupo (plan_id directo); la fecha es del enrollment.
   if (planId) {
     for (let from = 0; ; from += 1000) {
-      const { data, error } = await supabase
+      let q2 = supabase
         .from('study_enrollments')
         .select('member_id, completed_at, enrolled_at')
         .in('status', statuses)
@@ -300,6 +305,8 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
         .is('group_id', null)
         .order('id')
         .range(from, from + 999)
+      if (scopeIds) q2 = q2.in('member_id', scopeIds)
+      const { data, error } = await q2
       if (error) throw error
       const rows = (data ?? []) as unknown as Array<{ member_id: string | null; completed_at: string | null; enrolled_at: string | null }>
       for (const r of rows) {
@@ -321,6 +328,11 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
 export async function resolveAdvancedConditions(
   conditions: FilterCondition[],
   orGroupedIds: Set<number> = new Set(),
+  /** GRU-2 · Alcance opcional: resolver SOLO para estos miembros. Los sets salen
+   *  igual de correctos (son subconjuntos), pero cada consulta lee un índice en
+   *  vez de barrer la tabla. Es lo que hace viable evaluar la restricción de un
+   *  grupo en la pantalla de matrícula, sin una segunda implementación. */
+  scopeIds?: string[],
 ): Promise<ConditionResolution> {
   const supabase = createAdminClient()
   const perCondition: ResolvedCondition[] = []
@@ -336,7 +348,7 @@ export async function resolveAdvancedConditions(
         // que 'any' ('completed'+'enrolled'), pero como EXCLUDE en vez de
         // INCLUDE. Sin rango de fecha (no aplica a "nunca lo llevó").
         if (c.status === 'not_taken') {
-          res.exclude.push(await idsByEnrollment(c.study, ['completed', 'enrolled']))
+          res.exclude.push(await idsByEnrollment(c.study, ['completed', 'enrolled'], undefined, scopeIds))
           break
         }
         const statuses = c.status === 'completed' ? ['completed']
@@ -347,7 +359,7 @@ export async function resolveAdvancedConditions(
         // inicio. Así "Nivel 1 completado + rango" devuelve solo a quienes
         // finalizaron Nivel 1 dentro del rango (no un filtro de fecha aparte).
         const basis: EnrollDateBasis = c.status === 'in_progress' ? 'start' : 'completion'
-        res.include.push(await idsByEnrollment(c.study, statuses, { from: c.from, to: c.to, basis }))
+        res.include.push(await idsByEnrollment(c.study, statuses, { from: c.from, to: c.to, basis }, scopeIds))
         break
       }
       case 'service': {
@@ -364,12 +376,12 @@ export async function resolveAdvancedConditions(
           // interpola si es un UUID válido (anti filter-injection, auditoría S4).
           if (c.area && UUID_RE.test(c.area)) q = q.or(`id.eq.${c.area},parent_id.eq.${c.area}`, { referencedTable: 'position.area' })
           return q
-        }, 'volunteers', 'member_id, position:service_positions!inner(title, area:areas!service_positions_area_id_fkey!inner(id, name, parent_id))'))
+        }, 'volunteers', 'member_id, position:service_positions!inner(title, area:areas!service_positions_area_id_fkey!inner(id, name, parent_id))', 'member_id', scopeIds))
         break
       }
       case 'donor': {
         // is_donor es el flag derivado de donador activo (criterio por trimestres).
-        const set = await pagedIds(q => q.eq('is_donor', true), 'members', 'member_id:id', 'id')
+        const set = await pagedIds(q => q.eq('is_donor', true), 'members', 'member_id:id', 'id', scopeIds)
         if (c.value === 'yes') res.include.push(set)
         else res.exclude.push(set)
         break
@@ -422,6 +434,7 @@ export async function resolveAdvancedConditions(
               .not('member_id', 'is', null)
               .order('id')
               .range(from, from + 999)
+            if (scopeIds) q = q.in('member_id', scopeIds)
             q = applyEventFilters(q)
             if (c.from) q = q.gte(dateField, c.from)
             if (c.to) q = q.lte(dateField, `${c.to}T23:59:59.999Z`)
@@ -469,6 +482,7 @@ export async function resolveAdvancedConditions(
             .not('member_id', 'is', null)
             .order('id')
             .range(from, from + 999)
+          if (scopeIds) q = q.in('member_id', scopeIds)
           if (eventId) q = q.eq('event_id', eventId)
           if (c.eventType) q = q.eq('events.event_type', c.eventType)
           if (c.ticketStatus && c.ticketStatus !== 'any') q = q.eq('payment_status', c.ticketStatus)
@@ -487,7 +501,7 @@ export async function resolveAdvancedConditions(
         // Dentro de un grupo OR el override global no sirve (uniría mal):
         // se resuelve como set de miembros con ese estado.
         if (orGroupedIds.has(c.id)) {
-          res.include.push(await pagedIds(q => q.eq('is_active', c.value === 'active'), 'members', 'member_id:id', 'id'))
+          res.include.push(await pagedIds(q => q.eq('is_active', c.value === 'active'), 'members', 'member_id:id', 'id', scopeIds))
         } else {
           res.isActiveOverride = c.value === 'active'
         }
@@ -499,7 +513,7 @@ export async function resolveAdvancedConditions(
           if (c.min) q = q.lte('birth_date', new Date(now.getFullYear() - parseInt(c.min), now.getMonth(), now.getDate()).toISOString().slice(0, 10))
           if (c.max) q = q.gte('birth_date', new Date(now.getFullYear() - parseInt(c.max) - 1, now.getMonth(), now.getDate() + 1).toISOString().slice(0, 10))
           return q.not('birth_date', 'is', null)
-        }, 'members', 'member_id:id', 'id')
+        }, 'members', 'member_id:id', 'id', scopeIds)
         res.include.push(set)
         break
       }
@@ -509,13 +523,14 @@ export async function resolveAdvancedConditions(
           q => q.eq('status', 'active').ilike('position.area.name', '%dirigente%'),
           'volunteers',
           'member_id, position:service_positions!inner(area:areas!service_positions_area_id_fkey!inner(name))',
+          'member_id', scopeIds,
         )
         if (c.value === 'yes') res.include.push(set)
         else res.exclude.push(set)
         break
       }
       case 'marital': {
-        res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id'))
+        res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id', scopeIds))
         break
       }
       case 'account': {
@@ -527,7 +542,7 @@ export async function resolveAdvancedConditions(
           if (c.value === 'none') return q.is('auth_user_id', null)
           if (c.value === 'active') return q.not('last_sign_in_at', 'is', null)
           return q.not('auth_user_id', 'is', null).is('last_sign_in_at', null) // never_entered
-        }, 'members', 'member_id:id', 'id'))
+        }, 'members', 'member_id:id', 'id', scopeIds))
         break
       }
       case 'created': {
@@ -535,7 +550,7 @@ export async function resolveAdvancedConditions(
           if (c.from) q = q.gte('created_at', c.from)
           if (c.to) q = q.lte('created_at', `${c.to}T23:59:59.999Z`)
           return q
-        }, 'members', 'member_id:id', 'id'))
+        }, 'members', 'member_id:id', 'id', scopeIds))
         break
       }
       case 'form': {
@@ -546,7 +561,7 @@ export async function resolveAdvancedConditions(
         if (!c.formId || !UUID_RE.test(c.formId)) break
         if (c.status === 'not_filled') {
           res.exclude.push(await pagedIds(
-            q => q.eq('form_id', c.formId), 'form_responses', 'member_id',
+            q => q.eq('form_id', c.formId), 'form_responses', 'member_id', 'member_id', scopeIds,
           ))
           break
         }
@@ -567,7 +582,7 @@ export async function resolveAdvancedConditions(
           return q
         }, 'form_responses', byField
           ? 'member_id, vals:form_response_values!inner(field_id, value_text)'
-          : 'member_id'))
+          : 'member_id', 'member_id', scopeIds))
         break
       }
     }
@@ -602,9 +617,19 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
   // completo): esa condición se resuelve como set y acá se relaja el eq.
   const orGroupedIds = new Set((groups ?? []).filter(g => g.op === 'OR').flatMap(g => g.members))
   const statusInOrGroup = !!conditions?.some(c => c.type === 'status' && orGroupedIds.has(c.id))
+
+  // GRU-2 · Cuando la pregunta es "¿esta persona cumple?" (una, o un puñado), el
+  // universo YA está acotado: en vez de resolver cada condición sobre las ~18 mil
+  // fichas y después intersectar, se resuelve directo sobre esos ids. Mismo
+  // código, mismo resultado, una consulta indexada. El tope existe porque el
+  // alcance viaja en la URL de PostgREST.
+  const scopeIds = explicitIds && explicitIds.length > 0 && explicitIds.length <= 100
+    ? explicitIds
+    : undefined
+
   let resolution: Awaited<ReturnType<typeof resolveAdvancedConditions>> | null = null
   if (conditions?.length) {
-    resolution = await resolveAdvancedConditions(conditions, orGroupedIds)
+    resolution = await resolveAdvancedConditions(conditions, orGroupedIds, scopeIds)
     if (resolution.isActiveOverride !== undefined) is_active = resolution.isActiveOverride
   }
 
@@ -633,7 +658,10 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
       .select(is_server ? 'id, volunteers!inner(status)' : 'id')
       .order('id')
       .range(from, from + pageSize - 1)
-    if (!statusInOrGroup) query = query.eq('is_active', is_active)
+    if (scopeIds) query = query.in('id', scopeIds)
+    // any_active: no filtrar por estado (la restricción de un grupo se evalúa
+    // sobre la persona, no sobre si su ficha está activa).
+    if (!statusInOrGroup && !filters.any_active) query = query.eq('is_active', is_active)
 
     if (search) {
       query = applyMemberSearch(query, search)

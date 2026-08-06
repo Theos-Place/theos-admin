@@ -6,6 +6,8 @@ import { groupViewerScope } from '@/lib/auth/studies-scope'
 import { updateGroup, getGroupById, deleteGroup, countActiveEnrollments, isMemberOfGroup } from '@/lib/supabase/queries/studies'
 import { groupWriteSchema } from '../schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
+import { normalizeRestriction } from '@/lib/studies/group-restrictions'
+import type { GroupWriteInput } from '@/lib/supabase/queries/studies'
 
 export async function GET(
   _req: NextRequest,
@@ -58,6 +60,10 @@ export async function PUT(
         { status: 400 },
       )
     }
+    // GRU-2: misma normalización que al crear (ver el POST).
+    const patch: Partial<GroupWriteInput> = 'enrollment_restrictions' in parsed.data
+      ? { ...parsed.data, enrollment_restrictions: normalizeRestriction(parsed.data.enrollment_restrictions) }
+      : { ...parsed.data, enrollment_restrictions: undefined }
     // GRU-1: la coherencia de la ventana se valida sobre el grupo RESULTANTE
     // (patch parcial mergeado con lo guardado).
     if ('enrollment_start_date' in parsed.data || 'enrollment_end_date' in parsed.data || 'starts_at' in parsed.data) {
@@ -70,7 +76,7 @@ export async function PUT(
       const dateError = validateEnrollmentDates(merged)
       if (dateError) return NextResponse.json({ error: dateError, code: 'fechas_matricula' }, { status: 400 })
     }
-    await updateGroup(id, parsed.data)
+    await updateGroup(id, patch)
     return NextResponse.json({ ok: true })
   } catch (error) {
     if (error instanceof Error && error.message === 'DIRIGENTE_NO_RECOMENDADO') {

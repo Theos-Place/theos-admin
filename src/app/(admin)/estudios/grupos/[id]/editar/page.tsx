@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils'
 import { minEnrollmentEnd, maxEnrollmentEnd } from '@/lib/studies/enrollment-window'
 import { ChevronLeft } from 'lucide-react'
 import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
+import { AudienceRestrictionSection } from '@/components/studies/AudienceRestrictionSection'
+import { normalizeRestriction, type GroupRestriction } from '@/lib/studies/group-restrictions'
 
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
   { value: 'en_matricula', label: 'En matrícula' },
@@ -92,6 +94,21 @@ function EditarForm({ group, studyType, refetch }: {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // GRU-2: la restricción no viaja en el listado de grupos (solo el flag
+  // has_restriction), así que el detalle se pide acá al abrir la edición.
+  const [restriction, setRestriction] = useState<GroupRestriction | null>(null)
+  const [restrictionLoaded, setRestrictionLoaded] = useState(!group.has_restriction)
+  useEffect(() => {
+    if (!group.has_restriction) return
+    let vivo = true
+    fetch(`/api/studies/groups/${group.id}/restriction`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (vivo) setRestriction(normalizeRestriction(d?.restriction)) })
+      .catch(() => { /* sin restricción cargada: no se pisa al guardar */ })
+      .finally(() => { if (vivo) setRestrictionLoaded(true) })
+    return () => { vivo = false }
+  }, [group.id, group.has_restriction])
+
   // Un grupo tiene un único día: seleccionar reemplaza; volver a tocar el
   // mismo lo quita. Se guarda igual como array (schedule_days) con 0 o 1 día.
   function toggleDay(d: string) {
@@ -123,6 +140,9 @@ function EditarForm({ group, studyType, refetch }: {
           whatsapp_group_url: waUrl || null,
           status,
           is_virtual: isVirtual,
+          // Si la restricción no terminó de cargar, NO se manda: mejor no tocar
+          // la columna que borrarla sin querer.
+          ...(restrictionLoaded ? { enrollment_restrictions: restriction } : {}),
         }),
       })
       if (!res.ok) {
@@ -323,6 +343,15 @@ function EditarForm({ group, studyType, refetch }: {
             <input className={inputCls} placeholder="https://chat.whatsapp.com/..." value={waUrl} onChange={e => setWaUrl(e.target.value)} />
           </div>
         </div>
+
+        {/* GRU-2 · A quién se le ofrece este grupo (opcional). */}
+        {restrictionLoaded && (
+          <AudienceRestrictionSection
+            value={restriction}
+            onChange={setRestriction}
+            defaultOpen={!!group.has_restriction}
+          />
+        )}
 
         {error && <p className="text-sm text-coral font-body">{error}</p>}
 

@@ -4,6 +4,8 @@ import { isGroupFull, occupiesSpot, OCCUPYING_STATUSES } from '@/lib/studies/enr
 import { isEnrollmentWindowOpen } from '@/lib/studies/enrollment-window'
 import { countBlockingStudyPayments } from '@/lib/supabase/queries/payments'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
+import { getGroupRestriction, memberPassesRestriction } from '@/lib/supabase/queries/group-restrictions'
+import { hasRestriction, restrictionBlockedMessage, type GroupRestriction } from '@/lib/studies/group-restrictions'
 import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
 import { ymdCR } from '@/lib/format'
 import type { Json } from '@/types/database'
@@ -69,6 +71,8 @@ export type DbGroupEnriched = {
   is_leader_training: boolean | null
   training_modality: string | null
   is_virtual: boolean | null
+  /** GRU-2: restricción de audiencia del grupo (shape del filtro del padrón). */
+  enrollment_restrictions: unknown
   age_min: number | null
   age_max: number | null
   enrollments: Array<{
@@ -355,7 +359,7 @@ const GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, enrollment_start_date, enrollment_end_date,
   status, current_week, whatsapp_group_url,
-  is_leader_training, training_modality, is_virtual,
+  is_leader_training, training_modality, is_virtual, enrollment_restrictions,
   age_min, age_max,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
@@ -372,7 +376,7 @@ const GROUP_SELECT = `
 const LIST_GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
-  is_leader_training, training_modality, is_virtual,
+  is_leader_training, training_modality, is_virtual, enrollment_restrictions,
   age_min, age_max,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
@@ -384,7 +388,7 @@ const LIST_GROUP_SELECT = `
 const LIST_GROUP_MEMBERS_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
-  is_leader_training, training_modality, is_virtual,
+  is_leader_training, training_modality, is_virtual, enrollment_restrictions,
   age_min, age_max,
   plan:study_plans(code),
   leader:members!study_groups_leader_id_fkey(first_name, last_name),
@@ -699,6 +703,20 @@ export type GroupWriteInput = {
   age_max?: number | null
   current_week?: number
   whatsapp_group_url?: string | null
+  /** GRU-2: restricción de audiencia ya normalizada (null = grupo abierto).
+   *  Se serializa a jsonb al escribir; `undefined` = no tocar la columna. */
+  enrollment_restrictions?: GroupRestriction | null
+}
+
+/** Prepara el patch/insert para Supabase: la restricción viaja como jsonb.
+ *  `undefined` se saca del objeto para que un PATCH parcial NO la borre. */
+function toGroupRow(input: Partial<GroupWriteInput>): Record<string, unknown> {
+  const { enrollment_restrictions, ...rest } = input
+  const row: Record<string, unknown> = { ...rest }
+  if (enrollment_restrictions !== undefined) {
+    row.enrollment_restrictions = enrollment_restrictions as unknown as Json
+  }
+  return row
 }
 
 /** Resuelve el UUID de un plan a partir de su `code` (el frontend usa code). */
@@ -848,7 +866,7 @@ async function planLevelById(supabase: ReturnType<typeof createAdminClient>, pla
 export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
   await assertLeadersRecommended(supabase, [input.leader_id, input.co_leader_id])
-  const { data, error } = await supabase.from('study_groups').insert(input as Insertable<'study_groups'>).select('id').single()
+  const { data, error } = await supabase.from('study_groups').insert(toGroupRow(input) as Insertable<'study_groups'>).select('id').single()
   if (error) throw error
   // EST-1: asignar dirigente lo activa automáticamente — salvo campañas.
   if (groupLocksLeader(await planLevelById(supabase, input.plan_id))) {
@@ -863,7 +881,7 @@ export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): 
   if ('leader_id' in patch || 'co_leader_id' in patch) {
     await assertLeadersRecommended(supabase, [patch.leader_id, patch.co_leader_id])
   }
-  const { error } = await supabase.from('study_groups').update(patch).eq('id', id)
+  const { error } = await supabase.from('study_groups').update(toGroupRow(patch) as Insertable<'study_groups'>).eq('id', id)
   if (error) throw error
   if ('leader_id' in patch || 'co_leader_id' in patch) {
     // EST-1: excepción de campañas — el plan sale del grupo (el patch no lo trae).
@@ -1033,7 +1051,14 @@ export async function getMemberRecommendations(memberId: string): Promise<Member
 export async function enrollMember(
   groupId: string, memberId: string,
   scholarshipInput?: { scholarship_id?: string; coupon_code?: string },
-  opts?: { enforceEnrollmentWindow?: boolean; allowPendingStudyPayments?: boolean },
+  opts?: {
+    enforceEnrollmentWindow?: boolean
+    allowPendingStudyPayments?: boolean
+    /** GRU-2: el staff puede matricular a alguien que NO cumple la restricción
+     *  de audiencia del grupo, pero solo con este override explícito (la UI se
+     *  lo confirma y queda en la bitácora — nunca silencioso). */
+    allowRestrictionOverride?: boolean
+  },
 ): Promise<{ status: 'enrolled'; enrollment_id: string; amount: number; requires_payment: boolean }> {
   const supabase = createAdminClient()
   const { data: g } = await supabase
@@ -1070,6 +1095,16 @@ export async function enrollMember(
     const ced = (mem as { cedula?: string | null } | null)?.cedula
     if (!ced || !String(ced).trim()) throw new Error('CEDULA_REQUERIDA')
   }
+  // Guard GRU-2: restricción de audiencia del grupo. Server-side porque
+  // esconderlo de la UI no alcanza: el staff matricula a terceros por el mismo
+  // endpoint y el deep link al grupo también llega acá.
+  if (!opts?.allowRestrictionOverride) {
+    const restriction = await getGroupRestriction(groupId)
+    if (hasRestriction(restriction) && !(await memberPassesRestriction(memberId, restriction))) {
+      throw new Error(`RESTRICCION_GRUPO:${restrictionBlockedMessage(restriction)}`)
+    }
+  }
+
   // Guard: grupo virtual sin autorización del miembro — server-side, no
   // depende de que la UI ya lo haya filtrado (se puede saltar el fetch).
   if (group?.is_virtual) {

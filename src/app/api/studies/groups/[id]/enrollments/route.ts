@@ -7,6 +7,8 @@ import { createAutoFolletoIfNeeded } from '@/lib/supabase/queries/folletos'
 import { ymdCR } from '@/lib/format'
 import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
 import { groupFullMessage } from '@/lib/studies/enrollment-capacity'
+import { RESTRICTION_ERROR_CODE } from '@/lib/studies/group-restrictions'
+import { logAudit } from '@/lib/audit'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
 // Autoservicio real: cualquier autenticado puede matricularse a sí mismo; el
@@ -20,7 +22,7 @@ export async function POST(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    const { member_id, scholarship_id, coupon_code, override_pago_pendiente } = await req.json()
+    const { member_id, scholarship_id, coupon_code, override_pago_pendiente, override_restriccion } = await req.json()
     const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
     if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
     // GRU-1: la ventana de matrícula aplica al autoservicio; el staff con
@@ -32,7 +34,17 @@ export async function POST(
       // staff puede saltarlo solo con el override EXPLÍCITO del body (la UI
       // se lo confirma — nunca silencioso).
       allowPendingStudyPayments: isStaff && override_pago_pendiente === true,
+      // GRU-2: mismo criterio que el override de pago — solo el staff, solo
+      // explícito, y queda registrado abajo.
+      allowRestrictionOverride: isStaff && override_restriccion === true,
     })
+    if (isStaff && override_restriccion === true) {
+      await logAudit({
+        actorUserId: auth.ctx.userId, action: 'UPDATE', entityType: 'study_enrollments',
+        entityId: result.enrollment_id,
+        newData: { override_restriccion: true, group_id: id, member_id: targetMemberId },
+      })
+    }
     // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
     await notifyEnrollment(id, targetMemberId)
     // FOL-1: si esta matrícula llenó el cupo, genera el tiquete de folletos
@@ -77,6 +89,14 @@ export async function POST(
           code: 'pago_pendiente',
           count,
         },
+        { status: 409 },
+      )
+    }
+    // GRU-2: el mensaje dice POR QUÉ ("Este grupo es solo para: Dirigente"),
+    // no un error genérico — llega igual por deep link que desde el staff.
+    if (error instanceof Error && error.message.startsWith('RESTRICCION_GRUPO:')) {
+      return NextResponse.json(
+        { error: error.message.slice('RESTRICCION_GRUPO:'.length), code: RESTRICTION_ERROR_CODE },
         { status: 409 },
       )
     }

@@ -6,19 +6,45 @@ import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/hooks/useAuth'
-import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
+import { GROUP_ADMIN_ROLES, STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge, VirtualGroupBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users } from 'lucide-react'
+import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users, Lock } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
+
+/** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
+ *  no viaja en el listado (solo el flag), así que se pide acá. */
+function GroupRestrictionNote({ groupId }: { groupId: string }) {
+  const [info, setInfo] = useState<{ summary: string; count: number | null } | null>(null)
+  useEffect(() => {
+    let vivo = true
+    fetch(`/api/studies/groups/${groupId}/restriction`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (vivo && d?.summary) setInfo({ summary: d.summary, count: d.count ?? null }) })
+      .catch(() => { /* sin resumen: no se pinta nada */ })
+    return () => { vivo = false }
+  }, [groupId])
+  if (!info) return null
+  return (
+    <p className="flex items-start gap-1.5 text-[13px] text-navy-light/70 font-body">
+      <Lock size={13} className="mt-0.5 shrink-0" />
+      <span>
+        Solo para: <strong className="text-navy">{info.summary}</strong>
+        {info.count !== null && (
+          <span className="text-navy-light/60"> · {info.count.toLocaleString('es-CR')} {info.count === 1 ? 'persona cumple' : 'personas cumplen'}</span>
+        )}
+      </span>
+    </p>
+  )
+}
 
 function AttendanceBar({ pct }: { pct: number }) {
   const color = pct >= 70 ? 'bg-teal-deep' : pct >= 40 ? 'bg-amber-400' : 'bg-coral'
@@ -39,9 +65,14 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
   onEnrolled: () => void
 }) {
   const toast = useToast()
+  const { roles } = useAuth()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<{ id: string; first_name: string; last_name: string; cedula: string | null }[]>([])
   const [adding, setAdding] = useState<string | null>(null)
+  // GRU-2: si la persona no cumple la restricción de audiencia del grupo, el
+  // staff puede matricularla igual — pero confirmándolo, y queda registrado.
+  const puedeSaltarRestriccion = roles.some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r))
+  const [restriccion, setRestriccion] = useState<{ memberId: string; nombre: string; motivo: string } | null>(null)
 
   useEffect(() => {
     const q = query.trim()
@@ -58,22 +89,66 @@ function AddMemberModal({ groupId, enrolledIds, onClose, onEnrolled }: {
     return () => { alive = false; clearTimeout(t) }
   }, [query])
 
-  async function enroll(memberId: string) {
+  async function enroll(memberId: string, overrideRestriccion = false) {
     setAdding(memberId)
     try {
       const res = await fetch(`/api/studies/groups/${groupId}/enrollments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: memberId }),
+        body: JSON.stringify({
+          member_id: memberId,
+          ...(overrideRestriccion ? { override_restriccion: true } : {}),
+        }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json().catch(() => null)
+      if (res.status === 409 && data?.code === 'restriccion_grupo' && puedeSaltarRestriccion) {
+        const m = results.find(x => x.id === memberId)
+        setRestriccion({
+          memberId,
+          nombre: m ? `${m.first_name} ${m.last_name}` : 'Esta persona',
+          motivo: String(data?.error ?? ''),
+        })
+        setAdding(null)
+        return
+      }
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
       onEnrolled()
       onClose()
     } catch (err) {
       console.error('No se pudo inscribir al miembro:', err)
-      toast('No se pudo inscribir al miembro en el grupo. Intentá de nuevo.', 'error')
+      toast(err instanceof Error && err.message ? err.message : 'No se pudo inscribir al miembro en el grupo. Intentá de nuevo.', 'error')
       setAdding(null)
     }
+  }
+
+  // Confirmación del override: dice QUÉ restricción se está saltando.
+  if (restriccion) {
+    return (
+      <Modal onClose={() => setRestriccion(null)} titleId="override-restriccion-title" width={440}>
+        <div className="p-6 space-y-4">
+          <h3 id="override-restriccion-title" className="text-base font-bold text-navy font-display">
+            {restriccion.nombre} no cumple la restricción del grupo
+          </h3>
+          <p className="text-[13px] text-navy-light/70 font-body">
+            {restriccion.motivo} ¿Matricularla de todas formas? Queda registrado quién lo autorizó.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { const id = restriccion.memberId; setRestriccion(null); enroll(id, true) }}
+              className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            >
+              Matricular de todas formas
+            </button>
+            <button
+              onClick={() => setRestriccion(null)}
+              className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )
   }
 
   return (
@@ -466,6 +541,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <span>Zona: <strong className="text-navy">{sedeLabel(group.zone)}</strong></span>
               <span>Horario: <strong className="text-navy">{group.schedule_days.join('/')} {group.schedule_time}</strong></span>
             </div>
+            {/* GRU-2: a quién se le ofrece este grupo. Solo se pinta si hay
+                restricción — un grupo abierto no necesita decir nada. */}
+            {group.has_restriction && <GroupRestrictionNote groupId={group.id} />}
             {studyType && group.current_week > 0 && group.status !== 'finalizado' && (
               <WeekProgressBar current={group.current_week} total={studyType.weeks} className="w-48" />
             )}
