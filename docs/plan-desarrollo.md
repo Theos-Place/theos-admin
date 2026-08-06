@@ -1739,6 +1739,104 @@ Tests: el wizard completa con 4 pasos; la regla de los 6 meses sigue funcionando
 nueva ubicación; una solicitud vieja con oficiante se lee bien en la cola.
 ```
 
+### [ ] EST-12 · Encuesta de satisfacción del dirigente al cerrar un grupo
+Archivos: módulo de formularios, `study_groups` (migración), cron nuevo, `src/lib/email/`, patrón a copiar: `src/app/api/cron/event-surveys/route.ts` + `src/lib/events/survey-schedule.ts` + `src/lib/email/event-survey-notify.ts`
+
+```
+NO EXISTE para grupos de estudio; sí existe para eventos (EVE-4: cron event-surveys diario
+a las 17:00 UTC, con formulario o plantilla configurable, dedupe por survey_sent_at y
+destinatarios = quienes hicieron check-in). REPLICÁ ESE MOLDE, no inventes uno nuevo.
+
+Objetivo: cuando un grupo de estudio termina, mandarle automáticamente a todos sus
+estudiantes una encuesta de satisfacción sobre el dirigente, y que las respuestas queden
+asociadas al dirigente y al co-dirigente de ese grupo.
+
+────────────────────────────────────────
+1) CREAR EL FORMULARIO (seed idempotente en scripts/, como seed-cdeb-preinscription-form.mjs)
+Título: "Encuesta de satisfacción — Estudio bíblico".
+Encabezado: "¡Gracias por completar tu estudio bíblico! Queremos conocer tu experiencia para
+seguir mejorando. Tus respuestas son confidenciales y nos ayudan a apoyar mejor a nuestros
+dirigentes."
+
+AUTOLLENADO (decisión confirmada): dirigente, co-dirigente, curso/capacitación, lugar
+(sede/país) y modalidad (presencial/virtual) NO se preguntan — salen del grupo. Guardalos en
+la respuesta como contexto, no como campos que el estudiante escribe.
+
+Preguntas (todas obligatorias salvo las abiertas del final):
+ 1. ¿Demostró el dirigente un buen conocimiento del material?
+    Totalmente / En gran parte / Algo / Muy poco
+ 2. ¿Estuvo el dirigente preparado para aclarar dudas sobre el tema tratado?
+    Siempre / Frecuentemente / A veces / Rara vez
+ 3. ¿El dirigente fomentó la participación activa de los estudiantes?
+    (ayuda: "Involucra y motiva a todo el grupo a participar")
+    Siempre / Frecuentemente / A veces / Nunca
+ 4. Si hubo intervenciones largas de algún participante, ¿cómo las manejó el dirigente?
+    Muy bien, de manera respetuosa / Bien, pero podría mejorar / A veces interrumpe /
+    No interviene y se hacen muy largos los estudios / No aplica
+ 5. ¿Cómo trató el dirigente los temas sensibles con el grupo?
+    Con mucha sensibilidad / Generalmente sensible / Algo sensible / Poco sensible / No aplica
+ 6. ¿Reconoció y manejó adecuadamente las diferencias de opinión?
+    Siempre / Frecuentemente / A veces / Nunca
+ 7. ¿El dirigente comunicó el mensaje de forma clara y comprensible?
+    Siempre / Frecuentemente / A veces / Nunca
+ 8. ¿Fomentó el dirigente la aplicación de lo aprendido en la vida diaria?
+    Siempre / Frecuentemente / A veces / Nunca
+ 9. ¿Demostró interés y el amor de Dios a los estudiantes durante y fuera del estudio?
+    Siempre / Frecuentemente / A veces / Nunca
+10. ¿Mantuvo el dirigente la confianza respetando la privacidad?
+    Siempre / Frecuentemente / A veces / Nunca
+11. Comentarios adicionales (texto libre, opcional)
+    ayuda: "Cosas que te gustaron y cosas por mejorar."
+12. Comentarios sobre el folleto y el contenido del estudio (texto libre, opcional)
+    ayuda: "Contanos cómo fue tu experiencia con el contenido y qué te pareció el folleto;
+    trabajamos constantemente para mejorar."
+Cierre: "¡Muchas gracias por completar este formulario y ayudarnos a mejorar!"
+
+────────────────────────────────────────
+2) ASOCIACIÓN AL DIRIGENTE (lo que hace útil la encuesta)
+Cada respuesta debe quedar ligada al grupo, al dirigente y al co-dirigente, para poder ver
+después "todas las evaluaciones de tal dirigente" a lo largo del tiempo.
+Definí cómo: los formularios hoy se asocian a una entidad (entity_type/entity_id), así que
+la respuesta ya puede colgar del grupo — pero necesitás resolver el salto grupo → dirigente
+de forma consultable, no calculada cada vez. Proponeme el enfoque antes de implementar.
+Vista nueva: en el perfil del dirigente (o en /estudios/dirigentes/[id]), un panel con sus
+evaluaciones: promedio por pregunta, tendencia entre grupos y los comentarios abiertos.
+
+⚠️ CONFIDENCIALIDAD — es lo más delicado de este punto
+El encabezado le promete al estudiante que sus respuestas son confidenciales. Eso hay que
+cumplirlo en el código:
+ - Las respuestas se guardan SIN identificar al estudiante, o identificadas pero nunca
+   visibles junto a sus respuestas. Decidime cuál preferís y por qué; mi inclinación es
+   guardar quién respondió (para el dedupe y para saber la tasa de respuesta) pero que la
+   vista de resultados NUNCA muestre nombre junto a respuesta.
+ - EL DIRIGENTE EVALUADO NO VE SUS PROPIAS EVALUACIONES sin que alguien las medie. Acceso:
+   coordinador_dirigentes, coordinador_estudios, direccion, admin. Confirmame si querés que
+   el dirigente vea un resumen agregado de sí mismo.
+ - Si un grupo tuvo menos de 3 respuestas, no mostrar los comentarios abiertos: con dos
+   respuestas se adivina quién escribió qué.
+
+────────────────────────────────────────
+3) ENVÍO AUTOMÁTICO
+Migración en study_groups, espejo de lo que ya tiene events:
+survey_form_id, survey_template_id, survey_offset_hours (o survey_send_at), survey_sent_at.
+Cron nuevo /api/cron/study-surveys copiando el patrón exacto de event-surveys: auth con
+CRON_SECRET, ping a healthcheck, dedupe con survey_sent_at, límite diario de correos,
+horario UTC coherente con los demás en vercel.json.
+ - DISPARADOR: al cerrar el grupo (o al llegar su fecha de fin — decidí cuál y decímelo;
+   mi inclinación es al CIERRE, porque es cuando el dirigente ya terminó su trabajo).
+   Con un desfase configurable, por defecto el día siguiente.
+ - DESTINATARIOS: los estudiantes del grupo. Definí si van todos o solo los que aprobaron;
+   mi inclinación es todos los que estuvieron matriculados, incluidos los reprobados —
+   pero NO los retirados, que no completaron el estudio. Confirmámelo.
+ - Correo con plantilla propia (seed en scripts/, patrón seed-invitation-templates.mjs) con
+   el link al formulario. Respetá preferencias de notificación.
+ - Configurable por grupo: poder desactivar la encuesta en un grupo puntual, y poder
+   dispararla manualmente desde la ficha del grupo.
+
+Tests: el cron no reenvía; el formulario autollena el contexto del grupo; la vista de
+resultados no muestra nombres; con menos de 3 respuestas se ocultan los comentarios.
+```
+
 ---
 
 ## Backlog (fases siguientes, requieren definición de producto)

@@ -1,6 +1,6 @@
 # Sistema theos-admin — resumen ejecutivo
 
-> Documento de referencia para retomar contexto rápido. Generado 2026-07-25 recorriendo el código real (rutas, esquema, permisos, crons). Lo que no quedó claro en el código está marcado **por confirmar**.
+> Documento de referencia para retomar contexto rápido. Generado 2026-07-25 recorriendo el código real (rutas, esquema, permisos, crons); **actualizado el 2026-08-06** con la Fase 7 del plan. Lo que no quedó claro en el código está marcado **por confirmar**.
 
 ## 1. Panorama general
 
@@ -35,12 +35,12 @@ Gestión de estudios y capacitaciones: catálogo de planes con prerequisitos enc
 |---|---|
 | Páginas | `/estudios`, `/estudios/grupos/*` (detalle, editar, asistencia, cierre), `/estudios/plan/*`, `/estudios/dirigentes/*`, `/estudios/bloques`, `/estudios/analisis`, `/estudios/solicitudes` |
 | APIs | `/api/studies/groups/*` (attendance, close, enrollments, sessions), `/api/studies/plans`, `/api/studies/dirigentes` (+bulk), `/api/studies/bloques`, `/api/studies/eligibility`, `/api/studies/exceptions`, `/api/studies/invitations`, `/api/studies/requests`, `/api/studies/prematrimonial/*` |
-| Tablas | `study_plans`, `study_groups`, `study_leaders`, `study_sessions`, `study_attendance`, `capacitacion_bloques`, `study_invitations`, `study_requirement_exceptions`, `study_requests` (+history), `prematrimonial_requests` (+history) |
+| Tablas | `study_plans`, `study_groups` (incl. `enrollment_restrictions` — GRU-2), `study_leaders`, `study_sessions`, `study_attendance`, `capacitacion_bloques`, `study_invitations`, `study_requirement_exceptions`, `study_requests` (+history), `prematrimonial_requests` (+history), `leader_evaluations` (**esquema sin flujo**: 0 filas, sin pantalla ni correo) |
 | Permisos | `STUDY_ADMIN_ROLES` (coordinador_estudios, coordinador_dirigentes, direccion, admin); grupos también `editor_grupos_estudio`; bloques solo coordinador_estudios + admin |
-| Estado | Funcional. Rama de "comportamiento histórico" en `/api/studies/groups` (compatibilidad). Solicitudes conviven con el flujo viejo de reubicaciones |
+| Estado | Funcional. Rama de "comportamiento histórico" en `/api/studies/groups` (compatibilidad). GRU-2: restricción de audiencia POR GRUPO (se SUMA a los requisitos del plan). BLQ-1: vista de calendario anual en bloques. REU-2: el cambio de grupo se pide desde 4 lugares. EST-11: los planes desactivados solo los ve `STUDY_ADMIN_ROLES`, y no viajan en el payload |
 | Depende de | Matrícula, folletos, pagos (matrícula paga), notificaciones (recordatorios, ausencia de dirigentes), sedes |
 
-Cadenas de niveles: **N1→N2→N3→N4** y **DIS1→DIS2→DIS3** (no existe DIS4). Al cerrar un grupo, el sucesor hereda dirigente/horario/zona (la cohorte avanza junta) y se genera la solicitud de folletos del siguiente nivel.
+Cadenas de niveles: **N1→N2→N3→N4** y **DIS1→DIS2→DIS3** (no existe DIS4; DIS1 es de etapa **intermedia**, no inicial). Al cerrar un grupo, el sucesor hereda dirigente/horario/zona (la cohorte avanza junta) — **pero NO la restricción de audiencia** (GRU-2). Cerrar ya no genera folletos (FOL-1).
 
 ### Matrícula
 Autoservicio o staff: matricular a un miembro en un estudio elegible, con cobro y opción de beca. Wizard prematrimonial aparte (pareja, requiere N2 de ambos).
@@ -73,9 +73,9 @@ CRUD de eventos con recurrencia (modelo iCalendar de excepciones), tipos, inscri
 |---|---|
 | Páginas | `/eventos` (list/grid/calendar), `/eventos/nuevo`, `/eventos/[id]` (+`/editar`), `/eventos/tipos`, `/eventos/embed`; pública: `/calendario` |
 | APIs | `/api/events/*` (register, registrations, volunteers, checkins), `/api/events/types`, `/api/event-registrations/[id]/comprobante`, `/api/eventos/elegibilidad`, `/api/public/events` |
-| Tablas | `events`, `event_types`, `sub_events`, `event_exceptions`, `event_registrations`, `event_checkins`, `event_volunteers`, `event_organizing_committees` |
-| Permisos | Gestión: direccion, encargado_staff, comunicaciones; check-in: encargado_eventos, direccion |
-| Estado | Funcional. Param `vista` legacy como fallback en `/eventos`. `events` no tiene `is_public`: hoy **todos** los eventos son públicos en el calendario embebible |
+| Tablas | `events` (incl. `registration_form_id` y `survey_*` — EVE-4), `event_types`, `sub_events`, `event_exceptions`, `event_registrations` (incl. `form_response_id`), `event_checkins`, `event_volunteers`, `event_organizing_committees`, `event_managers` (FRM-1 B) |
+| Permisos | Gestión: direccion, encargado_staff, comunicaciones; check-in: encargado_eventos, direccion. **Encargados por evento** (`event_managers`): gestionan ESE evento completo sin el módulo, y heredan su formulario; solo los roles de gestión pueden nombrarlos |
+| Estado | Funcional. Param `vista` legacy como fallback en `/eventos`. `events` no tiene `is_public`: hoy **todos** los eventos son públicos en el calendario embebible. EVE-4: formulario de inscripción opcional (la inscripción NO depende de él) y encuesta de satisfacción programada a quienes hicieron check-in |
 | Depende de | Check-in, servidores (voluntarios, exención de comité organizador), pagos |
 
 ### Servidores / comités
@@ -105,19 +105,21 @@ Envíos masivos de email con selección de audiencia, plantillas, configuración
 | Tablas | `message_broadcasts`, `message_logs`, `message_templates`, `channel_configs`, `internal_notifications` |
 | Permisos | `comunicaciones`, `direccion` |
 | Estado | Funcional para email. El canal WhatsApp está solo modelado en el esquema (`channel_configs.type`, prefs de miembro); su implementación está planeada para una fase siguiente |
+| Editor de correo | Dos modos. El **visual** (TipTap) solo representa lo básico y DESTRUYE tablas, estilos en línea y contenedores; por eso el contenido con diseño avanzado abre en **modo código** y forzar el visual pide confirmación. La detección vive en `src/components/communications/email-html.ts` — mira el ORIGINAL del servidor, no el estado vivo. `renderEmail` fuerza el color de los botones en línea porque varios clientes ignoran el `<style>` y pintan el enlace de azul |
 | Depende de | Miembros (audiencias/listas), formularios (sub-módulo en el sidebar), email (infra) |
 
 ### Formularios
-Builder de formularios con campos configurables y recolección de respuestas. Vive dentro de Comunicaciones.
+Builder de formularios con campos configurables, encabezado con flyer y recolección de respuestas. Vive dentro de Comunicaciones, pero tiene entrada propia de primer nivel para quien alcanza formularios sin alcanzar Comunicaciones (`formsNavPlacement`).
 
 | | |
 |---|---|
-| Páginas | `/formularios`, `/formularios/nuevo`, `/formularios/[id]` (+preview, respuestas) |
-| APIs | `/api/forms`, `/api/forms/[id]/responses` |
-| Tablas | `forms`, `form_fields`, `form_responses`, `form_response_values` |
-| Permisos | `comunicaciones`, `direccion`, `encargado_staff` (permiso `formularios` en `ROLES`) |
-| Estado | Funcional. Triggers de BD validan la entidad asociada y desasocian el form si se borra el evento/grupo padre. Plantilla de correo `form_asignado` existe pero **no está conectada** (decisión de 2026-07-17: implementarla luego como feature) |
-| Depende de | Eventos y estudios (forms asociados a entidades), email (`form_completado`) |
+| Páginas | `/formularios`, `/formularios/nuevo`, `/formularios/[id]` (+preview, respuestas, selección) |
+| APIs | `/api/forms`, `/api/forms/[id]`, `/api/forms/[id]/responses`, `/api/forms/[id]/access`, `/api/forms/upload-hero` |
+| Tablas | `forms` (incl. `hero_*` — FRM-2), `form_fields`, `form_responses`, `form_response_values`, `form_access_grants` |
+| Permisos | Rol `forms` + `comunicaciones`, `direccion`, `encargado_staff` (permiso `formularios`). Además: acceso puntual por formulario (`form_access_grants`) y herencia desde el evento padre (`event_managers`) |
+| Quién LLENA | **Solo la audiencia** (2026-08-06, `src/lib/forms/fill-access.ts`): a quien se le mandó el link por correo, inscritos del evento, matriculados del grupo, convocados de una preinscripción, o cualquiera si el form está marcado `is_public` |
+| Estado | Funcional. Triggers de BD validan la entidad asociada y desasocian el form si se borra el evento/grupo padre. `form_asignado` **sí está conectada** desde FEA-1 (2026-07-26) |
+| Depende de | Eventos y estudios (forms asociados a entidades), email (`form_completado`, `form_asignado`), Storage (`form-heroes`) |
 
 ### Folletos
 Cola de pedidos de folletos por sede, ligada a bloques de capacitación y al cierre de grupos: al cerrar un grupo N1–N3/DIS1–DIS2 se genera la solicitud del siguiente nivel.
@@ -140,7 +142,7 @@ Registro global de pagos y cola de revisión de comprobantes (SINPE/transferenci
 | APIs | `/api/payments` (+`[id]/receipt`, `[id]/review`, `bulk`, `queue`), `/api/finance/payments` |
 | Tablas | `payments` (status + review_status + concept), `refunds` |
 | Permisos | `requireModuleView('revision_pagos', 'edit')`: roles revision_pagos, folletos, coordinador_dirigentes, coordinador_estudios, finanzas, direccion, admin |
-| Estado | Funcional. Detección de referencia duplicada (índice único), acciones con guard 409 si el tiquete ya cambió. RPC `approve_payment` propaga por `concept` |
+| Estado | Funcional. Detección de referencia duplicada (índice único), acciones con guard 409 si el tiquete ya cambió. RPC `approve_payment` propaga por `concept`. La lista muestra **de qué tipo es el cobro y de qué cosa** (`src/lib/finance/payment-label.ts`: "Estudio · Transformados"), derivado de las columnas y no de una descripción escrita |
 | Depende de | Matrícula, eventos, folletos, prematrimonial (origen del pago); cron `payment-holds-expire` libera cupos con comprobante rechazado +72h |
 
 ### Becas
@@ -281,16 +283,19 @@ Bandeja de notificaciones internas persistidas + alertas calculadas al vuelo (ur
 | `/api/cron/storage-orphans` | 15:00 lunes | Reporte de consistencia Storage↔BD (solo reporta, no borra) |
 | `/api/cron/payment-holds-expire` | 16:00 diario | Comprobante rechazado +72h sin resubir → libera cupo (`expired`/`expirada`) |
 | `/api/cron/payment-reminders` | 16:30 lunes | Recordatorio consolidado de pagos pendientes por miembro (notificación interna → /mis-pagos), con prefs y dedupe diario (PAG-3) |
-| `/api/cron/report-snapshots` | 06:00 diario | Recalcula datasets de reportes a `report_snapshots` (maxDuration 300s). Único **sin** ping de healthcheck (**por confirmar** si es intencional) |
+| `/api/cron/report-snapshots` | 06:00 diario | Recalcula datasets de reportes a `report_snapshots` (maxDuration 300s) |
+| `/api/cron/event-surveys` | 17:00 diario | EVE-4: despacha las encuestas de satisfacción vencidas a quienes hicieron check-in; dedupe en `events.survey_sent_at` |
 
-Además hay una edge function de Supabase `process-email-queue` que llama de vuelta al app (`/process`, crons de estudios/folletos) con el mismo `CRON_SECRET` — **por confirmar** que no duplique los crons de Vercel (pendiente conocido).
+**Ya no queda ningún cron sin health check** (2026-08-06) y hay un test que lo vigila (`src/lib/health.test.ts`). Las 9 variables `HEALTHCHECK_URL_*` están listadas en `.env.example` con su horario.
+
+**Verificado 2026-08-06:** el proyecto de Supabase **no tiene ninguna edge function desplegada**, así que la sospecha de que `process-email-queue` duplicara los crons de Vercel queda descartada. Los 3 jobs de pg_cron que sí existen son funciones SQL: `refresh_donor_flags` (6:30), `refresh_member_sedes` (6:45) y `prune_audit_log` (4:00).
 
 ### Email
 - AWS SES por SMTP (nodemailer, STARTTLS 587), remitente `SES_FROM_EMAIL`. Configuration set para publicar bounces/complaints a SNS; webhook `/api/email/sns-webhook` verifica la firma. Supresión + unsubscribe/resubscribe. Límite diario `EMAIL_DAILY_LIMIT` (default 5000).
-- Plantillas de sistema (BD con fallback hardcodeado): `form_asignado` (no conectada), `form_completado`, `matricula_estudiante`, `matricula_dirigente`, `inicio_capacitacion`, `beca_aprobada`, `beca_aprobada_parcial`, `beca_rechazada`. Helpers adicionales para cobro de evento, rechazo de pago e inicio de estudio.
+- Plantillas de sistema (BD con fallback hardcodeado): `form_asignado` (no conectada), `form_completado`, `matricula_estudiante`, `matricula_dirigente`, `inicio_capacitacion`, `beca_aprobada`, `beca_aprobada_parcial`, `beca_rechazada`, `cupon_asignado`, `encuesta_evento` (EVE-4). Helpers adicionales para cobro de evento, rechazo de pago e inicio de estudio.
 
 ### Storage
-Tres buckets referenciados en código: `payment-receipts` (comprobantes de pago, incl. prematrimonial y eventos), `employee-docs` (documentos/contratos de empleados) y `email-images` (imágenes del editor de correos, con URL pública). En la práctica hoy solo se suben comprobantes de pago y contratos; `email-images` existe como soporte del editor de comunicaciones. No se declaran en migraciones: se crean desde el dashboard de Supabase. No hay más buckets en uso.
+Buckets referenciados en código: `payment-receipts` (comprobantes de pago, incl. prematrimonial y eventos), `employee-docs` (documentos/contratos de empleados), `email-images` y `email-media` (editor de correos, públicos), `event-flyers` (EVE-2, público) y `form-heroes` (FRM-2, público, 5 MB, MIME limitado a jpeg/png/webp en el propio bucket). En la práctica hoy solo se suben comprobantes de pago y contratos; `email-images` existe como soporte del editor de comunicaciones. No se declaran en migraciones: se crean desde el dashboard de Supabase. No hay más buckets en uso.
 
 ### RLS
 Habilitado en todas las tablas; la app opera vía service role así que las políticas son defensa en profundidad. Helpers `private.has_any_role()`, `is_admin()`, `is_own_member()`. `vacancies` tiene SELECT público por decisión de negocio; `report_snapshots` es deny-all (solo service role) a propósito.
@@ -341,17 +346,22 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`); asignación en `member_role
 
 **Seguimientos cerrados 2026-07-28:** el param `vista` legacy de /eventos se retiró; el último productor de flyers base64 (detalle de evento) pasó al endpoint de Storage; `data:` en `img-src` se queda **a propósito** — el QR de TOTP en /configuracion/seguridad lo usa (data:image/svg+xml).
 
+3. `leader_evaluations` es **esquema sin flujo**: la tabla existe (grupo, dirigente, nota, comentarios) pero tiene 0 filas y no hay pantalla ni correo que la escriba. Decidir si se implementa la retroalimentación al dirigente o se retira la tabla.
+
 **Operativos (fuera del código, acciones del usuario/administración):**
-- Verificar que la edge function `process-email-queue` no duplique los crons de vercel.json.
-- Agregar `HEALTHCHECK_URL_STORAGE_ORPHANS` (y decidir si `report-snapshots` debe pingear healthcheck).
+- Agregar las 9 `HEALTHCHECK_URL_*` en Vercel — la lista completa, con el horario de cada cron, está en `.env.example`. Ya no falta ningún ping del lado del código.
 - Env vars de Supabase en Vercel solo están en Production; los deploys Preview fallan por eso.
-- Configurar Healthchecks/Sentry en env.
+- Configurar Sentry (`SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`); hoy no hay reporte de errores en producción.
 - Confirmar SMTP de Supabase Auth en producción (lo usa la invitación automática de cuentas).
+
+*(Cerrado 2026-08-06: la edge function `process-email-queue` no existe — el proyecto no tiene ninguna edge function desplegada, así que no duplica nada.)*
 
 **Plan de ejecución:** la cola completa priorizada por fases está en [`docs/plan-desarrollo.md`](plan-desarrollo.md).
 
-**Planeado para fases siguientes:**
-- Canal WhatsApp en comunicaciones (hoy solo modelado en el esquema).
+**Planeado para fases siguientes (requieren definición de producto):**
+- Campañas como tipo de matrícula (CAM-1): ¿sin prerequisitos? ¿cupos? ¿pago?
+- Canal WhatsApp en comunicaciones (hoy solo modelado en el esquema); falta elegir proveedor y costos.
+- Pagos por tarjeta / SINPE directo: el esquema ya soporta los métodos; la UI se retiró y está marcada FASE FUTURA en el código.
 
 **Decisiones confirmadas (no son deuda):**
 - No hay panel admin de sedes/org: intencional, las sedes se administran directamente en la BD.
