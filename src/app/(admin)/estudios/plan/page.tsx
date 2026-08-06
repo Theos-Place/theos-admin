@@ -14,6 +14,7 @@ import { ExpandableDescription } from '@/components/studies/ExpandableDescriptio
 import { ChevronRight, ArrowDown, Plus, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { studyCostLabel } from '@/lib/studies/cost-label'
+import { visiblePlans, stageRank } from '@/lib/studies/plan-visibility'
 
 function StageLabel({ children, color }: { children: React.ReactNode; color: 'navy' | 'teal' | 'coral' | 'purple' }) {
   const styles = {
@@ -207,7 +208,13 @@ export default function PlanDeEstudiosPage() {
   // Solo se ocultan las charlas NO curriculares (ej. BUS "¿Adónde va este bus?").
   // Los estudios reales desactivados sí son curriculares → se muestran marcados
   // como inactivos (is_archived: gris + badge "Desactivado", ordenados al final).
-  const curricular = useMemo(() => studyTypes.filter(s => s.is_curricular !== false), [studyTypes])
+  // EST-11 · Los DESACTIVADOS son solo para quien administra estudios. El
+  // endpoint ya no se los manda a nadie más; esto es la misma regla del lado de
+  // la página (y lo que vale si la lista viene de una caché anterior).
+  const curricular = useMemo(
+    () => visiblePlans(studyTypes.filter(s => s.is_curricular !== false), canManage),
+    [studyTypes, canManage],
+  )
   const byStage = (stage: string) => [...curricular.filter(s => s.stage === stage)].sort(withinStage(stage))
   const niveles    = useMemo(() => byStage('niveles'), [curricular])
   const inicial    = useMemo(() => byStage('inicial'), [curricular])
@@ -215,16 +222,17 @@ export default function PlanDeEstudiosPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- mismo patrón que las etapas de arriba (byStage es estable por render)
   const avanzada   = useMemo(() => byStage('avanzada'), [curricular])
   const campana    = useMemo(() => byStage('campaña'), [curricular])
-  // Listado final ordenado por etapa.
-  const STAGE_RANK: Record<string, number> = { niveles: 0, inicial: 1, intermedia: 2, avanzada: 3, 'campaña': 4 }
-  // CDEB y CDC ("cómo dar...") van al final de toda la lista, justo antes de los
-  // descontinuados (que siempre quedan de últimos).
-  const isInvTail = (code: string) => (code === 'CDEB' || code === 'CDC' ? 1 : 0)
+  // Listado final ordenado por etapa (stageRank: campañas SIEMPRE al final).
+  //
+  // BUG EST-11 que arregla esto: antes había un `isInvTail` que empujaba CDEB y
+  // CDC al fondo de TODA la lista, ANTES de comparar la etapa. Resultado: las
+  // campañas quedaban intercaladas entre Hermenéutica y esos dos avanzados. El
+  // orden dentro de la etapa avanzada ya lo pone TAIL en withinStage, así que
+  // ese desempate sobraba.
   const sortedStudyTypes = useMemo(
     () => [...curricular].sort((a, b) =>
       archLast(a, b)
-      || isInvTail(a.code) - isInvTail(b.code)
-      || (STAGE_RANK[a.stage] ?? 99) - (STAGE_RANK[b.stage] ?? 99)
+      || stageRank(a.stage) - stageRank(b.stage)
       || withinStage(a.stage)(a, b),
     ),
     [curricular],

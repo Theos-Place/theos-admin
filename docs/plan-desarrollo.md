@@ -1536,7 +1536,26 @@ Tests: evento sin encuesta se comporta igual; el cron no reenvía; la encuesta p
 futuro no se manda antes de tiempo.
 ```
 
-### [ ] EST-11 · Plan de estudios: EB desactivados solo para staff + campañas al final
+### [x] EST-11 · Plan de estudios: EB desactivados solo para staff + campañas al final
+
+> **HECHO 2026-08-06.** Regla pura en `src/lib/studies/plan-visibility.ts` (orden canónico
+> de etapas, `canSeeArchivedPlans`, `visiblePlans`), usada por la página Y por
+> `GET /api/studies/plans` — el miembro ya no los recibe en el payload aunque adivine la
+> URL. 9 tests.
+>
+> **CAUSA DEL BUG DEL ORDEN:** no era `STUDY_STAGES` (ya tenía campañas al final) ni las
+> secciones visuales (también correctas). Era el listado plano de la tabla: un desempate
+> `isInvTail` empujaba CDEB y CDC al fondo de TODA la lista ANTES de comparar la etapa, así
+> que las campañas quedaban entre Hermenéutica y esos dos. El orden dentro de la etapa
+> avanzada ya lo pone `TAIL` en `withinStage`, así que ese desempate sobraba: se eliminó.
+>
+> `/matricula` y `/estudios/analisis` se revisaron y ya estaban bien (la primera tiene su
+> `STAGE_ORDER` correcto, la segunda no lista niveles ni campañas y ya excluía los
+> desactivados).
+>
+> **Impacto medido en producción:** de 40 planes, 9 están desactivados (LECTPROP, PAREJAS,
+> PLANDANIEL, QEJ, TEOAT, APO, EFE, GAL, MDM). Esos 9 los veía cualquiera con sesión,
+> incluido el rol miembro; ahora solo los ve quien administra estudios.
 Archivos: `src/app/(admin)/estudios/plan/*`, `src/data/study-catalog.ts` (`STUDY_STAGES`), `src/lib/studies/eligibility.ts` (`LEVEL_TO_STAGE`)
 
 ```

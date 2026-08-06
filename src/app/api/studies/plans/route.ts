@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getStudyPlans, createPlan } from '@/lib/supabase/queries/studies'
+import { visiblePlans, canSeeArchivedPlans } from '@/lib/studies/plan-visibility'
 import { planWriteSchema } from './schema'
 
 export async function GET() {
@@ -10,7 +11,9 @@ export async function GET() {
     const auth = await requireRoles()
     if (auth.res) return auth.res
     const plans = await getStudyPlans()
-    return NextResponse.json(plans)
+    // EST-11: los estudios DESACTIVADOS son solo para quien administra estudios.
+    // Se filtran acá y no en la página: si no, bastaría con mirar el payload.
+    return NextResponse.json(visiblePlans(plans, canSeeArchivedPlans(auth.ctx.roles)))
   } catch (error) {
     console.error('GET /api/studies/plans:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
