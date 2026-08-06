@@ -102,9 +102,27 @@ function hoistPreheader(content: string): { preheader: string; rest: string } {
   return { preheader: m[0].trim(), rest: content.replace(PREHEADER_RE, '') }
 }
 
+/**
+ * Fuerza el color del texto de los botones EN LÍNEA.
+ *
+ * El bloque <style> ya dice `.cta-button { color:#ffffff }`, pero varios
+ * clientes de correo lo ignoran o lo tiran, y entonces le aplican al enlace SU
+ * color por defecto: el botón coral con el texto azul (reportado 2026-08-06).
+ * Lo único que respetan todos es el atributo `style` del propio <a>.
+ *
+ * Solo toca los <a> que NO traen ya un style propio: si alguien puso un color a
+ * mano, se respeta.
+ */
+export function inlineButtonColors(html: string): string {
+  return html.replace(
+    /<a\b(?![^>]*\sstyle=)([^>]*\bclass="(?:cta-button|cta-secondary)"[^>]*)>/gi,
+    '<a$1 style="color:#ffffff; text-decoration:none;">',
+  )
+}
+
 export function renderEmail(content: string, opts?: { unsubscribeUrl?: string; logoUrl?: string }): string {
   const logoUrl = opts?.logoUrl ?? LOGO_URL
-  const { preheader, rest } = hoistPreheader(content)
+  const { preheader, rest } = hoistPreheader(inlineButtonColors(content))
   const baja = opts?.unsubscribeUrl
     ? `
   <div class="subfooter">
