@@ -20,8 +20,9 @@ ahora, con los grupos abiertos de cada uno.
 2. Elegí el estudio. Si hay varios grupos, elegí el que te sirva por día, hora y zona.
 3. Confirmá. Si el estudio tiene costo, el sistema te lo dice antes.
 4. Listo: **ya quedaste matriculado**. El lugar es tuyo.
-5. Si el estudio tiene costo, **subí el comprobante** del SINPE o la transferencia. Podés
-   hacerlo en ese momento o después, desde tu perfil.
+5. Si el estudio tiene costo, el sistema te **pide el comprobante en el momento** — el
+   screenshot del SINPE o la transferencia, y el número de referencia. Es a propósito: es
+   cuando tenés la captura a mano.
 
 ## Por qué no aparece el estudio que quiero
 
@@ -40,8 +41,13 @@ Esta es la duda más común, y casi siempre es una de estas cinco:
 
 ## Si hay que pagar
 
-El pago no bloquea la matrícula: quedás inscrito de una, y el comprobante lo revisa finanzas
-por su cuenta. Tu lugar en el grupo no depende de eso.
+El comprobante **siempre se pide**, y siempre en el mismo momento: apenas confirmás. Vale
+igual si te matriculás vos o si te matricula alguien del staff.
+
+Ahora bien, pedirlo no es lo mismo que condicionar el cupo: **la matrícula ya quedó hecha**
+antes de que subas nada. Si cerrás la ventana sin subir el comprobante, seguís matriculado y
+el cobro queda pendiente — finanzas lo revisa por su cuenta y tu lugar en el grupo no depende
+de eso.
 
 **Si el comprobante se rechaza** — porque la imagen no se lee, el monto no coincide o la
 referencia está repetida — te avisamos y subís otro. **No perdés la matrícula**: seguís en el
@@ -55,6 +61,15 @@ de tu cuenta.
 
 Pedí una beca antes de subir cualquier comprobante: hay una guía aparte de cómo hacerlo. Si
 te la aprueban completa, la matrícula no requiere pago; si es parcial, pagás la diferencia.
+
+## Si te matriculaste en el grupo equivocado
+
+Se pide un **cambio de grupo** desde el sistema, sin escribirle a nadie. El enlace está en
+tres lugares: la pantalla de confirmación apenas te matriculás, la ficha de tu grupo y
+**Pagos pendientes**.
+
+Lo revisa el coordinador de estudios: **no es automático**. Mientras tanto seguís matriculado
+en tu grupo actual, así que no dejes de ir a clases.
 
 > Si te matriculaste y ya no vas a poder llevar el estudio, avisale a tu dirigente o al
 > comité de estudios. El cupo le sirve a otra persona.

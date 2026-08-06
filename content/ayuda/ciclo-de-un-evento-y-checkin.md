@@ -29,6 +29,10 @@ Lo que más se olvida configurar:
 - **Qué pagan los servidores del comité organizador.** Por defecto **pagan igual que todos**.
   Si querés otra cosa, hay que configurarlo en el evento: o un **precio de servidor** más
   bajo, o **exentarlos** (ahí el tiquete sale exento, sin cobro). No pasa solo.
+- **Formulario de inscripción** (opcional). Se elige uno ya creado y se le pide a quien se
+  inscribe. Ojo con esto: **la inscripción no depende del formulario**. El cupo, el pago y el
+  check-in viven en la inscripción; la respuesta queda enlazada como información adicional.
+  Alguien que se inscribe y no llena el formulario está inscrito igual.
 - **Sub-eventos**, si el evento tiene actividades internas con cupo propio.
 - **Recurrencia**, si se repite. Cancelar una fecha de una serie recurrente no cancela la
   serie: se marca esa fecha como excepción.
@@ -56,6 +60,31 @@ no sube.
 
 Los números exactos: asistencia activa es 6 charlas en los últimos 6 meses completos más 1 en
 los últimos 60 días; reforzada, 12.
+
+## Encargados del evento
+
+Si una persona organiza la actividad pero no tiene el módulo de Eventos, no hace falta darle
+el rol: en la configuración del evento, sección **Encargados de este evento**, se la agrega y
+con eso gestiona **ese** evento completo —inscripciones, check-in, servidores, reportes y la
+edición— y ningún otro. Si el evento tiene formulario, lo hereda.
+
+Nombrar encargados es de dirección, encargado de staff, comunicaciones y admin. Quien recibe
+el permiso no lo reparte.
+
+## La encuesta de satisfacción
+
+Se activa en el evento y se programa: **qué** se manda (un formulario o una plantilla de
+correo) y **cuándo** (2 horas después de que termine, al día siguiente, 3 días, una semana, o
+una fecha y hora exactas).
+
+Va a **quienes hicieron check-in**, no a todos los inscritos: quien no llegó no tiene qué
+evaluar. Eso es fijo.
+
+El envío es automático y sale una sola vez. En la ficha del evento se ve el estado: programada
+para tal fecha, o enviada a N personas con N respuestas.
+
+> Si movés la fecha de fin del evento, la programación se recalcula. Si apagás la encuesta,
+> se borra: no queda un envío esperando.
 
 ## Después del evento
 

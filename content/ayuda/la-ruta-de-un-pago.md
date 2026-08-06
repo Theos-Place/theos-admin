@@ -45,6 +45,16 @@ esperar.
 rechaza y pasan 72 horas sin uno nuevo, la inscripción al evento se vence y el lugar vuelve a
 estar disponible.
 
+## Cómo saber de qué es un cobro
+
+Cada pago dice **de qué tipo es** —Estudio, Evento, Prematrimonial o Folletos— y **de qué
+cosa**, con el nombre del estudio o del evento: *"Estudio · Transformados"*, *"Evento · Campa
+de servidores 2026"*.
+
+En los estudios se muestra el nombre del **estudio**, no el del grupo. El grupo dice dónde y
+con quién ("TRANS — Centro"); en una lista de pagos lo que hace falta saber es qué se está
+pagando.
+
 ## Cosas que confunden
 
 **Ya pagué y sigue diciendo pendiente.** Falta subir el comprobante, o está en revisión. La

@@ -34,6 +34,30 @@ Dos cosas que confunden seguido:
   respeta los requisitos del plan (el estudio anterior aprobado, la invitación si el plan es
   por invitación, la edad si aplica).
 
+### Restringir el grupo a cierta gente (opcional)
+
+A veces un grupo es solo para dirigentes, o solo para quienes ya llevaron cierto estudio. En
+crear/editar grupo hay un bloque **"Restringir este grupo a…"** que limita a quién se le
+ofrece. Se arma con las mismas condiciones del filtro del padrón, acotadas a las que
+describen a una persona: dirigente, servicio, estudio, edad, estado civil y donador.
+
+Tres cosas importantes:
+
+- Es **del grupo, no del plan**. Dos grupos de la misma capacitación pueden tener
+  restricciones distintas, o uno tenerla y el otro no.
+- **Se suma** a los requisitos de la etapa, no los reemplaza. Un dirigente que no cumple la
+  asistencia de Intermedia sigue bloqueado.
+- Mientras la armás, el sistema te dice **a cuánta gente alcanza**. Si dice *nadie*, la
+  condición quedó demasiado estrecha y ese grupo no se le va a ofrecer a ninguna persona.
+
+Quien no cumple no ve el grupo. Si el staff necesita matricular a alguien igual, puede
+hacerlo desde la ficha del grupo confirmando la excepción — queda registrado quién la
+autorizó.
+
+> **El contacto del dirigente** está en la ficha del grupo: teléfono (con enlace a WhatsApp)
+> y correo, del dirigente y del co-dirigente. Solo lo ve quien gestiona el grupo; un
+> estudiante inscrito ve el nombre, no el celular.
+
 ## 3. En curso
 
 Se toma **asistencia clase por clase** y, si el plan lleva folleto, se cobra.

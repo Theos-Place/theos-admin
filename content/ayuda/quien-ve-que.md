@@ -38,10 +38,16 @@ poder de más: `folletos` (la cola de folletos), `revision_pagos` (revisar compr
 editar grupos, y nada más de estudios: sin plan, dirigentes, análisis ni solicitudes),
 `forms` (todos los formularios y sus respuestas), `reportes`, `solo_lectura`.
 
-**Acceso a un formulario suelto** — sin ser un rol: en la configuración de un formulario se
-puede dar acceso a personas concretas, para que vean y exporten las respuestas de **ese**
-formulario y de ningún otro (el caso típico es la encargada de una actividad). No las
-habilita a editar las preguntas ni a ver los demás formularios.
+**Permisos sobre UNA cosa** — no son roles: se dan sobre un recurso concreto y no alcanzan a
+nada más. Son la forma de delegar una actividad sin abrir un módulo entero.
+
+- **Encargada de un evento** — se agrega en la configuración del evento, sección *Encargados
+  de este evento*. Ve y gestiona **ese** evento completo (inscripciones, check-in, servidores,
+  reportes y edición) sin tener el módulo de Eventos, y ningún otro evento. Si el evento tiene
+  formulario, lo hereda: no hay que dárselo por separado. Solo dirección, encargado de staff,
+  comunicaciones y admin pueden nombrar encargados — quien recibe el permiso no lo reparte.
+- **Acceso a un formulario suelto** — en la configuración del formulario. Ve y exporta las
+  respuestas de **ese** formulario y de ningún otro. No habilita a editar las preguntas.
 
 **Roles que salen de servir** — `dirigente` (dirige un grupo de estudio) y `lider_comite`
 (lidera un comité). Estos dos no se piden: se asignan cuando entrás a ese puesto, y se quitan

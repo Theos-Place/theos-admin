@@ -13,7 +13,9 @@ import { hasManagementRole, type RoleId } from '@/lib/auth/roles'
 import { parseFrontmatter, type FrontmatterValue } from './frontmatter'
 
 export const HELP_SECTIONS = [
-  'Primeros pasos', 'Estudios', 'Eventos', 'Pagos', 'Servidores', 'Comunicaciones', 'Finanzas',
+  'Primeros pasos', 'Estudios', 'Eventos', 'Pagos', 'Servidores', 'Comunicaciones',
+  // Formularios va después de Comunicaciones porque ahí vive en el menú.
+  'Formularios', 'Finanzas',
 ] as const
 export type HelpSection = (typeof HELP_SECTIONS)[number]
 

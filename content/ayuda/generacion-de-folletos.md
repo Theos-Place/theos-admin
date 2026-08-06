@@ -34,6 +34,22 @@ Y dos que dispara una persona:
 > en el nivel siguiente sin material. Los hitos de un bloque tampoco generan pedidos: mandan
 > el **reporte** de folletos por sede, para planificar la impresión.
 
+## Ver el año completo
+
+Los hitos de folletos cuelgan de los **bloques de capacitación**, y son fáciles de perder de
+vista porque el primero cae **3 semanas antes** de que el bloque abra.
+
+En **Estudios → Bloques** hay un botón **Calendario** que muestra los 12 meses del año con
+cada bloque como una barra, y sus cuatro hitos marcados encima: folleto preliminar, folleto de
+confirmación, apertura y cierre de matrícula. La barra arranca en el primer folleto, no en la
+apertura — esa es la fecha en que el trabajo empieza de verdad.
+
+Abajo, en su propio carril, van las ventanas de matrícula de los grupos, para ver de un
+vistazo qué se solapa con qué.
+
+Es una vista alternativa: la lista de siempre sigue estando, y en celular se muestra esa (un
+año entero no se lee en una pantalla angosta).
+
 ## Los cuatro estados
 
 `creada → en impresión → enviado/entregado → cerrada`

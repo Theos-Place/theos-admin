@@ -173,3 +173,27 @@ describe('helpNeighbors', () => {
     expect(helpNeighbors(docs, 'nope')).toEqual({ prev: null, next: null })
   })
 })
+
+// ── El centro de ayuda real ─────────────────────────────────────────────────
+// Guard de contenido: los artículos de content/ayuda tienen que parsear bien.
+// Un `seccion` mal escrito NO revienta — cae en "Primeros pasos" en silencio —,
+// así que se vigila acá.
+describe('los artículos publicados', () => {
+  it('todos declaran una sección válida y un título', async () => {
+    const { readdirSync, readFileSync } = await import('node:fs')
+    const archivos = readdirSync('content/ayuda').filter(f => f.endsWith('.md'))
+    expect(archivos.length).toBeGreaterThan(10)
+
+    for (const f of archivos) {
+      const doc = parseHelpDoc(f.replace(/\.md$/, ''), readFileSync(`content/ayuda/${f}`, 'utf8'))
+      const declarada = /^seccion:\s*(.+)$/m.exec(readFileSync(`content/ayuda/${f}`, 'utf8'))?.[1]?.trim()
+      expect(doc.titulo, `${f} sin título`).not.toBe(doc.slug)
+      expect(doc.seccion, `${f}: sección "${declarada}" no existe`).toBe(declarada)
+      expect(doc.resumen, `${f} sin resumen`).toBeTruthy()
+      // Las de rol tienen que decir cuáles: `roles: []` no la ve nadie.
+      if (doc.visibilidad === 'roles') {
+        expect(doc.roles.length, `${f} con visibilidad de roles y sin roles`).toBeGreaterThan(0)
+      }
+    }
+  })
+})
