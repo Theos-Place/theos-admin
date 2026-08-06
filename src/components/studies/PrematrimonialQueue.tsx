@@ -117,7 +117,7 @@ export function PrematrimonialQueue() {
               {r.available_days.length > 0 && <p className="inline-flex flex-wrap items-center gap-1.5"><Calendar size={13} /> {r.available_days.join(', ')} · {r.available_times.join('/')}</p>}
               {r.zones.length > 0 && <p className="flex items-center gap-1.5"><MapPin size={13} /> {r.zones.join(', ')}</p>}
               {r.can_host && <p className="flex items-center gap-1.5"><Home size={13} /> Ofrece casa{r.host_address ? `: ${r.host_address}` : ''}{r.host_maps_url ? ` · ${r.host_maps_url}` : ''}</p>}
-              {(r.ceremony_date || r.officiant) && <p className="flex items-center gap-1.5"><Clock size={13} /> Boda: {r.ceremony_date ? `${r.ceremony_date}${r.ceremony_date_defined ? '' : ' (aprox)'}` : 'sin fecha'}{r.venue_outside_gam ? ' · fuera del GAM' : ''}{r.officiant ? ` · oficia: ${r.officiant}` : ''}</p>}
+              {(r.ceremony_date || r.officiant) && <p className="flex items-center gap-1.5"><Clock size={13} /> Boda: {r.ceremony_date ? `${r.ceremony_date}${r.ceremony_date_defined ? '' : ' (aprox)'}` : 'sin fecha'}{r.venue_outside_gam ? ' · fuera del GAM' : ''}{/* PRE-10: solo las solicitudes viejas traen oficiante. */}{r.officiant ? ` · oficia: ${r.officiant}` : ''}</p>}
               {r.comments && <p className="text-navy-light/60">“{r.comments}”</p>}
               {/* PRE-9: antecedentes de la pareja. Las solicitudes viejas no
                   los tienen → se muestran con "—". */}

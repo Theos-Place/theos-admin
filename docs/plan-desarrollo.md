@@ -1691,6 +1691,54 @@ mezclados en la vista de reubicaciones) tienen que estar arreglados antes, o vam
 visible un flujo que no se puede completar.
 ```
 
+### [x] PRE-10 · Quitar la pregunta del oficiante y fusionar el paso de ceremonia
+
+> **HECHO 2026-08-06.** Fuera la pregunta, la constante `OFFICIANTS`, el estado y el campo
+> del payload. El paso "La ceremonia" —que ya solo tenía la fecha— se fusionó con el de
+> logística, bajo el subtítulo "La boda". El wizard queda en **3 pasos** (el plan decía
+> "de 5 a 4": PRE-9 ya había quitado uno antes).
+>
+> · La regla de la fecha NO se tocó: mismo `CEREMONY_DATE_QUESTION` (importado, no copiado),
+>   mismo mínimo de 6 meses y mismo checkbox, ahora dentro del paso 2.
+> · El placeholder de comentarios ya no menciona al oficiante.
+> · Renumerado el indicador, el corte de "Continuar/Enviar" y verificadas las validaciones:
+>   la del género de la pareja sigue en el paso 1 y la de antecedentes en el 2.
+> · DATOS HISTÓRICOS intactos: la columna `officiant` no se borra y la cola la sigue
+>   mostrando. En producción hay 1 solicitud y tiene oficiante — se sigue leyendo.
+> · 10 tests, incluido que la fecha quedó dentro del paso 2 y que la cola conserva el campo.
+Archivos: `src/app/(admin)/matricula/prematrimonial/page.tsx` (constante `OFFICIANTS` línea ~28, paso 3 líneas ~410-430, payload línea ~193), `src/app/api/studies/prematrimonial/route.ts`, `src/components/studies/PrematrimonialQueue.tsx`
+
+```
+Theos deja de ofrecer el servicio de dirigir la ceremonia, así que sale del wizard
+prematrimonial.
+
+1) QUITAR la pregunta "¿Quién te gustaría que dirigiera la ceremonia?" y la constante
+   OFFICIANTS (línea ~28). Sacar `officiant` del payload que se manda al crear la solicitud
+   (línea ~193).
+2) FUSIONAR EL PASO (decisión confirmada): al quitar el oficiante, el paso 3 "La ceremonia"
+   queda solo con la fecha de la boda y los comentarios. Mové esos dos campos al paso de
+   LOGÍSTICA y eliminá el paso 3. El wizard baja de 5 a 4 pasos.
+   - La fecha conserva su regla y su copy exacto (PRE-3/PRE-9): mínimo hoy + 6 meses
+     calendario, con el checkbox "Fecha ya definida" y el texto
+     "¿Tienen fecha definida o aproximada para la boda? (Si ya la tienen, indicá la fecha.
+     Recordá que el curso debe iniciar mínimo 6 meses antes)". NO la toques.
+   - El placeholder del textarea de comentarios menciona hoy al oficiante ("si elegiste
+     'Otro' para el oficiante, especificá acá…"): reescribilo, que ya no aplica.
+   - Renumerá los pasos y el indicador de progreso, y revisá la navegación
+     (setStep, los guards de "no podés avanzar si…" y el botón Atrás del primer paso).
+     Ojo con la validación del paso 2 (backgroundError) y la del paso 1 (género de la
+     pareja) — que sigan disparando en el paso correcto después del renumerado.
+3) DATOS HISTÓRICOS: la columna officiant de prematrimonial_requests NO se borra, igual que
+   se hizo con venue_* en PRE-9. Las solicitudes viejas deben seguir mostrando su oficiante
+   en la cola (PrematrimonialQueue); las nuevas lo muestran vacío o simplemente no muestran
+   esa fila.
+4) Quitá la validación server-side de officiant si existe, y revisá que el zod del POST no
+   lo exija.
+
+Tests: el wizard completa con 4 pasos; la regla de los 6 meses sigue funcionando en su
+nueva ubicación; una solicitud vieja con oficiante se lee bien en la cola.
+```
+
 ---
 
 ## Backlog (fases siguientes, requieren definición de producto)

@@ -177,7 +177,9 @@ export async function POST(req: NextRequest) {
         ceremony_date_defined: !!ceremonia.ceremony_date_defined,
         venue_defined: !!ceremonia.venue_defined,
         venue_outside_gam: !!ceremonia.venue_outside_gam,
-        officiant: ceremonia.officiant ?? null,
+        // PRE-10: el oficiante salió del wizard (Theos dejó de dirigir
+        // ceremonias). La columna NO se borra: las solicitudes viejas siguen
+        // mostrando el suyo en la cola. Las nuevas nacen sin él.
         comments: ceremonia.comments ?? null,
       },
       receiptPath: path,

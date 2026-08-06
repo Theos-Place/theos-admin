@@ -25,7 +25,6 @@ const TIMES = ['Tarde', 'Noche']
 // de sedes. Registros viejos con zonas fuera de la lista se muestran tal cual
 // en la cola (PrematrimonialQueue hace join de lo guardado).
 const ZONES = ['Este de San José', 'Oeste de San José', 'Alajuela', 'Cartago', 'Liberia', 'Heredia']
-const OFFICIANTS = ['Ernesto Desanti', 'Roberto Acosta', 'Héctor Morales', 'Mario Madrigal', 'Pablo Rojas', 'Roberto Morales', 'No requerimos de este servicio', 'Otro (especificar en comentarios)']
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -130,7 +129,6 @@ export default function PrematrimonialWizardPage() {
   // (datos históricos) y las solicitudes nuevas las guardan en false.
   const venueDefined = false
   const venueOutsideGam = false
-  const [officiant, setOfficiant] = useState('')
   // PRE-9: antecedentes de la pareja (paso 2) + diagnóstico (paso 4).
   const [datingTime, setDatingTime] = useState('')
   const [firstMarriage, setFirstMarriage] = useState<boolean | null>(null)
@@ -190,7 +188,7 @@ export default function PrematrimonialWizardPage() {
       fd.set('spouse_member_id', spouse.id)
       fd.set('reference_code', reference.trim())
       fd.set('logistica', JSON.stringify({ available_days: days, available_times: times, zones, can_host: canHost, host_address: hostAddress.trim() || null, host_maps_url: hostMaps.trim() || null }))
-      fd.set('ceremonia', JSON.stringify({ ceremony_date: ceremonyDate || null, ceremony_date_defined: dateDefined, venue_defined: venueDefined, venue_outside_gam: venueOutsideGam, officiant: officiant || null, comments: comments.trim() || null }))
+      fd.set('ceremonia', JSON.stringify({ ceremony_date: ceremonyDate || null, ceremony_date_defined: dateDefined, venue_defined: venueDefined, venue_outside_gam: venueOutsideGam, comments: comments.trim() || null }))
       fd.set('background', JSON.stringify({
         dating_time: datingTime, first_marriage: firstMarriage,
         previous_marriage_notes: prevMarriageNotes, has_children: hasChildren,
@@ -288,7 +286,7 @@ export default function PrematrimonialWizardPage() {
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal/15"><Heart size={20} className="text-teal-deep" /></div>
         <div>
           <h1 className="text-xl font-bold text-navy font-display">Inscripción al Curso Prematrimonial</h1>
-          <p className="text-[13px] text-navy-light/70 font-body">Paso {step} de 4</p>
+          <p className="text-[13px] text-navy-light/70 font-body">Paso {step} de 3</p>
         </div>
       </div>
 
@@ -404,33 +402,23 @@ export default function PrematrimonialWizardPage() {
                 <p className="rounded-xl bg-coral/5 px-4 py-3 text-[13px] text-coral-deep font-body" role="alert">{backgroundError}</p>
               )}
             </div>
+            <div className="mt-2 space-y-4 border-t border-navy/10 pt-4">
+              <h3 className="font-semibold text-navy font-display">La boda</h3>
+              {/* PRE-9: la pregunta del LUGAR se quitó. PRE-10: la del OFICIANTE
+                  también — Theos dejó de ofrecer ese servicio. Queda la fecha,
+                  con su regla y su copy exacto (mínimo hoy + 6 meses). */}
+              <div>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{CEREMONY_DATE_QUESTION}</p>
+                <input type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+                <label className="ml-3 text-[13px] text-navy font-body"><input type="checkbox" checked={dateDefined} onChange={e => setDateDefined(e.target.checked)} /> Fecha ya definida</label>
+              </div>
+              <textarea value={comments} onChange={e => setComments(e.target.value)} rows={3} placeholder="Comentarios adicionales (opcional)" className="w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+            </div>
           </div>
         )}
 
-        {/* PASO 3 — ceremonia */}
+        {/* PASO 3 — diagnóstico + pago (PRE-10: era el 4) */}
         {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="font-semibold text-navy font-display">La ceremonia</h2>
-            {/* PRE-9: la pregunta del LUGAR se quitó (las columnas venue_* quedan
-                por los datos históricos). Solo la fecha, con el copy exacto. */}
-            <div>
-              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{CEREMONY_DATE_QUESTION}</p>
-              <input type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
-              <label className="ml-3 text-[13px] text-navy font-body"><input type="checkbox" checked={dateDefined} onChange={e => setDateDefined(e.target.checked)} /> Fecha ya definida</label>
-            </div>
-            <div>
-              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">¿Quién te gustaría que dirigiera la ceremonia?</p>
-              <select value={officiant} onChange={e => setOfficiant(e.target.value)} className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body">
-                <option value="">Seleccioná…</option>
-                {OFFICIANTS.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <textarea value={comments} onChange={e => setComments(e.target.value)} rows={3} placeholder="Comentarios adicionales (si elegiste 'Otro' para el oficiante, especificá acá para solicitar autorización)" className="w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
-          </div>
-        )}
-
-        {/* PASO 4 — diagnóstico + pago */}
-        {step === 4 && (
           <div className="space-y-4">
             {/* PRE-9: diagnóstico (opcional) antes del pago. */}
             <div className="space-y-2 border-b border-navy/10 pb-4">
@@ -493,7 +481,7 @@ export default function PrematrimonialWizardPage() {
             className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-navy-light/70 hover:bg-navy/5 font-body">
             <ArrowLeft size={15} /> {step === 1 ? 'Salir' : 'Atrás'}
           </button>
-          {step < 4 ? (
+          {step < 3 ? (
             <button type="button" disabled={
               (step === 1 && (!spouse || spouse.same_gender || !!spouse.gender_missing))
               || (step === 2 && backgroundError !== null)

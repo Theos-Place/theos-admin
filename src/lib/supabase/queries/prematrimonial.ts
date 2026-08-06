@@ -65,6 +65,7 @@ export type PrematCeremonia = {
   ceremony_date_defined: boolean
   venue_defined: boolean
   venue_outside_gam: boolean
+  /** PRE-10: ya no se pregunta. Se deja opcional por los datos históricos. */
   officiant?: string | null
   comments?: string | null
 }
