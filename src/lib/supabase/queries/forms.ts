@@ -182,6 +182,8 @@ export type FormWriteInput = {
   entity_id?: string | null
   slug?: string | null
   is_active?: boolean
+  /** Abierto a cualquiera con el link (escapatoria del guard de llenado). */
+  is_public?: boolean
   /** FRM-2 · Encabezado. null limpia el campo (quitar el flyer). */
   hero_image_url?: string | null
   hero_title?: string | null

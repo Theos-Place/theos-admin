@@ -109,6 +109,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const [fields, setFields]           = useState<FormFieldNew[]>([])
   // FRM-2 · Encabezado del formulario (flyer + título + bienvenida).
   const [hero, setHero]               = useState<FormHeroData>({})
+  // Quién puede LLENARLO (2026-08-06). Por defecto NO: si el formulario no
+  // cuelga de un evento ni de un grupo y no se manda por correo, no hay a quién
+  // ofrecérselo, así que queda cerrado hasta que alguien lo abra a propósito.
+  const [isPublic, setIsPublic]       = useState(false)
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
   const [focusLogic, setFocusLogic]   = useState(false)
   const [showLogicPanel, setShowLogicPanel] = useState(false)
@@ -129,6 +133,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         setDescription(f.description)
         setCategory(f.category)
         setStatus(f.is_active ? 'active' : 'draft')
+        setIsPublic(f.is_public)
         setFields(f.fields)
         setHero({
           hero_image_url: f.hero_image_url,
@@ -183,7 +188,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     setSaving(true)
     const isActive = (nextStatus ?? status) === 'active'
     const payload = {
-      name, description, category, is_active: isActive, fields,
+      name, description, category, is_active: isActive, is_public: isPublic, fields,
       hero_image_url: hero.hero_image_url ?? null,
       hero_title: hero.hero_title ?? null,
       hero_subtitle: hero.hero_subtitle ?? null,
@@ -359,6 +364,26 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
         {/* Center: Canvas */}
         <div className="flex-1 md:overflow-y-auto px-4 md:px-6 py-5">
+          {/* Quién puede llenarlo. */}
+          <div className="max-w-2xl mx-auto mb-4 rounded-2xl bg-surface-card shadow-[var(--shadow-md)] px-4 py-3">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5 accent-coral"
+                checked={isPublic}
+                onChange={e => setIsPublic(e.target.checked)}
+              />
+              <span>
+                <span className="block text-sm text-navy font-body">Abierto a cualquiera con el link</span>
+                <span className="block text-[12px] text-navy-light/60 font-body mt-0.5">
+                  {isPublic
+                    ? 'Cualquier persona con sesión que tenga el link puede llenarlo. Usalo para los que se comparten por WhatsApp.'
+                    : 'Solo lo llena a quien se lo mandes por correo. Si el formulario es de un evento o de un grupo, sus inscritos ya entran sin marcar esto.'}
+                </span>
+              </span>
+            </label>
+          </div>
+
           {/* FRM-2 · Encabezado, arriba del constructor de campos. */}
           <div className="max-w-2xl mx-auto mb-4">
             <HeroEditor

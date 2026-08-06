@@ -27,6 +27,10 @@ export type FillAccessInput = {
   wasSentLink: boolean
   /** Ya respondió antes (para no dejar afuera a quien está corrigiendo). */
   hasResponded: boolean
+  /** El formulario está marcado como ABIERTO (forms.is_public): cualquiera con
+   *  el link puede llenarlo. Es la escapatoria explícita para los que se
+   *  comparten por WhatsApp. */
+  isPublic: boolean
 }
 
 export type FillAccess =
@@ -62,8 +66,12 @@ export function formFillAccess(i: FillAccessInput): FillAccess {
       ? { allowed: true }
       : { allowed: false, reason: 'Este formulario es solo para las personas convocadas por el comité.' }
   }
-  // Formulario suelto SIN audiencia y sin envío registrado: no hay contra qué
-  // comparar. Se deja pasar a propósito — cerrarlo dejaría inservibles los
-  // formularios que se comparten por WhatsApp o se linkean a mano.
-  return { allowed: true }
+  // Formulario suelto SIN audiencia y sin envío registrado. Cerrado por defecto
+  // (decisión 2026-08-06): si no sabemos a quién va dirigido, no va dirigido a
+  // cualquiera. Para los que sí se comparten por WhatsApp está la casilla
+  // "abierto a cualquiera con el link" (forms.is_public), que hay que marcar a
+  // propósito.
+  return i.isPublic
+    ? { allowed: true }
+    : { allowed: false, reason: NOT_FOR_YOU }
 }

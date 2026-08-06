@@ -11,6 +11,9 @@ export function formToWriteInput(body: Record<string, unknown>): FormWriteInput 
     entity_id: (body.entity_id as string) ?? null,
     slug: (body.slug as string) ?? null,
     is_active: body.is_active === undefined ? undefined : Boolean(body.is_active),
+    // Abierto a cualquiera con el link. Por defecto NO: un formulario sin
+    // audiencia definida no es para cualquiera (2026-08-06).
+    is_public: Boolean(body.is_public),
     ...heroFrom(body),
   }
 }
@@ -38,6 +41,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   if ('entity_id' in body) out.entity_id = (body.entity_id as string) ?? null
   if ('slug' in body) out.slug = (body.slug as string) ?? null
   if ('is_active' in body) out.is_active = Boolean(body.is_active)
+  if ('is_public' in body) out.is_public = Boolean(body.is_public)
   const hero = heroFrom(body)
   if ('hero_image_url' in body) out.hero_image_url = hero.hero_image_url
   if ('hero_title' in body) out.hero_title = hero.hero_title

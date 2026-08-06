@@ -12,6 +12,7 @@ const BASE: FillAccessInput = {
   isConvoked: false,
   wasSentLink: false,
   hasResponded: false,
+  isPublic: false,
 }
 
 describe('quién entra siempre', () => {
@@ -69,11 +70,21 @@ describe('preinscripción con audiencia definida (CDEB)', () => {
 })
 
 describe('formulario suelto, sin audiencia y sin envío registrado', () => {
-  it('se deja pasar a propósito', () => {
-    // Cerrarlo dejaría inservibles los formularios que se comparten por
-    // WhatsApp o se linkean a mano: no hay contra qué comparar.
-    expect(formFillAccess(BASE).allowed).toBe(true)
-    expect(formFillAccess({ ...BASE, entityType: null }).allowed).toBe(true)
+  it('CERRADO por defecto: si no sabemos a quién va, no va a cualquiera', () => {
+    expect(formFillAccess(BASE).allowed).toBe(false)
+    expect(formFillAccess({ ...BASE, entityType: null }).allowed).toBe(false)
+  })
+
+  it('se abre marcándolo como público, a propósito', () => {
+    expect(formFillAccess({ ...BASE, isPublic: true }).allowed).toBe(true)
+    expect(formFillAccess({ ...BASE, entityType: null, isPublic: true }).allowed).toBe(true)
+  })
+
+  it('marcarlo público NO abre los que tienen audiencia definida', () => {
+    // Un formulario de evento sigue siendo de sus inscritos aunque alguien
+    // marque la casilla sin pensar.
+    expect(formFillAccess({ ...BASE, entityType: 'event', isPublic: true }).allowed).toBe(false)
+    expect(formFillAccess({ ...BASE, hasConvocationList: true, isPublic: true }).allowed).toBe(false)
   })
 })
 

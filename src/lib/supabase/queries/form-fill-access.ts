@@ -42,6 +42,7 @@ export async function memberFormFillAccess(input: {
   const f = form as unknown as {
     entity_type: string | null
     entity_id: string | null
+    is_public: boolean | null
     fields: Array<{ options_source?: string | null; options_source_param?: string | null }>
   }
 
@@ -92,5 +93,6 @@ export async function memberFormFillAccess(input: {
     isConvoked: convocado,
     wasSentLink: leLlego,
     hasResponded: yaRespondio,
+    isPublic: !!f.is_public,
   })
 }

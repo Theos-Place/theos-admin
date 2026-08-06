@@ -37,6 +37,28 @@ en vez de un cuestionario pelado.
 Abajo del bloque hay una vista previa de cómo va a quedar. Vale la pena mirarla: la mayoría de
 la gente lo abre desde el teléfono.
 
+## Quién puede LLENARLO
+
+Distinto de quién ve las respuestas. Desde el 2026-08-06 un formulario **no se
+llena solo por tener el link**: hay que ser parte de su audiencia.
+
+- **De un evento** → sus inscritos.
+- **De un grupo de estudio** → sus matriculados.
+- **De preinscripción/selección** (como CDEB) → las personas convocadas por el
+  comité, o sea las que tienen una recomendación **enviada** que dice que sí.
+- **A quien se lo mandaste por correo** → siempre, sea cual sea el formulario.
+  El envío es la convocatoria.
+- **Suelto, sin nada de lo anterior** → nadie, salvo que marques la casilla
+  **"Abierto a cualquiera con el link"**, arriba del constructor. Esa es la
+  escapatoria para los que se comparten por WhatsApp, y hay que marcarla a
+  propósito.
+
+Quien no corresponde ve un aviso con el motivo, **antes** de las preguntas, no
+después de llenarlas.
+
+> Marcar "abierto" NO abre los que sí tienen audiencia: un formulario de evento
+> sigue siendo de sus inscritos aunque alguien marque la casilla sin pensar.
+
 ## Quién ve las respuestas
 
 Tres caminos, de más amplio a más acotado:
