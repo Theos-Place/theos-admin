@@ -31,12 +31,21 @@ export async function GET(req: NextRequest) {
     const assignedTo = scope === 'assigned' ? (auth.ctx.memberId ?? '') : undefined
 
     const { searchParams } = req.nextUrl
-    if (searchParams.get('count') === 'open') {
+    const count = searchParams.get('count')
+    if (count === 'open') {
       return NextResponse.json({
         count: scope === 'all'
           ? await countOpenStudyRequests()
           : (await getStudyRequests({ assigned_to: assignedTo })).filter(r => r.status !== 'resolved' && r.status !== 'rejected').length,
       })
+    }
+    // REU-2: conteo SOLO de reubicaciones pendientes. El conteo 'open' mezcla
+    // reubicaciones con intereses, y los intereses son informativos (EST-6): un
+    // badge que los junta no dice cuánta gente está esperando un cambio de grupo.
+    if (count === 'relocation') {
+      const abiertas = (await getStudyRequests({ type: 'relocation', assigned_to: assignedTo }))
+        .filter(r => r.status !== 'resolved' && r.status !== 'rejected')
+      return NextResponse.json({ count: abiertas.length })
     }
     const status = searchParams.get('status') ?? undefined
     const type = searchParams.get('type') ?? undefined

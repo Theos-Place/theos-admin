@@ -1636,7 +1636,22 @@ Si ya se implementó GRU-1 (fechas de matrícula por grupo), mostrá también es
 Permisos: los mismos de la pantalla de bloques (coordinador_estudios, admin).
 ```
 
-### [ ] REU-2 · Hacer visible la reubicación como plan de contingencia
+### [x] REU-2 · Hacer visible la reubicación como plan de contingencia
+
+> **HECHO 2026-08-06.** No se construyó nada nuevo: el flujo de `relocation` es el mismo.
+> `StudyRequestActions` ganó dos props —`only` (mostrar un solo acceso) y `variant='link'`
+> (enlace discreto)— y con eso el MISMO modal aparece en tres lugares nuevos:
+> la confirmación de matrícula, la ficha del grupo en la vista del estudiante y /mis-pagos.
+> El perfil sigue igual.
+>
+> · El modal ahora explica qué pasa después: lo revisa el coordinador, NO es automático, y
+>   mientras tanto sigue matriculado en su grupo actual.
+> · Coordinador: entrada propia "Cambios de grupo" en el hub de estudios, con contador
+>   propio (`?count=relocation`). El conteo general mezclaba reubicaciones con intereses, y
+>   los intereses son informativos (EST-6) — un badge que los junta no dice cuánta gente
+>   está esperando un cambio.
+> · 9 tests: que los tres accesos sigan puestos, que el modal explique el después, y que el
+>   deep link `?tab=relocation` abra la sección.
 Archivos: `src/components/studies/StudyRequestActions.tsx`, detalle de grupo, confirmación de matrícula, `/estudios/solicitudes`
 Depende de: EST-6 y EST-7 (sin esos dos arreglados el flujo existe pero no sirve)
 

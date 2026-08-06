@@ -21,6 +21,7 @@ import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
 import { LeaderContact } from '@/components/studies/LeaderContact'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
+import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -645,6 +646,12 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             <p className="text-sm text-navy-light/60 font-body">
               {enrolled.length} inscritos de {group.max_capacity} lugares
             </p>
+            {/* REU-2 · Para el estudiante que abre SU grupo y se da cuenta de
+                que se matriculó en el equivocado. El flujo ya existía enterrado
+                en una pestaña del perfil; acá está donde se necesita. */}
+            {readOnly && actor?.member_id && (
+              <StudyRequestActions memberId={actor.member_id} only="relocation" variant="link" />
+            )}
             {!readOnly && (
             <button
               onClick={() => setShowAddMember(true)}

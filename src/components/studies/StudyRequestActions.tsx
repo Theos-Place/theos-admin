@@ -31,7 +31,14 @@ const MIN_REASON = 20
 const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30 disabled:opacity-60'
 const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
 
-export function StudyRequestActions({ memberId }: { memberId: string }) {
+export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
+  memberId: string
+  /** REU-2: mostrar SOLO uno de los dos accesos. Sin esto salen los dos (perfil). */
+  only?: StudyRequestType
+  /** 'link' = enlace discreto, para meterlo dentro de otra pantalla sin competir
+   *  con lo que esa pantalla vino a hacer. */
+  variant?: 'buttons' | 'link'
+}) {
   const toast = useToast()
   const { studyTypes } = useStudyPlans()
   const { dirigentes } = useDirigentes()
@@ -164,31 +171,10 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
     }
   }
 
-  return (
-    <>
-      <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={() => open('relocation')}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy font-body hover:bg-navy/10 transition-colors"
-        >
-          <ArrowLeftRight size={13} /> Solicitar reubicación
-        </button>
-        <button
-          onClick={() => open('study_interest')}
-          disabled={hasOpenReq}
-          title={hasOpenReq ? 'Ya tenés una solicitud de estudio abierta' : undefined}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy font-body hover:bg-navy/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <BookOpen size={13} /> Me interesa un estudio
-        </button>
-      </div>
-      {hasOpenReq && (
-        <p className="mt-1.5 text-[12px] text-navy-light/60 font-body">
-          Ya registraste una solicitud de estudio (una a la vez). Revisá la página de Matrícula: ahí aparecen los grupos nuevos cuando se abren.
-        </p>
-      )}
-
-      {openModal && (
+  // El modal es el MISMO para las dos variantes de abajo: lo que cambia es
+  // cómo se abre — los botones del perfil o el enlace discreto que REU-2 mete
+  // dentro de otras pantallas.
+  const modal = openModal ? (
         <Modal onClose={() => setOpenModal(null)} titleId="study-request-title">
           <div className="p-6 space-y-4">
             <h2 id="study-request-title" className="text-lg font-semibold text-navy font-display">
@@ -207,6 +193,19 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
                       Esta solicitud es <strong>informativa</strong>: nos ayuda a ver qué estudios tienen demanda para
                       abrir grupos nuevos. <strong>No te vamos a contactar</strong> — revisá la página de Matrícula,
                       ahí van a aparecer los grupos nuevos cuando se abran. ¡Gracias por contarnos!
+                    </p>
+                  </div>
+                )}
+
+                {/* REU-2: qué pasa después. Sin esto la gente manda la solicitud
+                    y se queda esperando sin saber si tiene que hacer algo más. */}
+                {openModal === 'relocation' && !relocationBlocked && (
+                  <div className="flex items-start gap-2 rounded-xl bg-teal/8 border border-teal/20 px-4 py-3">
+                    <Info size={15} className="mt-0.5 shrink-0 text-teal-deep" aria-hidden />
+                    <p className="text-[13px] text-navy font-body">
+                      Lo revisa el <strong>coordinador de estudios</strong>: no es automático.
+                      Mientras tanto <strong>seguís matriculado en tu grupo actual</strong> — no
+                      pierdas las clases. Te avisamos cuando esté resuelto.
                     </p>
                   </div>
                 )}
@@ -367,7 +366,59 @@ export function StudyRequestActions({ memberId }: { memberId: string }) {
             )}
           </div>
         </Modal>
+  ) : null
+
+  const muestra = (t: StudyRequestType) => !only || only === t
+
+  // REU-2 · Enlace discreto: el mismo modal, pero puesto donde la persona se da
+  // cuenta del error (su grupo, la confirmación de matrícula) y no enterrado en
+  // una pestaña del perfil.
+  if (variant === 'link') {
+    return (
+      <>
+        <button
+          onClick={() => open(only ?? 'relocation')}
+          className="inline-flex items-center gap-1.5 text-[12px] text-navy-light/70 hover:text-navy underline underline-offset-2 transition-colors font-body"
+        >
+          <ArrowLeftRight size={12} />
+          {only === 'study_interest'
+            ? '¿Buscás otro estudio? Contanos cuál'
+            : '¿Te matriculaste en el grupo equivocado? Pedí un cambio de grupo'}
+        </button>
+        {modal}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div className="flex gap-2 flex-wrap">
+        {muestra('relocation') && (
+        <button
+          onClick={() => open('relocation')}
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy font-body hover:bg-navy/10 transition-colors"
+        >
+          <ArrowLeftRight size={13} /> Solicitar reubicación
+        </button>
+        )}
+        {muestra('study_interest') && (
+        <button
+          onClick={() => open('study_interest')}
+          disabled={hasOpenReq}
+          title={hasOpenReq ? 'Ya tenés una solicitud de estudio abierta' : undefined}
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy font-body hover:bg-navy/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <BookOpen size={13} /> Me interesa un estudio
+        </button>
+        )}
+      </div>
+      {muestra('study_interest') && hasOpenReq && (
+        <p className="mt-1.5 text-[12px] text-navy-light/60 font-body">
+          Ya registraste una solicitud de estudio (una a la vez). Revisá la página de Matrícula: ahí aparecen los grupos nuevos cuando se abren.
+        </p>
       )}
+
+      {modal}
     </>
   )
 }

@@ -7,7 +7,7 @@ import { toYmdLocal } from '@/lib/format'
 import {
   Users, Clock, AlertTriangle, TrendingUp,
   BookOpen, UserCheck, BarChart2, ListChecks, LayoutList, Inbox,
-  GraduationCap, History, Megaphone, CloudUpload,
+  GraduationCap, History, Megaphone, CloudUpload, ArrowLeftRight,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
@@ -25,6 +25,10 @@ const QUICK_ACCESS = [
   { href: '/estudios/plan',         label: 'Plan de Estudios', icon: BookOpen,   desc: 'Tipos de estudio' },
   { href: '/estudios/dirigentes',   label: 'Dirigentes',       icon: UserCheck,  desc: 'Perfil de líderes' },
   { href: '/estudios/solicitudes',  label: 'Solicitudes',      icon: Inbox,      desc: 'Reubicaciones, grupos y espera' },
+  // REU-2: la cola de CAMBIOS DE GRUPO tiene su propia entrada. El conteo
+  // general mezcla reubicaciones con intereses (informativos), y lo que hay que
+  // atender es la gente esperando un cambio.
+  { href: '/estudios/solicitudes?tab=relocation', label: 'Cambios de grupo', icon: ArrowLeftRight, desc: 'Reubicaciones pendientes' },
   { href: '/estudios/analisis',     label: 'Análisis',         icon: BarChart2,  desc: 'Demanda por bloque' },
 ]
 
@@ -36,11 +40,16 @@ export default function EstudiosPage() {
   // Solicitudes abiertas (reubicaciones + unirse a grupo + grupo nuevo).
   // El endpoint exige rol de coordinación: con 403 el conteo queda en 0.
   const [openRequests, setOpenRequests] = useState(0)
+  const [openRelocations, setOpenRelocations] = useState(0)
   useEffect(() => {
     let alive = true
     fetch('/api/studies/requests?count=open')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
+      .catch(() => {})
+    fetch('/api/studies/requests?count=relocation')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d) setOpenRelocations(d.count ?? 0) })
       .catch(() => {})
     return () => { alive = false }
   }, [])
@@ -236,9 +245,14 @@ export default function EstudiosPage() {
                   className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors group"
                 >
                   <Icon size={16} className="text-navy-light/60 group-hover:text-coral transition-colors" />
-                  <div>
-                    <p className="text-sm text-navy font-medium font-body">
+                  <div className="min-w-0">
+                    <p className="text-sm text-navy font-medium font-body inline-flex items-center gap-1.5">
                       {label}
+                      {href.includes('tab=relocation') && openRelocations > 0 && (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[10px] text-white">
+                          {openRelocations}
+                        </span>
+                      )}
                     </p>
                     <p className="text-[11px] text-navy-light/60">{desc}</p>
                   </div>

@@ -14,6 +14,7 @@ import { CreditCard, GraduationCap, History } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { MemberPaymentsList } from '@/components/members/MemberPaymentsList'
+import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { formatDate } from '@/lib/format'
 
 type ScholarshipRow = {
@@ -184,13 +185,20 @@ function MisPagosContent() {
               <p className="px-4 py-6 text-center text-[13px] text-navy-light/50 font-body">Cargando…</p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAll(v => !v)}
-            className="text-[12px] text-navy-light/60 hover:text-coral transition-colors font-body"
-          >
-            {showAll ? 'Ocultar pagos cerrados' : 'Ver también los pagos cerrados'}
-          </button>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowAll(v => !v)}
+              className="text-[12px] text-navy-light/60 hover:text-coral transition-colors font-body"
+            >
+              {showAll ? 'Ocultar pagos cerrados' : 'Ver también los pagos cerrados'}
+            </button>
+            {/* REU-2 · Tercera entrada al cambio de grupo: acá es donde el
+                miembro ve sus estudios (el cobro de la matrícula). */}
+            {memberId && (
+              <StudyRequestActions memberId={memberId} only="relocation" variant="link" />
+            )}
+          </div>
         </div>
 
         {memberId && <MemberScholarships key={memberId} memberId={memberId} />}

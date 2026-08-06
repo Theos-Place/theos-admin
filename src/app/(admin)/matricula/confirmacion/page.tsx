@@ -7,6 +7,8 @@ import { CheckCircle2, GraduationCap, MessageCircle } from 'lucide-react'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { toDomainStudyGroup, toDomainStudyType } from '@/lib/studies/adapter'
 import { formatDateLong, formatCRC } from '@/lib/format'
+import { useAuth } from '@/hooks/useAuth'
+import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 
 const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles',
@@ -21,6 +23,7 @@ function formatDays(days: string[]): string {
 }
 
 function ConfirmacionContent() {
+  const { user } = useAuth()
   const searchParams = useSearchParams()
   const groupId  = searchParams.get('group') ?? ''
   const studyCode = searchParams.get('study') ?? ''
@@ -142,6 +145,15 @@ function ConfirmacionContent() {
             Recibirás un mensaje de WhatsApp con los detalles del grupo y el próximo paso del proceso.
           </p>
         </div>
+
+        {/* REU-2 · El momento en que la persona se da cuenta de que se
+            equivocó de grupo es JUSTO acá. El flujo de reubicación ya existía;
+            lo que faltaba era encontrarlo. */}
+        {user?.member_id && (
+          <div className="pt-1">
+            <StudyRequestActions memberId={user.member_id} only="relocation" variant="link" />
+          </div>
+        )}
 
         {/* Botones */}
         <div className="flex gap-2 pt-1">
