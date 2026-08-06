@@ -157,14 +157,27 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   const [guestEmail, setGuestEmail] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  // Motivo por el que ESTE formulario no es para esta persona (2026-08-06). Se
+  // pregunta al cargar, no al enviar: hacer llenar 24 campos y rechazar al final
+  // es la peor forma de decirlo. El guard de verdad vive en el POST.
+  const [sinAcceso, setSinAcceso] = useState<string | null>(null)
+
   useEffect(() => {
     let alive = true
-    fetch(`/api/forms/${id}`)
+    // En vista previa no se pregunta: la abre quien administra el formulario.
+    const url = isPreview ? `/api/forms/${id}` : `/api/forms/${id}?fill_access=1`
+    fetch(url)
       .then(r => (r.ok ? r.json() : null))
-      .then(db => { if (alive) { setForm(db ? toDomainFormTemplate(db) : null); setLoadingForm(false) } })
+      .then(db => {
+        if (!alive) return
+        setForm(db ? toDomainFormTemplate(db) : null)
+        const acceso = db?.fill_access
+        setSinAcceso(acceso && acceso.allowed === false ? String(acceso.reason) : null)
+        setLoadingForm(false)
+      })
       .catch(() => { if (alive) setLoadingForm(false) })
     return () => { alive = false }
-  }, [id])
+  }, [id, isPreview])
 
   // Dedupe (una respuesta por persona salvo que el form admita varias):
   // allow_multiple_responses existía en el esquema pero nadie lo leía.
@@ -192,6 +205,29 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
     return (
       <div className="flex items-center justify-center min-h-60">
         <p className="text-sm text-navy-light/60 font-body">Formulario no encontrado.</p>
+      </div>
+    )
+  }
+
+  // Este formulario no es para esta persona: se dice acá, antes de las preguntas.
+  if (sinAcceso) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-surface-low">
+        <div className="w-full max-w-md text-center space-y-4">
+          <div className="h-16 w-16 rounded-full bg-surface-card flex items-center justify-center mx-auto shadow-[var(--shadow-md)]">
+            <AlertTriangle size={26} className="text-navy-light/60" />
+          </div>
+          <h1 className="text-xl font-extrabold text-navy font-display tracking-[-0.02em]">
+            {form.name}
+          </h1>
+          <p className="text-sm text-navy-light/70 font-body leading-relaxed">{sinAcceso}</p>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-full bg-navy px-5 py-2.5 text-sm text-white hover:bg-navy/80 transition-colors font-body"
+          >
+            Ir al inicio
+          </Link>
+        </div>
       </div>
     )
   }
@@ -290,6 +326,12 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       })
       if (!res.ok) {
         const detail = await res.json().catch(() => null)
+        // El formulario no es para esta persona (2026-08-06): el motivo es
+        // legible y hay que mostrarlo tal cual, no taparlo con el genérico.
+        if (res.status === 403 && detail?.code === 'formulario_no_asignado') {
+          setSubmitError(String(detail.error))
+          return
+        }
         console.error('Error al enviar formulario:', res.status, detail)
         setSubmitError('Ocurrió un error al enviar el formulario. Verificá tu correo e intentá de nuevo.')
         return

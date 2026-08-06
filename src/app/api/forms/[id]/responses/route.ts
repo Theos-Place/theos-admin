@@ -4,7 +4,8 @@ import { rateLimit } from '@/lib/rate-limit'
 import {
   getFormResponses, submitResponse, hasMemberResponded, hasFormAccessGrant,
 } from '@/lib/supabase/queries/forms'
-import { formViewerScope } from '@/lib/auth/forms-scope'
+import { formViewerScope, hasFormsModule } from '@/lib/auth/forms-scope'
+import { memberFormFillAccess } from '@/lib/supabase/queries/form-fill-access'
 import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
 
 export async function GET(
@@ -78,6 +79,18 @@ export async function POST(
         { error: 'Se requiere un correo electrónico para enviar el formulario' },
         { status: 400 },
       )
+    }
+
+    // Solo puede enviar quien fue convocado (decisión 2026-08-06). Antes
+    // alcanzaba con tener sesión y el link: alguien no recomendado podía
+    // preinscribirse a CDEB igual. La regla vive en @/lib/forms/fill-access.
+    const acceso = await memberFormFillAccess({
+      formId: id,
+      memberId,
+      isStaff: hasFormsModule(auth.ctx.roles) || await hasFormAccessGrant(id, auth.ctx.memberId),
+    })
+    if (!acceso.allowed) {
+      return NextResponse.json({ error: acceso.reason, code: 'formulario_no_asignado' }, { status: 403 })
     }
 
     const res = await submitResponse(id, { ...body, member_id: memberId, guest_email: memberId ? body.guest_email ?? null : guestEmail })

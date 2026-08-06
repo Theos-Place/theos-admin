@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { getFormById, updateForm, deleteForm, resolveDynamicOptions } from '@/lib/supabase/queries/forms'
+import { getFormById, updateForm, deleteForm, resolveDynamicOptions, hasFormAccessGrant } from '@/lib/supabase/queries/forms'
+import { memberFormFillAccess } from '@/lib/supabase/queries/form-fill-access'
+import { hasFormsModule } from '@/lib/auth/forms-scope'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
 import { requireFormEdit } from '@/lib/auth/event-guard'
@@ -20,7 +22,19 @@ export async function GET(
     const { id } = await params
     const form = await getFormById(id)
     if (!form) return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
-    return NextResponse.json(await resolveDynamicOptions(form))
+    const resuelto = await resolveDynamicOptions(form)
+    // ?fill_access=1 · la pantalla de llenado pregunta ANTES de mostrar las
+    // preguntas si esta persona puede enviarlo, para no hacerle llenar 24 campos
+    // y rechazarla al final. El guard de verdad sigue estando en el POST.
+    if (_req.nextUrl.searchParams.get('fill_access') === '1') {
+      const acceso = await memberFormFillAccess({
+        formId: id,
+        memberId: auth.ctx.memberId,
+        isStaff: hasFormsModule(auth.ctx.roles) || await hasFormAccessGrant(id, auth.ctx.memberId),
+      })
+      return NextResponse.json({ ...resuelto, fill_access: acceso })
+    }
+    return NextResponse.json(resuelto)
   } catch (error) {
     console.error('GET /api/forms/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
