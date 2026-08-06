@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type FormTemplate, type FormFieldNew, type FieldType } from '@/types/forms'
 import { HeroEditor } from '@/components/forms/HeroEditor'
+import { fieldProblems, saveBlockedMessage } from '@/lib/forms/field-validation'
 import { type FormHeroData } from '@/components/forms/FormHero'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { FormCanvas } from '@/components/forms/FormCanvas'
@@ -17,8 +18,6 @@ import { FormAccessPanel } from './FormAccessPanel'
 import { useToast } from '@/components/shared/Toast'
 
 // Tipos estructurales que no exigen label (el separador de página es un divisor).
-const LABEL_OPTIONAL: FieldType[] = ['page_break']
-
 type FormStatus = 'draft' | 'active'
 
 const FIELD_GROUPS: { label: string; types: { type: FieldType; label: string }[] }[] = [
@@ -178,11 +177,13 @@ export function FormBuilder({ formId }: FormBuilderProps) {
       toast('El formulario necesita un nombre', 'error')
       return
     }
-    // Campos sin etiqueta: un formulario con campos en blanco es inservible.
-    const unlabeled = fields.filter(f => !LABEL_OPTIONAL.includes(f.type) && !f.label.trim())
-    if (unlabeled.length > 0) {
-      setActiveFieldId(unlabeled[0].id)
-      toast(`Hay ${unlabeled.length} campo${unlabeled.length !== 1 ? 's' : ''} sin etiqueta`, 'error')
+    // Campos incompletos: un formulario con campos en blanco es inservible. La
+    // regla vive en lib/forms/field-validation (el bloque informativo pide
+    // TEXTO, no etiqueta — su título es opcional y así lo dice el inspector).
+    const problemas = fieldProblems(fields)
+    if (problemas.length > 0) {
+      setActiveFieldId(problemas[0].fieldId)
+      toast(saveBlockedMessage(fields) ?? 'Hay campos incompletos', 'error')
       return
     }
     setSaving(true)
