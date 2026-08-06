@@ -4,12 +4,12 @@ seccion: Primeros pasos
 tipo: tutorial
 roles: [admin, direccion, coordinador_estudios, coordinador_dirigentes, finanzas, comunicaciones, encargado_staff]
 orden: 90
-resumen: Usuarios y grupos de prueba para probar el sistema sin tocar datos reales. Se borran el 2026-08-19.
+resumen: Usuarios y grupos de prueba para probar el sistema sin tocar datos reales. Se borran el 2026-08-20.
 ---
 
 # Datos de prueba (agosto 2026)
 
-**Estos datos se borran el 2026-08-19.** No construyas nada encima esperando que dure:
+**Estos datos se borran el 2026-08-20.** No construyas nada encima esperando que dure:
 listas, comunicados o reportes armados sobre esta gente se quedan sin base ese día.
 
 ## Qué esperamos de vos
@@ -83,6 +83,11 @@ Trabajá **solo con los registros marcados `[prueba]`**. En el padrón conviven 
 | [prueba] Cumple Novia | cumple.novia@prueba.theosplace.invalid | sí | miembro | Novia que CUMPLE el requisito | La otra mitad de la pareja que sí puede |
 | [prueba] NoCumple Novio | nocumple.novio@prueba.theosplace.invalid | sí | miembro | Novio que NO cumple (sin N1 ni N2) | Ver el bloqueo de PRE-5 diciendo quién no cumple |
 | [prueba] NoCumple Novia | nocumple.novia@prueba.theosplace.invalid | sí | miembro | Novia sin documento registrado | Ver el bloqueo por documento faltante |
+| [prueba] Ret01 Evaluador | ret01.evaluador@prueba.theosplace.invalid | no | miembro | Estudiante 1 de 5 del grupo cerrado con evaluaciones | — |
+| [prueba] Ret02 Evaluador | ret02.evaluador@prueba.theosplace.invalid | no | miembro | Estudiante 2 de 5 del grupo cerrado con evaluaciones | — |
+| [prueba] Ret03 Evaluador | ret03.evaluador@prueba.theosplace.invalid | no | miembro | Estudiante 3 de 5 del grupo cerrado con evaluaciones | — |
+| [prueba] Ret04 Evaluador | ret04.evaluador@prueba.theosplace.invalid | no | miembro | Estudiante 4 de 5 del grupo cerrado con evaluaciones | — |
+| [prueba] Ret05 Evaluador | ret05.evaluador@prueba.theosplace.invalid | no | miembro | Estudiante 5 de 5 del grupo cerrado con evaluaciones | Su comentario es el que sirve para probar "ocultar" |
 
 ## Grupos de estudio
 
@@ -99,6 +104,7 @@ Trabajá **solo con los registros marcados `[prueba]`**. En el padrón conviven 
 | [prueba] Grupo N2 listo para cierre | N2 | niveles | en_curso | [prueba] Dora Dirigente | 8 | Probar el cierre completo: aprobados, reprobados con justificación y retirados con motivo (ahora obligatorio) |
 | [prueba] Grupo DIS3 listo para cierre | DIS3 | intermedia | en_curso | [prueba] Dora Dirigente | 4 | Cierre con recomendación a CDEB por estudiante (EST-9) |
 | [prueba] Grupo Panorama cerrado | PAN | intermedia | finalizado | [prueba] Coco Codirigente | 2 | Grupo ya cerrado · aporta una SEGUNDA evaluación a CDEB del mismo candidato, hecha por otro dirigente |
+| [prueba] Grupo N3 cerrado con evaluaciones | N3 | niveles | finalizado | [prueba] Dora Dirigente | 5 | Retroalimentación al dirigente: ver el panel, ocultar un comentario y compartirlo |
 
 ## Lo demás
 
@@ -114,7 +120,8 @@ Trabajá **solo con los registros marcados `[prueba]`**. En el padrón conviven 
 | Prematrimonial | [prueba] NoCumple Novio + [prueba] NoCumple Novia | NO cumple: sirve para ver los bloqueos de PRE-5 y PRE-7 |
 | Eventos | [prueba] Evento con inscripción | Inscripción abierta, check-in activo, sin costo · en 10 días |
 | Formularios | [prueba] Formulario del evento | Asociado al evento de prueba · probar respuestas, export y acceso puntual |
-| Listas | [prueba] Datos de prueba agosto 2026 | 32 personas · verlas juntas en /miembros/listas |
+| Estudios | [prueba] Grupo N3 cerrado con evaluaciones | 5 evaluaciones del dirigente sin revisar · abrir la ficha del grupo, ocultar un comentario y compartirla |
+| Listas | [prueba] Datos de prueba agosto 2026 | 37 personas · verlas juntas en /miembros/listas |
 
 ## Recorridos sugeridos
 
@@ -137,5 +144,5 @@ Trabajá **solo con los registros marcados `[prueba]`**. En el padrón conviven 
 
 ---
 
-*Generado el 2026-08-05 por `scripts/seed-datos-de-prueba.ts`. Para borrar el set:
+*Generado el 2026-08-06 por `scripts/seed-datos-de-prueba.ts`. Para borrar el set:
 `npx tsx scripts/limpiar-datos-de-prueba.ts` (sin `--aplicar` solo lista qué borraría).*

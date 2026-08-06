@@ -663,6 +663,70 @@ async function main() {
   }
   otros.push({ bloque: 'Formularios', que: tituloForm, detalle: 'Asociado al evento de prueba · probar respuestas, export y acceso puntual' })
 
+  // ── I) Grupo cerrado con retroalimentación del dirigente ──────────────────
+  // El flujo entero necesita un grupo YA cerrado con varias evaluaciones para
+  // poder mirar el panel: promedio, distribución, comentarios y el paso de
+  // revisión (ocultar uno y compartir con el dirigente).
+  //
+  // OJO: acá NO se manda el correo de la encuesta. Las cuentas de prueba usan un
+  // dominio inexistente y cada envío sería un rebote duro contra la reputación
+  // de SES. Se marca `feedback_requested_at` como si ya hubiera salido y se
+  // insertan las respuestas directo.
+  console.log('· I · grupo cerrado con retroalimentación')
+  const grupoRetro = await crearGrupo({
+    nombre: 'Grupo N3 cerrado con evaluaciones', planId: plan('N3').id, planCode: 'N3', etapa: 'niveles',
+    leaderId: dirigente.id, leaderNombre: dirigente.nombre, estado: 'finalizado',
+    inicio: new Date(HOY.getTime() - 180 * 86400000),
+    fin: new Date(HOY.getTime() - 10 * 86400000),
+    sirve: 'Retroalimentación al dirigente: ver el panel, ocultar un comentario y compartirlo',
+  })
+  // El dirigente necesita ficha en study_leaders: leader_evaluations apunta ahí.
+  let { data: fichaDir } = await laxo.from('study_leaders').select('id').eq('member_id', dirigente.id).maybeSingle()
+  if (!fichaDir) {
+    const { data, error } = await laxo.from('study_leaders')
+      .insert({ member_id: dirigente.id, is_active: true }).select('id').single()
+    if (error) throw new Error(`ficha de dirigente: ${error.message}`)
+    fichaDir = data as { id: string }
+  }
+  const RESPUESTAS = [
+    { score: 5, comments: 'Explicaba con mucha claridad y siempre llegaba puntual.' },
+    { score: 4, comments: 'Muy bueno. A veces nos quedábamos cortos de tiempo al final.' },
+    { score: 5, comments: null },
+    { score: 3, comments: 'Cumplió, pero me hubiera gustado más discusión en grupo.' },
+    { score: 2, comments: 'ESTE COMENTARIO ES PARA PROBAR EL BOTÓN DE OCULTAR.' },
+  ]
+  for (let i = 0; i < RESPUESTAS.length; i++) {
+    const est = await crearMiembro({
+      nombre: `Ret${String(i + 1).padStart(2, '0')} Evaluador`,
+      caso: `Estudiante ${i + 1} de 5 del grupo cerrado con evaluaciones`,
+      sirve: i === 4 ? 'Su comentario es el que sirve para probar "ocultar"' : '—',
+    })
+    await matricular(grupoRetro, est.id, 'completed')
+    const { data: yaEval } = await laxo.from('leader_evaluations')
+      .select('id').eq('group_id', grupoRetro).eq('member_id', est.id).maybeSingle()
+    if (!yaEval) {
+      await laxo.from('leader_evaluations').insert({
+        leader_id: (fichaDir as { id: string }).id,
+        group_id: grupoRetro,
+        member_id: est.id,
+        score: RESPUESTAS[i].score,
+        comments: RESPUESTAS[i].comments,
+        evaluation_date: ymd(new Date(HOY.getTime() - 8 * 86400000)),
+      })
+    }
+  }
+  grupos.find(g => g.nombre.includes('N3 cerrado con evaluaciones'))!.estudiantes = RESPUESTAS.length
+  // Como si el correo ya hubiera salido, pero SIN compartirla: así el panel
+  // abre en el estado que hay que probar (la coordinación tiene que revisar).
+  await laxo.from('study_groups')
+    .update({ feedback_requested_at: HOY.toISOString(), feedback_released_at: null })
+    .eq('id', grupoRetro)
+  otros.push({
+    bloque: 'Estudios',
+    que: `${MARCA} Grupo N3 cerrado con evaluaciones`,
+    detalle: '5 evaluaciones del dirigente sin revisar · abrir la ficha del grupo, ocultar un comentario y compartirla',
+  })
+
   // ── Lista guardada con todos ───────────────────────────────────────────────
   console.log('· lista guardada')
   const { data: todos } = await laxo.from('members').select('id').like('external_id', `${PREFIJO_EXTERNAL}%`)
