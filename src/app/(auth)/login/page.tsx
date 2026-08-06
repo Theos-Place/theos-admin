@@ -7,6 +7,7 @@ import { Eye, EyeOff, AlertCircle, Loader2, Fingerprint, ShieldCheck, ArrowLeft 
 import { createClient } from '@/lib/supabase/client'
 import { shouldSuggestPasskey } from '@/lib/auth/passkey-suggestion'
 import { PasskeySuggestionModal } from '@/components/auth/PasskeySuggestionModal'
+import { safeDest, DEFAULT_DEST } from '@/lib/auth/redirect-target'
 
 function isEmail(value: string): boolean {
   return value.includes('@')
@@ -51,11 +52,18 @@ export default function LoginPage() {
   const [showPasskeyModal, setShowPasskeyModal] = useState(false)
 
   // Destino post-login: respeta ?redirect si es un path interno seguro (evita
-  // open-redirect), si no cae al dashboard. Usado por el login-gate de /vacantes.
+  // open-redirect), si no cae al dashboard. Lo pone el middleware cuando manda
+  // al login desde una ruta protegida, y también el login-gate de /vacantes.
+  //
+  // La validación vive en lib/auth/redirect-target (la misma que usa el
+  // middleware para construirlo): un solo criterio de qué destino se acepta.
+  //
+  // Lee de window.location.search a propósito: la verificación de MFA ocurre
+  // INLINE en esta misma página, así que la URL —y con ella el ?redirect=— no
+  // cambia entre la contraseña y el segundo factor.
   function postLoginDest(): string {
-    if (typeof window === 'undefined') return '/dashboard'
-    const r = new URLSearchParams(window.location.search).get('redirect')
-    return r && r.startsWith('/') && !r.startsWith('//') ? r : '/dashboard'
+    if (typeof window === 'undefined') return DEFAULT_DEST
+    return safeDest(new URLSearchParams(window.location.search).get('redirect'))
   }
 
   function goToDashboard() {

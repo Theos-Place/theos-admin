@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Check, Send, LogIn } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { loginUrlWithDest } from '@/lib/auth/redirect-target'
 
 /** Botón "Aplicar" de la vista PÚBLICA de vacantes (/vacantes). Ver la vacante
  *  no requiere sesión; aplicar sí. Sin sesión → manda a /login con redirect de
@@ -22,14 +23,14 @@ export function PublicApplyButton({ vacancyId, className }: { vacancyId: string;
       if (!session) {
         // Login-gate: volvés a /vacantes tras autenticarte.
         setState('auth')
-        router.push(`/login?redirect=${encodeURIComponent('/vacantes')}`)
+        router.push(loginUrlWithDest('/vacantes'))
         return
       }
       const res = await fetch(`/api/servers/vacancies/${vacancyId}/apply`, { method: 'POST' })
       if (res.status === 201) { setState('done'); return }
       const d = await res.json().catch(() => null) as { code?: string } | null
       if (res.status === 409 && d?.code === 'already_applied') { setState('already'); return }
-      if (res.status === 401) { setState('auth'); router.push(`/login?redirect=${encodeURIComponent('/vacantes')}`); return }
+      if (res.status === 401) { setState('auth'); router.push(loginUrlWithDest('/vacantes')); return }
       setState('error')
     } catch {
       setState('error')

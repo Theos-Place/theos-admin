@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { buildCsp, newNonce } from '@/lib/csp'
+import { loginUrlWithDest } from '@/lib/auth/redirect-target'
 
 // Rutas accesibles sin sesión.
 // '/ayuda' es público a propósito: los correos de invitación linkean ahí y el
@@ -18,10 +19,13 @@ function isPublic(pathname: string): boolean {
 // Ruta de step-up donde el usuario completa el segundo factor (TOTP).
 const MFA_PATH = '/verificacion'
 
-function redirectTo(request: NextRequest, response: NextResponse, pathname: string) {
+/** Redirige limpiando el query. `search` permite colgar uno propio (el
+ *  ?redirect= del login); sin él la URL queda pelada, que es lo que quieren los
+ *  otros casos (MFA, login con sesión, raíz → dashboard). */
+function redirectTo(request: NextRequest, response: NextResponse, pathname: string, search = '') {
   const url = request.nextUrl.clone()
   url.pathname = pathname
-  url.search = ''
+  url.search = search
   const redirect = NextResponse.redirect(url)
   response.cookies.getAll().forEach(c => redirect.cookies.set(c))
   return redirect
@@ -40,9 +44,16 @@ export async function proxy(request: NextRequest) {
   const { response, user, needsMfa } = await updateSession(request)
   const { pathname } = request.nextUrl
 
-  // Sin sesión en ruta protegida → al login.
+  // Sin sesión en ruta protegida → al login, GUARDANDO a dónde iba. Antes se
+  // perdía y todo el mundo aterrizaba en el dashboard: los deep links de las
+  // notificaciones y de los correos llegaban a ningún lado.
+  //
+  // Va el pathname Y el search: `/mis-pagos?pago=<id>` sin el search abre la
+  // página pero no el pago.
   if (!user && !isPublic(pathname)) {
-    return redirectTo(request, response, '/login')
+    const destino = loginUrlWithDest(pathname, request.nextUrl.search)
+    const [ruta, query = ''] = destino.split('?')
+    return redirectTo(request, response, ruta, query ? `?${query}` : '')
   }
 
   if (user) {
