@@ -29,7 +29,7 @@ export async function GET() {
     if (!member) {
       // Usuario de auth sin member enlazado: sin acceso a módulos.
       return NextResponse.json({
-        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false, granted_form_ids: [] },
+        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false, granted_form_ids: [], managed_event_ids: [] },
       })
     }
 
@@ -79,6 +79,16 @@ export async function GET() {
       console.warn('auth/me: accesos a formularios:', e instanceof Error ? e.message : e)
     }
 
+    // FRM-1 B: eventos que tiene a cargo. Habilitan /eventos y su detalle a
+    // quien no tiene el módulo (mismo patrón que granted_form_ids).
+    let managedEventIds: string[] = []
+    try {
+      const { getManagedEventIds } = await import('@/lib/supabase/queries/events')
+      managedEventIds = await getManagedEventIds(member.id)
+    } catch (e) {
+      console.warn('auth/me: eventos a cargo:', e instanceof Error ? e.message : e)
+    }
+
     const name = `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim() || (member.email ?? '')
 
     return NextResponse.json({
@@ -95,6 +105,7 @@ export async function GET() {
         is_system: !!member.is_system,
         in_study_committee: inStudyCommittee,
         granted_form_ids: grantedFormIds,
+        managed_event_ids: managedEventIds,
       },
     })
   } catch (error) {

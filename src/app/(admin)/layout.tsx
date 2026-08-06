@@ -99,6 +99,15 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // mostrar según el permiso. Las subrutas de gestión (/eventos/nuevo,
   // /eventos/[id]/editar, etc.) siguen exigiendo el módulo normalmente.
   if (pathname === '/eventos') return <>{children}</>
+  // Excepción (FRM-1 B): quien tiene eventos A CARGO entra al detalle de ESOS
+  // eventos —y a su check-in y edición— sin el módulo. El resto sigue cerrado.
+  {
+    const aCargo = user.managed_event_ids ?? []
+    if (aCargo.length > 0) {
+      const m = pathname.match(/^\/eventos\/([0-9a-f-]{36})(?:\/|$)/i)
+      if (m && aCargo.includes(m[1])) return <>{children}</>
+    }
+  }
   // Excepción (2026-07-31): la FICHA de un evento muestra su información general
   // a cualquier sesión — la propia página deja solo el tab de Información a quien
   // no gestiona, y el API no le manda inscritos ni check-ins. Las subrutas de

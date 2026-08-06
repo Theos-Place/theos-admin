@@ -23,6 +23,9 @@ export interface AuthUser {
   /** Formularios con acceso puntual (form_access_grants). Habilitan
    *  /formularios y las respuestas de ESOS formularios sin tener el módulo. */
   granted_form_ids?: string[]
+  /** Eventos que tiene a cargo (event_managers). Le abren /eventos y el detalle
+   *  de ESOS eventos aunque no tenga el módulo. */
+  managed_event_ids?: string[]
 }
 
 interface AuthState {

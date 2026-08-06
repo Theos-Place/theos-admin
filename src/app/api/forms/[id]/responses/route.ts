@@ -5,6 +5,7 @@ import {
   getFormResponses, submitResponse, hasMemberResponded, hasFormAccessGrant,
 } from '@/lib/supabase/queries/forms'
 import { formViewerScope } from '@/lib/auth/forms-scope'
+import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
 
 export async function GET(
   req: NextRequest,
@@ -30,6 +31,8 @@ export async function GET(
       memberId: ctx.memberId,
       form: { id },
       hasGrant: await hasFormAccessGrant(id, ctx.memberId),
+      // FRM-1 B: si el formulario cuelga de un evento, su encargado lo ve.
+      isEventManager: await isManagerOfFormEvent(id, ctx.memberId),
     })
     if (scope === 'none') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     return NextResponse.json(await getFormResponses(id))

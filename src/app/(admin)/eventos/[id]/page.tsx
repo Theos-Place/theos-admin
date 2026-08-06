@@ -179,13 +179,16 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const canSendMessage = can('comunicaciones', 'create')
   // Regla pura compartida (src/lib/events/detail-access.ts): Información es de
   // cualquier sesión; el resto exige permiso de eventos.
-  const visibleTabs = visibleEventTabs({ canManage, canCheckin, canReport })
-  const seeManagementData = canSeeEventManagementData({ canManage, canCheckin, canReport })
+  // FRM-1 B: encargada de ESTE evento — ve y gestiona todo lo suyo aunque no
+  // tenga el módulo de eventos.
+  const { user } = useAuth()
+  const isEventManager = (user?.managed_event_ids ?? []).includes(id)
+  const visibleTabs = visibleEventTabs({ canManage, canCheckin, canReport, isManager: isEventManager })
+  const seeManagementData = canSeeEventManagementData({ canManage, canCheckin, canReport, isManager: isEventManager })
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
 
   // Inscripción desde la ficha: misma elegibilidad y mismo modal que la lista
   // de eventos, para no tener dos caminos que se puedan desincronizar.
-  const { user } = useAuth()
   const memberId = user?.member_id ?? null
   const [elig, setElig] = useState<EventEligibilityResult | null>(null)
   const [eligRefresh, setEligRefresh] = useState(0)

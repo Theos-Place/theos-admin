@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
 import { createVolunteer, NotCommitteeServerError } from '@/lib/supabase/queries/events'
+import { requireEventAccess } from '@/lib/auth/event-guard'
 
 // POST: asigna un servidor. Body: { member_id, role?, status? }
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    // FRM-1 B: también el ENCARGADO de este evento (event_managers).
+    const auth = await requireEventAccess((await params).id)
     if (auth.res) return auth.res
   try {
     const { id } = await params

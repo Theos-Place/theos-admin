@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
 import { createRegistration, registrationPricing, getEventRegistrationIds, PaymentRequiredError, EventFullError, AlreadyRegisteredError } from '@/lib/supabase/queries/events'
+import { requireEventAccess } from '@/lib/auth/event-guard'
 
 // GET: con ?member_id → precio aplicable para inscribir a ese miembro.
 //      sin member_id → lista de inscritos { count, member_ids } (audiencia comms).
@@ -9,9 +9,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
-    if (auth.res) return auth.res
+    // FRM-1 B: también el ENCARGADO de este evento (event_managers).
     const { id } = await params
+    const auth = await requireEventAccess(id)
+    if (auth.res) return auth.res
     const memberId = req.nextUrl.searchParams.get('member_id')
     if (!memberId) {
       const member_ids = await getEventRegistrationIds(id)
@@ -31,9 +32,10 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
-    if (auth.res) return auth.res
+    // FRM-1 B: también el ENCARGADO de este evento (event_managers).
     const { id } = await params
+    const auth = await requireEventAccess(id)
+    if (auth.res) return auth.res
     const body = await req.json()
     if (!body?.member_id) {
       return NextResponse.json({ error: 'Se requiere member_id' }, { status: 400 })

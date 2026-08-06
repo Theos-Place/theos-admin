@@ -14,6 +14,9 @@ import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
 import { ymdCR, CURRENCIES, currencySymbol } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { EventManagersPanel } from '../_components/EventManagersPanel'
+import { useAuth } from '@/hooks/useAuth'
+import { canGrantEventManagers } from '@/lib/auth/events-scope'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
   Users, Star, MapPin, Music, Coffee, Zap,
@@ -138,6 +141,9 @@ function RecurringSaveModal({
 export default function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
   const toast = useToast()
   const { id } = use(params)
+  // El encargado puede editar su evento, pero NO repartir el permiso.
+  const { roles } = useAuth()
+  const puedeNombrarEncargados = canGrantEventManagers(roles)
   const { event, loading } = useEvent(id)
   const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
   // Si venimos de una ocurrencia recurrente (?date=ISO), editamos SOBRE su fecha.
@@ -591,6 +597,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           )}
         </div>
       </Section>
+
+      {/* FRM-1 B · Encargados: quién gestiona ESTE evento sin tener el módulo.
+          Va acá, en la configuración del evento, y su formulario lo hereda. */}
+      {puedeNombrarEncargados && (
+        <Section id="encargados" title="⑥ Encargados de este evento" open={openSections.has('encargados')} onToggle={() => toggleSection('encargados')}>
+          <EventManagersPanel eventId={id} />
+        </Section>
+      )}
       </div>
     </div>
   )

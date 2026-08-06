@@ -1213,7 +1213,34 @@ el baseline un comentario con los buckets requeridos (payment-receipts, employee
 email-images, event-flyers si ya existe EVE-2).
 ```
 
-### [ ] FRM-1 · Rol `forms` + encargados por evento/formulario (feedback 2026-07-30)
+### [x] FRM-1 · Rol `forms` + encargados por evento/formulario (feedback 2026-07-30)
+
+> **PARTE A HECHA — 2026-08-04** (migración `20260804120000`, commits `df1ca21` + `dade10e` + `e3ecb0e`).
+> Rol `forms` con el módulo formularios (view/create/edit/export, sin delete: borrar se lleva
+> las respuestas). Desalineamiento cerrado: `comunicaciones` y `encargado_staff` ya declaran el
+> módulo y los guards de escritura usan `requireModuleView('formularios', {action})`.
+> Bug encontrado al probar: el rol no veía la entrada del menú porque Formularios cuelga de
+> Comunicaciones — resuelto con `formsNavPlacement` (submenu | top_level | none).
+>
+> **PARTE B, A MEDIAS.** Hecho: acceso puntual **por formulario** (tabla `form_access_grants`,
+> `formViewerScope` → admin|grantee|none, UI "Personas con acceso a este formulario" en el
+> FormBuilder, aplicado en el listado, el detalle y las respuestas; `granted_form_ids` en
+> `/api/auth/me` para el sidebar y el ModuleGuard).
+>
+> **PARTE B CERRADA — 2026-08-06** (migración `20260806100000_event_managers`).
+> Encargados de un evento: tabla `event_managers`, `eventViewerScope` → admin|manager|none,
+> `requireEventAccess` / `requireFormEdit` (`src/lib/auth/event-guard.ts`),
+> `/api/events/[id]/managers` (GET/POST/DELETE, solo `EVENT_ADMIN_ROLES`), sección
+> "⑥ Encargados de este evento" en el editor, `managed_event_ids` en `/api/auth/me`, y los
+> tabs completos de SU evento vía `visibleEventTabs({isManager})`. El formulario del evento
+> HEREDA el permiso (`formViewerScope({isEventManager})` → `event_manager`, que sí edita).
+>
+> **DESVÍO DEL PLAN, a propósito:** el plan pedía una tabla polimórfica `entity_managers`
+> (entity_type/entity_id). Se hizo `event_managers` específica, con FK reales. Motivo: sin FK
+> quedan filas colgando al borrar el evento y cada lectura tiene que validar el tipo a mano.
+> Dos tablas chicas (`event_managers` + `form_access_grants`) se leen de un vistazo; la
+> herencia evento→formulario vive en la función de permisos, no en la forma de la tabla.
+> Decisión de TI, 2026-08-06.
 Archivos: `src/lib/auth/roles.ts`, migración (CHECK de `member_roles` + tabla nueva), `src/app/api/forms/*`, configuración de evento y de formulario, patrón a copiar: `src/lib/auth/studies-scope.ts`
 
 ```

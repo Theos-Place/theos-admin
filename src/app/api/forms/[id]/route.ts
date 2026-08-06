@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles } from '@/lib/auth/guard'
 import { getFormById, updateForm, deleteForm, resolveDynamicOptions } from '@/lib/supabase/queries/forms'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
+import { requireFormEdit } from '@/lib/auth/event-guard'
 
 export async function GET(
   _req: NextRequest,
@@ -30,12 +31,13 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    // Editar la ESTRUCTURA del formulario: permiso de edición del módulo. El
-    // acceso puntual (form_access_grants) NO alcanza — ese es solo de lectura.
-    const auth = await requireModuleView('formularios', { action: 'edit' })
+    // Editar la ESTRUCTURA: el módulo formularios o el ENCARGADO del evento al
+    // que pertenece (FRM-1 B). El acceso puntual a un formulario suelto NO
+    // alcanza: ese es de lectura.
+    const { id } = await params
+    const auth = await requireFormEdit(id)
     if (auth.res) return auth.res
   try {
-    const { id } = await params
     const body = await req.json()
     const fields = 'fields' in body ? formToFields(body) : undefined
     await updateForm(id, formToPartialWriteInput(body), fields)

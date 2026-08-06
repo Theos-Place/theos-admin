@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView, getAuthContext } from '@/lib/auth/guard'
 import { getForms, createForm, getGrantedFormIds } from '@/lib/supabase/queries/forms'
 import { hasFormsModule } from '@/lib/auth/forms-scope'
+import { getManagedEventIds } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToFields } from '@/lib/forms/form-mapper'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 
@@ -13,9 +14,15 @@ export async function GET() {
     if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     const forms = await getForms()
     if (hasFormsModule(ctx.roles)) return NextResponse.json(forms)
+    // Sin el módulo: los formularios con acceso puntual MÁS los de los eventos
+    // que tiene a cargo (FRM-1 B: el permiso del evento se hereda a su form).
     const granted = new Set(await getGrantedFormIds(ctx.memberId))
-    if (granted.size === 0) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
-    return NextResponse.json(forms.filter(f => granted.has(f.id)))
+    const misEventos = new Set(await getManagedEventIds(ctx.memberId))
+    const visibles = forms.filter(f =>
+      granted.has(f.id)
+      || (f.entity_type === 'event' && f.entity_id && misEventos.has(f.entity_id)))
+    if (visibles.length === 0) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    return NextResponse.json(visibles)
   } catch (error) {
     console.error('GET /api/forms:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

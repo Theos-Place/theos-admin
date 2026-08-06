@@ -6,6 +6,9 @@
 //  · 'admin'   → el módulo `formularios` (rol forms, comunicaciones,
 //                encargado_staff, dirección, admin, solo_lectura): TODOS los
 //                formularios.
+//  · 'event_manager' → encargada del EVENTO al que pertenece el formulario
+//                (tabla event_managers): lo ve, lo exporta y SÍ puede editarlo
+//                — organiza esa actividad (decisión 2026-08-06).
 //  · 'grantee' → acceso puntual a ESE formulario (tabla form_access_grants):
 //                lee y exporta sus respuestas, y ningún otro formulario.
 //                NO puede editar la estructura del formulario — eso sigue
@@ -22,7 +25,7 @@
 import { hasModulePermission } from './roles'
 import type { RoleId } from '@/types/auth'
 
-export type FormViewerScope = 'admin' | 'grantee' | 'none'
+export type FormViewerScope = 'admin' | 'event_manager' | 'grantee' | 'none'
 
 /** ¿Los roles dan el módulo de formularios completo? */
 export function hasFormsModule(roles: readonly RoleId[] | null | undefined): boolean {
@@ -36,8 +39,13 @@ export function formViewerScope(input: {
   form: { id: string } | null
   /** ¿Existe un acceso puntual de esta persona a ESE formulario? */
   hasGrant: boolean
+  /** FRM-1 B: ¿es encargada del EVENTO al que pertenece este formulario?
+   *  El permiso del evento se HEREDA a su formulario — por eso alcanza con dos
+   *  tablas con FK real en vez de una polimórfica. */
+  isEventManager?: boolean
 }): FormViewerScope {
   if (hasFormsModule(input.roles)) return 'admin'
+  if (input.form && input.memberId && input.isEventManager) return 'event_manager'
   if (input.form && input.memberId && input.hasGrant) return 'grantee'
   return 'none'
 }
@@ -45,13 +53,15 @@ export function formViewerScope(input: {
 /** ¿Puede exportar las respuestas? El acceso puntual incluye la exportación
  *  (decisión 2026-08-04: para eso se da). */
 export function canExportFormResponses(scope: FormViewerScope): boolean {
-  return scope === 'admin' || scope === 'grantee'
+  return scope !== 'none'
 }
 
 /** ¿Puede editar la ESTRUCTURA del formulario? Solo el módulo, nunca el
  *  acceso puntual. La acción concreta la sigue validando el guard de escritura. */
 export function canEditFormStructure(scope: FormViewerScope): boolean {
-  return scope === 'admin'
+  // El encargado del evento sí edita el formulario de SU evento; el acceso
+  // puntual a un formulario suelto, no.
+  return scope === 'admin' || scope === 'event_manager'
 }
 
 /**

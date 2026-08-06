@@ -7,6 +7,7 @@ import {
   EventHasAttendanceError, type EventScope, type OccurrenceRef,
 } from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
+import { requireEventAccess } from '@/lib/auth/event-guard'
 
 /** Lee el alcance (all/future/single) y la ocurrencia del body, si vienen.
  *  `occurrence_date` = YYYY-MM-DD en hora CR (lo calcula el cliente). */
@@ -51,10 +52,12 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+  // FRM-1 B: el ENCARGADO edita SU evento (fechas, cupo, precio). Borrarlo y
+  // cancelarlo NO: eso sigue en dirección y en quien administra eventos.
+  const { id } = await params
+  const auth = await requireEventAccess(id)
   if (auth.res) return auth.res
   try {
-    const { id } = await params
     const body = await req.json()
     const { scope, occurrence } = readScope(body)
     // Solo reemplazamos sub-eventos si el body los trae explícitamente.

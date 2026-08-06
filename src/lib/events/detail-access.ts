@@ -21,10 +21,14 @@ export type EventTabPerms = {
   canCheckin: boolean
   /** can('eventos', 'export') — reportes. */
   canReport: boolean
+  /** FRM-1 B: encargada de ESTE evento (event_managers). Ve y gestiona todo lo
+   *  de este evento sin tener el módulo — y nada de los demás. */
+  isManager?: boolean
 }
 
 /** Tabs visibles. 'informacion' SIEMPRE está: es la parte pública de la ficha. */
 export function visibleEventTabs(perms: EventTabPerms): EventTab[] {
+  if (perms.isManager) return [...EVENT_TABS]   // su evento: lo ve completo
   return EVENT_TABS.filter(t =>
     t === 'informacion' ? true
     : t === 'checkin'   ? perms.canCheckin
@@ -35,8 +39,10 @@ export function visibleEventTabs(perms: EventTabPerms): EventTab[] {
 
 /** ¿Puede ver los datos de GESTIÓN del evento (inscritos, check-ins, cupos
  *  ocupados)? Es lo que decide si el payload del API los incluye. */
-export function canSeeEventManagementData(perms: Pick<EventTabPerms, 'canManage' | 'canCheckin' | 'canReport'>): boolean {
-  return perms.canManage || perms.canCheckin || perms.canReport
+export function canSeeEventManagementData(
+  perms: Pick<EventTabPerms, 'canManage' | 'canCheckin' | 'canReport' | 'isManager'>,
+): boolean {
+  return !!perms.isManager || perms.canManage || perms.canCheckin || perms.canReport
 }
 
 export type RegistrationCta =

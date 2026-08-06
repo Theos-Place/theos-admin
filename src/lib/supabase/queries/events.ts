@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { EventType, EventStatus, EventPaymentStatus, AttendanceType } from '@/types/event'
 
@@ -1085,3 +1086,95 @@ export async function deleteEventScoped(
 
 // Re-exportamos tipos de dominio usados por el adapter
 export type { AttendanceType }
+
+// ── Encargados de un evento (FRM-1 parte B, 2026-08-06) ─────────────────────
+// Permiso sobre UN evento, no un rol: la decisión de autorización vive en
+// src/lib/auth/events-scope.ts (pura); acá solo se leen y escriben las filas.
+
+export type EventManager = {
+  id: string
+  event_id: string
+  member_id: string
+  member_name: string
+  member_email: string | null
+  granted_by_name: string | null
+  granted_at: string
+}
+
+/** ¿Esta persona es encargada de ESTE evento? */
+export async function isEventManager(eventId: string, memberId: string | null): Promise<boolean> {
+  if (!memberId) return false
+  const supabase = createAdminClient() as unknown as SupabaseClient
+  const { data, error } = await supabase
+    .from('event_managers').select('id')
+    .eq('event_id', eventId).eq('member_id', memberId).maybeSingle()
+  if (error) { console.warn('isEventManager:', error.message); return false }
+  return !!data
+}
+
+/** Eventos que esta persona tiene a cargo (para acotar listados y el menú). */
+export async function getManagedEventIds(memberId: string | null): Promise<string[]> {
+  if (!memberId) return []
+  const supabase = createAdminClient() as unknown as SupabaseClient
+  const { data, error } = await supabase
+    .from('event_managers').select('event_id').eq('member_id', memberId)
+  if (error) { console.warn('getManagedEventIds:', error.message); return [] }
+  return ((data ?? []) as Array<{ event_id: string }>).map(r => r.event_id)
+}
+
+/** ¿Es encargada del evento AL QUE PERTENECE este formulario? Es la herencia:
+ *  el formulario de un evento lo ve y lo edita quien tiene el evento a cargo. */
+export async function isManagerOfFormEvent(formId: string, memberId: string | null): Promise<boolean> {
+  if (!memberId) return false
+  const supabase = createAdminClient() as unknown as SupabaseClient
+  const { data } = await supabase
+    .from('forms').select('entity_type, entity_id').eq('id', formId).maybeSingle()
+  const f = data as { entity_type: string | null; entity_id: string | null } | null
+  if (f?.entity_type !== 'event' || !f.entity_id) return false
+  return isEventManager(f.entity_id, memberId)
+}
+
+export async function getEventManagers(eventId: string): Promise<EventManager[]> {
+  const supabase = createAdminClient() as unknown as SupabaseClient
+  const { data, error } = await supabase
+    .from('event_managers')
+    .select(`
+      id, event_id, member_id, granted_at,
+      member:members!event_managers_member_id_fkey(first_name, last_name, email),
+      granter:members!event_managers_granted_by_fkey(first_name, last_name)
+    `)
+    .eq('event_id', eventId).order('granted_at', { ascending: true })
+  if (error) throw error
+  type Row = {
+    id: string; event_id: string; member_id: string; granted_at: string
+    member: { first_name: string; last_name: string; email: string | null } | null
+    granter: { first_name: string; last_name: string } | null
+  }
+  return ((data ?? []) as unknown as Row[]).map(r => ({
+    id: r.id,
+    event_id: r.event_id,
+    member_id: r.member_id,
+    member_name: [r.member?.first_name, r.member?.last_name].filter(Boolean).join(' ') || '—',
+    member_email: r.member?.email ?? null,
+    granted_by_name: r.granter ? [r.granter.first_name, r.granter.last_name].filter(Boolean).join(' ') : null,
+    granted_at: r.granted_at,
+  }))
+}
+
+/** Alta idempotente: repetir el mismo encargado no falla ni duplica (UNIQUE). */
+export async function grantEventManager(
+  eventId: string, memberId: string, grantedBy: string | null,
+): Promise<void> {
+  const supabase = createAdminClient() as unknown as SupabaseClient
+  const { error } = await supabase.from('event_managers')
+    .upsert({ event_id: eventId, member_id: memberId, granted_by: grantedBy },
+      { onConflict: 'event_id,member_id', ignoreDuplicates: true })
+  if (error) throw error
+}
+
+export async function revokeEventManager(eventId: string, memberId: string): Promise<void> {
+  const supabase = createAdminClient() as unknown as SupabaseClient
+  const { error } = await supabase.from('event_managers')
+    .delete().eq('event_id', eventId).eq('member_id', memberId)
+  if (error) throw error
+}
