@@ -40,10 +40,6 @@
     {
       "path": "/api/cron/study-surveys",
       "schedule": "30 17 * * *"
-    },
-    {
-      "path": "/api/cron/scheduled-broadcasts",
-      "schedule": "*/15 * * * *"
     }
   ]
 }

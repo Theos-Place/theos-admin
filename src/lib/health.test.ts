@@ -8,6 +8,16 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 
 const vercel = JSON.parse(readFileSync('vercel.json', 'utf8')) as { crons: Array<{ path: string }> }
+
+/** Crons que NO los dispara Vercel.
+ *
+ *  El plan de Vercel es Hobby y ahí los crons solo pueden correr UNA VEZ AL DÍA:
+ *  un schedule más frecuente en vercel.json hace que Vercel rechace el
+ *  deployment ENTERO, no solo ese cron (comprobado 2026-08-07: "Hobby accounts
+ *  are limited to daily cron jobs"). Los que necesitan correr más seguido se
+ *  disparan desde afuera, pero igual llevan su health check: el modo de fallo
+ *  que se vigila es el mismo. */
+const CRONS_EXTERNOS = ['/api/cron/scheduled-broadcasts']
 const envExample = readFileSync('.env.example', 'utf8')
 const health = readFileSync('src/lib/health.ts', 'utf8')
 
@@ -17,7 +27,7 @@ const declaradas = [...health.matchAll(/'(HEALTHCHECK_URL_[A-Z_]+)'/g)].map(m =>
 describe('health checks de los crons', () => {
   it('cada cron de vercel.json pingea un health check', () => {
     const sinPing: string[] = []
-    for (const { path } of vercel.crons) {
+    for (const path of [...vercel.crons.map(c => c.path), ...CRONS_EXTERNOS]) {
       const archivo = `src/app${path}/route.ts`
       const src = readFileSync(archivo, 'utf8')
       if (!src.includes('pingHealthcheck(')) sinPing.push(path)
@@ -33,6 +43,6 @@ describe('health checks de los crons', () => {
 
   it('hay tantos health checks como crons', () => {
     // Si no coinciden, o sobra una variable muerta o falta un cron por cubrir.
-    expect(declaradas.length).toBe(vercel.crons.length)
+    expect(declaradas.length).toBe(vercel.crons.length + CRONS_EXTERNOS.length)
   })
 })
