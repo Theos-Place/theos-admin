@@ -59,3 +59,25 @@ describe('inlineButtonColors', () => {
       .toContain('style="color:#ffffff; text-decoration:none;"')
   })
 })
+
+// ── EST-13 · Tabla de conteos de la retroalimentación ───────────────────────
+describe('estilos de la tabla de puntajes', () => {
+  const html = renderEmail('<table class="score-table"><tr><td class="score-crit">x</td></tr></table>')
+
+  it('las clases viven en el layout, no en el cuerpo', () => {
+    // Un <style> dentro del body lo ignoran varios clientes de correo.
+    expect(html).toContain('.score-table')
+    expect(html).toContain('.score-crit')
+    expect(html).toContain('.scale-legend')
+  })
+
+  it('tiene variante responsive: 6 columnas no entran en un celular', () => {
+    const media = html.slice(html.indexOf('@media'))
+    expect(media).toContain('.score-table')
+  })
+
+  it('el cuerpo pasa tal cual, con el header y el footer del sistema', () => {
+    expect(html).toContain('class="score-table"')
+    expect(html).toContain('class="wrapper"')
+  })
+})

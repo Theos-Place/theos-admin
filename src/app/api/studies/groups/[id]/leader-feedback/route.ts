@@ -5,6 +5,7 @@ import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { feedbackError, leaderView, SCORE_MIN, SCORE_MAX, COMMENT_MAX } from '@/lib/studies/leader-feedback'
 import { summarize } from '@/lib/studies/leader-feedback'
+import { sendLeaderFeedbackReport } from '@/lib/email/leader-feedback-report-send'
 import {
   memberCanEvaluate, saveLeaderFeedback, groupFeedbackRows, feedbackGroupRef,
   releaseGroupFeedback, setFeedbackHidden,
@@ -148,7 +149,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (parsed.data.action === 'compartir') {
       await releaseGroupFeedback(id, auth.ctx.memberId)
-      return NextResponse.json({ ok: true })
+      // EST-13: compartir ES enviar. El paso de revisión que pedía el plan ya
+      // ocurrió — el comité leyó las respuestas y ocultó lo que no correspondía
+      // antes de apretar este botón. Best-effort: si el correo falla, la
+      // retroalimentación igual queda compartida en la ficha.
+      let sent = 0
+      try {
+        sent = (await sendLeaderFeedbackReport(id)).sent
+      } catch (e) {
+        console.warn('No se pudo enviar el resumen al dirigente:', e)
+      }
+      return NextResponse.json({ ok: true, sent })
     }
     await setFeedbackHidden({
       evaluationId: parsed.data.evaluation_id,

@@ -39,6 +39,19 @@ const STYLES = `
   .tag { display: inline-block; background: #EF5554; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 50px; margin-bottom: 16px; }
   .tag-blue { background: #161440; }
   .tag-teal { background: #70BDC2; }
+  /* EST-13 · Tabla de conteos de la retroalimentación al dirigente. Va acá y no
+     en el cuerpo de la plantilla porque un <style> dentro del body lo ignoran
+     varios clientes de correo — y así queda disponible para cualquier otra
+     plantilla que necesite una tabla. */
+  .score-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; table-layout: fixed; }
+  .score-table th { background: #161440; padding: 10px; font-size: 12px; font-weight: 700; color: #70BDC2; text-align: center; width: 42px; }
+  .score-table th.score-crit { text-align: left; padding: 10px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; width: auto; border-radius: 8px 0 0 0; }
+  .score-table th:last-child { border-radius: 0 8px 0 0; }
+  .score-table td { padding: 12px 6px; font-size: 14px; font-weight: 700; color: #161440; text-align: center; }
+  .score-table td.score-crit { text-align: left; padding: 12px 14px; font-size: 13px; font-weight: 400; color: #444; word-break: break-word; overflow-wrap: break-word; }
+  .score-table tr:nth-child(odd) td { background: #f4f4f0; }
+  .score-table tr:nth-child(even) td { background: #ffffff; }
+  .scale-legend { font-size: 11px; color: #888; margin-bottom: 10px; line-height: 1.6; }
   .student-list { margin: 0; padding: 0; list-style: none; }
   .student-list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #444; }
   .student-list li:last-child { border-bottom: none; }
@@ -68,6 +81,11 @@ const STYLES = `
     .body { padding-top: 32px; padding-bottom: 28px; }
     .greeting { font-size: 18px; }
     .info-label { min-width: 70px; }
+    /* Una tabla de 6 columnas no entra en un celular: se achica todo y el
+       criterio se queda con el ancho que sobre. */
+    .score-table th, .score-table td { padding: 8px 3px !important; font-size: 12px !important; }
+    .score-table th { width: 26px !important; }
+    .score-table th.score-crit, .score-table td.score-crit { padding: 8px !important; font-size: 12px !important; }
   }
 `
 

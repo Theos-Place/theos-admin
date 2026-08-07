@@ -1837,6 +1837,85 @@ Tests: el cron no reenvía; el formulario autollena el contexto del grupo; la vi
 resultados no muestra nombres; con menos de 3 respuestas se ocultan los comentarios.
 ```
 
+### [ ] EST-13 · Correo de retroalimentación al dirigente con el resumen de la encuesta
+Archivos: `docs/referencias/email-feedback-dirigente.html` (molde visual con datos de ejemplo), `src/lib/email/`, `message_templates`, cron o disparo desde la ficha del grupo
+Depende de: EST-12 (la encuesta tiene que existir y tener respuestas)
+
+```
+Después de recoger la encuesta de EST-12, al dirigente se le manda un correo con el RESUMEN
+AGREGADO de sus evaluaciones. El molde visual está en
+docs/referencias/email-feedback-dirigente.html (con datos de ejemplo).
+
+⚠️ ESTO NO ES UNA PLANTILLA EDITABLE COMÚN: las tablas de conteos y las listas de
+comentarios se CALCULAN a partir de las respuestas. La plantilla es la cáscara (saludo,
+secciones, versículo, firma) y el contenido de las tablas se genera. Decidí cómo lo
+resolvés — helper de render en src/lib/email/ con marcadores en la plantilla, o generación
+completa desde código con la plantilla solo para el copy editable — y decime cuál elegiste.
+
+⚠️ USAR EL LAYOUT BASE DEL SISTEMA, NO EL HTML SUELTO DEL REFERENCIA
+El archivo de referencia es un correo COMPLETO y autónomo: trae su propio <style>, wrapper,
+header con logo y footer. En este sistema las plantillas guardan SOLO EL CUERPO y
+renderEmail() de src/lib/email/baseLayout.ts pone el resto. Al portarlo:
+ - QUITAR del HTML: el bloque <style>, el div .wrapper, el header con el logo y el tagline,
+   y el footer. Todo eso ya lo pone baseLayout (y así el logo sale del asset correcto, sin
+   la URL de CCB).
+ - REUTILIZAR las clases que ya existen en lugar de estilos en línea duplicados:
+   · .tag .tag-blue  → la etiqueta "📊 Retroalimentación"
+   · .greeting       → "Hola, {nombre} 👋"
+   · .divider        → los separadores degradados
+   · .info-box + .info-title → los dos bloques de comentarios
+   · .highlight-box  → la caja navy del versículo
+   Los párrafos normales ya heredan el estilo de .body p, no les pongas font-size a mano.
+ - LO ÚNICO QUE NO EXISTE son las tablas de conteos. Agregá esas clases a los STYLES de
+   baseLayout.ts (algo como .score-table, .score-head, .score-cell, .scale-legend) en vez de
+   dejar estilos en línea en el cuerpo: el comentario del propio archivo explica que un
+   <style> dentro del body lo ignoran varios clientes de correo, y así quedan disponibles si
+   otra plantilla necesita una tabla.
+ - Sumá la variante responsive de la tabla al bloque @media de baseLayout: en celular una
+   tabla de 6 columnas se desborda.
+ - Actualizá baseLayout.test.ts con el caso nuevo.
+Resultado esperado: si mañana cambia el header o el footer de los correos, este también
+cambia solo, sin tocarlo.
+
+ESTRUCTURA (respetala, viene del correo que ya usan):
+- Etiqueta "📊 Retroalimentación", saludo "Hola, {nombre} 👋" y el párrafo de contexto.
+- "Recibimos N evaluaciones de tu grupo".
+- Cinco secciones, cada una con su LEYENDA DE ESCALA propia arriba (porque las escalas
+  cambian entre secciones) y una tabla de conteos por opción:
+    1. Conocimiento del material — Totalmente / En gran parte / Algo / Muy poco
+    2. Preparación y participación — Siempre / Frecuentemente / A veces / Rara vez
+    3. Manejo de intervenciones — Muy bien / Bien, podría mejorar / A veces interrumpe /
+       No interviene / No aplica
+    4. Temas sensibles — Mucha sensibilidad / Generalmente sensible / Algo sensible /
+       Poco sensible / No aplica
+    5. Comunicación y actitud — Siempre / Frecuentemente / A veces / Nunca
+  Las celdas muestran CUÁNTAS personas eligieron esa opción; vacías si es cero (no "0").
+- Dos bloques de comentarios abiertos, en viñetas: sobre el dirigente y el curso, y sobre el
+  folleto y el contenido.
+- Versículo de Mateo 25:23b en la caja navy, y firma del Comité de Dirigentes.
+
+REGLAS IMPORTANTES
+- CONFIDENCIALIDAD: el correo va con conteos y comentarios ANÓNIMOS, nunca con nombres.
+  Esto es lo que hace que el dirigente sí pueda recibir su propia retroalimentación (ajusta
+  lo anotado en EST-12: el agregado sí se comparte, el detalle por persona no).
+- MÍNIMO DE RESPUESTAS: si el grupo tuvo menos de 3 respuestas, NO mandes los comentarios
+  abiertos (con dos se adivina quién escribió qué). Con menos de 3 en total, evaluá si vale
+  mandar el correo o esperar — proponeme la regla.
+- CO-DIRIGENTE: si el grupo tiene co-dirigente, ¿recibe el mismo correo? Mi inclinación es
+  que sí, con el mismo contenido. Confirmámelo.
+- LOGO: el HTML de referencia apunta a theosplace.ccbchurch.com. Reemplazalo por un asset
+  propio, igual que en las otras plantillas. No debe quedar ninguna URL de CCB.
+- Los comentarios abiertos pueden venir con formato pegado desde Word (el ejemplo trae
+  spans con Calibri): limpialos antes de insertarlos, dejá solo el texto.
+- ENVÍO: definí si lo dispara el cierre + un desfase, o si el comité lo manda a mano desde
+  la ficha del grupo después de revisar. Mi inclinación: generarlo automático pero que
+  quede en borrador para que el comité lo revise y lo envíe — es información sensible y
+  alguien debería leerla antes. Proponémelo.
+
+Tests: los conteos coinciden con las respuestas; con menos de 3 respuestas no salen los
+comentarios; ningún nombre de estudiante aparece en el HTML generado.
+```
+
 ### [ ] INT-3 · Cerrar los huecos de multimoneda (antes de cobrar en euros / antes de Tilopay)
 Archivos: RPCs en la migración baseline (`donation_stats`, `payment_stats`, `dashboard_sums`, `create_refund`), `src/lib/format.ts`, `sedes` (migración), forms de plan/grupo/evento, `src/lib/supabase/queries/scholarships.ts` y `finance.ts`, exports CSV
 Continúa **INT-2** (backlog, cerrado el 2026-07-28), que dejó explícitamente pendiente la decisión de producto sobre los agregados. Decisión tomada: **por moneda separada, sin conversión automática.**

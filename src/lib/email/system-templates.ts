@@ -19,7 +19,7 @@ export type SystemTemplateKey =
   | 'beca_aprobada' | 'beca_aprobada_parcial' | 'beca_rechazada'
   | 'cupon_asignado'
   | 'encuesta_evento'
-  | 'retro_dirigente'
+  | 'retro_dirigente' | 'retro_dirigente_resumen'
 
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */
@@ -50,6 +50,12 @@ const FALLBACK: Record<string, { subject: string; html: string }> = {
   retro_dirigente: {
     subject: '¿Cómo te fue en {{nombre_estudio}}?',
     html: '<p>Hola {{nombre}},</p><p>Terminaste <strong>{{nombre_estudio}}</strong> con {{nombre_dirigente}}. Nos ayudaría mucho saber cómo te fue: son dos preguntas y es anónimo para tu dirigente.</p><p><a href="{{link_encuesta}}">Responder</a></p>',
+  },
+  // EST-13: resumen agregado que recibe el dirigente. La cáscara es editable;
+  // {{tablas}} y {{comentarios}} los genera leader-feedback-report.ts.
+  retro_dirigente_resumen: {
+    subject: 'Tu retroalimentación de {{nombre_estudio}}',
+    html: '<p>Hola {{nombre}},</p><p>Recibimos {{cantidad}} evaluaciones de tu grupo de {{nombre_estudio}}.</p>{{tablas}}{{comentarios}}',
   },
   // BEC-1: cupón genérico enviado a una persona desde /finanzas/becas.
   cupon_asignado: {
