@@ -23,17 +23,34 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export async function scheduleLeaderFeedback(groupId: string): Promise<{ scheduled: string | null }> {
   const sb = createAdminClient() as unknown as SupabaseClient
   const { data } = await sb.from('study_groups')
-    .select('survey_enabled, survey_offset_hours, feedback_requested_at, survey_send_at')
+    .select('survey_enabled, survey_offset_hours, feedback_requested_at, survey_send_at, survey_form_id')
     .eq('id', groupId).maybeSingle()
-  const g = data as { survey_enabled: boolean; survey_offset_hours: number | null; feedback_requested_at: string | null; survey_send_at: string | null } | null
+  const g = data as { survey_enabled: boolean; survey_offset_hours: number | null; feedback_requested_at: string | null; survey_send_at: string | null; survey_form_id: string | null } | null
   if (!g || !g.survey_enabled) return { scheduled: null }
   // Ya enviada o ya programada: no se re-programa (re-cerrar no corre la fecha).
   if (g.feedback_requested_at || g.survey_send_at) return { scheduled: g.survey_send_at }
 
   const cuando = surveySendAt(new Date().toISOString(), g.survey_offset_hours ?? 24)
   if (!cuando) return { scheduled: null }
-  await sb.from('study_groups').update({ survey_send_at: cuando }).eq('id', groupId)
+  // Se FIJA el cuestionario que le tocó a este grupo. Si mañana alguien edita
+  // el formulario, las respuestas viejas siguen apuntando a las preguntas que
+  // esa gente respondió.
+  const formId = g.survey_form_id ?? await currentSurveyFormId(sb)
+  await sb.from('study_groups')
+    .update({ survey_send_at: cuando, survey_form_id: formId })
+    .eq('id', groupId)
   return { scheduled: cuando }
+}
+
+/** El formulario de encuesta vigente. Se busca por título —es el que crea
+ *  scripts/seed-study-survey-form.mjs— porque `forms` no tiene una clave de
+ *  sistema como message_templates. */
+export const SURVEY_FORM_TITLE = 'Encuesta de satisfacción — Estudio bíblico'
+
+export async function currentSurveyFormId(sb: SupabaseClient): Promise<string | null> {
+  const { data } = await sb.from('forms')
+    .select('id').eq('title', SURVEY_FORM_TITLE).eq('is_active', true).maybeSingle()
+  return (data as { id: string } | null)?.id ?? null
 }
 
 export async function requestLeaderFeedback(groupId: string): Promise<{ sent: number; skipped?: string }> {

@@ -10,6 +10,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { MessageSquare, EyeOff, Eye, Send, Loader2, ShieldCheck } from 'lucide-react'
 import { SCORE_LABELS, MIN_RESPUESTAS_PARA_MOSTRAR, type FeedbackSummary, type LeaderView } from '@/lib/studies/leader-feedback'
+import type { PreguntaResumen } from '@/lib/studies/study-survey'
 import { cn } from '@/lib/utils'
 
 type Fila = { id?: string; score: number; comments?: string | null; hidden?: boolean }
@@ -19,6 +20,7 @@ type Payload = {
   summary?: FeedbackSummary
   rows?: Fila[]
   view?: LeaderView
+  per_question?: PreguntaResumen[]
 }
 
 export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
@@ -74,7 +76,12 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
         </Caja>
       )
     }
-    return <Caja><Resumen s={v.summary} /></Caja>
+    return (
+      <Caja>
+        <Resumen s={v.summary} />
+        <PorPregunta preguntas={data.per_question ?? []} />
+      </Caja>
+    )
   }
 
   // ── Coordinación ──────────────────────────────────────────────────────────
@@ -92,6 +99,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
   return (
     <Caja>
       <Resumen s={s} sinComentarios />
+      <PorPregunta preguntas={data.per_question ?? []} />
 
       <div className="space-y-2 pt-1">
         <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
@@ -143,6 +151,33 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
         )}
       </div>
     </Caja>
+  )
+}
+
+/** Promedio por pregunta: lo que dice DÓNDE mejorar. Ordenado de peor a mejor,
+ *  porque lo que hay que mirar primero es lo más bajo. */
+function PorPregunta({ preguntas }: { preguntas: PreguntaResumen[] }) {
+  if (preguntas.length === 0) return null
+  const conNota = [...preguntas]
+    .filter(p => p.average !== null)
+    .sort((a, b) => (a.average ?? 0) - (b.average ?? 0))
+  if (conNota.length === 0) return null
+  return (
+    <div className="space-y-1.5 pt-2 border-t border-[var(--outline-variant)]">
+      <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Por pregunta</p>
+      {conNota.map(p => (
+        <div key={p.fieldId} className="flex items-center gap-2 text-[12px] font-body">
+          <span className="flex-1 text-navy-light/80">{p.label}</span>
+          <span className="h-1.5 w-16 shrink-0 rounded-full bg-surface-low overflow-hidden">
+            <span
+              className={cn('block h-full rounded-full', (p.average ?? 0) < 3 ? 'bg-coral' : 'bg-teal-deep')}
+              style={{ width: `${((p.average ?? 0) / 5) * 100}%` }}
+            />
+          </span>
+          <span className="w-8 text-right tabular-nums text-navy font-medium">{p.average}</span>
+        </div>
+      ))}
+    </div>
   )
 }
 

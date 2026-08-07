@@ -1739,7 +1739,32 @@ Tests: el wizard completa con 4 pasos; la regla de los 6 meses sigue funcionando
 nueva ubicación; una solicitud vieja con oficiante se lee bien en la cola.
 ```
 
-### [ ] EST-12 · Encuesta de satisfacción del dirigente al cerrar un grupo
+### [x] EST-12 · Encuesta de satisfacción del dirigente al cerrar un grupo
+
+> **HECHO 2026-08-06.** Formulario de 12 preguntas (seed idempotente
+> `scripts/seed-study-survey-form.mjs`), envío programado por cron
+> `/api/cron/study-surveys` (17:30 UTC) con el molde de EVE-4, y panel con
+> promedio por pregunta.
+>
+> **ASOCIACIÓN grupo → dirigente (lo que el plan pedía proponer):** el formulario es UNO
+> para todos los grupos, así que no puede colgar de una entidad. La respuesta detallada vive
+> en `form_responses` y **`leader_evaluations` es la proyección consultable** — grupo,
+> dirigente, co-dirigente y promedio en una fila, con índice. `study_groups.survey_form_id`
+> FIJA el cuestionario que le tocó a cada grupo: si mañana se edita, las respuestas viejas
+> siguen apuntando a las preguntas que esa gente respondió.
+>
+> **CONFIDENCIALIDAD:** se guarda quién respondió (dedupe y tasa de respuesta) pero la vista
+> nunca muestra nombre junto a respuesta. El dirigente NO ve nada hasta que la coordinación
+> revisa y comparte; con menos de 3 respuestas no ve los comentarios.
+>
+> **DESTINATARIOS (confirmado contra el SQL del cierre):** los reprobados quedan `completed`
+> y los retirados `dropped`, así que el criterio `completed`/`enrolled` ya deja fuera
+> exactamente a los retirados, como pedía la inclinación del plan.
+>
+> Puntaje: el formulario pregunta con palabras y `study-survey.ts` las convierte a 1-5 por
+> posición (la primera opción es la mejor), así preguntas de 4 y de 5 opciones son
+> comparables sin una tabla de puntajes que se desincronice. "No aplica" no puntúa.
+> Se puede apagar por grupo (`survey_enabled`).
 Archivos: módulo de formularios, `study_groups` (migración), cron nuevo, `src/lib/email/`, patrón a copiar: `src/app/api/cron/event-surveys/route.ts` + `src/lib/events/survey-schedule.ts` + `src/lib/email/event-survey-notify.ts`
 
 ```
@@ -1837,7 +1862,23 @@ Tests: el cron no reenvía; el formulario autollena el contexto del grupo; la vi
 resultados no muestra nombres; con menos de 3 respuestas se ocultan los comentarios.
 ```
 
-### [ ] EST-13 · Correo de retroalimentación al dirigente con el resumen de la encuesta
+### [x] EST-13 · Correo de retroalimentación al dirigente con el resumen de la encuesta
+
+> **HECHO 2026-08-06.** Cinco secciones con sus tablas de conteos y los dos bloques de
+> comentarios. La plantilla es la CÁSCARA editable con `{{tablas}}` y `{{comentarios}}`;
+> el HTML lo genera `src/lib/email/leader-feedback-report.ts`.
+> Usa el layout base: las clases `.score-table`/`.scale-legend` se agregaron a
+> `baseLayout.ts` con su variante responsive. Ninguna URL de CCB.
+>
+> **DECISIONES PROPUESTAS Y APLICADAS:**
+> · CUÁNDO → al apretar "Compartir con el dirigente". No hizo falta un borrador aparte: el
+>   paso de revisión ya existe y hace eso. Compartir ES enviar.
+> · MENOS DE 3 RESPUESTAS → el correo sale, sin los comentarios abiertos. Callarse es peor:
+>   el dirigente sabe que la encuesta salió. Sin NINGUNA respuesta no se manda.
+> · CO-DIRIGENTE → recibe el mismo correo.
+>
+> Verificado con datos reales: 5 tablas, 5 leyendas, 33 celdas en cero vacías, 4 comentarios,
+> sin nombres y con el layout del sistema.
 Archivos: `docs/referencias/email-feedback-dirigente.html` (molde visual con datos de ejemplo), `src/lib/email/`, `message_templates`, cron o disparo desde la ficha del grupo
 Depende de: EST-12 (la encuesta tiene que existir y tener respuestas)
 

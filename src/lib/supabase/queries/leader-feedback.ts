@@ -2,6 +2,8 @@
 // @/lib/studies/leader-feedback; acá solo se leen y escriben filas.
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canEvaluate, summarize, type FeedbackRow, type FeedbackSummary } from '@/lib/studies/leader-feedback'
+import { responseAverage, perQuestionSummary, type RespuestaCerrada } from '@/lib/studies/study-survey'
+import { currentSurveyFormId } from '@/lib/email/leader-feedback-notify'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 type GrupoRef = {
@@ -67,6 +69,98 @@ export async function memberCanEvaluate(groupId: string, memberId: string) {
   }
 }
 
+/** Las preguntas del cuestionario que le tocó a este grupo. */
+export async function surveyQuestions(groupId: string): Promise<{
+  formId: string | null
+  fields: Array<{ id: string; label: string; help_text: string | null; description: string | null; field_type: string; options: string[]; is_required: boolean }>
+}> {
+  const sb = createAdminClient() as unknown as SupabaseClient
+  const { data: g } = await sb.from('study_groups').select('survey_form_id').eq('id', groupId).maybeSingle()
+  let formId = (g as { survey_form_id: string | null } | null)?.survey_form_id ?? null
+  // Grupos cerrados ANTES de EST-12 no tienen cuestionario fijado: se usa el vigente.
+  if (!formId) formId = await currentSurveyFormId(sb)
+  if (!formId) return { formId: null, fields: [] }
+
+  const { data } = await sb.from('form_fields')
+    .select('id, label, help_text, description, field_type, options, is_required')
+    .eq('form_id', formId).order('sort_order')
+  const fields = ((data ?? []) as Array<{ id: string; label: string; help_text: string | null; description: string | null; field_type: string; options: unknown; is_required: boolean | null }>)
+    .map(f => ({
+      id: f.id, label: f.label, help_text: f.help_text, description: f.description,
+      field_type: f.field_type,
+      options: Array.isArray(f.options) ? (f.options as string[]) : [],
+      is_required: !!f.is_required,
+    }))
+  return { formId, fields }
+}
+
+/** Guarda la respuesta COMPLETA del cuestionario (EST-12 parte 2):
+ *  la respuesta detallada va a form_responses/values y la PROYECCIÓN a
+ *  leader_evaluations, que es lo que permite promediar por dirigente. */
+export async function saveSurveyResponse(input: {
+  groupId: string
+  memberId: string
+  formId: string
+  answers: Record<string, string>
+}): Promise<void> {
+  const sb = createAdminClient() as unknown as SupabaseClient
+  const grupo = await feedbackGroupRef(input.groupId)
+  if (!grupo?.leader_id) throw new Error('GRUPO_SIN_DIRIGENTE')
+  const { data: sl } = await sb
+    .from('study_leaders').select('id').eq('member_id', grupo.leader_id).limit(1).maybeSingle()
+  const leaderId = (sl as { id: string } | null)?.id
+  if (!leaderId) throw new Error('DIRIGENTE_SIN_FICHA')
+
+  // ANTES de escribir nada: si ya respondió, se corta. El endpoint ya lo valida,
+  // pero si el choque saliera recién en la proyección quedaría una respuesta
+  // huérfana en form_responses — pasó al probar esto de punta a punta.
+  const { data: yaResp } = await sb.from('leader_evaluations')
+    .select('id').eq('group_id', input.groupId).eq('member_id', input.memberId).limit(1)
+  if (((yaResp ?? []) as unknown[]).length > 0) throw new Error('YA_RESPONDIO')
+
+  // La respuesta detallada, por el mismo RPC transaccional del módulo de forms.
+  const { data: rpcId, error } = await sb.rpc('submit_form_response', {
+    p_form_id: input.formId,
+    p_member_id: input.memberId,
+    p_guest_name: null,
+    p_guest_email: null,
+    p_answers: input.answers,
+  } as never)
+  if (error) throw error
+  const responseId = rpcId as unknown as string
+
+  // La proyección: promedio de las cerradas + el comentario abierto principal.
+  const { fields } = await surveyQuestions(input.groupId)
+  const cerradas = fields.filter(f => f.field_type === 'radio').map(f => ({
+    fieldId: f.id, label: f.label, options: f.options, answer: input.answers[f.id] ?? null,
+  }))
+  const promedio = responseAverage(cerradas)
+  const abierto = fields
+    .filter(f => f.field_type === 'textarea' && !/folleto/i.test(f.label))
+    .map(f => input.answers[f.id])
+    .find(v => (v ?? '').trim()) ?? null
+
+  const { error: projErr } = await sb.from('leader_evaluations').insert({
+    leader_id: leaderId,
+    co_leader_id: grupo.co_leader_id,
+    group_id: input.groupId,
+    member_id: input.memberId,
+    response_id: responseId,
+    // Sin ninguna pregunta puntuada (todo "No aplica") igual queda la fila, con
+    // el mínimo: la respuesta existe y sus comentarios cuentan.
+    score: promedio ?? 3,
+    comments: abierto,
+    evaluation_date: new Date().toISOString().slice(0, 10),
+  })
+  if (projErr) {
+    // La proyección es lo que hace útil la respuesta: sin ella no se puede
+    // promediar por dirigente. Si falla, se deshace la respuesta en vez de
+    // dejarla colgando.
+    await sb.from('form_responses').delete().eq('id', responseId)
+    throw projErr
+  }
+}
+
 /** Guarda la evaluación. El `leader_id` de la tabla apunta a study_leaders, no a
  *  members: se resuelve desde el dirigente del grupo. */
 export async function saveLeaderFeedback(input: {
@@ -106,6 +200,37 @@ export async function groupFeedbackRows(groupId: string): Promise<FeedbackRow[]>
     .order('created_at')
   return ((data ?? []) as Array<{ id: string; score: number; comments: string | null; hidden_at: string | null }>)
     .map(r => ({ id: r.id, score: r.score, comments: r.comments, hidden: !!r.hidden_at }))
+}
+
+/** Promedio POR PREGUNTA de un grupo. Es lo que dice DÓNDE mejorar: un promedio
+ *  general de 4.2 no distingue "explica bien" de "no fomenta la participación". */
+export async function groupPerQuestion(groupId: string) {
+  const sb = createAdminClient() as unknown as SupabaseClient
+  const { data: evals } = await sb.from('leader_evaluations')
+    .select('response_id').eq('group_id', groupId).not('response_id', 'is', null)
+  const ids = ((evals ?? []) as Array<{ response_id: string }>).map(e => e.response_id)
+  if (ids.length === 0) return []
+
+  const { data } = await sb.from('form_response_values')
+    .select('response_id, value_text, field:form_fields(id, label, field_type, options)')
+    .in('response_id', ids)
+  const rows = (data ?? []) as unknown as Array<{
+    response_id: string; value_text: string | null
+    field: { id: string; label: string; field_type: string; options: unknown } | null
+  }>
+  const porRespuesta = new Map<string, RespuestaCerrada[]>()
+  for (const r of rows) {
+    if (r.field?.field_type !== 'radio') continue
+    const lista = porRespuesta.get(r.response_id) ?? []
+    lista.push({
+      fieldId: r.field.id,
+      label: r.field.label,
+      options: Array.isArray(r.field.options) ? (r.field.options as string[]) : [],
+      answer: r.value_text,
+    })
+    porRespuesta.set(r.response_id, lista)
+  }
+  return perQuestionSummary([...porRespuesta.values()])
 }
 
 /** Resumen de UN grupo (para la coordinación: incluye todo). */

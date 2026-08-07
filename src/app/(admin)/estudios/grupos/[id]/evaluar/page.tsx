@@ -9,21 +9,29 @@ import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Check, Loader2, ChevronLeft, ShieldCheck } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
-import { SCORE_LABELS, SCORE_MIN, SCORE_MAX, COMMENT_MAX } from '@/lib/studies/leader-feedback'
+import { COMMENT_MAX } from '@/lib/studies/leader-feedback'
 import { cn } from '@/lib/utils'
+
+type Campo = {
+  id: string; label: string; help_text: string | null; description: string | null
+  field_type: string; options: string[]; is_required: boolean
+}
 
 type Estado = {
   group: { id: string; name: string | null; plan_name: string | null; leader_name: string | null }
   can_answer?: boolean
   reason?: string | null
+  form_id?: string | null
+  fields?: Campo[]
 }
 
 export default function EvaluarDirigentePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [data, setData] = useState<Estado | null>(null)
   const [cargando, setCargando] = useState(true)
-  const [score, setScore] = useState<number | null>(null)
-  const [comments, setComments] = useState('')
+  // Las respuestas del cuestionario, por id de campo. Las preguntas salen del
+  // formulario que el comité edita en el builder — acá no hay ninguna hardcodeada.
+  const [answers, setAnswers] = useState<Record<string, string>>({})
   const [enviando, setEnviando] = useState(false)
   const [listo, setListo] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,14 +45,18 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
     return () => { vivo = false }
   }, [id])
 
+  const campos = data?.fields ?? []
+  const preguntas = campos.filter(c => c.field_type === 'radio' || c.field_type === 'textarea')
+  const faltante = preguntas.find(c => c.is_required && !(answers[c.id] ?? '').trim())
+
   async function enviar() {
-    if (score == null || enviando) return
+    if (faltante || enviando) return
     setEnviando(true); setError(null)
     try {
       const res = await fetch(`/api/studies/groups/${id}/leader-feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score, comments: comments.trim() || null }),
+        body: JSON.stringify({ answers }),
       })
       const body = await res.json().catch(() => null)
       if (!res.ok) throw new Error(body?.error || 'No se pudo enviar tu evaluación.')
@@ -114,56 +126,81 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
           </p>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Tu nota</p>
-          <div className="space-y-1.5">
-            {Array.from({ length: SCORE_MAX - SCORE_MIN + 1 }, (_, i) => SCORE_MAX - i).map(n => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setScore(n)}
-                aria-pressed={score === n}
-                className={cn(
-                  'w-full flex items-center gap-3 rounded-xl border px-4 py-2.5 text-left transition-colors font-body',
-                  score === n
-                    ? 'border-coral bg-coral/5 text-navy'
-                    : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
+        {campos.map(c => {
+          if (c.field_type === 'info') {
+            return (
+              <div key={c.id} className="rounded-xl bg-surface-low px-4 py-3 space-y-1">
+                {c.label && <p className="text-[13px] font-bold text-navy font-display">{c.label}</p>}
+                {c.description && (
+                  <p className="text-[13px] text-navy-light/80 font-body leading-relaxed whitespace-pre-line">{c.description}</p>
                 )}
-              >
-                <span className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold',
-                  score === n ? 'bg-coral text-white' : 'bg-surface-low text-navy-light')}>{n}</span>
-                <span className="text-[13px]">{SCORE_LABELS[n]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <label htmlFor="retro-comentario" className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
-            ¿Algo que quieras contarnos? (opcional)
-          </label>
-          <textarea
-            id="retro-comentario"
-            rows={4}
-            maxLength={COMMENT_MAX}
-            value={comments}
-            onChange={e => setComments(e.target.value)}
-            placeholder="Lo que funcionó, lo que se puede mejorar…"
-            className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-y font-body"
-          />
-          <p className="text-right text-[11px] text-navy-light/60 font-mono">{comments.length}/{COMMENT_MAX}</p>
-        </div>
+              </div>
+            )
+          }
+          if (c.field_type === 'radio') {
+            return (
+              <fieldset key={c.id} className="space-y-2">
+                <legend className="text-[13px] text-navy font-body">
+                  {c.label} {c.is_required && <span className="text-coral">*</span>}
+                </legend>
+                {c.help_text && <p className="text-[12px] text-navy-light/60 font-body">{c.help_text}</p>}
+                <div className="space-y-1.5">
+                  {c.options.map(o => (
+                    <button
+                      key={o}
+                      type="button"
+                      onClick={() => setAnswers(a => ({ ...a, [c.id]: o }))}
+                      aria-pressed={answers[c.id] === o}
+                      className={cn(
+                        'w-full rounded-xl border px-4 py-2.5 text-left text-[13px] transition-colors font-body',
+                        answers[c.id] === o
+                          ? 'border-coral bg-coral/5 text-navy'
+                          : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
+                      )}
+                    >
+                      {o}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )
+          }
+          if (c.field_type === 'textarea') {
+            return (
+              <div key={c.id} className="space-y-1.5">
+                <label htmlFor={`f-${c.id}`} className="text-[13px] text-navy font-body block">
+                  {c.label} {!c.is_required && <span className="text-navy-light/60">(opcional)</span>}
+                </label>
+                {c.help_text && <p className="text-[12px] text-navy-light/60 font-body">{c.help_text}</p>}
+                <textarea
+                  id={`f-${c.id}`}
+                  rows={3}
+                  maxLength={COMMENT_MAX}
+                  value={answers[c.id] ?? ''}
+                  onChange={e => setAnswers(a => ({ ...a, [c.id]: e.target.value }))}
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-y font-body"
+                />
+              </div>
+            )
+          }
+          return null
+        })}
 
         {error && <p className="text-[13px] text-coral font-body" role="alert">{error}</p>}
 
         <button
           type="button"
           onClick={enviar}
-          disabled={score == null || enviando}
+          disabled={!!faltante || enviando}
           className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-3 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
         >
           {enviando ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar evaluación'}
         </button>
+        {faltante && (
+          <p className="text-[12px] text-navy-light/60 font-body text-center">
+            Falta responder: {faltante.label}
+          </p>
+        )}
       </div>
     </PageContainer>
   )

@@ -8,7 +8,8 @@ import { summarize } from '@/lib/studies/leader-feedback'
 import { sendLeaderFeedbackReport } from '@/lib/email/leader-feedback-report-send'
 import {
   memberCanEvaluate, saveLeaderFeedback, groupFeedbackRows, feedbackGroupRef,
-  releaseGroupFeedback, setFeedbackHidden,
+  releaseGroupFeedback, setFeedbackHidden, surveyQuestions, saveSurveyResponse,
+  groupPerQuestion,
 } from '@/lib/supabase/queries/leader-feedback'
 
 // Retroalimentación al dirigente de un grupo cerrado.
@@ -16,10 +17,17 @@ import {
 // GET  · ¿puedo responder? (el estudiante) o el resumen (staff y el dirigente).
 // POST · guarda la respuesta del estudiante.
 
-const bodySchema = z.object({
-  score: z.number().int().min(SCORE_MIN).max(SCORE_MAX),
-  comments: z.string().max(COMMENT_MAX).nullish(),
-}).strict()
+// Dos formas de responder:
+//  · answers  → el CUESTIONARIO completo (EST-12): { <field_id>: "opción" }
+//  · score    → la nota suelta, que es como nació esto y sigue sirviendo para
+//               cargar una evaluación a mano.
+const bodySchema = z.union([
+  z.object({ answers: z.record(z.string().uuid(), z.string().max(COMMENT_MAX)) }).strict(),
+  z.object({
+    score: z.number().int().min(SCORE_MIN).max(SCORE_MAX),
+    comments: z.string().max(COMMENT_MAX).nullish(),
+  }).strict(),
+])
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -40,6 +48,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (esStaff || esDirigente) {
       const filas = await groupFeedbackRows(id)
       const grupoInfo = { id: grupo.id, name: grupo.name, plan_name: grupo.plan_name, leader_name: grupo.leader_name }
+      const porPregunta = await groupPerQuestion(id)
       if (esStaff) {
         // La coordinación ve TODO —incluidos los comentarios ya ocultados— y el
         // estado de la revisión, que es lo que le permite decidir.
@@ -48,6 +57,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           role: 'staff',
           released_at: grupo.feedback_released_at,
           summary: summarize(filas),
+          per_question: porPregunta,
           rows: filas,
         })
       }
@@ -59,16 +69,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           released: !!grupo.feedback_released_at,
           summary: summarize(filas, { forLeader: true }),
         }),
+        // El detalle por pregunta solo si ya se compartió.
+        per_question: grupo.feedback_released_at ? porPregunta : [],
       })
     }
 
     // Estudiante: si puede responder y el contexto para la pantalla.
     if (!memberId) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     const { decision } = await memberCanEvaluate(id, memberId)
+    // Las preguntas salen del formulario fijado al grupo: el cuestionario se
+    // edita en el builder, no en el código.
+    const cuestionario = decision.allowed ? await surveyQuestions(id) : { formId: null, fields: [] }
     return NextResponse.json({
       group: { id: grupo.id, name: grupo.name, plan_name: grupo.plan_name, leader_name: grupo.leader_name },
       can_answer: decision.allowed,
       reason: decision.allowed ? null : decision.reason,
+      form_id: cuestionario.formId,
+      fields: cuestionario.fields,
     })
   } catch (error) {
     console.error('GET /api/studies/groups/[id]/leader-feedback:', error)
@@ -92,23 +109,42 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         { status: 400 },
       )
     }
-    // Misma regla que la UI, por si el body viene de otro lado.
-    const invalido = feedbackError(parsed.data)
-    if (invalido) return NextResponse.json({ error: invalido }, { status: 400 })
-
     const { decision } = await memberCanEvaluate(id, memberId)
     if (!decision.allowed) {
       return NextResponse.json({ error: decision.reason, code: 'no_puede_evaluar' }, { status: 403 })
     }
 
+    const cuerpo = parsed.data
+    if ('answers' in cuerpo) {
+      const respuestas = cuerpo.answers
+      const { formId, fields } = await surveyQuestions(id)
+      if (!formId) return NextResponse.json({ error: 'No hay cuestionario configurado.' }, { status: 409 })
+      // Las obligatorias tienen que venir: el guard de la UI no alcanza.
+      const faltan = fields.filter(f => f.is_required && !(respuestas[f.id] ?? '').trim())
+      if (faltan.length > 0) {
+        return NextResponse.json(
+          { error: `Falta responder: ${faltan[0].label}`, code: 'faltan_respuestas' },
+          { status: 400 },
+        )
+      }
+      await saveSurveyResponse({ groupId: id, memberId, formId, answers: respuestas })
+      return NextResponse.json({ ok: true }, { status: 201 })
+    }
+
+    // Misma regla que la UI, por si el body viene de otro lado.
+    const invalido = feedbackError(cuerpo)
+    if (invalido) return NextResponse.json({ error: invalido }, { status: 400 })
     await saveLeaderFeedback({
       groupId: id,
       memberId,
-      score: parsed.data.score,
-      comments: (parsed.data.comments ?? '').trim() || null,
+      score: cuerpo.score,
+      comments: (cuerpo.comments ?? '').trim() || null,
     })
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'YA_RESPONDIO') {
+      return NextResponse.json({ error: 'Ya enviaste tu evaluación de este grupo. ¡Gracias!', code: 'ya_respondio' }, { status: 409 })
+    }
     if (error instanceof Error && error.message === 'GRUPO_SIN_DIRIGENTE') {
       return NextResponse.json({ error: 'Este grupo no tiene dirigente asignado.' }, { status: 409 })
     }
