@@ -27,5 +27,10 @@ export function meetsPrematRequirementFromCodes(completedCodes: string[], enroll
   return n1ok && n2ok
 }
 
-/** Mensaje único del requisito, para 409/copy de UI. */
-export const PREMAT_REQUIREMENT_LABEL = 'Nivel 1 completado y estar inscrito en Nivel 2'
+/** Mensaje único del requisito, para el 409 y para TODOS los textos de la UI.
+ *
+ *  Dice "completado o en curso" a propósito: quien YA terminó Nivel 2 (o un
+ *  nivel posterior) también cumple, y el texto anterior —"estar inscrito en
+ *  Nivel 2"— dejaba fuera a esa gente en la lectura aunque el sistema sí la
+ *  dejaba pasar. Redacción neutra en género: la usan el inscrito y la pareja. */
+export const PREMAT_REQUIREMENT_LABEL = 'Nivel 1 completado y Nivel 2 completado o en curso'

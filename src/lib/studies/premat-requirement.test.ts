@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { meetsPrematRequirementFromCodes } from './premat-requirement'
+import { PREMAT_REQUIREMENT_LABEL, meetsPrematRequirementFromCodes } from './premat-requirement'
 
 describe('meetsPrematRequirementFromCodes (PRE-5)', () => {
   it('N1 completado + N2 inscrito (enrolled) → pasa', () => {
@@ -28,5 +28,18 @@ describe('meetsPrematRequirementFromCodes (PRE-5)', () => {
 
   it('sin nada → falla', () => {
     expect(meetsPrematRequirementFromCodes([], [])).toBe(false)
+  })
+})
+
+describe('el texto que se le muestra a la gente', () => {
+  it('dice que Nivel 2 COMPLETADO también cumple, no solo estar inscrito', () => {
+    // El texto viejo ("estar inscrito en Nivel 2") dejaba fuera en la lectura a
+    // quien ya lo terminó, aunque la regla sí lo dejaba pasar.
+    expect(meetsPrematRequirementFromCodes(['N1', 'N2'], [])).toBe(true)
+    expect(PREMAT_REQUIREMENT_LABEL).toContain('Nivel 2 completado')
+  })
+
+  it('es neutro en género: lo leen el inscrito y la pareja', () => {
+    expect(PREMAT_REQUIREMENT_LABEL).not.toMatch(/inscrit[oa]\b/)
   })
 })

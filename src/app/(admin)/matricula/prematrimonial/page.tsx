@@ -13,6 +13,7 @@ import {
 } from '@/lib/studies/premat-background'
 import { useAuth } from '@/hooks/useAuth'
 import { minCeremonyDate } from '@/lib/studies/premat-dates'
+import { PREMAT_REQUIREMENT_LABEL } from '@/lib/studies/premat-requirement'
 import { toYmdLocal } from '@/lib/format'
 import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -111,6 +112,10 @@ export default function PrematrimonialWizardPage() {
   const [searching, setSearching] = useState(false)
   const [spouse, setSpouse] = useState<{ id: string; name: string; meets_requirement: boolean; same_gender: boolean; gender_missing: 'requester' | 'spouse' | 'both' | null } | null>(null)
   const [spouseMsg, setSpouseMsg] = useState('')
+  // Homónimos: cuando la búsqueda por nombre trae varios, se eligen de una lista.
+  const [spouseMatches, setSpouseMatches] = useState<
+    Array<{ spouse_member_id: string; name: string; meets_requirement: boolean }>
+  >([])
 
   // Paso 3 — logística
   const [days, setDays] = useState<string[]>([])
@@ -153,15 +158,22 @@ export default function PrematrimonialWizardPage() {
   // (mientras carga, no bloqueamos). Fuera de onBehalf, la del usuario.
   const hasCedula = onBehalf ? (enrollee?.has_cedula ?? true) : (user?.has_cedula ?? true)
 
-  async function searchSpouse() {
-    setSpouseMsg(''); setSpouse(null); setSearching(true)
+  /** Busca por nombre/documento/correo/teléfono. Con `memberId` se pide una
+   *  persona concreta: es lo que pasa al elegir de la lista de homónimos. */
+  async function searchSpouse(memberId?: string) {
+    setSpouseMsg(''); setSpouse(null); setSpouseMatches([]); setSearching(true)
     try {
       const res = await fetch('/api/studies/prematrimonial/spouse-search', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: spouseQuery.trim(), ...(onBehalf ? { on_behalf_of: requestedMemberId } : {}) }),
+        body: JSON.stringify({
+          query: spouseQuery.trim(),
+          ...(memberId ? { spouse_member_id: memberId } : {}),
+          ...(onBehalf ? { on_behalf_of: requestedMemberId } : {}),
+        }),
       })
       const d = await res.json()
       if (d.found) setSpouse({ id: d.spouse_member_id, name: d.name, meets_requirement: d.meets_requirement, same_gender: !!d.same_gender, gender_missing: d.gender_missing ?? null })
+      else if (Array.isArray(d.matches) && d.matches.length > 0) setSpouseMatches(d.matches)
       else setSpouseMsg(d.message || 'No encontrado.')
     } catch { setSpouseMsg('No se pudo buscar. Intentá de nuevo.') }
     finally { setSearching(false) }
@@ -270,7 +282,7 @@ export default function PrematrimonialWizardPage() {
           <Heart className="mx-auto mb-3 text-coral-deep" size={28} />
           <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? 'El miembro aún no cumple el requisito' : 'Aún no cumplís el requisito'}</h2>
           <p className="mt-2 text-sm text-navy-light/70 font-body">
-            El curso prematrimonial requiere <strong>Nivel 1 completado y estar inscrito en Nivel 2</strong>{onBehalf ? ` — ${enrolleeName} todavía no lo cumple.` : '. Matriculate en Nivel 2 y volvé.'}
+            El curso prematrimonial requiere <strong>{PREMAT_REQUIREMENT_LABEL}</strong>{onBehalf ? ` — ${enrolleeName} todavía no lo cumple.` : '. Matriculate en Nivel 2 y volvé.'}
           </p>
           <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
             <ArrowRight size={14} /> Ir a matrícula
@@ -302,19 +314,42 @@ export default function PrematrimonialWizardPage() {
               </div>
             )}
             <h2 className="font-semibold text-navy font-display">La pareja</h2>
-            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con Nivel 1 completado e inscrita en Nivel 2 — buscala por documento, correo o teléfono.</p>
+            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con <strong>{PREMAT_REQUIREMENT_LABEL}</strong> — buscala por nombre, documento, correo o teléfono.</p>
             <div className="flex gap-2">
-              <input value={spouseQuery} onChange={e => setSpouseQuery(e.target.value)} placeholder="Cédula, correo o teléfono"
+              <input value={spouseQuery} onChange={e => setSpouseQuery(e.target.value)} placeholder="Nombre, cédula, correo o teléfono"
                 className="flex-1 rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />
-              <button type="button" onClick={searchSpouse} disabled={searching || !spouseQuery.trim()}
+              <button type="button" onClick={() => searchSpouse()} disabled={searching || !spouseQuery.trim()}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm text-white disabled:opacity-50 font-body">
                 {searching ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />} Buscar
               </button>
             </div>
+            {spouseMatches.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[13px] text-navy-light/70 font-body">
+                  Encontramos varias personas con ese nombre. Elegí a tu pareja:
+                </p>
+                {spouseMatches.map(m => (
+                  <button
+                    key={m.spouse_member_id}
+                    type="button"
+                    onClick={() => searchSpouse(m.spouse_member_id)}
+                    className="w-full rounded-xl border border-navy/15 px-4 py-2.5 text-left text-sm text-navy hover:bg-surface-low transition-colors font-body"
+                  >
+                    {m.name}
+                    {!m.meets_requirement && (
+                      <span className="ml-2 text-[12px] text-coral-deep">· aún no cumple el requisito</span>
+                    )}
+                  </button>
+                ))}
+                <p className="text-[12px] text-navy-light/60 font-body">
+                  ¿No está en la lista? Buscala por cédula o correo.
+                </p>
+              </div>
+            )}
             {spouse && (
               <div className="rounded-xl border border-teal/25 bg-teal/5 px-4 py-3 text-sm font-body">
                 <p className="text-navy inline-flex items-center gap-1.5"><Check size={15} className="text-teal-deep" /> Encontrado: <strong>{spouse.name}</strong></p>
-                {!spouse.meets_requirement && <p className="mt-1 text-coral-deep text-[13px]">⚠ Tu pareja aún no cumple el requisito (Nivel 1 completado y estar inscrita en Nivel 2); no podrás inscribirte hasta que lo cumpla.</p>}
+                {!spouse.meets_requirement && <p className="mt-1 text-coral-deep text-[13px]">⚠ Tu pareja aún no cumple el requisito ({PREMAT_REQUIREMENT_LABEL}); no podrás inscribirte hasta que lo cumpla.</p>}
                 {/* PRE-7: mismo género = probable error de selección o de dato. */}
                 {spouse.same_gender && (
                   <p className="mt-1 text-coral-deep text-[13px]">⚠ La persona seleccionada tiene el mismo género registrado. Verificá que seleccionaste a la persona correcta; si el género en el perfil está incorrecto, contactá al equipo para corregirlo.</p>

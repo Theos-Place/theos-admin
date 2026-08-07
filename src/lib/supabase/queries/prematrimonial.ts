@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { type PrematBackground } from '@/lib/studies/premat-background'
 import { normalizeCedula } from '@/lib/cedula'
+import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { normalizePhone } from '@/lib/phone'
 import { getMemberStudyProfile } from '@/lib/supabase/queries/studies-eligibility'
 import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
@@ -42,6 +43,59 @@ export async function findSpouseByContact(raw: string): Promise<{ id: string; na
     if (data) return pick(data as Row)
   }
   return null
+}
+
+/** Cuántos nombres devuelve una búsqueda por nombre. Corto a propósito: es para
+ *  desambiguar dos homónimos, no para navegar el padrón. */
+export const SPOUSE_NAME_LIMIT = 6
+
+/** Mínimo de letras para buscar por nombre. Con menos, cualquiera podría ir
+ *  sacando el padrón de a pedacitos ("a", "b", "c"...). */
+export const SPOUSE_NAME_MIN = 3
+
+/**
+ * Candidatos a cónyuge. Primero los identificadores EXACTOS (cédula, correo,
+ * teléfono); si no hay ninguno, se busca por NOMBRE.
+ *
+ * PRIVACIDAD: por nombre puede haber varios homónimos, así que devuelve una
+ * lista — pero solo id + nombre, nunca un dato de contacto, y como mucho
+ * SPOUSE_NAME_LIMIT resultados. Es lo mismo que ya se exponía de a uno con la
+ * búsqueda exacta; lo que NO se hace es dejar listar el padrón entero.
+ */
+export async function findSpouseCandidates(raw: string): Promise<Array<{ id: string; name: string }>> {
+  const q = (raw ?? '').trim()
+  if (!q) return []
+
+  const exacto = await findSpouseByContact(q)
+  if (exacto) return [exacto]
+
+  // Solo tiene sentido buscar por nombre si lo escrito parece un nombre.
+  const letras = q.replace(/[^\p{L}]/gu, '')
+  if (letras.length < SPOUSE_NAME_MIN) return []
+
+  const sb = loose()
+  let query = sb.from('members')
+    .select('id, first_name, last_name')
+    .eq('is_active', true)
+    .order('first_name')
+    .limit(SPOUSE_NAME_LIMIT)
+  query = applyMemberSearch(query, q, 'search_text')
+  const { data } = await query
+  return ((data ?? []) as Array<{ id: string; first_name: string | null; last_name: string | null }>)
+    .map(d => ({ id: d.id, name: `${d.first_name ?? ''} ${d.last_name ?? ''}`.trim() }))
+}
+
+/** UN candidato por id (el que se eligió de la lista de homónimos). Devuelve
+ *  lista vacía si no existe o si es el propio inscrito, para que el endpoint lo
+ *  trate igual que una búsqueda sin resultados. */
+export async function spouseById(
+  memberId: string, enrolleeId: string | null,
+): Promise<Array<{ id: string; name: string }>> {
+  if (!memberId || memberId === enrolleeId) return []
+  const { data } = await loose().from('members')
+    .select('id, first_name, last_name').eq('id', memberId).eq('is_active', true).maybeSingle()
+  const d = data as { id: string; first_name: string | null; last_name: string | null } | null
+  return d ? [{ id: d.id, name: `${d.first_name ?? ''} ${d.last_name ?? ''}`.trim() }] : []
 }
 
 /** PRE-5: ¿el miembro cumple el requisito del prematrimonial? (N1 completado +
