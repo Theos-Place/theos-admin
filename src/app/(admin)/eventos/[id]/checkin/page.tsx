@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { Modal } from '@/components/shared/Modal'
-import { getInitials, toYmdLocal, formatCRC } from '@/lib/format'
+import { getInitials, toYmdLocal, formatMoney } from '@/lib/format'
 import { PageContainer } from '@/components/layout/PageContainer'
 
 // El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
@@ -612,7 +612,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 No tiene inscripción en este evento pago. Registrá el cobro y le hacés
                 check-in de una vez.
                 {event.payment_amount != null && event.payment_amount > 0 && (
-                  <> Monto del evento: <strong className="text-navy">{formatCRC(event.payment_amount)}</strong>.</>
+                  <> Monto del evento: <strong className="text-navy">{formatMoney(event.payment_amount, event.currency)}</strong>.</>
                 )}
               </p>
             </div>

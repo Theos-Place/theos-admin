@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { DbDonation } from '@/lib/supabase/queries/finance'
 import { toDomainDonation } from '@/lib/finance/adapter'
 import type { Donation } from '@/types/finance'
+import type { MoneyTotals } from '@/lib/money'
 
 export type DonationSearchParams = {
   search?: string
@@ -14,9 +15,10 @@ export type DonationStats = {
   unique_donors: number
   /** FIN-1: miembros con is_donor=true (donó en los últimos ~2 trimestres). */
   active_donors: number
-  total_this_month: number | null
+  /** INT-3: por moneda ({"CRC": 1250000}). null = sin permiso de ver montos. */
+  total_this_month: MoneyTotals | null
   unidentified_count: number
-  unidentified_total: number | null
+  unidentified_total: MoneyTotals | null
 }
 
 const PAGE_SIZE = 50
@@ -47,7 +49,7 @@ export function useDonations(params: DonationSearchParams) {
   const [error, setError]     = useState<string | null>(null)
   const [stats, setStats]     = useState<DonationStats | null>(null)
   // FIN-1: suma de montos del filtro completo (null sin filtros o sin permiso de montos).
-  const [filteredSum, setFilteredSum] = useState<number | null>(null)
+  const [filteredSum, setFilteredSum] = useState<MoneyTotals | null>(null)
 
   const key = buildQuery(params, 1)
 
@@ -57,7 +59,7 @@ export function useDonations(params: DonationSearchParams) {
     setLoading(true); setError(null)
     fetch(`/api/finance/donations?${key}`)
       .then(r => { if (!r.ok) throw new Error('Error cargando donaciones'); return r.json() })
-      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: number | null }) => {
+      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: MoneyTotals | null }) => {
         if (cancelled) return
         setDonations((d.donations ?? []).map(toDomainDonation))
         setTotal(d.total ?? 0)
@@ -99,7 +101,7 @@ export function useDonations(params: DonationSearchParams) {
     setLoading(true); setError(null)
     fetch(`/api/finance/donations?${buildQuery(params, 1)}`)
       .then(r => { if (!r.ok) throw new Error('Error cargando donaciones'); return r.json() })
-      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: number | null }) => {
+      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: MoneyTotals | null }) => {
         setDonations((d.donations ?? []).map(toDomainDonation))
         setTotal(d.total ?? 0)
         setFilteredSum(d.filtered_sum ?? null)

@@ -3,11 +3,11 @@
 import { useState, useMemo } from 'react'
 import { BarChart2, Download, Package } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
-import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import { sumByCurrency, toCurrency, addTotals, mainCurrency, totalIn, formatTotalsInline, type MoneyTotals } from '@/lib/money'
+import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
 import { Tabs } from '@/components/shared/Tabs'
 import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
-import { formatCRC } from '@/lib/format'
 
 // Etiquetas en español para la tabla (los values crudos venían de la BD).
 const METHOD_LABEL: Record<string, string> = {
@@ -68,9 +68,9 @@ export default function ReportesPage() {
   const monthlyData = useMemo(() => {
     return MONTH_NAMES.map((name, i) => {
       const month = i + 1
-      const total = yearDonations
-        .filter(d => new Date(d.donation_date).getMonth() + 1 === month)
-        .reduce((s, d) => s + d.amount, 0)
+      // INT-3: por moneda. Antes sumaba euros con colones en el mismo número.
+      const total = sumByCurrency(
+        yearDonations.filter(d => new Date(d.donation_date).getMonth() + 1 === month))
       const uniqueDonors = new Set(
         yearDonations
           .filter(d => d.is_identified && new Date(d.donation_date).getMonth() + 1 === month)
@@ -80,21 +80,27 @@ export default function ReportesPage() {
     })
   }, [yearDonations])
 
-  const maxMonthTotal = Math.max(...monthlyData.map(m => m.total), 1)
-  const topMonths = [...monthlyData].filter(m => m.total > 0).sort((a, b) => b.total - a.total).slice(0, 3)
+  // Las barras del informe se dibujan en UNA moneda (la principal de los datos);
+  // el texto muestra todas. Ver la nota de FinanceChart: una barra no puede
+  // representar dos monedas a la vez.
+  const monedaInforme = mainCurrency(addTotals(...monthlyData.map(m => m.total)))
+  const barra = (m: { total: MoneyTotals }) => totalIn(m.total, monedaInforme)
+  const maxMonthTotal = Math.max(...monthlyData.map(barra), 1)
+  const topMonths = [...monthlyData].filter(m => barra(m) > 0).sort((a, b) => barra(b) - barra(a)).slice(0, 3)
 
   function exportDonationsCSV() {
     generateCSV(
-      ['ID', 'Miembro', 'Cédula', 'Fecha', 'Monto', 'Lote', 'Estado'],
-      filteredDonations.map(d => [d.id, d.member_name, d.member_cedula, d.donation_date, d.amount, d.source_file, d.is_identified ? 'Identificado' : 'Sin identificar'])
+      // INT-3: el monto NUNCA sale sin su moneda.
+      ['ID', 'Miembro', 'Cédula', 'Fecha', 'Monto', 'Moneda', 'Lote', 'Estado'],
+      filteredDonations.map(d => [d.id, d.member_name, d.member_cedula, d.donation_date, d.amount, toCurrency(d.currency), d.source_file, d.is_identified ? 'Identificado' : 'Sin identificar'])
       , 'reporte-donaciones'
     )
   }
 
   function exportPaymentsCSV() {
     generateCSV(
-      ['ID', 'Miembro', 'Cédula', 'Entidad', 'Tipo', 'Monto', 'Método', 'Estado', 'Fecha'],
-      filteredPayments.map(p => [p.id, p.member_name, p.member_cedula, p.entity_name, p.entity_type === 'event' ? 'Evento' : 'Grupo', p.amount, p.method, p.status, p.created_at.split('T')[0]])
+      ['ID', 'Miembro', 'Cédula', 'Entidad', 'Tipo', 'Monto', 'Moneda', 'Método', 'Estado', 'Fecha'],
+      filteredPayments.map(p => [p.id, p.member_name, p.member_cedula, p.entity_name, p.entity_type === 'event' ? 'Evento' : 'Grupo', p.amount, toCurrency(p.currency), p.method, p.status, p.created_at.split('T')[0]])
       , 'reporte-pagos'
     )
   }
@@ -102,17 +108,17 @@ export default function ReportesPage() {
   function exportTransparencyCSV() {
     generateCSV(
       ['Mes', 'Total Donaciones', 'Donadores únicos'],
-      monthlyData.map(m => [m.name, m.total, m.uniqueDonors])
+      monthlyData.map(m => [m.name, formatTotalsInline(m.total), m.uniqueDonors])
       , `informe-transparencia-${yearFilter}`
     )
   }
 
   function exportQuickBooksDonations() {
-    exportQuickBooksCSV('donations', donations.map(d => [d.donation_date, d.member_name, 'Donaciones', d.amount, 'Donación Theos Place']))
+    exportQuickBooksCSV('donations', donations.map(d => [d.donation_date, d.member_name, 'Donaciones', d.amount, toCurrency(d.currency), 'Donación Theos Place']))
   }
 
   function exportQuickBooksPayments() {
-    exportQuickBooksCSV('payments', payments.filter(p => p.status === 'paid').map(p => [p.paid_at?.split('T')[0] ?? '', p.member_name, 'Pagos', p.amount, p.entity_name, p.method]))
+    exportQuickBooksCSV('payments', payments.filter(p => p.status === 'paid').map(p => [p.paid_at?.split('T')[0] ?? '', p.member_name, 'Pagos', p.amount, toCurrency(p.currency), p.entity_name, p.method]))
   }
 
   return (
@@ -184,7 +190,7 @@ export default function ReportesPage() {
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{d.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{d.member_cedula}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{new Date(d.donation_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</p></td>
-                        <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} defaultHidden={false} /></td>
+                        <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>
                             {d.is_identified ? 'Identificado' : 'Sin identificar'}
@@ -217,14 +223,15 @@ export default function ReportesPage() {
             {/* Stats for filtered */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { label: 'Total cobrado', value: paidPayments.reduce((s, p) => s + p.amount, 0), color: '#3DB97A' },
-                { label: 'Pendiente', value: pendingPayments.reduce((s, p) => s + p.amount, 0), color: '#E9B949' },
-                { label: 'Devuelto', value: refundedPayments.reduce((s, p) => s + p.amount, 0), color: '#519DA2' },
+                // INT-3: totales por moneda, nunca sumados entre sí.
+                { label: 'Total cobrado', value: sumByCurrency(paidPayments), color: '#3DB97A' },
+                { label: 'Pendiente', value: sumByCurrency(pendingPayments), color: '#E9B949' },
+                { label: 'Devuelto', value: sumByCurrency(refundedPayments), color: '#519DA2' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
                   <p className="text-[10px] uppercase tracking-widest mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
                   <p className="text-lg font-extrabold font-display" style={{ color }}>
-                    <AmountDisplay amount={value} defaultHidden={false} />
+                    <TotalsDisplay totals={value} defaultHidden={false} />
                   </p>
                 </div>
               ))}
@@ -245,7 +252,7 @@ export default function ReportesPage() {
                       <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
-                        <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} defaultHidden={false} /></td>
+                        <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} currency={p.currency} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{METHOD_LABEL[p.method] ?? p.method}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{STATUS_LABEL[p.status] ?? p.status}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">{p.created_at.split('T')[0]}</p></td>
@@ -287,7 +294,7 @@ export default function ReportesPage() {
                     <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-[rgba(22,20,64,0.03)]'}`}>
                       <p className="text-[12px] font-medium font-body text-navy">{m.name}</p>
                       <p className="text-[11px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
-                        {formatCRC(m.total)}
+                        {formatTotalsInline(m.total)}
                       </p>
                     </div>
                   ))}
@@ -313,8 +320,8 @@ export default function ReportesPage() {
                           <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className={`text-[13px] font-body ${m.total > 0 ? 'text-navy' : 'text-navy/60'}`}>
-                            {m.total > 0 ? `${formatCRC(m.total)}` : '—'}
+                          <p className={`text-[13px] font-body ${barra(m) > 0 ? 'text-navy' : 'text-navy/60'}`}>
+                            {barra(m) > 0 ? formatTotalsInline(m.total) : '—'}
                           </p>
                         </td>
                         <td className="px-5 py-3.5">
@@ -323,16 +330,16 @@ export default function ReportesPage() {
                           </p>
                         </td>
                         <td className="px-5 py-3.5 w-[30%]">
-                          {m.total > 0 && (
+                          {barra(m) > 0 && (
                             <div className="flex items-center gap-2">
                               <div className="flex-1 h-2 rounded-full bg-[rgba(22,20,64,0.06)]">
                                 <div
                                   className="h-2 rounded-full transition-all bg-teal-deep"
-                                  style={{ width: `${(m.total / maxMonthTotal) * 100}%` }}
+                                  style={{ width: `${(barra(m) / maxMonthTotal) * 100}%` }}
                                 />
                               </div>
                               <span className="text-[10px] w-6 text-right text-[rgba(22,20,64,0.60)] font-body">
-                                {Math.round((m.total / maxMonthTotal) * 100)}%
+                                {Math.round((barra(m) / maxMonthTotal) * 100)}%
                               </span>
                             </div>
                           )}

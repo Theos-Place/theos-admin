@@ -56,12 +56,14 @@ describe('formatMoney', () => {
     expect(formatMoney(50000)).toBe(`\u20a1${(50000).toLocaleString('es-CR')}`)
     expect(formatMoney(50000, null)).toBe(formatMoney(50000, 'CRC'))
   })
-  it('USD y EUR con su símbolo', () => {
-    expect(formatMoney(120, 'USD')).toBe('$120')
-    expect(formatMoney(75, 'EUR')).toBe('\u20ac75')
+  it('USD y EUR con su símbolo Y SUS CÉNTIMOS (INT-3)', () => {
+    // Antes se formateaban sin decimales, como los colones: €25,50 salía "€25,5".
+    expect(formatMoney(120, 'USD')).toBe('$120,00')
+    expect(formatMoney(75, 'EUR')).toBe('\u20ac75,00')
+    expect(formatMoney(25.5, 'EUR')).toBe('\u20ac25,50')
   })
   it('moneda desconocida antepone el código (no revienta)', () => {
-    expect(formatMoney(10, 'GBP')).toBe('GBP 10')
+    expect(formatMoney(10, 'GBP')).toBe('GBP 10,00')
   })
   it('formatCRC delega en formatMoney', () => {
     expect(formatCRC(1234)).toBe(formatMoney(1234, 'CRC'))

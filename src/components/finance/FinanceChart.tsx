@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 import type { Payment, Donation } from '@/types/finance'
-import { formatCRC } from '@/lib/format'
+import { formatMoney, currencySymbol, CURRENCIES, type Currency } from '@/lib/format'
+import { toCurrency } from '@/lib/money'
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
 
@@ -18,11 +19,20 @@ function getLast6Months(): { label: string; year: number; month: number }[] {
 export function FinanceChart({ payments, donations }: { payments: Payment[]; donations: Donation[] }) {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; payments: number; donations: number; label: string } | null>(null)
 
+  // INT-3: un gráfico de barras es de UNA moneda. Sumar colones con euros daría
+  // una altura sin significado, así que se dibuja una moneda a la vez y, si hay
+  // más de una en los datos, aparece un selector. Con una sola (hoy, todo CRC)
+  // no se ve ningún control extra.
+  const presentes = CURRENCIES.filter(c =>
+    payments.some(p => toCurrency(p.currency) === c) || donations.some(d => toCurrency(d.currency) === c))
+  const [moneda, setMoneda] = useState<Currency>(presentes[0] ?? 'CRC')
+  const cur: Currency = presentes.includes(moneda) ? moneda : (presentes[0] ?? 'CRC')
+
   const months = getLast6Months()
 
   const data = months.map(({ label, year, month }) => {
     const pTotal = payments
-      .filter(p => p.paid_at && p.status === 'paid')
+      .filter(p => p.paid_at && p.status === 'paid' && toCurrency(p.currency) === cur)
       .filter(p => {
         const d = new Date(p.paid_at!)
         return d.getFullYear() === year && d.getMonth() + 1 === month
@@ -30,6 +40,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
       .reduce((sum, p) => sum + p.amount, 0)
 
     const dTotal = donations
+      .filter(d => toCurrency(d.currency) === cur)
       .filter(d => {
         const dt = new Date(d.donation_date)
         return dt.getFullYear() === year && dt.getMonth() + 1 === month
@@ -56,6 +67,16 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
             <div className="h-2.5 w-2.5 rounded-sm bg-teal-deep" />
             <span className="text-[11px] font-body text-[rgba(22,20,64,0.55)]">Donaciones</span>
           </div>
+          {presentes.length > 1 && (
+            <select
+              value={cur}
+              onChange={e => setMoneda(e.target.value as Currency)}
+              aria-label="Moneda del gráfico"
+              className="rounded-lg border border-[var(--outline-variant)] bg-surface-card px-2 py-1 text-[11px] text-navy font-body"
+            >
+              {presentes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
         </div>
       </div>
 
@@ -65,7 +86,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
           {[1, 0.75, 0.5, 0.25, 0].map(frac => (
             <div key={frac} className="flex items-center gap-2">
               <span className="text-[10px] w-12 text-right shrink-0 text-[rgba(22,20,64,0.30)] font-body">
-                {frac === 0 ? '0' : `₡${Math.round(maxVal * frac / 1000)}k`}
+                {frac === 0 ? '0' : `${currencySymbol(cur)}${Math.round(maxVal * frac / 1000)}k`}
               </span>
               <div className="flex-1 border-t border-[rgba(22,20,64,0.06)]" />
             </div>
@@ -91,12 +112,12 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
                   <div
                     className="rounded-t-md transition-all duration-300 cursor-pointer w-[44%] bg-navy opacity-[0.85]"
                     style={{ height: pH }}
-                    title={`Pagos: ${formatCRC(pv)}`}
+                    title={`Pagos: ${formatMoney(pv, cur)}`}
                   />
                   <div
                     className="rounded-t-md transition-all duration-300 cursor-pointer w-[44%] bg-teal-deep opacity-[0.85]"
                     style={{ height: dH }}
-                    title={`Donaciones: ${formatCRC(dv)}`}
+                    title={`Donaciones: ${formatMoney(dv, cur)}`}
                   />
                 </div>
                 <span className="text-[11px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
@@ -118,8 +139,8 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
           }}
         >
           <p className="font-semibold mb-1">{tooltip.label}</p>
-          <p className="text-[rgba(255,255,255,0.75)]">Pagos: {formatCRC(tooltip.payments)}</p>
-          <p className="text-[rgba(255,255,255,0.75)]">Donaciones: {formatCRC(tooltip.donations)}</p>
+          <p className="text-[rgba(255,255,255,0.75)]">Pagos: {formatMoney(tooltip.payments, cur)}</p>
+          <p className="text-[rgba(255,255,255,0.75)]">Donaciones: {formatMoney(tooltip.donations, cur)}</p>
         </div>
       )}
     </div>

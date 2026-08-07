@@ -23,6 +23,7 @@ import {
   STUDY_REQUEST_NOTIFY_ROLES, selectStudyRequestRecipients,
 } from '@/lib/studies/request-notifications'
 import { requestDeepLink } from '@/lib/studies/request-deeplink'
+import { toCurrency } from '@/lib/money'
 import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
 import type {
   StudyRequest, StudyRequestWriteInput, StudyRequestStatus, StudyRequestType,
@@ -430,9 +431,9 @@ export async function resolveStudyRequest(
   if (row.wants_folleto) {
     const { data: g } = await supabase
       .from('study_groups')
-      .select('plan:study_plans!study_groups_plan_id_fkey(id, code, cost)')
+      .select('plan:study_plans!study_groups_plan_id_fkey(id, code, cost, currency)')
       .eq('id', targetGroupId).maybeSingle()
-    const plan = (g as { plan: { id: string; code: string | null; cost: number } | null } | null)?.plan
+    const plan = (g as { plan: { id: string; code: string | null; cost: number; currency: string | null } | null } | null)?.plan
     const amount = Number(plan?.cost ?? 0)
 
     // Mismo patrón de upsert que enrollMember: re-activa una fila existente
@@ -451,7 +452,8 @@ export async function resolveStudyRequest(
     // folleto sin su cobro es invisible para finanzas y la API habría
     // respondido éxito igual.
     const { error: payErr } = await supabase.from('payments').insert({
-      member_id: row.member_id, amount, currency: 'CRC', payment_method: 'comprobante',
+      // INT-3: el folleto se cobra en la moneda del plan, no en colones fijos.
+      member_id: row.member_id, amount, currency: toCurrency(plan?.currency), payment_method: 'comprobante',
       concept: 'folletos', enrollment_id: enrollmentId, study_group_id: targetGroupId,
       status: 'pending',
     })

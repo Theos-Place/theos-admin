@@ -13,13 +13,15 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { formatDate, formatDateTime, formatCRC } from '@/lib/format'
+import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
 // MEMBER_LOOKUP_URL: el rol 'becas' no tiene el módulo miembros y el
 // buscador quedaba vacío (bug 2026-08-04).
 import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/shared/MemberCombobox'
 import type { FinanceRequest } from '@/types/finance'
 
 type Scholarship = {
+  /** INT-3: moneda del descuento fijo. */
+  currency?: string | null
   id: string
   kind: 'asignada' | 'generica'
   member_id: string | null
@@ -39,8 +41,8 @@ type Scholarship = {
   email_sent_to: string | null
 }
 
-function formatDiscount(type: 'percentage' | 'fixed', value: number): string {
-  return type === 'percentage' ? `${value}%` : `${formatCRC(value)}`
+function formatDiscount(type: 'percentage' | 'fixed', value: number, currency?: string | null): string {
+  return type === 'percentage' ? `${value}%` : formatMoney(value, currency)
 }
 
 const STATUS_LABEL: Record<string, string> = { active: 'Activa', used: 'Usada', revoked: 'Revocada' }
@@ -253,7 +255,7 @@ export default function BecasPage() {
                         )}
                         <td className="px-4 py-3 text-sm font-mono font-medium text-navy">{c.code}</td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{c.entity_name}</td>
-                        <td className="px-4 py-3 text-sm text-navy font-body">{formatDiscount(c.discount_type, c.discount_value)}</td>
+                        <td className="px-4 py-3 text-sm text-navy font-body">{formatDiscount(c.discount_type, c.discount_value, c.currency)}</td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.expires_at ? formatDate(c.expires_at) : '—'}</td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.used_count}</td>
                         <td className="px-4 py-3">
@@ -368,7 +370,7 @@ export default function BecasPage() {
               Enviar cupón por correo · <span className="font-mono">{sendTarget.code}</span>
             </h3>
             <p className="text-sm text-navy-light/70 font-body">
-              Se le enviará el código, el descuento ({formatDiscount(sendTarget.discount_type, sendTarget.discount_value)})
+              Se le enviará el código, el descuento ({formatDiscount(sendTarget.discount_type, sendTarget.discount_value, sendTarget.currency)})
               y el destino ({sendTarget.entity_name}) al correo registrado de la persona.
             </p>
             {sendTarget.email_sent_at && (

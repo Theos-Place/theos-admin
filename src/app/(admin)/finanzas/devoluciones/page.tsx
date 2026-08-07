@@ -4,11 +4,12 @@ import { useState, useMemo, useEffect } from 'react'
 import { ArrowLeftRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
-import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import { sumByCurrency } from '@/lib/money'
+import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
 import { type Refund, type RefundStatus } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
 import { useToast } from '@/components/shared/Toast'
-import { formatDate, formatCRC } from '@/lib/format'
+import { formatDate, formatMoney } from '@/lib/format'
 
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
   const cfg: Record<RefundStatus, { label: string; color: string; bg: string }> = {
@@ -48,7 +49,8 @@ export default function DevolucionesPage() {
     pending:    refunds.filter(r => r.status === 'pending').length,
     processing: refunds.filter(r => r.status === 'processing').length,
     completed:  refunds.filter(r => r.status === 'completed').length,
-    totalAmount: refunds.filter(r => r.status === 'completed').reduce((s, r) => s + r.amount, 0),
+    // INT-3: por moneda; una devolución en euros no se suma con una en colones.
+    totalAmount: sumByCurrency(refunds.filter(r => r.status === 'completed')),
   }), [refunds])
 
   async function handleComplete() {
@@ -130,7 +132,7 @@ export default function DevolucionesPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Total devuelto</p>
             <p className="text-xl font-extrabold font-display text-navy">
-              <AmountDisplay amount={stats.totalAmount} defaultHidden={false} />
+              <TotalsDisplay totals={stats.totalAmount} defaultHidden={false} />
             </p>
           </div>
         </div>
@@ -262,7 +264,7 @@ export default function DevolucionesPage() {
             </div>
             <div className="px-6 py-5 space-y-4">
               <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">
-                Devolución de <strong>{formatCRC(completeTarget.amount)}</strong> a <strong>{completeTarget.member_name}</strong>
+                Devolución de <strong>{formatMoney(completeTarget.amount, completeTarget.currency)}</strong> a <strong>{completeTarget.member_name}</strong>
               </p>
               <div>
                 <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>

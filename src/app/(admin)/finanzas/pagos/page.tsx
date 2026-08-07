@@ -16,7 +16,8 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { FilterChips } from '@/components/shared/FilterChips'
-import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
+import type { MoneyTotals } from '@/lib/money'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
@@ -26,7 +27,7 @@ import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import type { DbPayment } from '@/lib/supabase/queries/finance'
 import { toDomainPayment } from '@/lib/finance/adapter'
-import { formatDate, formatDateTime } from '@/lib/format'
+import { formatDate, formatDateTime, CURRENCIES, type Currency } from '@/lib/format'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { cn } from '@/lib/utils'
@@ -87,6 +88,9 @@ function PagosContent() {
   const queueRef = useRef<PaymentReviewQueueHandle>(null)
   const toast = useToast()
 
+  // INT-3: filtro por moneda. Solo aparece si hay más de una en los totales —
+  // mientras todo sea en colones, un chip de moneda sería ruido.
+  const [currencyFilter, setCurrencyFilter] = useState<'all' | Currency>('all')
   // Listado paginado server-side (filtros + búsqueda viajan al servidor).
   const buildUrl = (page: number) => {
     const u = new URLSearchParams()
@@ -94,6 +98,7 @@ function PagosContent() {
     if (entityFilter !== 'all') u.set('entity_type', entityFilter)
     if (methodFilter !== 'all') u.set('method', methodFilter)
     if (statusFilter !== 'all') u.set('status', statusFilter)
+    if (currencyFilter !== 'all') u.set('currency', currencyFilter)
     u.set('page', String(page))
     u.set('pageSize', '25')
     return `/api/finance/payments?${u.toString()}`
@@ -104,16 +109,21 @@ function PagosContent() {
   const filtered = payments
 
   // Totales globales (los montos del header) — SQL, no sobre lo cargado.
-  const [stats, setStats] = useState({ total_paid: 0, total_card: 0, total_sinpe: 0, total_pending: 0 })
+  // INT-3: los totales llegan POR MONEDA ({"CRC": 25000}); ver TotalsDisplay.
+  const [stats, setStats] = useState<{ total_paid: MoneyTotals; total_pending: MoneyTotals }>(
+    { total_paid: {}, total_pending: {} })
   const loadStats = useCallback(() => {
     fetch('/api/finance/payments?stats=1')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setStats(d) })
+      .then(d => { if (d) setStats({ total_paid: d.total_paid ?? {}, total_pending: d.total_pending ?? {} }) })
       .catch(() => {})
   }, [])
   useEffect(() => { loadStats() }, [loadStats])
   const totalPaid = stats.total_paid
   const totalPending = stats.total_pending
+  // Las monedas que REALMENTE hay (de los totales globales, no de la página).
+  const monedasPresentes = CURRENCIES.filter(c =>
+    stats.total_paid[c] !== undefined || stats.total_pending[c] !== undefined)
 
   // Contador de la pestaña "En revisión": tiquetes accionables
   // (pendiente + en_revision, el default del endpoint sin filtros).
@@ -272,7 +282,7 @@ function PagosContent() {
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
               <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               <p className="text-xl font-extrabold font-display" style={{ color }}>
-                <AmountDisplay amount={value} defaultHidden={false} revealed={revealAll} />
+                <TotalsDisplay totals={value} defaultHidden={false} revealed={revealAll} />
               </p>
             </div>
           ))}
@@ -315,6 +325,18 @@ function PagosContent() {
               { key: 'cash', label: 'Efectivo' },
             ]}
           />
+
+          {monedasPresentes.length > 1 && (
+            <FilterChips
+              ariaLabel="Filtrar por moneda"
+              activeKey={currencyFilter}
+              onSelect={k => setCurrencyFilter(k as 'all' | Currency)}
+              chips={[
+                { key: 'all', label: 'Todas' },
+                ...monedasPresentes.map(c => ({ key: c, label: c })),
+              ]}
+            />
+          )}
 
           <FilterChips
             ariaLabel="Filtrar por estado"

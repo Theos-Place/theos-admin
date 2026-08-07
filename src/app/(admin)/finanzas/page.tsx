@@ -7,7 +7,8 @@ import {
   AlertCircle, Upload, GraduationCap, BarChart2, RefreshCw, TrendingUp,
 } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
-import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
+import { sumByCurrency, addTotals } from '@/lib/money'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { FinanceChart } from '@/components/finance/FinanceChart'
@@ -50,8 +51,8 @@ export default function FinanzasPage() {
     })
   }, [period, thisMonth, thisYear])
 
-  const totalIngresos = filteredPayments.reduce((s, p) => s + p.amount, 0)
-    + filteredDonations.reduce((s, d) => s + d.amount, 0)
+  // INT-3: pagos y donaciones se juntan SIN mezclar monedas.
+  const totalIngresos = addTotals(sumByCurrency(filteredPayments), sumByCurrency(filteredDonations))
 
   // "Donadores activos" = members.is_donor vía el RPC donation_stats — la MISMA
   // fuente que la página de donaciones (FIN-1). Antes se recalculaba acá
@@ -150,7 +151,7 @@ export default function FinanzasPage() {
               <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Total ingresos</p>
             </div>
             <p className="text-2xl font-extrabold font-display text-navy">
-              <AmountDisplay amount={totalIngresos} defaultHidden={false} revealed={revealAll} />
+              <TotalsDisplay totals={totalIngresos} defaultHidden={false} revealed={revealAll} />
             </p>
           </div>
 

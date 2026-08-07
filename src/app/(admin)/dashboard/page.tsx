@@ -19,7 +19,7 @@ import { type EventType } from '@/data/event-config'
 import { useEvents } from '@/hooks/useEvents'
 import { useDashboard } from '@/hooks/useDashboard'
 import { landsOnProfile } from '@/lib/auth/home-route'
-import { formatCRC } from '@/lib/format'
+import { formatTotalsInline, type MoneyTotals } from '@/lib/money'
 
 // Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
 const EMPTY_STATS = {
@@ -27,7 +27,7 @@ const EMPTY_STATS = {
   studies: { active_groups: 0, active_estudios: 0, active_capacitaciones: 0, students: 0, open_registration: 0, open_requests: 0, closing_soon: 0, without_leader: 0 },
   events: { today: 0, upcoming_this_month: 0, this_week: 0, pending_payments: 0, near_capacity: 0 },
   servers: { active: 0, positions: 0, committees: 0, open_vacancies: 0, pending_applications: 0 },
-  finance: { donors_active: 0, pending_refunds: 0, income_this_month: 0 },
+  finance: { donors_active: 0, pending_refunds: 0, income_this_month: {} as MoneyTotals },
   communications: { sent_this_month: 0, total_recipients: 0, failed: 0 },
 }
 
@@ -502,8 +502,9 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-navy/60 font-body">Pagos recibidos</span>
                 <span className="text-[13px] font-semibold text-navy font-body">
+                  {/* INT-3: una línea por moneda; hoy todo es CRC, así que se ve una. */}
                   {showAmounts
-                    ? `${formatCRC(DASHBOARD_STATS.finance.income_this_month)}`
+                    ? formatTotalsInline(DASHBOARD_STATS.finance.income_this_month)
                     : '₡ •••,•••'}
                 </span>
               </div>

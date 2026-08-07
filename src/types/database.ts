@@ -4581,7 +4581,8 @@ export type Database = {
       dashboard_sums: {
         Args: { p_month_start: string; p_month_start_date: string }
         Returns: {
-          income_this_month: number
+          /** INT-3: total POR MONEDA ({"CRC": 25000}), no un escalar. */
+          income_this_month: Json
           servers_unique: number
           total_recipients: number
         }[]

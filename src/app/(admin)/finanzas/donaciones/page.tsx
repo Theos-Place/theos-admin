@@ -9,7 +9,8 @@ import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { FilterChips } from '@/components/shared/FilterChips'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
-import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
+import type { MoneyTotals } from '@/lib/money'
 import { useDonations } from '@/hooks/useDonations'
 import { toDomainDonation } from '@/lib/finance/adapter'
 import type { Donation } from '@/types/finance'
@@ -137,10 +138,11 @@ export default function DonacionesPage() {
               <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               {isAmount
                 ? <p className="text-2xl font-extrabold font-display text-teal-deep">
-                    <AmountDisplay amount={value as number | null} defaultHidden={false} revealed={revealAll} />
+                    {/* INT-3: una línea por moneda; con una sola se ve igual que antes. */}
+                    <TotalsDisplay totals={value as MoneyTotals | null} defaultHidden={false} revealed={revealAll} />
                   </p>
                 : <p className={`text-4xl font-extrabold font-display ${alert ? 'text-coral' : 'text-navy'}`}>
-                    {value}
+                    {value as number}
                   </p>
               }
             </div>
@@ -154,7 +156,7 @@ export default function DonacionesPage() {
               <AlertTriangle size={18} className="text-[#E9B949] shrink-0 mt-[1px]" />
               <div>
                 <p className="text-[13px] font-semibold font-body text-[#9B7200]">
-                  {unidentifiedCount} donación{unidentifiedCount !== 1 ? 'es' : ''} sin identificar — <AmountDisplay amount={unidentifiedTotal} defaultHidden={false} revealed={revealAll} /> en total
+                  {unidentifiedCount} donación{unidentifiedCount !== 1 ? 'es' : ''} sin identificar — <TotalsDisplay totals={unidentifiedTotal} defaultHidden={false} revealed={revealAll} /> en total
                 </p>
                 <p className="text-[11px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
                   Vinculalas manualmente a un miembro para que queden registradas correctamente.
@@ -322,7 +324,7 @@ export default function DonacionesPage() {
             <p className="text-sm text-navy-light/60 font-body">
               Mostrando {donations.length.toLocaleString('es-CR')} de {total.toLocaleString('es-CR')} donaciones
               {filteredSum != null && (
-                <> · Total filtrado: <AmountDisplay amount={filteredSum} defaultHidden={false} revealed={revealAll} /></>
+                <> · Total filtrado: <TotalsDisplay totals={filteredSum} defaultHidden={false} revealed={revealAll} /></>
               )}
             </p>
             {hasMore && (

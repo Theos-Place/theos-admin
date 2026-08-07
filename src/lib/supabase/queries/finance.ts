@@ -1,4 +1,5 @@
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
+import { totalsFromJson, sumByCurrency, addTotals, toCurrency, type MoneyTotals } from '@/lib/money'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 
@@ -106,6 +107,8 @@ export type PaymentFilters = {
   entity_type?: 'event' | 'study_group'
   method?: string
   status?: string
+  /** INT-3: filtro por moneda. Los históricos no tienen valor: coinciden con CRC. */
+  currency?: string
   page?: number
   pageSize?: number
 }
@@ -127,6 +130,12 @@ export async function getPaymentsPage(filters: PaymentFilters = {}): Promise<{ r
   if (filters.entity_type) q = q.eq('entity_type', filters.entity_type)
   if (filters.method) q = q.eq('payment_method', filters.method)
   if (filters.status) q = q.eq('status', filters.status)
+  // Los pagos viejos pueden tener currency NULL: 'CRC' también los trae.
+  if (filters.currency) {
+    q = filters.currency === 'CRC'
+      ? q.or('currency.eq.CRC,currency.is.null')
+      : q.eq('currency', filters.currency)
+  }
   if (search) {
     // search_text del miembro: normalizado (sin tildes) y con índice GIN trgm
     // (migración 083) — el .or por columnas sueltas no tenía soporte de índice.
@@ -138,11 +147,12 @@ export async function getPaymentsPage(filters: PaymentFilters = {}): Promise<{ r
   return { rows: (data ?? []) as unknown as DbPayment[], total: count ?? 0 }
 }
 
+/** INT-3: los totales vienen POR MONEDA ({"CRC": 25000}), nunca sumados entre sí. */
 export type PaymentStats = {
-  total_paid: number
-  total_card: number
-  total_sinpe: number
-  total_pending: number
+  total_paid: MoneyTotals
+  total_card: MoneyTotals
+  total_sinpe: MoneyTotals
+  total_pending: MoneyTotals
 }
 
 /** Totales globales de pagos (SQL, migración 060). */
@@ -150,7 +160,13 @@ export async function getPaymentStats(): Promise<PaymentStats> {
   const supabase = createAdminClient()
   const { data, error } = await supabase.rpc('payment_stats')
   if (error) throw error
-  return data as unknown as PaymentStats
+  const raw = (data ?? {}) as Record<string, unknown>
+  return {
+    total_paid: totalsFromJson(raw.total_paid),
+    total_card: totalsFromJson(raw.total_card),
+    total_sinpe: totalsFromJson(raw.total_sinpe),
+    total_pending: totalsFromJson(raw.total_pending),
+  }
 }
 
 /** Vincula una donación a un miembro (la identifica). */
@@ -179,9 +195,9 @@ export type DonationStats = {
   unique_donors: number
   /** FIN-1: miembros con is_donor=true (donó en los últimos ~2 trimestres). */
   active_donors: number
-  total_this_month: number
+  total_this_month: MoneyTotals
   unidentified_count: number
-  unidentified_total: number
+  unidentified_total: MoneyTotals
 }
 
 const DONATION_SELECT = `
@@ -222,16 +238,17 @@ export async function getDonations(filters: DonationFilters = {}): Promise<{ row
 }
 
 /** FIN-1: SUMA de montos del filtro COMPLETO (no solo la página visible).
- *  Mismos filtros que getDonations; pagina solo la columna amount (PostgREST
- *  corta en ~1000 filas) y suma acá. Se pide solo cuando hay filtros activos. */
-export async function getDonationsFilteredSum(filters: DonationFilters = {}): Promise<number> {
+ *  Mismos filtros que getDonations; pagina solo amount+currency (PostgREST corta
+ *  en ~1000 filas) y suma acá. Se pide solo cuando hay filtros activos.
+ *  INT-3: el resultado es por moneda; nunca un escalar. */
+export async function getDonationsFilteredSum(filters: DonationFilters = {}): Promise<MoneyTotals> {
   const supabase = createAdminClient()
   const search = filters.search?.trim()
-  let sum = 0
+  let total: MoneyTotals = {}
   for (let from = 0; ; from += 1000) {
     let q = supabase
       .from('donations')
-      .select(search ? 'amount, member:members!inner(search_text)' : 'amount')
+      .select(search ? 'amount, currency, member:members!inner(search_text)' : 'amount, currency')
       .order('id')
       .range(from, from + 999)
     if (filters.status === 'identified') q = q.eq('is_identified', true)
@@ -241,11 +258,11 @@ export async function getDonationsFilteredSum(filters: DonationFilters = {}): Pr
     if (search) q = applyMemberSearch(q, search, 'member.search_text')
     const { data, error } = await q
     if (error) throw error
-    const rows = (data ?? []) as unknown as Array<{ amount: number | null }>
-    for (const r of rows) sum += Number(r.amount ?? 0)
+    const rows = (data ?? []) as unknown as Array<{ amount: number | null; currency: string | null }>
+    total = addTotals(total, sumByCurrency(rows))
     if (rows.length < 1000) break
   }
-  return sum
+  return total
 }
 
 /** Totales del módulo de donaciones (calculados en SQL, migración 058). */
@@ -253,7 +270,14 @@ export async function getDonationStats(): Promise<DonationStats> {
   const supabase = createAdminClient()
   const { data, error } = await supabase.rpc('donation_stats')
   if (error) throw error
-  return data as DonationStats
+  const raw = (data ?? {}) as Record<string, unknown>
+  return {
+    unique_donors: Number(raw.unique_donors ?? 0),
+    active_donors: Number(raw.active_donors ?? 0),
+    total_this_month: totalsFromJson(raw.total_this_month),
+    unidentified_count: Number(raw.unidentified_count ?? 0),
+    unidentified_total: totalsFromJson(raw.unidentified_total),
+  }
 }
 
 export async function getRefunds(): Promise<DbRefund[]> {
@@ -302,6 +326,8 @@ export type PaymentWriteInput = {
    *  la ficha de la matrícula y en la cola de revisión como uno más. */
   enrollment_id?: string | null
   concept?: 'matricula' | 'evento' | 'folletos' | 'prematrimonial' | 'otro' | null
+  /** INT-3: si no viene, se hereda de la entidad cobrada (ver currencyForPayment). */
+  currency?: string | null
 }
 
 /** Matrícula a la que se le quiere colgar un pago (2026-08-04). Devuelve null
@@ -320,9 +346,34 @@ export async function getEnrollmentForPayment(
   return (data as { member_id: string; group_id: string | null } | null) ?? null
 }
 
+/** INT-3 · La moneda de un pago manual NO se elige suelta: sale de lo que se
+ *  está cobrando (el plan del grupo o el evento). Sin entidad, colones.
+ *
+ *  Si se eligiera a mano, tarde o temprano alguien registra en colones el cobro
+ *  de un evento de Madrid y el descuadre aparece meses después. */
+export async function currencyForPayment(
+  input: { study_group_id?: string | null; event_id?: string | null },
+): Promise<string> {
+  const supabase = createAdminClient()
+  if (input.event_id) {
+    const { data } = await supabase.from('events').select('currency').eq('id', input.event_id).maybeSingle()
+    return toCurrency((data as { currency: string | null } | null)?.currency)
+  }
+  if (input.study_group_id) {
+    const { data } = await supabase
+      .from('study_groups').select('plan:study_plans(currency)')
+      .eq('id', input.study_group_id).maybeSingle()
+    const plan = (data as unknown as { plan: { currency: string | null } | null } | null)?.plan
+    return toCurrency(plan?.currency)
+  }
+  return 'CRC'
+}
+
 export async function createPayment(input: PaymentWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.from('payments').insert(input).select('id').single()
+  const currency = input.currency ?? await currencyForPayment(input)
+  const { data, error } = await supabase.from('payments')
+    .insert({ ...input, currency }).select('id').single()
   if (error) throw error
   return data as { id: string }
 }
@@ -423,6 +474,8 @@ export type DonationRow = {
   cedula?: string | null
   donation_date: string
   amount: number
+  /** INT-3: columna opcional del CSV. Sin ella, colones. */
+  currency?: string | null
 }
 
 /** Importa un lote de donaciones: identifica por cédula, detecta duplicados
@@ -464,7 +517,9 @@ export async function importDonations(
     const isIdentified = memberId != null
     if (isIdentified) identified++
 
-    const fileKey = `${memberId ?? r.cedula ?? ''}|${r.donation_date}|${r.amount}`
+    // La moneda entra en la clave de duplicados: ₡50 000 y €50 000 el mismo día
+    // NO son la misma donación.
+    const fileKey = `${memberId ?? r.cedula ?? ''}|${r.donation_date}|${r.amount}|${toCurrency(r.currency)}`
     let isDup = false
     if (seenInFile.has(fileKey)) { isDup = true; duplicates++ }
     else if (memberId) {
@@ -474,6 +529,7 @@ export async function importDonations(
         .eq('member_id', memberId)
         .eq('donation_date', r.donation_date)
         .eq('amount', r.amount)
+        .eq('currency', toCurrency(r.currency))
       if ((count ?? 0) > 0) { isDup = true; duplicates++ }
     }
     seenInFile.add(fileKey)
@@ -483,6 +539,7 @@ export async function importDonations(
       member_id: memberId,
       donation_date: r.donation_date,
       amount: r.amount,
+      currency: toCurrency(r.currency),
       source_file: filename,
       is_identified: isIdentified,
     })

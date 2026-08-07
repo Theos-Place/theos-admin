@@ -29,6 +29,9 @@ const paymentWriteSchema = z
     // (que es efectiva desde que se hizo).
     enrollment_id: z.string().uuid().nullish(),
     concept: z.enum(['matricula', 'evento', 'folletos', 'prematrimonial', 'otro']).nullish(),
+    // INT-3: opcional. Sin ella, se hereda del evento o del plan del grupo
+    // (currencyForPayment); no se asume colones a ciegas.
+    currency: z.enum(['CRC', 'USD', 'EUR']).nullish(),
   })
   .strict()
   .refine(v => !v.enrollment_id || v.concept === 'matricula', {
@@ -57,7 +60,8 @@ export async function GET(req: NextRequest) {
     const entity = searchParams.get('entity_type')
     const method = searchParams.get('method')
     const status = searchParams.get('status')
-    const hasFilter = !!(search || entity || method || status)
+    const currency = searchParams.get('currency')
+    const hasFilter = !!(search || entity || method || status || currency)
 
     // Sin paginación ni filtros: array completo (back-compat: dashboard, etc.).
     if (rawPage === null && rawPageSize === null && !hasFilter) {
@@ -69,6 +73,7 @@ export async function GET(req: NextRequest) {
       entity_type: entity === 'event' || entity === 'study_group' ? entity : undefined,
       method: method ?? undefined,
       status: status ?? undefined,
+      currency: currency === 'CRC' || currency === 'USD' || currency === 'EUR' ? currency : undefined,
       page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
       pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
     })

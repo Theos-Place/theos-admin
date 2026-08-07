@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { useOrg } from '@/lib/org'
 import type { AdminEvent } from '@/data/event-config'
 import { MAX_FILE_SIZE_BYTES } from '@/lib/constants'
-import { formatCRC } from '@/lib/format'
+import { formatMoney } from '@/lib/format'
 import { recurrenceLabel } from '@/lib/events/expand-recurrence'
 import { surveyStatus } from '@/lib/events/survey-schedule'
 
@@ -83,7 +83,7 @@ export function EventInfoTab({
                 <p className="text-sm text-navy font-body font-semibold">Este evento requiere inscripción</p>
                 <p className="text-[13px] text-navy-light/70 font-body mt-0.5">
                   {event.requires_payment && event.payment_amount
-                    ? `Tiene un costo de ${formatCRC(event.payment_amount)}.`
+                    ? `Tiene un costo de ${formatMoney(event.payment_amount, event.currency)}.`
                     : 'Es gratuito.'}
                   {event.max_capacity != null && ' El cupo es limitado.'}
                 </p>
@@ -182,7 +182,7 @@ export function EventInfoTab({
             // EVE-4 · Estado real de la encuesta, no solo "requerida":
             // programada para tal fecha / enviada a N / N respuestas.
             { label: 'Encuesta', value: etiquetaEncuesta(event, respuestasEncuesta) },
-            { label: 'Pago', value: event.requires_payment ? formatCRC(event.payment_amount ?? 0) : 'Gratuito' },
+            { label: 'Pago', value: event.requires_payment ? formatMoney(event.payment_amount ?? 0, event.currency) : 'Gratuito' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between text-sm">
               <span className="text-navy-light/60 font-body">{label}</span>

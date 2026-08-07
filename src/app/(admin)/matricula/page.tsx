@@ -19,7 +19,7 @@ import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib
 import { summarizeStageRequirements } from '@/lib/studies/stage-requirements-summary'
 import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
-import { formatDateLong, formatCRC } from '@/lib/format'
+import { formatDateLong, formatCRC, formatMoney } from '@/lib/format'
 import { studyCostLabel } from '@/lib/studies/cost-label'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 
@@ -813,7 +813,7 @@ function StudyCard({
           {studyType?.requires_payment && studyType.cost ? (
             <span className="flex items-center gap-1 text-coral">
               <DollarSign size={12} />
-              {formatCRC(studyType.cost)}
+              {formatMoney(studyType.cost, studyType.currency)}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-teal-deep">

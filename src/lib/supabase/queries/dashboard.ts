@@ -1,4 +1,5 @@
 import { createAdminClient, type TableName } from '@/lib/supabase/admin'
+import { sumByCurrency, totalsFromJson, type MoneyTotals } from '@/lib/money'
 import { getEvents } from './events'
 import { eventsInRange } from '@/lib/events/event-views'
 
@@ -46,7 +47,7 @@ export type DashboardStats = {
   studies: { active_groups: number; active_estudios: number; active_capacitaciones: number; students: number; open_registration: number; open_requests: number; closing_soon: number; without_leader: number }
   events: { today: number; upcoming_this_month: number; this_week: number; pending_payments: number; near_capacity: number }
   servers: { active: number; positions: number; committees: number; open_vacancies: number; pending_applications: number }
-  finance: { donors_active: number; pending_refunds: number; income_this_month: number }
+  finance: { donors_active: number; pending_refunds: number; income_this_month: MoneyTotals }
   communications: { sent_this_month: number; total_recipients: number; failed: number }
 }
 
@@ -132,26 +133,27 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
   // Sumas y distinct agregados en SQL (RPC dashboard_sums, migración 040):
   // income del mes, destinatarios del mes y personas únicas sirviendo
   // (serversActive cuenta filas = puestos; una persona puede tener varios).
-  let incomeThisMonth = 0
+  let incomeThisMonth: MoneyTotals = {}
   let totalRecipients = 0
   let serversUnique = 0
   const { data: sums, error: sumsError } = await supabase
     .rpc('dashboard_sums', { p_month_start: monthStart, p_month_start_date: monthStartDate })
     .single()
   if (!sumsError && sums) {
-    const s = sums as { income_this_month: number; total_recipients: number; servers_unique: number }
-    incomeThisMonth = Number(s.income_this_month)
+    const s = sums as { income_this_month: unknown; total_recipients: number; servers_unique: number }
+    // INT-3: income_this_month viene POR MONEDA ({"CRC": 25000}), no como escalar.
+    incomeThisMonth = totalsFromJson(s.income_this_month)
     totalRecipients = Number(s.total_recipients)
     serversUnique = Number(s.servers_unique)
   } else {
     // Fallback mientras la migración 040 no esté aplicada: traer y reducir en JS.
     console.warn('dashboard: rpc dashboard_sums no disponible, sumando en JS:', sumsError?.message)
     const [incomeRes, brRes, volRes] = await Promise.all([
-      supabase.from('payments').select('amount').eq('status', 'paid').gte('payment_date', monthStartDate),
+      supabase.from('payments').select('amount, currency').eq('status', 'paid').gte('payment_date', monthStartDate),
       supabase.from('message_broadcasts').select('total_recipients').gte('created_at', monthStart),
       supabase.from('volunteers').select('member_id').eq('status', 'active'),
     ])
-    incomeThisMonth = (incomeRes.data ?? []).reduce((s, r) => s + Number((r as { amount: number }).amount), 0)
+    incomeThisMonth = sumByCurrency((incomeRes.data ?? []) as Array<{ amount: number; currency: string | null }>)
     totalRecipients = (brRes.data ?? []).reduce((s, r) => s + Number((r as { total_recipients: number }).total_recipients), 0)
     serversUnique = new Set((volRes.data ?? []).map(r => (r as { member_id: string }).member_id)).size
   }

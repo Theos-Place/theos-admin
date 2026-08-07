@@ -77,6 +77,8 @@ export type EligibleGroup = {
   start_date: string
   requires_payment: boolean
   cost: number | null
+  /** INT-3: moneda del costo del plan; sin ella la pantalla asumiría colones. */
+  currency: string | null
   is_virtual: boolean
 }
 
@@ -271,6 +273,7 @@ export function computeEligibility(
               start_date: g.start_date,
               requires_payment: study.requires_payment,
               cost: study.cost ?? null,
+              currency: study.currency ?? null,
               is_virtual: !!g.is_virtual,
             }
           })

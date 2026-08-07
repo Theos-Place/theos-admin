@@ -3,7 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { updateFinanceRequestStatus } from '@/lib/supabase/queries/finance-requests'
 import { approvePayment } from '@/lib/supabase/queries/payments'
 import { sendSystemEmail } from '@/lib/email/system-templates'
-import { formatCRC, formatDate } from '@/lib/format'
+import { formatDate, formatMoney, currencyDecimals } from '@/lib/format'
+import { toCurrency } from '@/lib/money'
 import {
   checkPaymentScholarshipEligibility, computeApplication, currencyMismatch,
   checkCouponEmailSendable,
@@ -58,6 +59,8 @@ export type Scholarship = {
   discount_type: DiscountType
   discount_value: number
   code: string | null
+  /** INT-2/INT-3: moneda del descuento fijo (los porcentuales no dependen de ella). */
+  currency: string | null
   expires_at: string | null
   approval_type: ApprovalType | null
   status: ScholarshipStatus
@@ -70,19 +73,24 @@ export type Scholarship = {
 }
 
 /** Redondea al colón (CRC no usa decimales en la práctica de este sistema). */
-export function computeDiscountedAmount(original: number, type: DiscountType, value: number): number {
-  if (type === 'percentage') return Math.max(0, Math.round(original * (1 - value / 100)))
-  return Math.max(0, Math.round(original - value))
+/** INT-3: el redondeo va según la moneda. Antes era Math.round fijo, que asume
+ *  colones y se comería los céntimos de un cobro en euros. */
+export function computeDiscountedAmount(
+  original: number, type: DiscountType, value: number, currency: string | null = 'CRC',
+): number {
+  const bruto = type === 'percentage' ? original * (1 - value / 100) : original - value
+  const f = 10 ** currencyDecimals(currency)
+  return Math.max(0, Math.round(bruto * f) / f)
 }
 
-export function formatDiscount(type: DiscountType, value: number): string {
+export function formatDiscount(type: DiscountType, value: number, currency: string | null = 'CRC'): string {
   if (type === 'percentage') return `${value}%`
-  return `${formatCRC(value)}`
+  return formatMoney(value, currency)
 }
 
 const SELECT = `
   id, kind, member_id, entity_type, plan_id, event_id, discount_type, discount_value,
-  code, expires_at, approval_type, status, used_at, created_at, email_sent_at, email_sent_to,
+  code, currency, expires_at, approval_type, status, used_at, created_at, email_sent_at, email_sent_to,
   member:members!scholarships_member_id_fkey(first_name, last_name),
   plan:study_plans!scholarships_plan_id_fkey(name),
   event:events!scholarships_event_id_fkey(title)
@@ -98,6 +106,8 @@ type DbRow = {
   discount_type: DiscountType
   discount_value: number
   code: string | null
+  /** INT-2/INT-3: moneda del descuento fijo (los porcentuales no dependen de ella). */
+  currency: string | null
   expires_at: string | null
   approval_type: ApprovalType | null
   status: ScholarshipStatus
@@ -128,6 +138,7 @@ function toDomain(r: DbRow, usedCount = 0): Scholarship {
     event_id: r.event_id,
     entity_name: plan?.name ?? event?.title ?? '—',
     discount_type: r.discount_type,
+    currency: toCurrency(r.currency),
     discount_value: Number(r.discount_value),
     code: r.code,
     expires_at: r.expires_at,
@@ -316,6 +327,22 @@ export async function revokeScholarship(id: string): Promise<boolean> {
   return (data ?? []).length > 0
 }
 
+/** INT-3 · La moneda de una beca sale de LO QUE SE BECA (el plan o el evento).
+ *  Un descuento de monto fijo en otra moneda no se puede aplicar, así que nacer
+ *  en colones por defecto la volvería inservible para Madrid. */
+async function resolveEntityCurrency(entityType: ScholarshipEntityType, planId: string | null, eventId: string | null): Promise<string> {
+  const supabase = createAdminClient()
+  if (entityType === 'study_plan' && planId) {
+    const { data } = await supabase.from('study_plans').select('currency').eq('id', planId).maybeSingle()
+    return toCurrency((data as { currency: string | null } | null)?.currency)
+  }
+  if (entityType === 'event' && eventId) {
+    const { data } = await supabase.from('events').select('currency').eq('id', eventId).maybeSingle()
+    return toCurrency((data as { currency: string | null } | null)?.currency)
+  }
+  return 'CRC'
+}
+
 async function resolveEntityName(entityType: ScholarshipEntityType, planId: string | null, eventId: string | null): Promise<string> {
   const supabase = createAdminClient()
   if (entityType === 'study_plan' && planId) {
@@ -355,12 +382,14 @@ export async function approveScholarshipRequest(
   if (!['open', 'in_review'].includes(req.status)) throw new Error('La solicitud ya fue resuelta')
   if (!req.entity_type) throw new Error('La solicitud no tiene un destino definido')
 
+  const becaCurrency = await resolveEntityCurrency(req.entity_type, req.plan_id, req.event_id)
   const { data: created, error: insErr } = await supabase.from('scholarships').insert({
     kind: 'asignada',
     member_id: req.member_id,
     entity_type: req.entity_type,
     plan_id: req.plan_id,
     event_id: req.event_id,
+    currency: becaCurrency,
     discount_type: input.discount_type,
     discount_value: input.discount_value,
     approval_type: input.approval_type,
@@ -379,7 +408,7 @@ export async function approveScholarshipRequest(
     const { data: m } = await supabase.from('members').select('email, first_name, last_name').eq('id', req.member_id).maybeSingle()
     const member = m as { email: string | null; first_name: string; last_name: string } | null
     const entityName = await resolveEntityName(req.entity_type, req.plan_id, req.event_id)
-    const discount = formatDiscount(input.discount_type, input.discount_value)
+    const discount = formatDiscount(input.discount_type, input.discount_value, becaCurrency)
 
     await supabase.from('internal_notifications').insert({
       recipient_member_id: req.member_id,
@@ -512,7 +541,8 @@ export async function applyScholarshipToPayment(
     }
   }
 
-  const { amount: newAmount, covered } = computeApplication(Number(payment.amount), resolved.discount_type, resolved.discount_value)
+  const { amount: newAmount, covered } = computeApplication(
+    Number(payment.amount), resolved.discount_type, resolved.discount_value, payment.currency)
 
   // UPDATE optimista: solo si sigue pendiente y sin beca (anti-carrera).
   // Beca completa: method='scholarship' documenta el origen y review_status
@@ -599,7 +629,7 @@ export async function sendScholarshipEmail(
   const member = m as { email: string | null; first_name: string; last_name: string } | null
   if (!member?.email) throw new Error('sin_correo')
 
-  const discount = formatDiscount(s.discount_type, s.discount_value)
+  const discount = formatDiscount(s.discount_type, s.discount_value, s.currency)
   const result = s.kind === 'generica'
     ? await sendSystemEmail({
         systemKey: 'cupon_asignado',

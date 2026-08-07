@@ -29,10 +29,12 @@ export function exportQuickBooksCSV(
   rows: (string | number)[][]
 ) {
   if (type === 'donations') {
-    const headers = ['Date', 'Name', 'Account', 'Amount', 'Memo']
+    // INT-3: Currency va pegada al Amount — QuickBooks necesita saber en qué
+    // moneda está la cifra; sin la columna asumiría la del archivo entero.
+    const headers = ['Date', 'Name', 'Account', 'Amount', 'Currency', 'Memo']
     generateCSV(headers, rows, 'quickbooks-donaciones')
   } else {
-    const headers = ['Date', 'Name', 'Account', 'Amount', 'Description', 'Method']
+    const headers = ['Date', 'Name', 'Account', 'Amount', 'Currency', 'Description', 'Method']
     generateCSV(headers, rows, 'quickbooks-pagos')
   }
 }

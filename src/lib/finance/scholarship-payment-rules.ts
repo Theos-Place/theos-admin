@@ -2,6 +2,7 @@
 // pagos). Sin Supabase: la ruta /api/payments/[id]/apply-scholarship resuelve
 // los datos y delega acá las decisiones, así quedan testeables en node.
 
+import { currencyDecimals } from '@/lib/format'
 import type { DiscountType } from '@/lib/supabase/queries/scholarships'
 
 export type PaymentForScholarship = {
@@ -35,13 +36,17 @@ export function checkPaymentScholarshipEligibility(
 
 /** Monto resultante de aplicar el descuento. `covered` = beca completa: el
  *  pago baja a 0 y se aprueba sin comprobante (el objeto pagado se libera
- *  igual que con approve_payment). */
+ *  igual que con approve_payment).
+ *
+ *  INT-3: el redondeo va según la moneda. Antes era Math.round fijo, que asume
+ *  colones: un 10% sobre €25,50 daba €23 en vez de €22,95 — se comía los
+ *  céntimos. En colones el resultado es idéntico al de antes. */
 export function computeApplication(
-  amount: number, type: DiscountType, value: number,
+  amount: number, type: DiscountType, value: number, currency: string | null = 'CRC',
 ): { amount: number; covered: boolean } {
-  const discounted = type === 'percentage'
-    ? Math.max(0, Math.round(amount * (1 - value / 100)))
-    : Math.max(0, Math.round(amount - value))
+  const bruto = type === 'percentage' ? amount * (1 - value / 100) : amount - value
+  const f = 10 ** currencyDecimals(currency)
+  const discounted = Math.max(0, Math.round(bruto * f) / f)
   return { amount: discounted, covered: discounted === 0 }
 }
 

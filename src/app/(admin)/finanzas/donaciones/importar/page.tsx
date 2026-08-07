@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation'
 import { CloudUpload, Download, Check, CheckCircle2, XCircle, ArrowLeft, ChevronRight } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { generateCSV } from '@/lib/export'
-import { formatCRC } from '@/lib/format'
+import { formatMoney, type Currency } from '@/lib/format'
+import { sumByCurrency, formatTotalsInline, toCurrency } from '@/lib/money'
 
 interface PreviewRow {
   cedula: string
   csv_name: string
   date: string
   amount: number
+  /** INT-3: columna opcional del CSV; sin ella, colones. */
+  currency: Currency
 }
 
 type ImportResult = {
@@ -22,7 +25,9 @@ type ImportResult = {
   status: string
 }
 
-// Parser CSV simple (maneja comas entre comillas). Espera columnas: cedula, nombre, fecha, monto.
+// Parser CSV simple (maneja comas entre comillas). Espera columnas: cedula,
+// nombre, fecha, monto — y OPCIONALMENTE moneda (INT-3). Sin la columna, todo
+// entra como colones, que es lo que trae el histórico.
 function parseDonationsCSV(text: string): PreviewRow[] {
   const lines = text.split(/\r?\n/).filter(l => l.trim() !== '')
   if (lines.length === 0) return []
@@ -40,6 +45,7 @@ function parseDonationsCSV(text: string): PreviewRow[] {
   const header = split(lines[0]).map(h => h.toLowerCase())
   const idx = (names: string[]) => header.findIndex(h => names.some(n => h.includes(n)))
   const ci = idx(['cedula', 'cédula']), ni = idx(['nombre']), fi = idx(['fecha']), mi = idx(['monto', 'amount'])
+  const cui = idx(['moneda', 'currency'])
   return lines.slice(1).map(line => {
     const cols = split(line)
     return {
@@ -47,6 +53,7 @@ function parseDonationsCSV(text: string): PreviewRow[] {
       csv_name: ni >= 0 ? cols[ni] ?? '' : '',
       date: fi >= 0 ? cols[fi] ?? '' : '',
       amount: Number((mi >= 0 ? cols[mi] ?? '0' : '0').replace(/[^\d.-]/g, '')) || 0,
+      currency: toCurrency(cui >= 0 ? cols[cui] : null),
     }
   }).filter(r => r.date && r.amount > 0)
 }
@@ -86,10 +93,11 @@ export default function ImportarDonacionesPage() {
 
   function downloadTemplate() {
     generateCSV(
-      ['cedula', 'nombre', 'fecha', 'monto'],
+      // La columna moneda es opcional: si no viene, se importa en colones.
+      ['cedula', 'nombre', 'fecha', 'monto', 'moneda'],
       [
-        ['1-0847-0291', 'RUIZ MORENO ALEJANDRO', '2026-05-05', '50000'],
-        ['2-0738-1094', 'FERNANDEZ LOPEZ SOFIA', '2026-05-10', '35000'],
+        ['1-0847-0291', 'RUIZ MORENO ALEJANDRO', '2026-05-05', '50000', 'CRC'],
+        ['2-0738-1094', 'FERNANDEZ LOPEZ SOFIA', '2026-05-10', '35000', 'CRC'],
       ],
       'plantilla-donaciones'
     )
@@ -104,7 +112,7 @@ export default function ImportarDonacionesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: fileName || 'donaciones.csv',
-          rows: rows.map(r => ({ cedula: r.cedula || null, donation_date: r.date, amount: r.amount })),
+          rows: rows.map(r => ({ cedula: r.cedula || null, donation_date: r.date, amount: r.amount, currency: r.currency })),
           update_donor_status: updateDonorStatus,
         }),
       })
@@ -273,7 +281,7 @@ export default function ImportarDonacionesPage() {
                         </td>
                         <td className="px-5 py-3">
                           <p className="text-[13px] font-medium text-navy font-body">
-                            {formatCRC(row.amount)}
+                            {formatMoney(row.amount, row.currency)}
                           </p>
                         </td>
                       </tr>
@@ -312,7 +320,7 @@ export default function ImportarDonacionesPage() {
                 { label: 'Total filas', value: `${rows.length}` },
                 { label: 'Con cédula', value: `${conCedula}` },
                 { label: 'Sin cédula', value: `${sinCedula}` },
-                { label: 'Monto total', value: `${formatCRC(rows.reduce((s, r) => s + r.amount, 0))}` },
+                { label: 'Monto total', value: formatTotalsInline(sumByCurrency(rows)) },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between text-sm font-body">
                   <span className="text-[rgba(22,20,64,0.55)]">{label}</span>

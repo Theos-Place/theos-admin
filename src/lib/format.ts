@@ -110,16 +110,35 @@ export type Currency = (typeof CURRENCIES)[number]
 
 const CURRENCY_SYMBOL: Record<Currency, string> = { CRC: '₡', USD: '$', EUR: '€' }
 
+/** INT-3: decimales de cada moneda. El colón no usa céntimos en la práctica;
+ *  el euro y el dólar sí, y sin esto €25,50 se mostraba "€25,5". */
+const CURRENCY_DECIMALS: Record<Currency, number> = { CRC: 0, USD: 2, EUR: 2 }
+
+/** Cuántos decimales lleva la moneda. Sirve para los inputs de monto: el `step`
+ *  tiene que dejar escribir céntimos donde los hay y no donde no. */
+export function currencyDecimals(currency: string | null | undefined): number {
+  return CURRENCY_DECIMALS[(currency ?? 'CRC') as Currency] ?? 2
+}
+
+/** `step` del input de monto según la moneda: '1' en colones, '0.01' en euros. */
+export function amountStep(currency: string | null | undefined): string {
+  return currencyDecimals(currency) === 0 ? '1' : '0.01'
+}
+
 /** Símbolo de la moneda ("₡"/"$"/"€"); moneda desconocida → el código mismo. */
 export function currencySymbol(currency: string | null | undefined): string {
   return CURRENCY_SYMBOL[(currency ?? 'CRC') as Currency] ?? String(currency)
 }
 
-/** INT-2: formateo por moneda en un helper único. Default CRC (todo lo
- *  histórico es en colones); moneda desconocida → se antepone el código. */
+/** INT-2/INT-3: formateo por moneda en un helper único, con los decimales que
+ *  le corresponden a cada una. Default CRC (todo lo histórico es en colones);
+ *  moneda desconocida → se antepone el código. */
 export function formatMoney(amount: number, currency: string | null | undefined = 'CRC'): string {
   const cur = (currency ?? 'CRC') as Currency
   const symbol = CURRENCY_SYMBOL[cur]
-  const n = amount.toLocaleString('es-CR')
+  const d = currencyDecimals(cur)
+  const n = new Intl.NumberFormat(LOCALE, {
+    minimumFractionDigits: d, maximumFractionDigits: d,
+  }).format(amount)
   return symbol ? `${symbol}${n}` : `${currency} ${n}`
 }

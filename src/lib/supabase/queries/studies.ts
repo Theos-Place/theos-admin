@@ -1,3 +1,4 @@
+import { toCurrency } from '@/lib/money'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { groupLocksLeader } from '@/lib/studies/leader-activation'
 import { isGroupFull, occupiesSpot, OCCUPYING_STATUSES } from '@/lib/studies/enrollment-capacity'
@@ -7,7 +8,7 @@ import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getGroupRestriction, memberPassesRestriction } from '@/lib/supabase/queries/group-restrictions'
 import { hasRestriction, restrictionBlockedMessage, type GroupRestriction } from '@/lib/studies/group-restrictions'
 import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
-import { ymdCR } from '@/lib/format'
+import { ymdCR, formatMoney } from '@/lib/format'
 import type { Json } from '@/types/database'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
@@ -1071,12 +1072,12 @@ export async function enrollMember(
   // se validaba el cupo, ni el grupo virtual, ni la ventana de matrícula.
   const { data: g, error: gErr } = await supabase
     .from('study_groups')
-    .select('is_virtual, leader_id, co_leader_id, status, max_students, enrollment_start_date, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, requires_payment)')
+    .select('is_virtual, leader_id, co_leader_id, status, max_students, enrollment_start_date, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, currency, requires_payment)')
     .eq('id', groupId).maybeSingle()
   // Si la consulta falla, NO se sigue: matricular sin saber el plan es
   // matricular sin cobrar.
   if (gErr) throw gErr
-  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; status: string; max_students: number | null; enrollment_start_date: string | null; enrollment_end_date: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; requires_payment: boolean | null } | null } | null
+  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; status: string; max_students: number | null; enrollment_start_date: string | null; enrollment_end_date: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; currency: string | null; requires_payment: boolean | null } | null } | null
   // Un grupo que no existe tampoco se matricula.
   if (!group) throw new Error('GRUPO_NO_ENCONTRADO')
   const plan = group?.plan
@@ -1180,6 +1181,8 @@ export async function enrollMember(
   // de costo). Cualquier matrícula con costo queda pendiente de comprobante,
   // sin importar si la hace el propio miembro o el staff.
   const amount = Number(plan?.cost ?? 0)
+  // INT-3: el cobro va en la moneda DEL PLAN, no en colones por defecto.
+  const planCurrency = toCurrency(plan?.currency)
   const requiresPayment = !!plan?.requires_payment && amount > 0
   // Nombre del estudio para la descripción del cobro (el `code` no le dice nada
   // a nadie en una lista de pagos).
@@ -1197,7 +1200,7 @@ export async function enrollMember(
   if (requiresPayment && scholarshipInput && (scholarshipInput.scholarship_id || scholarshipInput.coupon_code) && plan?.id) {
     const { resolveScholarshipForApplication, computeDiscountedAmount } = await import('./scholarships')
     const resolved = await resolveScholarshipForApplication(memberId, 'study_plan', plan.id, scholarshipInput)
-    finalAmount = computeDiscountedAmount(amount, resolved.discount_type, resolved.discount_value)
+    finalAmount = computeDiscountedAmount(amount, resolved.discount_type, resolved.discount_value, planCurrency)
     appliedScholarship = { id: resolved.id, kind: resolved.kind }
   }
   // El dirigente del grupo no paga la matrícula de su propio grupo.
@@ -1221,7 +1224,7 @@ export async function enrollMember(
     // una matrícula pendiente_de_pago sin fila en payments es invisible para
     // finanzas y la API habría respondido éxito igual.
     const { error: payErr } = await supabase.from('payments').insert({
-      member_id: memberId, amount: finalAmount, currency: 'CRC', payment_method: 'comprobante',
+      member_id: memberId, amount: finalAmount, currency: planCurrency, payment_method: 'comprobante',
       concept: 'matricula', enrollment_id: enrollmentId,
       study_group_id: groupId, entity_type: 'study_group', status: 'pending',
       scholarship_id: appliedScholarship?.id ?? null,
@@ -1244,7 +1247,7 @@ export async function enrollMember(
       recipient_member_id: memberId,
       type: 'payment_pending',
       title: 'Tenés un cobro pendiente',
-      body: `Se generó un cobro de matrícula de ₡${finalAmount.toLocaleString('es-CR')}. Abrí el detalle para pagarlo (subir comprobante).`,
+      body: `Se generó un cobro de matrícula de ${formatMoney(finalAmount, planCurrency)}. Abrí el detalle para pagarlo (subir comprobante).`,
       link: `/miembros/${memberId}?tab=participacion`,
     })
     if (notifErr) console.warn('enrollMember: notificación de cobro falló:', notifErr.message)
