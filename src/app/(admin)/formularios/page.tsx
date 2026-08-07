@@ -20,8 +20,16 @@ import {
   Copy,
   Archive,
   MessageSquare,
+  Trash2,
+  Send,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Modal } from '@/components/shared/Modal'
+import {
+  canDeleteForm, canPublishForm, deleteWarning, matchesEstado, canUserDeleteForms,
+  ESTADO_FILTERS, type EstadoFilter,
+} from '@/lib/forms/form-actions'
+import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/shared/Toast'
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
@@ -64,6 +72,13 @@ export default function FormulariosPage() {
   const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>([])
   useEffect(() => { setLocalTemplates(forms) }, [forms])
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
+  const [estadoFilter, setEstadoFilter] = useState<EstadoFilter>('all')
+  const [deleteTarget, setDeleteTarget] = useState<FormTemplate | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  // Borrar es más acotado que editar (se lleva las respuestas): mismo criterio
+  // que el endpoint, para no mostrar un botón que va a devolver 403.
+  const { user } = useAuth()
+  const puedeBorrar = canUserDeleteForms(user?.roles)
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
@@ -92,18 +107,38 @@ export default function FormulariosPage() {
     }
   }
 
-  async function handleArchive(formId: string) {
+  /** Apaga o enciende el formulario. Desactivar NO borra nada: deja de recibir
+   *  respuestas y se puede volver a publicar. */
+  async function handleToggleActive(formId: string, activar: boolean) {
     setMenuOpen(null)
     try {
       const res = await fetch(`/api/forms/${formId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: false }),
+        body: JSON.stringify({ is_active: activar }),
       })
       if (!res.ok) throw new Error()
       await refetch()
+      toast(activar ? 'Formulario publicado' : 'Formulario desactivado', 'success')
     } catch {
-      toast('No se pudo archivar el formulario', 'error')
+      toast(activar ? 'No se pudo publicar el formulario' : 'No se pudo desactivar el formulario', 'error')
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/forms/${deleteTarget.id}`, { method: 'DELETE' })
+      const d = await res.json().catch(() => null) as { error?: string } | null
+      if (!res.ok) throw new Error(d?.error ?? '')
+      setDeleteTarget(null)
+      await refetch()
+      toast('Formulario eliminado', 'success')
+    } catch (e) {
+      toast((e as Error).message || 'No se pudo eliminar el formulario', 'error')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -121,13 +156,14 @@ export default function FormulariosPage() {
   const filtered = useMemo(() => {
     return localTemplates.filter(f => {
       if (categoryFilter !== 'all' && f.category !== categoryFilter) return false
+      if (!matchesEstado(f, estadoFilter)) return false
       if (query.trim()) {
         const q = query.toLowerCase()
         return f.name.toLowerCase().includes(q) || f.description.toLowerCase().includes(q)
       }
       return true
     })
-  }, [localTemplates, categoryFilter, query])
+  }, [localTemplates, categoryFilter, estadoFilter, query])
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
 
@@ -184,6 +220,12 @@ export default function FormulariosPage() {
           ariaLabel="Filtrar formularios por categoría"
           className="flex-1"
         />
+        <FilterChips
+          chips={ESTADO_FILTERS}
+          activeKey={estadoFilter}
+          onSelect={k => setEstadoFilter(k as EstadoFilter)}
+          ariaLabel="Filtrar formularios por estado"
+        />
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
           <input
@@ -195,6 +237,38 @@ export default function FormulariosPage() {
           />
         </div>
       </div>
+
+      {deleteTarget && (
+        <Modal onClose={() => setDeleteTarget(null)} titleId="del-form-title" width={440}>
+          <div className="space-y-4">
+            <h2 id="del-form-title" className="text-lg font-display font-extrabold text-navy">
+              Eliminar “{deleteTarget.name}”
+            </h2>
+            <p className="text-[13px] text-navy-light/70 font-body">
+              {deleteWarning(deleteTarget)
+                ?? 'El formulario no tiene respuestas. No se puede deshacer.'}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-full px-4 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDelete}
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+              >
+                <Trash2 size={13} />
+                {deleting ? 'Eliminando…' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* List */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
@@ -325,14 +399,37 @@ export default function FormulariosPage() {
                                   <Copy size={13} className="text-navy-light/60" />
                                   Duplicar
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleArchive(form.id)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
-                                >
-                                  <Archive size={13} className="text-coral/60" />
-                                  Archivar
-                                </button>
+                                {canPublishForm(form) ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleActive(form.id, true)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-teal-deep hover:bg-teal-soft/20 transition-colors font-body"
+                                  >
+                                    <Send size={13} className="text-teal-deep/60" />
+                                    Publicar
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleActive(form.id, false)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                                  >
+                                    <Archive size={13} className="text-navy-light/60" />
+                                    Desactivar
+                                  </button>
+                                )}
+                                {/* Eliminar solo si está desactivado: el backend
+                                    lo vuelve a validar (409 form_activo). */}
+                                {puedeBorrar && canDeleteForm(form) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => { setMenuOpen(null); setDeleteTarget(form) }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
+                                  >
+                                    <Trash2 size={13} className="text-coral/60" />
+                                    Eliminar
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>

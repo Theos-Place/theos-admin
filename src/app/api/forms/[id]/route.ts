@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { FORM_ACTION_MESSAGES, FORM_DELETE_ROLES } from '@/lib/forms/form-actions'
 import { requireRoles } from '@/lib/auth/guard'
 import { getFormById, updateForm, deleteForm, resolveDynamicOptions, hasFormAccessGrant } from '@/lib/supabase/queries/forms'
 import { memberFormFillAccess } from '@/lib/supabase/queries/form-fill-access'
@@ -71,13 +72,19 @@ export async function DELETE(
 ) {
     // Borrar SÍ queda con lista explícita: se lleva las respuestas por delante,
     // así que el rol 'forms' (view/create/edit/export) no lo tiene.
-    const auth = await requireRoles('comunicaciones', 'direccion', 'encargado_staff')
+    const auth = await requireRoles(...FORM_DELETE_ROLES)
     if (auth.res) return auth.res
   try {
     const { id } = await params
     await deleteForm(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if ((error as { message?: string })?.message === 'form_activo') {
+      return NextResponse.json(
+        { error: FORM_ACTION_MESSAGES.form_activo, code: 'form_activo' },
+        { status: 409 },
+      )
+    }
     console.error('DELETE /api/forms/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

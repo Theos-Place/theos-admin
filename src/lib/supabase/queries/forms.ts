@@ -243,8 +243,14 @@ export async function updateForm(
   }
 }
 
+/** Borra un formulario y, con él, sus respuestas.
+ *
+ *  Solo si está DESACTIVADO: la regla vive acá y no solo en el menú, porque el
+ *  endpoint es alcanzable sin pasar por la pantalla. Lanza 'form_activo'. */
 export async function deleteForm(id: string): Promise<void> {
   const supabase = createAdminClient()
+  const { data } = await supabase.from('forms').select('is_active').eq('id', id).maybeSingle()
+  if ((data as { is_active: boolean } | null)?.is_active) throw new Error('form_activo')
   const { error } = await supabase.from('forms').delete().eq('id', id)
   if (error) throw error
 }
