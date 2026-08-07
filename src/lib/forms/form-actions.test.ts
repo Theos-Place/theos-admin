@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   canDeleteForm, canPublishForm, deleteWarning, matchesEstado, ESTADO_FILTERS,
-  canUserDeleteForms,
+  canUserDeleteForms, deleteBlockedReason,
 } from './form-actions'
 
 const activo = { is_active: true, responses_count: 0 }
@@ -17,15 +17,18 @@ describe('eliminar', () => {
     expect(canDeleteForm(inactivo)).toBe(true)
   })
 
-  it('con respuestas se avisa CUÁNTAS se pierden, no un texto genérico', () => {
-    expect(deleteWarning({ ...inactivo, responses_count: 12 }))
-      .toContain('las 12 respuestas')
-    expect(deleteWarning({ ...inactivo, responses_count: 1 }))
-      .toContain('la respuesta que ya recibió')
+  it('CON RESPUESTAS no se puede: lo que la gente contestó no se tira', () => {
+    expect(canDeleteForm({ is_active: false, responses_count: 1 })).toBe(false)
+    expect(deleteBlockedReason({ is_active: false, responses_count: 12 })).toBe('form_con_respuestas')
   })
 
-  it('sin respuestas no se advierte nada: no hay nada que perder', () => {
-    expect(deleteWarning(inactivo)).toBeNull()
+  it('el motivo distingue los dos casos, para poder explicarlo', () => {
+    expect(deleteBlockedReason({ is_active: true, responses_count: 0 })).toBe('form_activo')
+    expect(deleteBlockedReason(inactivo)).toBeNull()
+  })
+
+  it('el aviso dice qué se pierde de verdad: nada más que el formulario', () => {
+    expect(deleteWarning(inactivo)).toContain('no se pierde nada más')
   })
 })
 

@@ -26,8 +26,8 @@ import {
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import {
-  canDeleteForm, canPublishForm, deleteWarning, matchesEstado, canUserDeleteForms,
-  ESTADO_FILTERS, type EstadoFilter,
+  canPublishForm, deleteWarning, deleteBlockedReason, matchesEstado, canUserDeleteForms,
+  FORM_ACTION_MESSAGES, ESTADO_FILTERS, type EstadoFilter,
 } from '@/lib/forms/form-actions'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/shared/Toast'
@@ -245,8 +245,7 @@ export default function FormulariosPage() {
               Eliminar “{deleteTarget.name}”
             </h2>
             <p className="text-[13px] text-navy-light/70 font-body">
-              {deleteWarning(deleteTarget)
-                ?? 'El formulario no tiene respuestas. No se puede deshacer.'}
+              {deleteWarning(deleteTarget)}
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -418,18 +417,31 @@ export default function FormulariosPage() {
                                     Desactivar
                                   </button>
                                 )}
-                                {/* Eliminar solo si está desactivado: el backend
-                                    lo vuelve a validar (409 form_activo). */}
-                                {puedeBorrar && canDeleteForm(form) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => { setMenuOpen(null); setDeleteTarget(form) }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-coral hover:bg-coral/5 transition-colors font-body"
-                                  >
-                                    <Trash2 size={13} className="text-coral/60" />
-                                    Eliminar
-                                  </button>
-                                )}
+                                {/* Eliminar: desactivado y SIN respuestas. El
+                                    backend lo vuelve a validar (409). Cuando no
+                                    se puede, el botón se muestra apagado con el
+                                    motivo — esconderlo dejaba a quien lo busca
+                                    sin saber por qué no está. */}
+                                {puedeBorrar && (() => {
+                                  const motivo = deleteBlockedReason(form)
+                                  return (
+                                    <button
+                                      type="button"
+                                      disabled={!!motivo}
+                                      title={motivo ? FORM_ACTION_MESSAGES[motivo] : undefined}
+                                      onClick={() => { setMenuOpen(null); setDeleteTarget(form) }}
+                                      className={cn(
+                                        'w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors font-body',
+                                        motivo
+                                          ? 'text-navy-light/40 cursor-not-allowed'
+                                          : 'text-coral hover:bg-coral/5',
+                                      )}
+                                    >
+                                      <Trash2 size={13} className={motivo ? 'text-navy-light/30' : 'text-coral/60'} />
+                                      Eliminar
+                                    </button>
+                                  )
+                                })()}
                               </div>
                             )}
                           </div>

@@ -79,11 +79,9 @@ export async function DELETE(
     await deleteForm(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    if ((error as { message?: string })?.message === 'form_activo') {
-      return NextResponse.json(
-        { error: FORM_ACTION_MESSAGES.form_activo, code: 'form_activo' },
-        { status: 409 },
-      )
+    const code = (error as { message?: string })?.message
+    if (code === 'form_activo' || code === 'form_con_respuestas') {
+      return NextResponse.json({ error: FORM_ACTION_MESSAGES[code], code }, { status: 409 })
     }
     console.error('DELETE /api/forms/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
