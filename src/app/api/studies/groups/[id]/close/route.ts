@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { requestLeaderFeedback } from '@/lib/email/leader-feedback-notify'
+import { scheduleLeaderFeedback } from '@/lib/email/leader-feedback-notify'
 import { closeGroup, type CloseResult } from '@/lib/supabase/queries/studies'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
@@ -95,18 +95,17 @@ export async function POST(
     // FOL-1: el cierre YA NO genera folletos — las reglas nuevas son cupo
     // lleno / fin de matrícula (durante la matrícula, no al cerrar) + manual.
 
-    // Retroalimentación al dirigente: se le pide a los estudiantes que
-    // acaban de terminar. Best-effort y con dedupe propio: el cierre no se
-    // cae ni se repite el correo si alguien reintenta.
-    let feedbackSent = 0
+    // EST-12: la encuesta al dirigente se PROGRAMA (por defecto el día
+    // siguiente) y la despacha el cron study-surveys. Best-effort: el cierre no
+    // se cae si esto falla.
+    let surveyAt: string | null = null
     try {
-      const r = await requestLeaderFeedback(id)
-      feedbackSent = r.sent
+      surveyAt = (await scheduleLeaderFeedback(id)).scheduled
     } catch (e) {
-      console.warn('No se pudo pedir la retroalimentación del dirigente:', e)
+      console.warn('No se pudo programar la encuesta del dirigente:', e)
     }
 
-    return NextResponse.json({ ok: true, autoEnrolled, feedbackSent })
+    return NextResponse.json({ ok: true, autoEnrolled, surveyAt })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_CERRADO') {
       // A9 (reconciliación): si el cierre original murió DESPUÉS de finalizar

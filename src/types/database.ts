@@ -1739,6 +1739,12 @@ export type Database = {
       leader_evaluations: {
         Row: {
           comments: string | null
+          co_leader_id: string | null
+          hidden_at: string | null
+          hidden_by: string | null
+          hidden_reason: string | null
+          member_id: string | null
+          response_id: string | null
           created_at: string | null
           evaluation_date: string
           group_id: string | null
@@ -1748,6 +1754,12 @@ export type Database = {
         }
         Insert: {
           comments?: string | null
+          co_leader_id?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
+          member_id?: string | null
+          response_id?: string | null
           created_at?: string | null
           evaluation_date?: string
           group_id?: string | null
@@ -1757,6 +1769,12 @@ export type Database = {
         }
         Update: {
           comments?: string | null
+          co_leader_id?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
+          member_id?: string | null
+          response_id?: string | null
           created_at?: string | null
           evaluation_date?: string
           group_id?: string | null
@@ -3697,6 +3715,12 @@ export type Database = {
           created_at: string | null
           current_week: number | null
           ends_at: string | null
+          feedback_released_at: string | null
+          feedback_released_by: string | null
+          feedback_requested_at: string | null
+          survey_enabled: boolean
+          survey_offset_hours: number
+          survey_send_at: string | null
           enrollment_end_date: string | null
           enrollment_restrictions: Json | null
           enrollment_start_date: string | null
@@ -3726,6 +3750,12 @@ export type Database = {
           created_at?: string | null
           current_week?: number | null
           ends_at?: string | null
+          feedback_released_at?: string | null
+          feedback_released_by?: string | null
+          feedback_requested_at?: string | null
+          survey_enabled?: boolean
+          survey_offset_hours?: number
+          survey_send_at?: string | null
           enrollment_end_date?: string | null
           enrollment_restrictions?: Json | null
           enrollment_start_date?: string | null
@@ -3755,6 +3785,12 @@ export type Database = {
           created_at?: string | null
           current_week?: number | null
           ends_at?: string | null
+          feedback_released_at?: string | null
+          feedback_released_by?: string | null
+          feedback_requested_at?: string | null
+          survey_enabled?: boolean
+          survey_offset_hours?: number
+          survey_send_at?: string | null
           enrollment_end_date?: string | null
           enrollment_restrictions?: Json | null
           enrollment_start_date?: string | null

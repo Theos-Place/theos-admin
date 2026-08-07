@@ -138,13 +138,23 @@ describe('comentarios ocultados por la coordinación', () => {
 
 // ── Cableado: el correo y la pantalla ───────────────────────────────────────
 describe('cómo llega el estudiante a la encuesta', () => {
-  it('el cierre del grupo la dispara, y no tumba el cierre si falla', async () => {
+  it('el cierre PROGRAMA la encuesta (EST-12), no la manda en el momento', async () => {
     const { readFileSync } = await import('node:fs')
     const close = readFileSync('src/app/api/studies/groups/[id]/close/route.ts', 'utf8')
-    expect(close).toContain('requestLeaderFeedback(id)')
-    // Best-effort: dentro de try/catch, como el resto de los envíos del cierre.
-    const bloque = close.slice(close.indexOf('requestLeaderFeedback(id)') - 200, close.indexOf('requestLeaderFeedback(id)') + 200)
-    expect(bloque).toContain('catch')
+    expect(close).toContain('scheduleLeaderFeedback(id)')
+    // El envío es del cron, no del cierre.
+    expect(close).not.toContain('requestLeaderFeedback(')
+    // Best-effort: dentro de try/catch, como el resto del cierre.
+    const i = close.indexOf('scheduleLeaderFeedback(id)')
+    expect(close.slice(i - 200, i + 200)).toContain('catch')
+  })
+
+  it('el cron es quien despacha', async () => {
+    const { readFileSync } = await import('node:fs')
+    const cron = readFileSync('src/app/api/cron/study-surveys/route.ts', 'utf8')
+    expect(cron).toContain('requestLeaderFeedback(')
+    expect(cron).toContain('isSurveyDue(')
+    expect(cron).toContain('pingHealthcheck(')
   })
 
   it('el envío tiene dedupe propio: no reescribe si se reintenta', async () => {

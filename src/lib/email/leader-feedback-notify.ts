@@ -14,7 +14,27 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { CAN_EVALUATE_STATUSES } from '@/lib/studies/leader-feedback'
+import { surveySendAt } from '@/lib/studies/study-survey'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+/** Programa la encuesta para más adelante (EST-12). La manda el cron
+ *  study-surveys, no el cierre: mandarla en el mismo minuto en que el dirigente
+ *  cierra el grupo se siente automático y se responde peor. */
+export async function scheduleLeaderFeedback(groupId: string): Promise<{ scheduled: string | null }> {
+  const sb = createAdminClient() as unknown as SupabaseClient
+  const { data } = await sb.from('study_groups')
+    .select('survey_enabled, survey_offset_hours, feedback_requested_at, survey_send_at')
+    .eq('id', groupId).maybeSingle()
+  const g = data as { survey_enabled: boolean; survey_offset_hours: number | null; feedback_requested_at: string | null; survey_send_at: string | null } | null
+  if (!g || !g.survey_enabled) return { scheduled: null }
+  // Ya enviada o ya programada: no se re-programa (re-cerrar no corre la fecha).
+  if (g.feedback_requested_at || g.survey_send_at) return { scheduled: g.survey_send_at }
+
+  const cuando = surveySendAt(new Date().toISOString(), g.survey_offset_hours ?? 24)
+  if (!cuando) return { scheduled: null }
+  await sb.from('study_groups').update({ survey_send_at: cuando }).eq('id', groupId)
+  return { scheduled: cuando }
+}
 
 export async function requestLeaderFeedback(groupId: string): Promise<{ sent: number; skipped?: string }> {
   const sb = createAdminClient() as unknown as SupabaseClient
@@ -54,6 +74,8 @@ export async function requestLeaderFeedback(groupId: string): Promise<{ sent: nu
 
   const permitidos = await filterByNotifPref(sb, alumnos, 'mensajes_sistema')
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'
+  // El link va a la encuesta del grupo. La pantalla resuelve el formulario y
+  // deja la respuesta ligada a ESTE grupo (y a su dirigente).
   const link = `${site}/estudios/grupos/${groupId}/evaluar`
   const nombreEstudio = grupo.plan?.name ?? grupo.name ?? 'el estudio'
   const nombreDirigente = grupo.leader
