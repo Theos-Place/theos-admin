@@ -1968,12 +1968,16 @@ Estado por punto:
 2. ✅ Decimales por moneda (`formatMoney` con Intl, CRC 0 / USD 2 / EUR 2) + `amountStep`.
    Se encontraron y arreglaron DOS redondeos a entero que se comían los céntimos:
    `computeApplication` y `computeDiscountedAmount` (becas y cupones).
-3. ⚠️ PARCIAL — `sedes.currency` existe (Madrid y Madrid Home en EUR), pero los formularios
-   NO pueden proponerla: **`events.sede_id` está vacío en los 3 372 eventos y
-   `study_groups.sede` en los 2 182 grupos**, y ningún formulario de plan, grupo o evento
-   pide sede. Además el precio de un estudio vive en `study_plans.cost`, que es global y no
-   tiene sede: hoy un mismo plan no puede costar ₡X en CR y €Y en Madrid — hace falta un
-   plan aparte. Requiere decisión de producto (ver abajo).
+3. ✅ `sedes.currency` (Madrid y Madrid Home en EUR) + **selector de sede en el evento**
+   (crear y editar): al elegirla propone la moneda del cobro, editable, y avisa en coral si
+   quedan distintas. Decisión del usuario 2026-08-06: agregar sede a eventos y grupos.
+   En GRUPOS el campo ya existía — la "zona" ES una sede (el combobox lee `/api/sedes`),
+   así que no se duplicó: se agregó el aviso de que la sede cobra en otra moneda que el
+   plan. La moneda de la matrícula sigue saliendo del PLAN a propósito: el monto vive en
+   `study_plans.cost` y cambiar la moneda sin cambiar el monto convertiría ₡25 000 en
+   €25 000. Para cobrar en euros hay que crear un plan con el precio en euros.
+   Nota: `events.sede_id` estaba vacío en los 3 372 eventos históricos y sigue vacío; se
+   llena de ahora en adelante.
 4. ✅ Becas/cupones: el bloqueo de monto fijo en otra moneda ya venía de INT-2; ahora la
    beca NACE en la moneda de lo que beca, el descuento se muestra en su moneda y el
    redondeo respeta los céntimos. Las devoluciones heredan la moneda del pago.
@@ -1989,8 +1993,9 @@ pago manual de finanzas nacía en colones por el default de la columna; el gráf
 finanzas y el informe de transparencia sumaban meses sin mirar la moneda (ahora se dibujan
 en UNA moneda con selector).
 
-**Pendiente de decisión (punto 3):** ¿los estudios y eventos van a tener sede? Sin eso no
-hay de dónde proponer la moneda, y un plan sigue teniendo un único precio global.
+**Queda para cuando Madrid cobre de verdad:** un mismo plan no puede costar ₡X en CR y €Y
+en Madrid (el precio es global). Hoy se resuelve con un plan aparte; si molesta, la opción
+es una tabla plan×sede con su precio y moneda.
 
 <details><summary>Spec original</summary>
 Archivos: RPCs en la migración baseline (`donation_stats`, `payment_stats`, `dashboard_sums`, `create_refund`), `src/lib/format.ts`, `sedes` (migración), forms de plan/grupo/evento, `src/lib/supabase/queries/scholarships.ts` y `finance.ts`, exports CSV

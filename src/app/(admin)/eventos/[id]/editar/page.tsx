@@ -12,7 +12,8 @@ import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
 import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
-import { ymdCR, CURRENCIES, currencySymbol } from '@/lib/format'
+import { ymdCR, CURRENCIES, currencySymbol, amountStep } from '@/lib/format'
+import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { EventManagersPanel } from '../_components/EventManagersPanel'
 import { useAuth } from '@/hooks/useAuth'
@@ -178,6 +179,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [paymentAmount, setPaymentAmount] = useState(event?.payment_amount ? String(event.payment_amount) : '')
   // INT-2: moneda del cobro del evento.
   const [currency, setCurrency] = useState(event?.currency ?? 'CRC')
+  // INT-3: la sede propone la moneda del cobro (Madrid en euros). Editable.
+  const [sedeId, setSedeId] = useState<string | null>(event?.sede_id ?? null)
+  const { activeSedes } = useSedes()
+  const sedeSel = activeSedes.find(x => x.sede_id === sedeId)
+  // Aviso, no bloqueo: la moneda se puede dejar distinta a propósito.
+  const sedeDesajuste = !!sedeSel && (sedeSel.currency ?? 'CRC') !== currency
   const [serverPrice, setServerPrice] = useState(event?.server_price != null ? String(event.server_price) : '')
   const [serversPay, setServersPay] = useState(event?.servers_pay ?? true)
   const [showRecurringModal, setShowRecurringModal] = useState(false)
@@ -223,6 +230,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setRequiresPayment(event.requires_payment ?? false)
     setPaymentAmount(event.payment_amount ? String(event.payment_amount) : '')
     setCurrency(event.currency ?? 'CRC')
+    setSedeId(event.sede_id ?? null)
     setServerPrice(event.server_price != null ? String(event.server_price) : '')
     setServersPay(event.servers_pay ?? true)
     // EVE-4
@@ -295,7 +303,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       is_virtual: isVirtual, virtual_link: virtualLink, location,
       is_recurring: isRecurring, recurrence_rule: recurrenceRule, recurrence_end: recurrenceEnd,
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
-      requires_payment: requiresPayment, payment_amount: paymentAmount, currency,
+      requires_payment: requiresPayment, payment_amount: paymentAmount, currency, sede_id: sedeId,
       server_price: serverPrice, servers_pay: serversPay,
       sub_events: subEvents,
       // EVE-4 · Formulario de inscripción y encuesta programada.
@@ -589,6 +597,23 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             <button type="button" role="switch" aria-checked={requiresPayment} aria-label="Requiere pago" onClick={() => setRequiresPayment(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', requiresPayment ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresPayment ? 'translate-x-4' : 'translate-x-0.5')} /></button>
             <span className="text-sm text-navy font-body">Evento con cobro</span>
           </label>
+          <div className="space-y-1 max-w-[280px]">
+            <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display" htmlFor="edit-event-sede">Sede</label>
+            <select
+              id="edit-event-sede"
+              className={cn(inputCls, 'font-body')}
+              value={sedeId ?? ''}
+              onChange={e => {
+                const id = e.target.value || null
+                setSedeId(id)
+                const s = activeSedes.find(x => x.sede_id === id)
+                if (s?.currency) setCurrency(s.currency)
+              }}
+            >
+              <option value="">Sin sede</option>
+              {activeSedes.map(s => <option key={s.sede_id ?? s.id} value={s.sede_id ?? ''}>{s.name}</option>)}
+            </select>
+          </div>
           {requiresPayment && (
             <div className="space-y-3 pl-1">
               <div className="space-y-1">
@@ -596,17 +621,22 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                 <select id="edit-event-currency" className={cn(inputCls, 'font-body', 'max-w-[160px]')} value={currency} onChange={e => setCurrency(e.target.value)}>
                   {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
+                {sedeDesajuste && (
+                  <p className="text-[12px] text-coral font-body">
+                    {sedeSel?.name} cobra normalmente en {sedeSel?.currency}. Revisá la moneda.
+                  </p>
+                )}
                 <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Costo</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">{currencySymbol(currency)}</span>
-                  <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
+                  <input type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Costo para servidores (opcional)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">{currencySymbol(currency)}</span>
-                  <input type="number" className={cn(inputCls, 'pl-7', 'font-body')} placeholder="Igual al costo" value={serverPrice} onChange={e => setServerPrice(e.target.value)} disabled={!serversPay} />
+                  <input type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} placeholder="Igual al costo" value={serverPrice} onChange={e => setServerPrice(e.target.value)} disabled={!serversPay} />
                 </div>
                 <p className="text-[11px] text-navy-light/60 font-body">Se aplica a servidores activos de los comités organizadores.</p>
               </div>

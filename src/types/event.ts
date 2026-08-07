@@ -60,6 +60,8 @@ export type AdminEvent = {
   payment_amount: number | null
   /** INT-2: moneda de payment_amount/server_price (CRC/USD/EUR). */
   currency: string
+  /** INT-3: sede del evento (uuid); propone la moneda del cobro. */
+  sede_id: string | null
   /** Precio para servidores de los comités organizadores. null = igual al normal. */
   server_price: number | null
   /** false = servidores del comité organizador exentos de pago. */

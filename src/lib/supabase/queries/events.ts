@@ -32,6 +32,8 @@ export type DbEventEnriched = {
   payment_amount: number | null
   /** INT-2: moneda de payment_amount/server_price (CRC/USD/EUR). */
   currency: string
+  /** INT-3: sede del evento; propone la moneda del cobro. */
+  sede_id: string | null
   server_price: number | null
   servers_pay: boolean
   requires_survey: boolean
@@ -239,6 +241,8 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
 /** Campos escribibles de un evento (nombres de columna DB). */
 export type EventWriteInput = {
   title: string
+  /** INT-3: sede del evento; propone la moneda del cobro en el formulario. */
+  sede_id?: string | null
   description?: string | null
   event_type: string
   location?: string | null
@@ -961,6 +965,7 @@ function toWriteInput(e: DbEventEnriched): EventWriteInput {
     requires_payment: e.requires_payment,
     payment_amount: e.payment_amount,
     currency: e.currency,
+    sede_id: e.sede_id,
     server_price: e.server_price,
     servers_pay: e.servers_pay,
     requires_survey: e.requires_survey,

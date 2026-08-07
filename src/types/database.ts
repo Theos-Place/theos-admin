@@ -3473,6 +3473,8 @@ export type Database = {
           time: string | null
           updated_at: string | null
           waze_url: string | null
+          /** INT-3: moneda por defecto de la sede. */
+          currency: string
         }
         Insert: {
           age_group?: string | null
@@ -3487,6 +3489,7 @@ export type Database = {
           time?: string | null
           updated_at?: string | null
           waze_url?: string | null
+          currency?: string
         }
         Update: {
           age_group?: string | null
@@ -3501,6 +3504,7 @@ export type Database = {
           time?: string | null
           updated_at?: string | null
           waze_url?: string | null
+          currency?: string
         }
         Relationships: []
       }

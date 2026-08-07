@@ -55,6 +55,8 @@ export function formToWriteInput(body: Record<string, unknown>): EventWriteInput
     payment_amount: num(body.payment_amount),
     // INT-2: moneda del costo; valores fuera del CHECK caen a CRC.
     currency: ['CRC', 'USD', 'EUR'].includes(body.currency as string) ? (body.currency as string) : 'CRC',
+    // INT-3: sede del evento (propone la moneda en el formulario).
+    sede_id: (body.sede_id as string) || null,
     server_price: num(body.server_price),
     servers_pay: body.servers_pay === undefined ? true : Boolean(body.servers_pay),
     requires_survey: Boolean(body.has_satisfaction_survey),
@@ -110,7 +112,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
     is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule', recurrence_end: 'recurrence_end',
     requires_registration: 'requires_registration', max_capacity: 'max_capacity',
     requires_payment: 'requires_payment', payment_amount: 'payment_amount',
-    currency: 'currency',
+    currency: 'currency', sede_id: 'sede_id',
     server_price: 'server_price', servers_pay: 'servers_pay',
     has_satisfaction_survey: 'requires_survey', flyer: 'flyer_url', status: 'status',
   }

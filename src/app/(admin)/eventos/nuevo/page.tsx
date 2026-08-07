@@ -48,6 +48,8 @@ interface FormData {
   survey_template_id: string | null
   survey_offset_hours: number | null
   survey_send_at: string | null
+  /** INT-3: sede del evento; propone la moneda del cobro. */
+  sede_id: string | null
   requires_payment: boolean
   payment_amount: string
   currency: string
@@ -138,6 +140,7 @@ function NuevoEventoForm() {
     survey_send_at: null,
     requires_payment: false,
     payment_amount: '',
+    sede_id: null,
     currency: 'CRC',
     server_price: '',
     servers_pay: true,
@@ -439,6 +442,8 @@ function NuevoEventoForm() {
 
           {step === 4 && (
             <Step4Financiero
+              sede_id={form.sede_id}
+              onSedeChange={(sedeId, currency) => setForm(prev => ({ ...prev, sede_id: sedeId, currency }))}
               requires_payment={form.requires_payment}
               payment_amount={form.payment_amount}
               currency={form.currency}

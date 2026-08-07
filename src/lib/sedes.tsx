@@ -7,7 +7,12 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 
 export type Sede = {
+  /** El CODE de la sede (histórico: el dominio usa el code como id). */
   id: string
+  /** INT-3: el uuid real, para las FK (events.sede_id). */
+  sede_id?: string
+  /** INT-3: moneda por defecto de la sede (propone, no obliga). */
+  currency?: string
   name: string
   is_active: boolean
   is_historical: boolean

@@ -98,6 +98,11 @@ export default function NuevoGrupoPage() {
   }
 
   const studyType = studyTypes.find(s => s.id === step1.study_type_id)
+  // INT-3: la zona del grupo es una sede y la sede tiene su moneda.
+  const zonaSede = zoneSel.kind === 'existing' && zoneSel.value !== 'all'
+    ? SEDES.find(s => s.id === zoneSel.value) : undefined
+  const monedaZonaDistinta = !!zonaSede && !!studyType?.requires_payment
+    && (zonaSede.currency ?? 'CRC') !== (studyType.currency ?? 'CRC')
 
   // Si el usuario ya tocó las fechas a mano, la precarga del bloque no las pisa.
   const [enrollTouched, setEnrollTouched] = useState(false)
@@ -308,6 +313,18 @@ export default function NuevoGrupoPage() {
                   allowCreate={false}
                   placeholder="Buscar zona…"
                 />
+              )}
+              {/* INT-3: la zona ES la sede. Si esa sede cobra en otra moneda que
+                  el plan, el cobro de matrícula saldría en la moneda del PLAN —
+                  el monto vive ahí y convertirlo sería inventar un tipo de
+                  cambio. Se avisa para que se use un plan con el precio correcto. */}
+              {monedaZonaDistinta && (
+                <p className="text-[12px] text-coral font-body">
+                  {zonaSede?.name} cobra en {zonaSede?.currency} y este estudio está en{' '}
+                  {studyType?.currency ?? 'CRC'}: la matrícula se cobraría en{' '}
+                  {studyType?.currency ?? 'CRC'}. Si el precio es en {zonaSede?.currency},
+                  usá un plan con ese precio.
+                </p>
               )}
             </div>
 

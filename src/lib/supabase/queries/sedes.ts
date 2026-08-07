@@ -41,13 +41,15 @@ export async function getSedes(): Promise<Sede[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('sedes')
-    .select('code, name, is_active, is_historical, day, time, location, age_group, waze_url')
+    .select('id, code, name, is_active, is_historical, day, time, location, age_group, waze_url, currency')
     .order('name', { ascending: true })
   if (error) throw error
   return (data ?? []).map((s) => {
     const r = s as Record<string, unknown>
     return {
       id: r.code as string,
+      sede_id: r.id as string,
+      currency: (r.currency as string) ?? 'CRC',
       name: r.name as string,
       is_active: !!r.is_active,
       is_historical: !!r.is_historical,
