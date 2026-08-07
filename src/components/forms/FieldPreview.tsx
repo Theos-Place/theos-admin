@@ -11,17 +11,24 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
 
   // EST-10: bloque de TEXTO INFORMATIVO — sin input. El cuerpo va en
   // `description` (el label es el título opcional del bloque).
+  //
+  // El título NO se pinta acá: este preview vive dentro del canvas del builder,
+  // que ya muestra el label de todo campo encima de su vista previa. Pintarlo
+  // también adentro repetía el título (bug 2026-08-07). En el formulario real
+  // el título sí sale — lo pone PublicField, que no pasa por este componente.
   if (field.type === 'info') {
+    if (!field.description) {
+      return (
+        <p className="text-[12px] text-navy-light/60 italic font-body">
+          Sin texto. Escribilo en “Descripción”.
+        </p>
+      )
+    }
     return (
-      <div className="rounded-xl bg-surface-low border border-[var(--outline-variant)] px-4 py-3.5 space-y-1.5">
-        {field.label && (
-          <p className="text-[13px] font-bold text-navy font-display">{field.label}</p>
-        )}
-        {field.description && (
-          <div className="text-[13px] text-navy-light/80 font-body leading-relaxed whitespace-pre-line">
-            {field.description}
-          </div>
-        )}
+      <div className="rounded-xl bg-surface-low border border-[var(--outline-variant)] px-4 py-3.5">
+        <div className="text-[13px] text-navy-light/80 font-body leading-relaxed whitespace-pre-line">
+          {field.description}
+        </div>
       </div>
     )
   }

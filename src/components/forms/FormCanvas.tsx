@@ -252,7 +252,14 @@ export function FormCanvas({
                     </div>
                     <div className="flex-1 min-w-0 flex items-start gap-2">
                       <p className="text-[13px] font-semibold text-navy leading-snug flex-1 font-display">
-                        {field.label || <span className="text-navy-light/60 italic">Sin etiqueta</span>}
+                        {field.label || (
+                          // En un bloque informativo el título es opcional a
+                          // propósito (no es una pregunta): "Sin etiqueta" ahí
+                          // se lee como un error que no existe.
+                          <span className="text-navy-light/60 italic">
+                            {field.type === 'info' ? 'Texto informativo' : 'Sin etiqueta'}
+                          </span>
+                        )}
                         {field.is_required && <span className="ml-1 text-coral text-[11px]">*</span>}
                       </p>
                       {logicCount > 0 && (
