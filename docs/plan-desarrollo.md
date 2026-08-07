@@ -1957,7 +1957,42 @@ Tests: los conteos coinciden con las respuestas; con menos de 3 respuestas no sa
 comentarios; ningún nombre de estudiante aparece en el HTML generado.
 ```
 
-### [ ] INT-3 · Cerrar los huecos de multimoneda (antes de cobrar en euros / antes de Tilopay)
+### [x] INT-3 · Cerrar los huecos de multimoneda — HECHO 2026-08-06 (migraciones 20260806240000 y 20260806250000, aplicadas a producción)
+Estado por punto:
+1. ✅ Agregados por moneda. `donation_stats`, `payment_stats` y `dashboard_sums` devuelven
+   `{"CRC": …, "EUR": …}`; `create_refund`/`process_refund` calculan el tope DENTRO de la
+   moneda del pago. En TS: `sumByCurrency`/`addTotals` en `src/lib/money.ts` y
+   `TotalsDisplay` para las tarjetas. Verificado en producción con datos de prueba en EUR:
+   `total_paid {CRC 25000, EUR 40}` (antes habría dicho 25 040) y una devolución que topa
+   en 14,50 respetando los céntimos. Los datos de prueba se borraron.
+2. ✅ Decimales por moneda (`formatMoney` con Intl, CRC 0 / USD 2 / EUR 2) + `amountStep`.
+   Se encontraron y arreglaron DOS redondeos a entero que se comían los céntimos:
+   `computeApplication` y `computeDiscountedAmount` (becas y cupones).
+3. ⚠️ PARCIAL — `sedes.currency` existe (Madrid y Madrid Home en EUR), pero los formularios
+   NO pueden proponerla: **`events.sede_id` está vacío en los 3 372 eventos y
+   `study_groups.sede` en los 2 182 grupos**, y ningún formulario de plan, grupo o evento
+   pide sede. Además el precio de un estudio vive en `study_plans.cost`, que es global y no
+   tiene sede: hoy un mismo plan no puede costar ₡X en CR y €Y en Madrid — hace falta un
+   plan aparte. Requiere decisión de producto (ver abajo).
+4. ✅ Becas/cupones: el bloqueo de monto fijo en otra moneda ya venía de INT-2; ahora la
+   beca NACE en la moneda de lo que beca, el descuento se muestra en su moneda y el
+   redondeo respeta los céntimos. Las devoluciones heredan la moneda del pago.
+5. ✅ Moneda visible en montos de eventos, planes, matrícula, becas y devoluciones (se
+   quitaron los `formatCRC` que asumían colones); CSV y QuickBooks con columna de moneda;
+   el import acepta columna `moneda` opcional (y entra en la clave de duplicados); filtro
+   por moneda en /finanzas/pagos, visible solo si hay más de una.
+6. ✅ Verificado contra producción (ver punto 1).
+
+**Hallazgos** (lo que sumaba mal, además de los agregados): la matrícula de estudios y el
+cobro de folletos insertaban `currency: 'CRC'` fijo aunque el plan fuera en otra moneda; el
+pago manual de finanzas nacía en colones por el default de la columna; el gráfico de
+finanzas y el informe de transparencia sumaban meses sin mirar la moneda (ahora se dibujan
+en UNA moneda con selector).
+
+**Pendiente de decisión (punto 3):** ¿los estudios y eventos van a tener sede? Sin eso no
+hay de dónde proponer la moneda, y un plan sigue teniendo un único precio global.
+
+<details><summary>Spec original</summary>
 Archivos: RPCs en la migración baseline (`donation_stats`, `payment_stats`, `dashboard_sums`, `create_refund`), `src/lib/format.ts`, `sedes` (migración), forms de plan/grupo/evento, `src/lib/supabase/queries/scholarships.ts` y `finance.ts`, exports CSV
 Continúa **INT-2** (backlog, cerrado el 2026-07-28), que dejó explícitamente pendiente la decisión de producto sobre los agregados. Decisión tomada: **por moneda separada, sin conversión automática.**
 Prioridad: **antes de la integración con Tilopay.** Si la pasarela nace asumiendo colones, cambiarla después es rehacer la integración.
@@ -2018,6 +2053,7 @@ Creá un plan y un evento en EUR con datos de prueba, matriculá, pagá, aplicá
 moneda correcta y una en la equivocada, y revisá que dashboard y reportes muestren los dos
 totales separados y correctos. Reportame qué encontraste que sumaba mal.
 ```
+</details>
 
 ---
 
