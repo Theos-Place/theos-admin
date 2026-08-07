@@ -28,37 +28,49 @@ const INTRO = `¡Gracias por completar tu estudio bíblico! Queremos conocer tu 
 
 Tus respuestas son confidenciales y nos ayudan a apoyar mejor a nuestros dirigentes.`
 
-/** Las 10 preguntas cerradas, EN ORDEN. La primera opción es siempre la mejor:
- *  de eso depende que el puntaje se calcule igual para todas (ver
- *  scoreFromOptions en src/lib/studies/study-survey.ts). */
+/** Las 10 preguntas, EN ORDEN. Desde 2026-08-07 se responden con una
+ *  CALIFICACIÓN 1-5 en vez de opciones con palabras: con etiquetas distintas en
+ *  cada pregunta la encuesta se leía larguísima y la gente la abandonaba.
+ *
+ *  5 es SIEMPRE lo mejor (ver scoreFromScale en src/lib/studies/study-survey.ts).
+ *  Las etiquetas de las puntas conservan el sentido de cada pregunta, que es lo
+ *  que se perdería con un "1 a 5" pelado. */
 const CERRADAS = [
   { label: '¿Demostró el dirigente un buen conocimiento del material?',
-    options: ['Totalmente', 'En gran parte', 'Algo', 'Muy poco'] },
+    min_label: 'Muy poco', max_label: 'Totalmente' },
   { label: '¿Estuvo el dirigente preparado para aclarar dudas sobre el tema tratado?',
-    options: ['Siempre', 'Frecuentemente', 'A veces', 'Rara vez'] },
+    min_label: 'Rara vez', max_label: 'Siempre' },
   { label: '¿El dirigente fomentó la participación activa de los estudiantes?',
     help_text: 'Involucra y motiva a todo el grupo a participar.',
-    options: ['Siempre', 'Frecuentemente', 'A veces', 'Nunca'] },
+    min_label: 'Nunca', max_label: 'Siempre' },
+  // Las dos que antes tenían "No aplica" son OPCIONALES: dejarlas en blanco es
+  // ahora la forma de decir "no me tocó vivirlo", y así no puntúan.
   { label: 'Si hubo intervenciones largas de algún participante, ¿cómo las manejó el dirigente?',
-    options: ['Muy bien, de manera respetuosa', 'Bien, pero podría mejorar', 'A veces interrumpe',
-      'No interviene y se hacen muy largos los estudios', 'No aplica'] },
+    help_text: 'Si no aplica en tu caso, dejala en blanco.',
+    is_required: false, min_label: 'No interviene', max_label: 'Muy bien' },
   { label: '¿Cómo trató el dirigente los temas sensibles con el grupo?',
-    options: ['Con mucha sensibilidad', 'Generalmente sensible', 'Algo sensible', 'Poco sensible', 'No aplica'] },
+    help_text: 'Si no aplica en tu caso, dejala en blanco.',
+    is_required: false, min_label: 'Poco sensible', max_label: 'Con mucha sensibilidad' },
   { label: '¿Reconoció y manejó adecuadamente las diferencias de opinión?',
-    options: ['Siempre', 'Frecuentemente', 'A veces', 'Nunca'] },
+    min_label: 'Nunca', max_label: 'Siempre' },
   { label: '¿El dirigente comunicó el mensaje de forma clara y comprensible?',
-    options: ['Siempre', 'Frecuentemente', 'A veces', 'Nunca'] },
+    min_label: 'Nunca', max_label: 'Siempre' },
   { label: '¿Fomentó el dirigente la aplicación de lo aprendido en la vida diaria?',
-    options: ['Siempre', 'Frecuentemente', 'A veces', 'Nunca'] },
+    min_label: 'Nunca', max_label: 'Siempre' },
   { label: '¿Demostró interés y el amor de Dios a los estudiantes durante y fuera del estudio?',
-    options: ['Siempre', 'Frecuentemente', 'A veces', 'Nunca'] },
+    min_label: 'Nunca', max_label: 'Siempre' },
   { label: '¿Mantuvo el dirigente la confianza respetando la privacidad?',
-    options: ['Siempre', 'Frecuentemente', 'A veces', 'Nunca'] },
+    min_label: 'Nunca', max_label: 'Siempre' },
 ]
 
 const FIELDS = [
   { field_type: 'info', label: '¡Gracias por completar tu estudio bíblico!', description: INTRO },
-  ...CERRADAS.map(q => ({ field_type: 'radio', is_required: true, ...q })),
+  ...CERRADAS.map(({ min_label, max_label, ...q }) => ({
+    field_type: 'scale', is_required: true,
+    scale_min: 1, scale_max: 5,
+    scale_min_label: min_label, scale_max_label: max_label,
+    ...q,
+  })),
   { field_type: 'textarea', label: 'Comentarios adicionales',
     help_text: 'Cosas que te gustaron y cosas por mejorar.' },
   { field_type: 'textarea', label: 'Comentarios sobre el folleto y el contenido del estudio',
@@ -100,6 +112,10 @@ const rows = FIELDS.map((f, i) => ({
   description: f.description ?? null,
   is_required: !!f.is_required,
   options: f.options ?? null,
+  scale_min: f.scale_min ?? null,
+  scale_max: f.scale_max ?? null,
+  scale_min_label: f.scale_min_label ?? null,
+  scale_max_label: f.scale_max_label ?? null,
 }))
 const { error: insErr } = await db.from('form_fields').insert(rows)
 if (insErr) throw insErr

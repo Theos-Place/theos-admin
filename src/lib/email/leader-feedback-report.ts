@@ -83,9 +83,19 @@ function sectionHtml(title: string, preguntas: PreguntaResumen[]): string {
   if (preguntas.length === 0) return ''
   // La escala es la de la primera pregunta: dentro de una sección todas la comparten.
   const escala = Object.keys(preguntas[0].breakdown)
-  const leyenda = escala.map((o, i) => `${i + 1} = ${esc(o)}`).join(' · ')
 
-  const head = escala.map((_, i) => `<th>${i + 1}</th>`).join('')
+  // Dos formatos de pregunta conviven (ver study-survey.ts):
+  //  · CALIFICACIÓN 1-5 → las claves YA son los números (ascendente, ver
+  //    escalaDe); la cabecera los muestra tal cual y la leyenda dice cuál punta
+  //    es la buena.
+  //  · PALABRAS → la cabecera numera las columnas y la leyenda traduce cada
+  //    número, porque "Frecuentemente" no entra en una celda.
+  const esCalificacion = escala.length > 0 && escala.every(o => /^\d+$/.test(o))
+  const leyenda = esCalificacion
+    ? `${escala[0]} = lo peor · ${escala[escala.length - 1]} = lo mejor`
+    : escala.map((o, i) => `${i + 1} = ${esc(o)}`).join(' · ')
+
+  const head = escala.map((o, i) => `<th>${esCalificacion ? esc(o) : i + 1}</th>`).join('')
   const filas = preguntas.map(p => {
     const celdas = escala
       .map(o => `<td>${p.breakdown[o] ? p.breakdown[o] : '&nbsp;'}</td>`)

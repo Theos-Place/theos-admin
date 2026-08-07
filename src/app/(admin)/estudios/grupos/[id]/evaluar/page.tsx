@@ -2,9 +2,10 @@
 
 // Evaluación del dirigente por parte del estudiante, al cerrar el grupo.
 //
-// Dos preguntas y listo: una nota con su etiqueta y un comentario opcional. La
-// pantalla pregunta ANTES si esta persona puede responder — llenar y que te
-// rechacen al final es la peor forma de decir que no te toca.
+// Las preguntas salen del formulario que el comité edita en el builder; acá no
+// hay ninguna hardcodeada. La pantalla pregunta ANTES si esta persona puede
+// responder — llenar y que te rechacen al final es la peor forma de decir que no
+// te toca.
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Check, Loader2, ChevronLeft, ShieldCheck } from 'lucide-react'
@@ -15,7 +16,14 @@ import { cn } from '@/lib/utils'
 type Campo = {
   id: string; label: string; help_text: string | null; description: string | null
   field_type: string; options: string[]; is_required: boolean
+  scale_min?: number | null; scale_max?: number | null
+  scale_min_label?: string | null; scale_max_label?: string | null
 }
+
+/** Los tipos de campo que esta pantalla sabe pintar. Un tipo que no esté acá
+ *  NO se muestra: por eso 'scale' tuvo que agregarse cuando la encuesta pasó de
+ *  opciones con palabras a calificación 1-5 (2026-08-07). */
+const ANSWERABLE = ['radio', 'scale', 'textarea']
 
 type Estado = {
   group: { id: string; name: string | null; plan_name: string | null; leader_name: string | null }
@@ -46,7 +54,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
   }, [id])
 
   const campos = data?.fields ?? []
-  const preguntas = campos.filter(c => c.field_type === 'radio' || c.field_type === 'textarea')
+  const preguntas = campos.filter(c => ANSWERABLE.includes(c.field_type))
   const faltante = preguntas.find(c => c.is_required && !(answers[c.id] ?? '').trim())
 
   async function enviar() {
@@ -162,6 +170,47 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
                     </button>
                   ))}
                 </div>
+              </fieldset>
+            )
+          }
+          if (c.field_type === 'scale') {
+            // Calificación 1-5: una fila de botones con las puntas etiquetadas.
+            // Ocupa un renglón en vez de cinco, que es el punto de haber
+            // cambiado el formato: la encuesta entera cabe en una pantalla.
+            const min = c.scale_min ?? 1
+            const max = c.scale_max ?? 5
+            const nums = Array.from({ length: Math.max(0, max - min + 1) }, (_, i) => min + i)
+            return (
+              <fieldset key={c.id} className="space-y-2">
+                <legend className="text-[13px] text-navy font-body">
+                  {c.label} {c.is_required && <span className="text-coral">*</span>}
+                </legend>
+                {c.help_text && <p className="text-[12px] text-navy-light/60 font-body">{c.help_text}</p>}
+                <div className="flex gap-1.5 flex-wrap">
+                  {nums.map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setAnswers(a => ({ ...a, [c.id]: String(n) }))}
+                      aria-pressed={answers[c.id] === String(n)}
+                      aria-label={`${n} de ${max}`}
+                      className={cn(
+                        'h-10 w-10 rounded-xl border text-sm font-semibold transition-colors font-mono',
+                        answers[c.id] === String(n)
+                          ? 'border-coral bg-coral text-white'
+                          : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                {(c.scale_min_label || c.scale_max_label) && (
+                  <div className="flex justify-between gap-3 text-[11px] text-navy-light/60 font-body">
+                    <span>{c.scale_min_label}</span>
+                    <span>{c.scale_max_label}</span>
+                  </div>
+                )}
               </fieldset>
             )
           }

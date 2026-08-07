@@ -2,7 +2,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   scoreFromOptions, isNoAplica, responseAverage, perQuestionSummary,
-  surveySendAt, isSurveyDue, type RespuestaCerrada,
+  surveySendAt, isSurveyDue, scoreFromScale, scoreOf, escalaDe,
+  type RespuestaCerrada,
 } from './study-survey'
 
 const FRECUENCIA = ['Siempre', 'Frecuentemente', 'A veces', 'Nunca']
@@ -44,6 +45,44 @@ describe('de palabras a número', () => {
   })
 })
 
+describe('calificación 1-5 (el formato de hoy)', () => {
+  it('el número ES la nota', () => {
+    expect(scoreFromScale(5)).toBe(5)
+    expect(scoreFromScale(1)).toBe(1)
+    expect(scoreFromScale('3')).toBe(3)
+  })
+
+  it('EN BLANCO no puntúa: es el "no aplica" de una escala', () => {
+    expect(scoreFromScale(null)).toBeNull()
+    expect(scoreFromScale('')).toBeNull()
+    expect(scoreFromScale(undefined)).toBeNull()
+  })
+
+  it('si mañana alguien pone la escala en 1-10, la nota sigue siendo comparable', () => {
+    expect(scoreFromScale(10, 1, 10)).toBe(5)
+    expect(scoreFromScale(1, 1, 10)).toBe(1)
+    expect(scoreFromScale(5.5, 1, 10)).toBe(3)
+  })
+
+  it('un valor fuera de rango se acota en vez de romper el promedio', () => {
+    expect(scoreFromScale(9, 1, 5)).toBe(5)
+    expect(scoreFromScale(0, 1, 5)).toBe(1)
+    expect(scoreFromScale('x')).toBeNull()
+  })
+
+  it('scoreOf usa la regla que le toca a cada pregunta', () => {
+    const escala: RespuestaCerrada = { fieldId: 'a', label: 'a', options: [], answer: '4', kind: 'scale' }
+    const palabras: RespuestaCerrada = { fieldId: 'b', label: 'b', options: FRECUENCIA, answer: 'Siempre' }
+    expect(scoreOf(escala)).toBe(4)
+    expect(scoreOf(palabras)).toBe(5)
+  })
+
+  it('las columnas van en orden ascendente: JS ordena solo las claves numéricas', () => {
+    expect(escalaDe({ fieldId: 'a', label: 'a', options: [], answer: null, kind: 'scale' }))
+      .toEqual(['1', '2', '3', '4', '5'])
+  })
+})
+
 describe('promedio de una respuesta', () => {
   const p = (label: string, options: string[], answer: string | null): RespuestaCerrada =>
     ({ fieldId: label, label, options, answer })
@@ -58,6 +97,13 @@ describe('promedio de una respuesta', () => {
 
   it('todo "No aplica" no inventa un promedio', () => {
     expect(responseAverage([p('c', CON_NA, 'No aplica')])).toBeNull()
+  })
+
+  it('mezcla de calificación y palabras: se promedian juntas', () => {
+    expect(responseAverage([
+      { fieldId: 'a', label: 'a', options: [], answer: '5', kind: 'scale' },
+      p('b', FRECUENCIA, 'Nunca'),   // 1
+    ])).toBe(3)
   })
 })
 
@@ -88,6 +134,42 @@ describe('promedio POR PREGUNTA', () => {
     ])
     expect(r[0].count).toBe(1)
     expect(r[0].average).toBe(5)
+  })
+})
+
+describe('conteo por pregunta con calificación', () => {
+  const preg = (n: string | null): RespuestaCerrada[] =>
+    [{ fieldId: 'f1', label: 'Claridad', options: [], answer: n, kind: 'scale' }]
+
+  it('cuenta cuántos eligieron cada número', () => {
+    const r = perQuestionSummary([preg('5'), preg('5'), preg('3')])
+    expect(r[0].breakdown['5']).toBe(2)
+    expect(r[0].breakdown['3']).toBe(1)
+    expect(r[0].average).toBe(4.33)
+  })
+
+  it('quien dejó la pregunta en blanco no entra al promedio', () => {
+    const r = perQuestionSummary([preg('4'), preg(null)])
+    expect(r[0].count).toBe(1)
+    expect(r[0].average).toBe(4)
+  })
+})
+
+describe('respuestas guardadas con el formato anterior', () => {
+  it('una palabra en una pregunta que HOY es calificación no ensucia la tabla', () => {
+    // El formulario cambió de opciones a escala 1-5 (2026-08-07); lo respondido
+    // antes no se puede reinterpretar sin inventar una nota.
+    const vieja: RespuestaCerrada[] = [
+      { fieldId: 'f1', label: 'Claridad', options: [], answer: 'Siempre', kind: 'scale' },
+    ]
+    const nueva: RespuestaCerrada[] = [
+      { fieldId: 'f1', label: 'Claridad', options: [], answer: '4', kind: 'scale' },
+    ]
+    const r = perQuestionSummary([vieja, nueva])
+    expect(Object.keys(r[0].breakdown)).toEqual(['1', '2', '3', '4', '5'])
+    expect(r[0].breakdown['4']).toBe(1)
+    expect(r[0].count).toBe(1)          // la vieja no puntúa
+    expect(r[0].average).toBe(4)
   })
 })
 

@@ -60,6 +60,30 @@ describe('las tablas de conteos', () => {
   })
 })
 
+describe('tablas de una encuesta con CALIFICACIÓN 1-5', () => {
+  const CALIF = preg('¿Demostró el dirigente un buen conocimiento del material?', {
+    '5': 3, '4': 2, '3': 0, '2': 0, '1': 1,
+  })
+  const html = tablesHtml([CALIF])
+
+  it('la cabecera muestra los números de la escala, no 1..N', () => {
+    expect(html).toContain('<th>5</th>')
+    expect(html).toContain('<th>1</th>')
+  })
+
+  it('la leyenda dice qué punta es la buena, sin inventar etiquetas', () => {
+    expect(html).toContain('1 = lo peor')
+    expect(html).toContain('5 = lo mejor')
+    // Lo que NO debe pasar: numerar las columnas y decir "1 = 5".
+    expect(html).not.toContain('1 = 5 ')
+  })
+
+  it('los conteos siguen saliendo en su columna', () => {
+    expect(html).toContain('<td>3</td>')
+    expect(html).toContain('<td>&nbsp;</td>')
+  })
+})
+
 describe('comentarios abiertos', () => {
   const base = { count: 5, sobreDirigente: ['Muy claro'], sobreFolleto: ['El folleto se entiende'] }
 

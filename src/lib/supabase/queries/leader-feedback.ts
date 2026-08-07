@@ -2,7 +2,10 @@
 // @/lib/studies/leader-feedback; acá solo se leen y escriben filas.
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canEvaluate, summarize, type FeedbackRow, type FeedbackSummary } from '@/lib/studies/leader-feedback'
-import { responseAverage, perQuestionSummary, type RespuestaCerrada } from '@/lib/studies/study-survey'
+import {
+  responseAverage, perQuestionSummary, toRespuestaCerrada,
+  type RespuestaCerrada, type CampoCerrado,
+} from '@/lib/studies/study-survey'
 import { currentSurveyFormId } from '@/lib/email/leader-feedback-notify'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -69,10 +72,18 @@ export async function memberCanEvaluate(groupId: string, memberId: string) {
   }
 }
 
+/** El valor que dio la persona: texto para las opciones, número para las
+ *  calificaciones (el RPC manda los no-string a value_json). */
+function answerOf(r: { value_text: string | null; value_json: unknown }): string | number | null {
+  if (r.value_text !== null && r.value_text !== undefined) return r.value_text
+  const v = r.value_json
+  return typeof v === 'number' || typeof v === 'string' ? v : null
+}
+
 /** Las preguntas del cuestionario que le tocó a este grupo. */
 export async function surveyQuestions(groupId: string): Promise<{
   formId: string | null
-  fields: Array<{ id: string; label: string; help_text: string | null; description: string | null; field_type: string; options: string[]; is_required: boolean }>
+  fields: Array<{ id: string; label: string; help_text: string | null; description: string | null; field_type: string; options: string[]; is_required: boolean; scale_min: number | null; scale_max: number | null; scale_min_label: string | null; scale_max_label: string | null }>
 }> {
   const sb = createAdminClient() as unknown as SupabaseClient
   const { data: g } = await sb.from('study_groups').select('survey_form_id').eq('id', groupId).maybeSingle()
@@ -82,14 +93,16 @@ export async function surveyQuestions(groupId: string): Promise<{
   if (!formId) return { formId: null, fields: [] }
 
   const { data } = await sb.from('form_fields')
-    .select('id, label, help_text, description, field_type, options, is_required')
+    .select('id, label, help_text, description, field_type, options, is_required, scale_min, scale_max, scale_min_label, scale_max_label')
     .eq('form_id', formId).order('sort_order')
-  const fields = ((data ?? []) as Array<{ id: string; label: string; help_text: string | null; description: string | null; field_type: string; options: unknown; is_required: boolean | null }>)
+  const fields = ((data ?? []) as Array<{ id: string; label: string; help_text: string | null; description: string | null; field_type: string; options: unknown; is_required: boolean | null; scale_min: number | null; scale_max: number | null; scale_min_label: string | null; scale_max_label: string | null }>)
     .map(f => ({
       id: f.id, label: f.label, help_text: f.help_text, description: f.description,
       field_type: f.field_type,
       options: Array.isArray(f.options) ? (f.options as string[]) : [],
       is_required: !!f.is_required,
+      scale_min: f.scale_min, scale_max: f.scale_max,
+      scale_min_label: f.scale_min_label, scale_max_label: f.scale_max_label,
     }))
   return { formId, fields }
 }
@@ -131,9 +144,9 @@ export async function saveSurveyResponse(input: {
 
   // La proyección: promedio de las cerradas + el comentario abierto principal.
   const { fields } = await surveyQuestions(input.groupId)
-  const cerradas = fields.filter(f => f.field_type === 'radio').map(f => ({
-    fieldId: f.id, label: f.label, options: f.options, answer: input.answers[f.id] ?? null,
-  }))
+  const cerradas = fields
+    .map(f => toRespuestaCerrada(f, input.answers[f.id] ?? null))
+    .filter((r): r is RespuestaCerrada => r !== null)
   const promedio = responseAverage(cerradas)
   const abierto = fields
     .filter(f => f.field_type === 'textarea' && !/folleto/i.test(f.label))
@@ -212,22 +225,21 @@ export async function groupPerQuestion(groupId: string) {
   if (ids.length === 0) return []
 
   const { data } = await sb.from('form_response_values')
-    .select('response_id, value_text, field:form_fields(id, label, field_type, options)')
+    // value_json además de value_text: una calificación se guarda como NÚMERO
+    // y el RPC manda los no-string a value_json (submit_form_response).
+    .select('response_id, value_text, value_json, field:form_fields(id, label, field_type, options, scale_min, scale_max)')
     .in('response_id', ids)
   const rows = (data ?? []) as unknown as Array<{
-    response_id: string; value_text: string | null
-    field: { id: string; label: string; field_type: string; options: unknown } | null
+    response_id: string; value_text: string | null; value_json: unknown
+    field: CampoCerrado | null
   }>
   const porRespuesta = new Map<string, RespuestaCerrada[]>()
   for (const r of rows) {
-    if (r.field?.field_type !== 'radio') continue
+    if (!r.field) continue
+    const cerrada = toRespuestaCerrada(r.field, answerOf(r))
+    if (!cerrada) continue
     const lista = porRespuesta.get(r.response_id) ?? []
-    lista.push({
-      fieldId: r.field.id,
-      label: r.field.label,
-      options: Array.isArray(r.field.options) ? (r.field.options as string[]) : [],
-      answer: r.value_text,
-    })
+    lista.push(cerrada)
     porRespuesta.set(r.response_id, lista)
   }
   return perQuestionSummary([...porRespuesta.values()])

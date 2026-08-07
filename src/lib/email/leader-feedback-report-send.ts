@@ -10,11 +10,14 @@
 // comentarios ocultados por la coordinación no viajan.
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
-import { perQuestionSummary, type RespuestaCerrada } from '@/lib/studies/study-survey'
+import {
+  perQuestionSummary, toRespuestaCerrada,
+  type RespuestaCerrada, type CampoCerrado,
+} from '@/lib/studies/study-survey'
 import { tablesHtml, commentsHtml, shouldSendReport } from '@/lib/email/leader-feedback-report'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-type Campo = { id: string; label: string; field_type: string; options: unknown }
+type Campo = CampoCerrado & { field_type: string }
 
 export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent: number; skipped?: string }> {
   const sb = createAdminClient() as unknown as SupabaseClient
@@ -49,21 +52,19 @@ export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent:
   if (responseIds.length > 0) {
     const { data: vals } = await sb
       .from('form_response_values')
-      .select('response_id, value_text, field:form_fields(id, label, field_type, options)')
+      // value_json: una calificación 1-5 se guarda como número y va ahí.
+      .select('response_id, value_text, value_json, field:form_fields(id, label, field_type, options, scale_min, scale_max)')
       .in('response_id', responseIds)
-    const rows = (vals ?? []) as unknown as Array<{ response_id: string; value_text: string | null; field: Campo | null }>
+    const rows = (vals ?? []) as unknown as Array<{ response_id: string; value_text: string | null; value_json: unknown; field: Campo | null }>
 
     const porRespuesta = new Map<string, RespuestaCerrada[]>()
     for (const r of rows) {
       if (!r.field) continue
-      if (r.field.field_type === 'radio') {
+      const valor = r.value_text ?? (typeof r.value_json === 'number' || typeof r.value_json === 'string' ? r.value_json : null)
+      const cerrada = toRespuestaCerrada(r.field, valor)
+      if (cerrada) {
         const lista = porRespuesta.get(r.response_id) ?? []
-        lista.push({
-          fieldId: r.field.id,
-          label: r.field.label,
-          options: Array.isArray(r.field.options) ? (r.field.options as string[]) : [],
-          answer: r.value_text,
-        })
+        lista.push(cerrada)
         porRespuesta.set(r.response_id, lista)
       } else if (r.field.field_type === 'textarea' && r.value_text?.trim()) {
         // El primer textarea es sobre el dirigente; el segundo, sobre el folleto.
