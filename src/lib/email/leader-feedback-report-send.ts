@@ -100,13 +100,10 @@ export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent:
     const { ok } = await sendSystemEmail({
       systemKey: 'retro_dirigente_resumen',
       to: { email: m.email, name: nombre },
-      data: {
-        nombre,
-        nombre_estudio: nombreEstudio,
-        cantidad: String(filas.length),
-        tablas,
-        comentarios,
-      },
+      data: { nombre, nombre_estudio: nombreEstudio, cantidad: String(filas.length) },
+      // Las tablas y los comentarios van por rawData: son HTML armado acá y
+      // renderTemplate los escaparía (el correo llegaba sin nada, bug 2026-08-06).
+      rawData: { tablas, comentarios },
     })
     if (ok) sent++
   }

@@ -25,6 +25,32 @@ export function renderTemplate(html: string, data: TemplateData): string {
   return out
 }
 
+/**
+ * Como renderTemplate, pero `rawData` son valores que YA son HTML generado por el
+ * sistema (tablas de conteos, listas de comentarios) y NO deben escaparse.
+ *
+ * Por qué existe (bug 2026-08-06, el resumen al dirigente llegaba vacío):
+ * renderTemplate ESCAPA lo que le pasan por `data` y BORRA los {{...}} que no
+ * están. Las dos vías dejaban el correo sin tablas — una las mostraba como texto
+ * `&lt;table&gt;` y la otra las eliminaba. Acá el marcador se reemplaza por un
+ * centinela que renderTemplate no toca, y el HTML entra recién después.
+ *
+ * OJO: lo que entra por `rawData` no se escapa. Solo HTML armado por el sistema;
+ * el texto de una persona se escapa ANTES de llegar acá.
+ */
+export function renderTemplateWithHtml(
+  html: string,
+  data: TemplateData,
+  rawData: Record<string, string>,
+): string {
+  const centinelas = Object.keys(rawData).map(k => [k, `@@RAW_${k.toUpperCase()}@@`] as const)
+  const conCentinelas: TemplateData = { ...data }
+  for (const [k, c] of centinelas) conCentinelas[k] = c
+  let out = renderTemplate(html, conCentinelas)
+  for (const [k, c] of centinelas) out = out.split(c).join(rawData[k])
+  return out
+}
+
 /** Valores de ejemplo para el preview de plantillas del sistema (variables {{...}}). */
 export const PREVIEW_SAMPLE: TemplateData = {
   nombre: 'Juan Pérez',

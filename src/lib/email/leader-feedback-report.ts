@@ -11,6 +11,7 @@
 // conteos por opción y textos sueltos; el helper no recibe member_id ni tiene
 // cómo saber quién dijo qué.
 import { MIN_RESPUESTAS_PARA_MOSTRAR } from '@/lib/studies/leader-feedback'
+import { renderTemplateWithHtml, type TemplateData } from '@/lib/email/render-vars'
 import type { PreguntaResumen } from '@/lib/studies/study-survey'
 
 /** Las cinco secciones del correo, con las preguntas que agrupa cada una.
@@ -142,9 +143,12 @@ export function shouldSendReport(count: number): boolean {
   return count > 0
 }
 
-/** Reemplaza los marcadores de la cáscara. */
-export function renderReportBody(shell: string, parts: { tablas: string; comentarios: string }): string {
-  return shell
-    .split('{{tablas}}').join(parts.tablas)
-    .split('{{comentarios}}').join(parts.comentarios)
+/** Arma el cuerpo final: las variables de texto se escapan (como debe ser) y el
+ *  HTML generado entra sin escapar. Ver renderTemplateWithHtml para el porqué. */
+export function buildReportBody(
+  shell: string,
+  vars: TemplateData,
+  parts: { tablas: string; comentarios: string },
+): string {
+  return renderTemplateWithHtml(shell, vars, parts)
 }

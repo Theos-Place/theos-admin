@@ -1,7 +1,7 @@
 // EST-13 · El correo de retroalimentación al dirigente.
 import { describe, it, expect } from 'vitest'
 import {
-  tablesHtml, commentsHtml, cleanComment, shouldSendReport, renderReportBody,
+  tablesHtml, commentsHtml, cleanComment, shouldSendReport, buildReportBody,
   REPORT_SECTIONS,
 } from './leader-feedback-report'
 import type { PreguntaResumen } from '@/lib/studies/study-survey'
@@ -103,11 +103,26 @@ describe('cuándo se manda', () => {
 })
 
 describe('la cáscara y lo calculado', () => {
-  it('los marcadores se reemplazan', () => {
-    const shell = '<p>Hola</p>{{tablas}}<p>medio</p>{{comentarios}}<p>chau</p>'
-    const out = renderReportBody(shell, { tablas: '<table></table>', comentarios: '<div></div>' })
-    expect(out).toBe('<p>Hola</p><table></table><p>medio</p><div></div><p>chau</p>')
+  const shell = '<p>Hola {{nombre}}</p>{{tablas}}<p>medio</p>{{comentarios}}<p>chau</p>'
+  const partes = { tablas: '<table class="score-table"></table>', comentarios: '<div class="info-box"></div>' }
+
+  it('EL BUG: el HTML generado NO se escapa', () => {
+    // renderTemplate escapa lo que le pasan por `data` y borra lo que no está:
+    // por las dos vías el correo llegaba sin tablas.
+    const out = buildReportBody(shell, { nombre: 'Dora' }, partes)
+    expect(out).toContain('<table class="score-table">')
+    expect(out).not.toContain('&lt;table')
+  })
+
+  it('las variables de texto SÍ se escapan', () => {
+    const out = buildReportBody(shell, { nombre: '<b>Dora</b>' }, partes)
+    expect(out).toContain('&lt;b&gt;Dora&lt;/b&gt;')
+  })
+
+  it('no quedan marcadores sin reemplazar', () => {
+    const out = buildReportBody(shell, { nombre: 'Dora' }, partes)
     expect(out).not.toContain('{{')
+    expect(out).not.toContain('@@RETRO')
   })
 })
 

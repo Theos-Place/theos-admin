@@ -8,7 +8,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/provider'
 import { renderEmail } from '@/lib/email/baseLayout'
-import { renderTemplate, type TemplateData } from '@/lib/email/render-vars'
+import { renderTemplate, renderTemplateWithHtml, type TemplateData } from '@/lib/email/render-vars'
 
 export type { TemplateData }
 
@@ -90,6 +90,9 @@ export async function sendSystemEmail(opts: {
   systemKey: SystemTemplateKey
   to: { email: string; name?: string }
   data: TemplateData
+  /** Marcadores cuyo valor YA es HTML del sistema (tablas, listas): NO se escapa.
+   *  Nunca meter acá texto escrito por una persona sin escapar antes. */
+  rawData?: Record<string, string>
   fromName?: string
 }): Promise<{ ok: boolean }> {
   try {
@@ -97,7 +100,10 @@ export async function sendSystemEmail(opts: {
     const subject = renderTemplate(tpl.subject, opts.data)
     // El html_body es SOLO el contenido; se envuelve con el layout base (head+
     // header+footer) para producir el correo completo.
-    const html = renderEmail(renderTemplate(tpl.html, opts.data))
+    const cuerpo = opts.rawData
+      ? renderTemplateWithHtml(tpl.html, opts.data, opts.rawData)
+      : renderTemplate(tpl.html, opts.data)
+    const html = renderEmail(cuerpo)
     await sendEmail({ to: opts.to, subject, html, kind: 'transactional', fromName: opts.fromName })
     return { ok: true }
   } catch (e) {
