@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
+import { TICK_MINUTES } from '@/lib/communications/schedule'
 
 const SECTION_TITLE = 'text-[10px] uppercase tracking-widest text-navy-light/60 font-display'
 
@@ -63,6 +64,9 @@ export function ScheduleSection({
               value={scheduledAt}
               onChange={e => setScheduledAt(e.target.value)}
             />
+            <p className="text-[11px] text-navy-light/60 font-body">
+              La cola se revisa cada {TICK_MINUTES} min: puede salir hasta {TICK_MINUTES} minutos después.
+            </p>
           </div>
           <div className="space-y-1">
             <label className="text-[11px] text-navy-light/60 font-body">Zona horaria</label>

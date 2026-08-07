@@ -1,15 +1,49 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/group-enrollment-windows", "schedule": "30 12 * * *" },
-    { "path": "/api/cron/folleto-blocks", "schedule": "0 13 * * *" },
-    { "path": "/api/studies/start-reminders", "schedule": "30 13 * * *" },
-    { "path": "/api/notifications/leader-absence-check", "schedule": "0 14 * * *" },
-    { "path": "/api/cron/storage-orphans", "schedule": "0 15 * * 1" },
-    { "path": "/api/cron/payment-holds-expire", "schedule": "0 16 * * *" },
-    { "path": "/api/cron/payment-reminders", "schedule": "30 16 * * 1" },
-    { "path": "/api/cron/report-snapshots", "schedule": "0 6 * * *" },
-    { "path": "/api/cron/event-surveys", "schedule": "0 17 * * *" },
-    { "path": "/api/cron/study-surveys", "schedule": "30 17 * * *" }
+    {
+      "path": "/api/cron/group-enrollment-windows",
+      "schedule": "30 12 * * *"
+    },
+    {
+      "path": "/api/cron/folleto-blocks",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/studies/start-reminders",
+      "schedule": "30 13 * * *"
+    },
+    {
+      "path": "/api/notifications/leader-absence-check",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/storage-orphans",
+      "schedule": "0 15 * * 1"
+    },
+    {
+      "path": "/api/cron/payment-holds-expire",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/payment-reminders",
+      "schedule": "30 16 * * 1"
+    },
+    {
+      "path": "/api/cron/report-snapshots",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/event-surveys",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/study-surveys",
+      "schedule": "30 17 * * *"
+    },
+    {
+      "path": "/api/cron/scheduled-broadcasts",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }

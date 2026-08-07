@@ -18,6 +18,7 @@ import { renderEmail } from '@/lib/email/baseLayout'
 import { unsubscribeUrl } from '@/lib/email/footer'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { applyVars } from '@/lib/communications/vars'
+import { SCHEDULED_STATUS, isBroadcastDue } from '@/lib/communications/schedule'
 import { ymdCR, todayCR } from '@/lib/format'
 import type { CommunicationChannel, CommunicationStatus } from '@/types/communication'
 
@@ -34,6 +35,7 @@ export type DbBroadcast = {
   created_by: string | null
   started_at: string | null
   completed_at: string | null
+  scheduled_at: string | null
   created_at: string
   smtp_config_id: string | null
   whatsapp_config_id: string | null
@@ -79,7 +81,7 @@ export async function getMessages(): Promise<DbBroadcast[]> {
     .from('message_broadcasts')
     .select(`
       id, subject, body, channel, status, segment_label, recipient_filter, total_recipients,
-      skipped_count, created_by, started_at, completed_at, created_at, smtp_config_id, whatsapp_config_id,
+      skipped_count, created_by, started_at, completed_at, scheduled_at, created_at, smtp_config_id, whatsapp_config_id,
       logs:message_logs(channel, status)
     `)
     .order('created_at', { ascending: false })
@@ -431,6 +433,108 @@ async function resolveEmailRecipients(
     if (m?.email_complained) { fuera('queja'); continue }                  // queja → excluir siempre
     if (isMarketing && m?.newsletter_opt_out) { fuera('baja'); continue }  // baja → excluir en marketing
     out.push({ ...r, recipient: email })
+  }
+  return out
+}
+
+/**
+ * Deja el comunicado esperando su hora en vez de mandarlo ya.
+ *
+ * Los destinatarios se guardan en recipient_filter: cuando llegue la hora no va
+ * a haber nadie en la pantalla para volver a calcularlos. Se guardan los IDs,
+ * no los correos — así el envío usa el correo vigente ese día y respeta las
+ * bajas y los rebotes que hayan pasado entre medio.
+ *
+ * Mismo claim atómico que sendBroadcast (draft → scheduled): dos clics no
+ * programan dos veces.
+ */
+export async function scheduleBroadcast(
+  id: string, recipients: Recipient[], scheduledAt: string,
+): Promise<void> {
+  const supabase = createAdminClient()
+  if (recipients.some(r => r.channel === 'email') && !isEmailConfigured()) {
+    throw new Error(EMAIL_NOT_CONFIGURED)
+  }
+  const { data: claimed, error } = await supabase
+    .from('message_broadcasts')
+    .update({
+      status: SCHEDULED_STATUS,
+      scheduled_at: scheduledAt,
+      recipient_filter: { recipients: recipients.map(r => ({ member_id: r.member_id, channel: r.channel })) },
+    })
+    .eq('id', id)
+    .eq('status', 'draft')
+    .select('id')
+  if (error) throw error
+  if ((claimed ?? []).length === 0) throw new Error('BROADCAST_YA_ENVIADO')
+}
+
+/** Cancela la programación: vuelve a borrador y olvida la hora.
+ *  Sin esto, un comunicado programado por error no se podría detener. */
+export async function unscheduleBroadcast(id: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('message_broadcasts')
+    .update({ status: 'draft', scheduled_at: null, recipient_filter: null })
+    .eq('id', id)
+    .eq('status', SCHEDULED_STATUS)
+    .select('id')
+  if (error) throw error
+  return (data ?? []).length > 0
+}
+
+/**
+ * Manda los comunicados cuya hora ya pasó. Lo llama el cron.
+ *
+ * Cada uno vuelve a 'draft' un instante antes de enviarse porque sendBroadcast
+ * exige ese estado para su propio claim; el UPDATE condicionado a 'scheduled'
+ * es lo que evita que dos barridos simultáneos manden el mismo comunicado.
+ */
+export async function dispatchScheduledBroadcasts(
+  now: Date = new Date(),
+): Promise<Array<{ id: string; ok: boolean; error?: string }>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('message_broadcasts')
+    .select('id, status, scheduled_at, recipient_filter')
+    .eq('status', SCHEDULED_STATUS)
+    .lte('scheduled_at', now.toISOString())
+    .order('scheduled_at')
+    .limit(50)
+  if (error) throw error
+
+  const filas = (data ?? []) as Array<{
+    id: string; status: string; scheduled_at: string | null
+    recipient_filter: { recipients?: Recipient[] } | null
+  }>
+
+  const out: Array<{ id: string; ok: boolean; error?: string }> = []
+  for (const b of filas) {
+    // La condición canónica es la función pura: si mañana se agrega un caso
+    // (cancelado, pausado), vale para el cron y para la pantalla por igual.
+    if (!isBroadcastDue(b, now)) continue
+    const recipients = (b.recipient_filter?.recipients ?? []).map(r => ({
+      member_id: r.member_id ?? null, channel: r.channel, recipient: '',
+    })) as Recipient[]
+
+    const { data: liberado } = await supabase
+      .from('message_broadcasts')
+      .update({ status: 'draft' })
+      .eq('id', b.id).eq('status', SCHEDULED_STATUS)
+      .select('id')
+    if ((liberado ?? []).length === 0) continue   // otro barrido se lo llevó
+
+    try {
+      await sendBroadcast(b.id, recipients)
+      out.push({ id: b.id, ok: true })
+    } catch (e) {
+      // Queda en 'draft' con su hora: visible en el historial como borrador y
+      // reenviable a mano. No se reprograma solo para no reintentar en bucle
+      // un comunicado que, por ejemplo, se quedó sin destinatarios elegibles.
+      const msg = e instanceof Error ? e.message : 'error'
+      console.warn('dispatchScheduledBroadcasts:', b.id, msg)
+      out.push({ id: b.id, ok: false, error: msg })
+    }
   }
   return out
 }

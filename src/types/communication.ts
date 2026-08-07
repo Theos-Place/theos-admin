@@ -2,7 +2,7 @@
 
 // 'interna' = notificación interna en el sistema (campana), sin correo/WhatsApp.
 export type CommunicationChannel = 'interna' | 'whatsapp' | 'email' | 'both'
-export type CommunicationStatus = 'draft' | 'sending' | 'sent' | 'failed' | 'partial'
+export type CommunicationStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed' | 'partial'
 
 export type CommunicationMessage = {
   id: string
@@ -12,6 +12,8 @@ export type CommunicationMessage = {
   status: CommunicationStatus
   sent_by: string
   sent_at: string | null
+  /** Instante en que debe salir (solo con status 'scheduled'). */
+  scheduled_at?: string | null
   created_at: string
   segment: {
     label: string

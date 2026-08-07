@@ -21,10 +21,13 @@ import {
   MessageSquare,
   FileText,
   ClipboardList,
+  Clock,
+  X,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { useToast } from '@/components/shared/Toast'
 
-type MainTab = 'historial' | 'borradores'
+type MainTab = 'historial' | 'programados' | 'borradores'
 type ChannelFilter = 'all' | CommunicationChannel
 type StatusFilter = 'all' | CommunicationStatus
 
@@ -48,9 +51,33 @@ export default function ComunicacionesPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
-  const { messages } = useCommunications('messages')
-  const sent = useMemo(() => messages.filter(m => m.status !== 'draft'), [messages])
+  const { messages, refetch } = useCommunications('messages')
+  const toast = useToast()
+  const [cancelando, setCancelando] = useState<string | null>(null)
+
+  /** Devuelve el comunicado a borrador: deja de estar programado y no sale. */
+  async function cancelarProgramado(id: string) {
+    setCancelando(id)
+    try {
+      const res = await fetch(`/api/communications/messages/${id}/schedule`, { method: 'DELETE' })
+      const d = await res.json().catch(() => null) as { error?: string } | null
+      if (!res.ok) throw new Error(d?.error ?? '')
+      await refetch()
+      toast('Envío cancelado. El comunicado quedó como borrador.', 'success')
+    } catch (e) {
+      toast((e as Error).message || 'No se pudo cancelar el envío', 'error')
+    } finally {
+      setCancelando(null)
+    }
+  }
+  // Un programado NO es historial: todavía no salió. Tampoco borrador: ya tiene
+  // destinatarios y hora. Va en su propia pestaña, donde se puede cancelar.
+  const sent = useMemo(() => messages.filter(m => m.status !== 'draft' && m.status !== 'scheduled'), [messages])
   const drafts = useMemo(() => messages.filter(m => m.status === 'draft'), [messages])
+  const scheduled = useMemo(
+    () => messages.filter(m => m.status === 'scheduled')
+      .sort((a, b) => (a.scheduled_at ?? '').localeCompare(b.scheduled_at ?? '')),
+    [messages])
 
   const stats = useMemo(() => {
     const sentThisMonth = sent.filter(m => thisMonth(m.sent_at))
@@ -97,14 +124,16 @@ export default function ComunicacionesPage() {
   const histPage = useClientPagination(filtered, 15)
 
   const STATUS_STYLE: Record<CommunicationStatus, string> = {
-    draft:   'bg-navy/10 text-navy-light/60',
-    sending: 'bg-amber-50 text-amber-700',
+    draft:     'bg-navy/10 text-navy-light/60',
+    scheduled: 'bg-teal-soft/20 text-teal-deep',
+    sending:   'bg-amber-50 text-amber-700',
     sent:    'bg-teal-soft/30 text-teal-deep',
     failed:  'bg-coral/10 text-coral',
     partial: 'bg-amber-50 text-amber-700',
   }
   const STATUS_LABEL: Record<CommunicationStatus, string> = {
-    draft: 'Borrador', sending: 'Enviando', sent: 'Enviado', failed: 'Fallido', partial: 'Parcial',
+    draft: 'Borrador', scheduled: 'Programado', sending: 'Enviando',
+    sent: 'Enviado', failed: 'Fallido', partial: 'Parcial',
   }
 
   return (
@@ -210,7 +239,7 @@ export default function ComunicacionesPage() {
       {/* Tabs */}
       <div>
         <div className="flex gap-1 border-b mb-4 border-[var(--outline-variant)]">
-          {(['historial', 'borradores'] as MainTab[]).map(t => (
+          {(['historial', 'programados', 'borradores'] as MainTab[]).map(t => (
             <button
               key={t}
               type="button"
@@ -220,7 +249,9 @@ export default function ComunicacionesPage() {
                 tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/60 hover:text-navy'
               )}
             >
-              {t === 'historial' ? 'Historial' : `Borradores${drafts.length > 0 ? ` (${drafts.length})` : ''}`}
+              {t === 'historial' ? 'Historial'
+                : t === 'programados' ? `Programados${scheduled.length > 0 ? ` (${scheduled.length})` : ''}`
+                : `Borradores${drafts.length > 0 ? ` (${drafts.length})` : ''}`}
             </button>
           ))}
         </div>
@@ -354,6 +385,50 @@ export default function ComunicacionesPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {tab === 'programados' && (
+          <div className="space-y-3">
+            {scheduled.length === 0 ? (
+              <div className="rounded-2xl bg-surface-card">
+                <EmptyState icon={Clock} title="No hay comunicados programados" />
+              </div>
+            ) : (
+              scheduled.map(msg => (
+                <div
+                  key={msg.id}
+                  className="rounded-2xl p-5 flex items-center justify-between gap-4 bg-surface-card shadow-[var(--shadow-md)]"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <ChannelBadge channel={msg.channel} size="sm" />
+                    </div>
+                    <p className="text-sm font-semibold text-navy truncate font-body">
+                      {msg.subject || msg.body.split('\n')[0].slice(0, 60)}
+                    </p>
+                    <p className="text-[11px] text-navy-light/60 mt-0.5 font-body inline-flex items-center gap-1">
+                      <Clock size={11} className="shrink-0" />
+                      Sale el {msg.scheduled_at
+                        ? new Date(msg.scheduled_at).toLocaleString('es-CR', {
+                            day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true,
+                          })
+                        : '—'}
+                      {' · '}{msg.segment.total_recipients.toLocaleString('es-CR')} personas
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={cancelando === msg.id}
+                    onClick={() => cancelarProgramado(msg.id)}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-coral hover:bg-coral/5 transition-colors disabled:opacity-40 font-body"
+                  >
+                    <X size={12} />
+                    {cancelando === msg.id ? 'Cancelando…' : 'Cancelar envío'}
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         )}
 

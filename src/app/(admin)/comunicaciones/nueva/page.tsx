@@ -19,6 +19,9 @@ import { RecipientsSection } from './_components/RecipientsSection'
 import { ChannelSection } from './_components/ChannelSection'
 import { ContentSection } from './_components/ContentSection'
 import { ScheduleSection } from './_components/ScheduleSection'
+import {
+  resolveScheduledAt, scheduleSummary, SCHEDULE_MESSAGES, TICK_MINUTES,
+} from '@/lib/communications/schedule'
 import { ListModal, TemplateModal, ConfirmModal, SendingOverlay } from './_components/Modals'
 
 function insertAtCursor(ref: React.RefObject<HTMLTextAreaElement | null>, value: string, setter: (v: string) => void) {
@@ -91,6 +94,8 @@ function NuevaComunicacionContent() {
   const [scheduled, setScheduled] = useState(false)
   const [scheduledAt, setScheduledAt] = useState('')
   const [timezone, setTimezone] = useState('America/Costa_Rica')
+  // Instante resuelto del envío programado (para la pantalla de confirmación).
+  const [scheduledIso, setScheduledIso] = useState<string | null>(null)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showListModal, setShowListModal] = useState(false)
@@ -210,6 +215,18 @@ function NuevaComunicacionContent() {
   }
 
   async function handleSend() {
+    // Programado: se valida ANTES de crear nada. Una hora inválida o pasada no
+    // debe dejar un borrador huérfano en el historial.
+    let cuando: { local_datetime: string; timezone: string } | null = null
+    if (scheduled) {
+      const r = resolveScheduledAt(scheduledAt, timezone)
+      if (!r.ok) {
+        toast(SCHEDULE_MESSAGES[r.error], 'error')
+        return
+      }
+      cuando = { local_datetime: scheduledAt, timezone }
+      setScheduledIso(r.iso)
+    }
     setSending(true)
     try {
       const channels: ('whatsapp' | 'email' | 'interna')[] = channel === 'both' ? ['whatsapp', 'email'] : [channel]
@@ -233,10 +250,16 @@ function NuevaComunicacionContent() {
       })
       if (!createRes.ok) throw new Error()
       const { id } = await createRes.json()
-      const sendRes = await fetch(`/api/communications/messages/${id}/send`, {
+      // Programar o enviar: son dos endpoints distintos. Hasta 2026-08-07 la
+      // pantalla llamaba a /send en los dos casos y lo "programado" salía al
+      // instante; el toggle solo cambiaba el texto del botón.
+      const url = cuando
+        ? `/api/communications/messages/${id}/schedule`
+        : `/api/communications/messages/${id}/send`
+      const sendRes = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipients: recips }),
+        body: JSON.stringify(cuando ? { ...cuando, recipients: recips } : { recipients: recips }),
       })
       if (!sendRes.ok) {
         const data = await sendRes.json().catch(() => null)
@@ -260,11 +283,20 @@ function NuevaComunicacionContent() {
         </div>
         <div className="text-center">
           <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
-            ¡Mensaje enviado!
+            {scheduledIso ? '¡Mensaje programado!' : '¡Mensaje enviado!'}
           </h2>
           <p className="text-sm text-navy-light/60 mt-1 font-body">
-            Enviado a {recipients.count.toLocaleString('es-CR')} personas
+            {scheduledIso
+              ? `Sale el ${scheduleSummary(scheduledIso, timezone)} a ${recipients.count.toLocaleString('es-CR')} personas`
+              : `Enviado a ${recipients.count.toLocaleString('es-CR')} personas`}
           </p>
+          {scheduledIso && (
+            <p className="text-[12px] text-navy-light/60 mt-2 font-body max-w-sm">
+              El envío se revisa cada {TICK_MINUTES} minutos, así que puede salir hasta
+              {' '}{TICK_MINUTES} minutos después de esa hora. Podés cancelarlo desde el
+              historial mientras no haya salido.
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <Link

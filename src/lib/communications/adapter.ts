@@ -24,6 +24,7 @@ export function toDomainMessage(db: DbBroadcast): CommunicationMessage {
     status: db.status,
     sent_by: db.created_by ?? '',
     sent_at: db.completed_at ?? db.started_at,
+    scheduled_at: db.scheduled_at,
     created_at: db.created_at,
     segment: {
       label: db.segment_label ?? '',

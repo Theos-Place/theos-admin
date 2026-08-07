@@ -28,14 +28,16 @@ type QueueStats = {
 type RecipientFilter = 'all' | 'sent' | 'failed' | 'skipped'
 
 const STATUS_STYLE: Record<CommunicationStatus, string> = {
-  draft:   'bg-navy/10 text-navy-light/60',
-  sending: 'bg-amber-50 text-amber-700',
+  draft:     'bg-navy/10 text-navy-light/60',
+  scheduled: 'bg-teal-soft/20 text-teal-deep',
+  sending:   'bg-amber-50 text-amber-700',
   sent:    'bg-teal-soft/30 text-teal-deep',
   failed:  'bg-coral/10 text-coral',
   partial: 'bg-amber-50 text-amber-700',
 }
 const STATUS_LABEL: Record<CommunicationStatus, string> = {
-  draft: 'Borrador', sending: 'Enviando', sent: 'Enviado', failed: 'Fallido', partial: 'Parcial',
+  draft: 'Borrador', scheduled: 'Programado', sending: 'Enviando',
+  sent: 'Enviado', failed: 'Fallido', partial: 'Parcial',
 }
 
 type RecipientRow = {
