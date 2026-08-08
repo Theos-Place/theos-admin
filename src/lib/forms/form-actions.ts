@@ -10,10 +10,14 @@
 
 export type FormEstado = { is_active: boolean; responses_count: number }
 
-/** Quién puede BORRAR un formulario. Es más acotado que editarlo: el borrado se
- *  lleva las respuestas por delante, así que el rol 'forms' no alcanza.
- *  Fuente única — la usan el endpoint y el menú de la lista. */
-export const FORM_DELETE_ROLES = ['comunicaciones', 'direccion', 'encargado_staff'] as const
+/** Quién puede BORRAR un formulario. Es más acotado que editarlo: el rol 'forms'
+ *  (ver/crear/editar/exportar) no alcanza.
+ *  Fuente única — la usan el endpoint y el menú de la lista.
+ *
+ *  'admin' está incluido desde 2026-08-07: no hay bypass automático por ser
+ *  admin en este sistema (cada guard lista sus roles), así que sin ponerlo acá
+ *  TI no veía la opción de eliminar y tampoco habría podido usar el endpoint. */
+export const FORM_DELETE_ROLES = ['admin', 'comunicaciones', 'direccion', 'encargado_staff'] as const
 
 export function canUserDeleteForms(roles: readonly string[] | undefined): boolean {
   return (roles ?? []).some(r => (FORM_DELETE_ROLES as readonly string[]).includes(r))

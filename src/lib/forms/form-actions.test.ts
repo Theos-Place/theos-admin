@@ -46,10 +46,13 @@ describe('quién puede borrar', () => {
     expect(canUserDeleteForms(undefined)).toBe(false)
   })
 
-  it('comunicaciones, dirección y encargado de staff sí', () => {
+  it('comunicaciones, dirección, encargado de staff y admin sí', () => {
     expect(canUserDeleteForms(['comunicaciones'])).toBe(true)
     expect(canUserDeleteForms(['direccion'])).toBe(true)
     expect(canUserDeleteForms(['forms', 'encargado_staff'])).toBe(true)
+    // En este sistema ser admin NO da permisos por defecto: cada guard lista
+    // sus roles. Sin esto, TI no veía el botón de eliminar.
+    expect(canUserDeleteForms(['admin'])).toBe(true)
   })
 })
 

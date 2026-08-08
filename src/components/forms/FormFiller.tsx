@@ -514,7 +514,11 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   className={cn('space-y-2 form-field-enter', field.type === 'section' && 'pt-2')}
                   style={{ animation: 'slideDown 200ms ease-out' }}
                 >
-                  {field.type !== 'section' && (
+                  {/* 'info' queda fuera, igual que 'section': su título lo pinta
+                      PublicField DENTRO del recuadro. Pintarlo también acá lo
+                      duplicaba (bug 2026-08-07). Además un <label> ahí sería
+                      semánticamente falso: el bloque no tiene ningún input. */}
+                  {field.type !== 'section' && field.type !== 'info' && (
                     <label className="block font-body">
                       <span className="text-sm font-semibold text-navy">
                         {field.label}
