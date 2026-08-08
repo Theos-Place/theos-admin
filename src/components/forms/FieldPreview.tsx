@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { ScaleField } from './ScaleField'
 import type { FormFieldNew } from '@/data/form-config'
 
 interface FieldPreviewProps {
@@ -139,28 +140,14 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
   }
 
   if (field.type === 'scale') {
-    const min = field.scale_min ?? 1
-    const max = field.scale_max ?? 5
-    const nums = Array.from({ length: max - min + 1 }, (_, i) => min + i)
     return (
-      <div className="space-y-1">
-        <div className="flex gap-1 flex-wrap">
-          {nums.map(n => (
-            <div
-              key={n}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-[13px] font-medium text-navy-light/60 border cursor-not-allowed border-[var(--outline-variant)] font-mono"
-            >
-              {n}
-            </div>
-          ))}
-        </div>
-        {(field.scale_min_label || field.scale_max_label) && (
-          <div className="flex justify-between">
-            <span className="text-[10px] text-navy-light/60 font-body">{field.scale_min_label}</span>
-            <span className="text-[10px] text-navy-light/60 font-body">{field.scale_max_label}</span>
-          </div>
-        )}
-      </div>
+      <ScaleField
+        min={field.scale_min}
+        max={field.scale_max}
+        minLabel={field.scale_min_label}
+        maxLabel={field.scale_max_label}
+        size="sm"
+      />
     )
   }
 

@@ -10,6 +10,7 @@ import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Check, Loader2, ChevronLeft, ShieldCheck } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
+import { ScaleField } from '@/components/forms/ScaleField'
 import { COMMENT_MAX } from '@/lib/studies/leader-feedback'
 import { cn } from '@/lib/utils'
 
@@ -174,43 +175,25 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
             )
           }
           if (c.field_type === 'scale') {
-            // Calificación 1-5: una fila de botones con las puntas etiquetadas.
-            // Ocupa un renglón en vez de cinco, que es el punto de haber
-            // cambiado el formato: la encuesta entera cabe en una pantalla.
-            const min = c.scale_min ?? 1
-            const max = c.scale_max ?? 5
-            const nums = Array.from({ length: Math.max(0, max - min + 1) }, (_, i) => min + i)
+            // Calificación 1-5: ocupa un renglón en vez de cinco, que es el
+            // punto de haber cambiado el formato — la encuesta entera cabe en
+            // una pantalla. La escala misma la pinta ScaleField (una sola
+            // implementación para las tres pantallas que la usan).
             return (
               <fieldset key={c.id} className="space-y-2">
                 <legend className="text-[13px] text-navy font-body">
                   {c.label} {c.is_required && <span className="text-coral">*</span>}
                 </legend>
                 {c.help_text && <p className="text-[12px] text-navy-light/60 font-body">{c.help_text}</p>}
-                <div className="flex gap-1.5 flex-wrap">
-                  {nums.map(n => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setAnswers(a => ({ ...a, [c.id]: String(n) }))}
-                      aria-pressed={answers[c.id] === String(n)}
-                      aria-label={`${n} de ${max}`}
-                      className={cn(
-                        'h-10 w-10 rounded-xl border text-sm font-semibold transition-colors font-mono',
-                        answers[c.id] === String(n)
-                          ? 'border-coral bg-coral text-white'
-                          : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
-                      )}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                {(c.scale_min_label || c.scale_max_label) && (
-                  <div className="flex justify-between gap-3 text-[11px] text-navy-light/60 font-body">
-                    <span>{c.scale_min_label}</span>
-                    <span>{c.scale_max_label}</span>
-                  </div>
-                )}
+                <ScaleField
+                  min={c.scale_min}
+                  max={c.scale_max}
+                  minLabel={c.scale_min_label}
+                  maxLabel={c.scale_max_label}
+                  value={answers[c.id]}
+                  onChange={n => setAnswers(a => ({ ...a, [c.id]: String(n) }))}
+                  ariaLabel={c.label}
+                />
               </fieldset>
             )
           }

@@ -240,8 +240,11 @@ export default function FormulariosPage() {
 
       {deleteTarget && (
         <Modal onClose={() => setDeleteTarget(null)} titleId="del-form-title" width={440}>
-          <div className="space-y-4">
-            <h2 id="del-form-title" className="text-lg font-display font-extrabold text-navy">
+          {/* El Modal compartido NO trae padding: lo pone cada uso (p-6 es la
+              convención del resto del sistema). Sin esto el contenido quedaba
+              pegado a los bordes del panel. */}
+          <div className="p-6 space-y-4">
+            <h2 id="del-form-title" className="pr-6 text-lg font-display font-extrabold text-navy">
               Eliminar “{deleteTarget.name}”
             </h2>
             <p className="text-[13px] text-navy-light/70 font-body">

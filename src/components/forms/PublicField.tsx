@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { ScaleField } from './ScaleField'
 import type { FormFieldNew } from '@/data/form-config'
 
 interface PublicFieldProps {
@@ -153,38 +154,18 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
   }
 
   if (field.type === 'scale') {
-    const min = field.scale_min ?? 1
-    const max = field.scale_max ?? 5
-    const nums = Array.from({ length: max - min + 1 }, (_, i) => min + i)
     return (
-      <div className="space-y-2">
-        <div className="flex gap-1.5 flex-wrap">
-          {nums.map(n => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => onChange(n)}
-              className={cn(
-                'h-10 w-10 rounded-xl text-sm font-semibold border transition-all font-mono',
-                numVal === n
-                  ? 'bg-coral text-white border-coral'
-                  : 'hover:bg-surface-low text-navy-light/60 border-outline-variant'
-              )}
-              style={{
-                borderColor: numVal === n ? undefined : 'var(--outline-variant)',
-              }}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-        {(field.scale_min_label || field.scale_max_label) && (
-          <div className="flex justify-between px-1">
-            <span className="text-[11px] text-navy-light/60 font-body">{field.scale_min_label}</span>
-            <span className="text-[11px] text-navy-light/60 font-body">{field.scale_max_label}</span>
-          </div>
-        )}
-      </div>
+      <ScaleField
+        min={field.scale_min}
+        max={field.scale_max}
+        minLabel={field.scale_min_label}
+        maxLabel={field.scale_max_label}
+        // Crudo, no numVal: un valor precargado puede venir como string
+        // (respuestas guardadas) y ScaleField ya lo normaliza.
+        value={typeof value === 'string' || typeof value === 'number' ? value : null}
+        onChange={onChange}
+        ariaLabel={field.label}
+      />
     )
   }
 
