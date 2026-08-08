@@ -9,15 +9,14 @@ import { readFileSync } from 'node:fs'
 
 const vercel = JSON.parse(readFileSync('vercel.json', 'utf8')) as { crons: Array<{ path: string }> }
 
-/** Crons que NO los dispara Vercel.
+/** Crons que NO los dispara Vercel. Vacío desde que la cuenta es Pro.
  *
- *  El plan de Vercel es Hobby y ahí los crons solo pueden correr UNA VEZ AL DÍA:
- *  un schedule más frecuente en vercel.json hace que Vercel rechace el
- *  deployment ENTERO, no solo ese cron (comprobado 2026-08-07: "Hobby accounts
- *  are limited to daily cron jobs"). Los que necesitan correr más seguido se
- *  disparan desde afuera, pero igual llevan su health check: el modo de fallo
- *  que se vigila es el mismo. */
-const CRONS_EXTERNOS = ['/api/cron/scheduled-broadcasts']
+ *  OJO al agregar un cron que corra más de una vez al día: en el plan Hobby
+ *  Vercel RECHAZA el deployment entero, no solo ese cron ("Hobby accounts are
+ *  limited to daily cron jobs" — pasó el 2026-08-07 y dejó seis commits sin
+ *  desplegar). Si la cuenta volviera a Hobby, los frecuentes van acá y se
+ *  disparan desde afuera. */
+const CRONS_EXTERNOS: string[] = []
 const envExample = readFileSync('.env.example', 'utf8')
 const health = readFileSync('src/lib/health.ts', 'utf8')
 

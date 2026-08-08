@@ -15,10 +15,9 @@ async function authorize(req: NextRequest): Promise<NextResponse | null> {
 /**
  * Manda los comunicados programados cuya hora ya pasó.
  *
- * NO está en vercel.json: el plan de Vercel es Hobby y ahí un cron solo puede
- * correr una vez al día — un schedule más frecuente hace que Vercel rechace el
- * deployment entero. El disparo cada 15 minutos viene de afuera (ver
- * docs/plan-desarrollo.md). La hora que elige el usuario no es exacta al
+ * Corre cada 15 minutos (vercel.json). Requiere plan Pro: en Hobby un cron solo
+ * puede correr una vez al día y un schedule más frecuente hace que Vercel
+ * rechace el deployment ENTERO. La hora que elige el usuario no es exacta al
  * minuto: sale en el primer barrido posterior, y la pantalla lo dice.
  *
  * Además arrastra la COLA DIARIA: cuando un envío no cabe en el cupo del día,
