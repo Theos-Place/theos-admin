@@ -2062,6 +2062,389 @@ totales separados y correctos. Reportame qué encontraste que sumaba mal.
 
 ---
 
+## Fase 8 — Reuniones de agosto (Finanzas y Dirigentes)
+
+> Decisión tomada 2026-08-06 sobre la evaluación del dirigente: **identificada pero
+> confidencial** — el sistema guarda quién respondió (permite dedupe, tasa de respuesta y
+> "quiénes llenaron y quiénes no"), pero al dirigente NUNCA se le revela quién dio el
+> feedback. EST-12 y EST-13 quedan como están (ya especificaban exactamente esto).
+
+### De la reunión con Finanzas
+
+### [ ] FIN-2 · Pedir el documento de identidad donde falta (login, matrícula, check-in)
+Archivos: `src/lib/auth/auth-context.tsx`, wizard de matrícula, `/eventos/[id]/checkin`, perfil
+
+```
+Para finanzas, que todos tengan documento registrado es prioritario. Hoy solo el
+prematrimonial lo exige (PRE-7). Agregá la captura en tres puntos, con fricción distinta:
+1) AL ENTRAR AL SISTEMA (descartable): si el miembro logueado no tiene documento, un aviso
+   "Completá tu perfil" con modal para ingresarlo ahí mismo (tipo + número, selector de
+   INT-1, normalización y dedup 409 existentes). Descartable; si lo descarta, reaparece a
+   los 14 días (guardá el descarte con fecha, no con un booleano). No bloquea nada.
+2) AL MATRICULARSE (obligatorio): si quien se matricula no tiene documento, el wizard lo
+   pide como paso previo y no continúa sin él — mismo criterio y mismo copy claro de PRE-7
+   ("Ingresá tu cédula o número de documento de identidad para continuar"). Aplica a
+   autoservicio y a staff matriculando a terceros.
+3) EN EL CHECK-IN (captura rápida, opcional): cuando el staff hace check-in de alguien sin
+   documento, mostrá un indicador discreto con un campo para capturarlo al vuelo SIN frenar
+   la fila — es opcional: el check-in nunca se bloquea por esto.
+El dato se guarda en el perfil (cedula + cedula_normalized / document_type de INT-1), con
+el dedup existente: si el documento ya pertenece a otro miembro → 409 y mensaje claro.
+Tests: modal reaparece a los 14 días; matrícula bloqueada sin documento; check-in nunca
+bloqueado; dedup.
+```
+
+### [ ] FIN-3 · Beca descontada visible en el modal de pago + comprobante requerido para el pago
+Archivos: modal de pago/matrícula, `src/lib/supabase/queries/scholarships.ts`, flujo de comprobantes
+
+```
+CONTEXTO — no romper una decisión ya tomada: la matrícula es EFECTIVA DE INMEDIATO y el
+pago es un carril aparte. "Comprobante obligatorio" acá significa obligatorio PARA EL PAGO,
+no para la matrícula: sin comprobante el pago sigue pendiente (con los recordatorios de
+PAG-3 y el bloqueo de PAG-2 para matrículas nuevas), pero la matrícula no se cae.
+1) BECA DESCONTADA EN EL MODAL: si la persona tiene beca activa aplicable, el modal de pago
+   la muestra automáticamente: precio del estudio, línea de descuento de la beca (monto o
+   porcentaje) y MONTO FINAL A PAGAR grande y claro. Que no haya que adivinar cuánto
+   transferir — ese es el reclamo de finanzas: la gente paga montos equivocados.
+2) COMPROBANTE REQUERIDO PARA COMPLETAR EL PAGO: el flujo de subir comprobante pasa a ser
+   el único camino para que un pago SINPE/transferencia llegue a la cola de revisión (hoy
+   ya es así vía submitEnrollmentComprobante — verificá que no haya camino que marque un
+   pago en revisión sin comprobante). Si la beca es del 100%, se mantiene BEC-1: sin
+   comprobante y aprobado directo.
+3) En el modal, si la persona sube el comprobante ahí mismo, el monto que declara debe
+   coincidir con el monto final calculado — avisá si difiere (no bloquees: finanzas decide
+   en revisión).
+Tests: modal con beca del 50% muestra el residual correcto; beca 100% sin comprobante;
+monto declarado distinto genera aviso.
+```
+
+### [ ] FIN-4 · Arreglo de pago en tractos (uso interno de finanzas)
+Archivos: migración (tabla nueva), `/finanzas/pagos`, `src/lib/supabase/queries/payments.ts`, guard de matrícula/inscripción
+
+```
+Excepción manejada internamente (NUNCA visible como opción de autoservicio): finanzas puede
+partir el pago de un estudio o evento en tractos.
+1) MODELO: tabla payment_plans (acuerdo: member_id, referencia al objeto pagado —
+   enrollment_id o event_registration_id—, monto total, moneda, cantidad de tractos, creado
+   por, notas) y los tractos como filas en payments ligadas al acuerdo (payment_plan_id,
+   cada una con su monto y fecha esperada). Así cada tracto pasa por la cola de revisión
+   normal y los agregados no cambian. Proponeme el esquema exacto antes de migrar.
+2) QUIÉN: solo finanzas, direccion y admin crean arreglos, desde la página unificada de
+   pagos (REV-3), sobre un pago pendiente existente ("Convertir en arreglo de pago").
+3) BLOQUEO (extiende PAG-2): con un tracto VENCIDO impago, la persona no puede matricularse
+   en otro estudio NI inscribirse a otro evento pago. Tracto futuro al día no bloquea.
+   Mensaje claro con el detalle de lo que debe.
+4) SEGUIMIENTO: los tractos aparecen en /mis-pagos de la persona con sus fechas; entran a
+   los recordatorios semanales de PAG-3; y la página de pagos permite filtrar "en arreglo
+   de pago". Si un tracto se vence, notificación interna a finanzas.
+5) Si la persona deja de pagar a mitad: finanzas decide manualmente (cancelar el arreglo,
+   condonar, o convertir en caso de seguimiento) — no automatices consecuencias más allá
+   del bloqueo.
+Tests: crear arreglo parte el pago en tractos que suman el total; tracto vencido bloquea
+matrícula y evento; tracto al día no bloquea.
+```
+
+### [ ] FIN-5 · Aprobación parcial de becas: 100%, 50%, porcentaje libre, o rechazo
+Archivos: revisión de solicitudes de beca (`/finanzas/becas`, `finance_requests`), `scholarships`, plantillas `beca_aprobada` / `beca_aprobada_parcial` / `beca_rechazada`
+
+```
+Al resolver una solicitud de beca, finanzas puede: aprobar al 100%, al 50%, definir un
+porcentaje libre (o un monto fijo), o rechazar. Hoy la resolución es más binaria.
+1) UI de revisión: botones rápidos 100% / 50% / "otro" (input de porcentaje o monto) /
+   Rechazar, con vista previa de cuánto cubriría sobre el costo del estudio.
+2) MODELO: guardá el PORCENTAJE otorgado además del monto calculado (con multimoneda de
+   INT-3 el porcentaje es portable; el monto se congela en la moneda del plan al momento de
+   aprobar). Revisá qué guarda scholarships hoy (kind, amount) y extendé sin romper las
+   becas existentes.
+3) RESIDUAL: la persona paga el resto por el flujo normal (FIN-3 muestra el desglose en el
+   modal). No se puede pedir OTRA beca para el mismo pago — una beca por matrícula.
+4) CORREOS: ya existen las tres plantillas (beca_aprobada, beca_aprobada_parcial,
+   beca_rechazada) — conectá cada resolución con la suya, incluyendo el porcentaje y el
+   monto final a pagar en la parcial.
+Permisos: becas, finanzas, direccion (los actuales de requireModuleView('becas')).
+Tests: 50% calcula bien el residual; rechazo manda el correo correcto; beca existente
+pre-cambio se sigue leyendo.
+```
+
+### [ ] FIN-6 · Devoluciones: tipo, filtros, visibilidad compartida y convertir en donación
+Archivos: `/finanzas/devoluciones` y solicitudes, `refunds`, RPC `create_refund`, `donations`
+
+```
+Cuatro mejoras al flujo de devoluciones:
+1) TIPO: derivalo del pago original (concept + entidad): estudio, evento, campaña,
+   actividad. No lo pidas a mano — el pago ya sabe de dónde vino. Si el pago es de un plan
+   de estudios, guardá también el plan para poder filtrar por tipo de estudio.
+2) FILTROS en la pantalla de solicitudes de devolución: por tipo, y si es estudio, por plan.
+3) VISIBILIDAD COMPARTIDA: además de finanzas, la devolución la ve el responsable del
+   origen — encargado del evento (entity_managers de FRM-1 si existe, o los roles de
+   gestión de eventos) o coordinador de estudios según el tipo. Ven y comentan; RESOLVER
+   sigue siendo de finanzas.
+4) CONVERTIR EN DONACIÓN: botón "Convertir en donación" para cuando la persona no quiere el
+   reembolso. Mecánica: la devolución queda resuelta con estado 'convertida_donacion' (no
+   se borra — sin soft-delete y con historial) y se crea la donación en donations con la
+   fecha de conversión, ligada al miembro y con referencia cruzada al refund. El trigger de
+   is_donor hace lo suyo solo.
+   ⚠️ ANTES DE IMPLEMENTAR el punto 4: confirmar con contabilidad que la conversión es
+   correcta fiscalmente (es plata que cambia de naturaleza). El botón queda gateado a
+   finanzas + direccion y pide confirmación explícita con el monto.
+Tests: tipo derivado correcto; filtro por plan; el encargado del evento ve solo las de su
+evento; conversión crea la donación y no duplica plata.
+```
+
+### De la reunión con Dirigentes
+
+### [ ] DIR-1 · Migrar el formulario de disponibilidad de dirigentes desde CCB
+Archivos: builder de formularios, `study_leaders` (`availability_status`, `zone_preference`), cola del coordinador
+
+```
+Traer al sistema el formulario de disponibilidad de dirigentes que hoy vive en CCB.
+Construirlo con el builder de formularios (seed idempotente, como el de preinscripción
+CDEB). Contenido exacto del form original:
+
+- Encabezado: "¡Gracias por tu servicio y compromiso!" + el versículo:
+  «"Pero los maestros sabios, que enseñaron a muchos a andar por el buen camino, brillarán
+  para siempre como las estrellas del cielo." Daniel 12:3 (TLA)»
+- Nombre y teléfono: NO se preguntan — la persona está autenticada, se prellenan del perfil
+  (en CCB eran campos manuales; acá sobran).
+- "¿Tenés disponibilidad para dar un Estudio Bíblico?" (obligatoria) con la nota de
+  contexto: "Las capacitaciones comenzarán la semana del 21 de setiembre, si Dios quiere.
+  Los Niveles se abren a finales de cada mes." — OJO: esa fecha cambia cada ciclo; hacela
+  parte del texto editable del form, no la quemes.
+- "¿Tenés disponibilidad para ser suplente?" (obligatoria) con la nota: "Tomaremos en
+  cuenta tu disponibilidad de lugar, días y modalidad."
+- "¿Te gustaría capacitarte para dar algún estudio?" (obligatoria): Sí / No, ninguno.
+- "¿Tenés algún comentario adicional?" (texto libre, opcional).
+
+MEJORA SOBRE EL ORIGINAL (confirmada por la nota de "lugar, días y modalidad"): el form de
+CCB preguntaba disponibilidad como texto; acá agregá campos estructurados condicionales —
+si responde que SÍ puede dar estudio o ser suplente: días de la semana (multi), horario
+(mañana/tarde/noche, multi), zonas (multi, desde el catálogo de sedes con useSedes) y
+modalidad (presencial/virtual). Estructurado se puede filtrar; texto libre no. El patrón de
+multi-select de días/zonas ya existe en REU-1.
+
+LAS RESPUESTAS NO ACTUALIZAN NADA AUTOMÁTICAMENTE (decisión): quedan como insumo en una
+vista para el coordinador de dirigentes, al lado del estado actual del dirigente
+(availability_status, zone_preference, qualified_study_codes). El coordinador decide y
+aplica los cambios con los flujos existentes. Un cambio automático movería asignaciones
+sin criterio humano.
+
+Convocatoria: enviable por broadcast a la lista de dirigentes activos, con el patrón de
+COM-2 (link al form + bloque de primera vez).
+Tests: prellenado; condicionales de disponibilidad; responder NO cambia availability_status.
+```
+
+### [ ] DIR-2 · Correos de cumpleaños automáticos a servidores y dirigentes
+Archivos: cron nuevo `/api/cron/birthday-greetings`, `vercel.json`, `message_templates`
+
+```
+Cron DIARIO (patrón exacto de los existentes: CRON_SECRET, healthcheck, horario UTC
+coherente) que felicite a los cumpleañeros del día.
+1) AUDIENCIA: miembros activos que sean servidores activos (volunteers status active) o
+   dirigentes (study_leaders is_active) — no todo el padrón. Con birth_date de ese día y
+   correo válido (sin email_bounced).
+2) PLANTILLA: "Feliz cumpleaños" editable en message_templates (seed idempotente, identidad
+   de Theos, no is_system), con el nombre de la persona. Que comunicaciones pueda cambiar
+   el texto sin tocar código.
+3) DEDUPE ANUAL: no felicitar dos veces el mismo año (registrá el envío; ojo con el caso
+   29 de febrero → felicitar el 28 en años no bisiestos).
+4) Respetar preferencias de notificación (categoría mensajes_sistema o la que corresponda)
+   y el límite diario de correos.
+5) BONUS para el coordinador: el día 1 de cada mes, notificación interna al coordinador de
+   dirigentes con la lista de cumpleañeros del mes (solo dirigentes), para el saludo
+   personal.
+Tests: dedupe anual, exclusión de rebotados, caso 29/2.
+```
+
+### [ ] DIR-3 · Recordatorio de cierre de grupo una semana antes
+Archivos: cron (extender `start-reminders` o crear `close-reminders`), `study_groups`, correo nuevo
+
+```
+Cuando a un grupo en_curso le falta UNA SEMANA para terminar, correo al dirigente Y al
+co-dirigente recordando que deben hacer el cierre, con link directo a la página de cierre
+del grupo (/estudios/grupos/[id]/cierre).
+1) CÁLCULO de la fecha de fin: usá study_groups.end_date si existe; si no, fecha de inicio
+   + semanas del plan (study_plans.weeks). Documentá cuál manda cuando hay ambas (end_date
+   gana: es la explícita).
+2) MOLDE: copiá el patrón del cron start-reminders (dedupe con una columna tipo
+   close_reminder_sent_at, CRON_SECRET, healthcheck).
+3) SEGUNDO RECORDATORIO: si 7 días después de la fecha de fin el grupo sigue en_curso,
+   un segundo y último correo ("tu grupo ya terminó y está pendiente de cierre") + una
+   notificación interna al coordinador de estudios. No insistir más — a partir de ahí es
+   gestión humana.
+4) El correo usa el layout base (renderEmail) con plantilla de sistema y fallback
+   hardcodeado, como inicio_capacitacion.
+Tests: dispara a -7 días y no antes; dedupe; segundo recordatorio a +7; grupo cerrado a
+tiempo no recibe el segundo.
+```
+
+### [ ] DIR-4 · Envío automático de la evaluación al cerrar el grupo
+Ya especificado en **EST-12** (cron study-surveys copiando el de eventos) y desbloqueado con
+la decisión de confidencialidad. Según la reunión, el formulario y la plantilla ya existen
+en el sistema: verificá al implementar EST-12 si sirven tal cual (seed ya corrido) y en ese
+caso el trabajo se reduce al cron + la asociación al dirigente. Sin punto aparte.
+
+### [ ] DIR-5 · Página "Evaluaciones": tiquete por grupo, rol nuevo y flujo de revisión
+Archivos: página nueva, migración (tiquetes + rol), `src/components/shared/RequestBoard.tsx`, `src/lib/auth/roles.ts`
+Depende de: EST-12 (las evaluaciones tienen que existir). Se integra con EST-13 (el correo al dirigente sale de acá).
+
+```
+Cuando los estudiantes llenan la evaluación del dirigente (EST-12), se abre UN TIQUETE POR
+GRUPO en una página nueva "Evaluaciones", donde el comité revisa el compilado antes de que
+nada llegue al dirigente.
+1) ROL NUEVO `evaluaciones` (migración: agregarlo al CHECK de member_roles, patrón de
+   FRM-1/forms). Acceso a la página: rol evaluaciones + coordinador_dirigentes + admin.
+   NADIE MÁS — ni direccion (mismo criterio que las recomendaciones CDEB de EST-9): es
+   información sensible sobre personas.
+2) TIQUETE POR GRUPO: se crea al llegar la primera respuesta del grupo (o al cerrar el
+   grupo, decidilo con el flujo de EST-12). Muestra: grupo, dirigente y co-dirigente, el
+   compilado de respuestas (conteos por pregunta + comentarios), tasa de respuesta, y —
+   como la evaluación es IDENTIFICADA PERO CONFIDENCIAL — la lista de QUIÉNES LLENARON Y
+   QUIÉNES NO (visible solo en esta página; los nombres jamás se asocian a respuestas
+   individuales en ninguna vista, ni siquiera acá).
+3) ESTADOS del tiquete, reutilizando RequestBoard (el tablero genérico de solicitudes):
+   abierto → asignado (a alguien con rol evaluaciones) → resuelto, más ESCALADO (al
+   coordinador de dirigentes). "Escalado" no existe en el flujo de solicitudes actual:
+   agregalo como estado propio de este tablero sin tocar los estados de study_requests.
+4) ENVÍO MANUAL AL DIRIGENTE: desde el tiquete, el botón que genera y envía el correo de
+   retroalimentación de EST-13 (conteos + comentarios anónimos). Esto materializa la
+   decisión de EST-13 de que el correo se revisa antes de enviarse: el tiquete ES esa
+   revisión. Registrar quién lo envió y cuándo.
+5) VIGENCIA: la ventana de respuesta de la evaluación es de DOS SEMANAS desde el envío.
+   Pasadas las dos semanas el tiquete se puede cerrar; el cierre muestra el resumen de
+   participación. Las respuestas tardías ya no entran (el form se desactiva o rechaza
+   respuestas fuera de ventana — usá starts_at/ends_at de forms si aplica).
+Tests: gate del rol (403 para direccion y para miembro); estados incluida la escalada;
+nombres de respondentes visibles solo en la lista de participación, nunca junto a una
+respuesta; envío manual dispara el correo de EST-13 una sola vez.
+```
+
+### [ ] DIR-6 · Estados administrativos del dirigente: "en pausa" y "en revisión"
+Archivos: `src/app/api/studies/leaders/schema.ts` (`availability_status`), `/estudios/dirigentes`, migración si hace falta CHECK
+
+```
+Además de activo/inactivo, el coordinador necesita distinguir POR QUÉ un dirigente no está
+activo: "en pausa" (descanso acordado) o "en revisión" (situación bajo evaluación).
+1) REUTILIZAR availability_status, no crear un campo paralelo: ya tiene available /
+   assigned / resting / inactive. Mapeo: "en pausa" = resting (solo cambia la ETIQUETA en
+   la UI a "En pausa"); agregar el valor nuevo en_revision (migración del CHECK si está en
+   BD, y el schema zod).
+2) VISIBILIDAD: estos matices son ADMINISTRATIVOS — los ve y edita solo
+   coordinador_dirigentes, coordinador_estudios y admin. Para el resto de roles que ven
+   dirigentes, un dirigente resting o en_revision se muestra simplemente como inactivo,
+   sin el matiz. "En revisión" es información delicada: cuidá que no se filtre en listados,
+   exports ni en la vista del propio dirigente.
+3) COHERENCIA con las reglas existentes: EST-1 (dirigente con grupo activo ⇒ activo
+   automático) debe respetar en_revision — si alguien está en revisión, asignarle un grupo
+   NO lo activa en silencio: bloqueá la asignación con un mensaje ("Este dirigente está en
+   revisión; contactá al coordinador"). El bulk-status y la activación individual igual.
+4) Filtros por estos estados en /estudios/dirigentes para los roles que los ven.
+Tests: etiquetas visibles solo para los roles correctos; asignar grupo a un en_revision se
+bloquea; el dirigente no ve su propio matiz.
+```
+
+### [ ] DIR-7 · Reporte de dirigentes
+Archivos: `/reportes` (página/bloque nuevo), `report_snapshots`, cron `report-snapshots`
+
+```
+Página o bloque nuevo en Reportes con el pulso del cuerpo de dirigentes:
+1) MÉTRICAS: dirigentes activos (is_active) · cuántos están dando estudio ahora (grupo
+   en_matricula o en_curso como leader o co_leader) · disponibles sin grupo · en pausa /
+   en revisión (solo para los roles que ven ese matiz, DIR-6) · y el TOTAL DE PERSONAS
+   CAPACITADAS PARA DAR CADA TIPO DE ESTUDIO, que sale directo de
+   study_leaders.qualified_study_codes agrupado por código de plan.
+2) Desglose por sede/zona (zone_preference) y evolución simple (comparación contra el
+   snapshot de hace 3 y 6 meses).
+3) CACHÉ: entra al cron nocturno report-snapshots como los demás datasets — no cálculo en
+   vivo: cruza varias tablas y el patrón del módulo es snapshot.
+4) PERMISOS: requireModuleView('reportes') como el resto, pero el desglose de en_revision
+   solo para coordinador_dirigentes/coordinador_estudios/admin (consistente con DIR-6).
+Tests: los conteos cuadran con un caso armado (dirigente con grupo, sin grupo, en pausa);
+capacitados por tipo suma bien con códigos múltiples.
+```
+
+### [ ] MIG-1 · Limpieza de datos de prueba + reimportación del histórico reciente (CCB)
+Archivos: `scripts/limpiar-datos-de-prueba.ts` (ya existe), scripts de import existentes (`import-study-history.ts`, `import-charla-attendance.cjs`, `import-active-students.ts`, `import-grupos.ts`), exports de CCB que aporta Floriana
+
+```
+Operación de datos en dos mitades: LIMPIAR lo que fue prueba y REIMPORTAR lo real que pasó
+en CCB durante estos meses. Orden estricto: primero limpiar, después importar — si no, la
+reimportación choca con los datos de prueba. TODO con dry-run y mi aprobación por etapa.
+
+────────────────────────────────────────
+ETAPA 0 · SILENCIO DE CORREOS (ANTES de tocar nada)
+El sistema NO debe mandar correos a miembros todavía: todo lo actual es prueba de procesos.
+Y esta operación puede disparar envíos sola — ejemplos reales del riesgo:
+  · importar grupos finalizados puede hacer que el cron de encuestas (study-surveys/EST-12,
+    si ya existe) los vea como recién cerrados y mande la evaluación a todos;
+  · los pagos de prueba pendientes alimentan el recordatorio de los lunes
+    (payment-reminders);
+  · start-reminders, folleto-blocks y event-surveys corren a diario en producción.
+Implementá un MODO SILENCIOSO global antes de la limpieza y la importación:
+1) Una env tipo EMAIL_SILENT_MODE=1 que el helper central de envío (src/lib/email/provider)
+   respete: registra en log lo que HABRÍA enviado (destinatario + asunto) y no envía nada.
+   Guard en un solo lugar, no cron por cron — cualquier camino de envío pasa por ahí.
+   Excepción única: los correos de auth (reset de contraseña) siguen saliendo, porque el
+   staff los necesita para entrar.
+2) Los imports deben correr con los disparadores de notificación desactivados o con
+   marcas de "ya notificado" (survey_sent_at, start_notified_at, close_reminder_sent_at,
+   assignment_notified_key…) selladas al importar, para que al apagar el modo silencioso
+   no salga una ola retroactiva de correos viejos.
+3) Al terminar MIG-1, ANTES de apagar el modo silencioso: un reporte de qué habría enviado
+   el sistema en las últimas 24 h. Si la lista no está vacía y limpia, no se apaga.
+El modo silencioso queda encendido hasta que yo dé la orden (cuando los datos sean
+oficiales), y apagarlo es una decisión explícita, no parte de esta tarea.
+
+────────────────────────────────────────
+ETAPA 1 · LIMPIEZA
+a) El set marcado [prueba] / PRUEBA-: correr scripts/limpiar-datos-de-prueba.ts (ya existe,
+   con dry-run). Es la parte fácil.
+b) Grupos de prueba NO marcados, y pagos y matrículas hechos después del 1 de junio 2026:
+   según la operación, todo lo transaccional posterior a junio fue prueba (el sistema no
+   estaba en uso real). PERO acá va la cautela:
+   - Generá primero un INVENTARIO: todos los study_groups creados después del 2026-06-01
+     que no vengan de la migración histórica, con sus matrículas, pagos, check-ins y
+     asistencias colgando; y todos los payments/enrollments posteriores a esa fecha.
+     Sepárame el inventario en "claramente prueba" (creados por cuentas del equipo,
+     nombres obvios de test) y "dudosos".
+   - ACLARACIÓN (2026-08-08): aunque el staff entró el 3 de agosto, sus datos TAMPOCO son
+     oficiales — son pruebas de procesos. Al menos matrículas y eventos posteriores a junio
+     son prueba, incluidos los del staff. Igual van al inventario para mi revisión (no a
+     borrado ciego), pero la presunción es que se limpian.
+   - Yo reviso el inventario y marco qué se borra. Nada se borra sin esa revisión.
+   - Borrado en orden de dependencias (check-ins → asistencias → pagos → matrículas →
+     grupos), como hace el script de limpieza existente. Sin tocar members reales ni sus
+     cuentas de auth.
+
+────────────────────────────────────────
+ETAPA 2 · REIMPORTACIÓN desde CCB (los exports los paso yo — pedímelos por tipo)
+a) GRUPOS CERRADOS de estos meses: importarlos como grupos en estado finalizado, con
+   dirigente matcheado por cédula o external_id, usando/extendiendo import-grupos.ts y el
+   flujo de import de EST-2.
+b) PERSONAS QUE PASARON EL CURSO: sus matrículas como enrollments completed (con nota si el
+   export la trae — ver import-panorama-grades como referencia), colgando del grupo
+   correcto. Esto alimenta prerequisitos de la cadena (N1→N2…), así que la elegibilidad de
+   septiembre depende de que quede bien.
+c) ASISTENCIAS DE LOS ÚLTIMOS MESES: check-ins de charla desde el corte de junio hasta hoy,
+   con import-charla-attendance.cjs (dedupe contra lo ya importado: mismo miembro + mismo
+   evento no se duplica). Esto recalcula la asistencia activa y las sedes automáticas, que
+   HOY están desactualizadas — la elegibilidad de estudios depende de esto.
+Matcheo de personas siempre por external_id o cédula normalizada; sin fallback automático
+por nombre (reporte de no matcheados para revisión).
+
+────────────────────────────────────────
+ETAPA 3 · RECÁLCULO Y VERIFICACIÓN
+- Correr refresh_member_sedes (masivo) y verificar que el trigger de is_donor no necesite
+  recálculo (las donaciones no se tocan en esta operación).
+- Números de control antes/después: total de grupos finalizados, enrollments completed,
+  check-ins por mes, miembros con asistencia activa. Reportame el antes y el después de
+  cada etapa.
+- Muestreo: 5 personas conocidas (me pedís los nombres) y verificamos a mano que su
+  historial quedó correcto.
+Correr en STAGING primero de punta a punta; a producción solo con el reporte aprobado.
+```
+
+---
+
 ## Backlog (fases siguientes, requieren definición de producto)
 
 - **CAM-1 · Matrículas de estudios tipo campaña** — no urge. Definir: ¿sin prerequisitos? ¿cupos? ¿pago? La etapa 'campaña' ya existe en la elegibilidad (campañas sin compromisos) y la excepción de campaña queda implementada en EST-1.
