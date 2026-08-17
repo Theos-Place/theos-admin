@@ -11,9 +11,10 @@ export const FIN_MATRICULA_MIN_ENROLLED = 5
 
 export type AutoFolletoTipo = 'cupo_lleno' | 'fin_matricula'
 
-/** Planes con folleto propio: las cadenas de niveles y discípulos. */
+/** Planes con folleto propio: las cadenas de niveles y discípulos, y
+ *  prematrimonial (la pareja recibe su folleto al crearse el grupo). */
 export function hasOwnFolleto(planCode: string | null | undefined): boolean {
-  return !!planCode && (/^N[1-4]$/.test(planCode) || /^DIS[1-3]$/.test(planCode))
+  return !!planCode && (/^N[1-4]$/.test(planCode) || /^DIS[1-3]$/.test(planCode) || planCode === 'PREMAT')
 }
 
 export function shouldCreateAutoFolleto(

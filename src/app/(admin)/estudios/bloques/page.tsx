@@ -38,8 +38,9 @@ export default function BloquesPage() {
   const [busy, setBusy] = useState(false)
   const [del, setDel] = useState<Bloque | null>(null)
   const [warn, setWarn] = useState<string | null>(null)
-  // BLQ-1 · Vista alternativa: el listado se mantiene tal cual.
-  const [vista, setVista] = useState<'lista' | 'calendario'>('lista')
+  // BLQ-1 · Vista alternativa: el listado se mantiene tal cual. El calendario
+  // es la vista por defecto (en pantalla angosta se oculta y queda la lista).
+  const [vista, setVista] = useState<'lista' | 'calendario'>('calendario')
   const [anio, setAnio] = useState(new Date().getFullYear())
   const [ventanas, setVentanas] = useState<VentanaGrupo[]>([])
   const [resaltado, setResaltado] = useState<string | null>(null)
@@ -282,7 +283,7 @@ export default function BloquesPage() {
             <h3 id="bloque-title" className="text-base font-bold text-navy font-display">{editing ? 'Editar bloque' : 'Nuevo bloque'}</h3>
             <div className="space-y-1">
               <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Nombre</label>
-              <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Capacitaciones I-2026" className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+              <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Bloque 1 2026" className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Año</label>

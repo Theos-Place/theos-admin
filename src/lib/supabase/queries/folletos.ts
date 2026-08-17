@@ -251,6 +251,9 @@ export async function notifyFolletoRecipients(input: {
   body: string
   subject: string
   html: string
+  /** Destino de la campana. Default: la cola de folletos. Los avisos de hito
+   *  de bloque apuntan a /estudios/bloques (el hito ya no crea tiquetes). */
+  link?: string
 }): Promise<void> {
   const recipients = await getFolletoRecipients()
   if (recipients.length === 0) return
@@ -261,7 +264,7 @@ export async function notifyFolletoRecipients(input: {
     type: 'folleto_created',
     title: input.title,
     body: input.body,
-    link: '/estudios/folletos',
+    link: input.link ?? '/estudios/folletos',
   })))
   if (error) console.warn('notifyFolletoRecipients notificaciones:', error.message)
 

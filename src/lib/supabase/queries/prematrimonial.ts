@@ -294,6 +294,9 @@ export async function createGroupForRequest(
     starts_at: group.starts_at ?? null,
     location: group.location ?? null,
     status: 'en_matricula',
+    // El grupo es solo para la pareja: cupo 2. Además de bloquear matrículas
+    // extra, dispara la regla cupo_lleno del folleto automático de abajo.
+    max_students: 2,
   }).select('id').single()
   if (gErr) throw gErr
   const groupId = (g as { id: string }).id
@@ -317,6 +320,17 @@ export async function createGroupForRequest(
   const { error: eErr } = await sb.from('study_enrollments')
     .upsert(rows, { onConflict: 'group_id,member_id' })
   if (eErr) throw eErr
+
+  // Con la pareja matriculada el cupo (2) queda lleno: tiquete de folletos
+  // automático (PREMAT tiene folleto propio). Best-effort e idempotente —
+  // el índice único por grupo evita duplicados si se reintenta.
+  try {
+    const { createAutoFolletoIfNeeded } = await import('@/lib/supabase/queries/folletos')
+    const todayCR = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date())
+    await createAutoFolletoIfNeeded(groupId, 'cupo_lleno', todayCR)
+  } catch (e) {
+    console.warn('premat create_group folleto automático:', e)
+  }
 
   await sb.from('prematrimonial_requests')
     .update({ status: 'grupo_creado', resulting_group_id: groupId, reviewed_by: actorId })

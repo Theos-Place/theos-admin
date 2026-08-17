@@ -15,7 +15,7 @@ describe('folleto-auto-rules (FOL-1)', () => {
   })
 
   it('solo planes con folleto propio (cadenas N y DIS)', () => {
-    for (const c of ['N1', 'N4', 'DIS1', 'DIS3']) expect(hasOwnFolleto(c)).toBe(true)
-    for (const c of ['SCJ', 'PREMAT', 'CDEB', 'BUS', null]) expect(hasOwnFolleto(c)).toBe(false)
+    for (const c of ['N1', 'N4', 'DIS1', 'DIS3', 'PREMAT']) expect(hasOwnFolleto(c)).toBe(true)
+    for (const c of ['SCJ', 'CDEB', 'BUS', null]) expect(hasOwnFolleto(c)).toBe(false)
   })
 })

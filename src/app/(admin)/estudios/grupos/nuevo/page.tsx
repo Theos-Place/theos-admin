@@ -51,7 +51,7 @@ type Step1 = {
 
 export default function NuevoGrupoPage() {
   const toast = useToast()
-  const { activeSedes: SEDES } = useSedes()
+  const { zoneSedes: SEDES } = useSedes()
   const { studyTypes } = useStudies('plans')
   const { dirigentes } = useDirigentes()
   const [step, setStep] = useState(1)

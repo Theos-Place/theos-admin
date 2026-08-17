@@ -16,6 +16,9 @@ export type Sede = {
   name: string
   is_active: boolean
   is_historical: boolean
+  /** Zona de grupos de estudio (independiente de is_active, que gobierna
+   *  los pickers de sede de miembros/eventos). */
+  is_zone?: boolean
   day?: string
   time?: string
   location?: string
@@ -36,6 +39,8 @@ type SedesCtx = {
   sedes: Sede[]
   activeSedes: Sede[]
   historicalSedes: Sede[]
+  /** Zonas disponibles para grupos de estudio (is_zone), ordenadas por nombre. */
+  zoneSedes: Sede[]
   loading: boolean
   sedeLabel: (id: string) => string
 }
@@ -64,6 +69,7 @@ export function SedesProvider({ children }: { children: React.ReactNode }) {
     sedes,
     activeSedes: sedes.filter((s) => s.is_active),
     historicalSedes: sedes.filter((s) => s.is_historical),
+    zoneSedes: sedes.filter((s) => s.is_zone),
     loading,
     sedeLabel,
   }), [sedes, loading])
@@ -75,7 +81,7 @@ export function useSedes(): SedesCtx {
   const ctx = useContext(Ctx)
   if (!ctx) {
     // Fallback si se usa fuera del provider: caché + listas vacías.
-    return { sedes: [], activeSedes: [], historicalSedes: [], loading: false, sedeLabel }
+    return { sedes: [], activeSedes: [], historicalSedes: [], zoneSedes: [], loading: false, sedeLabel }
   }
   return ctx
 }

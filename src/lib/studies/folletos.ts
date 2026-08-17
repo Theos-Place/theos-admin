@@ -25,6 +25,7 @@ export function levelLabel(code: string | null | undefined): string {
   if (!code) return ''
   if (/^N\d+$/.test(code)) return `Nivel ${code.slice(1)}`
   if (/^DIS\d+$/.test(code)) return `Discípulos ${code.slice(3)}`
+  if (code === 'PREMAT') return 'Prematrimonial'
   return code
 }
 

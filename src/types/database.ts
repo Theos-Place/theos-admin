@@ -3468,6 +3468,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_historical: boolean | null
+          is_zone: boolean
           location: string | null
           name: string
           time: string | null
@@ -3484,6 +3485,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_historical?: boolean | null
+          is_zone?: boolean
           location?: string | null
           name: string
           time?: string | null
@@ -3499,6 +3501,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_historical?: boolean | null
+          is_zone?: boolean
           location?: string | null
           name?: string
           time?: string | null
@@ -3715,6 +3718,7 @@ export type Database = {
         Row: {
           age_max: number | null
           age_min: number | null
+          bloque_id: string | null
           co_leader_id: string | null
           created_at: string | null
           current_week: number | null
@@ -3750,6 +3754,7 @@ export type Database = {
         Insert: {
           age_max?: number | null
           age_min?: number | null
+          bloque_id?: string | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
@@ -3785,6 +3790,7 @@ export type Database = {
         Update: {
           age_max?: number | null
           age_min?: number | null
+          bloque_id?: string | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
@@ -3818,6 +3824,13 @@ export type Database = {
           zone?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_groups_bloque_id_fkey"
+            columns: ["bloque_id"]
+            isOneToOne: false
+            referencedRelation: "capacitacion_bloques"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "study_groups_co_leader_id_fkey"
             columns: ["co_leader_id"]
@@ -4554,6 +4567,17 @@ export type Database = {
         Args: { p_apertura: string }
         Returns: {
           cantidad: number
+          sede: string
+        }[]
+      }
+      block_folletos_detail: {
+        Args: { p_apertura: string }
+        Returns: {
+          cantidad: number
+          dirigente: string
+          grupo: string
+          nivel: string
+          nivel_code: string
           sede: string
         }[]
       }

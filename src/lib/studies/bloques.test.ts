@@ -31,20 +31,23 @@ describe('bloqueMilestones', () => {
   })
 })
 
-describe('bloqueEstadoActual', () => {
-  const apertura = '2026-09-14'
-  const cierre = '2026-09-21'
-  it('antes del primer hito (apertura - 21) → en_apertura', () => {
-    expect(bloqueEstadoActual(apertura, cierre, '2026-08-23')).toBe('en_apertura')
+describe('bloqueEstadoActual (regla por cuatrimestre)', () => {
+  // Bloque 2 abre en mayo, bloque 3 en septiembre.
+  const aperturas = ['2026-01-15', '2026-05-15', '2026-09-14']
+  it('antes de la apertura → en_apertura', () => {
+    expect(bloqueEstadoActual('2026-09-14', aperturas, '2026-09-13')).toBe('en_apertura')
   })
-  it('el día exacto del primer hito → activo', () => {
-    expect(bloqueEstadoActual(apertura, cierre, '2026-08-24')).toBe('activo')
+  it('el día de la apertura → activo', () => {
+    expect(bloqueEstadoActual('2026-09-14', aperturas, '2026-09-14')).toBe('activo')
   })
-  it('el día exacto del cierre → todavía activo', () => {
-    expect(bloqueEstadoActual(apertura, cierre, '2026-09-21')).toBe('activo')
+  it('sigue activo aunque su matrícula haya cerrado, hasta que abra el siguiente', () => {
+    expect(bloqueEstadoActual('2026-05-15', aperturas, '2026-08-17')).toBe('activo')
   })
-  it('el día después del cierre → archivado', () => {
-    expect(bloqueEstadoActual(apertura, cierre, '2026-09-22')).toBe('archivado')
+  it('cuando abre el bloque siguiente → archivado', () => {
+    expect(bloqueEstadoActual('2026-05-15', aperturas, '2026-09-14')).toBe('archivado')
+  })
+  it('el último bloque queda activo indefinidamente si no hay otro posterior', () => {
+    expect(bloqueEstadoActual('2026-09-14', aperturas, '2027-06-01')).toBe('activo')
   })
 })
 
@@ -52,9 +55,9 @@ describe('suggestedBlocksForYear', () => {
   it('genera 3 bloques (ene/may/sep) con cierre = apertura + 7', () => {
     const blocks = suggestedBlocksForYear(2027)
     expect(blocks).toEqual([
-      { nombre: 'Capacitaciones I-2027', fecha_apertura: '2027-01-15', fecha_cierre_matricula: '2027-01-22' },
-      { nombre: 'Capacitaciones II-2027', fecha_apertura: '2027-05-15', fecha_cierre_matricula: '2027-05-22' },
-      { nombre: 'Capacitaciones III-2027', fecha_apertura: '2027-09-15', fecha_cierre_matricula: '2027-09-22' },
+      { nombre: 'Bloque 1 2027', fecha_apertura: '2027-01-15', fecha_cierre_matricula: '2027-01-22' },
+      { nombre: 'Bloque 2 2027', fecha_apertura: '2027-05-15', fecha_cierre_matricula: '2027-05-22' },
+      { nombre: 'Bloque 3 2027', fecha_apertura: '2027-09-15', fecha_cierre_matricula: '2027-09-22' },
     ])
   })
 })

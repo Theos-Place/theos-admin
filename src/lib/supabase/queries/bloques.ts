@@ -23,6 +23,15 @@ export type DbBloque = {
 
 export type SedeCount = { sede: string; cantidad: number }
 
+export type GroupFolletoDetail = {
+  sede: string
+  grupo: string
+  nivel_code: string
+  nivel: string
+  dirigente: string
+  cantidad: number
+}
+
 export async function getBloques(): Promise<DbBloque[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
@@ -32,16 +41,25 @@ export async function getBloques(): Promise<DbBloque[]> {
   if (error) throw error
   const today = crToday()
   // Estado SIEMPRE derivado de fechas (autoritativo); ignora el valor almacenado.
-  return ((data ?? []) as DbBloque[]).map(b => ({
-    ...b, estado: bloqueEstadoActual(b.fecha_apertura, b.fecha_cierre_matricula, today),
+  const rows = (data ?? []) as DbBloque[]
+  const aperturas = rows.map(b => b.fecha_apertura)
+  return rows.map(b => ({
+    ...b, estado: bloqueEstadoActual(b.fecha_apertura, aperturas, today),
   }))
+}
+
+/** Aperturas de todos los bloques (para derivar el estado por cuatrimestre). */
+async function getAperturas(supabase: ReturnType<typeof createAdminClient>): Promise<string[]> {
+  const { data } = await supabase.from('capacitacion_bloques').select('fecha_apertura')
+  return ((data ?? []) as Array<{ fecha_apertura: string }>).map(b => b.fecha_apertura)
 }
 
 export async function createBloque(input: {
   nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const estado = bloqueEstadoActual(input.fecha_apertura, input.fecha_cierre_matricula, crToday())
+  const aperturas = [...(await getAperturas(supabase)), input.fecha_apertura]
+  const estado = bloqueEstadoActual(input.fecha_apertura, aperturas, crToday())
   const { data, error } = await supabase.from('capacitacion_bloques').insert({ ...input, estado }).select('id').single()
   if (error) throw error
   return data as { id: string }
@@ -57,8 +75,9 @@ export async function updateBloque(id: string, patch: Partial<{
     nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
     estado: string; updated_at: string
   }> = { ...patch, updated_at: new Date().toISOString() }
-  if (patch.fecha_apertura && patch.fecha_cierre_matricula) {
-    row.estado = bloqueEstadoActual(patch.fecha_apertura, patch.fecha_cierre_matricula, crToday())
+  if (patch.fecha_apertura) {
+    const aperturas = [...(await getAperturas(supabase)), patch.fecha_apertura]
+    row.estado = bloqueEstadoActual(patch.fecha_apertura, aperturas, crToday())
   }
   const { error } = await supabase.from('capacitacion_bloques').update(row).eq('id', id)
   if (error) throw error
@@ -80,6 +99,16 @@ export async function countBlockBySede(aperturaIso: string): Promise<SedeCount[]
   return ((data ?? []) as Array<{ sede: string; cantidad: number }>).map(r => ({ sede: r.sede, cantidad: Number(r.cantidad) }))
 }
 
+/** Desglose por grupo (grupo, nivel, dirigente, sede) de los folletos del bloque.
+ *  Misma asociación por rango de fechas que countBlockBySede; alimenta el
+ *  correo/notificación de hitos. Lanza si el RPC falla (mismo motivo). */
+export async function countBlockDetail(aperturaIso: string): Promise<GroupFolletoDetail[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('block_folletos_detail', { p_apertura: aperturaIso })
+  if (error) throw new Error(`countBlockDetail: ${error.message}`)
+  return ((data ?? []) as Array<GroupFolletoDetail>).map(r => ({ ...r, cantidad: Number(r.cantidad) }))
+}
+
 /** Total de matrículas asociadas a un bloque (para la regla de borrado). */
 export async function countBlockEnrollments(aperturaIso: string): Promise<number> {
   const rows = await countBlockBySede(aperturaIso)
@@ -92,7 +121,9 @@ export type MilestoneResult = {
   milestone: BloqueMilestone
   tipo: string
   fecha_apertura: string
+  fecha_cierre_matricula: string
   by_sede: SedeCount[]
+  detail: GroupFolletoDetail[]
   total: number
 }
 
@@ -113,8 +144,9 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
   }>
 
   // Recalcular el estado almacenado (cache) a diario según fechas.
+  const aperturas = list.map(b => b.fecha_apertura)
   for (const b of list) {
-    const derived = bloqueEstadoActual(b.fecha_apertura, b.fecha_cierre_matricula, todayIso)
+    const derived = bloqueEstadoActual(b.fecha_apertura, aperturas, todayIso)
     if (derived !== b.estado) {
       await supabase.from('capacitacion_bloques').update({ estado: derived }).eq('id', b.id)
     }
@@ -141,7 +173,14 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
       // dentro de la ventana lo reintenta. Un fallo en un bloque no detiene
       // los demás.
       try {
-        const bySede = await countBlockBySede(b.fecha_apertura)
+        // Una sola consulta: el desglose por grupo; el conteo por sede se
+        // deriva de ahí (misma asociación por fechas que countBlockBySede).
+        const detail = await countBlockDetail(b.fecha_apertura)
+        const sedeMap = new Map<string, number>()
+        for (const d of detail) sedeMap.set(d.sede, (sedeMap.get(d.sede) ?? 0) + d.cantidad)
+        const bySede: SedeCount[] = [...sedeMap.entries()]
+          .map(([sede, cantidad]) => ({ sede, cantidad }))
+          .sort((a, z) => z.cantidad - a.cantidad)
         const total = bySede.reduce((s, r) => s + r.cantidad, 0)
         const tipo = MILESTONE_TO_TIPO[m]
 
@@ -161,7 +200,8 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
 
         results.push({
           bloque_id: b.id, bloque_nombre: b.nombre, milestone: m, tipo,
-          fecha_apertura: b.fecha_apertura, by_sede: bySede, total,
+          fecha_apertura: b.fecha_apertura, fecha_cierre_matricula: b.fecha_cierre_matricula,
+          by_sede: bySede, detail, total,
         })
       } catch (e) {
         console.error(`processBloqueMilestones ${b.nombre}/${m}:`, e)

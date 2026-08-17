@@ -25,20 +25,57 @@ export async function POST(req: NextRequest) {
     const results = await processBloqueMilestones(today)
 
     for (const r of results) {
-      const aperturaLabel = new Date(`${r.fecha_apertura}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
+      const fmt = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
+      const aperturaLabel = fmt(r.fecha_apertura)
+      const cierreLabel = fmt(r.fecha_cierre_matricula)
       const hito = MILESTONE_LABEL[r.milestone]
-      const sedeLines = r.by_sede.filter(s => s.cantidad > 0).map(s => `<li>${s.sede}: <strong>${s.cantidad}</strong></li>`).join('')
+      const esFinal = r.milestone === 'final'
+      const plural = r.total !== 1
+
+      // Mensaje según el hito: preliminar/confirmación son un adelanto (la
+      // matrícula sigue abierta); solo el final es el conteo para imprimir.
+      const intro = esFinal
+        ? `La matrícula del bloque ya cerró: este es el <strong>conteo definitivo para imprimir</strong>.`
+        : `<strong>Este número todavía puede cambiar:</strong> es la cantidad de personas matriculadas hasta hoy, y la matrícula del bloque sigue abierta hasta el <strong>${cierreLabel}</strong>. El conteo definitivo llega ese día con el reporte final.`
+
+      // Desglose por sede, y dentro de cada sede el detalle por grupo
+      // (grupo · nivel · dirigente · cantidad).
+      const sedeBlocks = r.by_sede.filter(s => s.cantidad > 0).map(s => {
+        const rows = r.detail.filter(d => d.sede === s.sede).map(d => `
+          <tr>
+            <td style="padding:4px 12px 4px 0;">${d.grupo}</td>
+            <td style="padding:4px 12px 4px 0;">${d.nivel}</td>
+            <td style="padding:4px 12px 4px 0;">${d.dirigente}</td>
+            <td style="padding:4px 0; text-align:right;"><strong>${d.cantidad}</strong></td>
+          </tr>`).join('')
+        return `
+          <p style="margin-bottom:4px;"><strong>${s.sede}</strong> — ${s.cantidad} folleto${s.cantidad !== 1 ? 's' : ''}</p>
+          <table style="border-collapse:collapse; margin:0 0 12px 12px; font-size:14px;">
+            <tr>
+              <th align="left" style="padding:4px 12px 4px 0; font-weight:normal; color:#666;">Grupo</th>
+              <th align="left" style="padding:4px 12px 4px 0; font-weight:normal; color:#666;">Nivel</th>
+              <th align="left" style="padding:4px 12px 4px 0; font-weight:normal; color:#666;">Dirigente</th>
+              <th align="right" style="padding:4px 0; font-weight:normal; color:#666;">Matriculados</th>
+            </tr>
+            ${rows}
+          </table>`
+      }).join('')
+
       await notifyFolletoRecipients({
         title: `Folletos ${hito} · ${r.bloque_nombre}`,
-        body: `${r.total} folleto${r.total !== 1 ? 's' : ''} en total. Apertura: ${aperturaLabel}.`,
+        body: esFinal
+          ? `Conteo definitivo: ${r.total} folleto${plural ? 's' : ''}. Apertura: ${aperturaLabel}.`
+          : `Por ahora ${r.total} matriculado${plural ? 's' : ''}; la matrícula cierra el ${cierreLabel}.`,
         subject: `Folletos ${hito} — ${r.bloque_nombre}`,
+        // El hito no crea tiquetes en la cola de folletos, así que la campana
+        // lleva a los bloques, donde sí se ve este conteo.
+        link: '/estudios/bloques',
         html: `
-          <p>Reporte de folletos <strong>${hito}</strong> del bloque <strong>${r.bloque_nombre}</strong>.</p>
-          <p>Apertura: ${aperturaLabel}</p>
-          <p>Desglose por sede:</p>
-          <ul>${sedeLines || '<li>Sin matrículas aún</li>'}</ul>
-          <p>Total: <strong>${r.total}</strong> folleto${r.total !== 1 ? 's' : ''}.</p>
-          ${r.milestone === 'final' ? '<p><strong>Este es el conteo definitivo para imprimir.</strong></p>' : ''}
+          <p>Reporte <strong>${hito.toLowerCase()}</strong> de folletos del bloque <strong>${r.bloque_nombre}</strong> (apertura: ${aperturaLabel}).</p>
+          <p>${intro}</p>
+          <p>Total al día de hoy: <strong>${r.total}</strong> persona${plural ? 's' : ''} matriculada${plural ? 's' : ''}.</p>
+          ${sedeBlocks || '<p>Sin matrículas aún.</p>'}
+          <p>Podés ver los bloques y sus fechas en el sistema, en Estudios &rsaquo; Bloques.</p>
         `,
       })
     }

@@ -70,7 +70,7 @@ function EditarForm({ group, studyType, refetch }: {
 }) {
   const router = useRouter()
   const toast = useToast()
-  const { activeSedes: SEDES } = useSedes()
+  const { zoneSedes: SEDES } = useSedes()
 
   const [zone, setZone] = useState<ComboValue>(
     group.zone ? { kind: 'existing', value: group.zone, label: sedeLabel(group.zone) } : { kind: 'empty' },

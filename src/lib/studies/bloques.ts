@@ -61,13 +61,17 @@ export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
 // ── Estado derivado de fechas (no manual) ────────────────────────────────────
 export type BloqueEstado = 'en_apertura' | 'activo' | 'archivado'
 
-/** Vigencia del bloque: inicio = primer hito (apertura − 3 semanas); fin = cierre
- *  de matrícula. Estado según hoy (YYYY-MM-DD, zona CR) contra ese rango. */
-export function bloqueEstadoActual(aperturaIso: string, cierreIso: string, todayIso: string): BloqueEstado {
-  const inicio = addDays(aperturaIso, -21)
-  if (todayIso < inicio) return 'en_apertura'
-  if (todayIso > cierreIso) return 'archivado'
-  return 'activo'
+/** Vigencia por cuatrimestre (regla 2026-08-17): un bloque está ACTIVO desde su
+ *  apertura hasta que abre el siguiente bloque — no solo durante la ventana de
+ *  matrícula. Por eso el estado depende de las aperturas de TODOS los bloques:
+ *  - en_apertura: la apertura todavía no llega.
+ *  - activo: ya abrió y ningún bloque posterior ha abierto.
+ *  - archivado: un bloque posterior ya abrió.
+ *  `todasLasAperturas` puede incluir la del propio bloque (se ignora). */
+export function bloqueEstadoActual(aperturaIso: string, todasLasAperturas: string[], todayIso: string): BloqueEstado {
+  if (todayIso < aperturaIso) return 'en_apertura'
+  const abrioUnoPosterior = todasLasAperturas.some(a => a > aperturaIso && a <= todayIso)
+  return abrioUnoPosterior ? 'archivado' : 'activo'
 }
 
 export const BLOQUE_ESTADO_LABEL: Record<BloqueEstado, string> = {
@@ -84,13 +88,12 @@ export const BLOQUE_ESTADO_BADGE: Record<BloqueEstado, string> = {
 
 /** Tres bloques sugeridos por defecto para un año (ene/may/sep — fechas editables). */
 export function suggestedBlocksForYear(year: number): Array<{ nombre: string; fecha_apertura: string; fecha_cierre_matricula: string }> {
-  const roman = ['I', 'II', 'III']
   // Meses sugeridos: enero, mayo, septiembre. Apertura ~día 15; cierre ~apertura+7.
   const months = [0, 4, 8]
   return months.map((m, i) => {
     const apertura = `${year}-${String(m + 1).padStart(2, '0')}-15`
     return {
-      nombre: `Capacitaciones ${roman[i]}-${year}`,
+      nombre: `Bloque ${i + 1} ${year}`,
       fecha_apertura: apertura,
       fecha_cierre_matricula: addDays(apertura, 7),
     }

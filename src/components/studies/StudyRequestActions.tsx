@@ -42,7 +42,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   const toast = useToast()
   const { studyTypes } = useStudyPlans()
   const { dirigentes } = useDirigentes()
-  const { activeSedes } = useSedes()
+  const { zoneSedes } = useSedes()
   const [openModal, setOpenModal] = useState<StudyRequestType | null>(null)
   const [eligibility, setEligibility] = useState<Eligibility | null>(null)
   const [dataLoading, setDataLoading] = useState(false)
@@ -115,7 +115,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   function toggleZone(z: string) {
     setZones(prev => prev.includes(z) ? prev.filter(x => x !== z) : [...prev, z])
   }
-  const zoneLabel = zoneSel === 'otra' ? zoneOther.trim() : (activeSedes.find(s => s.id === zoneSel)?.name ?? '')
+  const zoneLabel = zoneSel === 'otra' ? zoneOther.trim() : (zoneSedes.find(s => s.id === zoneSel)?.name ?? '')
 
   async function submit() {
     if (blocked) return
@@ -276,7 +276,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <div>
                       <label className={LABEL_CLS}>Zona(s) que te sirven</label>
                       <div className="flex flex-wrap gap-2">
-                        {[...activeSedes.map(sd => sd.name), 'Cualquiera'].map(z => {
+                        {[...zoneSedes.map(sd => sd.name), 'Cualquiera'].map(z => {
                           const on = zones.includes(z)
                           return (
                             <button key={z} type="button" onClick={() => toggleZone(z)}
@@ -342,7 +342,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       <label htmlFor="interest-zone" className={LABEL_CLS}>Zona</label>
                       <select id="interest-zone" value={zoneSel} onChange={e => setZoneSel(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar zona…</option>
-                        {activeSedes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        {zoneSedes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         <option value="otra">Otra (escribir)</option>
                       </select>
                       {zoneSel === 'otra' && (
